@@ -1,0 +1,110 @@
+<style>
+    :root { --mau-c: #0056b3; --mau-n: transparent; --mau-t: #333333; }
+    
+    .khung-trai { 
+        width: 300px; flex-shrink: 0; display: flex; flex-direction: column; 
+        align-items: center; padding-top: 25px; position: sticky; top: 0; 
+        height: 100vh; background-color: var(--mau-c); padding-bottom: 25px; 
+        box-shadow: 4px 0 10px rgba(0,0,0,0.15); box-sizing: border-box; 
+        overflow-y: auto; z-index: 1000;
+    }
+    
+    .khung-logo { margin-bottom: 15px; display: flex; align-items: center; justify-content: center;}
+    .khung-logo img { width: 85px; background: white; border-radius: 50%; padding: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+    
+    .ten-truong-trai { 
+        color: #ffffff; font-size: 14px; font-weight: bold; text-align: center; 
+        margin-bottom: 5px; line-height: 1.4; padding: 0; text-transform: uppercase; 
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.4); padding-bottom: 15px; width: 90%;
+        white-space: nowrap;
+    }
+    
+    /* Ô THÔNG TIN NHÂN SỰ THEO MẪU ẢNH VÀ NGUYÊN TẮC VÀNG */
+    .hop-thong-tin-nv { 
+        background-color: #f8f9fa; border: 1px dashed #ced4da; border-radius: 4px; width: 92%; margin: 10px auto 20px auto; 
+        padding: 12px; font-family: 'Times New Roman', Times, serif; font-size: 14px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); box-sizing: border-box;
+    }
+    
+    .dong-tt-1 { 
+        display: flex; align-items: center; padding-bottom: 4px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dong-tt-mid { 
+        display: flex; align-items: center; border-bottom: 1px dashed #ced4da; padding-bottom: 8px; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tt-nhan { font-weight: bold; color: #333; margin-right: 5px; }
+    .tt-giatri { color: #0d6efd; font-weight: bold; text-transform: uppercase; }
+    .tt-trangthai { color: #0d6efd; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+    
+    .dong-tt-2 { font-size: 15px; display: flex; align-items: baseline; }
+    .tt-giatri-kq { color: #0d6efd; font-weight: bold; }
+
+    /* DANH MỤC MENU DỌC */
+    .danh-muc-trai { width: 100%; display: flex; flex-direction: column; padding: 0; box-sizing: border-box;}
+    .the-chuyen { 
+        color: #ffffff !important; font-size: 15px; font-family: 'Segoe UI', sans-serif; 
+        text-decoration: none; cursor: pointer; transition: 0.2s; display: flex; 
+        align-items: center; padding: 10px 20px; border: none; 
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15); box-sizing: border-box; 
+        background: transparent; width: 100%; text-align: left; border-radius: 0;
+    }
+    .the-chuyen:first-child { border-top: 1px solid rgba(255, 255, 255, 0.15); }
+    .the-chuyen:hover, .the-chuyen.active { 
+        background-color: rgba(255, 255, 255, 0.15) !important; 
+        font-weight: bold; border-left: 4px solid #ffc107; padding-left: 16px;
+    }
+    .b-tuong { margin-right: 12px; font-size: 18px; display: inline-block; width: 24px; text-align: center;}
+</style>
+
+<div class="khung-trai">
+    <div class="khung-logo">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="menu_logo" alt="Logo">
+    </div>
+    <div class="ten-truong-trai" id="menu_school_name">ĐANG TẢI...</div>
+
+    <div class="hop-thong-tin-nv" id="vungThongTin">
+       <div class="dong-tt-1">
+         <span class="tt-nhan">Giáo viên:</span>
+         <span class="tt-giatri" id="chuTenGv">Đang tải...</span>
+       </div>
+       <div class="dong-tt-mid">
+         <span class="tt-nhan">Trạng thái:</span>
+         <span class="tt-trangthai" id="chuTrangThai">...</span>
+       </div>
+       <div class="dong-tt-2">
+         <span class="tt-nhan">Kết quả:</span>
+         <span class="tt-giatri-kq" id="chuKqHthi">...</span>
+       </div>
+    </div>
+
+    <div class="danh-muc-trai nav flex-column" role="tablist">
+        <button class="the-chuyen nav-link active" id="tabNhiemVu" data-bs-toggle="tab" data-bs-target="#khuNhiemVu" type="button" role="tab">
+            <span class="b-tuong"><i class="bi bi-card-checklist"></i></span> Nhiệm vụ của tôi
+        </button>
+        <div id="khuGiaoViec" style="display:none; width: 100%;">
+            <button class="the-chuyen nav-link" id="tabGiaoViec" data-bs-toggle="tab" data-bs-target="#khuGiaoViecChinh" type="button" role="tab">
+                <span class="b-tuong"><i class="bi bi-briefcase"></i></span> Giao việc
+            </button>
+        </div>
+        <button class="the-chuyen nav-link" id="tabTongHop" data-bs-toggle="tab" data-bs-target="#khuTongHop" type="button" role="tab">
+            <span class="b-tuong"><i class="bi bi-table"></i></span> Tổng hợp kết quả
+        </button>
+        <button class="the-chuyen nav-link" id="tabBaoCao" data-bs-toggle="tab" data-bs-target="#khuBaoCao" type="button" role="tab">
+            <span class="b-tuong"><i class="bi bi-file-earmark-text"></i></span> Tổng hợp Báo cáo
+        </button>
+        <button class="the-chuyen nav-link" id="tabNghi" data-bs-toggle="tab" data-bs-target="#khuNghi" type="button" role="tab">
+            <span class="b-tuong"><i class="bi bi-calendar-x"></i></span> Tổng hợp nghỉ
+        </button>
+        <button class="the-chuyen nav-link" id="tabYkien" data-bs-toggle="tab" data-bs-target="#khuYkien" type="button" role="tab">
+            <span class="b-tuong"><i class="bi bi-chat-text"></i></span> Tổng hợp ý kiến
+        </button>
+        
+        <a href="#" id="menu_link_dgc" target="_blank" class="the-chuyen">
+            <span class="b-tuong"><i class="bi bi-award"></i></span> Đánh giá cuối năm
+        </a>
+        
+        <button class="the-chuyen mt-auto" onclick="thoatTaik()" style="border-top: 1px dashed rgba(255,255,255,0.3); background: rgba(220,53,69,0.2); color: #fff; font-weight: bold;">
+            <span class="b-tuong"><i class="bi bi-box-arrow-right"></i></span> Đăng xuất
+        </button>
+    </div>
+</div>

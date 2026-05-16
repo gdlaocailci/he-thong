@@ -1,0 +1,232 @@
+<style>
+  .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
+  .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
+  .tDe { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; }
+  .nhanNhiemVu { font-weight: bold; color: #333; font-size: 14px; }
+  .chuThongTin { font-weight: bold; color: #0d6efd; font-size: 15px; margin-left: 5px; }
+  .nhapTuyChinh { border: 1px solid #ced4da; border-radius: 4px; padding: 2px; outline: none; height: 30px; font-size: 14px; }
+  .epMotDong { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+  #bangNviec { table-layout: fixed; width: 100%; word-wrap: break-word; }
+  #bangNviec thead th { position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important; vertical-align: middle; text-align: center; padding: 8px 5px; }
+  #bangNviec textarea.form-control { border: none; background-color: transparent; resize: none; overflow: hidden; min-height: 35px; line-height: 1.3; white-space: pre-wrap; padding: 4px; box-shadow: none; cursor: default; }
+  #bangNviec .nhapNgay, #bangNviec .chonKq { border: none; background: transparent; box-shadow: none; width: 100%; text-align: center; height: 30px; }
+  #bangNviec td { vertical-align: middle !important; padding: 1px 2px !important; border-color: #f2f2f2 !important; overflow: hidden; text-overflow: ellipsis; }
+
+  .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
+  .diemTru, .diemTru:disabled { background-color: #dc3545 !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
+  .diemKhong, .diemKhong:disabled { background-color: #28a745 !important; color: black !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: black !important; }
+  button:disabled { cursor: not-allowed !important; opacity: 0.5 !important; filter: grayscale(100%) !important; pointer-events: none !important; box-shadow: none !important; }
+  tr.nenSom, tr.nenSom td { background-color: #d1e7dd !important; }
+  tr.nenHnay, tr.nenHnay td { background-color: #cfe2ff !important; }
+  tr.nenTre,  tr.nenTre  td { background-color: #fff3cd !important; }
+</style>
+
+<div class="hopDau">
+  <div class="d-flex align-items-center mb-1 w-100 position-relative">
+    <div class="text-nowrap" style="flex: 1.5;">
+      <span class="nhanNhiemVu">Thời gian:</span><span id="chuThoiGian" class="chuThongTin me-3">...</span>
+      <span class="nhanNhiemVu border-start ps-3">Năm học:</span><span id="chuNamHoc" class="chuThongTin">...</span>
+    </div>
+    <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
+    <div class="text-end text-nowrap" style="flex: 1.5;"> 
+      <div class="d-inline-block">
+         <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label><input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center mb-2 px-2 py-1 gap-2 flex-wrap" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; min-height: 42px;">
+     <div class="d-flex align-items-center justify-content-start px-3" style="flex: 1;">
+         <span class="nhanNhiemVu me-2 text-nowrap">Số ngày nghỉ:</span><input type="number" id="nhapSngayNghi" class="nhapTuyChinh text-center me-2" style="width: 45px; font-weight: bold;" placeholder="0">
+         <textarea id="nhapLdoNghi" class="form-control me-3" placeholder="Nhập lý do..." style="height: 30px; min-height: 30px; font-size: 13px; border-radius: 4px; width: 300px; resize: none; overflow: hidden; white-space: pre-wrap; padding: 4px 8px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '30px')"></textarea>
+     </div>
+     <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
+        <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" disabled><option value="">-- GV --</option></select>
+        <button class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
+        <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
+     </div>
+  </div>
+    
+  <div class="row g-1 mb-1">
+    <div class="col-md-6"><textarea id="nhapYkien" class="form-control border-danger" placeholder="* Ý kiến tham mưu, đề xuất..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea></div>
+    <div class="col-md-6">
+      <div style="position: relative;">
+        <textarea id="nhapBcao" class="form-control border-danger" placeholder="* Báo cáo tóm tắt quá trình thực hiện..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px 30px 3px 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
+        <button class="btn btn-sm text-primary" onclick="document.getElementById('tepBcao').click()" style="position: absolute; top: 2px; right: 4px; padding: 0; background: transparent; border: none; z-index: 10;" title="Đính kèm báo cáo"><i class="bi bi-paperclip" style="font-size: 18px;"></i></button>
+        <input type="file" id="tepBcao" multiple style="display:none;" onchange="xulyTaiBcao(this)">
+      </div>
+      <div id="vungDinhkBcao" class="mt-1 d-flex gap-1 flex-wrap justify-content-end"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm p-0 border-0">
+  <div class="table-responsive" style="max-height: 65vh; overflow-y: auto; border: 1px solid #f0f0f0;">
+    <table class="table table-bordered table-hover mb-0" id="bangNviec">
+      <thead><tr><th style="width: 3%;">TT</th><th style="width: 48%;">Nội dung công việc</th><th style="width: 15%;">Thời gian giao hoàn thành</th><th style="width: 10%;">Loại tiến độ</th><th style="width: 10%;">Kết quả</th><th style="width: 10%;">Ngày hoàn thành</th><th style="width: 3%;">Xoá</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="p-2 text-start bg-light border-top"><button class="btn btn-sm btn-outline-primary fw-bold" onclick="addNv()"><i class="bi bi-plus-circle"></i> Thêm nhiệm vụ</button></div>
+</div>
+
+<script>
+let mbcMo = false;
+function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
+function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
+function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
+
+function xulyTaiBcao(ptu) {
+    if (!ptu.files || ptu.files.length === 0) return; hienTaiDl("⏳ Đang tải lên " + ptu.files.length + " file đính kèm...");
+    let tdl = []; let dem = 0;
+    Array.from(ptu.files).forEach(t => {
+        let dc = new FileReader();
+        dc.onload = function(err) {
+            tdl.push({ tentep: t.name, kieu: t.type, dliu: err.target.result.split(',')[1] }); dem++;
+            if (dem === ptu.files.length) {
+                const hdt = { teps: tdl };
+                if (typeof khachApi.taiTepBcao === 'function') {
+                    khachApi.taiTepBcao(hdt, function(kq) {
+                        anTaiDl(); ptu.value = ""; 
+                        if ((kq && Array.isArray(kq)) || (kq && kq.ttai === 'tcong')) {
+                            let kqd = Array.isArray(kq) ? kq : kq.dliu; if(!window.tepdinhkBcao) window.tepdinhkBcao = []; window.tepdinhkBcao = window.tepdinhkBcao.concat(kqd); veDinhKemBcao();
+                            xulyLuuTam(true, function() { hienThongb('tcong', 'Đã đính kèm thành công ' + tdl.length + ' file!'); });
+                        } else { let tl = (kq && kq.tbao) ? kq.tbao : "Lỗi"; hienThongb('loi', "Lỗi tải file: " + tl); }
+                    }, function(loi) { anTaiDl(); ptu.value = ""; hienThongb('loi', "Lỗi kết nối Server: " + loi.message); });
+                } else { anTaiDl(); hienThongb('loi', "Lỗi API"); }
+            }
+        }; dc.readAsDataURL(t);
+    });
+}
+
+function veDinhKemBcao() {
+    let kc = $('#vungDinhkBcao'); kc.empty(); if(!window.tepdinhkBcao || window.tepdinhkBcao.length === 0) return;
+    window.tepdinhkBcao.forEach((tc, chs) => {
+        let b = $(`<span class="badge bg-info text-dark shadow-sm" style="font-size: 12px; cursor: pointer; border: 1px solid #90caf9; padding: 4px 6px;" title="${tc.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${chs + 1} <i class="bi bi-x text-danger fw-bold ms-1" style="font-size: 15px;" onclick="xoaDinhKemBcao(${chs}); event.stopPropagation();" title="Xóa đính kèm này khỏi hệ thống"></i></span>`);
+        b.on('click', function() { window.open(tc.duongd, '_blank'); }); kc.append(b);
+    });
+}
+
+function xoaDinhKemBcao(chs) {
+    const cbm = "Thầy/Cô có chắc chắn muốn xóa file đính kèm này khỏi hệ thống báo cáo không?";
+    if (typeof hienThongb === 'function') { hienThongb('xn', cbm, function() { xulyXoaTepDc(chs); }); } else { if (confirm(cbm)) xulyXoaTepDc(chs); }
+}
+
+function xulyXoaTepDc(chs) {
+    let tpx = window.tepdinhkBcao[chs]; hienTaiDl("⏳ Đang xóa file khỏi hệ thống...");
+    if (typeof khachApi.xoaTepBcao === 'function') {
+        khachApi.xoaTepBcao({ duongd: tpx.duongd }, function(kq) {
+            if (kq && kq.ttai === 'tcong') { window.tepdinhkBcao.splice(chs, 1); veDinhKemBcao(); xulyLuuTam(true, function() { anTaiDl(); hienThongb('tcong', 'Đã xóa file đính kèm thành công!'); }); } 
+            else { anTaiDl(); hienThongb('loi', "Lỗi xóa file: " + (kq.tbao || "Không xác định")); }
+        }, function(loi) { anTaiDl(); hienThongb('loi', "Lỗi kết nối Server: " + loi.message); });
+    } else { anTaiDl(); hienThongb('loi', "Lỗi API"); }
+}
+
+function xulyLuuTam(ath = false, xltc = null) {
+    const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); if(ntl && !ath) ntl.disabled = true; if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
+    let dlbg = [];
+    $('#bangNviec tbody tr').each(function() {
+        if ($(this).find('td').length > 1) {
+            let kqchon = $(this).find('.chonKq').val() || ""; let ndd = $(this).find('.nhapNgay').val() || ""; let ndc = $(this).find('.nhapNdung').val() || ""; let hc = ""; let ltd = "";
+            if ($(this).attr('data-is-new') === "true") { hc = $(this).find('.nhapHchot').val() || ""; ltd = $(this).find('.nhapTdo').val() || ""; } 
+            else { hc = $(this).attr('data-deadline') || ""; ltd = $(this).attr('data-type') || ""; }
+            dlbg.push(["", ndc, hc, ltd, kqchon, ndd]);
+        }
+    });
+
+    let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
+    const ht = { ttrg: canbHientai.canb.ttrg, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq };
+
+    khachApi.luuTam(ht, function(kq) {
+        if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if(typeof mokBcao === 'function') mokBcao();
+        if (kq && kq.ttai === 'tcong') { if (!ath) { if (typeof hienThongb === 'function') hienThongb('tcong', "Đã ghi nhớ kết quả thành công!"); else alert("Đã ghi nhớ kết quả thành công!"); } if(xltc) xltc(); } 
+        else { let ltc = kq ? kq.tbao : "Lỗi"; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu: " + ltc); else alert("Lỗi lưu: " + ltc); }
+    }, function(loi) { if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message); else alert("Lỗi Server: " + loi.message); });
+}
+
+function nopBcaoChinh() {
+    const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
+    if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
+    const yk = $('#nhapYkien').val().trim(), bc = $('#nhapBcao').val().trim();
+    if (yk === "" || bc === "") { hienThongb('loi', "Thiếu: Ý kiến tham mưu hoặc Báo cáo tóm tắt"); return; }
+    let bhl = true;
+    $('#bangNviec tbody tr').each(function(i) {
+      if ($(this).find('td').length < 2) return;
+      if (!$(this).find('.chonKq').val() || !$(this).find('.nhapNgay').val()) { hienThongb('loi', `Dòng ${i + 1} chưa xong.\nChọn Kết quả và Ngày hoàn thành!`); bhl = false; return false; }
+    }); if (!bhl) return;
+
+    hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
+      const ntn = document.getElementById('nutNopBcao'); if(ntn) ntn.disabled = true; hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
+      xulyLuuTam(true, function() {
+          hienTaiDl("🚀 Bước 2: Đang ghi vào dữ liệu tổng...");
+          let ht = $('#chuKqHthi'); let chukq = ht.is('input, select, textarea') ? ht.val() : ht.text(); chukq = chukq ? chukq.trim() : "";
+          const cnb = { ttrg: canbHientai.canb.ttrg, tenn: canbHientai.tde.tenn, snnghi: $('#nhapSngayNghi').val(), nhoc: canbHientai.tde.nhoc, tgian: canbHientai.tde.tgian, kq: chukq, dthuong: $('#nhapDiemThuong').val(), kienn: $('#nhapYkien').val(), bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), ldo: $('#nhapLdoNghi').val(), taik: window.PGV_ID_TC };
+          hienTaiDl("🚀 Bước 3: Thực hiện nộp báo cáo " + cnb.tgian);
+          khachApi.nopBcao(cnb, function(kq) {
+            anTaiDl(); if(ntn) ntn.disabled = false; 
+            if (kq && kq.ttai === 'tcong') { $('#chuTrangThai').text("Đã nộp báo cáo"); let tc = (kq.lacn === true) ? "Đã nộp lại kết quả mới nhất của " + cnb.tgian : "Đã nộp xong kết quả " + cnb.tgian; hienThongb('tcong', tc); if(typeof taiDlBdau === 'function') taiDlBdau(); if(typeof khaBcao === 'function') khaBcao(); } 
+            else { hienThongb('loi', "Lỗi nộp báo cáo: " + (kq ? kq.tbao : "Lỗi")); }
+          }, function(loi) { if(ntn) ntn.disabled = false; if(typeof khiLoiMayChu === 'function') khiLoiMayChu(loi); });
+      });
+    });
+}
+
+function mokBcao() { mbcMo = true; const nt = document.getElementById('nutNopBcao'); if(nt) { nt.disabled = false; nt.style.transition = "transform 0.2s"; nt.style.transform = "scale(1.1)"; setTimeout(() => nt.style.transform = "scale(1)", 200); } }
+function khaBcao() { if (!mbcMo) { const nt = document.getElementById('nutNopBcao'); if(nt) nt.disabled = true; } }
+
+function veBangNviec(db) {
+    khaBcao(); const bg = $('#bangNviec tbody').empty();
+    if (!db || db.length === 0) { bg.append('<tr><td colspan="7" class="text-center text-muted py-3 small">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
+    let lq = (typeof canbHientai !== 'undefined' && canbHientai.qchon === true);
+    db.forEach((dong, chs) => {
+        let sn = chs + 1; let ndc = dong[1] ? String(dong[1]) : ""; let hc = dong[2] || ""; let ltd = dong[3] || ""; let kqchon = dong[4] || ""; let nht = dong[5]; let ndd = hdNgay(nht); let nttc = hdNgay(hc);
+        let nutx = lq ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)" title="Xoá dòng (Quyền Admin)">✕</button>` : ``;
+        let dg = `<tr class="dongNv" data-deadline="${nttc}" data-type="${ltd}" data-is-new="false"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" readonly oninput="cdang(this)" onfocus="cdang(this)" rows="1">${ndc}</textarea></td><td class="text-center align-middle">${nttc}</td><td class="text-center align-middle">${ltd}</td><td class="align-middle"><select class="form-select form-select-sm chonKq shadow-sm" onchange="tinhtTdong()" style="border:none; font-size:13px;"><option value="">-- Chọn --</option><option value="Chất lượng đạt yêu cầu" ${kqchon === 'Chất lượng đạt yêu cầu' ? 'selected' : ''}>Đạt yêu cầu</option><option value="Chất lượng chưa đạt yêu cầu" ${kqchon === 'Chất lượng chưa đạt yêu cầu' ? 'selected' : ''}>Chưa đạt</option></select></td><td class="align-middle"><input type="text" class="form-control form-control-sm nhapNgay shadow-sm text-center" onchange="tinhtTdong()" onkeyup="tinhtTdong()" value="${ndd}" placeholder="dd/mm/yyyy" style="font-size:13px;"></td><td class="text-center align-middle">${nutx}</td></tr>`; bg.append(dg);
+    });
+    // Gỡ độ trễ nhân tạo: Giảm timeout từ 300ms xuống 10ms để render DOM tức thì
+    setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 10);
+}
+
+function cdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
+
+function addNv() {
+    const bg = $('#bangNviec tbody'); if (bg.find('tr td').length === 1 && bg.find('tr td').attr('colspan') == '7') { bg.empty(); } let sn = bg.find('tr.dongNv').length + 1;
+    let dg = `<tr class="dongNv" data-deadline="" data-type="" data-is-new="true"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this)" rows="1" placeholder="Nhập nội dung..."></textarea></td><td class="align-middle"><input type="text" class="form-control form-control-sm nhapHchot text-center" placeholder="dd/mm/yyyy" onchange="cnDong(this)"></td><td class="align-middle"><input type="text" class="form-control form-control-sm nhapTdo text-center" placeholder="Loại tiến độ..." onchange="cnDong(this)"></td><td class="align-middle"><select class="form-select form-select-sm chonKq shadow-sm" onchange="tinhtTdong()" style="border:none; font-size:13px;"><option value="">-- Chọn --</option><option value="Chất lượng đạt yêu cầu">Đạt yêu cầu</option><option value="Chất lượng chưa đạt yêu cầu">Chưa đạt</option></select></td><td class="align-middle"><input type="text" class="form-control form-control-sm nhapNgay shadow-sm text-center" onchange="tinhtTdong()" onkeyup="tinhtTdong()" value="" placeholder="dd/mm/yyyy" style="font-size:13px;"></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)" title="Xoá dòng này">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
+}
+
+function cnDong(ptu) { const dr = $(ptu).closest('tr'); dr.attr('data-deadline', dr.find('.nhapHchot').val() || ""); dr.attr('data-type', dr.find('.nhapTdo').val() || ""); tinhtTdong(); }
+function xoaDongNv(nt) { const cbm = "Thầy/Cô có chắc chắn muốn xoá nhiệm vụ này không?\n\nLưu ý: Bấm 'Lưu nhật ký' để đồng bộ."; if (typeof hienThongb === 'function') { hienThongb('xn', cbm, function() { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao(); }); } else { if (confirm(cbm)) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao(); } } }
+function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); if ($('#bangNviec tbody tr.dongNv').length === 0) { $('#bangNviec tbody').html('<tr><td colspan=\"7\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); } }
+
+function tinhtTdong() {
+    const dtc = document.getElementById('nhapDiemThuong'); let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
+    if(dtc) { dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); if (dc > 0) dtc.classList.add('diemCong'); else if (dc < 0) dtc.classList.add('diemTru'); else dtc.classList.add('diemKhong'); }
+    let tv = 0, ddg = 0, dcl = 0, dh = 0, vtd = 0, dt_T = 0; const cdt = document.querySelectorAll('#bangNviec tbody tr.dongNv'); tv = cdt.length; const ht = new Date(); ht.setHours(0, 0, 0, 0);
+
+    cdt.forEach((dg, chs) => { 
+        const hnc = dg.getAttribute('data-deadline'), ltR = dg.getAttribute('data-type') || "", lh = ltR.toLowerCase(); const cg = dg.querySelector('.chonKq'), kq = cg ? cg.value : ""; const idt = dg.querySelector('.nhapNgay'), ndht = idt ? idt.value : ""; dg.classList.remove('nenSom', 'nenHnay', 'nenTre'); 
+        let dd = null; if (chs < 2) { dd = ht; } else { let cd = chNgayVN(hnc); if(cd) { cd.setHours(0,0,0,0); dd = cd; } }
+        let df = chNgayVN(ndht); if (df && dd) { df.setHours(0, 0, 0, 0); if (df.getTime() < dd.getTime()) { dg.classList.add('nenSom'); } else if (df.getTime() === dd.getTime()) { dg.classList.add('nenHnay'); } else { dg.classList.add('nenTre'); } }
+        if (kq !== "") {
+            ddg++; let cq = (kq === "Chất lượng đạt yêu cầu"), kl = kNgay(hnc, ndht); 
+            if (cq) dcl++; if (kl !== null && kl >= 0) dh++; if (cq && kl !== null && kl >= 2 && lh.includes("cho vượt tiến độ")) { vtd++; }
+            if (chs >= 2) { if(cq) { if(kl !== null && kl >= 0) { dt_T += 1; if(kl >= 2 && lh.includes("cho vượt tiến độ")) { dt_T += 1; } } } }
+        }
+    });
+
+    let xpl = "Chưa hoàn thành", dcs = 0;
+    if (tv === 0) { xpl = "Chưa giao việc"; } else if (tv > 0 && ddg === 0) { xpl = "Chưa đánh giá"; } else {
+        let pcd = (dcl / tv) * 100, pdh = (dh / tv) * 100, pvt = (vtd / tv) * 100;
+        if (pcd >= 100 && pdh >= 100 && pvt >= 30) { xpl = "Xuất sắc"; dcs = 95; } else if (pcd >= 100 && pdh >= 100) { xpl = "Hoàn thành tốt"; dcs = 85; } else if (pcd >= 70 && pdh >= 70) { xpl = "Hoàn thành"; dcs = 75; } else { xpl = "Chưa hoàn thành"; dcs = 0; }
+    }
+    let tdg = 0; if (xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") { tdg = Math.min(dcs + dt_T, 100); } let dcg = tdg + dc;
+    const qht = document.getElementById('chuKqHthi');
+    if (qht) { qht.innerText = `${xpl}: ${dcg} điểm`; qht.className = "fw-bold epMotDong"; if (xpl === "Xuất sắc") qht.classList.add("text-success"); else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); else qht.classList.add("text-danger"); }
+}
+
+function kNgay(h, f) { if (!f) return null; let df = chNgayVN(f); if (!df) return null; let dd = chNgayVN(h); if (!dd) return 0; const k = dd - df; return Math.ceil(k / (1000 * 60 * 60 * 24)); }
+function chNgayVN(c) { if (!c || typeof c !== 'string') return null; const sc = c.trim().replace(/[-.]/g, '/'); const pt = sc.split('/'); if (pt.length !== 3) return null; let n = parseInt(pt[0], 10), m = parseInt(pt[1], 10), y = parseInt(pt[2], 10); if (isNaN(n) || isNaN(m) || isNaN(y)) return null; return new Date(y, m - 1, n); }
+function hdNgay(nc) { if (!nc) return ""; let cs = String(nc).trim(); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(cs)) return cs; if (cs.length >= 10 && cs.charAt(4) === '-') { let px = cs.substring(0, 10).split('-'); if(px.length === 3) return px[2] + '/' + px[1] + '/' + px[0]; } let cl = cs.replace(/\(.*?\)/g, '').trim(); let dt = new Date(cl); if (!isNaN(dt.getTime())) { let ng = dt.getDate(), th = dt.getMonth() + 1, na = dt.getFullYear(); return (ng < 10 ? '0' + ng : ng) + '/' + (th < 10 ? '0' + th : th) + '/' + na; } return nc; }
+function capnhTdong() { tinhtTdong(); }
+</script>
