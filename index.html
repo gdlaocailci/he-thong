@@ -1,36 +1,283 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    
+    <link rel="icon" href="https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cổng thông tin Quản trị - Trường TH&THCS Hợp Thành</title>
+  
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: #333; margin-bottom: 5px; }
-        .menu-doc { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
-        .menu-doc a { display: block; padding: 15px 20px; background-color: #0056b3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.3s; font-size: 16px; }
-        .menu-doc a:hover { background-color: #004494; }
-        .footer { margin-top: 40px; text-align: center; font-size: 0.9em; color: #666; line-height: 1.5; }
+        /* =========================================================================
+           1. KHỐI ĐỊNH DẠNG GIAO DIỆN TỔNG THỂ
+           ========================================================================= */
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 0 20px 20px 20px; 
+            background-color: #f4f7f6; 
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 0 30px 30px 30px; 
+            border-radius: 0 0 12px 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+
+        /* =========================================================================
+           2. KHỐI ĐỊNH DẠNG CẤU TRÚC TIÊU ĐỀ
+           ========================================================================= */
+        .header-main {
+            display: flex;
+            justify-content: center;
+            align-items: center;    
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+            position: sticky;
+            top: 0; 
+            background-color: white; 
+            z-index: 1000; 
+            padding-top: 15px; 
+            min-height: 65px;
+        }
+
+        .school-logo {
+            position: absolute;
+            left: 0;
+            height: 65px;            
+            width: auto;             
+            border-radius: 5px;      
+            object-fit: contain;
+        }
+
+        h1 { 
+            color: #2c3e50; 
+            text-transform: uppercase;
+            font-size: 1.8em; 
+            margin: 0;               
+            text-align: center;
+            padding-left: 80px;
+            padding-right: 80px;
+        }
+        
+        /* =========================================================================
+           3. KHỐI ĐỊNH DẠNG DANH SÁCH CHỨC NĂNG (GRID)
+           ========================================================================= */
+        .project-list { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            list-style-type: none; 
+            padding: 0; 
+            margin: 0;
+        }
+        .project-item { 
+            display: flex;
+            align-items: flex-start;
+            padding: 20px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px; 
+            background-color: transparent; 
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .project-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .project-icon {
+            font-size: 40px;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+        
+        .project-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .project-content a { 
+            text-decoration: none; 
+            color: #2c3e50; 
+            font-weight: bold; 
+            font-size: 1.25em; 
+            margin-bottom: 8px;
+            transition: color 0.2s ease;
+        }
+        .project-content p { 
+            margin: 0; 
+            color: #555; 
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        /* --- Bản đồ màu sắc theo từng khối chức năng --- */
+        :root {
+            --clr-calendar: #3498db;   
+            --clr-check: #f1c40f;      
+            --clr-task: #2ecc71;       
+            --clr-evaluate: #34495e;  
+            --clr-utilities: #8e44ad; 
+        }
+
+        .proj-calendar { border-left: 5px solid var(--clr-calendar); }
+        .proj-calendar .project-icon { color: var(--clr-calendar); }
+        .proj-calendar:hover { background-color: #ecf0f1; border-color: var(--clr-calendar); }
+        .proj-calendar .project-content a:hover { color: var(--clr-calendar); }
+
+        .proj-check { border-left: 5px solid var(--clr-check); }
+        .proj-check .project-icon { color: var(--clr-check); }
+        .proj-check:hover { background-color: #fef9e7; border-color: var(--clr-check); }
+        .proj-check .project-content a:hover { color: #f39c12; }
+
+        .proj-task { border-left: 5px solid var(--clr-task); }
+        .proj-task .project-icon { color: var(--clr-task); }
+        .proj-task:hover { background-color: #e8f8f5; border-color: var(--clr-task); }
+        .proj-task .project-content a:hover { color: var(--clr-task); }
+
+        .proj-evaluate { border-left: 5px solid var(--clr-evaluate); }
+        .proj-evaluate .project-icon { color: var(--clr-evaluate); }
+        .proj-evaluate:hover { background-color: #ebedef; border-color: var(--clr-evaluate); }
+        .proj-evaluate .project-content a:hover { color: #2c3e50; }
+
+        .footer { 
+            margin-top: 40px; 
+            text-align: center; 
+            color: #7f8c8d; 
+            font-size: 1em; 
+            font-weight: bold;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        /* =========================================================================
+           4. KHỐI ĐỊNH DẠNG TIỆN ÍCH LỚP PHỦ
+           ========================================================================= */
+        .utility-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .btn-open-utility {
+            background-color: var(--clr-utilities);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-open-utility:hover {
+            background-color: #732d91;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .utilities-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            display: none; 
+            background-color: #f4f7f6;
+        }
+
+        .utilities-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>HỆ THỐNG QUẢN TRỊ ĐIỀU HÀNH</h1>
-        <h2>Trường TH&THCS Hợp Thành</h2>
         
-        <div class="menu-doc">
-            <a href="./SoCongVan/index.html">1. Lịch công tác & Sổ công văn</a>
-            <a href="./SoKiemTraHopThanh/index.html">2. Sổ kiểm tra nội bộ</a>
-            <a href="./PhieuGiaoViec/index.html">3. PHIẾU GIAO VIỆC</a>
-            <a href="./DanhGiaVienChuc/index.html">4. Đánh giá viên chức</a>
-            </div>
+        <div class="header-main">
+            <img src="https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png" alt="Logo Trường TH&THCS Hợp Thành" class="school-logo">
+            <h1>HỆ THỐNG QUẢN TRỊ ĐIỀU HÀNH</h1>
+        </div>
+
+        <div class="utility-bar">
+            <button class="btn-open-utility" onclick="toggleUtilities(true)">
+                <span class="material-icons">build_circle</span> Tiện ích dạy học
+            </button>
+        </div>
+        
+        <ul class="project-list">
+            
+            <li class="project-item proj-calendar">
+                <span class="material-icons project-icon">calendar_month</span>
+                <div class="project-content">
+                    <a href="./SoCongVan/index.html">1. Lịch công tác & Sổ công văn</a>
+                    <p>Quản lý lịch làm việc, lưu trữ và tra cứu hệ thống văn bản đi, đến, văn bản chỉ đạo.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-check">
+                <span class="material-icons project-icon">fact_check</span>
+                <div class="project-content">
+                    <a href="./SoKiemTraHopThanh/index.html">2. Sổ kiểm tra nội bộ</a>
+                    <p>Số hóa hồ sơ kiểm tra nội bộ, theo dõi công tác kiểm tra chuyên môn nghiệp vụ.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-task">
+                <span class="material-icons project-icon">assignment</span>
+                <div class="project-content">
+                    <a href="./PhieuGiaoViec/index.html">3. Phiếu giao việc</a>
+                    <p>Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-evaluate">
+                <span class="material-icons project-icon">assignment_ind</span>
+                <div class="project-content">
+                    <a href="./DanhGiaVienChuc/index.html">4. Đánh giá viên chức</a>
+                    <p>Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động định kỳ.</p>
+                </div>
+            </li>
+
+        </ul>
 
         <div class="footer">
-            Phát triển bởi<br>
-            <strong>Hoàng Ngọc Lâm</strong>
+            <p>Phát triển bởi<br>Hoàng Ngọc Lâm</p>
         </div>
     </div>
+
+    <div id="utilities-overlay" class="utilities-overlay">
+        <iframe src="tienich.html" class="utilities-iframe" title="Tiện Ích Dạy Học"></iframe>
+    </div>
+
+<script>
+    /**
+     * Tính năng: Bật/Tắt Lớp phủ chứa Iframe Tiện Ích.
+     * Xử lý: Mở overlay đồng thời khóa thanh cuộn (scroll) ở trang chính.
+     * @param {boolean} isShow - Trạng thái cần thiết lập (true: Hiện, false: Ẩn)
+     */
+    function toggleUtilities(isShow) {
+        var overlay = document.getElementById('utilities-overlay');
+        if (isShow) {
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden'; 
+        } else {
+            overlay.style.display = 'none';
+            document.body.style.overflow = ''; 
+        }
+    }
+</script>
 </body>
 </html>
