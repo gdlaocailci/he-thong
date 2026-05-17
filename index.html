@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <link rel="icon" href="https://drive.google.com/file/d/1bYOnnYGMPzXnpEl6ODtTisQu3k2Lr4Yg/view?usp=sharing">
+    <link rel="icon" href="https://i.ibb.co/XkjLVJFt/logo-TH-THCS-v3.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cổng thông tin Quản trị - Trường TH&THCS Hợp Thành</title>
@@ -15,7 +15,6 @@
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
             margin: 0; 
-            /* Thu hẹp vùng đệm dưới cùng của trang */
             padding: 0 10px 10px 10px; 
             background-color: #f4f7f6; 
         }
@@ -23,7 +22,6 @@
             max-width: 1000px; 
             margin: 0 auto; 
             background: white; 
-            /* Thu hẹp vùng đệm bên trong khung chính */
             padding: 0 20px 15px 20px; 
             border-radius: 0 0 12px 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
@@ -37,7 +35,6 @@
             justify-content: center;
             align-items: center;    
             border-bottom: 2px solid #3498db;
-            /* Giảm khoảng cách trên, dưới của tiêu đề */
             padding-bottom: 5px; 
             margin-bottom: 10px; 
             position: sticky;
@@ -60,7 +57,7 @@
         h1 { 
             color: #2c3e50; 
             text-transform: uppercase;
-            font-size: 1.6em; /* Thu nhỏ cỡ chữ một chút để cân đối không gian */
+            font-size: 1.6em; 
             margin: 0;               
             text-align: center;
             padding-left: 80px;
@@ -73,8 +70,7 @@
         .project-list { 
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            /* Giảm khoảng cách giữa các ô chức năng */
-            gap: 10px;
+            gap: 15px;
             list-style-type: none; 
             padding: 0; 
             margin: 0;
@@ -82,8 +78,7 @@
         .project-item { 
             display: flex;
             align-items: flex-start;
-            /* Giảm vùng đệm bên trong từng ô chức năng */
-            padding: 12px; 
+            padding: 15px; 
             border: 1px solid #e0e0e0; 
             border-radius: 8px; 
             background-color: transparent; 
@@ -96,7 +91,7 @@
         }
         
         .project-icon {
-            font-size: 36px; /* Thu nhỏ biểu tượng một chút */
+            font-size: 36px; 
             margin-right: 12px;
             margin-top: 0;
         }
@@ -110,7 +105,6 @@
             color: #2c3e50; 
             font-weight: bold; 
             font-size: 1.15em; 
-            /* Giảm khoảng cách giữa tiêu đề và mô tả */
             margin-bottom: 4px;
             transition: color 0.2s ease;
         }
@@ -127,6 +121,12 @@
             --clr-check: #f1c40f;      
             --clr-task: #2ecc71;       
             --clr-evaluate: #34495e;  
+            --clr-donate: #e74c3c;     
+            --clr-fund: #d35400;       
+            --clr-student: #27ae60;    
+            --clr-hr: #9b59b6;        
+            --clr-benefits: #95a5a6;  
+            --clr-bhxh: #1abc9c;      
             --clr-utilities: #8e44ad; 
         }
 
@@ -150,8 +150,37 @@
         .proj-evaluate:hover { background-color: #ebedef; border-color: var(--clr-evaluate); }
         .proj-evaluate .project-content a:hover { color: #2c3e50; }
 
+        .proj-donate { border-left: 5px solid var(--clr-donate); }
+        .proj-donate .project-icon { color: var(--clr-donate); }
+        .proj-donate:hover { background-color: #fdedec; border-color: var(--clr-donate); }
+        .proj-donate .project-content a:hover { color: var(--clr-donate); }
+
+        .proj-fund { border-left: 5px solid var(--clr-fund); }
+        .proj-fund .project-icon { color: var(--clr-fund); }
+        .proj-fund:hover { background-color: #fdf2e9; border-color: var(--clr-fund); }
+        .proj-fund .project-content a:hover { color: var(--clr-fund); }
+
+        .proj-student { border-left: 5px solid var(--clr-student); }
+        .proj-student .project-icon { color: var(--clr-student); }
+        .proj-student:hover { background-color: #eafaf1; border-color: var(--clr-student); }
+        .proj-student .project-content a:hover { color: var(--clr-student); }
+
+        .proj-hr { border-left: 5px solid var(--clr-hr); }
+        .proj-hr .project-icon { color: var(--clr-hr); }
+        .proj-hr:hover { background-color: #f4ecf7; border-color: var(--clr-hr); }
+        .proj-hr .project-content a:hover { color: var(--clr-hr); }
+
+        .proj-benefits { border-left: 5px solid var(--clr-benefits); }
+        .proj-benefits .project-icon { color: var(--clr-benefits); }
+        .proj-benefits:hover { background-color: #f8f9f9; border-color: var(--clr-benefits); }
+        .proj-benefits .project-content a:hover { color: #7f8c8d; }
+
+        .proj-bhxh { border-left: 5px solid var(--clr-bhxh); }
+        .proj-bhxh .project-icon { color: var(--clr-bhxh); }
+        .proj-bhxh:hover { background-color: #e8f8f5; border-color: var(--clr-bhxh); }
+        .proj-bhxh .project-content a:hover { color: #16a085; }
+
         .footer { 
-            /* Giảm khoảng cách phần chân trang */
             margin-top: 20px; 
             text-align: center; 
             color: #7f8c8d; 
@@ -167,7 +196,6 @@
         .utility-bar {
             display: flex;
             justify-content: flex-end;
-            /* Giảm khoảng cách dưới của thanh công cụ */
             margin-bottom: 10px;
         }
 
@@ -175,7 +203,7 @@
             background-color: var(--clr-utilities);
             color: white;
             border: none;
-            padding: 6px 15px; /* Thu gọn nút bấm */
+            padding: 6px 15px; 
             border-radius: 5px;
             cursor: pointer;
             display: flex;
@@ -215,7 +243,7 @@
     <div class="container">
         
         <div class="header-main">
-            <img src="https://drive.google.com/file/d/1bYOnnYGMPzXnpEl6ODtTisQu3k2Lr4Yg/view?usp=sharing" alt="Logo Trường TH&THCS Hợp Thành" class="school-logo">
+            <img src="https://i.ibb.co/XkjLVJFt/logo-TH-THCS-v3.png" alt="Logo Trường TH&THCS Hợp Thành" class="school-logo">
             <h1>HỆ THỐNG QUẢN TRỊ ĐIỀU HÀNH</h1>
         </div>
 
@@ -256,6 +284,86 @@
                 <div class="project-content">
                     <a href="./DanhGiaVienChuc/index.html">4. Đánh giá viên chức</a>
                     <p>Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động định kỳ.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-calendar">
+                <span class="material-icons project-icon">calendar_month</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/congvan_lichlamviec_hopthanh/" target="_blank">5. Lịch công tác & Hệ thống văn bản (Có tích hợp AI)</a>
+                    <p>Quản lý lịch làm việc, lưu trữ và tra cứu hệ thống văn bản đi, đến, văn bản chỉ đạo.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-check">
+                <span class="material-icons project-icon">fact_check</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/kiemtra_hopthanh/" target="_blank">6. Sổ kiểm tra nội bộ (Có tích hợp AI)</a>
+                    <p>Số hóa hồ sơ kiểm tra nội bộ, theo dõi công tác kiểm tra chuyên môn nghiệp vụ.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-task">
+                <span class="material-icons project-icon">assignment</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/danhgiaketquacongviec_hopthanh/" target="_blank">7. Phiếu đánh giá xếp loại hằng tháng</a>
+                    <p>Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên hằng tháng.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-donate">
+                <span class="material-icons project-icon">volunteer_activism</span>
+                <div class="project-content">
+                    <a href="https://testphanmem.github.io/quanlytaitro_hopthanh/" target="_blank">8. Quản lý tài trợ</a>
+                    <p>Theo dõi, thống kê minh bạch các nguồn tài trợ, đóng góp xã hội hóa giáo dục.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-fund">
+                <span class="material-icons project-icon">account_balance_wallet</span>
+                <div class="project-content">
+                    <a href="https://testphanmem.github.io/quanlyquy_hopthanh/" target="_blank">9. Quản lý quỹ</a>
+                    <p>Kiểm soát thu chi, báo cáo tài chính các loại quỹ nội bộ của đơn vị.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-student">
+                <span class="material-icons project-icon">school</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/quanlihocsinh_hopthanh/" target="_blank">10. Quản lý học sinh</a>
+                    <p>Quản lý số lượng, kết quả học tập và rèn luyện, thành tích của học sinh.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-hr">
+                <span class="material-icons project-icon">groups</span>
+                <div class="project-content">
+                    <a href="https://testphanmem.github.io/nhansu_hopthanh/" target="_blank">11. Quản lý chất lượng đội ngũ</a>
+                    <p>Quản lý thông tin trình độ chuyên môn và chất lượng đội ngũ.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-benefits">
+                <span class="material-icons project-icon">badge</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/quanlychedo_hopthanh/" target="_blank">12. Quản lý chế độ đội ngũ</a>
+                    <p>Theo dõi, quản lý các chế độ chính sách, thâm niên, lương và phụ cấp của giáo viên.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-bhxh">
+                <span class="material-icons project-icon">calculate</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/chedo-BHXH-nghihuu/" target="_blank">13. Tính chế độ BHXH, Hưu trí (Có tích hợp AI)</a>
+                    <p>Công cụ tính toán chi tiết chế độ nghỉ hưu, trợ cấp thôi việc và BHXH một lần.</p>
+                </div>
+            </li>
+
+            <li class="project-item proj-evaluate">
+                <span class="material-icons project-icon">assignment_ind</span>
+                <div class="project-content">
+                    <a href="https://quanlylaocai.github.io/danhgiacuoinam/" target="_blank">14. Đánh giá xếp loại viên chức</a>
+                    <p>Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động cuối năm.</p>
                 </div>
             </li>
 
