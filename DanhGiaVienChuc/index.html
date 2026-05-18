@@ -570,7 +570,7 @@
                 f_x_h();
             } else if (t_k_khac.status === 'success') {
                 // KIỂM TRA LỖI SAO CHỨC VỤ KHÁC NHÓM (CẬP NHẬT TRÍCH XUẤT CỘT D)
-                hienThiThongBaoUI(`<b>ĐĂNG NHẬP THẤT BẠI</b><br><br>Bạn đã chọn sai đối tượng đánh giá.<br>Chức vụ của bạn là: <span style="color:#b91c1c; font-size:18px;"><b>${t_k_khac.y_role || 'Chưa cập nhật'}</b></span>.<br>Vui lòng ấn Đóng để chọn lại chính xác đối tượng này.`, f_x_logout);
+                hienThiThongBaoUI(`<b>ĐĂNG NHẬP THẤT BẠI</b><br><br>Bạn đã chọn sai đối tượng đánh giá.<br>Chức vụ của bạn là: <span style="color:#b91c1c; font-size:18px;"><b>${t_k_khac.y_role || 'Chưa cập nhật'}</b></span>.<br>Vui lòng chọn lại chính xác đối tượng đánh giá.`, f_x_logout);
                 f_x_j(false);
                 return;
             } else { 
