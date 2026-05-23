@@ -153,7 +153,15 @@
                 ${htiGhim}
               </td>
               <td>${dg[2]||''}</td>
-              <td>${dg[17]||''}</td> <td>${dg[18]||''}</td> <td>${dg[19]||''}</td> <td>${dg[20]||''}</td><td>${dg[25]||''}</td><td>${dg[21]||''}</td> <td>${dg[22]||''}</td> <td>${dg[23]||''}</td> <td>${dg[24]||''}</td>
+              <td>${dg[17]||''}${chú thích}
+              <td>${dg[18]||''}
+              <td>${dg[19]||''}
+              <td>${dg[20]||''}
+              <td>${dg[21]||''}   <!-- XL Đảng viên -->
+              <td>${dg[22]||''}   <!-- DH Chuyên môn -->
+              <td>${dg[23]||''}   <!-- DH Thi đua -->
+              <td>${dg[24]||''}   <!-- Hình thức -->
+              <td>${dg[25]||''}   <!-- Cấp khen -->
           </tr>`);
        });
     }
@@ -211,11 +219,11 @@
            dlToanc[csSua][20] = fd.elements['z'].value; 
            
            // Ghi đúng vị trí Index dựa trên Cột
-           dlToanc[csSua][21] = fd.elements['aa'].value; // Cột 22
-           dlToanc[csSua][22] = fd.elements['ab'].value; // Cột 23
-           dlToanc[csSua][23] = fd.elements['ac'].value; // Cột 24
-           dlToanc[csSua][24] = fd.elements['ae'].value; // Cột 25
-           dlToanc[csSua][25] = fd.elements['ad'].value; // Cột 26
+          dlToanc[csSua][21] = fd.elements['ad'].value;   // XL ĐV -> 21
+          dlToanc[csSua][22] = fd.elements['aa'].value;   // DH CM -> 22
+          dlToanc[csSua][23] = fd.elements['ab'].value;   // DH TĐ -> 23
+          dlToanc[csSua][24] = fd.elements['ac'].value;   // Hình thức -> 24
+          dlToanc[csSua][25] = fd.elements['ae'].value;   // Cấp khen -> 25
            
            dlToanc[csSua][31] = $("#mcLinkDg").val();
 
