@@ -170,13 +170,11 @@
        fr.elements['x'].value = dr[18]||""; // XL CM K2
        fr.elements['y'].value = dr[19]||""; // XL CNN
        fr.elements['z'].value = dr[20]||""; // XL VC
-       
-       // Index cập nhật: XL Đảng viên (25), DH CM (21), DH TĐ (22), HT Khen (23), Cấp khen (24)
-       fr.elements['ad'].value = dr[25]||""; 
-       fr.elements['aa'].value = dr[21]||""; 
-       fr.elements['ab'].value = dr[22]||""; 
-       fr.elements['ac'].value = dr[23]||""; 
-       fr.elements['ae'].value = dr[24]||""; 
+       fr.elements['ad'].value = dr[21]||""; //XL Đảng viên (21)
+       fr.elements['aa'].value = dr[22]||""; //DH CM (22)
+       fr.elements['ab'].value = dr[23]||""; // DH TĐ (23)
+       fr.elements['ac'].value = dr[24]||""; //HT Khen (24)
+       fr.elements['ae'].value = dr[25]||""; //Cấp khen (25)
        
        let lk = dr[31] || "";
        $("#mcLinkDg").val(lk);
