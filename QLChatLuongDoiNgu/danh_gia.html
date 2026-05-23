@@ -139,7 +139,7 @@
           
           let dlC = dg.cktdg ? "dongCkt" : ""; let tcP = dg.cktdg ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
 
-          let lk = dg[32] || "";
+          let lk = dg[31] || "";
           let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
           let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="${u}" target="_blank" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
           
@@ -178,7 +178,7 @@
        fr.elements['ac'].value = dr[23]||""; 
        fr.elements['ae'].value = dr[24]||""; 
        
-       let lk = dr[32] || "";
+       let lk = dr[31] || "";
        $("#mcLinkDg").val(lk);
        veGhimModal(lk);
 
@@ -219,7 +219,7 @@
            dlToanc[csSua][24] = fd.elements['ae'].value; // Cột 25
            dlToanc[csSua][25] = fd.elements['ad'].value; // Cột 26
            
-           dlToanc[csSua][32] = $("#mcLinkDg").val();
+           dlToanc[csSua][31] = $("#mcLinkDg").val();
 
            dlToanc[csSua].cktdg = true; veBangDg(); $("#hopThoaiDg").modal('hide'); hienTbao("Đã lưu tạm thời. Nhấn Cập Nhật để ghi dữ liệu.", 'tc');
        }
