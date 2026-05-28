@@ -1,0 +1,147 @@
+<style>
+  .sidebar-menu { 
+      width: 260px; 
+      background: #1e3a8a; 
+      border-right: 1px solid #172554; 
+      height: 100vh; 
+      position: sticky; 
+      top: 0; 
+      display: flex; 
+      flex-direction: column; 
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      font-family: "Times New Roman", serif;
+      z-index: 1000;
+  }
+  .sidebar-header {
+      padding: 25px 15px;
+      text-align: center;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 15px;
+  }
+  .sidebar-logo {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+      margin-bottom: 12px;
+      background: #ffffff;
+      border-radius: 50%;
+      padding: 3px;
+  }
+  .sidebar-title {
+      color: #ffeb3b;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+  }
+  .sidebar-subtitle {
+      color: #ffffff;
+      font-size: 12px;
+      opacity: 0.9;
+  }
+  .menu-list {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0 15px;
+  }
+  .menu-btn {
+      background: transparent;
+      color: #e2e8f0;
+      border: none;
+      padding: 12px 15px;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+  }
+  .menu-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      transform: translateX(5px);
+  }
+  .menu-btn.active {
+      background: #3b82f6;
+      color: #ffffff;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .menu-logout {
+      color: #fca5a5 !important;
+  }
+  .menu-logout:hover {
+      background: rgba(239, 68, 68, 0.1) !important;
+      color: #fef2f2 !important;
+  }
+  .menu-bottom-section {
+      padding: 20px 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+  }
+  .btn-ai-sidebar {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+  }
+  .btn-ai-sidebar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  }
+</style>
+
+<div class="sidebar-menu">
+  <div class="sidebar-header">
+    <img src="" class="sidebar-logo" alt="Logo">
+    <h3 class="sidebar-title" id="menu_title"></h3>
+    <div class="sidebar-subtitle" id="menu_subtitle"></div>
+  </div>
+  
+  <div class="menu-list">
+      <button class="menu-btn active" onclick="chuyentth('TabNhapLieu', this)">
+          <i class="bi bi-pencil-square"></i> GHI SỔ KIỂM TRA
+      </button>
+      <button class="menu-btn" onclick="chuyentth('TabTimKiem', this)">
+          <i class="bi bi-search"></i> THỐNG KÊ - TRA CỨU
+      </button>
+      <button class="menu-btn" onclick="chuyentth('TabHuongDan', this)">
+          <i class="bi bi-info-circle"></i> HƯỚNG DẪN SỬ DỤNG
+      </button>
+      <button class="menu-btn" onclick="chuyentth('TabPhanQuyen', this)">
+          <i class="bi bi-shield-lock"></i> CẤP QUYỀN TRUY CẬP
+      </button>
+
+     <button class="menu-btn menu-logout" onclick="dangxg()" style="margin-top: auto; justify-content: center;">
+          <i class="bi bi-box-arrow-right"></i> ĐĂNG XUẤT
+      </button>
+  </div>
+
+  <div class="menu-bottom-section">
+      <button class="btn-ai-sidebar w-100" onclick="toggleAIChat()">
+          <i class="bi bi-robot"></i> Trợ Giúp Hướng Dẫn
+      </button>
+      
+      <div class="dev-badge-container w-100 justify-content-center" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 5px; box-shadow: none;">
+        <div class="dev-icon-fly" style="margin-right: 8px;">🚀</div>
+        <div class="dev-text-group" style="text-align: left;">
+          <div class="dev-name-label" id="menu_author" style="font-size: 10px;"></div>
+          <div class="dev-role-label" style="font-size: 8px;">Thiết kế & Phát triển</div>
+        </div>
+      </div>
+  </div>
+</div>
