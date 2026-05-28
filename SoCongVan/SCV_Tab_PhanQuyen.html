@@ -70,9 +70,9 @@ function createPQRow(stt, email, quyen) {
         <td><input type="text" class="cell-input email-pq" value="${email || ''}" style="text-align: left;" placeholder="Nhập địa chỉ email..."></td>
         <td>
             <select class="cell-input quyen-pq" style="cursor: pointer; text-align: center; text-align-last: center;">
-                <option value="" ${qVal === '' ? 'selected' : ''}></option>
-                <option value="x" ${qVal === 'x' ? 'selected' : ''}>x</option>
-                <option value="xx" ${qVal === 'xx' ? 'selected' : ''}>xx</option>
+                <option value="" ${qVal === 'Chỉ xem' ? 'selected' : ''}></option>
+                <option value="x" ${qVal === 'Cập nhật VB' ? 'selected' : ''}>x</option>
+                <option value="xx" ${qVal === 'Admin Vip' ? 'selected' : ''}>xx</option>
             </select>
         </td>
     `;
