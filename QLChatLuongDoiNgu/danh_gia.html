@@ -113,7 +113,6 @@
 </div>
 
 <script>
-    // Khai báo hàm dùng chung toàn cục để chống lỗi xung đột
     if (typeof window.xoaDauVN !== 'function') {
         window.xoaDauVN = function(str) {
             if (!str) return "";
@@ -127,6 +126,10 @@
        const vb = $("#khuBangDg tbody"); vb.empty();
        
        dlToanc.sort((a, b) => {
+           // ƯU TIÊN 1: Đưa dòng vừa sửa chưa lưu lên đầu tiên
+           if (a.cktdg && !b.cktdg) return -1;
+           if (!a.cktdg && b.cktdg) return 1;
+
            let nA = String(a[0] || "").trim(), nB = String(b[0] || "").trim();
            if (nA !== nB) return nB.localeCompare(nA); 
            
