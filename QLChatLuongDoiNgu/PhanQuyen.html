@@ -138,6 +138,13 @@
     if (mangPhanQuyen.length === 0) {
       html = '<tr><td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu.</td></tr>';
     } else {
+      // Ưu tiên dòng chưa lưu nổi lên đầu
+      mangPhanQuyen.sort((a, b) => {
+          if (a.ckt && !b.ckt) return -1;
+          if (!a.ckt && b.ckt) return 1;
+          return 0;
+      });
+
       mangPhanQuyen.forEach((tkObj, i) => {
         // Áp dụng thuật toán Lọc tương đối không dấu
         if(tk && !window.xoaDauVN(tkObj.join(" ")).includes(tk)) return;
@@ -152,11 +159,14 @@
             tenQuyen = '<span class="badge bg-secondary">Cập nhật cá nhân</span>';
         }
 
-        html += `<tr>
+        let cdG = tkObj.ckt ? "dongCkt" : ""; 
+        let cpT = tkObj.ckt ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
+
+        html += `<tr class="${cdG}">
           <td><button class="btn btn-sm btn-outline-primary" onclick="moSuaTaiKhoan(${i})"><i class="fas fa-edit"></i></button></td>
           <td class="text-center">${dem}</td>
           <td class="text-start fw-bold text-primary">${tkObj[0]}</td>
-          <td class="text-start">${tkObj[1]}</td>
+          <td class="text-start">${tkObj[1]}${cpT}</td>
           <td class="text-center fw-bold text-success">${tkObj[3] || ''}</td>
           <td class="text-center">${tenQuyen}</td>
         </tr>`;
@@ -244,10 +254,13 @@
     if (biTrungCCCD) return hienTbao('Mã cá biệt (CCCD) này đã tồn tại. Không cho phép trùng lặp!', 'loi');
     if (biTrungTen) return hienTbao('Họ và tên này đã tồn tại. Không cho phép trùng lặp!', 'loi');
 
+    let rowData = [dChi, hTen, quyen, cccd];
+    rowData.ckt = true; // Cờ đánh dấu chưa lưu
+
     if (cs === -1) {
-      mangPhanQuyen.push([dChi, hTen, quyen, cccd]);
+      mangPhanQuyen.unshift(rowData); // Đẩy lên đầu danh sách
     } else {
-      mangPhanQuyen[cs] = [dChi, hTen, quyen, cccd];
+      mangPhanQuyen[cs] = rowData;
     }
 
     veBangPhanQuyen();
