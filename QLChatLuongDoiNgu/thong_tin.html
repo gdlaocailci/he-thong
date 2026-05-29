@@ -60,8 +60,8 @@
             </div>
             <div class="row mb-2">
                <div class="col-md-4"><label>Tỉnh/TP (TT) <span class="text-danger">*</span></label><input type="text" name="c7" class="form-control" placeholder="Tỉnh/TP..."></div>
-               <div class="col-md-4"><label>Xã/Phường (TT) <span class="text-danger">*</span></label><input type="text" name="c8" class="form-control" placeholder="Xã/Phường..."></div>
-               <div class="col-md-4"><label>Tổ/xóm (TT) <span class="text-danger">*</span></label><input type="text" name="c9" class="form-control" placeholder="Tổ/xóm..."></div>
+               <div class="col-md-4"><label>Huyện/Quận (TT)</label><input type="text" name="c8" class="form-control" placeholder="Huyện/Quận..."></div>
+               <div class="col-md-4"><label>Xã/Phường (TT) <span class="text-danger">*</span></label><input type="text" name="c9" class="form-control" placeholder="Xã/Phường..."></div>
             </div>
             <div class="row mb-2">
               <div class="col-md-2"><input type="checkbox" name="c10" id="onhapDv"><label>Đả&#8203;ng viê&#8203;n</label></div>
@@ -148,9 +148,15 @@
        const tv = $("#khuBangNs tbody"); tv.empty();
        
        dlToanc.sort((a, b) => {
+           // ƯU TIÊN 1: Dòng chưa lưu (ckt) luôn nổi lên đầu tiên
+           if (a.ckt && !b.ckt) return -1;
+           if (!a.ckt && b.ckt) return 1;
+
+           // ƯU TIÊN 2: Sắp xếp theo Năm học giảm dần
            let nA = String(a[0] || "").trim(), nB = String(b[0] || "").trim();
            if (nA !== nB) return nB.localeCompare(nA);
            
+           // ƯU TIÊN 3: Sắp xếp theo Tên (Alphabet)
            let htA = String(a[1] || "").trim().split(' '), tA = htA[htA.length - 1].toLowerCase();
            let htB = String(b[1] || "").trim().split(' '), tB = htB[htB.length - 1].toLowerCase();
            
@@ -169,6 +175,8 @@
           let cqS = (ndHtai.vTro === 'qtriv') || (ndHtai.vTro === 'ngdung' && cccdND !== "" && cccdND !== "KHONG_XAC_DINH" && cccdND === cccdHS);
           
           let ntS = cqS ? `<button class="btn btn-sm btn-warning py-0" onclick="suaDong(${v})"><i class="fas fa-edit"></i></button>` : '';
+          
+          // Bút đỏ và màu nền vàng sẽ nổi bật ngay dòng đầu tiên
           let cdG = dg.ckt ? "dongCkt" : ""; let cpT = dg.ckt ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
           
         tv.append(`
@@ -276,10 +284,9 @@
        
        let cccd = String(bd.elements['c26'].value).trim(); 
 
-       // 1. XÁC THỰC THÔNG TIN (VALIDATION CHỐNG BỎ TRỐNG)
        let hopLe = true;
        for(let i = 0; i <= 16; i++) {
-           if(i === 10 || i === 14 || i === 16) continue;
+           if(i === 8 || i === 10 || i === 14 || i === 16) continue;
            if(String(nB[i]).trim() === "") {
                hopLe = false;
                break;
@@ -288,19 +295,16 @@
        if(cccd === "") hopLe = false; 
 
        if(!hopLe) {
-           return hienTbao("Vui lòng điền đầy đủ các thông tin (Trừ Hạng/Ngạch và LL Chính trị)!", 'loi');
+           return hienTbao("Vui lòng điền đầy đủ các thông tin (Trừ Huyện, Hạng/Ngạch và LL Chính trị)!", 'loi');
        }
 
-       // 2. KIỂM TRA TRÙNG LẶP CCCD KHI LƯU
        let biTrungCCCD = false;
        if (csSua !== -1) { 
-           // Chế độ SỬA: Nếu CCCD bị đổi, kiểm tra xem mã mới có trùng với ai khác không
            let cccdCu = String(dlToanc[csSua][26] || "").trim();
            if (cccd !== cccdCu) { 
                biTrungCCCD = dlToanc.some((row, index) => index !== csSua && String(row[26] || "").trim() === cccd);
            }
        } else { 
-           // Chế độ THÊM MỚI: Kiểm tra mã CCCD trong toàn bộ dữ liệu
            biTrungCCCD = dlToanc.some(row => String(row[26] || "").trim() === cccd);
        }
 
@@ -308,7 +312,6 @@
            return hienTbao("Mã cá biệt (CCCD) này đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!", 'loi');
        }
 
-       // 3. XỬ LÝ CHUYỂN NĂM HỌC HOẶC GHI DỮ LIỆU
        if(csSua !== -1) {
            let hienTaiNam = String(dlToanc[csSua][0]).trim();
            let formNam = String(nB[0]).trim();
@@ -373,7 +376,7 @@
            while(nB.length < 34) { nB.push(""); }
            nB[26] = cccd; 
            nB.ckt = true;
-           dlToanc.push(nB); 
+           dlToanc.unshift(nB); // CẬP NHẬT: Chèn dòng mới lên đầu mảng (dù đã có Sort bảo vệ)
        }
        $("#hopThoaiHs").modal('hide'); veBangNs();
     }
