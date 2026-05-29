@@ -148,15 +148,12 @@
        const tv = $("#khuBangNs tbody"); tv.empty();
        
        dlToanc.sort((a, b) => {
-           // ƯU TIÊN 1: Dòng chưa lưu (ckt) luôn nổi lên đầu tiên
            if (a.ckt && !b.ckt) return -1;
            if (!a.ckt && b.ckt) return 1;
 
-           // ƯU TIÊN 2: Sắp xếp theo Năm học giảm dần
            let nA = String(a[0] || "").trim(), nB = String(b[0] || "").trim();
            if (nA !== nB) return nB.localeCompare(nA);
            
-           // ƯU TIÊN 3: Sắp xếp theo Tên (Alphabet)
            let htA = String(a[1] || "").trim().split(' '), tA = htA[htA.length - 1].toLowerCase();
            let htB = String(b[1] || "").trim().split(' '), tB = htB[htB.length - 1].toLowerCase();
            
@@ -165,6 +162,7 @@
        });
 
        let stt = 1; 
+
        dlToanc.forEach((dg, v) => {
           let nc = String(dg[0]).trim();
           if(ln && nc !== String(ln).trim()) return;
@@ -174,9 +172,14 @@
           let cccdHS = String(dg[26] || "").trim();
           let cqS = (ndHtai.vTro === 'qtriv') || (ndHtai.vTro === 'ngdung' && cccdND !== "" && cccdND !== "KHONG_XAC_DINH" && cccdND === cccdHS);
           
+          let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+          // BỔ SUNG LOGIC KHÓA BẢO VỆ: Ẩn nút sửa với người dùng thường khi hệ thống đang khóa
+          if (ndHtai.vTro === 'ngdung' && isKhoaHT) {
+              cqS = false;
+          }
+
           let ntS = cqS ? `<button class="btn btn-sm btn-warning py-0" onclick="suaDong(${v})"><i class="fas fa-edit"></i></button>` : '';
           
-          // Bút đỏ và màu nền vàng sẽ nổi bật ngay dòng đầu tiên
           let cdG = dg.ckt ? "dongCkt" : ""; let cpT = dg.ckt ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
           
         tv.append(`
