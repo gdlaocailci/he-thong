@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" id="page_favicon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <title>Đang tải hệ thống...</title>
+  
+  <script>
+    document.write('<script src="ketnoi.js?v=' + new Date().getTime() + '"><\/script>');
+  </script>
+
+  <script src="NS_MinhChung.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <script>
+    async function goiMyChuHien(tenLenh, tLieu = {}) {
+        tLieu.lenh = tenLenh;
+        try {
+            const ph = await fetch((typeof QLNS_CONFIG_GAS_URL !== 'undefined' ? QLNS_CONFIG_GAS_URL : ""), {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8",
+                },
+                body: JSON.stringify(tLieu)
+            });
+            return await ph.json();
+        } catch (loi) {
+            console.error("Lỗi Fetch API:", loi);
+            throw new Error("Lỗi kết nối mạng. Vui lòng kiểm tra lại!");
+        }
+    }
+  </script>
+
+  <style>
+    :root { --mauChinh: #0d6efd; --nenDau: #f8f9fa; }
+    body { font-family: 'Times New Roman', Times, serif !important; background-color: #f4f6f9; font-size: 0.9rem; }
+    
+    .thongTinDau { background-color: white; border-bottom: 2px solid var(--mauChinh); padding: 0 15px; height: 40px; }
+    .tenTruong { font-weight: bold; color: #1e3a8a; font-size: 0.95rem; text-transform: uppercase; }
+    
+    .khuGdev { display: flex; align-items: center; background: linear-gradient(135deg, #0d6efd, #0dcaf0); border-radius: 12px; padding: 2px 8px 2px 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default; height: 24px; }
+    .khuGdev:hover { transform: translateY(-1px); box-shadow: 0 3px 6px rgba(13, 202, 240, 0.3); }
+    .vongTlua { background-color: rgba(255, 255, 255, 0.2); width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 5px; }
+    .vongTlua i { color: #FFD700; font-size: 0.65rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: transform 0.5s ease; }
+    .khuGdev:hover .vongTlua i { transform: translate(1px, -1px) scale(1.1); }
+    .chuDev { display: flex; flex-direction: column; justify-content: center; line-height: 0.85; }
+    .tenDev { color: white; font-weight: 700; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    .vtDev { color: rgba(255,255,255,0.9); font-size: 0.4rem; font-weight: 400; }
+    
+    #vungTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+    
+    .table-responsive { overflow-x: auto; } 
+    
+    .bangTchinh { width: max-content; min-width: 100%; }
+    
+    .bangTchinh th { white-space: nowrap; vertical-align: middle; font-size: 0.85rem; padding: 4px 6px; background-color: var(--mauChinh); color: white; text-align: center; }
+    
+    .bangTchinh td { 
+       white-space: normal; 
+       word-wrap: break-word; 
+       overflow-wrap: break-word; 
+       vertical-align: middle; 
+       font-size: 0.85rem; 
+       padding: 4px 6px; 
+       text-align: center; 
+    } 
+    
+    #khuBangNs td:nth-child(3), 
+    #khuBangDg td:nth-child(3) { 
+       text-align: left; 
+    }
+
+    .dongCkt { background-color: #fff3cd !important; color: #856404; }
+    
+    .theTke { background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 10px; margin-bottom: 15px; }
+    .tdeTke { color: var(--mauChinh); font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem; }
+    .tdePhu { font-size: 0.75rem; background-color: #e9ecef; color: #333; }
+    .cotDlTke { min-width: 55px; width: 55px; max-width: 55px; text-align: center; }
+
+    #manhDn { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f4f6f9; z-index: 2000; display: flex; justify-content: center; align-items: center; }
+    .hopDn { width: 100%; max-width: 580px; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+
+    .tenNhanSu { cursor: pointer; color: #0d6efd; font-weight: bold; position: relative; }
+    .tenNhanSu:hover { text-decoration: underline; }
+    .vungGhimLink { display: none; margin-top: 3px; background: #eef2ff; padding: 2px 5px; border-radius: 4px; border: 1px dashed #cbd5e1; }
+    .link-display-area a { font-size: 11px; margin-right: 5px; text-decoration: none; color: #b91c1c; font-weight: bold; }
+    
+    .toast-container { z-index: 10000; }
+    .toast-body { font-size: 0.9rem; padding: 8px 12px; }
+    .nav-link { padding: 0.3rem 0.8rem; font-size: 0.9rem; }
+    .nav-tabs .nav-link.active { background-color: var(--mauChinh) !important; color: white !important; font-weight: bold; border-color: var(--mauChinh) !important; border-bottom: none; border-radius: 6px 6px 0 0; }
+    .form-control, .form-select, .btn { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+    .input-group-text { padding: 0.25rem 0.5rem; }
+
+    /* BẮT ĐẦU KHỐI: Thu hẹp tối đa trên dưới dòng tìm kiếm */
+    #vungChuaNoiDung .tab-pane > .row:first-child,
+    #vungChuaNoiDung .tab-pane > div:first-child {
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    /* KẾT THÚC KHỐI */
+  </style>
+</head>
+<body>
+
+  <div id="vungTai"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="tbNhanh" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="manhDn" style="display:none;">
+    <div class="hopDn text-center">
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="login_logo" style="width: 85px; height: 85px; margin-bottom: 15px;">
+      <h3 class="fw-bold text-uppercase mb-2" style="color: #b91c1c;" id="login_app_name">ĐANG TẢI...</h3>
+      <h4 class="fw-bold mb-4" style="color: #1e3a8a;" id="login_school_name">...</h4>
+      
+      <div class="mt-3 px-1 mb-4">
+         <p class="fw-bold mb-0" style="font-size: 14px; line-height: 1.5; padding: 15px; background: #e8f5e9; border-radius: 8px; border: 1px solid #c8e6c9; color: #0f5132; text-align: center;">
+           <i class="fas fa-shield-alt"></i> <b>Cam kết bảo mật:</b> Hệ thống sử dụng token an toàn của Google.<br>Tuyệt đối không thu thập hay lưu trữ mật khẩu người dùng.
+         </p>
+      </div>
+
+      <h5 class="fw-bold mb-3" style="color: #b91c1c; font-size: 16px;" id="login_version">Phiên bản: Đang tải...</h5>
+
+      <div id="g_id_onload"
+           data-callback="xulyPhienDn"
+           data-auto_prompt="false">
+      </div>
+      
+      <div class="d-flex justify-content-center w-100 mb-4 mt-2">
+         <div class="g_id_signin" 
+              data-type="standard" 
+              data-size="large" 
+              data-theme="outline" 
+              data-text="continue_with" 
+              data-shape="rectangular" 
+              data-logo_alignment="left">
+         </div>
+      </div>
+      
+      <div class="w-100 text-center" style="margin-top: 25px; font-size: 13px; font-weight: bold; color: #6c757d;" id="login_author">
+         Thiết kế và phát triển<br>Hoàng Ngọc Lâm
+      </div>
+      <p id="loiDn" class="text-danger mt-2 text-center fw-bold small"></p>
+    </div>
+  </div>
+
+  <div id="udChinh" style="display:none;">
+    <ul class="nav nav-tabs px-3 mt-1" id="bangChonGoc" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#muc1" onclick="datTde('THÔNG TIN NHÂN SỰ')">Thông tin nhân sự</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc2" onclick="datTde('KẾT QUẢ ĐÁNH GIÁ')">Kết quả đánh giá</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc3" onclick="datTde('THỐNG KÊ - TỔNG HỢP')">Tổng hợp</button></li>
+      <li class="nav-item" id="tabPhanQuyen" style="display:none;"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc4" onclick="datTde('PHÂN QUYỀN'); taiDsPhanQuyen();">Phân quyền</button></li>
+      
+      <li class="nav-item ms-auto d-flex align-items-center mb-1">
+         <button onclick="dxuat()" class="btn btn-outline-danger fw-bold shadow-sm" style="font-size: 0.85rem; padding: 4px 15px;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+      </li>
+    </ul>
+    
+    <div class="thongTinDau d-flex justify-content-between align-items-center">
+      <div class="tenTruong" id="header_ten_truong">ĐANG TẢI...</div>
+      <div class="khuGdev">
+         <div class="vongTlua"><i class="fas fa-rocket"></i></div>
+         <div class="chuDev">
+            <div class="tenDev" id="header_author_name">ĐANG TẢI...</div>
+            <div class="vtDev">System Developer</div>
+         </div>
+      </div>
+    </div>
+
+    <div class="bg-light px-3 py-1 d-flex justify-content-between border-bottom align-items-center">
+      
+      <div class="d-flex align-items-center text-nowrap" style="flex: 1; min-width: fit-content;">
+         <span class="me-1 small">Xin chào:</span> 
+         <span id="hthiNd" class="fw-bold text-success me-2 small"></span> 
+         <span id="nhanVt" class="badge bg-secondary" style="font-size: 0.7rem;"></span>
+      </div>
+      
+      <div class="fw-bold text-uppercase text-primary text-center px-3" id="tdeTrang" style="font-size: 1.35rem; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); white-space: nowrap;">THÔNG TIN NHÂN SỰ</div>
+      
+      <div class="text-end" style="flex: 1;"></div>
+      
+    </div>
+    <div class="tab-content px-2 pt-0 pb-2" id="vungChuaNoiDung">
+    </div>
+    </div>
+
+  <div class="modal fade" id="htKhoa" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2 text-white bg-danger border-0">
+          <h5 class="modal-title fw-bold" id="tdKhoa"><i class="fas fa-lock"></i> Hệ thống đã khóa</h5>
+        </div>
+        <div class="modal-body text-center py-4">
+          <p id="ndKhoa" style="font-size: 16px; color: #495057;">Thời gian sử dụng của bạn đã kết thúc.<br>Vui lòng liên hệ Quản trị viên để gia hạn.</p>
+        </div>
+        <div class="modal-footer py-2 justify-content-center border-0">
+          <button type="button" class="btn btn-danger" id="nutThoat">Thoát hệ thống</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function applyQLNSConfig() {
+        if(typeof QLNS_LINK_LOGO !== 'undefined') {
+            let log = document.getElementById('login_logo');
+            if(log) log.src = QLNS_LINK_LOGO;
+        }
+        if(typeof QLNS_TEN_PM_UP !== 'undefined') {
+            let app = document.getElementById('login_app_name');
+            if(app) app.innerText = QLNS_TEN_PM_UP;
+        }
+        if(typeof QLNS_TEN_TRUONG !== 'undefined') {
+            let sch = document.getElementById('login_school_name');
+            if(sch) sch.innerText = QLNS_TEN_TRUONG;
+        }
+        if(typeof QLNS_TEN_TRUONG_UP !== 'undefined') {
+            let hSch = document.getElementById('header_ten_truong');
+            if(hSch) hSch.innerText = QLNS_TEN_TRUONG_UP;
+        }
+        if(typeof QLNS_PHIEN_BAN !== 'undefined') {
+            let ver = document.getElementById('login_version');
+            if(ver) ver.innerText = "Phiên bản: " + QLNS_PHIEN_BAN;
+        }
+        if(typeof QLNS_TAC_GIA_UP !== 'undefined') {
+            let aut = document.getElementById('login_author');
+            /* BẮT ĐẦU KHỐI: CẬP NHẬT ĐỊNH DẠNG TÁC GIẢ BẰNG JS */
+            if(aut) aut.innerHTML = "Thiết kế và phát triển<br>" + QLNS_TAC_GIA_UP;
+            /* KẾT THÚC KHỐI */
+            let dAut = document.getElementById('header_author_name');
+            if(dAut) dAut.innerText = QLNS_TAC_GIA_UP;
+        }
+        if(typeof QLNS_GOOGLE_CLIENT_ID !== 'undefined') {
+            let gId = document.getElementById('g_id_onload');
+            if(gId) gId.setAttribute('data-client_id', QLNS_GOOGLE_CLIENT_ID);
+        }
+    }
+    applyQLNSConfig();
+
+    let ndHtai = null, dlToanc = [], chinhToanc = [], csSua = -1;
+    let mangDuLieuTam = null; 
+    window.dangKhoaHeThong = false; 
+    
+    function kiemtKhoa() {
+        let hd = typeof QLNS_HAN_DUNG !== 'undefined' ? QLNS_HAN_DUNG : "31/12/2026";
+        if (!hd || hd.trim() === "") return true; 
+
+        let pt = hd.split('/');
+        let nHet = new Date(pt[2], pt[1] - 1, pt[0]);
+        let htai = new Date(); htai.setHours(0, 0, 0, 0);
+
+        const modKhoa = document.getElementById('htKhoa'), nutR = document.getElementById('nutThoat'), cTbao = document.getElementById('ndKhoa'), cTde = document.getElementById('tdKhoa');
+        if (!modKhoa || !nutR) return true;
+
+        if (htai > nHet) {
+            cTde.innerText = "Hết hạn sử dụng";
+            cTbao.innerHTML = `Thời gian sử dụng phần mềm của bạn đã kết thúc vào ngày <strong class="text-danger">${hd}</strong>.<br>Vui lòng liên hệ Admin để gia hạn.`;
+            nutR.innerText = 'Thoát hệ thống'; nutR.classList.remove('btn-primary'); nutR.classList.add('btn-danger'); nutR.removeAttribute('data-bs-dismiss'); 
+            nutR.onclick = function() { window.location.href = "https://www.google.com"; };
+            const md = new bootstrap.Modal(modKhoa, { backdrop: 'static', keyboard: false }); md.show();
+            let g1 = document.getElementById('manhDn'); if (g1) g1.style.display = 'none';
+            let g2 = document.getElementById('udChinh'); if (g2) g2.style.display = 'none';
+            let g3 = document.querySelector('.khuGdev'); if (g3) g3.style.display = 'none';
+            return false;
+        }
+        return true;
+    }
+
+    $(document).ready(() => { 
+        if (!kiemtKhoa()) return; 
+        
+        $("#vungTai").show();
+        
+        let taiTt = $.get("thong_tin.html");
+        let taiDg = $.get("danh_gia.html");
+        let taiTh = $.get("tong_hop.html");
+        
+        let taiPq = $.Deferred();
+        $.get("PhanQuyen.html").done(function(res) {
+            taiPq.resolve([res]);
+        }).fail(function() {
+            taiPq.resolve([""]); 
+        });
+
+        $.when(taiTt, taiDg, taiTh, taiPq).done(function(r1, r2, r3, r4) {
+            let pQuyenHtml = r4[0] || "";
+            $("#vungChuaNoiDung").html(r1[0] + r2[0] + r3[0] + pQuyenHtml);
+            kiemTraTrangThaiDangNhap();
+        }).fail(function() {
+            $("#vungTai").hide();
+            hienTbao("Lỗi tải phân hệ giao diện. Vui lòng kiểm tra lại đường dẫn tệp trên GitHub!", "loi");
+        });
+    });
+
+    function kiemTraTrangThaiDangNhap() {
+        $("#vungTai").hide(); 
+        let luuPt = sessionStorage.getItem("ngdungNs");
+        if(luuPt) {
+            ndHtai = JSON.parse(luuPt);
+            $("#manhDn").hide(); $("#udChinh").show();
+            $("#hthiNd").text(ndHtai.tenn); 
+            
+            // XÉT NHÃN QUYỀN
+            let tenVt = 'Chỉ xem';
+            if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
+            else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
+            else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
+            
+            $("#nhanVt").text(tenVt);
+            
+            // Tab Phân quyền CHỈ cho qtriv (xxx)
+            ndHtai.vTro === 'qtriv' ? $("#tabPhanQuyen").show() : $("#tabPhanQuyen").hide();
+            
+            $("#bangChonGoc button[data-bs-target='#muc1']").click();
+
+            taiDlBdau();
+        } else {
+            $("#manhDn").css("display", "flex"); 
+        }
+    }
+
+    function hienTbao(chu, kieu = 'tc') {
+       const ht = document.getElementById('tbNhanh');
+       const nDung = ht.querySelector('.toast-body');
+       ht.classList.remove('bg-primary', 'bg-danger', 'bg-success');
+       if(kieu === 'loi') ht.classList.add('bg-danger'); else ht.classList.add('bg-success');
+       nDung.textContent = chu;
+       const bn = new bootstrap.Toast(ht); bn.show();
+    }
+
+    function ddNgay(pt) {
+       let m = pt.value.replace(/\D/g, '');
+       if (m.length >= 2) m = m.substring(0,2) + '/' + m.substring(2);
+       if (m.length >= 5) m = m.substring(0,5) + '/' + m.substring(5, 9);
+       pt.value = m;
+    }
+
+    function giaimaJwt(chuoit) {
+      let ddb64 = chuoit.split('.')[1];
+      let b64 = ddb64.replace(/-/g, '+').replace(/_/g, '/');
+      let noidunjson = decodeURIComponent(atob(b64).split('').map(function(kt) {
+          return '%' + ('00' + kt.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(noidunjson);
+    }
+
+    function xulyPhienDn(phanho) {
+      const tdtai = giaimaJwt(phanho.credential);
+      const emTruyCap = tdtai['email']; 
+      
+      $("#vungTai").show();
+      $("#loiDn").text(""); 
+      goiMyChuHien('dangNhapHt', { gMai: emTruyCap })
+        .then(khiDnTc)
+        .catch(khiDnLoi);
+    }
+    
+    function khiDnTc(pq) {
+      if(!pq.tCong) { 
+          $("#vungTai").hide(); 
+          $("#loiDn").text(pq.tBao); 
+          hienTbao(pq.tBao, 'loi'); 
+          return; 
+      }
+      
+      ndHtai = pq.dLieu;
+      sessionStorage.setItem("ngdungNs", JSON.stringify(ndHtai));
+      $("#hthiNd").text(ndHtai.tenn); 
+      
+      let tenVt = 'Chỉ xem';
+      if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
+      else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
+      else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
+      
+      $("#nhanVt").text(tenVt);
+      
+      ndHtai.vTro === 'qtriv' ? $("#tabPhanQuyen").show() : $("#tabPhanQuyen").hide();
+      
+      $("#bangChonGoc button[data-bs-target='#muc1']").click();
+
+      $("#manhDn").hide(); $("#udChinh").show(); taiDlBdau();
+    }
+    
+    function khiDnLoi(loi) { hienTbao("Lỗi: " + loi, 'loi'); $("#vungTai").hide(); }
+    
+   function dxuat() {
+    // Xóa sessionStorage (chỉ xóa mục lưu người dùng)
+    sessionStorage.removeItem("ngdungNs");
+    // Nếu muốn xóa toàn bộ sessionStorage, dùng sessionStorage.clear();
+    
+    // Reset các biến toàn cục
+    ndHtai = null;
+    dlToanc = [];
+    chinhToanc = [];
+    csSua = -1;
+    mangDuLieuTam = null;
+    window.dangKhoaHeThong = false;
+    
+    // Xóa dữ liệu trên bảng
+    $("#khuBangNs tbody").empty();
+    $("#khuBangDg tbody").empty();
+    
+    // Ẩn tab phân quyền (nếu đang hiện)
+    $("#tabPhanQuyen").hide();
+    
+    // Chuyển về tab thông tin nhân sự
+    $("#bangChonGoc button[data-bs-target='#muc1']").click();
+    
+    // Xóa thông báo lỗi đăng nhập cũ
+    $("#loiDn").text("");
+    
+    // Ẩn giao diện chính, hiện màn hình đăng nhập
+    $("#udChinh").hide();
+    $("#manhDn").css("display", "flex").fadeIn();
+}
+    
+    function datTde(t) { $("#tdeTrang").text(t); }
+
+    function taiDlBdau() {
+      $("#vungTai").show();
+      goiMyChuHien('layTatCaDl')
+        .then(q => {
+            if(q.tCong) veUd(q.dLieu); else { hienTbao(q.tBao, 'loi'); $("#vungTai").hide(); }
+        }).catch(lc => { hienTbao(lc, 'loi'); $("#vungTai").hide(); });
+    }
+    
+    function veUd(tdl) {
+      if (!tdl) { hienTbao("Không có dữ liệu!", 'loi'); $("#vungTai").hide(); return; }
+      
+      if (tdl.dangKhoa !== undefined) {
+         window.dangKhoaHeThong = (tdl.dangKhoa === true || String(tdl.dangKhoa).toLowerCase() === "true");
+      }
+
+      // XỬ LÝ KHÓA NÚT CHUẨN
+      if (ndHtai.vTro === 'xem') {
+          // Quyền "" rỗng => Xem, tắt hết nút
+          $("#nutMoThemNs").hide();
+          $("#nutCnNhieuNs").hide();
+          $("#nutCnNhieuDg").hide();
+      } else {
+          // Nếu hệ thống khóa, tắt với admin_xx và ngdung, chỉ chừa qtriv
+          if (window.dangKhoaHeThong && ndHtai.vTro !== 'qtriv') {
+              $("#nutMoThemNs").hide();
+              $("#nutCnNhieuNs").hide();
+              $("#nutCnNhieuDg").hide();
+          } else {
+              // Mở nút lưu cho mọi quyền còn lại (chỉ thêm mới cho cấp cao)
+              (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') ? $("#nutMoThemNs").show() : $("#nutMoThemNs").hide();
+              $("#nutCnNhieuNs").show();
+              $("#nutCnNhieuDg").show();
+          }
+      }
+
+      chinhToanc = tdl.chinh || []; dlToanc = tdl.nsu || [];
+      cldChon(); veBangNs(); veBangDg(); veTke(); $("#vungTai").hide();
+    }
+
+    function cldChon() {
+       const m1 = {'.g-namhoc':0, '.g-gioitinh':1, '.g-trangthai':2, '.g-vitri':3, '.g-hang':4, '.g-trdo':5, '.g-llct':6};
+       for(let cl1 in m1) doDlChon(cl1, m1[cl1]);
+       const m2 = {'.g-xlcm':7, '.g-xlcnn':8, '.g-xlvc':9, '.g-dhcm':10, '.g-dhtd':11, '.g-ckhen':12};
+       for(let cl2 in m2) doDlChon(cl2, m2[cl2]);
+       let cn = layTuyc(0); let cg = '<option value="">Tất cả năm học</option>' + cn.map(o => `<option value="${o}">${o}</option>`).join('');
+       $("#nhapLocN1, #nhapLocN2, #nhapLocN3").html(cg);
+    }
+
+    function layTuyc(chS) { return chinhToanc.map(r => String(r[chS]).trim()).filter(x => x && x!=="" && x!=="undefined").filter((v,i,a) => a.indexOf(v)===i); }
+    function doDlChon(clL, chS) { let co = layTuyc(chS); $(clL).html('<option value="">--Chọn--</option>' + co.map(o => `<option value="${o}">${o}</option>`).join('')); }
+
+  </script>
+</body>
+</html>
