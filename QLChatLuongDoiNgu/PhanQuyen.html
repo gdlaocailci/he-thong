@@ -14,17 +14,39 @@
     font-size: 15px !important;
     padding: 8px 12px !important; /* Tăng độ rộng ô nhập liệu để dễ quan sát hơn */
   }
+
+  /* Cấu hình Switch On/Off Khoá Hệ Thống */
+  .form-check-input.sw-chot {
+    width: 3.5em !important;
+    height: 1.7em !important;
+    cursor: pointer;
+  }
+  /* Bật - Xanh (Cho phép cập nhật) */
+  .form-check-input.sw-chot:checked {
+    background-color: #198754; 
+    border-color: #198754;
+  }
+  /* Tắt - Đỏ (Khóa hệ thống) */
+  .form-check-input.sw-chot:not(:checked) {
+    background-color: #dc3545; 
+    border-color: #dc3545;
+  }
 </style>
 
 <div class="tab-pane fade" id="muc4">
   <div class="row mb-2 mt-2 g-1 align-items-center">
-    <div class="col-md-5">
+    <div class="col-md-4">
       <div class="input-group">
         <input type="text" id="nhapTimKiemPq" class="form-control" placeholder="Tìm kiếm tên/email/mã..." autocomplete="off" onkeypress="if(event.keyCode===13) { veBangPhanQuyen(); return false; }">
         <button type="button" class="btn btn-outline-secondary fw-bold" onclick="veBangPhanQuyen()"><i class="fas fa-search"></i> Lọc</button>
       </div>
     </div>
-    <div class="col-md-7 text-end">
+    <div class="col-md-8 text-end d-flex justify-content-end align-items-center">
+      <div class="form-check form-switch me-4 d-flex align-items-center" id="khungKhoaHeThong" style="display: none !important;">
+        <input class="form-check-input sw-chot me-2 mt-0" type="checkbox" id="nutKhoaHeThong" onchange="xuLyDoiTrangThaiKhoa()">
+        <label class="form-check-label fw-bold mb-0" id="nhanKhoaHeThong" for="nutKhoaHeThong">Đang tải...</label>
+      </div>
+      
       <button class="btn btn-primary fw-bold me-1" onclick="moThemTaiKhoan()"><i class="fas fa-plus"></i> Thêm tài khoản</button>
       <button class="btn btn-success fw-bold" onclick="capNhatPhanQuyen()"><i class="fas fa-save"></i> Cập nhật hệ thống</button>
     </div>
@@ -110,6 +132,10 @@
   function taiDsPhanQuyen() {
     if (!ndHtai || ndHtai.vTro !== 'qtriv') return;
     
+    // Hiển thị khung chức năng khóa hệ thống và nạp trạng thái
+    $("#khungKhoaHeThong").attr('style', 'display: flex !important;');
+    taiTrangThaiKhoa();
+    
     if (daTaiPhanQuyen) {
         veBangPhanQuyen();
         return;
@@ -138,7 +164,7 @@
     if (mangPhanQuyen.length === 0) {
       html = '<tr><td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu.</td></tr>';
     } else {
-      // BỔ SUNG: Ưu tiên dòng chưa lưu nổi lên đầu bảng
+      // Ưu tiên dòng chưa lưu nổi lên đầu bảng
       mangPhanQuyen.sort((a, b) => {
           if (a.ckt && !b.ckt) return -1;
           if (!a.ckt && b.ckt) return 1;
@@ -158,7 +184,7 @@
             tenQuyen = '<span class="badge bg-secondary">Cập nhật cá nhân</span>';
         }
 
-        // BỔ SUNG: Xử lý hiển thị màu nền và cây bút đỏ
+        // Xử lý hiển thị màu nền và cây bút đỏ
         let cdG = tkObj.ckt ? "dongCkt" : ""; 
         let cpT = tkObj.ckt ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
 
@@ -252,7 +278,6 @@
     if (biTrungTen) return hienTbao('Họ và tên này đã tồn tại. Không cho phép trùng lặp!', 'loi');
 
     let rowData = [dChi, hTen, quyen, cccd];
-    // BỔ SUNG: Gắn cờ chưa lưu
     rowData.ckt = true; 
 
     if (cs === -1) {
@@ -274,7 +299,6 @@
       .then(q => {
         if (q.tCong) {
           hienTbao(q.tBao, 'tc');
-          // XÓA cờ chưa lưu sau khi cập nhật thành công để đưa giao diện về bình thường
           mangPhanQuyen.forEach(tk => delete tk.ckt);
           veBangPhanQuyen();
         } else {
@@ -283,5 +307,53 @@
         $("#vungTai").hide();
       })
       .catch(lc => { hienTbao(lc, 'loi'); $("#vungTai").hide(); });
+  }
+
+  // ==========================================
+  // KHỐI HÀM GIAO DIỆN XỬ LÝ KHÓA/MỞ HỆ THỐNG
+  // ==========================================
+
+  function taiTrangThaiKhoa() {
+    goiMyChuHien('layTrangThaiKhoa', {}).then(q => {
+      if(q.tCong) {
+         let nut = document.getElementById("nutKhoaHeThong");
+         let nhan = document.getElementById("nhanKhoaHeThong");
+         // Nếu đang khóa -> Nút tắt (không check - Đỏ). Nếu không khóa -> Nút bật (Check - Xanh)
+         nut.checked = !q.dangKhoa; 
+         nhan.innerText = q.dangKhoa ? "Đang khóa cập nhật" : "Cho phép cập nhật";
+         nhan.className = q.dangKhoa ? "form-check-label fw-bold text-danger mb-0" : "form-check-label fw-bold text-success mb-0";
+      }
+    }).catch(e => console.error("Không thể đọc trạng thái khóa."));
+  }
+
+  function xuLyDoiTrangThaiKhoa() {
+    let nut = document.getElementById("nutKhoaHeThong");
+    // Nếu nút đang bật (check = Mở) thì dangKhoaMoi = false. Ngược lại là true.
+    let dangKhoaMoi = !nut.checked; 
+
+    let thongBao = dangKhoaMoi ? "Đồng chí có chắc chắn muốn KHÓA quyền cập nhật dữ liệu của Giáo viên không?" : "Đồng chí muốn MỞ KHÓA quyền cập nhật dữ liệu cho Giáo viên?";
+    
+    if(!confirm(thongBao)) {
+        nut.checked = !nut.checked; // Hủy thao tác, hoàn trả lại trạng thái UI
+        return;
+    }
+
+    $("#vungTai").show();
+    goiMyChuHien('thayDoiTrangThaiKhoa', { trangThai: dangKhoaMoi, vTro: ndHtai.vTro }).then(q => {
+       if(q.tCong) {
+          hienTbao(q.tBao, 'tc');
+          let nhan = document.getElementById("nhanKhoaHeThong");
+          nhan.innerText = dangKhoaMoi ? "Đang khóa cập nhật" : "Cho phép cập nhật";
+          nhan.className = dangKhoaMoi ? "form-check-label fw-bold text-danger mb-0" : "form-check-label fw-bold text-success mb-0";
+       } else {
+          hienTbao(q.tBao, 'loi');
+          nut.checked = !nut.checked; 
+       }
+       $("#vungTai").hide();
+    }).catch(e => {
+       hienTbao("Lỗi kết nối máy chủ!", 'loi');
+       nut.checked = !nut.checked; 
+       $("#vungTai").hide();
+    });
   }
 </script>
