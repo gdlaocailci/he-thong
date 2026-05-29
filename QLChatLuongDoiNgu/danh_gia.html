@@ -60,8 +60,8 @@
                <input type="hidden" name="mcLink" id="mcLinkDg" class="val-link">
             </div>
             <div class="row mb-2">
-               <div class="col-md-6"><label>Xếp loại CM (Kỳ 1)</label><select name="w" class="form-select g-xlcm"></select></div>
-               <div class="col-md-6"><label>Xếp loại CM (Kỳ 2)</label><select name="x" class="form-select g-xlcm"></select></div>
+               <div class="col-md-6"><label>Xếp loại CM (K1)</label><select name="w" class="form-select g-xlcm"></select></div>
+               <div class="col-md-6"><label>Xếp loại CM (K2)</label><select name="x" class="form-select g-xlcm"></select></div>
             </div>
             <div class="row mb-2">
                <div class="col-md-4"><label>Xếp loại CNN</label><select name="y" class="form-select g-xlcnn"></select></div>
@@ -126,7 +126,6 @@
        const vb = $("#khuBangDg tbody"); vb.empty();
        
        dlToanc.sort((a, b) => {
-           // ƯU TIÊN 1: Đưa dòng vừa sửa chưa lưu lên đầu tiên
            if (a.cktdg && !b.cktdg) return -1;
            if (!a.cktdg && b.cktdg) return 1;
 
@@ -141,6 +140,7 @@
        });
 
        let sttDg = 1; 
+
        dlToanc.forEach((dg, idx) => {
           let nc = String(dg[0]).trim();
           if(nl && nc !== String(nl).trim()) return;
@@ -151,9 +151,14 @@
           let cccdHS = String(dg[26] || "").trim();
           let cqS = (ndHtai.vTro === 'qtriv') || (ndHtai.vTro === 'ngdung' && cccdND !== "" && cccdND !== "KHONG_XAC_DINH" && cccdND === cccdHS);
           
+          let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+          // BỔ SUNG LOGIC KHÓA BẢO VỆ: Ẩn nút sửa với người dùng thường khi hệ thống đang khóa
+          if (ndHtai.vTro === 'ngdung' && isKhoaHT) {
+              cqS = false;
+          }
+
           let ns = cqS ? `<button class="btn btn-sm btn-success py-0" onclick="moSuaDg(${idx})"><i class="fas fa-edit"></i></button>` : '';
           
-          // Khởi tạo class nền vàng (dongCkt) và bút đỏ (tcP)
           let dlC = dg.cktdg ? "dongCkt" : ""; 
           let tcP = dg.cktdg ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
 
