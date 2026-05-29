@@ -1,0 +1,267 @@
+<div class="tab-pane fade" id="muc2">
+  <div class="row mb-2 g-1 align-items-center">
+      <div class="col-md-3">
+          <div class="input-group">
+              <select id="nhapLocN2" class="form-select" onchange="veBangDg()"><option value="">Tất cả năm học</option></select>
+              <button class="btn btn-primary" onclick="veBangDg()"><i class="fas fa-search"></i> Tìm</button>
+          </div>
+      </div>
+      <div class="col-md-4">
+          <div class="input-group">
+             <input type="text" id="nhapTimKiemDg" class="form-control" placeholder="Tìm tên/mã..." autocomplete="off" onkeypress="if(event.keyCode===13) { veBangDg(); return false; }">
+             <button type="button" class="btn btn-outline-secondary fw-bold" onclick="veBangDg()"><i class="fas fa-search"></i> Lọc</button>
+          </div>
+      </div>
+      <div class="col-md-5 text-end">
+          <button id="nutCnNhieuDg" class="btn btn-primary" onclick="cnNhieuDg()"><i class="fas fa-save"></i> Cập nhật</button>
+      </div>
+  </div>
+  <div class="table-responsive" style="max-height: calc(100vh - 220px); overflow-y: auto;">
+     <table class="table table-bordered table-striped bangTchinh table-sm" id="khuBangDg" style="table-layout: fixed; border-collapse: collapse;">
+       <thead class="sticky-top">
+         <tr>
+           <th style="width: 40px; text-align: center;">Sửa</th>
+           <th style="width: 40px; text-align: center;">STT</th>
+           <th style="width: 90px; text-align: center;">Năm học</th>
+           <th style="width: 180px; text-align: center;">Họ&#8203; và tê&#8203;n</th>
+           <th style="width: 100px; text-align: center;">Ngày sinh</th>
+           <th style="width: 80px; text-align: center;">XL CM (K1)</th>
+           <th style="width: 80px; text-align: center;">XL CM (K2)</th>
+           <th style="width: 80px; text-align: center;">XL CNN</th>
+           <th style="width: 100px; text-align: center;">XL Viên chức</th>
+           <th style="width: 100px; text-align: center;">XL Đả&#8203;ng viê&#8203;n</th> 
+           <th style="width: 120px; text-align: center;">DH Chuyên môn</th>
+           <th style="width: 120px; text-align: center;">DH Thi đua</th>
+           <th style="width: 120px; text-align: center;">Hình thức khen</th>
+           <th style="width: 120px; text-align: center;">Cấp khen</th>
+          </tr>
+       </thead>
+       <tbody></tbody>
+     </table>
+  </div>
+</div>
+
+<div class="modal fade" id="hopThoaiDg" data-bs-focus="false">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2"><h5 class="modal-title">Cập nhật đánh giá</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <form id="bmDgia" autocomplete="off" novalidate>
+            <div class="alert alert-info py-1 mb-2 d-flex justify-content-between align-items-center">
+               <div>
+                  <strong>Năm:</strong> <span id="vungNamDg"></span> | 
+                  <strong>Họ tên:</strong> <span id="vungTenDg" class="fw-bold"></span>
+                  <button type="button" class="btn btn-sm btn-outline-dark ms-2" onclick="goMinhChungDg(this)" title="Chèn minh chứng link">
+                     <i class="fas fa-paperclip"></i>
+                  </button>
+                  <span id="hthiGhimModal" class="ms-1"></span>
+               </div>
+               <input type="hidden" id="vungMsoDg">
+               <input type="hidden" name="mcLink" id="mcLinkDg" class="val-link">
+            </div>
+            <div class="row mb-2">
+               <div class="col-md-6"><label>Xếp loại CM (K1)</label><select name="w" class="form-select g-xlcm"></select></div>
+               <div class="col-md-6"><label>Xếp loại CM (K2)</label><select name="x" class="form-select g-xlcm"></select></div>
+            </div>
+            <div class="row mb-2">
+               <div class="col-md-4"><label>Xếp loại CNN</label><select name="y" class="form-select g-xlcnn"></select></div>
+               <div class="col-md-4"><label>Xếp loại Viên chức</label><select name="z" class="form-select g-xlvc"></select></div>
+               <div class="col-md-4"><label>XL Đả&#8203;ng viê&#8203;n</label>
+                  <select name="ad" class="form-select">
+                      <option value="">--Chọn--</option>
+                      <option value="HTXS">HTXS</option>
+                      <option value="HTT">HTT</option>
+                      <option value="HT">HT</option>
+                      <option value="CHT">CHT</option>
+                  </select>
+               </div>
+            </div>
+            <div class="row mb-2">
+               <div class="col-md-3"><label>Danh hiệu CM</label><select name="aa" class="form-select g-dhcm"></select></div>
+               <div class="col-md-3"><label>Danh hiệu Thi đua</label>
+                   <select name="ab" class="form-select">
+                       <option value="">--Chọn--</option>
+                       <option value="LĐTT">LĐTT</option>
+                       <option value="CSTĐ">CSTĐ</option>
+                   </select>
+               </div>
+               <div class="col-md-3"><label>Hình thức khen</label>
+                   <select name="ac" class="form-select">
+                       <option value="">--Chọn--</option>
+                       <option value="Giấy khen">Giấy khen</option>
+                       <option value="Bằng khen">Bằng khen</option>
+                       <option value="Kỷ niệm chương">Kỷ niệm chương</option>
+                       <option value="Huy chương">Huy chương</option>
+                       <option value="Huân chương">Huân chương</option>
+                   </select>
+               </div>
+               <div class="col-md-3"><label>Cấp khen</label>
+                   <select name="ae" class="form-select">
+                       <option value="">--Chọn--</option>
+                       <option value="Xã">Xã</option>
+                       <option value="Huyện/TP">Huyện/TP</option>
+                       <option value="Tỉnh">Tỉnh</option>
+                       <option value="Chính phủ">Chính phủ</option>
+                   </select>
+               </div>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer py-1"><button type="button" class="btn btn-success" onclick="guiBmDg()">Lưu Đánh Giá</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+    if (typeof window.xoaDauVN !== 'function') {
+        window.xoaDauVN = function(str) {
+            if (!str) return "";
+            return String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+        };
+    }
+
+    function veBangDg() {
+       const nl = $("#nhapLocN2").val(); 
+       const tk = window.xoaDauVN($("#nhapTimKiemDg").val()); 
+       const vb = $("#khuBangDg tbody"); vb.empty();
+       
+       dlToanc.sort((a, b) => {
+           if (a.cktdg && !b.cktdg) return -1;
+           if (!a.cktdg && b.cktdg) return 1;
+
+           let nA = String(a[0] || "").trim(), nB = String(b[0] || "").trim();
+           if (nA !== nB) return nB.localeCompare(nA); 
+           
+           let htA = String(a[1] || "").trim().split(' '), tA = htA[htA.length - 1].toLowerCase();
+           let htB = String(b[1] || "").trim().split(' '), tB = htB[htB.length - 1].toLowerCase();
+           
+           if (tA !== tB) return tA.localeCompare(tB, 'vi'); 
+           return String(a[1] || "").trim().localeCompare(String(b[1] || "").trim(), 'vi'); 
+       });
+
+       let sttDg = 1; 
+
+       dlToanc.forEach((dg, idx) => {
+          let nc = String(dg[0]).trim();
+          if(nl && nc !== String(nl).trim()) return;
+          if(tk && !window.xoaDauVN(dg.join(" ")).includes(tk)) return;
+          if(dg[4] === "Đã chuyển") return; 
+          
+          let cccdND = ndHtai.cccd ? String(ndHtai.cccd).trim() : "KHONG_XAC_DINH";
+          let cccdHS = String(dg[26] || "").trim();
+          
+          let cqS = false;
+          if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
+              cqS = true;
+          } else if (ndHtai.vTro === 'ngdung' && cccdND !== "" && cccdND !== "KHONG_XAC_DINH" && cccdND === cccdHS) {
+              cqS = true;
+          }
+          
+          let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+          if ((isKhoaHT && ndHtai.vTro !== 'qtriv') || ndHtai.vTro === 'xem') {
+              cqS = false;
+          }
+
+          let ns = cqS ? `<button class="btn btn-sm btn-success py-0" onclick="moSuaDg(${idx})"><i class="fas fa-edit"></i></button>` : '';
+          
+          let dlC = dg.cktdg ? "dongCkt" : ""; 
+          let tcP = dg.cktdg ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
+
+          let lk = dg[31] || "";
+          let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
+          let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="${u}" target="_blank" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
+          
+          vb.append(`<tr class="${dlC}">
+              <td class="text-center">${ns}</td>
+              <td class="text-center fw-bold text-muted">${sttDg++}</td>
+              <td class="text-center fw-bold">${dg[0]}</td>
+              <td class="text-start">
+                <div class="tenNhanSu" onclick="latGhim(${idx})">${dg[1]} ${tcP}</div>
+                ${htiGhim}
+              </td>
+              <td>${dg[2]||''}</td>
+              <td>${dg[17]||''}</td>
+              <td>${dg[18]||''}</td>
+              <td>${dg[19]||''}</td>
+              <td>${dg[20]||''}</td>
+              <td>${dg[21]||''}</td>
+              <td>${dg[22]||''}</td>
+              <td>${dg[23]||''}</td>
+              <td>${dg[24]||''}</td>
+              <td>${dg[25]||''}</td>
+           </tr>`);
+       });
+    }
+
+    function latGhim(idx) {
+        $(`#vungGhim_${idx}`).slideToggle(200);
+    }
+
+    function moSuaDg(idx) {
+       csSua = idx; const dr = dlToanc[idx]; $("#vungNamDg").text(dr[0]); $("#vungTenDg").text(dr[1]); $("#vungMsoDg").val(dr[1]);
+       const fr = document.getElementById("bmDgia"); fr.reset();
+       
+       fr.elements['w'].value = dr[17]||""; // XL CM K1
+       fr.elements['x'].value = dr[18]||""; // XL CM K2
+       fr.elements['y'].value = dr[19]||""; // XL CNN
+       fr.elements['z'].value = dr[20]||""; // XL VC
+       fr.elements['ad'].value = dr[21]||""; // XL Đảng viên
+       fr.elements['aa'].value = dr[22]||""; // DH Chuyên môn
+       fr.elements['ab'].value = dr[23]||""; // DH Thi đua
+       fr.elements['ac'].value = dr[24]||""; // Hình thức khen
+       fr.elements['ae'].value = dr[25]||""; // Cấp khen
+       
+       let lk = dr[31] || "";
+       $("#mcLinkDg").val(lk);
+       veGhimModal(lk);
+
+       $("#hopThoaiDg").modal('show');
+    }
+
+    function goMinhChungDg(btn) {
+        try {
+            let lHtai = $("#mcLinkDg").val();
+            if (typeof window.SCV_OpenUploadModal === 'function') {
+                window.SCV_OpenUploadModal(btn, lHtai, "ROOT_FOLDER_ID", true); 
+            } else {
+                hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công! Vui lòng F5 lại trang.", "loi");
+            }
+        } catch (loi) {
+            hienTbao("Lỗi hiển thị cửa sổ: " + loi.message, "loi");
+        }
+    }
+
+    function veGhimModal(lk) {
+        let d = lk.split(',').map(l => l.trim()).filter(l => l !== "");
+        let h = d.map((u, i) => `<a href="${u}" target="_blank" class="text-danger ms-1" title="Link ${i+1}"><i class="fas fa-paperclip"></i></a>`).join('');
+        $("#hthiGhimModal").html(h);
+    }
+
+    function guiBmDg() {
+       const fd = document.getElementById("bmDgia");
+       if (csSua !== -1) {
+           dlToanc[csSua][17] = fd.elements['w'].value; 
+           dlToanc[csSua][18] = fd.elements['x'].value; 
+           dlToanc[csSua][19] = fd.elements['y'].value; 
+           dlToanc[csSua][20] = fd.elements['z'].value; 
+           dlToanc[csSua][21] = fd.elements['ad'].value;   
+           dlToanc[csSua][22] = fd.elements['aa'].value;   
+           dlToanc[csSua][23] = fd.elements['ab'].value;   
+           dlToanc[csSua][24] = fd.elements['ac'].value;   
+           dlToanc[csSua][25] = fd.elements['ae'].value;   
+           
+           dlToanc[csSua][31] = $("#mcLinkDg").val();
+
+           dlToanc[csSua].cktdg = true; veBangDg(); $("#hopThoaiDg").modal('hide'); hienTbao("Đã lưu tạm thời. Nhấn Cập Nhật để ghi dữ liệu.", 'tc');
+       }
+    }
+    
+    function cnNhieuDg() {
+       const dc = dlToanc.filter(r => r.cktdg);
+       if(dc.length===0) return hienTbao("Không có dữ liệu đánh giá mới!", 'loi');
+       $("#vungTai").show();
+       goiMyChuHien('luuNhieuDgia', {mangDl: dc, vTro: ndHtai.vTro, cccd: ndHtai.cccd})
+         .then(g => { hienTbao(g.tBao, g.tCong ? 'tc' : 'loi'); if(g.tCong) taiDlBdau(); else $("#vungTai").hide(); })
+         .catch(le => { hienTbao(le, 'loi'); $("#vungTai").hide(); });
+    }
+</script>
