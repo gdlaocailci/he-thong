@@ -8,13 +8,26 @@
   
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
+    <script>
+        /* =========================================================================
+           THIẾT LẬP HÌNH NỀN TỨC THÌ (PRE-RENDER)
+           Đoạn mã này chạy ngay lập tức khi đọc tệp HTML, ngăn chặn hiện tượng chớp trắng.
+           ========================================================================= */
+        (function() {
+            var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
+            if (savedBgUrl && savedBgUrl.trim() !== "") {
+                document.documentElement.style.setProperty('--default-bg', "url('" + savedBgUrl + "')");
+            }
+        })();
+    </script>
+
     <style>
         /* =========================================================================
            1. KHỐI NỀN TẢNG (HỆ ĐIỀU HÀNH WINDOWS UI) 
            ========================================================================= */
         :root {
-            /* Hình nền Windows mặc định mới theo yêu cầu */
-            --default-bg: url('https://i.ibb.co/hJy3vH7y/hinh-nen-win-11-50-1.jpg');
+            /* Hình nền gốc mặc định */
+            --default-bg: url('https://i.ibb.co/4gCSYHV6/congthongtin1.jpg');
         }
 
         * {
@@ -32,6 +45,8 @@
         }
 
         body {
+            /* Màu nền tối làm lót dự phòng khi ảnh gốc đang tải qua mạng */
+            background-color: #2c3e50; 
             background-image: var(--default-bg);
             background-size: cover;
             background-position: center;
@@ -573,13 +588,6 @@
     /* =========================================================================
        5. KHỐI CẤU HÌNH HÌNH NỀN VÀ QUẢN LÝ CỬA SỔ
        ========================================================================= */
-    function loadSavedBackground() {
-        var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
-        if (savedBgUrl && savedBgUrl.trim() !== "") {
-            document.body.style.backgroundImage = "url('" + savedBgUrl + "')";
-        }
-    }
-
     function changeBackgroundImage() {
         var currentUrl = localStorage.getItem("ht_dashboard_bg") || "";
         var newUrl = prompt(
@@ -592,10 +600,10 @@
         if (newUrl !== null) {
             if (newUrl.trim() === "") {
                 localStorage.removeItem("ht_dashboard_bg");
-                document.body.style.backgroundImage = "var(--default-bg)";
+                document.documentElement.style.setProperty('--default-bg', "url('https://i.ibb.co/4gCSYHV6/congthongtin1.jpg')");
             } else {
                 localStorage.setItem("ht_dashboard_bg", newUrl.trim());
-                document.body.style.backgroundImage = "url('" + newUrl.trim() + "')";
+                document.documentElement.style.setProperty('--default-bg', "url('" + newUrl.trim() + "')");
             }
         }
     }
@@ -611,7 +619,6 @@
 
     // Khởi chạy hệ thống sau khi trang tải xong
     window.addEventListener("DOMContentLoaded", function() {
-        loadSavedBackground();
         initializeLayout(); // Kích hoạt thuật toán đóng băng tọa độ
     });
 </script>
