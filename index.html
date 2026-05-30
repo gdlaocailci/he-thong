@@ -6,44 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cổng thông tin Quản trị - Trường TH&THCS Hợp Thành</title>
   
-    <!-- Tích hợp thư viện biểu tượng Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <style>
         /* =========================================================================
-           1. KHỐI ĐỊNH DẠNG GIAO DIỆN TỔNG THỂ & HÌNH NỀN TỰ DO (FULL SCREEN)
+           1. KHỐI NỀN TẢNG (HỆ ĐIỀU HÀNH WINDOWS UI)
            ========================================================================= */
         :root {
-            /* Hình nền mặc định chuẩn mực, sang trọng */
+            /* Hình nền Windows mặc định */
             --default-bg: url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop');
-            
-            /* Bản đồ màu sắc theo từng khối chức năng */
-            --clr-calendar: #3498db;   
-            --clr-check: #f1c40f;      
-            --clr-task: #2ecc71;       
-            --clr-evaluate: #34495e;  
-            --clr-donate: #e74c3c;     
-            --clr-fund: #d35400;       
-            --clr-student: #27ae60;    
-            --clr-hr: #9b59b6;        
-            --clr-benefits: #95a5a6;  
-            --clr-bhxh: #1abc9c;      
         }
 
         * {
             box-sizing: border-box;
+            user-select: none; /* Hạn chế bôi đen văn bản để giống ứng dụng */
         }
 
         html, body { 
-            height: 100%;
+            height: 100vh;
+            width: 100vw;
             margin: 0; 
             padding: 0;
-            overflow: hidden; /* Khóa cuộn toàn trang để giữ giao diện luôn full màn hình */
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            padding: 12px; 
             background-image: var(--default-bg);
             background-size: cover;
             background-position: center;
@@ -53,353 +41,391 @@
             flex-direction: column;
         }
 
-        .container { 
+        /* =========================================================================
+           2. KHỐI MÀN HÌNH CHÍNH (DESKTOP GRID)
+           ========================================================================= */
+        #desktop-area {
             flex: 1;
+            padding: 10px;
+            /* Cấu trúc lưới linh hoạt: sắp xếp icon từ trên xuống, hết cột chuyển sang phải */
             display: flex;
             flex-direction: column;
-            width: 100%;
-            max-width: 100%;
-            background: rgba(255, 255, 255, 0.88); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 15px 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); 
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            overflow: hidden; /* Đảm bảo các thành phần bên trong không làm tràn màn hình */
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 15px 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Từng Icon trên Desktop */
+        .desktop-icon {
+            width: 90px;
+            min-height: 105px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .desktop-icon:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .desktop-icon:active {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Khối màu chứa Icon (Phong cách Windows 11 / Fluent Design) */
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            pointer-events: none; /* Tránh xung đột kéo thả */
+        }
+
+        .icon-box .material-icons {
+            font-size: 28px;
+            color: #ffffff;
+        }
+
+        /* Bảng màu rực rỡ cho các ứng dụng */
+        .bg-1 { background: linear-gradient(135deg, #1976D2, #42A5F5); }
+        .bg-2 { background: linear-gradient(135deg, #F57F17, #FBC02D); }
+        .bg-3 { background: linear-gradient(135deg, #388E3C, #66BB6A); }
+        .bg-4 { background: linear-gradient(135deg, #00796B, #26A69A); }
+        .bg-5 { background: linear-gradient(135deg, #7B1FA2, #AB47BC); }
+        .bg-6 { background: linear-gradient(135deg, #5D4037, #8D6E63); }
+        .bg-7 { background: linear-gradient(135deg, #D32F2F, #EF5350); }
+        .bg-8 { background: linear-gradient(135deg, #E64A19, #FF7043); }
+        .bg-9 { background: linear-gradient(135deg, #455A64, #78909C); }
+        .bg-10 { background: linear-gradient(135deg, #0097A7, #26C6DA); }
+
+        /* Chữ của Icon (Có viền đổ bóng đen để đọc được trên mọi nền) */
+        .icon-text {
+            color: #ffffff;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.3;
+            text-shadow: 1px 1px 2px #000000, 0 0 10px rgba(0,0,0,0.8);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-wrap: break-word;
+            pointer-events: none;
+        }
+
+        /* Trạng thái Kéo thả */
+        .desktop-icon.dragging {
+            opacity: 0.5;
+        }
+        .desktop-icon.drag-over {
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 1px dashed #ffffff;
         }
 
         /* =========================================================================
-           2. KHỐI TIÊU ĐỀ & THANH CÔNG CỤ (HEADER & UTILITY BAR)
+           3. THANH TÁC VỤ (TASKBAR) DƯỚI CÙNG
            ========================================================================= */
-        .header-container {
+        .taskbar {
+            height: 48px;
+            background: rgba(20, 20, 20, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            flex-shrink: 0; /* Không cho phép co rút, giữ cố định chiều cao */
+            padding: 0 15px;
+            z-index: 1000;
         }
 
-        .header-main {
+        /* Nút Start bên trái */
+        .start-btn {
             display: flex;
-            align-items: center;    
-            gap: 15px;
-        }
-
-        .school-logo {
-            height: 55px;            
-            width: auto;             
-            object-fit: contain;
-        }
-
-        h1 { 
-            color: #1a252f; 
-            text-transform: uppercase;
-            font-size: 1.5em; 
-            margin: 0;               
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-        
-        .utility-bar {
-            display: flex;
+            align-items: center;
             gap: 10px;
-        }
-
-        .btn-action {
-            color: white;
-            border: none;
-            padding: 8px 16px; 
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .start-btn:hover { background: rgba(255, 255, 255, 0.15); }
+        
+        .start-logo {
+            height: 28px;
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+        }
+
+        .start-text {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Khay hệ thống bên phải (System Tray) */
+        .system-tray {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-weight: bold;
-            font-size: 0.9em;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            gap: 8px;
+            color: #ffffff;
         }
 
-        .btn-utility { background-color: #8e44ad; }
-        .btn-utility:hover { background-color: #732d91; transform: translateY(-1px); }
+        .tray-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-        .btn-config { background-color: #2c3e50; }
-        .btn-config:hover { background-color: #1a252f; transform: translateY(-1px); }
+        .tray-icon:hover { background: rgba(255, 255, 255, 0.15); }
+        .tray-icon .material-icons { font-size: 20px; }
+
+        .clock-container {
+            text-align: right;
+            font-size: 12px;
+            line-height: 1.2;
+            margin-left: 10px;
+            padding: 0 5px;
+        }
 
         /* =========================================================================
-           3. KHỐI DANH SÁCH CHỨC NĂNG (LAUNCHPAD GRID - ICON TO)
+           4. HỘP THOẠI GHI CHÚ BÁM CHUỘT (TOOLTIP)
            ========================================================================= */
-        .project-list { 
-            flex: 1;
-            display: grid;
-            /* Phân bổ lưới tự động thích ứng full màn hình, tối thiểu 200px một ô */
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            grid-auto-rows: minmax(150px, 1fr);
-            gap: 20px;
-            list-style-type: none; 
-            padding: 5px; 
-            margin: 0;
-            overflow-y: auto; /* Nếu màn hình quá nhỏ, chỉ vùng này được cuộn nội bộ */
+        .win-tooltip {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #bbbbbb;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333333;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+            pointer-events: none; /* Quan trọng để không chặn sự kiện chuột */
+            opacity: 0;
+            z-index: 9999;
+            max-width: 250px;
+            line-height: 1.4;
+            transition: opacity 0.15s ease-in-out;
         }
-        
-        /* Cấu trúc từng ô dự án dạng ứng dụng thông minh */
-        .project-item { 
+
+        /* =========================================================================
+           5. CỬA SỔ TIỆN ÍCH DẠY HỌC (WINDOW UI)
+           ========================================================================= */
+        .window-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .window-container {
+            width: 85vw;
+            height: 85vh;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px; 
-            border: 1px solid rgba(0,0,0,0.06); 
-            border-radius: 12px; 
-            background-color: rgba(255, 255, 255, 0.85);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            cursor: grab;
-            position: relative;
             overflow: hidden;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            animation: popIn 0.2s ease-out;
         }
 
-        .project-item:active {
-            cursor: grabbing;
-        }
-        
-        /* Hiệu ứng phóng to nhẹ khi di chuột */
-        .project-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-            background-color: #ffffff;
+        @keyframes popIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
-        /* Định dạng icon lớn tương thích */
-        .project-icon {
-            font-size: 52px; 
-            margin-bottom: 12px;
-            transition: transform 0.3s ease;
-        }
-        
-        .project-item:hover .project-icon {
-            transform: scale(1.1);
-        }
-        
-        .project-title {
-            text-decoration: none; 
-            color: #2c3e50; 
-            font-weight: 700; 
-            font-size: 1.05em; 
-            line-height: 1.3;
-            margin: 0;
-        }
-
-        /* --- Khối ghi chú giới thiệu hiển thị khi hover (Tooltip Overlay) --- */
-        .project-desc {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(26, 37, 47, 0.96); /* Nền tối sang trọng che phủ */
-            color: #ffffff;
+        .window-titlebar {
+            background: #e0e0e0;
+            padding: 8px 15px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            padding: 15px;
-            box-sizing: border-box;
-            opacity: 0;
-            transition: opacity 0.25s ease-in-out;
-            text-align: center;
-            font-size: 0.92em;
-            line-height: 1.45;
-            pointer-events: none; /* Tránh cản trở sự kiện kéo thả */
-            border-radius: 12px;
-            font-weight: 500;
+            border-bottom: 1px solid #cccccc;
         }
 
-        /* Hiển thị ghi chú khi rê chuột vào ô */
-        .project-item:hover .project-desc {
-            opacity: 1;
-        }
+        .window-title { font-size: 14px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 5px; }
+        .window-title .material-icons { font-size: 16px; color: #555; }
 
-        /* --- Định dạng màu sắc nhận diện viền trái và icon --- */
-        .proj-1 { border-top: 5px solid var(--clr-calendar); } .proj-1 .project-icon { color: var(--clr-calendar); }
-        .proj-2 { border-top: 5px solid var(--clr-check); } .proj-2 .project-icon { color: var(--clr-check); }
-        .proj-3 { border-top: 5px solid var(--clr-task); } .proj-3 .project-icon { color: var(--clr-task); }
-        .proj-4 { border-top: 5px solid var(--clr-student); } .proj-4 .project-icon { color: var(--clr-student); }
-        .proj-5 { border-top: 5px solid var(--clr-hr); } .proj-5 .project-icon { color: var(--clr-hr); }
-        .proj-6 { border-top: 5px solid var(--clr-benefits); } .proj-6 .project-icon { color: var(--clr-benefits); }
-        .proj-7 { border-top: 5px solid var(--clr-donate); } .proj-7 .project-icon { color: var(--clr-donate); }
-        .proj-8 { border-top: 5px solid var(--clr-fund); } .proj-8 .project-icon { color: var(--clr-fund); }
-        .proj-9 { border-top: 5px solid var(--clr-evaluate); } .proj-9 .project-icon { color: var(--clr-evaluate); }
-        .proj-10 { border-top: 5px solid var(--clr-bhxh); } .proj-10 .project-icon { color: var(--clr-bhxh); }
-
-        /* Trạng thái khi đang kéo thả */
-        .project-item.dragging {
-            opacity: 0.4;
-            border: 2px dashed #3498db;
-        }
-        
-        .project-item.drag-over {
-            border: 2px dashed #2ecc71;
-            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
-        }
-
-        /* =========================================================================
-           4. CHÂN TRANG & LỚP PHỦ TIỆN ÍCH
-           ========================================================================= */
-        .footer { 
-            margin-top: 10px; 
-            text-align: center; 
-            color: #555; 
-            font-size: 0.9em; 
-            font-weight: bold;
-            border-top: 1px solid rgba(0,0,0,0.08);
-            padding-top: 8px;
-            flex-shrink: 0;
-        }
-
-        .utilities-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2000;
-            display: none; 
-            background-color: rgba(244, 247, 246, 0.98);
-        }
-
-        .utilities-iframe {
-            width: 100%;
-            height: 100%;
+        .window-close {
+            background: transparent;
             border: none;
-            display: block;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 30px; height: 30px;
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
         }
+        .window-close:hover { background: #e81123; color: white; }
+
+        .window-content {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div id="desktop-area">
         
-        <!-- Thanh Tiêu đề kết hợp Điều hướng tối ưu không gian -->
-        <div class="header-container">
-            <div class="header-main">
-                <img src="https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png" alt="Logo Trường TH&THCS Hợp Thành" class="school-logo">
-                <h1>HỆ THỐNG QUẢN TRỊ ĐIỀU HÀNH</h1>
-            </div>
-            <div class="utility-bar">
-                <button class="btn-action btn-config" onclick="changeBackgroundImage()" title="Thay đổi hình nền hệ thống">
-                    <span class="material-icons">wallpaper</span> Đổi hình nền
-                </button>
-                <button class="btn-action btn-utility" onclick="toggleUtilities(true)">
-                    <span class="material-icons">build_circle</span> Tiện ích dạy học
-                </button>
-            </div>
+        <div class="desktop-icon" data-id="1" draggable="true" onclick="navigateTo('./SoCongVan/index.html', false)" data-desc="Quản lý lịch làm việc, lưu trữ và tra cứu hệ thống văn bản đi, đến, văn bản chỉ đạo.">
+            <div class="icon-box bg-1"><span class="material-icons">calendar_month</span></div>
+            <span class="icon-text">Sổ công văn<br>& Lịch CT</span>
+        </div>
+
+        <div class="desktop-icon" data-id="2" draggable="true" onclick="navigateTo('./SoKiemTraHopThanh/index.html', false)" data-desc="Số hóa hồ sơ kiểm tra nội bộ, theo dõi công tác kiểm tra chuyên môn nghiệp vụ.">
+            <div class="icon-box bg-2"><span class="material-icons">fact_check</span></div>
+            <span class="icon-text">Sổ kiểm tra<br>nội bộ</span>
+        </div>
+
+        <div class="desktop-icon" data-id="3" draggable="true" onclick="navigateTo('./PhieuGiaoViec/index.html', false)" data-desc="Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên.">
+            <div class="icon-box bg-3"><span class="material-icons">assignment</span></div>
+            <span class="icon-text">Đánh giá<br>công tác</span>
         </div>
         
-        <!-- Khối lưới Chức năng - Hỗ trợ kéo thả và tự động sắp xếp theo cấu hình lưu trữ -->
-        <ul class="project-list" id="project-list">
-            
-            <li class="project-item proj-1" data-id="1" draggable="true" onclick="navigateTo('./SoCongVan/index.html', false)">
-                <span class="material-icons project-icon">calendar_month</span>
-                <p class="project-title">1. Lịch công tác & Sổ công văn</p>
-                <div class="project-desc">Quản lý lịch làm việc, lưu trữ và tra cứu hệ thống văn bản đi, đến, văn bản chỉ đạo.</div>
-            </li>
+        <div class="desktop-icon" data-id="4" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/quanlihocsinh_hopthanh/', true)" data-desc="Quản lý số lượng, kết quả học tập và rèn luyện, thành tích của học sinh.">
+            <div class="icon-box bg-4"><span class="material-icons">school</span></div>
+            <span class="icon-text">Quản lý<br>học sinh</span>
+        </div>
 
-            <li class="project-item proj-2" data-id="2" draggable="true" onclick="navigateTo('./SoKiemTraHopThanh/index.html', false)">
-                <span class="material-icons project-icon">fact_check</span>
-                <p class="project-title">2. Sổ kiểm tra nội bộ</p>
-                <div class="project-desc">Số hóa hồ sơ kiểm tra nội bộ, theo dõi công tác kiểm tra chuyên môn nghiệp vụ.</div>
-            </li>
+        <div class="desktop-icon" data-id="5" draggable="true" onclick="navigateTo('https://testphanmem.github.io/nhansu_hopthanh/', true)" data-desc="Quản lý thông tin trình độ chuyên môn và chất lượng đội ngũ nhà trường.">
+            <div class="icon-box bg-5"><span class="material-icons">groups</span></div>
+            <span class="icon-text">Chất lượng<br>đội ngũ</span>
+        </div>
 
-            <li class="project-item proj-3" data-id="3" draggable="true" onclick="navigateTo('./PhieuGiaoViec/index.html', false)">
-                <span class="material-icons project-icon">assignment</span>
-                <p class="project-title">3. Đánh giá công tác tháng</p>
-                <div class="project-desc">Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên.</div>
-            </li>
-            
-            <li class="project-item proj-4" data-id="4" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/quanlihocsinh_hopthanh/', true)">
-                <span class="material-icons project-icon">school</span>
-                <p class="project-title">4. Quản lý học sinh</p>
-                <div class="project-desc">Quản lý số lượng, kết quả học tập và rèn luyện, thành tích của học sinh.</div>
-            </li>
+        <div class="desktop-icon" data-id="6" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/quanlychedo_hopthanh/', true)" data-desc="Theo dõi, quản lý các chế độ chính sách, thâm niên, lương và phụ cấp của giáo viên.">
+            <div class="icon-box bg-6"><span class="material-icons">badge</span></div>
+            <span class="icon-text">Chế độ<br>đội ngũ</span>
+        </div>
 
-            <li class="project-item proj-5" data-id="5" draggable="true" onclick="navigateTo('https://testphanmem.github.io/nhansu_hopthanh/', true)">
-                <span class="material-icons project-icon">groups</span>
-                <p class="project-title">5. Quản lý chất lượng đội ngũ</p>
-                <div class="project-desc">Quản lý thông tin trình độ chuyên môn và chất lượng đội ngũ nhà trường.</div>
-            </li>
+        <div class="desktop-icon" data-id="7" draggable="true" onclick="navigateTo('https://testphanmem.github.io/quanlytaitro_hopthanh/', true)" data-desc="Theo dõi, thống kê minh bạch các nguồn tài trợ, đóng góp xã hội hóa giáo dục.">
+            <div class="icon-box bg-7"><span class="material-icons">volunteer_activism</span></div>
+            <span class="icon-text">Quản lý<br>tài trợ</span>
+        </div>
 
-            <li class="project-item proj-6" data-id="6" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/quanlychedo_hopthanh/', true)">
-                <span class="material-icons project-icon">badge</span>
-                <p class="project-title">6. Quản lý chế độ đội ngũ</p>
-                <div class="project-desc">Theo dõi, quản lý các chế độ chính sách, thâm niên, lương và phụ cấp của giáo viên.</div>
-            </li>
+        <div class="desktop-icon" data-id="8" draggable="true" onclick="navigateTo('https://testphanmem.github.io/quanlyquy_hopthanh/', true)" data-desc="Kiểm soát thu chi, báo cáo tài chính các loại quỹ nội bộ của đơn vị.">
+            <div class="icon-box bg-8"><span class="material-icons">account_balance_wallet</span></div>
+            <span class="icon-text">Quản lý<br>quỹ nội bộ</span>
+        </div>
+        
+        <div class="desktop-icon" data-id="9" draggable="true" onclick="onclick=navigateTo('./DanhGiaVienChuc/index.html', false)" data-desc="Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động định kỳ.">
+            <div class="icon-box bg-9"><span class="material-icons">assignment_ind</span></div>
+            <span class="icon-text">Đánh giá<br>viên chức</span>
+        </div>
 
-            <li class="project-item proj-7" data-id="7" draggable="true" onclick="navigateTo('https://testphanmem.github.io/quanlytaitro_hopthanh/', true)">
-                <span class="material-icons project-icon">volunteer_activism</span>
-                <p class="project-title">7. Quản lý tài trợ</p>
-                <div class="project-desc">Theo dõi, thống kê minh bạch các nguồn tài trợ, đóng góp xã hội hóa giáo dục.</div>
-            </li>
+        <div class="desktop-icon" data-id="10" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/chedo-BHXH-nghihuu/', true)" data-desc="Công cụ tích hợp tự động tính toán chi tiết chế độ nghỉ hưu, trợ cấp và BHXH một lần.">
+            <div class="icon-box bg-10"><span class="material-icons">calculate</span></div>
+            <span class="icon-text">Tính chế độ<br>BHXH, Hưu</span>
+        </div>
 
-            <li class="project-item proj-8" data-id="8" draggable="true" onclick="navigateTo('https://testphanmem.github.io/quanlyquy_hopthanh/', true)">
-                <span class="material-icons project-icon">account_balance_wallet</span>
-                <p class="project-title">8. Quản lý quỹ</p>
-                <div class="project-desc">Kiểm soát thu chi, báo cáo tài chính các loại quỹ nội bộ của đơn vị.</div>
-            </li>
-            
-            <li class="project-item proj-9" data-id="9" draggable="true" onclick="navigateTo('./DanhGiaVienChuc/index.html', false)">
-                <span class="material-icons project-icon">assignment_ind</span>
-                <p class="project-title">9. Đánh giá viên chức</p>
-                <div class="project-desc">Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động định kỳ.</div>
-            </li>
+    </div>
 
-            <li class="project-item proj-10" data-id="10" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/chedo-BHXH-nghihuu/', true)">
-                <span class="material-icons project-icon">calculate</span>
-                <p class="project-title">10. Tính chế độ BHXH, Hưu trí</p>
-                <div class="project-desc">Công cụ tích hợp AI tính toán chi tiết chế độ nghỉ hưu, trợ cấp và BHXH một lần.</div>
-            </li>
-
-        </ul>
-
-        <div class="footer">
-            <p>Phát triển bởi: Hoàng Ngọc Lâm</p>
+    <div class="taskbar">
+        <div class="start-btn" title="Hệ thống Quản trị Điều hành">
+            <img src="https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png" alt="Logo" class="start-logo">
+            <span class="start-text">Hợp Thành OS</span>
+        </div>
+        
+        <div class="system-tray">
+            <div class="tray-icon" onclick="toggleUtilities(true)" title="Mở Tiện ích dạy học">
+                <span class="material-icons">build_circle</span>
+            </div>
+            <div class="tray-icon" onclick="changeBackgroundImage()" title="Cấu hình Hình nền Desktop">
+                <span class="material-icons">wallpaper</span>
+            </div>
+            <div class="clock-container" id="sys-clock">
+                --:--<br>--/--/----
+            </div>
         </div>
     </div>
 
-    <!-- Khối Lớp phủ Tiện ích -->
-    <div id="utilities-overlay" class="utilities-overlay">
-        <iframe src="tienich.html" class="utilities-iframe" title="Tiện Ích Dạy Học"></iframe>
+    <div id="win-tooltip" class="win-tooltip"></div>
+
+    <div id="window-utilities" class="window-overlay">
+        <div class="window-container">
+            <div class="window-titlebar">
+                <div class="window-title">
+                    <span class="material-icons">build_circle</span> Tiện ích dạy học
+                </div>
+                <button class="window-close" onclick="toggleUtilities(false)" title="Đóng cửa sổ">✕</button>
+            </div>
+            <iframe src="tienich.html" class="window-content" title="Tiện ích"></iframe>
+        </div>
     </div>
 
 <script>
     /* =========================================================================
-       1. KHỐI XỬ LÝ ĐIỀU HƯỚNG TRÁNH XUNG ĐỘT KÉO THẢ
+       1. KHỐI XỬ LÝ ĐIỀU HƯỚNG VÀ TOOLTIP
        ========================================================================= */
     let isDragging = false;
+    const tooltip = document.getElementById('win-tooltip');
 
     function navigateTo(url, isNewTab) {
-        // Nếu người dùng vừa thực hiện thao tác kéo thả thì không kích hoạt chuyển trang
-        if (isDragging) return; 
-        
-        if (isNewTab) {
-            window.open(url, '_blank');
-        } else {
-            window.location.href = url;
-        }
+        if (isDragging) return; // Không điều hướng nếu đang thực hiện thao tác kéo
+        if (isNewTab) { window.open(url, '_blank'); } 
+        else { window.location.href = url; }
     }
 
+    // Gắn sự kiện Tooltip bám theo con trỏ chuột cho các icon
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+        icon.addEventListener('mouseenter', function(e) {
+            tooltip.innerText = this.getAttribute('data-desc');
+            tooltip.style.opacity = '1';
+        });
+        icon.addEventListener('mousemove', function(e) {
+            // Định vị Tooltip chếch xuống góc phải chuột một chút
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY + 15) + 'px';
+        });
+        icon.addEventListener('mouseleave', function() {
+            tooltip.style.opacity = '0';
+        });
+    });
+
     /* =========================================================================
-       2. KHỐI XỬ LÝ KÉO THẢ VÀ LƯU VỊ TRÍ (DRAG & DROP PERSISTENCE)
+       2. KHỐI XỬ LÝ ĐỒNG HỒ THỜI GIAN THỰC
        ========================================================================= */
-    const listContainer = document.getElementById('project-list');
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+        const dateStr = now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        document.getElementById('sys-clock').innerHTML = `${timeStr}<br>${dateStr}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* =========================================================================
+       3. KHỐI XỬ LÝ KÉO THẢ VÀ LƯU TRẠNG THÁI (DRAG & DROP)
+       ========================================================================= */
+    const desktopArea = document.getElementById('desktop-area');
     let dragSrcEl = null;
 
     function initDragAndDrop() {
-        const items = listContainer.querySelectorAll('.project-item');
-        
+        const items = desktopArea.querySelectorAll('.desktop-icon');
         items.forEach(item => {
             item.addEventListener('dragstart', handleDragStart);
             item.addEventListener('dragover', handleDragOver);
@@ -415,19 +441,16 @@
         dragSrcEl = this;
         this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
+        tooltip.style.opacity = '0'; // Ẩn tooltip khi đang kéo
     }
 
     function handleDragOver(e) {
-        if (e.preventDefault) {
-            e.preventDefault(); 
-        }
+        if (e.preventDefault) { e.preventDefault(); }
         return false;
     }
 
     function handleDragEnter(e) {
-        if (this !== dragSrcEl) {
-            this.classList.add('drag-over');
-        }
+        if (this !== dragSrcEl) { this.classList.add('drag-over'); }
     }
 
     function handleDragLeave(e) {
@@ -435,67 +458,49 @@
     }
 
     function handleDrop(e) {
-        if (e.stopPropagation) {
-            e.stopPropagation(); 
-        }
-        
+        if (e.stopPropagation) { e.stopPropagation(); }
         if (dragSrcEl !== this) {
-            const allItems = Array.from(listContainer.children);
+            const allItems = Array.from(desktopArea.children);
             const srcIdx = allItems.indexOf(dragSrcEl);
             const tgtIdx = allItems.indexOf(this);
             
-            // Thực hiện đổi vị trí trong DOM hình học
-            if (srcIdx < tgtIdx) {
-                listContainer.insertBefore(dragSrcEl, this.nextSibling);
-            } else {
-                listContainer.insertBefore(dragSrcEl, this);
-            }
-            
-            saveItemsOrder(); // Lưu lại trật tự mới vào bộ nhớ
+            if (srcIdx < tgtIdx) { desktopArea.insertBefore(dragSrcEl, this.nextSibling); } 
+            else { desktopArea.insertBefore(dragSrcEl, this); }
+            saveItemsOrder(); 
         }
         return false;
     }
 
     function handleDragEnd(e) {
         this.classList.remove('dragging');
-        const items = listContainer.querySelectorAll('.project-item');
+        const items = desktopArea.querySelectorAll('.desktop-icon');
         items.forEach(item => item.classList.remove('drag-over'));
-        
-        // Đặt độ trễ nhỏ để sự kiện click không bị kích hoạt nhầm ngay sau khi buông chuột
         setTimeout(() => { isDragging = false; }, 50);
     }
 
     function saveItemsOrder() {
-        const currentItems = listContainer.querySelectorAll('.project-item');
+        const currentItems = desktopArea.querySelectorAll('.desktop-icon');
         const orderArray = [];
-        currentItems.forEach(item => {
-            orderArray.push(item.getAttribute('data-id'));
-        });
-        localStorage.setItem('ht_dashboard_order', JSON.stringify(orderArray));
+        currentItems.forEach(item => { orderArray.push(item.getAttribute('data-id')); });
+        localStorage.setItem('ht_desktop_order', JSON.stringify(orderArray));
     }
 
     function loadItemsOrder() {
-        const savedOrder = localStorage.getItem('ht_dashboard_order');
+        const savedOrder = localStorage.getItem('ht_desktop_order');
         if (savedOrder) {
             const orderArray = JSON.parse(savedOrder);
             const itemsMap = {};
-            const items = Array.from(listContainer.children);
+            const items = Array.from(desktopArea.children);
+            items.forEach(item => { itemsMap[item.getAttribute('data-id')] = item; });
             
-            items.forEach(item => {
-                itemsMap[item.getAttribute('data-id')] = item;
-            });
-            
-            // Sắp xếp lại các thẻ li theo mảng đã lưu
             orderArray.forEach(id => {
-                if (itemsMap[id]) {
-                    listContainer.appendChild(itemsMap[id]);
-                }
+                if (itemsMap[id]) { desktopArea.appendChild(itemsMap[id]); }
             });
         }
     }
 
     /* =========================================================================
-       3. KHỐI CẤU HÌNH HÌNH NỀN HỆ THỐNG (BACKGROUND MANAGEMENT)
+       4. KHỐI CẤU HÌNH HÌNH NỀN VÀ QUẢN LÝ CỬA SỔ
        ========================================================================= */
     function loadSavedBackground() {
         var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
@@ -507,12 +512,9 @@
     function changeBackgroundImage() {
         var currentUrl = localStorage.getItem("ht_dashboard_bg") || "";
         var newUrl = prompt(
-            "CẤU HÌNH HÌNH NỀN HỆ THỐNG FULL-SCREEN
-" + 
-            "Vui lòng nhập đường dẫn (URL) hình ảnh mong muốn công tác (Ví dụ banner sự kiện, ảnh trường).
-
-" + 
-            "Mẹo: Để trống và nhấn OK để quay về hình nền mặc định.", 
+            "CẤU HÌNH HÌNH NỀN DESKTOP\n\n" + 
+            "Nhập đường dẫn (URL) hình ảnh Thầy muốn sử dụng làm hình nền:\n" + 
+            "(Để trống và nhấn OK nếu muốn quay về hình nền phong cảnh mặc định)", 
             currentUrl
         );
 
@@ -527,23 +529,20 @@
         }
     }
 
-    /* =========================================================================
-       4. KHỐI ĐIỀU KHIỂN TIỆN ÍCH LỚP PHỦ (OVERLAY UTILITIES)
-       ========================================================================= */
     function toggleUtilities(isShow) {
-        var overlay = document.getElementById('utilities-overlay');
+        var win = document.getElementById('window-utilities');
         if (isShow) {
-            overlay.style.display = 'block';
+            win.style.display = 'flex';
         } else {
-            overlay.style.display = 'none';
+            win.style.display = 'none';
         }
     }
 
-    // Khởi tạo toàn bộ dữ liệu cấu hình khi trang sẵn sàng
+    // Khởi chạy hệ thống khi tải xong trang
     document.addEventListener("DOMContentLoaded", function() {
-        loadItemsOrder();    // Tải vị trí sắp xếp ô chức năng
-        initDragAndDrop();   // Kích hoạt tính năng kéo thả thiết bị
-        loadSavedBackground(); // Tải hình nền tùy chỉnh
+        loadItemsOrder();
+        initDragAndDrop();
+        loadSavedBackground();
     });
 </script>
 </body>
