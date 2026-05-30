@@ -10,21 +10,37 @@
     
     <style>
         /* =========================================================================
-           1. KHỐI ĐỊNH DẠNG GIAO DIỆN TỔNG THỂ
+           1. KHỐI ĐỊNH DẠNG GIAO DIỆN TỔNG THỂ & HÌNH NỀN
            ========================================================================= */
+        :root {
+            /* Hình nền mặc định (có thể thay đổi qua giao diện) */
+            --default-bg: url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop');
+        }
+
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
             margin: 0; 
-            padding: 0 10px 10px 10px; 
-            background-color: #f4f7f6; 
+            padding: 20px 10px; 
+            /* Thiết lập hình nền toàn trang */
+            background-image: var(--default-bg);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
         }
+
         .container { 
-            max-width: 1000px; 
+            max-width: 1100px; 
             margin: 0 auto; 
-            background: white; 
-            padding: 0 20px 15px 20px; 
-            border-radius: 0 0 12px 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            /* Hiệu ứng kính mờ (Glassmorphism) đảm bảo văn bản luôn dễ đọc trên mọi nền */
+            background: rgba(255, 255, 255, 0.92); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 0 25px 20px 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); 
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         /* =========================================================================
@@ -35,84 +51,124 @@
             justify-content: center;
             align-items: center;    
             border-bottom: 2px solid #3498db;
-            padding-bottom: 5px; 
-            margin-bottom: 10px; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
             position: sticky;
             top: 0; 
-            background-color: white; 
+            /* Nền của header cũng trong suốt nhẹ để đồng bộ */
+            background: rgba(255, 255, 255, 0.95); 
             z-index: 1000; 
-            padding-top: 10px; 
-            min-height: 60px;
+            padding-top: 15px; 
+            min-height: 70px;
+            border-radius: 0 0 8px 8px;
         }
 
         .school-logo {
             position: absolute;
-            left: 0;
-            height: 60px;            
+            left: 10px;
+            height: 65px;            
             width: auto;             
-            border-radius: 5px;      
             object-fit: contain;
         }
 
         h1 { 
-            color: #2c3e50; 
+            color: #1a252f; 
             text-transform: uppercase;
-            font-size: 1.6em; 
+            font-size: 1.7em; 
             margin: 0;               
             text-align: center;
-            padding-left: 80px;
-            padding-right: 80px;
+            padding-left: 90px;
+            padding-right: 90px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
         
         /* =========================================================================
-           3. KHỐI ĐỊNH DẠNG DANH SÁCH CHỨC NĂNG (GRID)
+           3. KHỐI ĐỊNH DẠNG THANH CÔNG CỤ (UTILITY BAR)
+           ========================================================================= */
+        .utility-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-action {
+            color: white;
+            border: none;
+            padding: 8px 16px; 
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-utility { background-color: #8e44ad; }
+        .btn-utility:hover { background-color: #732d91; transform: translateY(-1px); }
+
+        .btn-config { background-color: #2c3e50; }
+        .btn-config:hover { background-color: #1a252f; transform: translateY(-1px); }
+
+        /* =========================================================================
+           4. KHỐI ĐỊNH DẠNG DANH SÁCH CHỨC NĂNG (GRID)
            ========================================================================= */
         .project-list { 
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 15px;
             list-style-type: none; 
             padding: 0; 
             margin: 0;
         }
+        
         .project-item { 
             display: flex;
             align-items: flex-start;
-            padding: 10px; 
-            border: 1px solid #e0e0e0; 
+            padding: 15px; 
+            border: 1px solid rgba(0,0,0,0.08); 
             border-radius: 8px; 
-            background-color: transparent; 
+            background-color: rgba(255, 255, 255, 0.8); /* Nền trắng đục cho từng thẻ */
             transition: all 0.3s ease-in-out;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
+        
         .project-item:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+            background-color: #ffffff;
         }
         
         .project-icon {
-            font-size: 36px; 
-            margin-right: 12px;
-            margin-top: 0;
+            font-size: 40px; 
+            margin-right: 15px;
+            margin-top: 2px;
         }
         
         .project-content {
             display: flex;
             flex-direction: column;
         }
+        
         .project-content a { 
             text-decoration: none; 
             color: #2c3e50; 
-            font-weight: bold; 
+            font-weight: 700; 
             font-size: 1.15em; 
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             transition: color 0.2s ease;
         }
+        
         .project-content p { 
             margin: 0; 
-            color: #555; 
-            line-height: 1.4;
-            font-size: 0.9em;
+            color: #444; 
+            line-height: 1.45;
+            font-size: 0.95em;
         }
 
         /* --- Bản đồ màu sắc theo từng khối chức năng --- */
@@ -127,96 +183,60 @@
             --clr-hr: #9b59b6;        
             --clr-benefits: #95a5a6;  
             --clr-bhxh: #1abc9c;      
-            --clr-utilities: #8e44ad; 
         }
 
+        /* Hiệu ứng viền và màu hover cho từng thẻ */
         .proj-calendar { border-left: 5px solid var(--clr-calendar); }
         .proj-calendar .project-icon { color: var(--clr-calendar); }
-        .proj-calendar:hover { background-color: #ecf0f1; border-color: var(--clr-calendar); }
         .proj-calendar .project-content a:hover { color: var(--clr-calendar); }
 
         .proj-check { border-left: 5px solid var(--clr-check); }
         .proj-check .project-icon { color: var(--clr-check); }
-        .proj-check:hover { background-color: #fef9e7; border-color: var(--clr-check); }
-        .proj-check .project-content a:hover { color: #f39c12; }
+        .proj-check .project-content a:hover { color: #d68910; }
 
         .proj-task { border-left: 5px solid var(--clr-task); }
         .proj-task .project-icon { color: var(--clr-task); }
-        .proj-task:hover { background-color: #e8f8f5; border-color: var(--clr-task); }
         .proj-task .project-content a:hover { color: var(--clr-task); }
 
         .proj-evaluate { border-left: 5px solid var(--clr-evaluate); }
         .proj-evaluate .project-icon { color: var(--clr-evaluate); }
-        .proj-evaluate:hover { background-color: #ebedef; border-color: var(--clr-evaluate); }
-        .proj-evaluate .project-content a:hover { color: #2c3e50; }
+        .proj-evaluate .project-content a:hover { color: #1a252f; }
 
         .proj-donate { border-left: 5px solid var(--clr-donate); }
         .proj-donate .project-icon { color: var(--clr-donate); }
-        .proj-donate:hover { background-color: #fdedec; border-color: var(--clr-donate); }
         .proj-donate .project-content a:hover { color: var(--clr-donate); }
 
         .proj-fund { border-left: 5px solid var(--clr-fund); }
         .proj-fund .project-icon { color: var(--clr-fund); }
-        .proj-fund:hover { background-color: #fdf2e9; border-color: var(--clr-fund); }
         .proj-fund .project-content a:hover { color: var(--clr-fund); }
 
         .proj-student { border-left: 5px solid var(--clr-student); }
         .proj-student .project-icon { color: var(--clr-student); }
-        .proj-student:hover { background-color: #eafaf1; border-color: var(--clr-student); }
         .proj-student .project-content a:hover { color: var(--clr-student); }
 
         .proj-hr { border-left: 5px solid var(--clr-hr); }
         .proj-hr .project-icon { color: var(--clr-hr); }
-        .proj-hr:hover { background-color: #f4ecf7; border-color: var(--clr-hr); }
         .proj-hr .project-content a:hover { color: var(--clr-hr); }
 
         .proj-benefits { border-left: 5px solid var(--clr-benefits); }
         .proj-benefits .project-icon { color: var(--clr-benefits); }
-        .proj-benefits:hover { background-color: #f8f9f9; border-color: var(--clr-benefits); }
         .proj-benefits .project-content a:hover { color: #7f8c8d; }
 
         .proj-bhxh { border-left: 5px solid var(--clr-bhxh); }
         .proj-bhxh .project-icon { color: var(--clr-bhxh); }
-        .proj-bhxh:hover { background-color: #e8f8f5; border-color: var(--clr-bhxh); }
         .proj-bhxh .project-content a:hover { color: #16a085; }
 
-        .footer { 
-            margin-top: 20px; 
-            text-align: center; 
-            color: #7f8c8d; 
-            font-size: 0.9em; 
-            font-weight: bold;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-
         /* =========================================================================
-           4. KHỐI ĐỊNH DẠNG TIỆN ÍCH LỚP PHỦ
+           5. KHỐI CHÂN TRANG & OVERLAY TIỆN ÍCH
            ========================================================================= */
-        .utility-bar {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
-        }
-
-        .btn-open-utility {
-            background-color: var(--clr-utilities);
-            color: white;
-            border: none;
-            padding: 6px 15px; 
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .footer { 
+            margin-top: 25px; 
+            text-align: center; 
+            color: #555; 
+            font-size: 0.95em; 
             font-weight: bold;
-            font-size: 0.95em;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-open-utility:hover {
-            background-color: #732d91;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding-top: 15px;
         }
 
         .utilities-overlay {
@@ -227,7 +247,7 @@
             height: 100%;
             z-index: 2000;
             display: none; 
-            background-color: #f4f7f6;
+            background-color: rgba(244, 247, 246, 0.98);
         }
 
         .utilities-iframe {
@@ -248,14 +268,17 @@
         </div>
 
         <div class="utility-bar">
-            <button class="btn-open-utility" onclick="toggleUtilities(true)">
+            <button class="btn-action btn-config" onclick="changeBackgroundImage()" title="Thay đổi hình nền theo sự kiện">
+                <span class="material-icons">wallpaper</span> Đổi hình nền
+            </button>
+            <button class="btn-action btn-utility" onclick="toggleUtilities(true)">
                 <span class="material-icons">build_circle</span> Tiện ích dạy học
             </button>
         </div>
         
         <ul class="project-list">
             
-            <li class="project-item proj-calendar">
+            <li class="project-item proj-calendar" onclick="window.location.href='./SoCongVan/index.html'">
                 <span class="material-icons project-icon">calendar_month</span>
                 <div class="project-content">
                     <a href="./SoCongVan/index.html">1. Lịch công tác & Sổ công văn</a>
@@ -263,7 +286,7 @@
                 </div>
             </li>
 
-            <li class="project-item proj-check">
+            <li class="project-item proj-check" onclick="window.location.href='./SoKiemTraHopThanh/index.html'">
                 <span class="material-icons project-icon">fact_check</span>
                 <div class="project-content">
                     <a href="./SoKiemTraHopThanh/index.html">2. Sổ kiểm tra nội bộ</a>
@@ -271,14 +294,15 @@
                 </div>
             </li>
 
-            <li class="project-item proj-task">
+            <li class="project-item proj-task" onclick="window.location.href='./PhieuGiaoViec/index.html'">
                 <span class="material-icons project-icon">assignment</span>
                 <div class="project-content">
                     <a href="./PhieuGiaoViec/index.html">3. Đánh giá kết quả công tác tháng</a>
                     <p>Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên.</p>
                 </div>
             </li>
-            <li class="project-item proj-student">
+            
+            <li class="project-item proj-student" onclick="window.open('https://quanlylaocai.github.io/quanlihocsinh_hopthanh/', '_blank')">
                 <span class="material-icons project-icon">school</span>
                 <div class="project-content">
                     <a href="https://quanlylaocai.github.io/quanlihocsinh_hopthanh/" target="_blank">4. Quản lý học sinh</a>
@@ -286,15 +310,15 @@
                 </div>
             </li>
 
-             <li class="project-item proj-hr">
+             <li class="project-item proj-hr" onclick="window.open('https://testphanmem.github.io/nhansu_hopthanh/', '_blank')">
                 <span class="material-icons project-icon">groups</span>
                 <div class="project-content">
-                    <a href="./QLChatLuongDoiNgu/index.html">5. Quản lý chất lượng đội ngũ</a>
+                    <a href="https://testphanmem.github.io/nhansu_hopthanh/" target="_blank">5. Quản lý chất lượng đội ngũ</a>
                     <p>Quản lý thông tin trình độ chuyên môn và chất lượng đội ngũ.</p>
                 </div>
             </li>
 
-            <li class="project-item proj-benefits">
+            <li class="project-item proj-benefits" onclick="window.open('https://quanlylaocai.github.io/quanlychedo_hopthanh/', '_blank')">
                 <span class="material-icons project-icon">badge</span>
                 <div class="project-content">
                     <a href="https://quanlylaocai.github.io/quanlychedo_hopthanh/" target="_blank">6. Quản lý chế độ đội ngũ</a>
@@ -302,7 +326,7 @@
                 </div>
             </li>
 
-             <li class="project-item proj-donate">
+             <li class="project-item proj-donate" onclick="window.open('https://testphanmem.github.io/quanlytaitro_hopthanh/', '_blank')">
                 <span class="material-icons project-icon">volunteer_activism</span>
                 <div class="project-content">
                     <a href="https://testphanmem.github.io/quanlytaitro_hopthanh/" target="_blank">7. Quản lý tài trợ</a>
@@ -310,7 +334,7 @@
                 </div>
             </li>
 
-             <li class="project-item proj-fund">
+             <li class="project-item proj-fund" onclick="window.open('https://testphanmem.github.io/quanlyquy_hopthanh/', '_blank')">
                 <span class="material-icons project-icon">account_balance_wallet</span>
                 <div class="project-content">
                     <a href="https://testphanmem.github.io/quanlyquy_hopthanh/" target="_blank">8. Quản lý quỹ</a>
@@ -318,7 +342,7 @@
                 </div>
             </li>
             
-            <li class="project-item proj-evaluate">
+            <li class="project-item proj-evaluate" onclick="window.location.href='./DanhGiaVienChuc/index.html'">
                 <span class="material-icons project-icon">assignment_ind</span>
                 <div class="project-content">
                     <a href="./DanhGiaVienChuc/index.html">9. Đánh giá viên chức</a>
@@ -326,10 +350,10 @@
                 </div>
             </li>
 
-            <li class="project-item proj-bhxh">
+            <li class="project-item proj-bhxh" onclick="window.open('https://quanlylaocai.github.io/chedo-BHXH-nghihuu/', '_blank')">
                 <span class="material-icons project-icon">calculate</span>
                 <div class="project-content">
-                    <a href="https://quanlylaocai.github.io/chedo-BHXH-nghihuu/" target="_blank">10. Tính chế độ BHXH, Hưu trí (Có tích hợp AI)</a>
+                    <a href="https://quanlylaocai.github.io/chedo-BHXH-nghihuu/" target="_blank">10. Tính chế độ BHXH, Hưu trí</a>
                     <p>Công cụ tính toán chi tiết chế độ nghỉ hưu, trợ cấp thôi việc và BHXH một lần.</p>
                 </div>
             </li>
@@ -346,19 +370,68 @@
     </div>
 
 <script>
+    /* =========================================================================
+       KHỐI XỬ LÝ LƯU TRỮ VÀ THAY ĐỔI HÌNH NỀN
+       ========================================================================= */
+    
+    // Tự động tải hình nền đã lưu khi trang vừa khởi tạo
+    document.addEventListener("DOMContentLoaded", function() {
+        loadSavedBackground();
+    });
+
     /**
-     * Tính năng: Bật/Tắt Lớp phủ chứa Iframe Tiện Ích.
-     * Xử lý: Mở overlay đồng thời khóa thanh cuộn (scroll) ở trang chính.
+     * Hàm lấy đường dẫn ảnh từ localStorage và áp dụng vào thẻ body
+     */
+    function loadSavedBackground() {
+        var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
+        if (savedBgUrl && savedBgUrl.trim() !== "") {
+            document.body.style.backgroundImage = "url('" + savedBgUrl + "')";
+        }
+    }
+
+    /**
+     * Hàm cho phép quản trị viên nhập URL ảnh mới để làm hình nền
+     * Các dịp lễ (như 30/4, 20/11) có thể tải ảnh lên Drive/Imgbb lấy link dán vào đây
+     */
+    function changeBackgroundImage() {
+        var currentUrl = localStorage.getItem("ht_dashboard_bg") || "";
+        var newUrl = prompt(
+            "CẤU HÌNH HÌNH NỀN HỆ THỐNG\n" + 
+            "Vui lòng nhập đường dẫn (URL) của hình ảnh bạn muốn sử dụng làm hình nền (Ví dụ: banner chào mừng 30/4).\n\n" + 
+            "Mẹo: Để trống và nhấn OK nếu muốn quay về hình nền mặc định.", 
+            currentUrl
+        );
+
+        // Nếu người dùng không bấm Hủy (Cancel)
+        if (newUrl !== null) {
+            if (newUrl.trim() === "") {
+                // Xoá cấu hình cũ, quay về mặc định của CSS
+                localStorage.removeItem("ht_dashboard_bg");
+                document.body.style.backgroundImage = "var(--default-bg)";
+            } else {
+                // Lưu và áp dụng hình nền mới
+                localStorage.setItem("ht_dashboard_bg", newUrl.trim());
+                document.body.style.backgroundImage = "url('" + newUrl.trim() + "')";
+            }
+        }
+    }
+
+    /* =========================================================================
+       KHỐI XỬ LÝ GIAO DIỆN HIỂN THỊ TIỆN ÍCH
+       ========================================================================= */
+
+    /**
+     * Bật/Tắt Lớp phủ chứa Iframe Tiện Ích
      * @param {boolean} isShow - Trạng thái cần thiết lập (true: Hiện, false: Ẩn)
      */
     function toggleUtilities(isShow) {
         var overlay = document.getElementById('utilities-overlay');
         if (isShow) {
             overlay.style.display = 'block';
-            document.body.style.overflow = 'hidden'; 
+            document.body.style.overflow = 'hidden'; // Khoá cuộn trang nền
         } else {
             overlay.style.display = 'none';
-            document.body.style.overflow = ''; 
+            document.body.style.overflow = ''; // Mở lại cuộn trang
         }
     }
 </script>
