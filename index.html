@@ -10,15 +10,16 @@
     
     <style>
         /* =========================================================================
-           1. KHỐI NỀN TẢNG (HỆ ĐIỀU HÀNH WINDOWS UI)
+           1. KHỐI NỀN TẢNG (HỆ ĐIỀU HÀNH WINDOWS UI) - PHỤC HỒI GỐC
            ========================================================================= */
         :root {
-            var(--default-bg: url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop');
+            /* Hình nền Windows mặc định */
+            --default-bg: url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop');
         }
 
         * {
             box-sizing: border-box;
-            user-select: none; 
+            user-select: none; /* Hạn chế bôi đen văn bản để giống ứng dụng */
         }
 
         html, body { 
@@ -41,20 +42,23 @@
         }
 
         /* =========================================================================
-           2. KHỐI MÀN HÌNH CHÍNH (DESKTOP AREA TỰ DO KÉO THẢ)
+           2. KHỐI MÀN HÌNH CHÍNH (DESKTOP GRID) - PHỤC HỒI GỐC
            ========================================================================= */
         #desktop-area {
             flex: 1;
-            /* Thiết lập không gian tương đối để làm mốc tọa độ cho các Icon */
-            position: relative; 
+            padding: 10px;
+            /* Cấu trúc lưới linh hoạt gốc */
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 15px 5px;
             overflow: hidden;
-            width: 100%;
-            height: 100%;
+            position: relative;
         }
 
-        /* Từng Icon trên Desktop - Sử dụng định vị tuyệt đối để kéo thả tùy ý */
+        /* Từng Icon trên Desktop */
         .desktop-icon {
-            position: absolute; /* Cho phép đặt vị trí tự do theo tọa độ x, y */
             width: 90px;
             min-height: 105px;
             display: flex;
@@ -64,7 +68,9 @@
             border: 1px solid transparent;
             border-radius: 4px;
             cursor: pointer;
-            transition: background 0.1s, opacity 0.2s;
+            transition: background 0.1s;
+            /* touch-action để hỗ trợ kéo thả trên màn hình cảm ứng mượt hơn */
+            touch-action: none; 
         }
 
         .desktop-icon:hover {
@@ -76,6 +82,7 @@
             background-color: rgba(255, 255, 255, 0.25);
         }
 
+        /* Khối màu chứa Icon */
         .icon-box {
             width: 50px;
             height: 50px;
@@ -105,6 +112,7 @@
         .bg-9 { background: linear-gradient(135deg, #455A64, #78909C); }
         .bg-10 { background: linear-gradient(135deg, #0097A7, #26C6DA); }
 
+        /* Chữ của Icon */
         .icon-text {
             color: #ffffff;
             font-size: 12px;
@@ -119,12 +127,8 @@
             pointer-events: none;
         }
 
-        .desktop-icon.dragging {
-            opacity: 0.6;
-        }
-
         /* =========================================================================
-           3. THANH TÁC VỤ (TASKBAR) DƯỚI CÙNG
+           3. THANH TÁC VỤ (TASKBAR) DƯỚI CÙNG - PHỤC HỒI GỐC
            ========================================================================= */
         .taskbar {
             height: 48px;
@@ -193,7 +197,7 @@
         }
 
         /* =========================================================================
-           4. HỘP THOẠI GHI CHÚ BÁM CHUỘT (TOOLTIP)
+           4. HỘP THOẠI GHI CHÚ BÁM CHUỘT (TOOLTIP) - PHỤC HỒI GỐC
            ========================================================================= */
         .win-tooltip {
             position: fixed;
@@ -204,7 +208,7 @@
             font-size: 13px;
             color: #333333;
             box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
-            pointer-events: none; 
+            pointer-events: none;
             opacity: 0;
             z-index: 9999;
             max-width: 250px;
@@ -213,7 +217,7 @@
         }
 
         /* =========================================================================
-           5. CỬA SỔ TIỆN ÍCH DẠY HỌC (WINDOW UI)
+           5. CỬA SỔ TIỆN ÍCH DẠY HỌC (WINDOW UI) - PHỤC HỒI GỐC
            ========================================================================= */
         .window-overlay {
             position: fixed;
@@ -278,52 +282,52 @@
 
     <div id="desktop-area">
         
-        <div class="desktop-icon" data-id="1" draggable="true" onclick="navigateTo('./SoCongVan/index.html', false)" data-desc="Quản lý lịch làm việc, lưu trữ và tra cứu hệ thống văn bản đi, đến, văn bản chỉ đạo.">
+        <div class="desktop-icon" data-id="1" onclick="navigateTo('./SoCongVan/index.html', false)" data-desc="Quản lý lịch làm việc, lưu trữ và tra cứu hệ thống văn bản đi, đến, văn bản chỉ đạo.">
             <div class="icon-box bg-1"><span class="material-icons">calendar_month</span></div>
             <span class="icon-text">Sổ công văn<br>& Lịch CT</span>
         </div>
 
-        <div class="desktop-icon" data-id="2" draggable="true" onclick="navigateTo('./SoKiemTraHopThanh/index.html', false)" data-desc="Số hóa hồ sơ kiểm tra nội bộ, theo dõi công tác kiểm tra chuyên môn nghiệp vụ.">
+        <div class="desktop-icon" data-id="2" onclick="navigateTo('./SoKiemTraHopThanh/index.html', false)" data-desc="Số hóa hồ sơ kiểm tra nội bộ, theo dõi công tác kiểm tra chuyên môn nghiệp vụ.">
             <div class="icon-box bg-2"><span class="material-icons">fact_check</span></div>
             <span class="icon-text">Sổ kiểm tra<br>nội bộ</span>
         </div>
 
-        <div class="desktop-icon" data-id="3" draggable="true" onclick="navigateTo('./PhieuGiaoViec/index.html', false)" data-desc="Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên.">
+        <div class="desktop-icon" data-id="3" onclick="navigateTo('./PhieuGiaoViec/index.html', false)" data-desc="Giao nhiệm vụ, theo dõi tiến độ và đánh giá kết quả công việc của cán bộ, giáo viên.">
             <div class="icon-box bg-3"><span class="material-icons">assignment</span></div>
             <span class="icon-text">Đánh giá<br>công tác</span>
         </div>
         
-        <div class="desktop-icon" data-id="4" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/quanlihocsinh_hopthanh/', true)" data-desc="Quản lý số lượng, kết quả học tập và rèn luyện, thành tích của học sinh.">
+        <div class="desktop-icon" data-id="4" onclick="navigateTo('https://quanlylaocai.github.io/quanlihocsinh_hopthanh/', true)" data-desc="Quản lý số lượng, kết quả học tập và rèn luyện, thành tích của học sinh.">
             <div class="icon-box bg-4"><span class="material-icons">school</span></div>
             <span class="icon-text">Quản lý<br>học sinh</span>
         </div>
 
-        <div class="desktop-icon" data-id="5" draggable="true" onclick="navigateTo('./QLChatLuongDoiNgu/index.html/', true)" data-desc="Quản lý thông tin trình độ chuyên môn và chất lượng đội ngũ nhà trường.">
+        <div class="desktop-icon" data-id="5" onclick="navigateTo('./QLChatLuongDoiNgu/index.html/', true)" data-desc="Quản lý thông tin trình độ chuyên môn và chất lượng đội ngũ nhà trường.">
             <div class="icon-box bg-5"><span class="material-icons">groups</span></div>
             <span class="icon-text">Chất lượng<br>đội ngũ</span>
         </div>
 
-        <div class="desktop-icon" data-id="6" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/quanlychedo_hopthanh/', true)" data-desc="Theo dõi, quản lý các chế độ chính sách, thâm niên, lương và phụ cấp của giáo viên.">
+        <div class="desktop-icon" data-id="6" onclick="navigateTo('https://quanlylaocai.github.io/quanlychedo_hopthanh/', true)" data-desc="Theo dõi, quản lý các chế độ chính sách, thâm niên, lương và phụ cấp của giáo viên.">
             <div class="icon-box bg-6"><span class="material-icons">badge</span></div>
             <span class="icon-text">Chế độ<br>đội ngũ</span>
         </div>
 
-        <div class="desktop-icon" data-id="7" draggable="true" onclick="navigateTo('https://testphanmem.github.io/quanlytaitro_hopthanh/', true)" data-desc="Theo dõi, thống kê minh bạch các nguồn tài trợ, đóng góp xã hội hóa giáo dục.">
+        <div class="desktop-icon" data-id="7" onclick="navigateTo('https://testphanmem.github.io/quanlytaitro_hopthanh/', true)" data-desc="Theo dõi, thống kê minh bạch các nguồn tài trợ, đóng góp xã hội hóa giáo dục.">
             <div class="icon-box bg-7"><span class="material-icons">volunteer_activism</span></div>
             <span class="icon-text">Quản lý<br>tài trợ</span>
         </div>
 
-        <div class="desktop-icon" data-id="8" draggable="true" onclick="navigateTo('https://testphanmem.github.io/quanlyquy_hopthanh/', true)" data-desc="Kiểm soát thu chi, báo cáo tài chính các loại quỹ nội bộ của đơn vị.">
+        <div class="desktop-icon" data-id="8" onclick="navigateTo('https://testphanmem.github.io/quanlyquy_hopthanh/', true)" data-desc="Kiểm soát thu chi, báo cáo tài chính các loại quỹ nội bộ của đơn vị.">
             <div class="icon-box bg-8"><span class="material-icons">account_balance_wallet</span></div>
             <span class="icon-text">Quản lý<br>quỹ nội bộ</span>
         </div>
         
-        <div class="desktop-icon" data-id="9" draggable="true" onclick="navigateTo('./DanhGiaVienChuc/index.html', false)" data-desc="Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động định kỳ.">
+        <div class="desktop-icon" data-id="9" onclick="navigateTo('./DanhGiaVienChuc/index.html', false)" data-desc="Hệ thống đánh giá, xếp loại thi đua viên chức và người lao động định kỳ.">
             <div class="icon-box bg-9"><span class="material-icons">assignment_ind</span></div>
             <span class="icon-text">Đánh giá<br>viên chức</span>
         </div>
 
-        <div class="desktop-icon" data-id="10" draggable="true" onclick="navigateTo('https://quanlylaocai.github.io/chedo-BHXH-nghihuu/', true)" data-desc="Công cụ tích hợp tự động tính toán chi tiết chế độ nghỉ hưu, trợ cấp và BHXH một lần.">
+        <div class="desktop-icon" data-id="10" onclick="navigateTo('https://quanlylaocai.github.io/chedo-BHXH-nghihuu/', true)" data-desc="Công cụ tích hợp tự động tính toán chi tiết chế độ nghỉ hưu, trợ cấp và BHXH một lần.">
             <div class="icon-box bg-10"><span class="material-icons">calculate</span></div>
             <span class="icon-text">Tính chế độ<br>BHXH, Hưu</span>
         </div>
@@ -370,15 +374,22 @@
     let isDragging = false;
     const tooltip = document.getElementById('win-tooltip');
     const desktopArea = document.getElementById('desktop-area');
+    const icons = document.querySelectorAll('.desktop-icon');
 
+    // Chặn điều hướng nếu vừa thực hiện thao tác kéo thả
     function navigateTo(url, isNewTab) {
-        if (isDragging) return; 
+        if (isDragging) {
+            isDragging = false;
+            return; 
+        }
         if (isNewTab) { window.open(url, '_blank'); } 
         else { window.location.href = url; }
     }
 
-    document.querySelectorAll('.desktop-icon').forEach(icon => {
+    // Hiển thị ghi chú khi di chuột
+    icons.forEach(icon => {
         icon.addEventListener('mouseenter', function(e) {
+            if (isDragging) return; // Ẩn khi đang kéo
             tooltip.innerText = this.getAttribute('data-desc');
             tooltip.style.opacity = '1';
         });
@@ -392,7 +403,7 @@
     });
 
     /* =========================================================================
-       2. KHỐI XỬ LÝ ĐỒNG HỒ THỜI GIAN THỰC
+       2. KHỐI ĐỒNG HỒ THỜI GIAN THỰC
        ========================================================================= */
     function updateClock() {
         const now = new Date();
@@ -404,75 +415,133 @@
     updateClock();
 
     /* =========================================================================
-       3. KHỐI XỬ LÝ KÉO THẢ TỌA ĐỘ TỰ DO (FREE DRAG & DROP POSITIONING)
+       3. THUẬT TOÁN ĐÓNG BĂNG TỌA ĐỘ VÀ KÉO THẢ (KHÔNG LÀM HỎNG CSS)
        ========================================================================= */
-    let dragSrcEl = null;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    function initFreeDragAndDrop() {
-        const items = document.querySelectorAll('.desktop-icon');
-        items.forEach(item => {
-            item.addEventListener('dragstart', handleDragStart);
-            item.addEventListener('dragend', handleDragEnd);
-        });
-
-        // Bắt sự kiện trên toàn bộ khu vực Desktop để tính tọa độ
-        desktopArea.addEventListener('dragover', function(e) {
-            e.preventDefault(); // Cho phép thả
-            e.dataTransfer.dropEffect = 'move';
-        });
-
-        desktopArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            if (dragSrcEl) {
-                const areaRect = desktopArea.getBoundingClientRect();
-                
-                // Tính tọa độ vị trí mới của Icon dựa trên vị trí thả chuột trừ đi độ lệch
-                let newLeft = e.clientX - areaRect.left - offsetX;
-                let newTop = e.clientY - areaRect.top - offsetY;
-
-                // Giới hạn không cho kéo thả ra khỏi viền màn hình hiện tại
-                newLeft = Math.max(0, Math.min(newLeft, areaRect.width - dragSrcEl.offsetWidth));
-                newTop = Math.max(0, Math.min(newTop, areaRect.height - dragSrcEl.offsetHeight));
-
-                // Áp dụng tọa độ tuyệt đối mới
-                dragSrcEl.style.left = newLeft + 'px';
-                dragSrcEl.style.top = newTop + 'px';
-
-                savePositions(); // Ghi nhận cấu hình vào bộ nhớ trình duyệt
+    function initializeLayout() {
+        const savedPositions = JSON.parse(localStorage.getItem('ht_desktop_positions_v3')) || {};
+        
+        // Bước 1: Áp dụng tọa độ đã lưu (nếu có)
+        icons.forEach(icon => {
+            const id = icon.getAttribute('data-id');
+            if (savedPositions[id]) {
+                icon.style.position = 'absolute';
+                icon.style.left = savedPositions[id].left;
+                icon.style.top = savedPositions[id].top;
+                icon.style.margin = '0'; // Xóa margin gốc của flexbox
             }
         });
+
+        // Bước 2: Chờ trình duyệt vẽ xong lưới Flexbox gốc, sau đó "đóng băng" tọa độ
+        // Thuật toán này giúp giữ nguyên 100% giao diện gốc, nhưng chuyển đổi ngầm sang tọa độ tuyệt đối để kéo thả
+        setTimeout(() => {
+            icons.forEach(icon => {
+                if (icon.style.position !== 'absolute') {
+                    const rect = icon.getBoundingClientRect();
+                    const areaRect = desktopArea.getBoundingClientRect();
+                    
+                    const absoluteLeft = (rect.left - areaRect.left) + 'px';
+                    const absoluteTop = (rect.top - areaRect.top) + 'px';
+                    
+                    icon.style.left = absoluteLeft;
+                    icon.style.top = absoluteTop;
+                }
+            });
+
+            // Sau khi đã chốt tọa độ của tất cả, mới áp dụng position absolute đồng loạt để không bị dồn cục
+            icons.forEach(icon => {
+                icon.style.position = 'absolute';
+                icon.style.margin = '0';
+            });
+        }, 50);
     }
 
-    function handleDragStart(e) {
-        isDragging = true;
-        dragSrcEl = this;
-        this.classList.add('dragging');
+    // Cơ chế kéo thả mượt mà bằng Mouse Events
+    let draggedIcon = null;
+    let offsetX = 0, offsetY = 0;
+    let dragThresholdPassed = false; // Phân biệt click và drag
+    let startX, startY;
+
+    icons.forEach(icon => {
+        icon.addEventListener('mousedown', startDrag);
+        icon.addEventListener('touchstart', startDrag, {passive: false});
+    });
+
+    function startDrag(e) {
+        if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return;
         
-        // Tính toán khoảng cách (độ lệch) từ điểm bấm chuột đến góc trên cùng bên trái của Icon
-        const rect = this.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-
-        e.dataTransfer.effectAllowed = 'move';
-        // Yêu cầu bắt buộc của HTML5 Drag API
-        e.dataTransfer.setData('text/plain', this.getAttribute('data-id')); 
+        dragThresholdPassed = false;
+        draggedIcon = this;
         
-        tooltip.style.opacity = '0'; // Ẩn nhãn ghi chú khi đang di chuyển
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        startX = clientX;
+        startY = clientY;
+
+        const rect = draggedIcon.getBoundingClientRect();
+        offsetX = clientX - rect.left;
+        offsetY = clientY - rect.top;
+        
+        tooltip.style.opacity = '0'; // Ẩn tooltip
+
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, {passive: false});
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
     }
 
-    function handleDragEnd(e) {
-        this.classList.remove('dragging');
-        // Tạo độ trễ siêu nhỏ để tránh xung đột với sự kiện Click điều hướng trang
-        setTimeout(() => { isDragging = false; }, 50); 
+    function drag(e) {
+        if (!draggedIcon) return;
+        
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+        // Nếu di chuột lớn hơn 3 pixel, xác nhận là hành động kéo chứ không phải click
+        if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) {
+            dragThresholdPassed = true;
+            isDragging = true;
+            draggedIcon.style.zIndex = '9999';
+            draggedIcon.style.opacity = '0.7';
+            e.preventDefault(); 
+        }
+
+        if (dragThresholdPassed) {
+            const areaRect = desktopArea.getBoundingClientRect();
+            
+            let newLeft = clientX - areaRect.left - offsetX;
+            let newTop = clientY - areaRect.top - offsetY;
+            
+            // Khóa khung giới hạn không cho icon văng ra khỏi màn hình
+            newLeft = Math.max(0, Math.min(newLeft, areaRect.width - draggedIcon.offsetWidth));
+            newTop = Math.max(0, Math.min(newTop, areaRect.height - draggedIcon.offsetHeight));
+            
+            draggedIcon.style.left = newLeft + 'px';
+            draggedIcon.style.top = newTop + 'px';
+        }
     }
 
-    /* =========================================================================
-       4. KHỐI QUẢN LÝ TỌA ĐỘ LƯU TRỮ VÀ KHỞI TẠO LƯỚI
-       ========================================================================= */
+    function stopDrag(e) {
+        if (!draggedIcon) return;
+        
+        draggedIcon.style.zIndex = '';
+        draggedIcon.style.opacity = '1';
+        
+        if (dragThresholdPassed) {
+            savePositions(); // Lưu lại vị trí mới
+        }
+        
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('touchmove', drag);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('touchend', stopDrag);
+        
+        draggedIcon = null;
+        
+        // Đặt độ trễ để tránh xung đột với sự kiện click
+        setTimeout(() => { isDragging = false; }, 50);
+    }
+
     function savePositions() {
-        const icons = document.querySelectorAll('.desktop-icon');
         const positions = {};
         icons.forEach(icon => {
             positions[icon.getAttribute('data-id')] = {
@@ -480,46 +549,11 @@
                 top: icon.style.top
             };
         });
-        localStorage.setItem('ht_desktop_positions', JSON.stringify(positions));
-    }
-
-    function setupInitialLayout() {
-        const icons = document.querySelectorAll('.desktop-icon');
-        const savedData = localStorage.getItem('ht_desktop_positions');
-        let savedPositions = savedData ? JSON.parse(savedData) : null;
-        
-        // Kích thước chuẩn để tự động dàn trang nếu chưa có dữ liệu vị trí
-        const iconWidth = 95; 
-        const iconHeight = 115;
-        const padding = 15;
-        
-        let currentX = padding;
-        let currentY = padding;
-
-        icons.forEach((icon, index) => {
-            const id = icon.getAttribute('data-id');
-            
-            if (savedPositions && savedPositions[id]) {
-                // Tái lập tọa độ đã được lưu
-                icon.style.left = savedPositions[id].left;
-                icon.style.top = savedPositions[id].top;
-            } else {
-                // Thuật toán trải Icon thông minh từ trên xuống, hết cột chuyển sang phải
-                if (currentY + iconHeight > desktopArea.clientHeight && index !== 0) {
-                    currentY = padding;
-                    currentX += iconWidth + padding;
-                }
-                
-                icon.style.left = currentX + 'px';
-                icon.style.top = currentY + 'px';
-                
-                currentY += iconHeight + padding;
-            }
-        });
+        localStorage.setItem('ht_desktop_positions_v3', JSON.stringify(positions));
     }
 
     /* =========================================================================
-       5. KHỐI CẤU HÌNH HÌNH NỀN VÀ QUẢN LÝ CỬA SỔ
+       4. KHỐI CẤU HÌNH HÌNH NỀN VÀ QUẢN LÝ CỬA SỔ
        ========================================================================= */
     function loadSavedBackground() {
         var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
@@ -557,19 +591,10 @@
         }
     }
 
-    // Khởi chạy hệ thống sau khi tải xong trang (Gắn Listener cho Window Resize)
+    // Khởi chạy hệ thống sau khi trang tải xong
     window.addEventListener("DOMContentLoaded", function() {
-        setupInitialLayout();     // Thiết lập vị trí/tọa độ
-        initFreeDragAndDrop();    // Kích hoạt tính năng kéo thả tọa độ tuyệt đối
-        loadSavedBackground();    // Tải cấu hình hình nền
-    });
-    
-    // Nếu màn hình thay đổi kích thước, giữ các Icon trong khung hình
-    window.addEventListener("resize", function() {
-        // Chỉ chạy lại layout nếu hệ thống chưa có tọa độ tùy chỉnh lưu trữ
-        if (!localStorage.getItem('ht_desktop_positions')) {
-            setupInitialLayout();
-        }
+        loadSavedBackground();
+        initializeLayout(); // Kích hoạt thuật toán đóng băng tọa độ
     });
 </script>
 </body>
