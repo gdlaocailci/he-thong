@@ -69,6 +69,10 @@
       .currency-col { text-align: right; font-weight: bold; white-space: nowrap; }
       .center-col { text-align: center; }
       
+      .badge-x { background-color: #0dcaf0; color: #000; padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;}
+      .badge-xx { background-color: #0d6efd; color: #fff; padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;}
+      .badge-xxx { background-color: #198754; color: #fff; padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;}
+      
       #upload_modal_cv { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10006; justify-content: center; align-items: center; }
       .up-container { background: #fff; padding: 20px 25px; border-radius: 12px; width: 480px; max-width: 95%; box-shadow: 0 15px 40px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.1); }
       .up-header { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -93,21 +97,6 @@
   </head>
   <body>
     <div id="loading"><div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div><div class="mt-3 fw-bold text-primary">Đang kết nối...</div></div>
-
-    <div class="modal fade" id="trialModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" style="z-index: 9999999;">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center p-4 border-0 shadow-lg" style="background: rgba(255, 255, 255, 0.95);">
-          <div class="mb-4 mt-2">
-            <i class="bi bi-info-circle text-primary" style="font-size: 3rem;"></i>
-          </div>
-          <h5 class="fw-bold mb-3" style="font-family: 'Segoe UI', sans-serif;" id="trialTitle">Thông báo hệ thống</h5>
-          <p class="fs-5 text-secondary" style="font-family: 'Segoe UI', sans-serif;" id="trialMessage">
-            Dữ liệu đang được tải, vui lòng chờ trong giây lát.
-          </p>
-          <button type="button" id="btnTrialOk" class="btn btn-primary px-5 mt-3 fw-bold" data-bs-dismiss="modal">Đồng ý</button>
-        </div>
-      </div>
-    </div>
 
     <div id="welcome-screen" style="display:none;">
       <div class="portal-box">
@@ -164,17 +153,20 @@
       </div>
 
       <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item">
-          <button class="nav-link active fw-bold px-3 py-1" data-bs-toggle="tab" data-bs-target="#tab1" type="button" onclick="loadTab1()">TIẾP NHẬN</button>
+        <li class="nav-item" id="navItemTab1" style="display:none;">
+          <button class="nav-link fw-bold px-3 py-1" id="btnTab1" data-bs-toggle="tab" data-bs-target="#tab1" type="button" onclick="loadTab1()">TIẾP NHẬN</button>
         </li>
-        <li class="nav-item">
-          <button class="nav-link fw-bold px-3 py-1" data-bs-toggle="tab" data-bs-target="#tab2" type="button">TRA CỨU</button>
+        <li class="nav-item" id="navItemTab2">
+          <button class="nav-link fw-bold px-3 py-1" id="btnTab2" data-bs-toggle="tab" data-bs-target="#tab2" type="button">TRA CỨU</button>
+        </li>
+        <li class="nav-item" id="navItemTab3" style="display:none;">
+          <button class="nav-link fw-bold px-3 py-1 text-danger" id="btnTab3" data-bs-toggle="tab" data-bs-target="#tab3" type="button" onclick="taiDuLieuQuyen()"><i class="bi bi-shield-lock"></i> PHÂN QUYỀN</button>
         </li>
       </ul>
 
       <div class="tab-content border border-top-0 p-2 bg-white shadow-sm rounded-bottom" style="min-height: 80vh;">
         
-        <div class="tab-pane fade show active" id="tab1">
+        <div class="tab-pane fade" id="tab1">
            <div class="mb-2">
               <button id="btnAdd" class="btn btn-success btn-sm fw-bold px-3" onclick="openModalAdd()"><i class="bi bi-plus-lg"></i> Thêm mới</button>
               <button class="btn btn-outline-secondary btn-sm ms-2 px-3" onclick="loadTab1()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
@@ -226,12 +218,35 @@
              </table>
            </div>
         </div>
+
+        <div class="tab-pane fade" id="tab3">
+           <div class="mb-3 text-end">
+              <button class="btn btn-success fw-bold px-4 btn-sm" onclick="moKhungThemMoiQuyen()"><i class="bi bi-person-plus-fill"></i> Thêm Cán Bộ</button>
+           </div>
+           
+           <div class="table-responsive" style="max-height: 72vh;">
+             <table class="table table-bordered table-hover text-center sticky-header">
+                <thead class="table-light">
+                   <tr>
+                      <th width="10%">Dòng</th>
+                      <th>Địa chỉ Email G-Mail</th>
+                      <th width="25%">Quyền hạn (Ký hiệu)</th>
+                      <th width="20%">Thao tác hành chính</th>
+                   </tr>
+                </thead>
+                <tbody id="bangPhanQuyen"></tbody>
+             </table>
+           </div>
+        </div>
+
       </div>
       <div class="dev-footer">Thiết kế và phát triển: <b>Hoàng Ngọc Lâm</b> - Trường TH&THCS Hợp Thành</div>
     </div>
 
     <div class="modal fade" id="modalAdd" data-bs-backdrop="static"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-success text-white py-2"><h5 class="modal-title fw-bold">THÊM MỚI</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="formAdd"><div class="row g-2"><div class="col-md-4"><label class="fw-bold small">Ngày tháng</label><input type="text" class="form-control form-control-sm" id="inpDate" placeholder="dd/mm/yyyy" onkeyup="dateInputMask(this)" maxlength="10"></div><div class="col-md-8"><label class="fw-bold small">Nội dung</label><input type="text" class="form-control form-control-sm" id="inpContent"></div><div class="col-md-2"><label class="fw-bold small">ĐVT</label><input type="text" class="form-control form-control-sm" id="inpUnit"></div><div class="col-md-3"><label class="fw-bold small">SL Nhận</label><input type="number" class="form-control form-control-sm" id="inpQtyIn" oninput="calcTotal()"></div><div class="col-md-3"><label class="fw-bold small">Giá</label><input type="number" class="form-control form-control-sm" id="inpPrice" oninput="calcTotal()"></div><div class="col-md-4"><label class="fw-bold small">Thành tiền</label><input type="text" class="form-control form-control-sm bg-light fw-bold text-danger" id="inpTotalIn" readonly></div><div class="col-md-6"><label class="fw-bold small">SL Phát</label><input type="number" class="form-control form-control-sm" id="inpQtyOut"></div><div class="col-md-6"><label class="fw-bold small">Tiền Phát</label><input type="number" class="form-control form-control-sm" id="inpTotalOut"></div><div class="col-md-6 pt-1"><div class="form-floating"><textarea class="form-control" id="inpSponsor" style="height: 70px"></textarea><label>Bên Tài trợ</label></div></div><div class="col-md-6 pt-1"><div class="form-floating"><textarea class="form-control" id="inpReceiver" style="height: 70px"></textarea><label>Bên Nhận</label></div></div><div class="col-12"><label class="fw-bold small">Ghi chú</label><input type="text" class="form-control form-control-sm" id="inpNote"></div><div class="col-12 mt-2 pt-2 border-top"><div class="d-flex align-items-center bg-light p-2 rounded border"><button type="button" class="btn btn-primary btn-sm fw-bold" onclick="openUploadModalCV()"><i class="bi bi-paperclip"></i> Đính kèm File</button><div class="ms-3"><span id="lblFileStatus" class="fst-italic text-muted small">Chưa có file.</span></div><input type="hidden" id="hiddenFileUrl"></div></div></div></form></div><div class="modal-footer py-1"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button><button class="btn btn-success btn-sm fw-bold" onclick="submitForm()">LƯU DỮ LIỆU</button></div></div></div></div>
     
+    <div class="modal fade" id="modalQuyen" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white py-2"><h5 class="modal-title fw-bold" id="tieuDeModalQuyen">THÊM MỚI QUYỀN</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="formQuyen"><input type="hidden" id="inpDongThamChieu" value=""><div class="mb-3"><label class="fw-bold small mb-1">Địa chỉ Email</label><input type="email" class="form-control" id="inpEmail" placeholder="ví dụ: canbo@gmail.com" required></div><div class="mb-3"><label class="fw-bold small mb-1">Cấp độ phân quyền</label><select class="form-select" id="inpQuyen"><option value="x">Chỉ tra cứu dữ liệu (x)</option><option value="xx">Cán bộ Tiếp nhận (xx)</option><option value="xxx">Quản trị tối cao (xxx)</option></select></div></form></div><div class="modal-footer py-1"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button><button class="btn btn-success btn-sm fw-bold" onclick="thucThiLuuQuyen()">LƯU HỒ SƠ</button></div></div></div></div>
+
     <div id="upload_modal_cv">
       <div class="up-container">
         <div class="up-header">
@@ -291,16 +306,8 @@
       let FILES_CV = [];
       const ROOT_ID_CV = '1KChaLe3wwh05zV1y_9Ob2NDHwIxl3Vv7'; 
 
-      function checkTrialPeriod() {
-        return true; 
-      }
-
       $(document).ready(function() {
-        const isTrialValid = checkTrialPeriod();
-        if (!isTrialValid) return; 
-
         document.getElementById('loading').style.display = 'none';
-
         const storedAccount = sessionStorage.getItem("HT_DINH_DANH");
         if(storedAccount) {
           window.HT_DINH_DANH_CB = storedAccount; 
@@ -338,6 +345,7 @@
         location.reload(); 
       }
 
+      // --- HÀM KIỂM TRA QUYỀN VÀ HIỂN THỊ CÁC TAB 1, 2, 3 (Gác cổng 3 lớp) ---
       function checkPermissionAndLoad(dinhDanhHienTai) {
         document.getElementById('welcome-screen').style.display = 'none';
         document.getElementById('loading').style.display = 'flex';
@@ -347,14 +355,30 @@
            document.getElementById('userEmailDisplay').innerText = "Cán bộ: " + quyenHan.dinhDanh;
            
            if (!quyenHan.quyenXem) {
+             // Lớp 1: Bị chặn (Cột C rỗng hoặc sai)
              document.getElementById('notice-overlay').style.display = 'flex';
              document.getElementById('notice-email').innerText = quyenHan.dinhDanh;
            } else {
+             // Mở khóa màn hình nội dung chung
              document.getElementById('main-content').style.display = 'block';
-             loadTab1();
-             if (!quyenHan.quyenGhi) {
-                var btn = document.getElementById('btnAdd');
-                if(btn) btn.style.display = 'none';
+             
+             if (quyenHan.quyenAdmin) {
+                // Lớp 3: Tối cao (xxx) -> Hiện tất cả 3 thẻ
+                document.getElementById('navItemTab1').style.display = 'block';
+                document.getElementById('navItemTab3').style.display = 'block';
+                new bootstrap.Tab(document.getElementById('btnTab1')).show();
+                loadTab1();
+             } else if (quyenHan.quyenGhi) {
+                // Lớp 2: Ghi sổ (xx) -> Hiện Tab 1 và 2, ẨN Tab 3 (Phân quyền)
+                document.getElementById('navItemTab1').style.display = 'block';
+                document.getElementById('navItemTab3').style.display = 'none';
+                new bootstrap.Tab(document.getElementById('btnTab1')).show();
+                loadTab1();
+             } else {
+                // Lớp 1: Chỉ tra cứu (x) -> Ẩn cả Tab 1 và Tab 3
+                document.getElementById('navItemTab1').style.display = 'none';
+                document.getElementById('navItemTab3').style.display = 'none';
+                new bootstrap.Tab(document.getElementById('btnTab2')).show();
              }
            }
         }).catch(loi => { 
@@ -444,7 +468,100 @@
            Swal.fire('Lỗi',loi.message,'error'); document.getElementById('loading').style.display='none'; 
         });
       }
+
+      // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ PHÂN QUYỀN (TAB 3) ---
+      function taiDuLieuQuyen() {
+          document.getElementById('loading').style.display = 'flex';
+          callServer('CQ_LayDanhSach', { dinhDanh: window.HT_DINH_DANH_CB })
+             .then(duLieu => {
+                document.getElementById('loading').style.display = 'none';
+                var htmlRows = '';
+                duLieu.forEach(muc => {
+                   var huyHieu = muc.quyen === 'xxx' ? '<span class="badge-xxx">Quản trị (xxx)</span>' : (muc.quyen === 'xx' ? '<span class="badge-xx">Tiếp nhận (xx)</span>' : (muc.quyen === 'x' ? '<span class="badge-x">Chỉ xem (x)</span>' : '<span class="text-danger fw-bold">Khóa</span>'));
+                   
+                   htmlRows += `<tr>
+                      <td>${muc.dong}</td>
+                      <td class="text-start fw-bold text-primary">${muc.email}</td>
+                      <td>${huyHieu}</td>
+                      <td>
+                         <button class="btn btn-sm btn-outline-primary px-3 py-0 me-1" onclick="moKhungCapNhatQuyen(${muc.dong}, '${muc.email}', '${muc.quyen}')">Sửa</button>
+                         <button class="btn btn-sm btn-outline-danger px-3 py-0" onclick="thucThiXoaQuyen(${muc.dong})">Xóa</button>
+                      </td>
+                   </tr>`;
+                });
+                document.getElementById('bangPhanQuyen').innerHTML = htmlRows;
+             })
+             .catch(loi => {
+                document.getElementById('loading').style.display = 'none';
+                Swal.fire('Lỗi truy xuất', loi.message, 'error');
+             });
+      }
+
+      function moKhungThemMoiQuyen() {
+          document.getElementById('formQuyen').reset();
+          document.getElementById('inpDongThamChieu').value = ""; 
+          document.getElementById('tieuDeModalQuyen').innerText = "THÊM MỚI QUYỀN TRUY CẬP";
+          new bootstrap.Modal(document.getElementById('modalQuyen')).show();
+      }
+
+      function moKhungCapNhatQuyen(dong, email, quyen) {
+          document.getElementById('inpDongThamChieu').value = dong;
+          document.getElementById('inpEmail').value = email;
+          document.getElementById('inpQuyen').value = quyen;
+          document.getElementById('tieuDeModalQuyen').innerText = "CẬP NHẬT QUYỀN CÁN BỘ (Dòng " + dong + ")";
+          new bootstrap.Modal(document.getElementById('modalQuyen')).show();
+      }
+
+      function thucThiLuuQuyen() {
+          var dongDuLieu = document.getElementById('inpDongThamChieu').value;
+          var emailCap = document.getElementById('inpEmail').value.trim();
+          var quyenCap = document.getElementById('inpQuyen').value;
+
+          if(!emailCap) { Swal.fire('Thiếu thông tin', 'Vui lòng nhập định danh Email.', 'warning'); return; }
+
+          document.getElementById('loading').style.display = 'flex';
+          var tenYeuCau = dongDuLieu ? 'CQ_CapNhat' : 'CQ_ThemMoi';
+          var goiDuLieu = { dongDuLieu: dongDuLieu, emailCap: emailCap, quyenCap: quyenCap, dinhDanh: window.HT_DINH_DANH_CB };
+
+          callServer(tenYeuCau, goiDuLieu)
+             .then(ketQua => {
+                bootstrap.Modal.getInstance(document.getElementById('modalQuyen')).hide();
+                Swal.fire('Thành công', 'Đã lưu trữ hồ sơ ánh xạ.', 'success');
+                taiDuLieuQuyen();
+             })
+             .catch(loi => {
+                document.getElementById('loading').style.display = 'none';
+                Swal.fire('Lỗi ghi sổ', loi.message, 'error');
+             });
+      }
+
+      function thucThiXoaQuyen(dong) {
+          Swal.fire({
+             title: 'Đồng chí có chắc chắn?',
+             text: 'Hành động này sẽ rút toàn bộ quyền truy cập của cán bộ.',
+             icon: 'warning',
+             showCancelButton: true,
+             confirmButtonColor: '#d33',
+             cancelButtonColor: '#6c757d',
+             confirmButtonText: 'Đồng ý rút quyền',
+             cancelButtonText: 'Hủy'
+          }).then((result) => {
+             if (result.isConfirmed) {
+                document.getElementById('loading').style.display = 'flex';
+                callServer('CQ_Xoa', { dongDuLieu: dong, dinhDanh: window.HT_DINH_DANH_CB })
+                   .then(ketQua => {
+                      Swal.fire('Đã xóa', 'Rút quyền thành công.', 'success');
+                      taiDuLieuQuyen();
+                   })
+                   .catch(loi => {
+                      document.getElementById('loading').style.display = 'none';
+                      Swal.fire('Lỗi xử lý', loi.message, 'error');
+                   });
+             }
+          });
+      }
       
+      // --- CÁC HÀM XỬ LÝ FILE ---
       function updateLinkCV(duongDan){ document.getElementById('hiddenFileUrl').value=duongDan; document.getElementById('lblFileStatus').innerHTML='<i class="bi bi-check-circle-fill"></i> Đã đính kèm hồ sơ.'; document.getElementById('lblFileStatus').className="fw-bold text-success small"; }
       function openUploadModalCV(){ document.getElementById('upload_modal_cv').style.display='flex'; loadFoldersCV(); }
       
