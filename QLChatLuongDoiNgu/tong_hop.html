@@ -207,33 +207,34 @@
             let xs3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
             let xs4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             
-            // Cập nhật mảng Cột 26 (Index 25): Đảng viên
-            let dv1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[25]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
-            let dv2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[25]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); })); 
-            let dv3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[25]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
-            let dv4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[25]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
+            // CẬP NHẬT: Xếp loại Đảng viên (Chỉ số mảng chuẩn r[21])
+            let dv1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
+            let dv2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); })); 
+            let dv3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
+            let dv4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             
-            let dh1 = taoODuLieuCoGhiChu(dy.filter(r => (r[21]||"").toLowerCase().includes("trường"))); 
-            let dh2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("huyện") || v.includes("tp") || v.includes("thành phố"); })); 
-            let dh3 = taoODuLieuCoGhiChu(dy.filter(r => (r[21]||"").toLowerCase().includes("tỉnh"))); 
-            let dh4 = taoODuLieuCoGhiChu(dy.filter(r => (r[21]||"").toLowerCase().includes("quốc gia") || (r[21]||"").toLowerCase().includes("qg")));
+            // CẬP NHẬT: Danh hiệu chuyên môn (Chỉ số mảng chuẩn r[22])
+            let dh1 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("trường"))); 
+            let dh2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[22]||"").toLowerCase(); return v.includes("huyện") || v.includes("tp") || v.includes("thành phố"); })); 
+            let dh3 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("tỉnh"))); 
+            let dh4 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("quốc gia") || (r[22]||"").toLowerCase().includes("qg")));
             
-            // Mảng Cột 23 (Index 22): Danh hiệu thi đua
-            let td1 = taoODuLieuCoGhiChu(dy.filter(r => r[22] === "LĐTT")); 
-            let td2 = taoODuLieuCoGhiChu(dy.filter(r => r[22] === "CSTĐ")); 
+            // CẬP NHẬT: Danh hiệu thi đua (Chỉ số mảng chuẩn r[23])
+            let td1 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "LĐTT")); 
+            let td2 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "CSTĐ")); 
             
-            // Mảng Cột 24 (Index 23): Hình thức khen
-            let ht1 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "Giấy khen")); 
-            let ht2 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "Bằng khen")); 
-            let ht3 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "Kỷ niệm chương")); 
-            let ht4 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "Huy chương")); 
-            let ht5 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "Huân chương"));
+            // CẬP NHẬT: Hình thức khen (Chỉ số mảng chuẩn r[24])
+            let ht1 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Giấy khen")); 
+            let ht2 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Bằng khen")); 
+            let ht3 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Kỷ niệm chương")); 
+            let ht4 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huy chương")); 
+            let ht5 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huân chương"));
 
-            // Cập nhật mảng Cột 25 (Index 24): Cấp khen
-            let ck1 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Xã")); 
-            let ck2 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huyện/TP")); 
-            let ck3 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Tỉnh")); 
-            let ck4 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Chính phủ")); 
+            // CẬP NHẬT: Cấp khen (Chỉ số mảng chuẩn r[25])
+            let ck1 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Xã")); 
+            let ck2 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Huyện/TP")); 
+            let ck3 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Tỉnh")); 
+            let ck4 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Chính phủ")); 
 
             bd2.append(`<tr><td class="fw-bold text-primary">${y}</td>${g1}${k1}${tb1}${y1}${g2}${k2}${tb2}${y2}${cn1}${cn2}${cn3}${xs1}${xs2}${xs4}${xs3}${dv1}${dv2}${dv4}${dv3}${dh1}${dh2}${dh3}${dh4}${td1}${td2}${ht1}${ht2}${ht3}${ht4}${ht5}${ck1}${ck2}${ck3}${ck4}</tr>`);
         });
