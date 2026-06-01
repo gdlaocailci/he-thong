@@ -1,0 +1,108 @@
+<style>
+  /* Cấu trúc giao diện Modal Quản trị - Tuân thủ chuẩn hành chính */
+  .modal-pq { background: rgba(0,0,0,0.6); z-index: 10010; }
+  .pq-box { background: white; border-radius: 10px; width: 600px; max-width: 95%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; font-family: 'Times New Roman', serif;}
+  .pq-header { background: #1e3a8a; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; text-transform: uppercase;}
+  .pq-body { padding: 20px; font-size: 16px; }
+  .pq-footer { padding: 15px; background: #f8fafc; text-align: right; border-top: 1px solid #e2e8f0; }
+  .pq-check-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+  .pq-check-item { display: flex; align-items: center; gap: 5px; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border: 1px solid #bbf7d0; cursor: pointer; transition: 0.2s;}
+  .pq-check-item:hover { background: #dcfce7; }
+  .pq-check-item input { cursor: pointer; width: 18px; height: 18px; }
+</style>
+
+<div id="modalCapQuyen" class="overlay-screen modal-pq" style="display:none;">
+  <div class="pq-box">
+    <div class="pq-header">
+      <i class="bi bi-person-lines-fill"></i> QUẢN LÝ PHÂN QUYỀN HỆ THỐNG
+    </div>
+    <div class="pq-body">
+       <div class="mb-3">
+         <label class="fw-bold text-primary mb-1">1. Email Cán bộ / Giáo viên:</label>
+         <input type="email" id="pq_email" class="form-control" placeholder="Nhập chính xác địa chỉ email...">
+       </div>
+       <div class="mb-3">
+         <label class="fw-bold text-primary mb-1">2. Quyền Hệ thống (Cột C):</label>
+         <select id="pq_hethong" class="form-select border-primary fw-bold text-primary">
+           <option value="" class="text-dark">⛔ Chặn truy cập (Để trống)</option>
+           <option value="x" selected class="text-success">👁️ Được phép Xem / Tra cứu (x)</option>
+           <option value="xx" class="text-danger">👑 Quản trị viên toàn quyền (xx)</option>
+         </select>
+       </div>
+       <div class="mb-2">
+         <label class="fw-bold text-primary">3. Quyền Nhập liệu (Tích chọn để cấp quyền "x"):</label>
+         <div class="pq-check-group">
+           <label class="pq-check-item text-success fw-bold"><input type="checkbox" id="pq_th" value="x"> Thăm hỏi (D)</label>
+           <label class="pq-check-item text-success fw-bold"><input type="checkbox" id="pq_kh" value="x"> Khuyến học (E)</label>
+           <label class="pq-check-item text-success fw-bold"><input type="checkbox" id="pq_qd" value="x"> Quỹ Đội (F)</label>
+           <label class="pq-check-item text-success fw-bold"><input type="checkbox" id="pq_cb" value="x"> Chi Bộ (G)</label>
+           <label class="pq-check-item text-success fw-bold"><input type="checkbox" id="pq_ctd" value="x"> Chữ thập đỏ (H)</label>
+         </div>
+       </div>
+       <div id="pq_status" class="mt-2 text-center fw-bold font-italic" style="font-size:14px;"></div>
+    </div>
+    <div class="pq-footer">
+       <button class="btn btn-secondary px-4 me-2 fw-bold" onclick="DongModalPhanQuyen()">ĐÓNG</button>
+       <button class="btn btn-primary px-4 fw-bold" id="btnSavePQ" onclick="ThucThiCapQuyen()">
+         <i class="bi bi-check-circle"></i> ĐỒNG BỘ QUYỀN
+       </button>
+    </div>
+  </div>
+</div>
+
+<script>
+   function MoModalPhanQuyen() {
+       document.getElementById('modalCapQuyen').style.display = 'flex';
+       document.getElementById('pq_status').innerText = '';
+   }
+   
+   function DongModalPhanQuyen() {
+       document.getElementById('modalCapQuyen').style.display = 'none';
+   }
+   
+   function ThucThiCapQuyen() {
+       const email = document.getElementById('pq_email').value.trim().toLowerCase();
+       if (!email) {
+           document.getElementById('pq_status').innerHTML = '<span class="text-danger">⚠️ Vui lòng nhập email cán bộ!</span>';
+           document.getElementById('pq_email').focus();
+           return;
+       }
+       
+       const dataPQ = {
+           email: email,
+           quyenHT: document.getElementById('pq_hethong').value,
+           qTH: document.getElementById('pq_th').checked ? 'x' : '',
+           qKH: document.getElementById('pq_kh').checked ? 'x' : '',
+           qQD: document.getElementById('pq_qd').checked ? 'x' : '',
+           qCB: document.getElementById('pq_cb').checked ? 'x' : '',
+           qCTD: document.getElementById('pq_ctd').checked ? 'x' : ''
+       };
+
+       const btnLuu = document.getElementById('btnSavePQ');
+       const trangThai = document.getElementById('pq_status');
+       
+       btnLuu.disabled = true;
+       btnLuu.innerHTML = 'Đang đồng bộ...';
+       trangThai.innerHTML = '<span class="text-primary">⏳ Đang xử lý dữ liệu lên máy chủ...</span>';
+
+       callServer('HT_CapNhatQuyen', {duLieuQuyen: dataPQ, taiKhoan: window.TAI_KHOAN_HE_THONG})
+         .then(kq => {
+             if (kq.thanhCong) {
+                 trangThai.innerHTML = '<span class="text-success">✅ ' + kq.thongBao + '</span>';
+                 setTimeout(() => { 
+                     DongModalPhanQuyen(); 
+                     document.getElementById('pq_email').value = ''; 
+                 }, 2000);
+             } else {
+                 trangThai.innerHTML = '<span class="text-danger">❌ ' + kq.thongBao + '</span>';
+             }
+         })
+         .catch(loi => {
+             trangThai.innerHTML = '<span class="text-danger">❌ Lỗi: ' + loi.message + '</span>';
+         })
+         .finally(() => {
+             btnLuu.disabled = false;
+             btnLuu.innerHTML = '<i class="bi bi-check-circle"></i> ĐỒNG BỘ QUYỀN';
+         });
+   }
+</script>
