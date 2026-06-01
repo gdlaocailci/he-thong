@@ -52,7 +52,7 @@
              </div>
            </div>
            <div id="pq_status" class="mt-3 text-center fw-bold" style="font-size:14px;"></div>
-           <button class="btn btn-outline-primary w-100 fw-bold mt-2" onclick="DuaVaoDanhSachTam()">
+           <button class="btn btn-outline-primary w-100 fw-bold mt-2" onclick="DuaVaoDanhSachTam(false)">
              <i class="bi bi-arrow-down-circle"></i> ĐƯA VÀO DANH SÁCH CHỜ LƯU
            </button>
            <button class="btn btn-outline-secondary w-100 fw-bold mt-2 btn-sm" onclick="LamMoiFormPQ()">
@@ -95,7 +95,7 @@
 </div>
 
 <script>
-   // Biến toàn cục lưu trữ danh sách quyền tại bộ nhớ đệm của trình duyệt
+   // Biến toàn cục lưu trữ danh sách quyền tại bộ nhớ đệm
    let dsPhanQuyen_Tam = [];
    let coThayDoiChuaLuu = false;
 
@@ -155,7 +155,6 @@
          });
    }
 
-   // Vẽ bảng dựa trên bộ nhớ đệm (Local Array) thay vì gọi máy chủ
    function VeBangDanhSachTam() {
        const bangHienThi = document.getElementById('pq_list_body');
        if (dsPhanQuyen_Tam.length === 0) {
@@ -203,12 +202,14 @@
        document.getElementById('pq_status').innerHTML = '<span class="text-primary">✏️ Đang thiết lập cho: ' + email + '</span>';
    }
 
-   // Hàm thêm hoặc cập nhật vào danh sách tạm trên trình duyệt
-   function DuaVaoDanhSachTam() {
+   // Hàm gắp dữ liệu từ form vào mảng tạm (imLang = true sẽ không báo lỗi nếu form trống)
+   function DuaVaoDanhSachTam(imLang = false) {
        const email = document.getElementById('pq_email').value.trim().toLowerCase();
        if (!email) {
-           document.getElementById('pq_status').innerHTML = '<span class="text-danger">⚠️ Vui lòng nhập email cán bộ!</span>';
-           document.getElementById('pq_email').focus();
+           if (!imLang) {
+               document.getElementById('pq_status').innerHTML = '<span class="text-danger">⚠️ Vui lòng nhập email cán bộ!</span>';
+               document.getElementById('pq_email').focus();
+           }
            return;
        }
        
@@ -222,23 +223,21 @@
            qCTD: document.getElementById('pq_ctd').checked ? 'x' : ''
        };
 
-       // Kiểm tra xem email đã có trong danh sách tạm chưa
        const viTri = dsPhanQuyen_Tam.findIndex(nv => nv.email === email);
        if (viTri > -1) {
-           dsPhanQuyen_Tam[viTri] = taiKhoanMoi; // Cập nhật
-           document.getElementById('pq_status').innerHTML = '<span class="text-success">✅ Đã cập nhật vào danh sách chờ.</span>';
+           dsPhanQuyen_Tam[viTri] = taiKhoanMoi;
+           if (!imLang) document.getElementById('pq_status').innerHTML = '<span class="text-success">✅ Đã cập nhật vào danh sách chờ.</span>';
        } else {
-           dsPhanQuyen_Tam.push(taiKhoanMoi); // Thêm mới
-           document.getElementById('pq_status').innerHTML = '<span class="text-success">✅ Đã thêm mới vào danh sách chờ.</span>';
+           dsPhanQuyen_Tam.push(taiKhoanMoi);
+           if (!imLang) document.getElementById('pq_status').innerHTML = '<span class="text-success">✅ Đã thêm mới vào danh sách chờ.</span>';
        }
 
        coThayDoiChuaLuu = true;
        CapNhatGiaoDienCanhBao();
        VeBangDanhSachTam();
-       setTimeout(() => { document.getElementById('pq_status').innerText = ''; }, 2000);
+       if (!imLang) setTimeout(() => { document.getElementById('pq_status').innerText = ''; }, 2000);
    }
 
-   // Hàm xóa khỏi danh sách tạm trên trình duyệt
    function XoaTaiKhoanKhoiDanhSachTam(emailXoa) {
        dsPhanQuyen_Tam = dsPhanQuyen_Tam.filter(nv => nv.email !== emailXoa);
        coThayDoiChuaLuu = true;
@@ -246,9 +245,11 @@
        VeBangDanhSachTam();
    }
 
-   // Hàm GỬI TẤT CẢ LÊN MÁY CHỦ CÙNG LÚC
    function DongBoLenMayChu() {
-       if (!confirm("Hệ thống sẽ cập nhật toàn bộ danh sách hiện tại lên máy chủ. Bạn có chắc chắn?")) return;
+       // Tự động gắp dữ liệu Form đang nhập dở vào mảng (nếu có)
+       DuaVaoDanhSachTam(true); 
+
+       if (!confirm("Hệ thống sẽ dọn dẹp và cập nhật toàn bộ danh sách hiện tại lên máy chủ. Bạn có chắc chắn?")) return;
 
        const btnDongBo = document.getElementById('btnDongBoToanBo');
        const trangThai = document.getElementById('pq_status');
@@ -265,7 +266,7 @@
                  coThayDoiChuaLuu = false;
                  CapNhatGiaoDienCanhBao();
                  LamMoiFormPQ();
-                 TaiDanhSachQuyen(); // Tải lại để xác nhận máy chủ đã ghi nhận chuẩn
+                 TaiDanhSachQuyen(); 
              } else {
                  HienThongBao("Lỗi đồng bộ: " + kq.thongBao, "error");
                  trangThai.innerHTML = '<span class="text-danger">❌ ' + kq.thongBao + '</span>';
