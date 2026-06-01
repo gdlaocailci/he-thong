@@ -1,10 +1,10 @@
 <style>
   /* Cấu trúc giao diện Modal Quản trị - Tuân thủ chuẩn hành chính */
   .modal-pq { background: rgba(0,0,0,0.6); z-index: 10010; }
-  .pq-box { background: white; border-radius: 10px; width: 900px; max-width: 98%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; font-family: 'Times New Roman', serif;}
+  .pq-box { background: white; border-radius: 10px; width: 950px; max-width: 98%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; font-family: 'Times New Roman', serif;}
   .pq-header { background: #1e3a8a; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; text-transform: uppercase;}
   .pq-body { padding: 20px; font-size: 15px; }
-  .pq-footer { padding: 15px; background: #f8fafc; text-align: right; border-top: 1px solid #e2e8f0; }
+  .pq-footer { padding: 15px; background: #f8fafc; text-align: right; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;}
   .pq-check-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
   .pq-check-item { display: flex; align-items: center; gap: 5px; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; border: 1px solid #bbf7d0; cursor: pointer; transition: 0.2s; width: 45%;}
   .pq-check-item:hover { background: #dcfce7; }
@@ -14,6 +14,10 @@
   .table-pq th { background-color: #e2e8f0; position: sticky; top: 0; z-index: 10; text-align: center; }
   .table-pq td { vertical-align: middle; }
   .btn-action { padding: 2px 8px; font-size: 13px; font-weight: bold; }
+  
+  /* Nổi bật trạng thái chờ đồng bộ */
+  .chu-y-dong-bo { color: #dc3545; font-style: italic; font-size: 13px; font-weight: bold; animation: nhapnhay 2s infinite; }
+  @keyframes nhapnhay { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 
 <div id="modalCapQuyen" class="overlay-screen modal-pq" style="display:none;">
@@ -23,9 +27,8 @@
     </div>
     <div class="pq-body">
       <div class="row">
-        <!-- CỘT TRÁI: FORM CẤP/SỬA QUYỀN -->
         <div class="col-md-5 border-end pe-3">
-           <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">THIẾT LẬP TÀI KHOẢN</h6>
+           <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">THIẾT LẬP TÀI KHOẢN (CỤC BỘ)</h6>
            <div class="mb-3">
              <label class="fw-bold text-primary mb-1">1. Email Cán bộ / Giáo viên:</label>
              <input type="email" id="pq_email" class="form-control fw-bold" placeholder="Nhập địa chỉ email...">
@@ -49,17 +52,19 @@
              </div>
            </div>
            <div id="pq_status" class="mt-3 text-center fw-bold" style="font-size:14px;"></div>
-           <button class="btn btn-primary w-100 fw-bold mt-2" id="btnSavePQ" onclick="ThucThiCapQuyen()">
-             <i class="bi bi-check-circle"></i> LƯU QUYỀN TRUY CẬP
+           <button class="btn btn-outline-primary w-100 fw-bold mt-2" onclick="DuaVaoDanhSachTam()">
+             <i class="bi bi-arrow-down-circle"></i> ĐƯA VÀO DANH SÁCH CHỜ LƯU
            </button>
            <button class="btn btn-outline-secondary w-100 fw-bold mt-2 btn-sm" onclick="LamMoiFormPQ()">
-             <i class="bi bi-arrow-counterclockwise"></i> Hủy / Làm mới Form
+             <i class="bi bi-arrow-counterclockwise"></i> Xóa Form / Nhập mới
            </button>
         </div>
         
-        <!-- CỘT PHẢI: DANH SÁCH TÀI KHOẢN -->
         <div class="col-md-7 ps-3">
-           <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">DANH SÁCH CÁN BỘ ĐÃ CẤP QUYỀN</h6>
+           <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+               <h6 class="fw-bold text-primary mb-0">DANH SÁCH CÁN BỘ</h6>
+               <span id="txtTrangThaiDongBo" class="chu-y-dong-bo d-none">⚠️ Có thay đổi chưa lưu!</span>
+           </div>
            <div class="table-responsive border rounded" style="max-height: 420px; overflow-y: auto;">
              <table class="table table-sm table-hover table-bordered table-pq mb-0" style="font-size: 13px;">
                <thead>
@@ -79,25 +84,41 @@
       </div>
     </div>
     <div class="pq-footer">
-       <button class="btn btn-secondary px-5 fw-bold" onclick="DongModalPhanQuyen()">ĐÓNG CỬA SỔ</button>
+       <div>
+           <button class="btn btn-success px-4 fw-bold shadow-sm" id="btnDongBoToanBo" onclick="DongBoLenMayChu()">
+             <i class="bi bi-cloud-upload"></i> ĐỒNG BỘ LÊN MÁY CHỦ
+           </button>
+       </div>
+       <button class="btn btn-secondary px-4 fw-bold" onclick="DongModalPhanQuyen()">ĐÓNG CỬA SỔ</button>
     </div>
   </div>
 </div>
 
 <script>
+   // Biến toàn cục lưu trữ danh sách quyền tại bộ nhớ đệm của trình duyệt
+   let dsPhanQuyen_Tam = [];
+   let coThayDoiChuaLuu = false;
+
    function MoModalPhanQuyen() {
        document.getElementById('modalCapQuyen').style.display = 'flex';
+       coThayDoiChuaLuu = false;
+       CapNhatGiaoDienCanhBao();
        LamMoiFormPQ();
        TaiDanhSachQuyen();
    }
    
    function DongModalPhanQuyen() {
+       if (coThayDoiChuaLuu) {
+           if (!confirm("⚠️ Bạn có những thay đổi chưa được đồng bộ lên máy chủ. Đóng cửa sổ sẽ làm mất các thay đổi này. Xác nhận đóng?")) {
+               return;
+           }
+       }
        document.getElementById('modalCapQuyen').style.display = 'none';
    }
 
    function LamMoiFormPQ() {
        document.getElementById('pq_email').value = '';
-       document.getElementById('pq_email').disabled = false; // Cho phép sửa lại email nếu nhập mới
+       document.getElementById('pq_email').disabled = false;
        document.getElementById('pq_hethong').value = 'x';
        document.getElementById('pq_th').checked = false;
        document.getElementById('pq_kh').checked = false;
@@ -106,46 +127,25 @@
        document.getElementById('pq_ctd').checked = false;
        document.getElementById('pq_status').innerText = '';
    }
+
+   function CapNhatGiaoDienCanhBao() {
+       const nhanCanhBao = document.getElementById('txtTrangThaiDongBo');
+       if (coThayDoiChuaLuu) {
+           nhanCanhBao.classList.remove('d-none');
+       } else {
+           nhanCanhBao.classList.add('d-none');
+       }
+   }
    
    function TaiDanhSachQuyen() {
        const bangHienThi = document.getElementById('pq_list_body');
-       bangHienThi.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-primary fw-bold"><div class="spinner-border spinner-border-sm"></div> Đang đồng bộ...</td></tr>';
+       bangHienThi.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-primary fw-bold"><div class="spinner-border spinner-border-sm"></div> Đang tải dữ liệu từ máy chủ...</td></tr>';
        
        callServer('HT_LayDanhSachQuyen', { taiKhoan: window.TAI_KHOAN_HE_THONG })
          .then(kq => {
              if (kq.thanhCong) {
-                 if (kq.duLieu.length === 0) {
-                     bangHienThi.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu phân quyền.</td></tr>';
-                     return;
-                 }
-                 let htmlDs = '';
-                 kq.duLieu.forEach(nv => {
-                     let nhanHT = nv.quyenHT === 'xx' ? '<span class="badge bg-danger">Admin</span>' : (nv.quyenHT === 'x' ? '<span class="badge bg-success">Xem</span>' : '<span class="badge bg-secondary">Khóa</span>');
-                     
-                     let qChiTiet = [];
-                     if(nv.qTH === 'x') qChiTiet.push('TH');
-                     if(nv.qKH === 'x') qChiTiet.push('KH');
-                     if(nv.qQD === 'x') qChiTiet.push('QĐ');
-                     if(nv.qCB === 'x') qChiTiet.push('CB');
-                     if(nv.qCTD === 'x') qChiTiet.push('CTĐ');
-                     let chuoiQuyen = qChiTiet.length > 0 ? qChiTiet.join(', ') : '-';
-
-                     // Chuyển dữ liệu an toàn vào hàm sửa
-                     let dulieuSua = `'${nv.email}', '${nv.quyenHT}', '${nv.qTH}', '${nv.qKH}', '${nv.qQD}', '${nv.qCB}', '${nv.qCTD}'`;
-
-                     htmlDs += `
-                       <tr>
-                         <td class="fw-bold">${nv.email}</td>
-                         <td class="text-center">${nhanHT}</td>
-                         <td class="text-center text-primary fw-bold">${chuoiQuyen}</td>
-                         <td class="text-center">
-                           <button class="btn btn-outline-primary btn-action" title="Sửa quyền" onclick="HienThiSuaQuyen(${dulieuSua})"><i class="bi bi-pencil-square"></i></button>
-                           <button class="btn btn-outline-danger btn-action" title="Thu hồi quyền" onclick="XacNhanXoaQuyen('${nv.email}')"><i class="bi bi-trash"></i></button>
-                         </td>
-                       </tr>
-                     `;
-                 });
-                 bangHienThi.innerHTML = htmlDs;
+                 dsPhanQuyen_Tam = kq.duLieu || [];
+                 VeBangDanhSachTam();
              } else {
                  bangHienThi.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Lỗi: ${kq.thongBao}</td></tr>`;
              }
@@ -155,41 +155,56 @@
          });
    }
 
+   // Vẽ bảng dựa trên bộ nhớ đệm (Local Array) thay vì gọi máy chủ
+   function VeBangDanhSachTam() {
+       const bangHienThi = document.getElementById('pq_list_body');
+       if (dsPhanQuyen_Tam.length === 0) {
+           bangHienThi.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Chưa có tài khoản nào.</td></tr>';
+           return;
+       }
+       let htmlDs = '';
+       dsPhanQuyen_Tam.forEach(nv => {
+           let nhanHT = nv.quyenHT === 'xx' ? '<span class="badge bg-danger">Admin</span>' : (nv.quyenHT === 'x' ? '<span class="badge bg-success">Xem</span>' : '<span class="badge bg-secondary">Khóa</span>');
+           
+           let qChiTiet = [];
+           if(nv.qTH === 'x') qChiTiet.push('TH');
+           if(nv.qKH === 'x') qChiTiet.push('KH');
+           if(nv.qQD === 'x') qChiTiet.push('QĐ');
+           if(nv.qCB === 'x') qChiTiet.push('CB');
+           if(nv.qCTD === 'x') qChiTiet.push('CTĐ');
+           let chuoiQuyen = qChiTiet.length > 0 ? qChiTiet.join(', ') : '-';
+
+           let dulieuSua = `'${nv.email}', '${nv.quyenHT}', '${nv.qTH}', '${nv.qKH}', '${nv.qQD}', '${nv.qCB}', '${nv.qCTD}'`;
+
+           htmlDs += `
+             <tr>
+               <td class="fw-bold text-primary">${nv.email}</td>
+               <td class="text-center">${nhanHT}</td>
+               <td class="text-center text-primary fw-bold">${chuoiQuyen}</td>
+               <td class="text-center">
+                 <button class="btn btn-outline-primary btn-action" title="Sửa cục bộ" onclick="HienThiSuaQuyen(${dulieuSua})"><i class="bi bi-pencil-square"></i></button>
+                 <button class="btn btn-outline-danger btn-action" title="Xóa cục bộ" onclick="XoaTaiKhoanKhoiDanhSachTam('${nv.email}')"><i class="bi bi-x-circle"></i></button>
+               </td>
+             </tr>
+           `;
+       });
+       bangHienThi.innerHTML = htmlDs;
+   }
+
    function HienThiSuaQuyen(email, qHT, qTH, qKH, qQD, qCB, qCTD) {
        document.getElementById('pq_email').value = email;
-       document.getElementById('pq_email').disabled = true; // Khóa trường email khi đang sửa
+       document.getElementById('pq_email').disabled = true; 
        document.getElementById('pq_hethong').value = qHT;
        document.getElementById('pq_th').checked = (qTH === 'x');
        document.getElementById('pq_kh').checked = (qKH === 'x');
        document.getElementById('pq_qd').checked = (qQD === 'x');
        document.getElementById('pq_cb').checked = (qCB === 'x');
        document.getElementById('pq_ctd').checked = (qCTD === 'x');
-       document.getElementById('pq_status').innerHTML = '<span class="text-primary">✏️ Đang chỉnh sửa tài khoản: ' + email + '</span>';
+       document.getElementById('pq_status').innerHTML = '<span class="text-primary">✏️ Đang thiết lập cho: ' + email + '</span>';
    }
 
-   function XacNhanXoaQuyen(emailXoa) {
-       if(!confirm(`⚠️ Bạn có chắc chắn muốn XÓA TOÀN BỘ QUYỀN của tài khoản [${emailXoa}] khỏi hệ thống?`)) return;
-       
-       const bangHienThi = document.getElementById('pq_list_body');
-       bangHienThi.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-danger fw-bold"><div class="spinner-border spinner-border-sm"></div> Đang xóa dữ liệu...</td></tr>';
-       
-       callServer('HT_XoaQuyen', { emailCanXoa: emailXoa, taiKhoan: window.TAI_KHOAN_HE_THONG })
-         .then(kq => {
-             if(kq.thanhCong) {
-                 HienThongBao(kq.thongBao, "success");
-                 TaiDanhSachQuyen();
-                 LamMoiFormPQ();
-             } else {
-                 HienThongBao(kq.thongBao, "error");
-                 TaiDanhSachQuyen();
-             }
-         }).catch(loi => {
-             HienThongBao("Lỗi hệ thống: " + loi.message, "error");
-             TaiDanhSachQuyen();
-         });
-   }
-   
-   function ThucThiCapQuyen() {
+   // Hàm thêm hoặc cập nhật vào danh sách tạm trên trình duyệt
+   function DuaVaoDanhSachTam() {
        const email = document.getElementById('pq_email').value.trim().toLowerCase();
        if (!email) {
            document.getElementById('pq_status').innerHTML = '<span class="text-danger">⚠️ Vui lòng nhập email cán bộ!</span>';
@@ -197,7 +212,7 @@
            return;
        }
        
-       const dataPQ = {
+       const taiKhoanMoi = {
            email: email,
            quyenHT: document.getElementById('pq_hethong').value,
            qTH: document.getElementById('pq_th').checked ? 'x' : '',
@@ -207,31 +222,62 @@
            qCTD: document.getElementById('pq_ctd').checked ? 'x' : ''
        };
 
-       const btnLuu = document.getElementById('btnSavePQ');
+       // Kiểm tra xem email đã có trong danh sách tạm chưa
+       const viTri = dsPhanQuyen_Tam.findIndex(nv => nv.email === email);
+       if (viTri > -1) {
+           dsPhanQuyen_Tam[viTri] = taiKhoanMoi; // Cập nhật
+           document.getElementById('pq_status').innerHTML = '<span class="text-success">✅ Đã cập nhật vào danh sách chờ.</span>';
+       } else {
+           dsPhanQuyen_Tam.push(taiKhoanMoi); // Thêm mới
+           document.getElementById('pq_status').innerHTML = '<span class="text-success">✅ Đã thêm mới vào danh sách chờ.</span>';
+       }
+
+       coThayDoiChuaLuu = true;
+       CapNhatGiaoDienCanhBao();
+       VeBangDanhSachTam();
+       setTimeout(() => { document.getElementById('pq_status').innerText = ''; }, 2000);
+   }
+
+   // Hàm xóa khỏi danh sách tạm trên trình duyệt
+   function XoaTaiKhoanKhoiDanhSachTam(emailXoa) {
+       dsPhanQuyen_Tam = dsPhanQuyen_Tam.filter(nv => nv.email !== emailXoa);
+       coThayDoiChuaLuu = true;
+       CapNhatGiaoDienCanhBao();
+       VeBangDanhSachTam();
+   }
+
+   // Hàm GỬI TẤT CẢ LÊN MÁY CHỦ CÙNG LÚC
+   function DongBoLenMayChu() {
+       if (!confirm("Hệ thống sẽ cập nhật toàn bộ danh sách hiện tại lên máy chủ. Bạn có chắc chắn?")) return;
+
+       const btnDongBo = document.getElementById('btnDongBoToanBo');
        const trangThai = document.getElementById('pq_status');
        
-       btnLuu.disabled = true;
-       btnLuu.innerHTML = 'Đang đồng bộ...';
-       trangThai.innerHTML = '<span class="text-primary">⏳ Đang lưu dữ liệu lên máy chủ...</span>';
+       btnDongBo.disabled = true;
+       btnDongBo.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ĐANG ĐỒNG BỘ...';
+       trangThai.innerHTML = '<span class="text-primary">⏳ Đang đẩy dữ liệu lên máy chủ...</span>';
 
-       callServer('HT_CapNhatQuyen', {duLieuQuyen: dataPQ, taiKhoan: window.TAI_KHOAN_HE_THONG})
+       callServer('HT_LuuToanBoQuyen', { danhSachQuyen: dsPhanQuyen_Tam, taiKhoan: window.TAI_KHOAN_HE_THONG })
          .then(kq => {
              if (kq.thanhCong) {
-                 trangThai.innerHTML = '<span class="text-success">✅ ' + kq.thongBao + '</span>';
-                 setTimeout(() => { 
-                     LamMoiFormPQ();
-                     TaiDanhSachQuyen(); // Tải lại danh sách sau khi lưu thành công
-                 }, 1500);
+                 HienThongBao(kq.thongBao, "success");
+                 trangThai.innerHTML = '<span class="text-success">✅ Đồng bộ hoàn tất!</span>';
+                 coThayDoiChuaLuu = false;
+                 CapNhatGiaoDienCanhBao();
+                 LamMoiFormPQ();
+                 TaiDanhSachQuyen(); // Tải lại để xác nhận máy chủ đã ghi nhận chuẩn
              } else {
+                 HienThongBao("Lỗi đồng bộ: " + kq.thongBao, "error");
                  trangThai.innerHTML = '<span class="text-danger">❌ ' + kq.thongBao + '</span>';
              }
          })
          .catch(loi => {
-             trangThai.innerHTML = '<span class="text-danger">❌ Lỗi: ' + loi.message + '</span>';
+             HienThongBao("Lỗi đường truyền: " + loi.message, "error");
+             trangThai.innerHTML = '<span class="text-danger">❌ Lỗi mạng!</span>';
          })
          .finally(() => {
-             btnLuu.disabled = false;
-             btnLuu.innerHTML = '<i class="bi bi-check-circle"></i> LƯU QUYỀN TRUY CẬP';
+             btnDongBo.disabled = false;
+             btnDongBo.innerHTML = '<i class="bi bi-cloud-upload"></i> ĐỒNG BỘ LÊN MÁY CHỦ';
          });
    }
 </script>
