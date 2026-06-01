@@ -5,28 +5,24 @@
     font-size: 15px !important; 
   }
   
-  /* Tăng cỡ chữ cho các ô nhập liệu và tiêu đề trong Form (Email, CCCD, Quyền...) */
   #modalPhanQuyen .form-label {
     font-size: 15px !important;
   }
   #modalPhanQuyen .form-control,
   #modalPhanQuyen .form-select {
     font-size: 15px !important;
-    padding: 8px 12px !important; /* Tăng độ rộng ô nhập liệu để dễ quan sát hơn */
+    padding: 8px 12px !important; 
   }
 
-  /* Cấu hình Switch On/Off Khoá Hệ Thống */
   .form-check-input.sw-chot {
     width: 3.5em !important;
     height: 1.7em !important;
     cursor: pointer;
   }
-  /* Bật - Xanh (Cho phép cập nhật) */
   .form-check-input.sw-chot:checked {
     background-color: #198754; 
     border-color: #198754;
   }
-  /* Tắt - Đỏ (Khóa hệ thống) */
   .form-check-input.sw-chot:not(:checked) {
     background-color: #dc3545; 
     border-color: #dc3545;
@@ -37,7 +33,7 @@
   <div class="row mb-2 mt-2 g-1 align-items-center">
     <div class="col-md-4">
       <div class="input-group">
-        <input type="text" id="nhapTimKiemPq" class="form-control" placeholder="Tìm kiếm tên/email/mã..." autocomplete="off" onkeypress="if(event.keyCode===13) { veBangPhanQuyen(); return false; }">
+        <input type="text" id="nhapTimKiemPq" class="form-control" placeholder="Tìm kiếm tên/mã..." autocomplete="off" onkeypress="if(event.keyCode===13) { veBangPhanQuyen(); return false; }">
         <button type="button" class="btn btn-outline-secondary fw-bold" onclick="veBangPhanQuyen()"><i class="fas fa-search"></i> Lọc</button>
       </div>
     </div>
@@ -58,9 +54,9 @@
         <tr>
           <th style="width: 50px;">Sửa</th>
           <th style="width: 50px;">STT</th>
-          <th>Địa chỉ Email</th>
+          <th>Định danh liên lạc</th>
           <th>Họ và tên</th>
-          <th>Mã cá biệt (CCCD)</th>
+          <th>Mã bảo mật cá nhân</th>
           <th>Quyền</th>
         </tr>
       </thead>
@@ -80,16 +76,16 @@
       <div class="modal-body">
         <input type="hidden" id="pq_chiSoSua" value="-1">
         <div class="mb-3">
-          <label class="form-label fw-bold">Địa chỉ (Email) <span class="text-danger">*</span></label>
-          <input type="email" class="form-control" id="pq_diaChi" placeholder="VD: ngvna@gmail.com">
+          <label class="form-label fw-bold">Định danh hệ thống <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="pq_diaChi" placeholder="Nhập định danh...">
         </div>
         <div class="mb-3">
           <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
           <input type="text" class="form-control" id="pq_hoTen" placeholder="VD: Nguyễn Văn A">
         </div>
         <div class="mb-3">
-          <label class="form-label fw-bold">Mã cá biệt (CCCD) <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="pq_cccd" placeholder="VD: 010099001234">
+          <label class="form-label fw-bold">Mã bảo mật cá nhân <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="pq_mcb" placeholder="Nhập mã bảo mật...">
         </div>
         <div class="mb-3">
           <label class="form-label fw-bold">Quyền hạn <span class="text-danger">*</span></label>
@@ -115,7 +111,6 @@
   let theModalPq = null;
   let daTaiPhanQuyen = false; 
 
-  // Hàm toàn cục xóa dấu phục vụ cho Lọc tìm kiếm
   if (typeof window.xoaDauVN !== 'function') {
       window.xoaDauVN = function(str) {
           if (!str) return "";
@@ -133,7 +128,6 @@
   function taiDsPhanQuyen() {
     if (!ndHtai || ndHtai.vTro !== 'qtriv') return;
     
-    // Hiển thị khung chức năng khóa hệ thống và nạp trạng thái
     $("#khungKhoaHeThong").attr('style', 'display: flex !important;');
     taiTrangThaiKhoa();
     
@@ -143,7 +137,6 @@
     }
 
     $("#vungTai").show();
-    // BỎ BIẾN THỪA: Gọi API sạch
     goiMyChuHien('layDsTaiKhoan', { vTro: ndHtai.vTro })
       .then(q => {
         if (q.tCong) {
@@ -166,7 +159,6 @@
     if (mangPhanQuyen.length === 0) {
       html = '<tr><td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu.</td></tr>';
     } else {
-      // Ưu tiên dòng chưa lưu nổi lên đầu bảng
       mangPhanQuyen.sort((a, b) => {
           if (a.ckt && !b.ckt) return -1;
           if (!a.ckt && b.ckt) return 1;
@@ -188,7 +180,6 @@
             tenQuyen = '<span class="badge bg-secondary">Cập nhật cá nhân</span>';
         }
 
-        // Xử lý hiển thị màu nền và cây bút đỏ
         let cdG = tkObj.ckt ? "dongCkt" : ""; 
         let cpT = tkObj.ckt ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
 
@@ -214,7 +205,7 @@
     $("#pq_chiSoSua").val(-1);
     $("#pq_diaChi").val('');
     $("#pq_hoTen").val('');
-    $("#pq_cccd").val('');
+    $("#pq_mcb").val('');
     $("#pq_quyen").val(''); 
     $("#nutXoaPq").hide(); 
     layModalPq().show();
@@ -225,7 +216,7 @@
     $("#pq_chiSoSua").val(i);
     $("#pq_diaChi").val(mangPhanQuyen[i][0]);
     $("#pq_hoTen").val(mangPhanQuyen[i][1]);
-    $("#pq_cccd").val(mangPhanQuyen[i][3] || "");
+    $("#pq_mcb").val(mangPhanQuyen[i][3] || "");
     
     let q = String(mangPhanQuyen[i][2] || "").trim().toLowerCase();
     $("#pq_quyen").val(q);
@@ -249,16 +240,16 @@
   function luuTamTaiKhoan() {
     let dChi = $("#pq_diaChi").val().trim().toLowerCase();
     let hTen = $("#pq_hoTen").val().trim();
-    let cccd = $("#pq_cccd").val().trim();
+    let mcb = $("#pq_mcb").val().trim();
     let quyen = $("#pq_quyen").val().trim().toLowerCase();
     let cs = parseInt($("#pq_chiSoSua").val());
 
-    if (dChi === '' || hTen === '' || cccd === '') {
-      hienTbao('Vui lòng điền đầy đủ Địa chỉ Email, Họ tên và Mã cá biệt (CCCD)!', 'loi');
+    if (dChi === '' || hTen === '' || mcb === '') {
+      hienTbao('Vui lòng điền đầy đủ Định danh liên lạc, Họ tên và Mã bảo mật cá nhân!', 'loi');
       return;
     }
 
-    let biTrungCCCD = false;
+    let biTrungMCB = false;
     let biTrungTen = false;
     let biTrungEmail = false;
 
@@ -266,22 +257,22 @@
        let dChiCu = String(mangPhanQuyen[cs][0] || "").trim().toLowerCase();
        if (dChi !== dChiCu) biTrungEmail = mangPhanQuyen.some((tk, i) => i !== cs && String(tk[0]).trim().toLowerCase() === dChi);
 
-       let cccdCu = String(mangPhanQuyen[cs][3] || "").trim();
-       if (cccd !== cccdCu) biTrungCCCD = mangPhanQuyen.some((tk, i) => i !== cs && String(tk[3]).trim() === cccd);
+       let mcbCu = String(mangPhanQuyen[cs][3] || "").trim();
+       if (mcb !== mcbCu) biTrungMCB = mangPhanQuyen.some((tk, i) => i !== cs && String(tk[3]).trim() === mcb);
        
        let tenCu = String(mangPhanQuyen[cs][1] || "").trim().toLowerCase();
        if (hTen.toLowerCase() !== tenCu) biTrungTen = mangPhanQuyen.some((tk, i) => i !== cs && String(tk[1]).trim().toLowerCase() === hTen.toLowerCase());
     } else { 
        biTrungEmail = mangPhanQuyen.some(tk => String(tk[0]).trim().toLowerCase() === dChi);
-       biTrungCCCD = mangPhanQuyen.some(tk => String(tk[3]).trim() === cccd);
+       biTrungMCB = mangPhanQuyen.some(tk => String(tk[3]).trim() === mcb);
        biTrungTen = mangPhanQuyen.some(tk => String(tk[1]).trim().toLowerCase() === hTen.toLowerCase());
     }
 
-    if (biTrungEmail) return hienTbao('Địa chỉ Email này đã tồn tại. Không cho phép trùng lặp!', 'loi');
-    if (biTrungCCCD) return hienTbao('Mã cá biệt (CCCD) này đã tồn tại. Không cho phép trùng lặp!', 'loi');
+    if (biTrungEmail) return hienTbao('Định danh này đã tồn tại. Không cho phép trùng lặp!', 'loi');
+    if (biTrungMCB) return hienTbao('Mã bảo mật cá nhân này đã tồn tại. Không cho phép trùng lặp!', 'loi');
     if (biTrungTen) return hienTbao('Họ và tên này đã tồn tại. Không cho phép trùng lặp!', 'loi');
 
-    let rowData = [dChi, hTen, quyen, cccd];
+    let rowData = [dChi, hTen, quyen, mcb];
     rowData.ckt = true; 
 
     if (cs === -1) {
@@ -333,7 +324,6 @@
       if(q.tCong) {
          let nut = document.getElementById("nutKhoaHeThong");
          let nhan = document.getElementById("nhanKhoaHeThong");
-         // Nếu đang khóa -> Nút tắt (không check - Đỏ). Nếu không khóa -> Nút bật (Check - Xanh)
          nut.checked = !q.dangKhoa; 
          nhan.innerText = q.dangKhoa ? "Đang khóa cập nhật" : "Cho phép cập nhật";
          nhan.className = q.dangKhoa ? "form-check-label fw-bold text-danger mb-0" : "form-check-label fw-bold text-success mb-0";
@@ -343,13 +333,12 @@
 
   function xuLyDoiTrangThaiKhoa() {
     let nut = document.getElementById("nutKhoaHeThong");
-    // Nếu nút đang bật (check = Mở) thì dangKhoaMoi = false. Ngược lại là true.
     let dangKhoaMoi = !nut.checked; 
 
     let thongBao = dangKhoaMoi ? "Đồng chí có chắc chắn muốn KHÓA quyền cập nhật dữ liệu của Giáo viên không?" : "Đồng chí muốn MỞ KHÓA quyền cập nhật dữ liệu cho Giáo viên?";
     
     if(!confirm(thongBao)) {
-        nut.checked = !nut.checked; // Hủy thao tác, hoàn trả lại trạng thái UI
+        nut.checked = !nut.checked; 
         return;
     }
 
