@@ -202,35 +202,36 @@
             let cn2 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "Khá")); 
             let cn3 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "TB"));
             
+            // Xếp loại Viên chức (Cột 21 -> Mảng r[20])
             let xs1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
             let xs2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); })); 
             let xs3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
             let xs4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             
-            // CẬP NHẬT: Xếp loại Đảng viên (Chỉ số mảng chuẩn r[21])
+            // ĐÃ NẮN LẠI INDEX: Xếp loại Đảng viên (Cột 22 -> Mảng r[21])
             let dv1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
             let dv2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); })); 
             let dv3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
             let dv4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             
-            // CẬP NHẬT: Danh hiệu chuyên môn (Chỉ số mảng chuẩn r[22])
+            // ĐÃ NẮN LẠI INDEX: Danh hiệu chuyên môn (Cột 23 -> Mảng r[22])
             let dh1 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("trường"))); 
             let dh2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[22]||"").toLowerCase(); return v.includes("huyện") || v.includes("tp") || v.includes("thành phố"); })); 
             let dh3 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("tỉnh"))); 
             let dh4 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("quốc gia") || (r[22]||"").toLowerCase().includes("qg")));
             
-            // CẬP NHẬT: Danh hiệu thi đua (Chỉ số mảng chuẩn r[23])
+            // ĐÃ NẮN LẠI INDEX: Danh hiệu thi đua (Cột 24 -> Mảng r[23])
             let td1 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "LĐTT")); 
             let td2 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "CSTĐ")); 
             
-            // CẬP NHẬT: Hình thức khen (Chỉ số mảng chuẩn r[24])
+            // ĐÃ NẮN LẠI INDEX: Hình thức khen (Cột 25 -> Mảng r[24])
             let ht1 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Giấy khen")); 
             let ht2 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Bằng khen")); 
             let ht3 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Kỷ niệm chương")); 
             let ht4 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huy chương")); 
             let ht5 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huân chương"));
 
-            // CẬP NHẬT: Cấp khen (Chỉ số mảng chuẩn r[25])
+            // ĐÃ NẮN LẠI INDEX: Cấp khen (Cột 26 -> Mảng r[25])
             let ck1 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Xã")); 
             let ck2 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Huyện/TP")); 
             let ck3 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Tỉnh")); 
