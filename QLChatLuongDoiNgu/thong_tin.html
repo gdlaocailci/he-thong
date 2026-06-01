@@ -1,3 +1,45 @@
+<div class="tab-pane fade show active" id="muc1">
+  <div class="row mb-2 g-1 align-items-center">
+    <div class="col-md-2"><select id="nhapLocN1" class="form-select" onchange="veBangNs()"><option value="">Tất cả năm học</option></select></div>
+    <div class="col-md-4">
+      <div class="input-group">
+        <input type="text" id="nhapTimKiemNs" class="form-control" placeholder="Tìm kiếm tên/mã..." autocomplete="off" onkeypress="if(event.keyCode===13) { veBangNs(); return false; }">
+        <button type="button" class="btn btn-outline-secondary fw-bold" onclick="veBangNs()"><i class="fas fa-search"></i> Lọc</button>
+      </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <button id="nutMoThemNs" class="btn btn-success me-1" onclick="moThem()"><i class="fas fa-plus"></i> Thêm mới</button>
+        <button id="nutCnNhieuNs" class="btn btn-primary" onclick="cnNhieuNs()"><i class="fas fa-save"></i> Cập nhật</button>
+    </div>
+  </div>
+  <div class="table-responsive" style="max-height: calc(100vh - 220px); overflow-y: auto;">
+   <table id="khuBangNs" class="table table-bordered table-striped bangTchinh table-sm" style="table-layout: fixed; border-collapse: collapse;">
+    <thead class="sticky-top">
+      <tr>
+        <th style="width: 40px; text-align: center;">Sửa</th>
+        <th style="width: 40px; text-align: center;">STT</th>
+        <th style="width: 90px; text-align: center;">Năm học</th>
+        <th style="width: 180px; text-align: center;">Họ&#8203; và tê&#8203;n</th>
+        <th style="width: 100px; text-align: center;">Ngà&#8203;y si&#8203;nh</th>
+        <th style="width: 70px; text-align: center;">Giớ&#8203;i tí&#8203;nh</th>
+        <th style="width: 100px; text-align: center;">Trạng thái</th>
+        <th style="width: 80px; text-align: center;">Dâ&#8203;n tộ&#8203;c</th>
+        <th style="width: 80px; text-align: center;">Tô&#8203;n giá&#8203;o</th>
+        <th style="width: 400px; text-align:center;">Đị&#8203;a chỉ (TT)</th>
+        <th style="width: 70px; text-align: center;">Đả&#8203;ng viê&#8203;n</th>
+        <th style="width: 120px; text-align: center;">Vị trí VL</th>
+        <th style="width: 100px; text-align: center;">Ngày tuyển</th>
+        <th style="width: 100px; text-align: center;">Hạng/Ngạch</th>
+        <th style="width: 130px; text-align: center;">Trình độ CM</th>
+        <th style="width: 110px; text-align: center;">LL Chính trị</th>
+      </tr>
+      </thead>
+    <tbody>
+      </tbody>
+  </table>
+  </div>
+</div>
+
 <div class="modal fade" id="hopThoaiHs" data-bs-focus="false">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
