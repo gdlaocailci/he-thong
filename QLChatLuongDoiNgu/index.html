@@ -362,11 +362,11 @@
 
     function xulyPhienDn(phanho) {
       const tdtai = giaimaJwt(phanho.credential);
-      const emTruyCap = tdtai['email']; 
+      const ddTruyCap = tdtai['email']; 
       
       $("#vungTai").show();
       $("#loiDn").text(""); 
-      goiMyChuHien('dangNhapHt', { gMai: emTruyCap })
+      goiMyChuHien('dangNhapHt', { dDanh: ddTruyCap })
         .then(khiDnTc)
         .catch(khiDnLoi);
     }
@@ -400,11 +400,7 @@
     function khiDnLoi(loi) { hienTbao("Lỗi: " + loi, 'loi'); $("#vungTai").hide(); }
     
    function dxuat() {
-    // Xóa sessionStorage (chỉ xóa mục lưu người dùng)
     sessionStorage.removeItem("ngdungNs");
-    // Nếu muốn xóa toàn bộ sessionStorage, dùng sessionStorage.clear();
-    
-    // Reset các biến toàn cục
     ndHtai = null;
     dlToanc = [];
     chinhToanc = [];
@@ -412,20 +408,11 @@
     mangDuLieuTam = null;
     window.dangKhoaHeThong = false;
     
-    // Xóa dữ liệu trên bảng
     $("#khuBangNs tbody").empty();
     $("#khuBangDg tbody").empty();
-    
-    // Ẩn tab phân quyền (nếu đang hiện)
     $("#tabPhanQuyen").hide();
-    
-    // Chuyển về tab thông tin nhân sự
     $("#bangChonGoc button[data-bs-target='#muc1']").click();
-    
-    // Xóa thông báo lỗi đăng nhập cũ
     $("#loiDn").text("");
-    
-    // Ẩn giao diện chính, hiện màn hình đăng nhập
     $("#udChinh").hide();
     $("#manhDn").css("display", "flex").fadeIn();
 }
@@ -447,20 +434,16 @@
          window.dangKhoaHeThong = (tdl.dangKhoa === true || String(tdl.dangKhoa).toLowerCase() === "true");
       }
 
-      // XỬ LÝ KHÓA NÚT CHUẨN
       if (ndHtai.vTro === 'xem') {
-          // Quyền "" rỗng => Xem, tắt hết nút
           $("#nutMoThemNs").hide();
           $("#nutCnNhieuNs").hide();
           $("#nutCnNhieuDg").hide();
       } else {
-          // Nếu hệ thống khóa, tắt với admin_xx và ngdung, chỉ chừa qtriv
           if (window.dangKhoaHeThong && ndHtai.vTro !== 'qtriv') {
               $("#nutMoThemNs").hide();
               $("#nutCnNhieuNs").hide();
               $("#nutCnNhieuDg").hide();
           } else {
-              // Mở nút lưu cho mọi quyền còn lại (chỉ thêm mới cho cấp cao)
               (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') ? $("#nutMoThemNs").show() : $("#nutMoThemNs").hide();
               $("#nutCnNhieuNs").show();
               $("#nutCnNhieuDg").show();
