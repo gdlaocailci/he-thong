@@ -220,18 +220,22 @@
         </div>
 
         <div class="tab-pane fade" id="tab3">
-           <div class="mb-3 text-end">
-              <button class="btn btn-success fw-bold px-4 btn-sm" onclick="moKhungThemMoiQuyen()"><i class="bi bi-person-plus-fill"></i> Thêm Cán Bộ</button>
+           <div class="mb-3 d-flex justify-content-between align-items-center">
+              <span class="fst-italic text-danger small"><i class="bi bi-info-circle"></i> Thao tác Thêm/Sửa/Xóa chỉ lưu trữ tạm. Vui lòng nhấn "Đồng bộ lên máy chủ" để xác nhận.</span>
+              <div>
+                 <button class="btn btn-primary fw-bold px-3 btn-sm me-2" onclick="thucThiCapNhatDongBo()"><i class="bi bi-cloud-upload"></i> Đồng bộ lên máy chủ</button>
+                 <button class="btn btn-success fw-bold px-3 btn-sm" onclick="moKhungThemMoiQuyen()"><i class="bi bi-person-plus-fill"></i> Thêm Cán Bộ</button>
+              </div>
            </div>
            
            <div class="table-responsive" style="max-height: 72vh;">
              <table class="table table-bordered table-hover text-center sticky-header">
                 <thead class="table-light">
                    <tr>
-                      <th width="10%">Dòng</th>
+                      <th width="10%">STT</th>
                       <th>Địa chỉ Email G-Mail</th>
                       <th width="25%">Quyền hạn (Ký hiệu)</th>
-                      <th width="20%">Thao tác hành chính</th>
+                      <th width="20%">Thao tác</th>
                    </tr>
                 </thead>
                 <tbody id="bangPhanQuyen"></tbody>
@@ -245,7 +249,7 @@
 
     <div class="modal fade" id="modalAdd" data-bs-backdrop="static"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-success text-white py-2"><h5 class="modal-title fw-bold">THÊM MỚI</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><form id="formAdd"><div class="row g-2"><div class="col-md-4"><label class="fw-bold small">Ngày tháng</label><input type="text" class="form-control form-control-sm" id="inpDate" placeholder="dd/mm/yyyy" onkeyup="dateInputMask(this)" maxlength="10"></div><div class="col-md-8"><label class="fw-bold small">Nội dung</label><input type="text" class="form-control form-control-sm" id="inpContent"></div><div class="col-md-2"><label class="fw-bold small">ĐVT</label><input type="text" class="form-control form-control-sm" id="inpUnit"></div><div class="col-md-3"><label class="fw-bold small">SL Nhận</label><input type="number" class="form-control form-control-sm" id="inpQtyIn" oninput="calcTotal()"></div><div class="col-md-3"><label class="fw-bold small">Giá</label><input type="number" class="form-control form-control-sm" id="inpPrice" oninput="calcTotal()"></div><div class="col-md-4"><label class="fw-bold small">Thành tiền</label><input type="text" class="form-control form-control-sm bg-light fw-bold text-danger" id="inpTotalIn" readonly></div><div class="col-md-6"><label class="fw-bold small">SL Phát</label><input type="number" class="form-control form-control-sm" id="inpQtyOut"></div><div class="col-md-6"><label class="fw-bold small">Tiền Phát</label><input type="number" class="form-control form-control-sm" id="inpTotalOut"></div><div class="col-md-6 pt-1"><div class="form-floating"><textarea class="form-control" id="inpSponsor" style="height: 70px"></textarea><label>Bên Tài trợ</label></div></div><div class="col-md-6 pt-1"><div class="form-floating"><textarea class="form-control" id="inpReceiver" style="height: 70px"></textarea><label>Bên Nhận</label></div></div><div class="col-12"><label class="fw-bold small">Ghi chú</label><input type="text" class="form-control form-control-sm" id="inpNote"></div><div class="col-12 mt-2 pt-2 border-top"><div class="d-flex align-items-center bg-light p-2 rounded border"><button type="button" class="btn btn-primary btn-sm fw-bold" onclick="openUploadModalCV()"><i class="bi bi-paperclip"></i> Đính kèm File</button><div class="ms-3"><span id="lblFileStatus" class="fst-italic text-muted small">Chưa có file.</span></div><input type="hidden" id="hiddenFileUrl"></div></div></div></form></div><div class="modal-footer py-1"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button><button class="btn btn-success btn-sm fw-bold" onclick="submitForm()">LƯU DỮ LIỆU</button></div></div></div></div>
     
-    <div class="modal fade" id="modalQuyen" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white py-2"><h5 class="modal-title fw-bold" id="tieuDeModalQuyen">THÊM MỚI QUYỀN</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="formQuyen"><input type="hidden" id="inpDongThamChieu" value=""><div class="mb-3"><label class="fw-bold small mb-1">Địa chỉ Email</label><input type="email" class="form-control" id="inpEmail" placeholder="ví dụ: canbo@gmail.com" required></div><div class="mb-3"><label class="fw-bold small mb-1">Cấp độ phân quyền</label><select class="form-select" id="inpQuyen"><option value="x">Chỉ tra cứu dữ liệu (x)</option><option value="xx">Cán bộ Tiếp nhận (xx)</option><option value="xxx">Quản trị tối cao (xxx)</option></select></div></form></div><div class="modal-footer py-1"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button><button class="btn btn-success btn-sm fw-bold" onclick="thucThiLuuQuyen()">LƯU HỒ SƠ</button></div></div></div></div>
+    <div class="modal fade" id="modalQuyen" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white py-2"><h5 class="modal-title fw-bold" id="tieuDeModalQuyen">THÊM MỚI QUYỀN</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="formQuyen"><input type="hidden" id="inpViTriMang" value=""><div class="mb-3"><label class="fw-bold small mb-1">Địa chỉ Email</label><input type="email" class="form-control" id="inpEmail" placeholder="ví dụ: canbo@gmail.com" required></div><div class="mb-3"><label class="fw-bold small mb-1">Cấp độ phân quyền</label><select class="form-select" id="inpQuyen"><option value="x">Chỉ tra cứu dữ liệu (x)</option><option value="xx">Cán bộ Tiếp nhận (xx)</option><option value="xxx">Quản trị tối cao (xxx)</option></select></div></form></div><div class="modal-footer py-1"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button><button class="btn btn-success btn-sm fw-bold" onclick="luuQuyenVaoMangTam()">LƯU TẠM THỜI</button></div></div></div></div>
 
     <div id="upload_modal_cv">
       <div class="up-container">
@@ -345,7 +349,7 @@
         location.reload(); 
       }
 
-      // --- HÀM KIỂM TRA QUYỀN VÀ HIỂN THỊ CÁC TAB 1, 2, 3 (Gác cổng 3 lớp) ---
+      // --- HÀM KIỂM TRA QUYỀN VÀ HIỂN THỊ CÁC TAB 1, 2, 3 ---
       function checkPermissionAndLoad(dinhDanhHienTai) {
         document.getElementById('welcome-screen').style.display = 'none';
         document.getElementById('loading').style.display = 'flex';
@@ -355,27 +359,22 @@
            document.getElementById('userEmailDisplay').innerText = "Cán bộ: " + quyenHan.dinhDanh;
            
            if (!quyenHan.quyenXem) {
-             // Lớp 1: Bị chặn (Cột C rỗng hoặc sai)
              document.getElementById('notice-overlay').style.display = 'flex';
              document.getElementById('notice-email').innerText = quyenHan.dinhDanh;
            } else {
-             // Mở khóa màn hình nội dung chung
              document.getElementById('main-content').style.display = 'block';
              
              if (quyenHan.quyenAdmin) {
-                // Lớp 3: Tối cao (xxx) -> Hiện tất cả 3 thẻ
                 document.getElementById('navItemTab1').style.display = 'block';
                 document.getElementById('navItemTab3').style.display = 'block';
                 new bootstrap.Tab(document.getElementById('btnTab1')).show();
                 loadTab1();
              } else if (quyenHan.quyenGhi) {
-                // Lớp 2: Ghi sổ (xx) -> Hiện Tab 1 và 2, ẨN Tab 3 (Phân quyền)
                 document.getElementById('navItemTab1').style.display = 'block';
                 document.getElementById('navItemTab3').style.display = 'none';
                 new bootstrap.Tab(document.getElementById('btnTab1')).show();
                 loadTab1();
              } else {
-                // Lớp 1: Chỉ tra cứu (x) -> Ẩn cả Tab 1 và Tab 3
                 document.getElementById('navItemTab1').style.display = 'none';
                 document.getElementById('navItemTab3').style.display = 'none';
                 new bootstrap.Tab(document.getElementById('btnTab2')).show();
@@ -469,27 +468,16 @@
         });
       }
 
-      // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ PHÂN QUYỀN (TAB 3) ---
+      // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ PHÂN QUYỀN TRÊN BỘ NHỚ TẠM (TAB 3) ---
+      let DANH_SACH_QUYEN_TAM = []; // Biến lưu tạm mảng dữ liệu nội bộ
+
       function taiDuLieuQuyen() {
           document.getElementById('loading').style.display = 'flex';
           callServer('CQ_LayDanhSach', { dinhDanh: window.HT_DINH_DANH_CB })
              .then(duLieu => {
                 document.getElementById('loading').style.display = 'none';
-                var htmlRows = '';
-                duLieu.forEach(muc => {
-                   var huyHieu = muc.quyen === 'xxx' ? '<span class="badge-xxx">Quản trị (xxx)</span>' : (muc.quyen === 'xx' ? '<span class="badge-xx">Tiếp nhận (xx)</span>' : (muc.quyen === 'x' ? '<span class="badge-x">Chỉ xem (x)</span>' : '<span class="text-danger fw-bold">Khóa</span>'));
-                   
-                   htmlRows += `<tr>
-                      <td>${muc.dong}</td>
-                      <td class="text-start fw-bold text-primary">${muc.email}</td>
-                      <td>${huyHieu}</td>
-                      <td>
-                         <button class="btn btn-sm btn-outline-primary px-3 py-0 me-1" onclick="moKhungCapNhatQuyen(${muc.dong}, '${muc.email}', '${muc.quyen}')">Sửa</button>
-                         <button class="btn btn-sm btn-outline-danger px-3 py-0" onclick="thucThiXoaQuyen(${muc.dong})">Xóa</button>
-                      </td>
-                   </tr>`;
-                });
-                document.getElementById('bangPhanQuyen').innerHTML = htmlRows;
+                DANH_SACH_QUYEN_TAM = duLieu; // Nạp dữ liệu từ máy chủ vào mảng tạm
+                veLaiBangQuyen();
              })
              .catch(loi => {
                 document.getElementById('loading').style.display = 'none';
@@ -497,68 +485,76 @@
              });
       }
 
+      function veLaiBangQuyen() {
+          var htmlRows = '';
+          DANH_SACH_QUYEN_TAM.forEach((muc, viTriIndex) => {
+             var huyHieu = muc.quyen === 'xxx' ? '<span class="badge-xxx">Quản trị (xxx)</span>' : (muc.quyen === 'xx' ? '<span class="badge-xx">Tiếp nhận (xx)</span>' : (muc.quyen === 'x' ? '<span class="badge-x">Chỉ xem (x)</span>' : '<span class="text-danger fw-bold">Khóa</span>'));
+             
+             // Giao diện render duyệt qua mảng tĩnh, STT được tính tự động từ vị trí index
+             htmlRows += `<tr>
+                <td>${viTriIndex + 1}</td>
+                <td class="text-start fw-bold text-primary">${muc.email}</td>
+                <td>${huyHieu}</td>
+                <td>
+                   <button class="btn btn-sm btn-outline-primary px-3 py-0 me-1" onclick="moKhungCapNhatQuyen(${viTriIndex}, '${muc.email}', '${muc.quyen}')">Sửa</button>
+                   <button class="btn btn-sm btn-outline-danger px-3 py-0" onclick="xoaQuyenKhoiMangTam(${viTriIndex})">Xóa</button>
+                </td>
+             </tr>`;
+          });
+          document.getElementById('bangPhanQuyen').innerHTML = htmlRows;
+      }
+
       function moKhungThemMoiQuyen() {
           document.getElementById('formQuyen').reset();
-          document.getElementById('inpDongThamChieu').value = ""; 
+          document.getElementById('inpViTriMang').value = "-1"; // Cờ hiệu đánh dấu đây là thao tác Thêm mới
           document.getElementById('tieuDeModalQuyen').innerText = "THÊM MỚI QUYỀN TRUY CẬP";
           new bootstrap.Modal(document.getElementById('modalQuyen')).show();
       }
 
-      function moKhungCapNhatQuyen(dong, email, quyen) {
-          document.getElementById('inpDongThamChieu').value = dong;
+      function moKhungCapNhatQuyen(viTriIndex, email, quyen) {
+          document.getElementById('inpViTriMang').value = viTriIndex;
           document.getElementById('inpEmail').value = email;
           document.getElementById('inpQuyen').value = quyen;
-          document.getElementById('tieuDeModalQuyen').innerText = "CẬP NHẬT QUYỀN CÁN BỘ (Dòng " + dong + ")";
+          document.getElementById('tieuDeModalQuyen').innerText = "CẬP NHẬT QUYỀN CÁN BỘ";
           new bootstrap.Modal(document.getElementById('modalQuyen')).show();
       }
 
-      function thucThiLuuQuyen() {
-          var dongDuLieu = document.getElementById('inpDongThamChieu').value;
+      // Hàm xử lý lưu dữ liệu vào mảng, chưa gửi lên máy chủ
+      function luuQuyenVaoMangTam() {
+          var viTriIndex = parseInt(document.getElementById('inpViTriMang').value);
           var emailCap = document.getElementById('inpEmail').value.trim();
           var quyenCap = document.getElementById('inpQuyen').value;
 
           if(!emailCap) { Swal.fire('Thiếu thông tin', 'Vui lòng nhập định danh Email.', 'warning'); return; }
 
-          document.getElementById('loading').style.display = 'flex';
-          var tenYeuCau = dongDuLieu ? 'CQ_CapNhat' : 'CQ_ThemMoi';
-          var goiDuLieu = { dongDuLieu: dongDuLieu, emailCap: emailCap, quyenCap: quyenCap, dinhDanh: window.HT_DINH_DANH_CB };
+          if (viTriIndex === -1) {
+              DANH_SACH_QUYEN_TAM.push({ email: emailCap, quyen: quyenCap });
+          } else {
+              DANH_SACH_QUYEN_TAM[viTriIndex].email = emailCap;
+              DANH_SACH_QUYEN_TAM[viTriIndex].quyen = quyenCap;
+          }
 
-          callServer(tenYeuCau, goiDuLieu)
+          bootstrap.Modal.getInstance(document.getElementById('modalQuyen')).hide();
+          veLaiBangQuyen(); // Tải lại giao diện bảng nội bộ
+      }
+
+      function xoaQuyenKhoiMangTam(viTriIndex) {
+          DANH_SACH_QUYEN_TAM.splice(viTriIndex, 1);
+          veLaiBangQuyen();
+      }
+
+      // Hàm đóng gói toàn bộ mảng gửi lên máy chủ trong 1 lần duy nhất
+      function thucThiCapNhatDongBo() {
+          document.getElementById('loading').style.display = 'flex';
+          callServer('CQ_CapNhatDongBo', { danhSachMoi: DANH_SACH_QUYEN_TAM, dinhDanh: window.HT_DINH_DANH_CB })
              .then(ketQua => {
-                bootstrap.Modal.getInstance(document.getElementById('modalQuyen')).hide();
-                Swal.fire('Thành công', 'Đã lưu trữ hồ sơ ánh xạ.', 'success');
+                Swal.fire('Thành công', 'Đã lưu đồng bộ toàn bộ bảng phân quyền lên máy chủ.', 'success');
                 taiDuLieuQuyen();
              })
              .catch(loi => {
                 document.getElementById('loading').style.display = 'none';
-                Swal.fire('Lỗi ghi sổ', loi.message, 'error');
+                Swal.fire('Lỗi đồng bộ', loi.message, 'error');
              });
-      }
-
-      function thucThiXoaQuyen(dong) {
-          Swal.fire({
-             title: 'Đồng chí có chắc chắn?',
-             text: 'Hành động này sẽ rút toàn bộ quyền truy cập của cán bộ.',
-             icon: 'warning',
-             showCancelButton: true,
-             confirmButtonColor: '#d33',
-             cancelButtonColor: '#6c757d',
-             confirmButtonText: 'Đồng ý rút quyền',
-             cancelButtonText: 'Hủy'
-          }).then((result) => {
-             if (result.isConfirmed) {
-                document.getElementById('loading').style.display = 'flex';
-                callServer('CQ_Xoa', { dongDuLieu: dong, dinhDanh: window.HT_DINH_DANH_CB })
-                   .then(ketQua => {
-                      Swal.fire('Đã xóa', 'Rút quyền thành công.', 'success');
-                      taiDuLieuQuyen();
-                   })
-                   .catch(loi => {
-                      document.getElementById('loading').style.display = 'none';
-                      Swal.fire('Lỗi xử lý', loi.message, 'error');
-                   });
-             }
-          });
       }
       
       // --- CÁC HÀM XỬ LÝ FILE ---
