@@ -92,12 +92,6 @@
   </script>
 
   <style>
-    /* Lớp CSS ngụy trang mật khẩu an toàn */
-    .skt-mask-pin { 
-        -webkit-text-security: disc; 
-        text-security: disc; 
-    }
-
     #instant-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 1050; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .spinner-ring { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #1e3a8a; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
     .loader-text { font-family: 'Segoe UI', sans-serif; font-weight: bold; color: #1e3a8a; letter-spacing: 1px; font-size: 14px; }
@@ -297,22 +291,22 @@
     </div>
   </div>
 
-  <div id="pin-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1060; justify-content: center; align-items: center; font-family: 'Times New Roman', serif;">
+  <div id="khoa-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1060; justify-content: center; align-items: center; font-family: 'Times New Roman', serif;">
     <div style="background: white; padding: 30px; border-radius: 12px; width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 5px solid #1e3a8a;">
-      <h4 id="pin-modal-title" style="color: #1e3a8a; font-weight: bold; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">XÁC THỰC ĐỊNH DANH</h4>
-      <p id="pin-modal-desc" style="font-size: 15px; color: #475569; margin-bottom: 20px;"></p>
+      <h4 id="khoa-modal-title" style="color: #1e3a8a; font-weight: bold; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">XÁC THỰC ĐỊNH DANH</h4>
+      <p id="khoa-modal-desc" style="font-size: 15px; color: #475569; margin-bottom: 20px;"></p>
 
-      <div id="pin-step-1">
-          <input type="text" id="pin-input-1" class="skt-mask-pin" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="..." style="width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; transition: border-color 0.3s; font-family: 'Times New Roman', serif;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#cbd5e1'" onkeypress="if(event.key === 'Enter') dongPinModal(true);">
+      <div id="khoa-step-1">
+          <input type="text" id="khoa-input-1" placeholder="..." style="-webkit-text-security: disc; width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; transition: border-color 0.3s; font-family: 'Times New Roman', serif;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#cbd5e1'" onkeypress="if(event.key === 'Enter') dongKhoaModal(true);">
       </div>
 
-      <div id="pin-step-2" style="display: none;">
-          <input type="text" id="pin-input-2" class="skt-mask-pin" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Tạo mã PIN cá nhân mới..." style="width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 16px; text-align: center; margin-bottom: 20px; outline: none; transition: border-color 0.3s; font-family: 'Times New Roman', serif;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#cbd5e1'" onkeypress="if(event.key === 'Enter') dongPinModal(true);">
+      <div id="khoa-step-2" style="display: none;">
+          <input type="text" id="khoa-input-2" placeholder="Tạo mã khóa bảo mật mới..." style="-webkit-text-security: disc; width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 16px; text-align: center; margin-bottom: 20px; outline: none; transition: border-color 0.3s; font-family: 'Times New Roman', serif;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#cbd5e1'" onkeypress="if(event.key === 'Enter') dongKhoaModal(true);">
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: center;">
-          <button onclick="dongPinModal(false)" style="flex: 1; padding: 12px; background: #f1f5f9; color: #475569; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">HỦY BỎ</button>
-          <button id="btn-pin-submit" onclick="dongPinModal(true)" style="flex: 1; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">XÁC NHẬN</button>
+          <button onclick="dongKhoaModal(false)" style="flex: 1; padding: 12px; background: #f1f5f9; color: #475569; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">HỦY BỎ</button>
+          <button id="btn-khoa-submit" onclick="dongKhoaModal(true)" style="flex: 1; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">XÁC NHẬN</button>
       </div>
     </div>
   </div>
@@ -339,7 +333,7 @@
       <h3 id="login-subtitle-main" style="color: #1e3a8a; margin-bottom: 25px;"></h3>
       
       <div class="alert alert-success text-start" style="font-size: 12px; padding: 10px; margin-bottom: 20px; border-radius: 8px; background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;">
-        <i class="bi bi-shield-check" style="font-size: 14px;"></i> <b>Cam kết bảo mật:</b> Hệ thống sử dụng token an toàn của Google. Tuyệt đối không thu thập hay lưu trữ mật khẩu cá nhân của Thầy/Cô.
+        <i class="bi bi-shield-check" style="font-size: 14px;"></i> <b>Cam kết bảo mật:</b> Hệ thống sử dụng token an toàn của Google. Tuyệt đối không thu thập hay lưu trữ khóa truy cập cá nhân của Thầy/Cô.
       </div>
 
       <p id="app-version-text" style="font-size: 13px; color:#dc3545;font-weight: bold; margin-bottom: 20px;"></p>
@@ -553,49 +547,49 @@
     }
 
     let html5QrCode = null;
-    let resolvePinPromise = null;
+    let resolveKhoaPromise = null;
 
-    function hienThiNhapPin(tieuDe, moTa, canTaoMoi) {
+    function hienThiNhapKhoa(tieuDe, moTa, canTaoMoi) {
         return new Promise((resolve) => {
-            document.getElementById('pin-modal-title').innerText = tieuDe;
-            document.getElementById('pin-modal-desc').innerHTML = moTa;
-            document.getElementById('pin-input-1').value = '';
-            document.getElementById('pin-input-2').value = '';
+            document.getElementById('khoa-modal-title').innerText = tieuDe;
+            document.getElementById('khoa-modal-desc').innerHTML = moTa;
+            document.getElementById('khoa-input-1').value = '';
+            document.getElementById('khoa-input-2').value = '';
 
-            document.getElementById('pin-step-1').style.display = 'block';
+            document.getElementById('khoa-step-1').style.display = 'block';
             if(canTaoMoi) {
-                document.getElementById('pin-step-2').style.display = 'block';
-                document.getElementById('pin-input-1').placeholder = "Nhập mã cấp phát của trường...";
+                document.getElementById('khoa-step-2').style.display = 'block';
+                document.getElementById('khoa-input-1').placeholder = "Nhập mã cấp phát của trường...";
             } else {
-                document.getElementById('pin-step-2').style.display = 'none';
-                document.getElementById('pin-input-1').placeholder = "Nhập mã PIN cá nhân...";
+                document.getElementById('khoa-step-2').style.display = 'none';
+                document.getElementById('khoa-input-1').placeholder = "Nhập mã khóa xác thực...";
             }
 
-            document.getElementById('pin-modal-overlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('pin-input-1').focus(), 100);
+            document.getElementById('khoa-modal-overlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('khoa-input-1').focus(), 100);
 
-            resolvePinPromise = resolve;
+            resolveKhoaPromise = resolve;
         });
     }
 
-    function dongPinModal(isXacNhan) {
+    function dongKhoaModal(isXacNhan) {
         if(!isXacNhan) {
-            document.getElementById('pin-modal-overlay').style.display = 'none';
-            if(resolvePinPromise) resolvePinPromise(null);
+            document.getElementById('khoa-modal-overlay').style.display = 'none';
+            if(resolveKhoaPromise) resolveKhoaPromise(null);
             return;
         }
 
-        let p1 = document.getElementById('pin-input-1').value.trim();
-        let p2 = document.getElementById('pin-input-2').value.trim();
-        let step2Visible = document.getElementById('pin-step-2').style.display !== 'none';
+        let p1 = document.getElementById('khoa-input-1').value.trim();
+        let p2 = document.getElementById('khoa-input-2').value.trim();
+        let step2Visible = document.getElementById('khoa-step-2').style.display !== 'none';
 
-        if(!p1) { alert("Vui lòng không để trống mã bảo mật!"); document.getElementById('pin-input-1').focus(); return; }
-        if(step2Visible && !p2) { alert("Vui lòng tạo mã PIN định danh mới!"); document.getElementById('pin-input-2').focus(); return; }
-        if(step2Visible && p2.length < 4) { alert("Mã PIN mới phải có ít nhất 4 ký tự/số để đảm bảo an toàn!"); document.getElementById('pin-input-2').focus(); return; }
+        if(!p1) { alert("Vui lòng không để trống mã bảo mật!"); document.getElementById('khoa-input-1').focus(); return; }
+        if(step2Visible && !p2) { alert("Vui lòng tạo khóa xác thực mới!"); document.getElementById('khoa-input-2').focus(); return; }
+        if(step2Visible && p2.length < 4) { alert("Mã khóa mới phải có ít nhất 4 ký tự/số để đảm bảo an toàn!"); document.getElementById('khoa-input-2').focus(); return; }
 
-        document.getElementById('pin-modal-overlay').style.display = 'none';
-        if(resolvePinPromise) {
-            resolvePinPromise(step2Visible ? {goc: p1, moi: p2} : {goc: p1, moi: ""});
+        document.getElementById('khoa-modal-overlay').style.display = 'none';
+        if(resolveKhoaPromise) {
+            resolveKhoaPromise(step2Visible ? {goc: p1, moi: p2} : {goc: p1, moi: ""});
         }
     }
 
@@ -674,16 +668,16 @@
             }
 
             if (kq_trangthai.loai === 'DA_TAO') {
-                let pinData = await hienThiNhapPin("XÁC THỰC ĐỊNH DANH", "Tài khoản: <b>" + tk_giai_ma + "</b><br>Vui lòng nhập Mã PIN cá nhân của Thầy/Cô:", false);
-                if (!pinData) { document.getElementById('login-overlay').style.display = 'flex'; return; }
+                let khoaData = await hienThiNhapKhoa("XÁC THỰC ĐỊNH DANH", "Tài khoản: <b>" + tk_giai_ma + "</b><br>Vui lòng nhập Mã khóa bảo mật của Thầy/Cô:", false);
+                if (!khoaData) { document.getElementById('login-overlay').style.display = 'flex'; return; }
                 
-                tiepTucXacThucQR(tk_giai_ma, pinData.goc, 'DA_TAO', "");
+                tiepTucXacThucQR(tk_giai_ma, khoaData.goc, 'DA_TAO', "");
                 
             } else if (kq_trangthai.loai === 'CHUA_TAO') {
-                let pinData = await hienThiNhapPin("KÍCH HOẠT TÀI KHOẢN MỚI", "Tài khoản: <b>" + tk_giai_ma + "</b><br>Lần đầu truy cập, vui lòng nhập mã bảo mật cấp phát và tự tạo Mã PIN mới.", true);
-                if (!pinData) { document.getElementById('login-overlay').style.display = 'flex'; return; }
+                let khoaData = await hienThiNhapKhoa("KÍCH HOẠT TÀI KHOẢN MỚI", "Tài khoản: <b>" + tk_giai_ma + "</b><br>Lần đầu truy cập, vui lòng nhập mã bảo mật cấp phát và tự tạo Mã khóa mới.", true);
+                if (!khoaData) { document.getElementById('login-overlay').style.display = 'flex'; return; }
 
-                tiepTucXacThucQR(tk_giai_ma, pinData.goc, 'CHUA_TAO', pinData.moi);
+                tiepTucXacThucQR(tk_giai_ma, khoaData.goc, 'CHUA_TAO', khoaData.moi);
             }
         })
         .withFailureHandler(loi => {
