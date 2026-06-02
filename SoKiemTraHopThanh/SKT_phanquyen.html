@@ -36,7 +36,7 @@
                         <th style="width: 50px;" class="text-center">Xóa</th>
                         <th style="width: 60px;" class="text-center">STT</th>
                         <th style="width: 35%;">Họ và tên</th>
-                        <th style="width: 35%;">Email</th>
+                        <th style="width: 35%;">Định danh (Tài khoản)</th>
                         <th style="width: 15%;">Quyền</th>
                     </tr>
                 </thead>
@@ -136,7 +136,7 @@
             .skt_lay_phanquyen();
     }
     
-    function addRowPQ(ten = '', email = '', quyen = '') {
+    function addRowPQ(ten = '', taikhoan = '', quyen = '') {
         const tbody = document.getElementById('tb-phanquyen-body');
         const tr = document.createElement('tr');
         
@@ -151,7 +151,7 @@
             </td>
             <td class="text-center align-middle fw-bold stt-col" style="color: #64748b;"></td>
             <td><input type="text" class="cell-input ten-col" value="${ten}" placeholder="Nhập họ và tên..."></td>
-            <td><input type="text" class="cell-input email-col" value="${email}" placeholder="Nhập email..."></td>
+            <td><input type="text" class="cell-input tk-col" value="${taikhoan}" placeholder="Nhập tên định danh..."></td>
             <td>
                 <select class="cell-input quyen-col" style="cursor:pointer; text-align: center;">
                     <option value="" ${selTrong}>Người được kiểm tra</option>
@@ -192,13 +192,13 @@
         
         rows.forEach((row, idx) => {
             const ten = row.querySelector('.ten-col').value.trim();
-            const email = row.querySelector('.email-col').value.trim();
+            const taikhoan = row.querySelector('.tk-col').value.trim();
             const quyen = row.querySelector('.quyen-col').value.trim();
             
             if (quyen === 'xx') tonTaiNguoiXX = true;
             
-            if (ten !== '' || email !== '') {
-                mangdl.push([idx + 1, ten, email, quyen]);
+            if (ten !== '' || taikhoan !== '') {
+                mangdl.push([idx + 1, ten, taikhoan, quyen]);
             }
         });
         
