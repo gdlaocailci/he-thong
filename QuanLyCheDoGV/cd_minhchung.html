@@ -1,0 +1,311 @@
+<style>
+  /* --- CSS CHO MODAL UPLOAD MINH CHỨNG (nâng cấp) --- */
+  #khung_tai_tl { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1080; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+  .up-container { background: white; padding: 20px; border-radius: 12px; width: 600px; max-width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-family: "Times New Roman", serif; animation: popIn 0.3s ease; }
+  .up-header { text-align: center; border-bottom: 2px solid #1e3a8a; margin-bottom: 15px; padding-bottom: 5px; }
+  .up-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .up-dropzone { border: 2px dashed #3b82f6; padding: 25px; text-align: center; background: white; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+  .up-dropzone:hover { background: #eff6ff; }
+  #linkInputArea { display: none; text-align: left; margin-top: 10px; }
+  #txtDirectLink { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: Arial, sans-serif; box-sizing: border-box; }
+  #btnTaiLen { width: 100%; padding: 12px; background: #059669; color: white; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; opacity: 0.5; pointer-events: none; margin-top: 10px; font-family: "Times New Roman", serif; font-size: 15px;}
+  #btnTaiLen.active { opacity: 1; pointer-events: auto; }
+  #btnTaiLen:hover.active { background: #047857; }
+  .close-up { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; float: right; font-family: "Times New Roman", serif; font-size: 15px;}
+  .close-up:hover { background: #b91c1c; }
+  #canhBaoXoa { display:none; color:#d97706; font-size:14px; text-align:center; margin-bottom:10px; font-weight:bold; background: #fffbeb; padding: 8px; border-radius: 6px; border: 1px dashed #d97706; }
+  #trangThaiTai { text-align:center; font-weight:bold; min-height:20px; color:#333; font-size:15px; }
+</style>
+
+<div id="khung_tai_tl">
+  <div class="up-container">
+    <div class="up-header"><h2 style="margin:0; color:#1e3a8a;">📁 ĐÍNH KÈM QUYẾT ĐỊNH</h2></div>
+    
+    <div class="up-box">
+      <label><b>1. Chọn thư mục lưu trữ:</b></label>
+      <select id="hopThuMuc" style="width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px; font-family: 'Times New Roman', serif; font-size: 15px;">
+        <option>⏳ Đang quét...</option>
+      </select>
+    </div>
+
+    <div class="up-box">
+      <label style="display:block; margin-bottom:5px;"><b>2. Phương thức đính kèm minh chứng:</b></label>
+      <div style="display:flex; gap:15px; justify-content:center; margin-bottom:10px; font-weight:bold; flex-wrap:wrap;">
+        <label><input type="radio" name="cheDoTai" value="file" checked onchange="CD_ChuyenSangFileLe()"> 📄 Tải File lẻ</label>
+        <label><input type="radio" name="cheDoTai" value="folder" onchange="CD_ChuyenSangThuMuc()"> 📂 Cả thư mục</label>
+        <label style="color:#047857;"><input type="radio" name="cheDoTai" value="link" onchange="CD_ChuyenSangLink()"> 🔗 Gán link Web/Drive</label>
+      </div>
+      <div style="display:flex; gap:20px; justify-content:center; padding:8px; background:#e0f2fe; border-radius:6px; margin-bottom:10px; font-size: 14px;">
+        <label style="color:#0369a1; cursor:pointer;" title="Xóa tài liệu cũ trên hệ thống, thay bằng tài liệu mới">
+          <input type="radio" name="cheDoGhi" value="replace" checked onchange="CD_HienThiCanhBao()"> 🔄 Thay thế QĐ cũ
+        </label>
+        <label style="color:#0369a1; cursor:pointer;" title="Giữ nguyên tài liệu cũ, chèn thêm tài liệu mới vào hệ thống">
+          <input type="radio" name="cheDoGhi" value="append" onchange="CD_HienThiCanhBao()"> ➕ Chèn thêm QĐ
+        </label>
+      </div>
+      
+      <!-- Vùng thả file (file lẻ hoặc thư mục) -->
+      <div class="up-dropzone" id="dropzoneArea" onclick="document.getElementById('tepDauVao').click()">
+        <span id="nhanHienThiTep">Nhấn vào đây để chọn hồ sơ</span>
+        <input type="file" id="tepDauVao" style="display:none" onchange="CD_XyLyChonTep(this)" multiple>
+      </div>
+
+      <!-- Vùng nhập link (ẩn mặc định) -->
+      <div id="linkInputArea">
+        <input type="text" id="txtDirectLink" placeholder="Dán đường link (Google Drive hoặc link web trực tiếp) vào đây..." oninput="CD_KiemTraLink()" autocomplete="off" spellcheck="false">
+        <div style="font-size:12px; color:#666; margin-top:5px; font-style: italic;">Hệ thống chỉ đọc được nếu file không bị khóa mật khẩu.</div>
+      </div>
+    </div>
+
+    <div id="canhBaoXoa">⚠️ Quyết định cũ trên hệ thống sẽ bị xóa vĩnh viễn để thay thế bằng tài liệu mới.</div>
+    <div id="trangThaiTai" style="text-align:center; font-weight:bold; min-height:20px; color:#333; font-size:15px;"></div>
+    
+    <div style="margin-top:10px;">
+      <button id="btnTaiLen" onclick="thucHienTaiLen()">BẮT ĐẦU TẢI LÊN</button>
+      <button class="close-up" onclick="dongKhungTai()">ĐÓNG</button>
+      <div style="clear:both"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let DANH_SACH_TEP = [];
+  let LIEN_KET_CAN_XOA = ""; 
+  let HAM_GOI_LAI_KHI_XONG = null; 
+
+  // Hàm lấy danh sách thư mục con (backend)
+  function taiDanhSachThuMuc() {
+    const s = document.getElementById('hopThuMuc');
+    window.google.script.run.withSuccessHandler(danhSach => {
+      s.innerHTML = `<option value="">-- Thư mục gốc --</option>`;
+      if(danhSach) danhSach.forEach(tm => s.add(new Option("📂 " + tm.name, tm.id)));
+    }).CD_LayThuMucCon();
+  }
+
+  // Mở modal (giữ nguyên giao diện)
+  function openUploadModal(linkHienTai, khiThanhCong) {
+    LIEN_KET_CAN_XOA = linkHienTai || "";
+    HAM_GOI_LAI_KHI_XONG = khiThanhCong;
+    CD_HienThiCanhBao();
+    
+    document.getElementById('hopThuMuc').innerHTML = '<option>⏳ Đang quét...</option>';
+    taiDanhSachThuMuc();
+    
+    // Reset giao diện về chế độ file
+    document.querySelector('input[name="cheDoTai"][value="file"]').checked = true;
+    CD_ChuyenSangFileLe();
+    document.getElementById('txtDirectLink').value = "";
+    document.getElementById('khung_tai_tl').style.display = 'flex';
+  }
+
+  // Cập nhật cảnh báo xóa cũ
+  function CD_HienThiCanhBao() {
+    const kieuGhi = document.querySelector('input[name="cheDoGhi"]:checked').value;
+    const vungCanhBao = document.getElementById('canhBaoXoa');
+    if(kieuGhi === 'replace' && LIEN_KET_CAN_XOA && LIEN_KET_CAN_XOA.trim() !== "") {
+      vungCanhBao.style.display = 'block';
+    } else {
+      vungCanhBao.style.display = 'none';
+    }
+  }
+
+  // Đóng modal
+  function dongKhungTai() {
+    document.getElementById('khung_tai_tl').style.display = 'none';
+    document.getElementById('trangThaiTai').innerText = "";
+    document.getElementById('tepDauVao').value = "";
+    document.getElementById('nhanHienThiTep').innerText = "Nhấn để chọn hồ sơ";
+    document.getElementById('canhBaoXoa').style.display = 'none';
+    document.getElementById('linkInputArea').style.display = 'none';
+    document.getElementById('dropzoneArea').style.display = 'block';
+    document.getElementById('txtDirectLink').value = "";
+    DANH_SACH_TEP = []; 
+    LIEN_KET_CAN_XOA = "";
+    HAM_GOI_LAI_KHI_XONG = null;
+    document.getElementById('btnTaiLen').classList.remove('active');
+  }
+
+  // Chuyển sang chế độ File lẻ
+  function CD_ChuyenSangFileLe() {
+    const tepVao = document.getElementById('tepDauVao');
+    tepVao.removeAttribute('webkitdirectory');
+    tepVao.removeAttribute('directory');
+    tepVao.setAttribute('multiple', 'multiple');
+    lamMoiOChonTep();
+    document.getElementById('dropzoneArea').style.display = 'block';
+    document.getElementById('linkInputArea').style.display = 'none';
+    document.getElementById('btnTaiLen').innerText = "BẮT ĐẦU TẢI LÊN";
+    document.getElementById('btnTaiLen').style.background = "#059669";
+  }
+
+  // Chuyển sang chế độ Cả thư mục
+  function CD_ChuyenSangThuMuc() {
+    const tepVao = document.getElementById('tepDauVao');
+    tepVao.setAttribute('webkitdirectory', '');
+    tepVao.setAttribute('directory', '');
+    tepVao.setAttribute('multiple', 'multiple');
+    lamMoiOChonTep();
+    document.getElementById('dropzoneArea').style.display = 'block';
+    document.getElementById('linkInputArea').style.display = 'none';
+    document.getElementById('btnTaiLen').innerText = "BẮT ĐẦU TẢI LÊN";
+    document.getElementById('btnTaiLen').style.background = "#059669";
+  }
+
+  // Chuyển sang chế độ Gán link
+  function CD_ChuyenSangLink() {
+    lamMoiOChonTep();            // xóa file đã chọn
+    document.getElementById('dropzoneArea').style.display = 'none';
+    document.getElementById('linkInputArea').style.display = 'block';
+    document.getElementById('btnTaiLen').innerText = "LƯU LINK NÀY NGAY";
+    document.getElementById('btnTaiLen').style.background = "#047857";
+    CD_KiemTraLink();
+  }
+
+  // Reset vùng chọn file
+  function lamMoiOChonTep() {
+    document.getElementById('tepDauVao').value = "";
+    document.getElementById('nhanHienThiTep').innerText = "Nhấn vào đây để chọn hồ sơ";
+    document.getElementById('btnTaiLen').classList.remove('active');
+    DANH_SACH_TEP = [];
+    document.getElementById('trangThaiTai').innerText = "";
+  }
+
+  // Xử lý khi chọn file / thư mục
+  function CD_XyLyChonTep(tepVao) {
+    if (tepVao.files.length > 0) {
+      DANH_SACH_TEP = tepVao.files;
+      const cheDoTai = document.querySelector('input[name="cheDoTai"]:checked').value;
+      if (cheDoTai === 'folder') {
+        const tenFolder = DANH_SACH_TEP[0].webkitRelativePath.split('/')[0];
+        document.getElementById('nhanHienThiTep').innerText = `📂 ${tenFolder} (${DANH_SACH_TEP.length} tệp)`;
+      } else {
+        if (DANH_SACH_TEP.length === 1) {
+          document.getElementById('nhanHienThiTep').innerText = "📄 " + DANH_SACH_TEP[0].name;
+        } else {
+          document.getElementById('nhanHienThiTep').innerText = `📄 Đã chọn ${DANH_SACH_TEP.length} tệp`;
+        }
+      }
+      document.getElementById('btnTaiLen').classList.add('active');
+      document.getElementById('trangThaiTai').innerText = "Hồ sơ đã sẵn sàng.";
+    }
+  }
+
+  // Kiểm tra link (bật nút khi có nội dung)
+  function CD_KiemTraLink() {
+    const linkVal = document.getElementById('txtDirectLink').value.trim();
+    const btn = document.getElementById('btnTaiLen');
+    if (linkVal !== "") {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  }
+
+  // Xử lý chính: tùy theo chế độ mà gọi backend khác nhau
+  function thucHienTaiLen() {
+    const cheDoTai = document.querySelector('input[name="cheDoTai"]:checked').value;
+    const kieuGhi = document.querySelector('input[name="cheDoGhi"]:checked').value;
+    const nutTai = document.getElementById('btnTaiLen');
+    const st = document.getElementById('trangThaiTai');
+
+    // ---------- TRƯỜNG HỢP 3: GÁN LINK ----------
+    if (cheDoTai === 'link') {
+      const linkMoi = document.getElementById('txtDirectLink').value.trim();
+      if (!linkMoi) return;
+      
+      nutTai.classList.remove('active');
+      st.style.color = "blue";
+      st.innerText = "⏳ Đang xử lý liên kết...";
+
+      // Xử lý chuỗi link cuối cùng (append hoặc replace)
+      let finalLink = linkMoi;
+      if (kieuGhi === 'append' && LIEN_KET_CAN_XOA && LIEN_KET_CAN_XOA.trim() !== "") {
+        finalLink = LIEN_KET_CAN_XOA + "," + linkMoi;
+        st.innerText = "⏳ Đang chèn thêm liên kết...";
+      } else if (kieuGhi === 'replace' && LIEN_KET_CAN_XOA && LIEN_KET_CAN_XOA.trim() !== "") {
+        st.innerText = "⏳ Đang dọn dẹp liên kết cũ...";
+        // Gọi xóa file cũ trên Drive (nếu có) - fire and forget
+        if (typeof window.google.script.run.CD_XoaTepTheoLink === 'function') {
+          window.google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){})
+            .CD_XoaTepTheoLink(LIEN_KET_CAN_XOA);
+        }
+      }
+      
+      // Gọi backend lưu link (cần hàm CD_GanLink bên server)
+      setTimeout(() => {
+        window.google.script.run
+          .withSuccessHandler(kq => xyLyKetQuaTai(kq, st, nutTai))
+          .withFailureHandler(err => {
+            st.style.color = "red";
+            st.innerText = "❌ Lỗi server: " + err.message;
+            nutTai.classList.add('active');
+          })
+          .CD_GanLink(finalLink, document.getElementById('hopThuMuc').value, LIEN_KET_CAN_XOA, kieuGhi);
+      }, 100);
+      return;
+    }
+
+    // ---------- TRƯỜNG HỢP 1 & 2: TẢI FILE / THƯ MỤC ----------
+    if (!DANH_SACH_TEP || DANH_SACH_TEP.length === 0) return;
+    const fId = document.getElementById('hopThuMuc').value;
+
+    nutTai.classList.remove('active');
+    st.style.color = "blue";
+    st.innerText = "⏳ Đang kết nối máy chủ...";
+    
+    if (cheDoTai === 'file') {
+      let mangDuLieuTep = []; let dem = 0;
+      st.innerText = `⏳ Đang đọc ${DANH_SACH_TEP.length} tài liệu...`;
+      Array.from(DANH_SACH_TEP).forEach(tepItem => {
+        const trinhDoc = new FileReader();
+        trinhDoc.onload = sk => {
+          mangDuLieuTep.push({ fileName: tepItem.name, mimeType: tepItem.type, data: sk.target.result.split(',')[1] });
+          dem++;
+          if (dem === DANH_SACH_TEP.length) {
+            st.innerText = `⏳ Đang chuyển ${DANH_SACH_TEP.length} tài liệu lên máy chủ...`;
+            window.google.script.run
+              .withSuccessHandler(kq => xyLyKetQuaTai(kq, st, nutTai))
+              .CD_TaiNhieuTep(mangDuLieuTep, fId, LIEN_KET_CAN_XOA, kieuGhi);
+          }
+        };
+        trinhDoc.readAsDataURL(tepItem);
+      });
+    } 
+    else if (cheDoTai === 'folder') {
+      const tenFolderMoi = DANH_SACH_TEP[0].webkitRelativePath.split('/')[0];
+      let mangDuLieuTep = []; let dem = 0;
+      st.innerText = `⏳ Đang đóng gói ${DANH_SACH_TEP.length} tài liệu...`;
+      Array.from(DANH_SACH_TEP).forEach(tepItem => {
+        const trinhDoc = new FileReader();
+        trinhDoc.onload = sk => {
+          mangDuLieuTep.push({ fileName: tepItem.name, mimeType: tepItem.type, data: sk.target.result.split(',')[1] });
+          dem++;
+          if (dem === DANH_SACH_TEP.length) {
+            st.innerText = "⏳ Đang chuyển gói dữ liệu lên máy chủ...";
+            window.google.script.run
+              .withSuccessHandler(kq => xyLyKetQuaTai(kq, st, nutTai))
+              .CD_TaiThuMuc(fId, tenFolderMoi, mangDuLieuTep, LIEN_KET_CAN_XOA, kieuGhi);
+          }
+        };
+        trinhDoc.readAsDataURL(tepItem);
+      });
+    }
+  }
+
+  // Xử lý kết quả trả về từ backend
+  function xyLyKetQuaTai(kq, st, nutTai) {
+    if (kq.thanhCong) {
+      st.style.color = "green";
+      st.innerText = "✅ " + kq.thongBao;
+      if (HAM_GOI_LAI_KHI_XONG) {
+        const kieuGhi = document.querySelector('input[name="cheDoGhi"]:checked').value;
+        HAM_GOI_LAI_KHI_XONG(kq.lienKetTep, (DANH_SACH_TEP[0] ? DANH_SACH_TEP[0].name : "link"), kieuGhi);
+      }
+      setTimeout(dongKhungTai, 1000);
+    } else {
+      st.style.color = "red";
+      st.innerText = "❌ " + kq.thongBao;
+      nutTai.classList.add('active');
+    }
+  }
+</script>
