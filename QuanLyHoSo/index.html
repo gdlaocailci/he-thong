@@ -399,7 +399,6 @@
     }
 
     function loadDesktopData(sysSession) {
-        // Đã sửa lại thành khoaBaoMat để tuân thủ luồng Back-end
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -690,13 +689,13 @@
                 case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
                 case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
                 
-                /* ĐÃ CẬP NHẬT: SỬ DỤNG MÃ DIRECT LINK CHO HÌNH ẢNH TRÊN GOOGLE DRIVE */
+                /* ĐÃ CẬP NHẬT: SỬ DỤNG MÁY CHỦ PHÂN PHỐI CDN CỦA GOOGLE ĐỂ HIỂN THỊ ẢNH TRỰC TIẾP */
                 case 'nam': 
-                    iconContent = '<img src="https://drive.google.com/uc?id=1f_3q35gsdit8MXizT11o6yqTRPHZTpjt" class="custom-avatar" alt="Nam">'; 
+                    iconContent = '<img src="https://lh3.googleusercontent.com/d/1f_3q35gsdit8MXizT11o6yqTRPHZTpjt" class="custom-avatar" alt="Nam">'; 
                     bgClass = 'bg-avatar'; 
                     break;
                 case 'nu': 
-                    iconContent = '<img src="https://drive.google.com/uc?id=1SXq_spHsWh5uye7U7D6_ZIWZhILo2dnq" class="custom-avatar" alt="Nữ">'; 
+                    iconContent = '<img src="https://lh3.googleusercontent.com/d/1SXq_spHsWh5uye7U7D6_ZIWZhILo2dnq" class="custom-avatar" alt="Nữ">'; 
                     bgClass = 'bg-avatar'; 
                     break;
 
