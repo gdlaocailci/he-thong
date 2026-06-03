@@ -16,5 +16,5 @@ const KETNOI = {
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwatqZkT9zencA2tHQu9xvbjkzduBkZq42jxnqSqFaHEJcBREoWNFVCvUK17BKVe4PHHw/exec",
 
     // 4. Mã định danh ứng dụng Google (OAuth 2.0 Client ID)
-    CLIENT_ID: "407480994586-m6fpq6sfcc90qqj9k08rsmi1lge6br94.apps.googleusercontent.com"
+    CLIENT_ID: "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com"
 };
