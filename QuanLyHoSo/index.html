@@ -50,9 +50,9 @@
         .bg-10 { background: #0097A7; border: 2px solid #80DEEA; } 
         .bg-default { background: #546E7A; border: 2px solid #B0BEC5; } 
         
-        /* CSS BỔ SUNG: AVATAR TRÒN */
-        .bg-avatar { background: transparent !important; border: 2px solid rgba(255,255,255,0.6) !important; border-radius: 50% !important; overflow: hidden; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important; }
-        .custom-avatar { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; }
+        /* CSS BỔ SUNG: AVATAR TRÒN HỖ TRỢ ẢNH DRIVE */
+        .bg-avatar { background: #fdfdfd !important; border: 2px solid rgba(255,255,255,0.8) !important; border-radius: 50% !important; overflow: hidden; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important; }
+        .custom-avatar { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; object-position: top center; transform: scale(1.1); }
 
         .icon-text { color: #ffffff; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.3; text-shadow: 1px 1px 2px #000000, 0 0 10px rgba(0,0,0,0.8); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word; pointer-events: none; }
         
@@ -246,8 +246,8 @@
                             <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
                         </optgroup>
                         <optgroup label="Giới tính & Cá nhân">
-                            <option value="nam">Giới tính Nam (Cán bộ - Bản Thanh lịch)</option>
-                            <option value="nu">Giới tính Nữ (Giáo viên - Bản Thanh lịch)</option>
+                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
+                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
                         </optgroup>
                         <optgroup label="Khác">
                             <option value="danso">Dân số & Xã hội (Gia đình)</option>
@@ -399,6 +399,7 @@
     }
 
     function loadDesktopData(sysSession) {
+        // Đã sửa lại thành khoaBaoMat để tuân thủ luồng Back-end
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -689,13 +690,13 @@
                 case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
                 case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
                 
-                /* ĐÃ CẬP NHẬT: SVG MỚI THEO PHONG CÁCH THANH LỊCH (KÍNH TRÍ THỨC, TRANG PHỤC CHUẨN MỰC) */
+                /* ĐÃ CẬP NHẬT: SỬ DỤNG MÃ DIRECT LINK CHO HÌNH ẢNH TRÊN GOOGLE DRIVE */
                 case 'nam': 
-                    iconContent = '<svg viewBox="0 0 100 100" class="custom-avatar"><circle cx="50" cy="50" r="50" fill="#E8F0FE"/><path d="M15 100 C15 65 85 65 85 100" fill="#1A237E"/><polygon points="35 68 50 88 65 68" fill="#FFF"/><polygon points="46 76 54 76 50 98" fill="#D32F2F"/><rect x="42" y="55" width="16" height="20" fill="#FFCC80"/><path d="M28 55 C28 85 72 85 72 55 C72 20 28 20 28 55 Z" fill="#FFE0B2"/><path d="M26 45 C26 10 74 10 74 45 C74 30 50 20 26 45 Z" fill="#212121"/><rect x="33" y="45" width="13" height="9" rx="2" fill="none" stroke="#333" stroke-width="2"/><rect x="54" y="45" width="13" height="9" rx="2" fill="none" stroke="#333" stroke-width="2"/><line x1="46" y1="49" x2="54" y2="49" stroke="#333" stroke-width="2"/><path d="M44 65 Q50 70 56 65" fill="none" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/></svg>'; 
+                    iconContent = '<img src="https://drive.google.com/uc?id=1f_3q35gsdit8MXizT11o6yqTRPHZTpjt" class="custom-avatar" alt="Nam">'; 
                     bgClass = 'bg-avatar'; 
                     break;
                 case 'nu': 
-                    iconContent = '<svg viewBox="0 0 100 100" class="custom-avatar"><circle cx="50" cy="50" r="50" fill="#FCE4EC"/><path d="M22 45 C15 90 20 100 25 100 L75 100 C80 100 85 90 78 45 Z" fill="#3E2723"/><path d="M15 100 C15 70 85 70 85 100" fill="#C62828"/><polygon points="38 72 50 88 62 72" fill="#FFF"/><rect x="43" y="55" width="14" height="20" fill="#FFCC80"/><path d="M30 55 C30 85 70 85 70 55 C70 25 30 25 30 55 Z" fill="#FFE0B2"/><path d="M28 45 C28 15 72 15 72 45 C72 30 50 25 28 45 Z" fill="#3E2723"/><circle cx="39" cy="49" r="6" fill="none" stroke="#333" stroke-width="2"/><circle cx="61" cy="49" r="6" fill="none" stroke="#333" stroke-width="2"/><line x1="45" y1="49" x2="55" y2="49" stroke="#333" stroke-width="2"/><path d="M45 65 Q50 69 55 65" fill="none" stroke="#D32F2F" stroke-width="2" stroke-linecap="round"/></svg>'; 
+                    iconContent = '<img src="https://drive.google.com/uc?id=1SXq_spHsWh5uye7U7D6_ZIWZhILo2dnq" class="custom-avatar" alt="Nữ">'; 
                     bgClass = 'bg-avatar'; 
                     break;
 
