@@ -20,7 +20,7 @@ var SCV_TAC_GIA_UP = "HOÀNG NGỌC LÂM";
 var SCV_MO_TA = "Hệ thống quản lý công văn và lịch công tác nội bộ - Trường TH&THCS Hợp Thành.";
 
 // MÃ CLIENT ID CỦA GOOGLE ĐĂNG NHẬP
-var SCV_GOOGLE_CLIENT_ID = "407480994586-m6fpq6sfcc90qqj9k08rsmi1lge6br94.apps.googleusercontent.com";
+var SCV_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
 
 /* ========================================================================= */
 /* KHỞI TẠO CẤU TRÚC HEADER TỰ ĐỘNG TỪ FILE JS                               */
