@@ -49,6 +49,10 @@
         .bg-9 { background: #546E7A; border: 2px solid #B0BEC5; } 
         .bg-10 { background: #0097A7; border: 2px solid #80DEEA; } 
         .bg-default { background: #546E7A; border: 2px solid #B0BEC5; } 
+        
+        /* CSS BỔ SUNG: AVATAR HUY HIỆU TRÒN ĐẸP MẮT */
+        .bg-avatar { background: transparent !important; border: 1px solid rgba(255,255,255,0.4) !important; border-radius: 50% !important; overflow: hidden; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important; }
+        .custom-avatar { width: 50px; height: 50px; display: block; border-radius: 50%; }
 
         .icon-text { color: #ffffff; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.3; text-shadow: 1px 1px 2px #000000, 0 0 10px rgba(0,0,0,0.8); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word; pointer-events: none; }
         
@@ -242,8 +246,8 @@
                             <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
                         </optgroup>
                         <optgroup label="Giới tính & Cá nhân">
-                            <option value="nam">Giới tính Nam (Biểu tượng Nam)</option>
-                            <option value="nu">Giới tính Nữ (Biểu tượng Nữ)</option>
+                            <option value="nam">Giới tính Nam (Cán bộ)</option>
+                            <option value="nu">Giới tính Nữ (Giáo viên)</option>
                         </optgroup>
                         <optgroup label="Khác">
                             <option value="danso">Dân số & Xã hội (Gia đình)</option>
@@ -395,7 +399,6 @@
     }
 
     function loadDesktopData(sysSession) {
-        // Đã sửa lại thành khoaBaoMat để tuân thủ luồng Back-end
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -685,7 +688,9 @@
                 case 'baohiem': iconContent = '<span class="material-icons">shield</span>'; bgClass = 'bg-10'; break;
                 case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
                 case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
-              case 'nam': 
+                
+                /* ĐÃ CẬP NHẬT: AVATAR FLAT DESIGN SẮC NÉT & CHUYÊN NGHIỆP */
+                case 'nam': 
                     iconContent = '<svg viewBox="0 0 100 100" class="custom-avatar"><rect width="100" height="100" fill="#E3F2FD"/><path d="M15 100 C15 60 85 60 85 100" fill="#1E88E5"/><path d="M35 100 L50 70 L65 100" fill="#FFFFFF"/><path d="M46 70 L50 95 L54 70 Z" fill="#E53935"/><path d="M40 70 Q50 65 60 70 L50 85 Z" fill="#1565C0" opacity="0.1"/><rect x="42" y="45" width="16" height="30" fill="#FFCC80"/><path d="M28 45 C28 65 72 65 72 45 C72 25 28 25 28 45 Z" fill="#FFE0B2"/><path d="M26 42 C26 15 74 15 74 42 C74 25 60 15 50 15 C35 15 26 25 26 42 Z" fill="#37474F"/><path d="M26 35 L26 50 C28 50 30 45 30 40 Z" fill="#37474F"/><path d="M74 35 L74 50 C72 50 70 45 70 40 Z" fill="#37474F"/><circle cx="40" cy="45" r="3.5" fill="#212121"/><circle cx="60" cy="45" r="3.5" fill="#212121"/><path d="M35 38 Q40 36 45 38" fill="none" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/><path d="M65 38 Q60 36 55 38" fill="none" stroke="#37474F" stroke-width="2.5" stroke-linecap="round"/><path d="M43 56 Q50 62 57 56" fill="none" stroke="#8D6E63" stroke-width="2.5" stroke-linecap="round"/></svg>'; 
                     bgClass = 'bg-avatar'; 
                     break;
@@ -693,6 +698,7 @@
                     iconContent = '<svg viewBox="0 0 100 100" class="custom-avatar"><rect width="100" height="100" fill="#FCE4EC"/><path d="M15 100 C15 65 85 65 85 100" fill="#00897B"/><path d="M38 100 L50 70 L62 100" fill="#FFFFFF"/><rect x="43" y="45" width="14" height="30" fill="#FFCC80"/><path d="M65 30 C95 40 90 85 75 95 C85 65 70 55 60 50 Z" fill="#4E342E"/><path d="M30 45 C30 65 70 65 70 45 C70 25 30 25 30 45 Z" fill="#FFE0B2"/><path d="M28 42 C28 15 72 15 72 42 C72 25 60 18 50 18 C38 18 28 25 28 42 Z" fill="#5D4037"/><path d="M28 35 C20 60 25 80 32 80 C28 60 32 45 35 40 Z" fill="#5D4037"/><circle cx="41" cy="45" r="3.5" fill="#212121"/><circle cx="59" cy="45" r="3.5" fill="#212121"/><circle cx="41" cy="45" r="8" fill="none" stroke="#D84315" stroke-width="2.5"/><circle cx="59" cy="45" r="8" fill="none" stroke="#D84315" stroke-width="2.5"/><line x1="49" y1="45" x2="51" y2="45" stroke="#D84315" stroke-width="2.5"/><path d="M45 56 Q50 60 55 56" fill="none" stroke="#E57373" stroke-width="2.5" stroke-linecap="round"/></svg>'; 
                     bgClass = 'bg-avatar'; 
                     break;
+
                 case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
                 case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
                 case 'phucvu': iconContent = '<span class="material-icons">room_service</span>'; bgClass = 'bg-7'; break;
