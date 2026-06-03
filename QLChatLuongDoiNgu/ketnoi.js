@@ -9,7 +9,7 @@ var QLNS_TEN_PM = "Quản lý nhân sự";
 var QLNS_TEN_PM_UP = "QUẢN LÝ CHẤT LƯỢNG ĐỘI NGŨ";
 var QLNS_PHIEN_BAN = "V2.5.2026";
 var QLNS_TAC_GIA_UP = "HOÀNG NGỌC LÂM";
-var QLNS_GOOGLE_CLIENT_ID = "407480994586-m6fpq6sfcc90qqj9k08rsmi1lge6br94.apps.googleusercontent.com";
+var QLNS_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
 var QLNS_MO_TA = "Hệ thống quản lý chất lượng đội ngũ nội bộ - " + QLNS_TEN_TRUONG;
 
 /* ========================================================================= */
