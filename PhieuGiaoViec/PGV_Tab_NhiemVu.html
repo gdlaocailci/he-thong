@@ -196,21 +196,36 @@ function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
 
 function thietLapNutKhoa(trangThai, ngayKhoa = "") {
-    trangThaiKhoa = trangThai;
-    let btn = document.getElementById("nutMoKhoa");
+    // Làm sạch tuyệt đối mọi khoảng trắng từ máy chủ truyền về
+    let ttKhoa = String(trangThai || "Mở").trim();
+    trangThaiKhoa = ttKhoa;
+    
     let isBGH = kiemTraLaBGH();
+    let btnAll = document.getElementById("nutKhoaTatCa");
+    let btn = document.getElementById("nutMoKhoa");
     let spanNgay = document.getElementById("hienThiNgayKhoa"); 
     
-    // [KHẮC PHỤC LỖI] Đưa kiểm tra nút Khóa Tất Cả vào đây để đảm bảo load đúng quyền
-    let btnAll = document.getElementById("nutKhoaTatCa");
+    // --- ĐỒNG BỘ NÚT KHÓA TẤT CẢ ---
     if(btnAll) {
         if(isBGH) {
             btnAll.style.setProperty('display', 'inline-block', 'important');
+            if (ttKhoa === "Khóa") {
+                // Đang Khóa -> Nút hiện "Mở"
+                btnAll.setAttribute("data-tt", "Mở");
+                btnAll.className = "btn btn-sm btn-outline-success fw-bold me-3 align-middle";
+                btnAll.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở tất cả`;
+            } else {
+                // Đang Mở -> Nút hiện "Khóa"
+                btnAll.setAttribute("data-tt", "Khóa");
+                btnAll.className = "btn btn-sm btn-outline-danger fw-bold me-3 align-middle";
+                btnAll.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa tất cả`;
+            }
         } else {
             btnAll.style.setProperty('display', 'none', 'important');
         }
     }
 
+    // --- ĐỒNG BỘ NÚT KHÓA CÁ NHÂN & NHÃN THỜI GIAN ---
     if (btn) {
         if (isBGH) {
             btn.style.setProperty('display', 'inline-flex', 'important');
@@ -218,22 +233,26 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
             btn.style.setProperty('display', 'none', 'important');
         }
         
-        if (trangThaiKhoa === "Khóa") {
-            btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
-            btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
+        if (ttKhoa === "Khóa") {
+            // [ĐÃ SỬA] Hồ sơ đang Khóa -> Nút cá nhân hiện màu Xanh gợi ý "Mở"
+            btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
+            btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'inline-flex', 'important');
                 spanNgay.innerText = ngayKhoa ? "Đã khoá: " + ngayKhoa : "Đã khoá";
             }
         } else {
-            btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
-            btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
+            // [ĐÃ SỬA] Hồ sơ đang Mở -> Nút cá nhân hiện màu Đỏ gợi ý "Khóa"
+            btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
+            btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'none', 'important');
                 spanNgay.innerText = "";
             }
         }
     }
+    
+    // Kích hoạt đóng băng giao diện văn bản
     apDungKhoaGiaoDien();
 }
 
@@ -301,57 +320,48 @@ function doiTrangThaiKhoa() {
         return;
     }
 
-    let btn = document.getElementById("nutKhoaTatCa");
-    let trangThaiHienTai = btn.getAttribute("data-tt"); 
+    let btnAll = document.getElementById("nutKhoaTatCa");
+    if (!btnAll) return;
+    
+    // Đọc chính xác hành động tiếp theo
+    let trangThaiHienTai = String(btnAll.getAttribute("data-tt") || "").trim(); 
     let trangThaiMoi = (trangThaiHienTai === "Khóa") ? "Khóa" : "Mở"; 
     
     let cfMsg = (trangThaiMoi === "Khóa") ? "Xác nhận KHÓA toàn bộ hồ sơ của TẤT CẢ cán bộ, giáo viên?" : "Xác nhận MỞ toàn bộ hồ sơ của TẤT CẢ cán bộ, giáo viên?";
     if (!confirm(cfMsg)) return;
 
-    // Lấy ngày hiện tại hệ thống
     let hnay = new Date();
     let chuoiNgay = ("0" + hnay.getDate()).slice(-2) + "/" + ("0" + (hnay.getMonth() + 1)).slice(-2) + "/" + hnay.getFullYear();
     let ngayGui = (trangThaiMoi === "Khóa") ? chuoiNgay : "";
 
-    btn.disabled = true;
-    hienTaiDl(`⏳ Đang ${trangThaiMoi.toLowerCase()} toàn bộ hồ sơ...`);
+    btnAll.disabled = true;
+    if(typeof hienTaiDl === 'function') hienTaiDl(`⏳ Đang ${trangThaiMoi.toLowerCase()} toàn bộ hồ sơ...`);
 
-    if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
-        khachApi.goiThuCong({
-            hdong: "luutrangthaikhoatatca",
-            khoa: trangThaiMoi,
-            ngayKhoa: ngayGui
-        }, function(kq) {
-            anTaiDl();
-            btn.disabled = false;
+    if (typeof khachApi !== 'undefined') {
+        let goiThanhCong = function(kq) {
+            if(typeof anTaiDl === 'function') anTaiDl();
+            btnAll.disabled = false;
             if (kq && kq.ttai === 'tcong') {
-                // Đảo trạng thái nút để chuẩn bị cho lần bấm tiếp theo
-                let ttTiepTheo = (trangThaiMoi === "Khóa") ? "Mở" : "Khóa";
-                btn.setAttribute("data-tt", ttTiepTheo);
-                if (ttTiepTheo === "Khóa") {
-                    btn.className = "btn btn-sm btn-outline-danger fw-bold me-3 align-middle";
-                    btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa tất cả`;
-                } else {
-                    btn.className = "btn btn-sm btn-outline-success fw-bold me-3 align-middle";
-                    btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở tất cả`;
-                }
-                
-                // Đồng bộ cập nhật ngay lập tức giao diện cá nhân đang mở
+                // Nhường toàn bộ quyền vẽ lại giao diện cho hàm thietLapNutKhoa đảm nhiệm
                 thietLapNutKhoa(trangThaiMoi, ngayGui);
-                
                 if (typeof hienThongb === 'function') hienThongb('tcong', `Đã ${trangThaiMoi.toLowerCase()} tất cả hồ sơ thành công!`);
             } else {
                 if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi hệ thống: " + (kq ? kq.tbao : "Không xác định"));
             }
-        }, function(loi) {
-            anTaiDl();
-            btn.disabled = false;
+        };
+        
+        let goiLoi = function(loi) {
+            if(typeof anTaiDl === 'function') anTaiDl();
+            btnAll.disabled = false;
             if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message);
-        });
-    } else {
-        anTaiDl();
-        btn.disabled = false;
-        alert("Lỗi hệ thống: Cổng giao tiếp API chưa sẵn sàng.");
+        };
+
+        // Kích hoạt API an toàn
+        if (typeof khachApi.goiThuCong === 'function') {
+            khachApi.goiThuCong({ hdong: "luutrangthaikhoatatca", khoa: trangThaiMoi, ngayKhoa: ngayGui }, goiThanhCong, goiLoi);
+        } else if (typeof khachApi.yeucauApi === 'function') {
+            khachApi.yeucauApi("luutrangthaikhoatatca", { khoa: trangThaiMoi, ngayKhoa: ngayGui }, goiThanhCong, goiLoi);
+        }
     }
 }
   
