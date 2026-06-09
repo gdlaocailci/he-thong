@@ -86,6 +86,8 @@
          <textarea id="nhapLdoNghi" class="form-control me-3" placeholder="Nhập lý do..." style="height: 30px; min-height: 30px; font-size: 13px; border-radius: 4px; width: 300px; resize: none; overflow: hidden; white-space: pre-wrap; padding: 4px 8px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '30px')"></textarea>
      </div>
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
+        <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
+        
         <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
         
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
@@ -122,6 +124,7 @@
 
 <script>
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
+let trangThaiKhoa = "Mở";
 
 function kiemTraLaBGH() {
     if (typeof window.PGV_QUYEN !== 'undefined' && (window.PGV_QUYEN === 'xxx' || window.PGV_QUYEN === 'xx')) return true;
@@ -161,6 +164,10 @@ function kiemTraQuyenTruyCap() {
             if (diemThuong) diemThuong.disabled = false;
         } 
     }
+
+    if (trangThaiKhoa === "Khóa" && diemThuong) {
+        diemThuong.disabled = true;
+    }
 }
 
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
@@ -184,6 +191,108 @@ function cdang(ptu) {
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
+
+function thietLapNutKhoa(trangThai) {
+    trangThaiKhoa = trangThai;
+    let btn = document.getElementById("nutMoKhoa");
+    let isBGH = kiemTraLaBGH();
+    
+    if (btn) {
+        if (isBGH) {
+            btn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+            btn.style.setProperty('display', 'none', 'important');
+        }
+        
+        if (trangThaiKhoa === "Khóa") {
+            btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
+            btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
+        } else {
+            btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
+            btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
+        }
+    }
+    apDungKhoaGiaoDien();
+}
+
+// [HÀM ĐƯỢC CẬP NHẬT THEO YÊU CẦU MỚI] Đồng bộ trực tiếp mà không cần ấn Lưu nhật ký
+function doiTrangThaiKhoa() {
+    if (!kiemTraLaBGH()) {
+        if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Đồng chí không có thẩm quyền thao tác nút chức năng này.");
+        return;
+    }
+    
+    let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
+    if (cotETonTai) { 
+        var selectGv = document.getElementById("hopChonGv"); 
+        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
+            maTrangDich = selectGv.value;
+        } 
+    }
+
+    if (!maTrangDich || maTrangDich.trim() === "") {
+        if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không xác định được hồ sơ để khóa/mở.");
+        return;
+    }
+
+    let trangThaiMoi = (trangThaiKhoa === "Khóa") ? "Mở" : "Khóa";
+    
+    let btn = document.getElementById("nutMoKhoa");
+    if (btn) btn.disabled = true;
+    hienTaiDl("⏳ Đang đồng bộ trạng thái khóa...");
+
+    if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong({
+            hdong: "luutrangthaikhoa",
+            ttrg: maTrangDich,
+            khoa: trangThaiMoi
+        }, function(kq) {
+            anTaiDl();
+            if (btn) btn.disabled = false;
+            if (kq && kq.ttai === 'tcong') {
+                thietLapNutKhoa(trangThaiMoi);
+                if (typeof hienThongb === 'function') hienThongb('tcong', "Đã đồng bộ trạng thái " + trangThaiMoi + " thành công!");
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu trạng thái: " + (kq ? kq.tbao : "Không xác định"));
+            }
+        }, function(loi) {
+            anTaiDl();
+            if (btn) btn.disabled = false;
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối Server: " + loi.message);
+        });
+    } else {
+        anTaiDl();
+        if (btn) btn.disabled = false;
+        alert("Lỗi hệ thống: Cổng giao tiếp API chưa sẵn sàng.");
+    }
+}
+
+function apDungKhoaGiaoDien() {
+    let isLocked = (trangThaiKhoa === "Khóa");
+    
+    $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('disabled', isLocked);
+    if (isLocked) {
+        $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('readonly', true);
+    } else {
+        if (!window.PGV_IS_SELF) {
+            $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('readonly', true);
+        } else {
+            $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('readonly', false);
+        }
+    }
+    
+    $('button[onclick="addNv()"]').prop('disabled', isLocked);
+    $('.bi-paperclip').closest('button').prop('disabled', isLocked);
+    
+    $('#bangNviec tbody tr').find('input, select, textarea, button').prop('disabled', isLocked);
+    
+    $('#vungDinhkBcao .bi-x').css({
+        'pointer-events': isLocked ? 'none' : 'auto',
+        'opacity': isLocked ? '0.5' : '1'
+    });
+    
+    kiemTraQuyenTruyCap();
+}
 
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
@@ -238,7 +347,8 @@ function xulyLuuTam(ath = false, xltc = null) {
     });
 
     let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
-    const ht = { ttrg: maTrangDich, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq };
+    
+    const ht = { ttrg: maTrangDich, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq, khoa: trangThaiKhoa };
 
     khachApi.luuTam(ht, function(kq) {
         if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if(typeof mokBcao === 'function') mokBcao();
@@ -433,10 +543,18 @@ function veBangNviec(db) {
          </tr>`;
         bg.append(dg);
     });
-    setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
+    setTimeout(() => { 
+        $('#bangNviec textarea').each(function() { cdang(this); }); 
+        tinhtTdong(); 
+        khaBcao(); 
+        if (typeof canbHientai !== 'undefined' && canbHientai.tde) {
+            thietLapNutKhoa(canbHientai.tde.khoa || "Mở");
+        }
+    }, 100);
 }
 
 function addNv() {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     var isBGH = kiemTraLaBGH();
     if (cotETonTai) {
         var selectGv = document.getElementById("hopChonGv");
@@ -495,6 +613,7 @@ function addNv() {
 }
 
 function xoaDongNv(nt) { 
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     if(confirm("Xác nhận xóa?")) { 
         $(nt).closest('tr').remove(); 
         tinhtTdong(); 
@@ -649,6 +768,15 @@ function khoiTaoTheoQuyen() {
         cotETonTai = false; document.getElementById("hopChonGv").style.display = 'none';
         kiemTraQuyenTruyCap();
     }
+    
+    let btn = document.getElementById("nutMoKhoa");
+    if(btn) {
+        if(kiemTraLaBGH()) {
+            btn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+            btn.style.setProperty('display', 'none', 'important');
+        }
+    }
 }
 
 // ==================== BỔ SUNG KHỐI XỬ LÝ TỆP ĐÍNH KÈM BÁO CÁO ====================
@@ -736,6 +864,7 @@ function epKieuKq(kq) {
 }
 
 function xulyTaiBcao(ptu) {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     const files = ptu.files;
     if (!files || files.length === 0) return;
     hienTaiDl("⏳ Đang tải tệp đính kèm lên máy chủ...");
@@ -828,6 +957,7 @@ function veDinhKemBcao() {
 }
 
 function xoaDinhKemBcao(chs) {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
     
     let tepXoa = window.tepdinhkBcao[chs];
