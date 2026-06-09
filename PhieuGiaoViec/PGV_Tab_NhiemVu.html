@@ -74,6 +74,8 @@
     <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
     <div class="text-end text-nowrap" style="flex: 2;"> 
       <div class="d-inline-block border-end border-secondary border-opacity-25 pe-3 me-2">
+        <button id="nutKhoaTatCa" class="btn btn-sm btn-outline-danger fw-bold me-3 align-middle" style="display: none; height: 26px; font-size: 12px;" onclick="doiTrangThaiKhoaTatCa()" data-tt="Khóa"><i class="bi bi-lock-fill me-1"></i> Khóa tất cả</button>
+        
          <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
          <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
       </div>
@@ -199,6 +201,16 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     let isBGH = kiemTraLaBGH();
     let spanNgay = document.getElementById("hienThiNgayKhoa"); 
     
+    // [KHẮC PHỤC LỖI] Đưa kiểm tra nút Khóa Tất Cả vào đây để đảm bảo load đúng quyền
+    let btnAll = document.getElementById("nutKhoaTatCa");
+    if(btnAll) {
+        if(isBGH) {
+            btnAll.style.setProperty('display', 'inline-block', 'important');
+        } else {
+            btnAll.style.setProperty('display', 'none', 'important');
+        }
+    }
+
     if (btn) {
         if (isBGH) {
             btn.style.setProperty('display', 'inline-flex', 'important');
@@ -211,7 +223,6 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
             btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'inline-flex', 'important');
-                // Chỉnh sửa tiền tố hiển thị thành "Đã khoá: "
                 spanNgay.innerText = ngayKhoa ? "Đã khoá: " + ngayKhoa : "Đã khoá";
             }
         } else {
@@ -284,6 +295,66 @@ function doiTrangThaiKhoa() {
     }
 }
 
+  function doiTrangThaiKhoaTatCa() {
+    if (!kiemTraLaBGH()) {
+        if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Đồng chí không có thẩm quyền!");
+        return;
+    }
+
+    let btn = document.getElementById("nutKhoaTatCa");
+    let trangThaiHienTai = btn.getAttribute("data-tt"); 
+    let trangThaiMoi = (trangThaiHienTai === "Khóa") ? "Khóa" : "Mở"; 
+    
+    let cfMsg = (trangThaiMoi === "Khóa") ? "Xác nhận KHÓA toàn bộ hồ sơ của TẤT CẢ cán bộ, giáo viên?" : "Xác nhận MỞ toàn bộ hồ sơ của TẤT CẢ cán bộ, giáo viên?";
+    if (!confirm(cfMsg)) return;
+
+    // Lấy ngày hiện tại hệ thống
+    let hnay = new Date();
+    let chuoiNgay = ("0" + hnay.getDate()).slice(-2) + "/" + ("0" + (hnay.getMonth() + 1)).slice(-2) + "/" + hnay.getFullYear();
+    let ngayGui = (trangThaiMoi === "Khóa") ? chuoiNgay : "";
+
+    btn.disabled = true;
+    hienTaiDl(`⏳ Đang ${trangThaiMoi.toLowerCase()} toàn bộ hồ sơ...`);
+
+    if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong({
+            hdong: "luutrangthaikhoatatca",
+            khoa: trangThaiMoi,
+            ngayKhoa: ngayGui
+        }, function(kq) {
+            anTaiDl();
+            btn.disabled = false;
+            if (kq && kq.ttai === 'tcong') {
+                // Đảo trạng thái nút để chuẩn bị cho lần bấm tiếp theo
+                let ttTiepTheo = (trangThaiMoi === "Khóa") ? "Mở" : "Khóa";
+                btn.setAttribute("data-tt", ttTiepTheo);
+                if (ttTiepTheo === "Khóa") {
+                    btn.className = "btn btn-sm btn-outline-danger fw-bold me-3 align-middle";
+                    btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa tất cả`;
+                } else {
+                    btn.className = "btn btn-sm btn-outline-success fw-bold me-3 align-middle";
+                    btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở tất cả`;
+                }
+                
+                // Đồng bộ cập nhật ngay lập tức giao diện cá nhân đang mở
+                thietLapNutKhoa(trangThaiMoi, ngayGui);
+                
+                if (typeof hienThongb === 'function') hienThongb('tcong', `Đã ${trangThaiMoi.toLowerCase()} tất cả hồ sơ thành công!`);
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi hệ thống: " + (kq ? kq.tbao : "Không xác định"));
+            }
+        }, function(loi) {
+            anTaiDl();
+            btn.disabled = false;
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message);
+        });
+    } else {
+        anTaiDl();
+        btn.disabled = false;
+        alert("Lỗi hệ thống: Cổng giao tiếp API chưa sẵn sàng.");
+    }
+}
+  
 function apDungKhoaGiaoDien() {
     let isLocked = (trangThaiKhoa === "Khóa");
     
@@ -793,6 +864,15 @@ function khoiTaoTheoQuyen() {
             btn.style.setProperty('display', 'inline-flex', 'important');
         } else {
             btn.style.setProperty('display', 'none', 'important');
+        }
+    }
+  // [BỔ SUNG] Kiểm soát hiển thị nút Khóa Tất Cả
+    let btnAll = document.getElementById("nutKhoaTatCa");
+    if(btnAll) {
+        if(kiemTraLaBGH()) {
+            btnAll.style.setProperty('display', 'inline-block', 'important');
+        } else {
+            btnAll.style.setProperty('display', 'none', 'important');
         }
     }
 }
