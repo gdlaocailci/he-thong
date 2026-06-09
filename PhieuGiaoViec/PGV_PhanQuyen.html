@@ -1,0 +1,988 @@
+<style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        .khung-phanquyen {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-family: 'Times New Roman', Times, serif;
+        }
+        
+        .tieu-de-phanquyen {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e3c72;
+            border-bottom: 2px solid #1e3c72;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nhom-namhoc {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: normal;
+            background: #f8f9fa;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        
+        .nhom-namhoc label {
+            margin: 0;
+            color: #1e3c72;
+        }
+        
+        .nhom-namhoc input {
+            width: 120px;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        
+        .btn-chucnang {
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .btn-chucnang:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-chucnang:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .bang-phanquyen {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .bang-phanquyen th {
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .bang-phanquyen td {
+            border: 1px solid #dee2e6;
+            padding: 6px 4px;
+            vertical-align: middle;
+        }
+        
+        .id-sheet-input, .email-input, .name-input {
+            width: 95%;
+            min-width: 110px;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+        
+        .id-sheet-input:focus, .email-input:focus, .name-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .quyen-select {
+            width: 120px;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+        }
+        
+        .input-error {
+            border-color: #dc3545 !important;
+            background-color: #fff0f0 !important;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 11px;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        .btn-xoa {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 32px;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        .btn-xoa:hover:not(:disabled) {
+            color: #a71d2a;
+            background-color: #ffe6e6;
+            transform: scale(1.05);
+        }
+        
+        .btn-xoa:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Spinner cho nút xóa */
+        .spinner-delete {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #dc3545;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        .spinner-delete-sm {
+            width: 14px;
+            height: 14px;
+            border-width: 2px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Hiệu ứng cho dòng đang xóa */
+        .row-deleting {
+            opacity: 0.5;
+            background-color: #f8f9fa;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .row-deleting td {
+            position: relative;
+        }
+        
+        .row-deleting td:first-child::before {
+            content: "⏳";
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            z-index: 1;
+        }
+        
+        .thong-bao-nho {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px dashed #dee2e6;
+        }
+        
+        .spinner-sm {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #007bff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        .bang-wrapper {
+            max-height: 550px;
+            overflow-y: auto;
+            overflow-x: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .bang-phanquyen thead th {
+            position: sticky;
+            top: 0;
+            background-color: #e9ecef;
+            z-index: 5;
+        }
+        
+        /* Toast notification */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 9999;
+            animation: slideInRight 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Note styles */
+        .note-phanquyen {
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f4f6f9;
+            padding: 12px 15px;
+            border-left: 4px solid #0056b3;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        
+        .text-danger {
+            color: #dc3545;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .ms-2 {
+            margin-left: 8px;
+        }
+        
+        .gap-2 {
+            gap: 8px;
+        }
+        
+        .d-flex {
+            display: flex;
+        }
+        
+        .align-items-center {
+            align-items: center;
+        }
+        
+        .justify-content-between {
+            justify-content: space-between;
+        }
+        
+        .stt-cell {
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="khung-phanquyen">
+        <div class="tieu-de-phanquyen">
+            <span><i class="bi bi-shield-lock"></i> CẤP QUYỀN TRUY CẬP</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="nhom-namhoc">
+                    <label><i class="bi bi-calendar"></i> Năm học:</label>
+                    <input type="text" id="namHocInput" placeholder="VD: 2024-2025">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-success btn-chucnang" id="btnThemMoiPQ">
+                        <i class="bi bi-plus-circle"></i> Thêm mới
+                    </button>
+                    <button class="btn btn-primary btn-chucnang" id="btnCapNhatPQ">
+                        <i class="bi bi-save"></i> Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bang-wrapper">
+            <table class="bang-phanquyen" id="quyenTablePQ">
+                <thead>
+                    <tr>
+                        <th style="width: 50px">Xóa</th>
+                        <th style="width: 50px">STT</th>
+                        <th style="min-width: 120px">ID sheet</th>
+                        <th style="min-width: 180px">Hộp thư (Email)</th>
+                        <th style="min-width: 150px">Tên hiển thị</th>
+                        <th style="width: 130px">Quyền</th>
+                    </tr>
+                </thead>
+                <tbody id="quyenTableBodyPQ">
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            Đang tải dữ liệu...
+                            <div class="spinner-sm ms-2"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="thong-bao-nho">
+            <i class="bi bi-info-circle" style="color: #0056b3;"></i> 
+            <span><strong>Ghi chú:</strong> <strong>ID</strong> không được trùng nhau (không phân biệt hoa/thường).</span>
+        </div>
+        
+        <div class="note-phanquyen">
+            <span style="font-weight: bold; color: #0056b3;">📋 Ghi chú phân quyền:</span>
+            <div style="margin-top: 5px;">
+                - Quyền <strong>Giáo viên</strong> = Người thực hiện nhiệm vụ.<br>
+                - Quyền <strong>Người giao việc</strong> = Người có quyền giao việc, không có quyền xem nhiệm vụ người khác.<br>
+                - Quyền <strong>Quản trị</strong> = Người có quyền giao việc và xem nhiệm vụ người khác.<br>
+                - Quyền <strong>Quản trị vip</strong> = Người có toàn quyền.
+            </div>
+        </div>
+        
+        <strong class="text-danger">
+            <i class="bi bi-exclamation-triangle"></i> 
+            ⚠️ Khi xóa, dữ liệu riêng của người đó (nếu có) sẽ bị xóa vĩnh viễn!
+        </strong>
+    </div>
+
+    <script>
+    (function() {
+        // ==================== CẤU HÌNH CƠ BẢN ====================
+        var API_URL = null;
+        var getToken = function() { 
+            try {
+                // Thử lấy từ sessionStorage trước
+                var token = sessionStorage.getItem('PGV_TOKEN_SECURE');
+                if (token) return token;
+                
+                // Fallback sang cách cũ
+                if (window.parent && window.parent.PGV_TOKEN) {
+                    token = window.parent.PGV_TOKEN;
+                    if (token) sessionStorage.setItem('PGV_TOKEN_SECURE', token);
+                    return token;
+                }
+                if (typeof PGV_TOKEN !== 'undefined') {
+                    token = PGV_TOKEN;
+                    if (token) sessionStorage.setItem('PGV_TOKEN_SECURE', token);
+                    return token;
+                }
+                return '';
+            } catch(e) {
+                console.error('Lỗi lấy token:', e);
+                return '';
+            }
+        };
+        
+        // Lấy API URL
+        try {
+            if (window.parent && window.parent.ddungApi) {
+                API_URL = window.parent.ddungApi;
+            }
+        } catch(e) {}
+        
+        if (!API_URL && typeof ddungApi !== 'undefined') {
+            API_URL = ddungApi;
+        }
+        
+        // ==================== HÀM GỌI API ====================
+        function callApi(action, data, onSuccess, onError) {
+            if (!API_URL) {
+                if (onError) onError(new Error("Không tìm thấy API"));
+                return;
+            }
+            var payload = { hdong: action, token: getToken() };
+            for (var k in data) payload[k] = data[k];
+            
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(function(res) { 
+                if (!res.ok) {
+                    throw new Error('HTTP ' + res.status);
+                }
+                return res.text();
+            })
+            .then(function(txt) {
+                var json = JSON.parse(txt);
+                if (json.ttai === 'loi') {
+                    throw new Error(json.tbao || 'Lỗi không xác định');
+                }
+                if (onSuccess) onSuccess(json);
+            })
+            .catch(function(err) { 
+                console.error('API Error:', err);
+                if (onError) onError(err); 
+            });
+        }
+        
+        // ==================== CÁC HÀM XỬ LÝ DỮ LIỆU ====================
+        function layDanhSach() {
+            return new Promise(function(resolve, reject) {
+                callApi('laydlkhai bao', {}, function(res) {
+                    var raw = res.dliu || [];
+                    var list = raw.map(function(row) {
+                        return {
+                            idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
+                            email: (row[1] || '').trim(),
+                            tenHienThi: (row[2] || '').trim(),
+                            quyen: (row[3] || '').trim()
+                        };
+                    });
+                    resolve(list);
+                }, reject);
+            });
+        }
+        
+        function capNhatDanhSach(list) {
+            return new Promise(function(resolve, reject) {
+                var dataToSave = list.map(function(item) {
+                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen];
+                });
+                callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
+            });
+        }
+        
+        function xoaSheetCaNhan(tenSheet) {
+            return new Promise(function(resolve, reject) {
+                if (!tenSheet || tenSheet.trim() === '') {
+                    resolve({ ttai: 'tcong', tbao: 'Tên sheet rỗng, bỏ qua' });
+                    return;
+                }
+                callApi('xoasheetcanhan', { tenSheet: tenSheet }, resolve, reject);
+            });
+        }
+        
+        function layNamHocVaThang() {
+            return new Promise(function(resolve, reject) {
+                callApi('gvlaydlbdau', {}, function(res) {
+                    var nam = (res.dliu && res.dliu.nam) ? res.dliu.nam : '';
+                    var thang = (res.dliu && res.dliu.thang) ? res.dliu.thang : '';
+                    resolve({ nam: nam, thang: thang });
+                }, reject);
+            });
+        }
+        
+        function capNhatNamHoc(namMoi, thangHienTai) {
+            return new Promise(function(resolve, reject) {
+                var payload = {
+                    nam: namMoi,
+                    thang: thangHienTai,
+                    nviec: null
+                };
+                callApi('gvxulynviec', { tdtai: payload }, resolve, reject);
+            });
+        }
+        
+        // ==================== BIẾN TOÀN CỤC ====================
+        var currentList = [];
+        var currentThang = '';
+        var isDeleting = false; // Cờ chống xóa đồng thời
+        var $ = function(sel) { return document.querySelector(sel); };
+        var $$ = function(sel) { return document.querySelectorAll(sel); };
+        
+        // ==================== HIỂN THỊ THÔNG BÁO ====================
+        function showNotification(message, type) {
+            var toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            if (type === 'error') {
+                toast.style.backgroundColor = '#dc3545';
+                toast.innerHTML = '<i class="bi bi-x-circle"></i> ' + message;
+            } else if (type === 'success') {
+                toast.style.backgroundColor = '#28a745';
+                toast.innerHTML = '<i class="bi bi-check-circle"></i> ' + message;
+            } else {
+                toast.style.backgroundColor = '#007bff';
+                toast.innerHTML = '<i class="bi bi-info-circle"></i> ' + message;
+            }
+            document.body.appendChild(toast);
+            setTimeout(function() { 
+                if (toast.parentNode) toast.remove(); 
+            }, 3000);
+        }
+        
+        function showTempError(input, message) {
+            input.classList.add('input-error');
+            var oldMsg = input.parentNode.querySelector('.error-message');
+            if (oldMsg) oldMsg.remove();
+            var msgDiv = document.createElement('div');
+            msgDiv.className = 'error-message';
+            msgDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + message;
+            input.parentNode.appendChild(msgDiv);
+            setTimeout(function() {
+                input.classList.remove('input-error');
+                if (msgDiv.parentNode) msgDiv.remove();
+            }, 2500);
+        }
+        
+        // ==================== HÀM XÓA VỚI HIỆU ỨNG ĐỒNG HỒ CÁT ====================
+        async function handleDelete(rowElement, idx, btnXoa) {
+            // Kiểm tra nếu đang có thao tác xóa khác
+            if (isDeleting) {
+                showNotification('Đang có thao tác xóa khác, vui lòng đợi...', 'error');
+                return;
+            }
+            
+            var idSheet = currentList[idx].idSheet;
+            if (!idSheet) {
+                showNotification('Không thể xóa: ID trống', 'error');
+                return;
+            }
+            
+            // Xác nhận xóa lần 1
+            if (!confirm('⚠️ Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\n\nDữ liệu riêng của người này (nếu có) sẽ bị xóa vĩnh viễn!')) {
+                return;
+            }
+            
+            // Xác nhận lần 2 để chắc chắn
+            var confirmAgain = confirm('⚠️ XÁC NHẬN LẦN CUỐI: Bạn có chắc chắn muốn xóa người dùng "' + idSheet + '"?\n\nHành động này KHÔNG THỂ hoàn tác!');
+            if (!confirmAgain) return;
+            
+            // Bắt đầu xóa
+            isDeleting = true;
+            
+            // Lưu nội dung gốc của nút xóa
+            var originalContent = btnXoa.innerHTML;
+            
+            // === HIỆU ỨNG ĐỒNG HỒ CÁT ===
+            // 1. Disable nút xóa
+            btnXoa.disabled = true;
+            
+            // 2. Thay đổi nội dung nút thành spinner
+            btnXoa.innerHTML = '<div class="spinner-delete spinner-delete-sm"></div>';
+            
+            // 3. Thêm class mờ cho toàn bộ dòng
+            if (rowElement) {
+                rowElement.classList.add('row-deleting');
+            }
+            
+            // 4. Disable tất cả các input trong dòng (không cho sửa khi đang xóa)
+            var inputsInRow = rowElement ? rowElement.querySelectorAll('input, select, button:not(.btn-xoa)') : [];
+            inputsInRow.forEach(function(input) {
+                input.disabled = true;
+            });
+            
+            try {
+                // Gọi API xóa (có thể mất vài giây)
+                await xoaSheetCaNhan(idSheet);
+                
+                // Xóa khỏi mảng currentList
+                currentList.splice(idx, 1);
+                
+                // Cập nhật lại bảng
+                renderTable();
+                
+                // Lưu danh sách mới lên server
+                await capNhatDanhSach(currentList);
+                
+                // Thông báo thành công
+                showNotification('✅ Đã xóa cán bộ "' + idSheet + '" thành công!', 'success');
+                
+            } catch (err) {
+                // Thông báo lỗi
+                showNotification('❌ Lỗi khi xóa: ' + (err.message || 'Lỗi không xác định'), 'error');
+                
+                // Khôi phục nút xóa nếu có lỗi
+                if (btnXoa) {
+                    btnXoa.disabled = false;
+                    btnXoa.innerHTML = originalContent;
+                }
+                
+                // Bỏ class mờ
+                if (rowElement) {
+                    rowElement.classList.remove('row-deleting');
+                }
+                
+                // Enable lại các input
+                inputsInRow.forEach(function(input) {
+                    input.disabled = false;
+                });
+            } finally {
+                isDeleting = false;
+            }
+        }
+        
+        // ==================== RENDER BẢNG (QUAN TRỌNG NHẤT) ====================
+        function renderTable() {
+            var tbody = $('#quyenTableBodyPQ');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (currentList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">📭 Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
+                return;
+            }
+            
+            for (var i = 0; i < currentList.length; i++) {
+                var item = currentList[i];
+                var stt = i + 1;
+                var tr = document.createElement('tr');
+                tr.setAttribute('data-idx', i);
+                tr.setAttribute('data-idsheet', item.idSheet);
+                
+                // Cột Xóa
+                var tdXoa = document.createElement('td');
+                tdXoa.className = 'text-center';
+                var btnXoa = document.createElement('button');
+                btnXoa.className = 'btn-xoa';
+                btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
+                btnXoa.setAttribute('data-idx', i);
+                btnXoa.setAttribute('data-idsheet', item.idSheet);
+                btnXoa.title = 'Xóa người dùng này';
+                
+                // Gắn sự kiện xóa với hiệu ứng đồng hồ cát
+                btnXoa.onclick = (function(idx, rowElement, btnElement) {
+                    return function() {
+                        handleDelete(rowElement, idx, btnElement);
+                    };
+                })(i, tr, btnXoa);
+                
+                tdXoa.appendChild(btnXoa);
+                
+                // Cột STT
+                var tdStt = document.createElement('td');
+                tdStt.className = 'stt-cell';
+                tdStt.innerText = stt;
+                
+                // Cột ID Sheet
+                var tdId = document.createElement('td');
+                var inpId = document.createElement('input');
+                inpId.type = 'text';
+                inpId.className = 'id-sheet-input';
+                inpId.value = item.idSheet;
+                inpId.setAttribute('data-field', 'idSheet');
+                inpId.setAttribute('data-idx', i);
+                inpId.placeholder = 'VD: GV01';
+                inpId.maxLength = 50;
+                tdId.appendChild(inpId);
+                
+                // Cột Email
+                var tdEmail = document.createElement('td');
+                var inpEmail = document.createElement('input');
+                inpEmail.type = 'email';
+                inpEmail.className = 'email-input';
+                inpEmail.value = item.email;
+                inpEmail.setAttribute('data-field', 'email');
+                inpEmail.setAttribute('data-idx', i);
+                inpEmail.placeholder = 'example@domain.com';
+                inpEmail.maxLength = 100;
+                tdEmail.appendChild(inpEmail);
+                
+                // Cột Tên hiển thị
+                var tdName = document.createElement('td');
+                var inpName = document.createElement('input');
+                inpName.type = 'text';
+                inpName.className = 'name-input';
+                inpName.value = item.tenHienThi;
+                inpName.setAttribute('data-field', 'tenHienThi');
+                inpName.setAttribute('data-idx', i);
+                inpName.placeholder = 'Họ và tên';
+                inpName.maxLength = 200;
+                tdName.appendChild(inpName);
+                
+                // Cột Quyền
+                var tdQuyen = document.createElement('td');
+                var sel = document.createElement('select');
+                sel.className = 'quyen-select';
+                sel.setAttribute('data-field', 'quyen');
+                sel.setAttribute('data-idx', i);
+                var opts = ['', 'x', 'xx', 'xxx'];
+                var labels = ['👨‍🏫 Giáo viên', '📋 Người giao việc', '⚙️ Quản trị', '👑 Quản trị Vip'];
+                for (var j = 0; j < opts.length; j++) {
+                    var option = document.createElement('option');
+                    option.value = opts[j];
+                    option.innerText = labels[j];
+                    if (item.quyen === opts[j]) option.selected = true;
+                    sel.appendChild(option);
+                }
+                tdQuyen.appendChild(sel);
+                
+                tr.appendChild(tdXoa);
+                tr.appendChild(tdStt);
+                tr.appendChild(tdId);
+                tr.appendChild(tdEmail);
+                tr.appendChild(tdName);
+                tr.appendChild(tdQuyen);
+                tbody.appendChild(tr);
+            }
+            
+            // Gắn sự kiện cho các input
+            $$('.id-sheet-input').forEach(function(inp) {
+                inp.onchange = function(e) {
+                    var idx = parseInt(this.getAttribute('data-idx'));
+                    var newVal = this.value.trim();
+                    if (newVal.length > 50) {
+                        showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
+                        this.value = currentList[idx].idSheet;
+                        return;
+                    }
+                    var lowerNew = newVal.toLowerCase();
+                    var duplicate = currentList.some(function(item, i) { 
+                        return i !== idx && item.idSheet.toLowerCase() === lowerNew; 
+                    });
+                    if (duplicate) {
+                        showTempError(this, 'ID đã tồn tại!');
+                        this.value = currentList[idx].idSheet;
+                        return;
+                    }
+                    currentList[idx].idSheet = newVal;
+                };
+                inp.onblur = function(e) {
+                    var idx = parseInt(this.getAttribute('data-idx'));
+                    var newVal = this.value.trim();
+                    if (newVal.length > 50) {
+                        showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
+                        this.value = currentList[idx].idSheet;
+                        return;
+                    }
+                    var lowerNew = newVal.toLowerCase();
+                    var duplicate = currentList.some(function(item, i) { 
+                        return i !== idx && item.idSheet.toLowerCase() === lowerNew; 
+                    });
+                    if (duplicate) {
+                        showTempError(this, 'ID không được trùng!');
+                        this.value = currentList[idx].idSheet;
+                    } else {
+                        currentList[idx].idSheet = newVal;
+                    }
+                };
+            });
+            
+            $$('.email-input').forEach(function(inp) {
+                inp.onchange = function() {
+                    var idx = parseInt(this.getAttribute('data-idx'));
+                    var email = this.value.trim();
+                    if (email && !isValidEmail(email)) {
+                        showTempError(this, 'Email không hợp lệ');
+                        this.value = currentList[idx].email;
+                        return;
+                    }
+                    currentList[idx].email = email;
+                };
+            });
+            
+            $$('.name-input').forEach(function(inp) {
+                inp.onchange = function() {
+                    var idx = parseInt(this.getAttribute('data-idx'));
+                    var name = this.value.trim();
+                    if (name.length > 200) {
+                        showTempError(this, 'Tên quá dài (tối đa 200 ký tự)');
+                        this.value = currentList[idx].tenHienThi;
+                        return;
+                    }
+                    currentList[idx].tenHienThi = name;
+                };
+            });
+            
+            $$('.quyen-select').forEach(function(sel) {
+                sel.onchange = function() {
+                    var idx = parseInt(this.getAttribute('data-idx'));
+                    currentList[idx].quyen = this.value;
+                };
+            });
+        }
+        
+        // Hàm kiểm tra email hợp lệ
+        function isValidEmail(email) {
+            if (!email) return true;
+            var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return re.test(email);
+        }
+        
+        // ==================== THÊM DÒNG MỚI ====================
+        function themDongMoi() {
+            currentList.unshift({ 
+                idSheet: '', 
+                email: '', 
+                tenHienThi: '', 
+                quyen: '' 
+            });
+            renderTable();
+            showNotification('Đã thêm dòng mới, vui lòng nhập thông tin', 'info');
+            setTimeout(function() {
+                var firstInput = document.querySelector('.id-sheet-input');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+        
+        // ==================== VALIDATE ====================
+        function validateList() {
+            var map = new Map();
+            for (var i = 0; i < currentList.length; i++) {
+                var id = currentList[i].idSheet.trim();
+                if (id === '') {
+                    showNotification('Dòng thứ ' + (i + 1) + ' chưa nhập ID.', 'error');
+                    return false;
+                }
+                if (id.length > 50) {
+                    showNotification('ID ở dòng ' + (i + 1) + ' quá dài (tối đa 50 ký tự).', 'error');
+                    return false;
+                }
+                var lower = id.toLowerCase();
+                if (map.has(lower)) {
+                    showNotification('ID "' + id + '" bị trùng (dòng ' + (map.get(lower) + 1) + ' và ' + (i + 1) + ').', 'error');
+                    return false;
+                }
+                map.set(lower, i);
+                
+                // Kiểm tra email nếu có
+                var email = currentList[i].email.trim();
+                if (email && !isValidEmail(email)) {
+                    showNotification('Email ở dòng ' + (i + 1) + ' không hợp lệ.', 'error');
+                    return false;
+                }
+            }
+            
+            // Kiểm tra có ít nhất 1 admin cấp cao
+            var hasAdmin = false;
+            for (var j = 0; j < currentList.length; j++) {
+                if (currentList[j].quyen === 'xxx') {
+                    hasAdmin = true;
+                    break;
+                }
+            }
+            if (!hasAdmin && currentList.length > 0) {
+                showNotification('⚠️ Danh sách phải có ít nhất một người có quyền Quản trị Vip (xxx)', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // ==================== LƯU DỮ LIỆU ====================
+        async function luuDuLieu() {
+            var namInput = $('#namHocInput');
+            var namMoi = namInput ? namInput.value.trim() : '';
+            if (namMoi === "") {
+                showNotification('⚠️ Vui lòng nhập Năm học trước khi cập nhật', 'error');
+                namInput.focus();
+                return;
+            }
+            
+            if (!validateList()) return;
+            
+            var btn = $('#btnCapNhatPQ');
+            var originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
+            btn.disabled = true;
+            
+            try {
+                await capNhatNamHoc(namMoi, currentThang);
+                await capNhatDanhSach(currentList);
+                showNotification('✅ Thành công! Đã cập nhật năm học và dữ liệu quyền.', 'success');
+                await taiLaiDuLieu();
+            } catch (err) {
+                showNotification('❌ Lỗi lưu: ' + (err.message || 'Lỗi không xác định'), 'error');
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+        
+        // ==================== TẢI LẠI DỮ LIỆU ====================
+        async function taiLaiDuLieu() {
+            try {
+                var list = await layDanhSach();
+                currentList = list;
+                renderTable();
+                console.log('Đã tải ' + currentList.length + ' dòng dữ liệu');
+            } catch (err) {
+                console.error('Lỗi tải dữ liệu:', err);
+                showNotification('Lỗi tải dữ liệu: ' + (err.message || 'Lỗi không xác định'), 'error');
+                currentList = [];
+                renderTable();
+            }
+        }
+        
+        // ==================== KHỞI TẠO NĂM HỌC ====================
+        async function khoiTaoNamHocVaThang() {
+            try {
+                var data = await layNamHocVaThang();
+                var namInput = $('#namHocInput');
+                if (namInput) {
+                    namInput.value = data.nam || '';
+                }
+                currentThang = data.thang || '';
+                console.log('Đã tải năm học:', data.nam, 'tháng:', data.thang);
+            } catch (err) {
+                console.error('Lỗi tải năm học/tháng:', err);
+            }
+        }
+        
+        // ==================== KHỞI CHẠY ỨNG DỤNG ====================
+        if (!API_URL) {
+            $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></td>';
+            showNotification('Lỗi cấu hình: Không tìm thấy API', 'error');
+            return;
+        }
+        
+        // Hiển thị cảnh báo nếu không dùng HTTPS
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            showNotification('⚠️ Cảnh báo bảo mật: Trang đang chạy qua HTTP, không phải HTTPS!', 'error');
+        }
+        
+        // Tải dữ liệu và khởi tạo
+        Promise.all([taiLaiDuLieu(), khoiTaoNamHocVaThang()]).catch(console.error);
+        
+        // Gắn sự kiện cho nút bấm
+        var btnThem = $('#btnThemMoiPQ');
+        var btnCap = $('#btnCapNhatPQ');
+        if (btnThem) btnThem.onclick = themDongMoi;
+        if (btnCap) btnCap.onclick = luuDuLieu;
+        
+        console.log('Ứng dụng quản lý phân quyền đã khởi động thành công!');
+        
+    })();
+    </script>
