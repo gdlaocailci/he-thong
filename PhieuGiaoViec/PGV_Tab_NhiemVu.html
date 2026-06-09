@@ -86,6 +86,7 @@
          <textarea id="nhapLdoNghi" class="form-control me-3" placeholder="Nhập lý do..." style="height: 30px; min-height: 30px; font-size: 13px; border-radius: 4px; width: 300px; resize: none; overflow: hidden; white-space: pre-wrap; padding: 4px 8px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '30px')"></textarea>
      </div>
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
+       <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
         
         <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
@@ -192,10 +193,11 @@ function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHe
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
 
-function thietLapNutKhoa(trangThai) {
+function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     trangThaiKhoa = trangThai;
     let btn = document.getElementById("nutMoKhoa");
     let isBGH = kiemTraLaBGH();
+    let spanNgay = document.getElementById("hienThiNgayKhoa"); 
     
     if (btn) {
         if (isBGH) {
@@ -207,9 +209,18 @@ function thietLapNutKhoa(trangThai) {
         if (trangThaiKhoa === "Khóa") {
             btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
             btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
+            if (spanNgay) {
+                spanNgay.style.setProperty('display', 'inline-flex', 'important');
+                // Chỉnh sửa tiền tố hiển thị thành "Đã khoá: "
+                spanNgay.innerText = ngayKhoa ? "Đã khoá: " + ngayKhoa : "Đã khoá";
+            }
         } else {
             btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
             btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
+            if (spanNgay) {
+                spanNgay.style.setProperty('display', 'none', 'important');
+                spanNgay.innerText = "";
+            }
         }
     }
     apDungKhoaGiaoDien();
@@ -237,6 +248,11 @@ function doiTrangThaiKhoa() {
 
     let trangThaiMoi = (trangThaiKhoa === "Khóa") ? "Mở" : "Khóa";
     
+    // [BỔ SUNG] Lấy ngày hiện tại hệ thống
+    let hnay = new Date();
+    let chuoiNgay = ("0" + hnay.getDate()).slice(-2) + "/" + ("0" + (hnay.getMonth() + 1)).slice(-2) + "/" + hnay.getFullYear();
+    let ngayGui = (trangThaiMoi === "Khóa") ? chuoiNgay : "";
+    
     let btn = document.getElementById("nutMoKhoa");
     if (btn) btn.disabled = true;
     hienTaiDl("⏳ Đang đồng bộ trạng thái khóa...");
@@ -245,12 +261,13 @@ function doiTrangThaiKhoa() {
         khachApi.goiThuCong({
             hdong: "luutrangthaikhoa",
             ttrg: maTrangDich,
-            khoa: trangThaiMoi
+            khoa: trangThaiMoi,
+            ngayKhoa: ngayGui // [BỔ SUNG] Gửi ngày xuống máy chủ
         }, function(kq) {
             anTaiDl();
             if (btn) btn.disabled = false;
             if (kq && kq.ttai === 'tcong') {
-                thietLapNutKhoa(trangThaiMoi);
+                thietLapNutKhoa(trangThaiMoi, ngayGui); // Cập nhật lại giao diện ngay lập tức
                 if (typeof hienThongb === 'function') hienThongb('tcong', "Đã đồng bộ trạng thái " + trangThaiMoi + " thành công!");
             } else {
                 if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu trạng thái: " + (kq ? kq.tbao : "Không xác định"));
@@ -543,12 +560,13 @@ function veBangNviec(db) {
          </tr>`;
         bg.append(dg);
     });
-    setTimeout(() => { 
+   setTimeout(() => { 
         $('#bangNviec textarea').each(function() { cdang(this); }); 
         tinhtTdong(); 
         khaBcao(); 
         if (typeof canbHientai !== 'undefined' && canbHientai.tde) {
-            thietLapNutKhoa(canbHientai.tde.khoa || "Mở");
+            // [ĐÃ SỬA] Kế thừa thêm ngày khóa từ máy chủ
+            thietLapNutKhoa(canbHientai.tde.khoa || "Mở", canbHientai.tde.ngayKhoa || "");
         }
     }, 100);
 }
