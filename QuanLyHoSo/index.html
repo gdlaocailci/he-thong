@@ -113,13 +113,19 @@
         .action-link { color: #1976D2; cursor: pointer; font-weight: 600; margin-right: 10px; text-decoration: underline; }
         .action-link.delete { color: #d32f2f; }
 
-        #window-alert .window-container { width: 420px; height: auto; }
-        #window-alert .window-titlebar { background-color: #ffebee; border-bottom: 1px solid #ffcdd2; }
-        #window-alert .window-title { color: #c62828; }
-        #window-alert .alert-content { padding: 30px 20px; text-align: center; }
-        #window-alert .alert-icon { font-size: 54px; color: #d32f2f; margin-bottom: 15px; }
-        #window-alert .alert-heading { margin: 0 0 10px 0; color: #333; font-size: 18px; }
-        #window-alert .alert-message { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 25px; }
+        /* Cập nhật giao diện Cảnh báo */
+        #window-alert .window-container { width: 440px; height: auto; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: none; }
+        #window-alert .window-titlebar { background-color: #d32f2f; border-bottom: none; padding: 12px 15px; }
+        #window-alert .window-title { color: #ffffff; font-size: 15px; }
+        #window-alert .window-title .material-icons { color: #ffffff; }
+        #window-alert .window-close { color: #ffffff; }
+        #window-alert .window-close:hover { background-color: rgba(255,255,255,0.2); color: #ffffff; }
+        #window-alert .alert-content { padding: 35px 25px; text-align: center; background-color: #ffffff; }
+        #window-alert .alert-icon { font-size: 64px; color: #d32f2f; margin-bottom: 15px; filter: drop-shadow(0px 4px 6px rgba(211,47,47,0.3)); }
+        #window-alert .alert-heading { margin: 0 0 10px 0; color: #222222; font-size: 20px; font-weight: 700; }
+        #window-alert .alert-message { font-size: 15px; color: #444444; line-height: 1.6; margin-bottom: 25px; }
+        #window-alert .btn-confirm { background-color: #d32f2f; color: #ffffff; border: none; padding: 10px 30px; font-size: 15px; font-weight: 600; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #window-alert .btn-confirm:hover { background-color: #b71c1c; transform: translateY(-1px); box-shadow: 0 6px 10px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -268,7 +274,7 @@
     <div id="window-xoa-hoso" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
-                <div class="window-title"><span class="material-icons" style="color:#d32f2f">delete</span> Công cụ Hủy Hồ sơ / Dự án</div>
+                <div class="window-title"><span class="material-icons" style="color:#ffffff">delete</span> Công cụ Hủy Hồ sơ / Dự án</div>
                 <button class="window-close" onclick="toggleXoaHoSoModal(false)">✕</button>
             </div>
             <div class="form-native">
@@ -347,7 +353,7 @@
                 <span class="material-icons alert-icon">gpp_bad</span>
                 <h3 class="alert-heading">Giới hạn Thẩm quyền</h3>
                 <div id="alert-message" class="alert-message"></div>
-                <button class="form-native btn-submit" style="background-color: #d32f2f; width: 120px; margin: 0 auto;" onclick="closeAlertModal()">Xác nhận</button>
+                <button class="btn-confirm" onclick="closeAlertModal()">Xác nhận</button>
             </div>
         </div>
     </div>
