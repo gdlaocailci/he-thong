@@ -605,7 +605,7 @@
             body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem('ht_sys_session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('pq-status').style.display = 'none';
-            if (result.status === 'success') { alert("Ghi nhận dữ liệu thành công!"); clearUserForm(); loadUsers(); loadDesktopData(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
+            if (result.status === 'success') { clearUserForm(); loadUsers(); loadDesktopData(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
         });
     }
 
