@@ -9,8 +9,11 @@ const KETNOI = {
     TEN_DINH_DANH: "Hợp Thành OS",
     TIEU_DE_TRANG: "Cổng thông tin Quản lý hồ sơ - Trường TH&THCS Hợp Thành",
     
-    // 2. Tài nguyên hình ảnh đại diện (Logo)
+    // 2. Tài nguyên hình ảnh đại diện (Logo & Giao diện)
     LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
+    LINK_HINH_NEN: "https://i.ibb.co/h1CBtJNW/Hinh-Nen-Ruong-Bac-Thang-15.jpg",
+    LINK_AVATAR_NAM: "https://lh3.googleusercontent.com/d/13OnSd7t73KO7GP6NB7FjkdpsO6vfH-dp",
+    LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU",
     
     // 3. Đường dẫn máy chủ xử lý dữ liệu (Google Apps Script API)
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxJEriNwHp3twwlVk_yqViktUo96XOj71ciMdNsNY8TSuH_76t7gPt48DGnWU34gWVdeQ/exec",
