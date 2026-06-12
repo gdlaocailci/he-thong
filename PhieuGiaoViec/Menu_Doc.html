@@ -121,7 +121,6 @@
             <span class="b-tuong"><i class="bi bi-chat-text"></i></span> Tổng hợp ý kiến
         </button>
         
-        <!-- Tab Tiêu chí đánh giá (Vị trí dưới Tổng hợp ý kiến) -->
         <button class="the-chuyen nav-link" id="tabTieuChi" data-bs-toggle="tab" data-bs-target="#khuTieuChi" type="button" role="tab" style="display: none;">
             <span class="b-tuong"><i class="bi bi-list-check"></i></span> Tiêu chí đánh giá
         </button>
@@ -130,9 +129,12 @@
             <span class="b-tuong"><i class="bi bi-award"></i></span> Đánh giá cuối năm
         </a>
         
-        <!-- TAB CẤP QUYỀN (chỉ hiển thị khi có quyền xxx) -->
         <button class="the-chuyen nav-link" id="tabCapQuyen" data-bs-toggle="tab" data-bs-target="#khuCapQuyen" type="button" role="tab" style="display: none;">
             <span class="b-tuong"><i class="bi bi-shield-lock"></i></span> Cấp quyền
+        </button>
+        
+        <button class="the-chuyen nav-link" id="tabLichSu" data-bs-toggle="tab" data-bs-target="#khuLichSu" type="button" role="tab" style="display: none;">
+            <span class="b-tuong"><i class="bi bi-clock-history"></i></span> Lịch sử đăng nhập
         </button>
         
         <button class="the-chuyen mt-auto" onclick="thoatTaik()" style="border-top: 1px dashed rgba(255,255,255,0.3); background: rgba(220,53,69,0.2); color: #fff; font-weight: bold;">
@@ -140,11 +142,10 @@
         </button>
     </div>
 
-    <!-- THÔNG TIN NHÀ PHÁT TRIỂN -->
     <div class="thong-tin-dev">
         <i class="bi bi-code-slash"></i> 
         <span class="ten-tac-gia" id="dev_author_name_menu">ĐANG TẢI...</span>
-        <br><small>System Developer</small>
+        <br><small>Thiết kế và phát triển</small>
     </div>
 </div>
 
@@ -168,9 +169,17 @@
             }
         };
         
+        window.kiemTraHienThiTabLichSu = function() {
+            var tabLichSu = document.getElementById('tabLichSu');
+            if (tabLichSu) {
+                tabLichSu.style.display = (window.PGV_SHOW_LICHSU === true) ? 'flex' : 'none';
+            }
+        };
+        
         window.addEventListener('load', function() {
             window.kiemTraHienThiTabCapQuyen();
             window.kiemTraHienThiTabTieuChi();
+            window.kiemTraHienThiTabLichSu();
         });
     })();
 </script>
