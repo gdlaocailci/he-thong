@@ -135,12 +135,14 @@ function kiemTraLaBGH() {
     return false;
 }
 
+// 3. Cập nhật hàm kiemTraQuyenTruyCap xử lý logic đóng băng nút lệnh và trường nhập liệu
 function kiemTraQuyenTruyCap() {
     var selectGv = document.getElementById("hopChonGv"); 
     var nutLuu = document.getElementById("nutLuuTam"); 
     var nutNop = document.getElementById("nutNopBcao");
     var diemThuong = document.getElementById("nhapDiemThuong");
     var isBGH = kiemTraLaBGH();
+    var isGS = kiemTraLaGS();
 
     if (cotETonTai && selectGv && selectGv.style.display !== "none") {
         var daChon = selectGv.value && selectGv.value !== "";
@@ -149,6 +151,12 @@ function kiemTraQuyenTruyCap() {
                 if (nutLuu) nutLuu.disabled = false; 
                 if (diemThuong) diemThuong.disabled = false;
                 if (nutNop) nutNop.disabled = true; 
+            } else if (isGS) {
+                // [CẬP NHẬT] Khóa cứng toàn bộ hệ thống điều khiển hành chính khi GS thực hiện tra cứu
+                if (nutLuu) nutLuu.disabled = true; 
+                if (nutNop) nutNop.disabled = true; 
+                if (diemThuong) diemThuong.disabled = true;
+                if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Chế độ Giám sát: Đồng chí chỉ có quyền xem, không có quyền chỉnh sửa hồ sơ cán bộ khác.'); 
             } else {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
@@ -176,8 +184,27 @@ function kiemTraQuyenTruyCap() {
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     var selectGv = document.getElementById("hopChonGv"); if (!selectGv) return;
     selectGv.innerHTML = '<option value="">-- Lựa chọn giáo viên --</option>';
-    if (danhSachGiaoVien && danhSachGiaoVien.length > 0) { danhSachGiaoVien.forEach(function(gv) { var option = document.createElement("option"); option.value = gv.id || gv.ma || gv.ttrg; option.textContent = gv.ten || gv.hoTen || gv.tenn; selectGv.appendChild(option); }); selectGv.style.display = "inline-block"; selectGv.disabled = false; } 
-    else { selectGv.style.display = "none"; selectGv.disabled = true; }
+    
+    // [SỬA LỖI] Cơ chế phòng vệ tự động trích xuất nếu mảng nằm trong thuộc tính dliu của gói phản hồi API
+    var ds = danhSachGiaoVien;
+    if (ds && !Array.isArray(ds) && ds.dliu) {
+        ds = ds.dliu;
+    }
+    
+    if (ds && ds.length > 0) { 
+        ds.forEach(function(gv) { 
+            var option = document.createElement("option"); 
+            option.value = gv.id || gv.ma || gv.ttrg; 
+            option.textContent = gv.ten || gv.hoTen || gv.tenn; 
+            selectGv.appendChild(option); 
+        }); 
+        selectGv.style.setProperty('display', 'inline-block', 'important'); // Ép buộc hiển thị trên thanh flex-container
+        selectGv.disabled = false; 
+    } 
+    else { 
+        selectGv.style.setProperty('display', 'none', 'important'); 
+        selectGv.disabled = true; 
+    }
 }
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
@@ -368,6 +395,13 @@ function doiTrangThaiKhoa() {
 function apDungKhoaGiaoDien() {
     let isLocked = (trangThaiKhoa === "Khóa");
     
+    // [CẬP NHẬT BIẾN CƠ CHẾ GIÁM SÁT] Kiểm tra nếu là Giám sát đang xem hồ sơ cán bộ khác
+    var selectGv = document.getElementById("hopChonGv");
+    var daChonGvKhac = selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "";
+    if (kiemTraLaGS() && daChonGvKhac) {
+        isLocked = true;
+    }
+
     $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('disabled', isLocked);
     if (isLocked) {
         $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('readonly', true);
@@ -382,6 +416,7 @@ function apDungKhoaGiaoDien() {
     $('button[onclick="addNv()"]').prop('disabled', isLocked);
     $('.bi-paperclip').closest('button').prop('disabled', isLocked);
     
+    // [KHÓA CỘT TRONG BẢNG] Cưỡng bức vô hiệu hóa toàn bộ input, select điểm, nút xóa dòng trong tbody
     $('#bangNviec tbody tr').find('input, select, textarea, button').prop('disabled', isLocked);
     
     $('#vungDinhkBcao .bi-x').css({
@@ -391,7 +426,12 @@ function apDungKhoaGiaoDien() {
     
     kiemTraQuyenTruyCap();
 }
-
+function kiemTraLaGS() {
+    if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN === 'gs') return true;
+    if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'gs') return true;
+    return false;
+}
+  
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
@@ -866,12 +906,23 @@ function tinhtTdong() {
 }
 
 function capnhTdong() { tinhtTdong(); }
-
+// 1. Thêm mới hàm độc lập kiểm tra quyền Giám sát
+function kiemTraLaGS() {
+    if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN === 'gs') return true;
+    if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'gs') return true;
+    return false;
+}
+// 2. Cập nhật hàm khoiTaoTheoQuyen để cấp danh sách giáo viên cho "gs"
 function khoiTaoTheoQuyen() {
-    if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'xx') {
-        if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { khachApi.gvLaydsCanb(function(dl) { xuLyCotE('xx', dl); }, function(err) { xuLyCotE('xx', []); }); } else { xuLyCotE('xx', []); }
+    // [SỬA LỖI] Bổ sung đầy đủ dải quyền bao gồm Quản trị VIP (xxx), Quản trị (xx) và Giám sát (gs) để kích hoạt nạp dropdown
+    if (typeof canbHientai !== 'undefined' && canbHientai && (canbHientai.quyen === 'xx' || canbHientai.quyen === 'xxx' || canbHientai.quyen === 'gs')) {
+        if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { 
+            khachApi.gvLaydsCanb(function(dl) { xuLyCotE(canbHientai.quyen, dl); }, function(err) { xuLyCotE(canbHientai.quyen, []); }); 
+        } else { xuLyCotE(canbHientai.quyen, []); }
     } else {
-        cotETonTai = false; document.getElementById("hopChonGv").style.display = 'none';
+        cotETonTai = false; 
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv) selectGv.style.setProperty('display', 'none', 'important');
         kiemTraQuyenTruyCap();
     }
     
@@ -883,7 +934,7 @@ function khoiTaoTheoQuyen() {
             btn.style.setProperty('display', 'none', 'important');
         }
     }
-  // [BỔ SUNG] Kiểm soát hiển thị nút Khóa Tất Cả
+    
     let btnAll = document.getElementById("nutKhoaTatCa");
     if(btnAll) {
         if(kiemTraLaBGH()) {
