@@ -391,6 +391,7 @@
             <span style="font-weight: bold; color: #0056b3;">📋 Ghi chú phân quyền:</span>
             <div style="margin-top: 5px;">
                 - Quyền <strong>Giáo viên</strong> = Người thực hiện nhiệm vụ.<br>
+                - Quyền <strong>Giám sát</strong> = Người có quyền xem toàn bộ nhiệm vụ của người khác nhưng không được chỉnh sửa.<br>
                 - Quyền <strong>Người giao việc</strong> = Người có quyền giao việc, không có quyền xem nhiệm vụ người khác.<br>
                 - Quyền <strong>Quản trị</strong> = Người có quyền giao việc và xem nhiệm vụ người khác.<br>
                 - Quyền <strong>Quản trị vip</strong> = Người có toàn quyền.
@@ -663,7 +664,7 @@
             }
         }
         
-        // ==================== RENDER BẢNG (QUAN TRỌNG NHẤT) ====================
+    // ==================== RENDER BẢNG (QUAN TRỌNG NHẤT) ====================
         function renderTable() {
             var tbody = $('#quyenTableBodyPQ');
             if (!tbody) return;
@@ -747,8 +748,11 @@
                 sel.className = 'quyen-select';
                 sel.setAttribute('data-field', 'quyen');
                 sel.setAttribute('data-idx', i);
-                var opts = ['', 'x', 'xx', 'xxx'];
-                var labels = ['👨‍🏫 Giáo viên', '📋 Người giao việc', '⚙️ Quản trị', '👑 Quản trị Vip'];
+                
+                // [ĐÃ BỔ SUNG] Cập nhật mảng tùy chọn thêm mã 'gs' và nhãn Giám sát
+                var opts = ['', 'gs', 'x', 'xx', 'xxx'];
+                var labels = ['👨‍🏫 Giáo viên', '👀 Giám sát', '📋 Người giao việc', '⚙️ Quản trị', '👑 Quản trị Vip'];
+                
                 for (var j = 0; j < opts.length; j++) {
                     var option = document.createElement('option');
                     option.value = opts[j];
