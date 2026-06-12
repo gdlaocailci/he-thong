@@ -445,7 +445,7 @@
       var isSelf = (kq.canb && kq.canb.taik === window.PGV_ID_TC);
       var quyen = kq.quyen || '';
       
-      if (quyen === 'xx' || quyen === 'xxx') {
+      if (quyen === 'xx' || quyen === 'xxx' || quyen === 'gs') {
           hs.show().prop('disabled', false).removeClass('bg-secondary text-white');
           if (hs.find('option:first').text().includes('Đang tải')) hs.find('option:first').text('-- GV --');
       } else {
