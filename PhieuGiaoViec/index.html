@@ -68,7 +68,7 @@
         xoaTepBcao: function(tdtai, khiTcong, khiLoi) { this.yeucauApi("xoatepbcao", { tdtai: tdtai }, khiTcong, khiLoi); },
         hoiDapAi: function(cauHoi, khiTcong, khiLoi) { this.yeucauApi("hoidapai", { cauhoi: cauHoi }, khiTcong, khiLoi); },
         ghiKetQuaThop: function(dl, khiTcong, khiLoi) { this.yeucauApi("ghiketquathop", { dldeu: dl }, khiTcong, khiLoi); },
-        
+        ghiNhatKy: function(tk, khiTcong, khiLoi) { this.yeucauApi("ghinhatky", { taikhoan: tk }, khiTcong, khiLoi); },
         // Hỗ trợ gọi thủ công linh hoạt cho các module mới như TieuChiDanhGia
         goiThuCong: function(dlGoi, khiTcong, khiLoi) { this.yeucauApi(dlGoi.hdong, dlGoi, khiTcong, khiLoi); }
     };
@@ -128,15 +128,30 @@
         document.head.appendChild(metaDesc);
     }
 
-    function kiemTraPhienLamViec() {
+  function kiemTraPhienLamViec() {
         const tkluuhd = sessionStorage.getItem("MA_PBAN_HT");
         const tokenluu = sessionStorage.getItem("PGV_TOKEN"); 
+        const daGhiLs = sessionStorage.getItem("DA_GHI_LS"); // Biến kiểm soát chống ghi đúp
 
         if (tkluuhd && tokenluu) { 
             window.PGV_ID_TC = tkluuhd; 
             window.PGV_TOKEN = tokenluu;
             document.getElementById('manhChao').style.display = 'none'; 
-            chbiHt(); 
+            
+            // Chỉ ghi lịch sử nếu trong phiên này chưa ghi
+            if (!daGhiLs) {
+                datTaiDl(true, "Đang thiết lập phiên làm việc...");
+                window.khachApi.ghiNhatKy(tkluuhd, function() {
+                    sessionStorage.setItem("DA_GHI_LS", "1"); // Đánh dấu đã ghi lịch sử
+                    chbiHt(); 
+                }, function(loi) {
+                    console.log("Lỗi ghi lịch sử: ", loi);
+                    chbiHt(); // Vẫn cho phép vào hệ thống
+                });
+            } else {
+                chbiHt(); 
+            }
+            
         } else { 
             document.getElementById('manhChao').style.display = 'flex'; 
             document.getElementById('khu_vuc_nut_dang_nhap').innerHTML = ""; 
@@ -158,7 +173,7 @@
         }
     }
 
-    function xulyPhienDn(phanho) {
+   function xulyPhienDn(phanho) {
       try {
         const tdtai = giaimaJwt(phanho.credential);
         const idht = tdtai["email"]; 
@@ -167,6 +182,8 @@
         
         window.PGV_ID_TC = idht; 
         window.PGV_TOKEN = phanho.credential;
+        
+        datTaiDl(true, "Xác thực thành công, đang tải...");
         location.reload(); 
       } catch(loi) {
         hienThongbLoi("Không thể xác thực phiên đăng nhập do lỗi bảo mật trình duyệt. Vui lòng thử lại.");
@@ -185,6 +202,7 @@
     function thoatTaik() { 
         sessionStorage.removeItem("MA_PBAN_HT"); 
         sessionStorage.removeItem("PGV_TOKEN"); 
+        sessionStorage.removeItem("DA_GHI_LS"); // Xóa cờ lịch sử
         window.PGV_ID_TC = null; 
         window.PGV_TOKEN = null;
         location.reload(); 
