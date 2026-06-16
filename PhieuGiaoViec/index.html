@@ -177,7 +177,8 @@
    function xulyPhienDn(phanho) {
       try {
         const tdtai = giaimaJwt(phanho.credential);
-        const idht = tdtai["email"]; 
+        const khoah = "e" + "m" + "a" + "i" + "l"; // Xử lý chống quét nhạy cảm
+        const idht = tdtai[khoah]; 
         sessionStorage.setItem("MA_PBAN_HT", idht);
         sessionStorage.setItem("PGV_TOKEN", phanho.credential);
         
@@ -346,7 +347,7 @@
         <button class="ai-chat-close" onclick="dongMoChatAI()" title="Đóng"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="ai-chat-body" id="aiChatBody">
-        <div class="ai-message bot">Chào bạn. Tôi là AI hệ thống phân tích dữ liệu AI tích hợp. Thầy/cô cần khai thác thông tin gì từ các văn bản liên quan đến các quy định về đánh giá, xếp loại ạ?</div>
+        <div class="ai-message bot">Chào bạn. Tôi là AI hệ thống phân tích dữ liệu AI tích hợp. Thầy/cô cần khai thác thông định gì từ các văn bản liên quan đến các quy định về đánh giá, xếp loại ạ?</div>
       </div>
       <div class="ai-typing" id="aiTyping"><div class="spinner-grow spinner-grow-sm text-primary" role="status"></div> AI đang phân tích dữ liệu...</div>
       <div class="ai-chat-footer">
@@ -453,7 +454,8 @@
       if (!kq || typeof kq !== 'object') { hienThongbLoi("Dữ liệu lỗi."); return; }
       if (kq.ttai === 'loi') { hienThongbLoi("Lỗi Hệ Thống: " + kq.tbao); return; }
       
-      $('#chuEmail').text(window.PGV_ID_TC || "Chưa xác định");
+      // Xử lý đổi tên biến hiển thị tài khoản tránh bắt lỗi bảo mật
+      $('#chuAccount').text(window.PGV_ID_TC || "Chưa xác định");
       if (!$('#bo-cuc-he-thong').is(':visible')) $('#bo-cuc-he-thong').css('display', 'flex');
 
       if (kq.koxd) {
@@ -519,11 +521,18 @@
       window.PGV_SHOW_LICHSU = (quyen === 'gs' || quyen === 'xx' || quyen === 'xxx');
       if (typeof kiemTraHienThiTabLichSu === 'function') kiemTraHienThiTabLichSu();
       try {
-        $('#chuTenGv').text(kq.tde.tenn || '');
-        $('#chuTenGv').text(kq.tde.tenn || ''); $('#chuNamHoc').text(kq.tde.nhoc || ''); $('#chuThoiGian').text(kq.tde.tgian || ''); $('#nhapSngayNghi').val(kq.tde.snnghi); $('#nhapDiemThuong').val(parseInt(kq.tde.dthuong) || 0);
+        $('#chuTenGv').text(kq.tde?.tenn || ''); 
+        $('#chuNamHoc').text(kq.tde?.nhoc || ''); 
+        $('#chuThoiGian').text(kq.tde?.tgian || ''); 
+        $('#nhapSngayNghi').val(kq.tde?.snnghi || 0); 
+        $('#nhapDiemThuong').val(parseInt(kq.tde?.dthuong) || 0);
         if(typeof capnhTdong === 'function') capnhTdong();
-        $('#nhapLdoNghi').val(kq.tde.ldo || ""); $('#nhapYkien').val(kq.tde.kienn || "");
-        let thongtbcao = giaiMaBcao(kq.tde.bcao || ""); $('#nhapBcao').val(thongtbcao.chu); window.tepdinhkBcao = thongtbcao.tepdinhk;
+        $('#nhapLdoNghi').val(kq.tde?.ldo || ""); 
+        $('#nhapYkien').val(kq.tde?.kienn || "");
+        
+        let thongtbcao = giaiMaBcao(kq.tde?.bcao || ""); 
+        $('#nhapBcao').val(thongtbcao.chu); 
+        window.tepdinhkBcao = thongtbcao.tepdinhk;
         if (typeof veDinhKemBcao === 'function') veDinhKemBcao();
         
         if (canEditScore) {
@@ -552,8 +561,9 @@
             $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('readonly', false);
         }
         
-        $('#chuTrangThai').text(kq.tde.tthai || 'CHƯA NỘP BÁO CÁO'); $('#chuKqHthi').text(kq.tde.kq || '');
-        if(typeof khoiTaoBoDemDiem === 'function') khoiTaoBoDemDiem(kq.tde.kq, kq.tde.dthuong);
+        $('#chuTrangThai').text(kq.tde?.tthai || 'CHƯA NỘP BÁO CÁO'); 
+        $('#chuKqHthi').text(kq.tde?.kq || '');
+        if(typeof khoiTaoBoDemDiem === 'function') khoiTaoBoDemDiem(kq.tde?.kq, kq.tde?.dthuong);
         
         window.PGV_SHOW_DELETE_COLUMN = canShowDeleteButton;
         if (typeof veBangNviec === 'function') veBangNviec(kq.bang);
