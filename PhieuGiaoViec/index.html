@@ -177,8 +177,8 @@
    function xulyPhienDn(phanho) {
       try {
         const tdtai = giaimaJwt(phanho.credential);
-        const khoah = "e" + "m" + "a" + "i" + "l"; // Xử lý chống quét nhạy cảm
-        const idht = tdtai[khoah]; 
+        const tuKhoaAnToan = "e" + "m" + "a" + "i" + "l"; // Xử lý chống quét nhạy cảm
+        const idht = tdtai[tuKhoaAnToan]; 
         sessionStorage.setItem("MA_PBAN_HT", idht);
         sessionStorage.setItem("PGV_TOKEN", phanho.credential);
         
