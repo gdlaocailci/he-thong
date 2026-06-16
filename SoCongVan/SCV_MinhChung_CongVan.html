@@ -12,7 +12,6 @@
   
   #warnDeleteCV { display:none; color:#d97706; font-size:13px; text-align:center; margin-bottom:10px; font-weight:bold; background: #fffbeb; padding: 8px; border-radius: 4px; border: 1px dashed #d97706; }
 </style>
-
 <div id="upload_modal_cv">
   <div class="up-container">
     <div class="up-header"><h2 style="margin:0; color:#b91c1c;">📁 VĂN BẢN KÈM THEO</h2></div>
@@ -228,13 +227,14 @@
     }
 
     // =================================================================================
-    // Nâng cấp: Xóa ngầm (Fire and Forget) qua ketnoi.js (Đã Fix API Bridge)
+    // CẬP NHẬT: TỐI ƯU HÓA UPLOAD ĐA LUỒNG SONG SONG (PROMISE.ALL)
     // =================================================================================
-    function doUploadCV() {
+    async function doUploadCV() {
        const mode = document.querySelector('input[name="upModeCV"]:checked').value;
        const wMode = document.querySelector('input[name="writeMode"]:checked').value;
        const btn = document.getElementById('uploadBtnCV'), st = document.getElementById('upStatusCV');
        
+       // ----- XỬ LÝ CHẾ ĐỘ LINK TRỰC TIẾP -----
        if (mode === 'link') {
            const linkVal = document.getElementById('txtDirectLinkCV').value.trim();
            if (!linkVal) return;
@@ -253,17 +253,11 @@
                    handleUpResultCV({ success: true, fileUrl: finalLinkStr, message: "Đã chèn thêm link thành công!" }, st, btn);
                }, 300);
            } 
-           // NẾU THAY THẾ (DỌN DẸP DRIVE NGẦM - KHÔNG CHỜ SERVER PHẢN HỒI LÂU)
            else if (wMode === 'replace' && LINK_CAN_XOA_CV && LINK_CAN_XOA_CV.trim() !== "") {
                st.innerText = "⏳ Đang ghi đè liên kết...";
-               
-               // Phát lệnh dọn dẹp xuống Server (Đã mở khóa kết nối trong ketnoi.js)
-               // Gọi hàm rỗng để không bắt UI chờ, tạo cảm giác mượt mà tuyệt đối (Fire & Forget)
                if(typeof google.script.run.SCV_deleteFileByUrl === 'function') {
                    google.script.run.withSuccessHandler(function() {}).withFailureHandler(function() {}).SCV_deleteFileByUrl(LINK_CAN_XOA_CV);
                }
-               
-               // Cập nhật giao diện lập tức
                setTimeout(() => {
                    handleUpResultCV({ success: true, fileUrl: finalLinkStr, message: "Đã thay thế và gán link mới thành công!" }, st, btn);
                }, 300);
@@ -277,50 +271,96 @@
            return;
        }
 
+       // ----- XỬ LÝ CHẾ ĐỘ FILE/FOLDER -----
        if (!FILES_CV || FILES_CV.length === 0) return;
        const fId = document.getElementById('folderSelectCV').value || CURRENT_ROOT_ID;
        
        btn.style.opacity = 0.5;
        btn.style.pointerEvents = "none"; 
        st.style.color = "blue"; 
-       st.innerText = "⏳ Đang chuẩn bị luồng dữ liệu tải lên...";
        
-       let filesData = [];
-       let count = 0;
+       // Xử lý Thay thế - Xóa file cũ ngầm trước
+       if (wMode === 'replace' && LINK_CAN_XOA_CV && LINK_CAN_XOA_CV.trim() !== "") {
+           st.innerText = "⏳ Đang dọn dẹp dữ liệu cũ...";
+           if(typeof google.script.run.SCV_deleteFileByUrl === 'function') {
+               google.script.run.withSuccessHandler(function() {}).withFailureHandler(function() {}).SCV_deleteFileByUrl(LINK_CAN_XOA_CV);
+           }
+       }
+
+       st.innerText = "⏳ Đang chuẩn bị luồng dữ liệu...";
        
+       // CHẾ ĐỘ FILE: CHẠY SONG SONG
        if (mode === 'file') {
-         st.innerText = `⏳ Đang đọc chuẩn hóa ${FILES_CV.length} tệp...`;
-         Array.from(FILES_CV).forEach(file => {
-           const r = new FileReader();
-           r.onload = e => {
-             filesData.push({ fileName: file.name, mimeType: file.type, data: e.target.result.split(',')[1] });
-             count++;
-             if (count === FILES_CV.length) {
-               st.innerText = `⏳ Đang đồng bộ ${FILES_CV.length} tệp lên Hệ thống lưu trữ...`;
-               google.script.run.withSuccessHandler(res => { handleUpResultCV(res, st, btn); })
-               .withFailureHandler(err => { st.style.color="red"; st.innerText="❌ "+err.message; btn.style.opacity=1; btn.style.pointerEvents="auto"; })
-               .SCV_uploadMultipleFilesToDrive(filesData, "", fId, LINK_CAN_XOA_CV, wMode);
-             }
-           };
-           r.readAsDataURL(file);
-         });
-       } else {
-         const folderName = FILES_CV[0].webkitRelativePath.split('/')[0];
-         st.innerText = `⏳ Đang đọc thư mục chứa ${FILES_CV.length} tệp...`;
-         Array.from(FILES_CV).forEach(file => {
-           const r = new FileReader();
-           r.onload = e => {
-             filesData.push({ fileName: file.name, mimeType: file.type, data: e.target.result.split(',')[1] });
-             count++;
-             if (count === FILES_CV.length) {
-               st.innerText = "⏳ Đang đồng bộ cấu trúc thư mục lên Hệ thống...";
-               google.script.run.withSuccessHandler(res => { handleUpResultCV(res, st, btn); })
-               .withFailureHandler(err => { st.style.color="red"; st.innerText="❌ "+err.message; btn.style.opacity=1; btn.style.pointerEvents="auto"; })
-               .SCV_uploadFolderEvidence(fId, folderName, filesData, LINK_CAN_XOA_CV, wMode); 
-             }
-           };
-           r.readAsDataURL(file);
-         });
+           st.innerText = `⏳ Đang mã hóa song song ${FILES_CV.length} tệp...`;
+           
+           try {
+               // 1. Chuyển đổi toàn bộ file sang Base64
+               const base64Promises = Array.from(FILES_CV).map(file => {
+                   return new Promise((resolve) => {
+                       const reader = new FileReader();
+                       reader.onload = e => {
+                           resolve({ fileName: file.name, mimeType: file.type, data: e.target.result.split(',')[1] });
+                       };
+                       reader.readAsDataURL(file);
+                   });
+               });
+               
+               const preparedFilesData = await Promise.all(base64Promises);
+               st.innerText = `⏳ Đang tải đa luồng ${FILES_CV.length} tệp lên Hệ thống...`;
+
+               // 2. Tải song song lên Server
+               const uploadPromises = preparedFilesData.map(fileData => {
+                   return new Promise((resolve, reject) => {
+                       google.script.run
+                           .withSuccessHandler(res => {
+                               if (res && res.success) resolve(res.fileUrl);
+                               else reject(res ? res.message : "Lỗi tải file");
+                           })
+                           .withFailureHandler(err => reject(err.message || err))
+                           .SCV_uploadSingleFileToDrive(fileData, "", fId);
+                   });
+               });
+
+               const uploadedUrls = await Promise.all(uploadPromises);
+               let finalLinkStr = uploadedUrls.join(',');
+               
+               // Xử lý Nối chuỗi nếu là Append
+               if (wMode === 'append' && LINK_CAN_XOA_CV && LINK_CAN_XOA_CV.trim() !== "") {
+                   finalLinkStr = LINK_CAN_XOA_CV + "," + finalLinkStr;
+               }
+
+               handleUpResultCV({ success: true, fileUrl: finalLinkStr, message: `Đã tải lên song song ${FILES_CV.length} tệp!` }, st, btn);
+
+           } catch (error) {
+               st.style.color = "red"; 
+               st.innerText = "❌ Lỗi luồng: " + error; 
+               btn.style.opacity = 1; 
+               btn.style.pointerEvents = "auto";
+           }
+       } 
+       // CHẾ ĐỘ FOLDER: Giữ nguyên để đảm bảo cấu trúc (tải cả cục vào 1 thư mục)
+       else {
+           let filesData = [];
+           let count = 0;
+           const folderName = FILES_CV[0].webkitRelativePath.split('/')[0];
+           st.innerText = `⏳ Đang chuẩn bị gói thư mục ${FILES_CV.length} tệp...`;
+           
+           Array.from(FILES_CV).forEach(file => {
+             const r = new FileReader();
+             r.onload = e => {
+               filesData.push({ fileName: file.name, mimeType: file.type, data: e.target.result.split(',')[1] });
+               count++;
+               if (count === FILES_CV.length) {
+                 st.innerText = "⏳ Đang đồng bộ cấu trúc thư mục lên Hệ thống...";
+                 google.script.run
+                 .withSuccessHandler(res => { handleUpResultCV(res, st, btn); })
+                 .withFailureHandler(err => { st.style.color="red"; st.innerText="❌ "+err.message; btn.style.opacity=1; btn.style.pointerEvents="auto"; })
+                 // Chế độ Folder không áp dụng nối link tự động qua wMode ở Server nữa (đã xử lý ngầm), truyền "" để an toàn
+                 .SCV_uploadFolderEvidence(fId, folderName, filesData, "", wMode); 
+               }
+             };
+             r.readAsDataURL(file);
+           });
        }
     }
 
