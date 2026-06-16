@@ -335,16 +335,21 @@
         sessionStorage.setItem("SCV_ACTIVE_ID", "Khách");
         window.SCV_GLOBAL_ID = "Khách";
         
-        await fetchCacheData(); 
-        
+        // TỐI ƯU HÓA: Tắt màn hình loading và hiển thị giao diện ngay lập tức
         document.getElementById('loading-overlay').style.display = 'none';
+        
         GLOBAL_USER = "Khách"; GLOBAL_PERM = false; 
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('btnTabNhap').style.display = 'none';
         document.getElementById('btnTabCV').style.display = 'none';
         document.getElementById('btnTabPhanQuyen').style.display = 'none';
         showTab('tabSearch', document.getElementById('btnTabSearch'));
+        
         loadSystemModules();
+        
+        // TỐI ƯU HÓA: Dữ liệu tải ngầm, không gây nghẽn màn hình khởi động
+        fetchCacheData(); 
+        
       } else {
         toast("⚠️ Cần phải được cấp quyền truy cập để xem dữ liệu");
         sessionStorage.removeItem("SCV_ACTIVE_ID");
@@ -382,12 +387,11 @@
           return; 
       }
       
-      await fetchCacheData(); 
-
+      // TỐI ƯU HÓA: Tắt màn hình loading và Mở giao diện NGAY LẬP TỨC
       document.getElementById('loading-overlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
 
-      // Áp dụng logic phân quyền mới
+      // Áp dụng logic phân quyền
       if (!res.canInput) {
           document.getElementById('btnTabNhap').style.display = 'none';
           document.getElementById('btnTabCV').style.display = 'none';
@@ -402,12 +406,17 @@
           document.getElementById('btnTabPhanQuyen').style.display = 'none';
       }
 
-      // Xử lý Active Tab mặc định nếu không có bất kỳ quyền nhập/quản trị nào
       if (!res.canInput && !res.canAdmin) {
           showTab('tabSearch', document.getElementById('btnTabSearch'));
       }
 
+      // Load các module HTML ngay lập tức
       loadSystemModules();
+      
+      // TỐI ƯU HÓA: Đẩy việc tải dữ liệu lớn xuống chạy ngầm (Background Sync)
+      // Loại bỏ lệnh 'await' để không bắt trình duyệt phải chờ đợi
+      fetchCacheData(); 
+
     }).SCV_getInitialData(window.SCV_GLOBAL_ID);
   }
 
