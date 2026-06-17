@@ -8,6 +8,7 @@
     <meta name="author" content="Thiết kế và phát triển Hoàng Ngọc Lâm">
     <title id="sys-title">Cổng thông tin Quản lý hồ sơ</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Phục hồi Thư viện Xác thực tài khoản Google -->
     <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
@@ -15,22 +16,19 @@
             document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
             document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
             document.getElementById('sys-logo').src = KETNOI.LINK_LOGO;
-            document.getElementById('sys-name').innerText = KETNOI.TEN_DINH_DANH;
         });
         (function() {
-            // Nạp hình nền mặc định từ cấu hình ketnoi.js
-            document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')");
-            
-            // Ghi đè nếu người dùng có thiết lập hình nền cá nhân
             var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
             if (savedBgUrl && savedBgUrl.trim() !== "") {
                 document.documentElement.style.setProperty('--default-bg', "url('" + savedBgUrl + "')");
+            } else {
+                document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')");
             }
         })();
     </script>
     <style>
         /* Khối CSS Hệ thống */
-        :root { --default-bg: #2c3e50; } /* Khởi tạo biến rỗng, sẽ được điền bởi script phía trên */
+        :root { --default-bg: #2c3e50; } 
         * { box-sizing: border-box; user-select: none; }
         html, body { height: 100vh; width: 100vw; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #2c3e50; background-image: var(--default-bg); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat; display: flex; flex-direction: column; }
@@ -54,7 +52,6 @@
         .bg-10 { background: #0097A7; border: 2px solid #80DEEA; } 
         .bg-default { background: #546E7A; border: 2px solid #B0BEC5; } 
         
-        /* CSS BỔ SUNG: AVATAR TRÒN HỖ TRỢ ẢNH DRIVE */
         .bg-avatar { background: #fdfdfd !important; border: 2px solid rgba(255,255,255,0.8) !important; border-radius: 50% !important; overflow: hidden; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important; }
         .custom-avatar { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; object-position: top center; transform: scale(1.1); }
 
@@ -76,6 +73,7 @@
         .tray-icon:hover { background: rgba(255, 255, 255, 0.15); }
         .tray-icon .material-icons { font-size: 20px; }
         .clock-container { text-align: right; font-size: 12px; line-height: 1.2; margin-left: 10px; padding: 0 5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px;}
+        
         .win-tooltip { position: fixed; background: rgba(255, 255, 255, 0.95); border: 1px solid #bbbbbb; padding: 6px 12px; border-radius: 4px; font-size: 13px; color: #333333; box-shadow: 2px 2px 8px rgba(0,0,0,0.25); pointer-events: none; opacity: 0; z-index: 9999; max-width: 250px; line-height: 1.4; transition: opacity 0.15s ease-in-out; }
         .window-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .window-container { background: #ffffff; border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; animation: popIn 0.2s ease-out; }
@@ -117,7 +115,6 @@
         .action-link { color: #1976D2; cursor: pointer; font-weight: 600; margin-right: 10px; text-decoration: underline; }
         .action-link.delete { color: #d32f2f; }
 
-        /* Cập nhật giao diện Cảnh báo */
         #window-alert .window-container { width: 440px; height: auto; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: none; }
         #window-alert .window-titlebar { background-color: #d32f2f; border-bottom: none; padding: 12px 15px; }
         #window-alert .window-title { color: #ffffff; font-size: 15px; }
@@ -130,6 +127,11 @@
         #window-alert .alert-message { font-size: 15px; color: #444444; line-height: 1.6; margin-bottom: 25px; }
         #window-alert .btn-confirm { background-color: #d32f2f; color: #ffffff; border: none; padding: 10px 30px; font-size: 15px; font-weight: 600; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         #window-alert .btn-confirm:hover { background-color: #b71c1c; transform: translateY(-1px); box-shadow: 0 6px 10px rgba(0,0,0,0.2); }
+
+        @keyframes spinHT { 100% { transform: rotate(360deg); } }
+        .loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: rgba(255,255,255,0.9); z-index: 10; background: rgba(0,0,0,0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+        .loading-screen .material-icons { font-size: 50px; animation: spinHT 1.2s linear infinite; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .loading-screen h3 { font-weight: 600; font-size: 16px; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.5); letter-spacing: 0.5px;}
     </style>
 </head>
 <body>
@@ -139,7 +141,7 @@
         <div class="start-btn" title="Hệ thống Quản trị Điều hành">
             <img src="" id="sys-logo" alt="Logo" class="start-logo">
             <div id="btn-google-login" style="display:none; margin-left: 5px;"></div>
-            <span class="start-text" id="sys-name">Đang tải...</span>
+            <span class="start-text" id="sys-name" style="display:none;">Đang tải...</span>
         </div>
         
         <div class="system-tray">
@@ -160,7 +162,7 @@
             <div class="tray-icon" onclick="resetPositions()" title="Khôi phục vị trí gốc của các biểu tượng"><span class="material-icons">restore</span></div>
             <div class="tray-icon" onclick="toggleUtilities(true)" title="Mở Tiện ích dạy học"><span class="material-icons">build_circle</span></div>
             <div class="tray-icon" onclick="changeBackgroundImage()" title="Cấu hình Hình nền Desktop"><span class="material-icons">wallpaper</span></div>
-            <div class="tray-icon" onclick="dangXuat()" title="Đăng xuất khỏi hệ thống an toàn"><span class="material-icons">logout</span></div>
+            <div class="tray-icon" id="btn-logout" style="display:none;" onclick="dangXuat()" title="Đăng xuất khỏi hệ thống an toàn"><span class="material-icons">logout</span></div>
             <div class="clock-container" id="sys-clock">--:--<br>--/--/----</div>
         </div>
     </div>
@@ -193,7 +195,7 @@
                     <input type="text" id="hs-td2" placeholder="Dán link hoặc chọn từ hệ thống..." style="margin-bottom: 8px;">
                     <div class="input-group">
                         <button class="btn-picker" onclick="khoiTaoGooglePicker()" title="Dùng tài khoản hiện tại"><span class="material-icons" style="font-size: 16px;">folder_shared</span> Kho hiện tại</button>
-                        <button class="btn-picker" style="background: #546E7A;" onclick="moDriveTaiKhoanKhac()"><span class="material-icons" style="font-size: 16px;">switch_account</span> Kho khác</button>
+                        <button class="btn-picker" style="background: #546E7A; color: white;" onclick="moDriveTaiKhoanKhac()"><span class="material-icons" style="font-size: 16px;">switch_account</span> Kho khác</button>
                     </div>
                     <div id="huong-dan-tk" style="display:none; font-size: 12px; color: #c62828; margin-top: 8px; background: #ffebee; padding: 8px; border-radius: 4px; line-height: 1.4;">
                         <b>Lưu ý:</b> Hệ thống vừa mở trang chuyển đổi bộ nhớ. Thầy/Cô hãy copy đường dẫn thư mục và dán vào ô trống phía trên.
@@ -288,7 +290,7 @@
                         <option value="">-- Đang tải danh sách --</option>
                     </select>
                 </div>
-                <button class="form-native btn-submit" style="background-color: #d32f2f;" onclick="xuLyXoaHoSo()">Xác Nhận Hủy</button>
+                <button class="form-native btn-submit" style="background-color: #d32f2f; color: white;" onclick="xuLyXoaHoSo()">Xác Nhận Hủy</button>
                 <div id="del-form-status" class="status-text" style="color: #d32f2f;">Đang xử lý...</div>
             </div>
         </div>
@@ -327,8 +329,8 @@
                         <div class="checkbox-group" id="icon-permission-list" style="max-height: 200px; overflow-y: auto;">
                             </div>
                     </div>
-                    <button class="form-native btn-submit" style="background-color: #8E24AA;" onclick="saveUser()">Ghi Nhận Thay Đổi</button>
-                    <button class="form-native btn-submit" style="background-color: #757575;" onclick="clearUserForm()">Làm Mới Biểu Mẫu</button>
+                    <button class="form-native btn-submit" style="background-color: #8E24AA; color: white;" onclick="saveUser()">Ghi Nhận Thay Đổi</button>
+                    <button class="form-native btn-submit" style="background-color: #757575; color: white;" onclick="clearUserForm()">Làm Mới Biểu Mẫu</button>
                     <div id="pq-status" class="status-text" style="color:#8E24AA;">Đang đồng bộ...</div>
                 </div>
                 
@@ -355,7 +357,7 @@
             </div>
             <div class="alert-content">
                 <span class="material-icons alert-icon">gpp_bad</span>
-                <h3 class="alert-heading">Giới hạn Thẩm quyền</h3>
+                <h3 class="alert-heading">Yêu cầu truy cập</h3>
                 <div id="alert-message" class="alert-message"></div>
                 <button class="btn-confirm" onclick="closeAlertModal()">Xác nhận</button>
             </div>
@@ -366,34 +368,67 @@
     let icons = []; let isDragging = false; const tooltip = document.getElementById('win-tooltip'); const desktopArea = document.getElementById('desktop-area');
     let tokenClient; let pickerAccessToken = null;
     let globalProfiles = []; 
+    
+    // Khai báo biến kiểm soát trạng thái đăng nhập
+    let isLoggedIn = false;
     let sysRoles = "";       
     let sysIconRoles = "";   
 
-    /* =========================================================================
-       0. KHỐI XÁC THỰC GOOGLE VÀ NẠP DỮ LIỆU
-       ========================================================================= */
     window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: KETNOI.CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
             callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
         });
+        
+        // Luồng 1: Tải biểu tượng lên ngay lập tức cho Khách
+        taiBieuTuongCongKhai();
+        // Luồng 2: Kiểm tra nếu đã có phiên đăng nhập thì phục hồi quyền quản trị
         kiemTraTrangThaiDangNhap();
     };
 
-    function kiemTraTrangThaiDangNhap() {
-        if (localStorage.getItem('ht_jwt_token')) {
-            localStorage.removeItem('ht_jwt_token');
+    // =========================================================================
+    // LUỒNG TẢI DỮ LIỆU CÔNG KHAI (HIỂN THỊ NGAY KHI MỞ TRANG)
+    // =========================================================================
+    function taiBieuTuongCongKhai() {
+        let cachedIcons = localStorage.getItem('ht_sys_icons_cache');
+        if (cachedIcons) {
+            try {
+                let parsedData = JSON.parse(cachedIcons);
+                renderIconsFromData(parsedData);
+            } catch (e) {}
+        } else {
+            desktopArea.innerHTML = '<div class="loading-screen"><span class="material-icons">sync</span><h3>Đang trích xuất không gian làm việc...</h3></div>';
         }
 
+        // Gọi API ngầm lấy danh sách mới nhất không cần Token
+        fetch(KETNOI.WEB_APP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'getPublicIcons' }) 
+        }).then(response => response.json()).then(result => {
+            if (result.status === 'success') { 
+                localStorage.setItem('ht_sys_icons_cache', JSON.stringify(result.data));
+                renderIconsFromData(result.data); 
+            }
+        }).catch(error => console.error("Lỗi tải biểu tượng:", error));
+    }
+
+    // =========================================================================
+    // LUỒNG XÁC THỰC BẢO MẬT
+    // =========================================================================
+    function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem('ht_sys_session');
         if (!sysSession) {
-            document.getElementById('sys-name').style.display = 'none'; document.querySelector('.system-tray').style.display = 'none';
+            isLoggedIn = false;
+            document.getElementById('sys-name').style.display = 'none'; 
+            document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('btn-google-login').style.display = 'block';
             google.accounts.id.renderButton(document.getElementById("btn-google-login"), { theme: "outline", size: "medium", type: "standard", text: "signin" });
         } else {
-            document.getElementById('btn-google-login').style.display = 'none'; document.getElementById('sys-name').style.display = 'block';
-            document.querySelector('.system-tray').style.display = 'flex'; loadDesktopData(sysSession);
+            document.getElementById('btn-google-login').style.display = 'none'; 
+            document.getElementById('sys-name').style.display = 'block';
+            document.getElementById('sys-name').innerText = "Đang xác thực...";
+            xacThucPhienDangNhap(sysSession);
         }
     }
 
@@ -404,22 +439,27 @@
     
     function dangXuat() { 
         localStorage.removeItem('ht_sys_session'); 
+        isLoggedIn = false;
         pickerAccessToken = null; 
         location.reload(); 
     }
 
-    function loadDesktopData(sysSession) {
+    function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
         }).then(response => response.json()).then(result => {
             if (result.status === 'success') { 
+                isLoggedIn = true;
                 document.getElementById('sys-name').innerText = result.verifiedEmail; 
+                document.getElementById('btn-logout').style.display = 'flex';
                 sysRoles = result.roles || "";
                 sysIconRoles = result.iconRoles || "";
-                renderIconsFromData(result.data); apDungPhanQuyen(sysRoles); 
-            } else { alert(result.message); dangXuat(); }
-        }).catch(error => console.error("Lỗi hệ thống:", error));
+                apDungPhanQuyen(sysRoles); 
+            } else { 
+                alert(result.message); dangXuat(); 
+            }
+        }).catch(error => console.error("Lỗi xác thực:", error));
     }
 
     function apDungPhanQuyen(roles) {
@@ -441,8 +481,138 @@
     }
 
     /* =========================================================================
-       1. KHỐI QUẢN LÝ GIAO DIỆN (UI), PICKER VÀ XÓA HỒ SƠ
+       KHỐI TẠO GIAO DIỆN VÀ PHÂN QUYỀN CLICK ICON
        ========================================================================= */
+    function renderIconsFromData(data) {
+        globalProfiles = data; 
+        desktopArea.innerHTML = ''; 
+        
+        data.forEach((item, index) => {
+            let type = item.iconType; 
+            let iconContent = '<span class="material-icons">apps</span>'; 
+            let bgClass = 'bg-default'; 
+
+            switch(type) {
+                case 'hocsinh': iconContent = '<span class="material-icons">school</span>'; bgClass = 'bg-4'; break;
+                case 'nhansu': iconContent = '<span class="material-icons">groups</span>'; bgClass = 'bg-5'; break;
+                case 'vanban': iconContent = '<span class="material-icons">description</span>'; bgClass = 'bg-2'; break;
+                case 'hoso': iconContent = '<span class="material-icons">folder_shared</span>'; bgClass = 'bg-2'; break;
+                case 'kiemtra': iconContent = '<span class="material-icons">fact_check</span>'; bgClass = 'bg-3'; break;
+                case 'danhgia': iconContent = '<span class="material-icons">assignment</span>'; bgClass = 'bg-3'; break;
+                case 'baocao': iconContent = '<span class="material-icons">bar_chart</span>'; bgClass = 'bg-10'; break;
+                case 'thi': iconContent = '<span class="material-icons">quiz</span>'; bgClass = 'bg-10'; break;
+                case 'khenthuong': iconContent = '<span class="material-icons">emoji_events</span>'; bgClass = 'bg-8'; break;
+                case 'kyluat': iconContent = '<span class="material-icons">gavel</span>'; bgClass = 'bg-6'; break;
+                case 'thoigian': iconContent = '<span class="material-icons">calendar_month</span>'; bgClass = 'bg-1'; break;
+                case 'taichinh': iconContent = '<span class="material-icons">account_balance_wallet</span>'; bgClass = 'bg-8'; break;
+                case 'csvc': iconContent = '<span class="material-icons">inventory</span>'; bgClass = 'bg-6'; break;
+                case 'thuvien': iconContent = '<span class="material-icons">local_library</span>'; bgClass = 'bg-4'; break;
+                case 'doandoi': iconContent = '<span class="material-icons">flag</span>'; bgClass = 'bg-1'; break;
+                case 'caidat': iconContent = '<span class="material-icons">settings</span>'; bgClass = 'bg-9'; break;
+                case 'congnghe': iconContent = '<span class="material-icons">memory</span>'; bgClass = 'bg-9'; break;
+                case 'mang': iconContent = '<span class="material-icons">wifi</span>'; bgClass = 'bg-1'; break;
+                case 'dienthoai': iconContent = '<span class="material-icons">smartphone</span>'; bgClass = 'bg-7'; break;
+                case 'trituemay': iconContent = '<span class="material-icons">smart_toy</span>'; bgClass = 'bg-9'; break;
+                case 'phantich': iconContent = '<span class="material-icons">query_stats</span>'; bgClass = 'bg-10'; break;
+                case 'yte': iconContent = '<span class="material-icons">health_and_safety</span>'; bgClass = 'bg-7'; break;
+                case 'thethao': iconContent = '<span class="material-icons">sports_soccer</span>'; bgClass = 'bg-2'; break;
+                case 'vanhoa': iconContent = '<span class="material-icons">theater_comedy</span>'; bgClass = 'bg-5'; break;
+                case 'amnhac': iconContent = '<span class="material-icons">music_note</span>'; bgClass = 'bg-5'; break;
+                case 'nhiepanh': iconContent = '<span class="material-icons">photo_camera</span>'; bgClass = 'bg-2'; break;
+                case 'truyenthong': iconContent = '<span class="material-icons">campaign</span>'; bgClass = 'bg-2'; break;
+                case 'baove': iconContent = '<span class="material-icons">security</span>'; bgClass = 'bg-9'; break;
+                case 'vesinh': iconContent = '<span class="material-icons">cleaning_services</span>'; bgClass = 'bg-3'; break;
+                case 'xeco': iconContent = '<span class="material-icons">directions_car</span>'; bgClass = 'bg-6'; break;
+                case 'doingoai': iconContent = '<span class="material-icons">public</span>'; bgClass = 'bg-1'; break;
+                case 'du_an': iconContent = '<span class="material-icons">rocket_launch</span>'; bgClass = 'bg-8'; break;
+                case 'khoa_hoc': iconContent = '<span class="material-icons">science</span>'; bgClass = 'bg-10'; break;
+                case 'nongnghiep': iconContent = '<span class="material-icons">agriculture</span>'; bgClass = 'bg-3'; break;
+                case 'congnghiep': iconContent = '<span class="material-icons">factory</span>'; bgClass = 'bg-9'; break;
+                case 'thuongmai': iconContent = '<span class="material-icons">store</span>'; bgClass = 'bg-2'; break;
+                case 'dulich': iconContent = '<span class="material-icons">flight_takeoff</span>'; bgClass = 'bg-1'; break;
+                case 'xaydung': iconContent = '<span class="material-icons">architecture</span>'; bgClass = 'bg-6'; break;
+                case 'kientruc': iconContent = '<span class="material-icons">home_work</span>'; bgClass = 'bg-6'; break;
+                case 'giaothong': iconContent = '<span class="material-icons">traffic</span>'; bgClass = 'bg-8'; break;
+                case 'logictics': iconContent = '<span class="material-icons">local_shipping</span>'; bgClass = 'bg-6'; break;
+                case 'baohiem': iconContent = '<span class="material-icons">shield</span>'; bgClass = 'bg-10'; break;
+                case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
+                case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
+                
+                case 'nam': 
+                    iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
+                    bgClass = 'bg-avatar'; 
+                    break;
+                case 'nu': 
+                    iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
+                    bgClass = 'bg-avatar'; 
+                    break;
+
+                case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
+                case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
+                case 'phucvu': iconContent = '<span class="material-icons">room_service</span>'; bgClass = 'bg-7'; break;
+                case 'bando': iconContent = '<span class="material-icons">map</span>'; bgClass = 'bg-1'; break;
+                case 'hotro': iconContent = '<span class="material-icons">support_agent</span>'; bgClass = 'bg-7'; break;
+                case 'khac': iconContent = '<span class="material-icons">apps</span>'; bgClass = 'bg-default'; break;
+                default: iconContent = '<span class="material-icons">folder</span>'; bgClass = 'bg-default'; break;
+            }
+
+            const div = document.createElement('div'); 
+            div.className = 'desktop-icon'; 
+            div.setAttribute('data-id', index + 1); 
+            div.setAttribute('data-desc', item.td1); 
+
+            div.innerHTML = `<div class="icon-box ${bgClass}">${iconContent}</div><span class="icon-text">${item.td1}</span>`;
+            
+            // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI TƯƠNG TÁC
+            div.onclick = function() { 
+                if (!isLoggedIn) {
+                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
+                    return;
+                }
+                
+                if (sysRoles.includes('xx')) {
+                    navigateTo(item.td2, true);
+                    return;
+                }
+                
+                const allowedIcons = sysIconRoles ? sysIconRoles.split('|') : [];
+                if (allowedIcons.includes(item.td1.trim())) {
+                    navigateTo(item.td2, true);
+                } else {
+                    showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
+                }
+            }; 
+
+            desktopArea.appendChild(div);
+        });
+        
+        icons = document.querySelectorAll('.desktop-icon'); setupTooltipEvents(); initializeLayout(); setupDragEvents();
+    }
+
+    /* =========================================================================
+       CÁC TIỆN ÍCH KHÁC (GIỮ NGUYÊN BẢN)
+       ========================================================================= */
+    function showAlertModal(message) {
+        document.getElementById('alert-message').innerHTML = message;
+        document.getElementById('window-alert').style.display = 'flex';
+    }
+
+    function closeAlertModal() {
+        document.getElementById('window-alert').style.display = 'none';
+    }
+    
+    function navigateTo(url, isNewTab) { if (isDragging) { isDragging = false; return; } if (isNewTab) { window.open(url, '_blank'); } else { window.location.href = url; } }
+    function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
+    function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
+    function initializeLayout() { const savedPositions = JSON.parse(localStorage.getItem('ht_desktop_positions_v3')) || {}; icons.forEach(icon => { const id = icon.getAttribute('data-id'); if (savedPositions[id]) { icon.style.position = 'absolute'; icon.style.left = savedPositions[id].left; icon.style.top = savedPositions[id].top; icon.style.margin = '0'; } }); setTimeout(() => { icons.forEach(icon => { if (icon.style.position !== 'absolute') { const rect = icon.getBoundingClientRect(); const areaRect = desktopArea.getBoundingClientRect(); icon.style.left = (rect.left - areaRect.left) + 'px'; icon.style.top = (rect.top - areaRect.top) + 'px'; } }); icons.forEach(icon => { icon.style.position = 'absolute'; icon.style.margin = '0'; }); }, 50); }
+    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
+    function setupDragEvents() { icons.forEach(icon => { icon.addEventListener('mousedown', startDrag); icon.addEventListener('touchstart', startDrag, {passive: false}); }); }
+    function startDrag(e) { if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return; dragThresholdPassed = false; draggedIcon = this; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; startX = clientX; startY = clientY; const rect = draggedIcon.getBoundingClientRect(); offsetX = clientX - rect.left; offsetY = clientY - rect.top; tooltip.style.opacity = '0'; document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, {passive: false}); document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag); }
+    function drag(e) { if (!draggedIcon) return; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { dragThresholdPassed = true; isDragging = true; draggedIcon.style.zIndex = '9999'; draggedIcon.style.opacity = '0.7'; e.preventDefault(); } if (dragThresholdPassed) { const areaRect = desktopArea.getBoundingClientRect(); let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); draggedIcon.style.left = newLeft + 'px'; draggedIcon.style.top = newTop + 'px'; } }
+    function stopDrag(e) { if (!draggedIcon) return; draggedIcon.style.zIndex = ''; draggedIcon.style.opacity = '1'; if (dragThresholdPassed) { savePositions(); } document.removeEventListener('mousemove', drag); document.removeEventListener('touchmove', drag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag); draggedIcon = null; setTimeout(() => { isDragging = false; }, 50); }
+    function savePositions() { const positions = {}; icons.forEach(icon => { positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; }); localStorage.setItem('ht_desktop_positions_v3', JSON.stringify(positions)); }
+    function resetPositions() { localStorage.removeItem('ht_desktop_positions_v3'); icons.forEach(icon => { icon.style.position = ''; icon.style.left = ''; icon.style.top = ''; icon.style.margin = ''; }); initializeLayout(); }
+    
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
         if(!isShow) {
@@ -485,7 +655,7 @@
             statusText.style.display = 'none';
             if (result.status === 'success') { 
                 toggleXoaHoSoModal(false); 
-                loadDesktopData(localStorage.getItem('ht_sys_session')); 
+                taiBieuTuongCongKhai(); 
             } else { alert("Cảnh báo: " + result.message); }
         }).catch(err => { statusText.style.display = 'none'; alert("Lỗi kết nối máy chủ: " + err); });
     }
@@ -493,12 +663,11 @@
     function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); document.getElementById('huong-dan-tk').style.display = 'block'; }
 
     function khoiTaoGooglePicker() {
-        document.getElementById('form-status').innerText = "Đang thiết lập cổng an toàn..."; document.getElementById('form-status').style.display = 'block';
         if (pickerAccessToken === null) { tokenClient.requestAccessToken({prompt: 'consent'}); } else { hienThiGooglePicker(pickerAccessToken); }
     }
 
     function hienThiGooglePicker(token) {
-        document.getElementById('form-status').style.display = 'none'; document.getElementById('window-gan-hoso').style.display = 'none';
+        document.getElementById('window-gan-hoso').style.display = 'none';
         gapi.load('picker', function() {
             var folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true);
             var picker = new google.picker.PickerBuilder().enableFeature(google.picker.Feature.SUPPORT_DRIVES).addView(folderView).addView(google.picker.ViewId.DOCS).setOAuthToken(token)
@@ -525,14 +694,11 @@
             document.getElementById('form-status').style.display = 'none';
             if (result.status === 'success') {
                 toggleHoSoModal(false);
-                loadDesktopData(localStorage.getItem('ht_sys_session'));
+                taiBieuTuongCongKhai();
             } else { alert("Phát sinh sự cố: " + result.message); }
         });
     }
 
-    /* =========================================================================
-       2. KHỐI QUẢN LÝ PHÂN QUYỀN NATIVE
-       ========================================================================= */
     function togglePhanQuyenModal(isShow) {
         document.getElementById('window-phanquyen').style.display = isShow ? 'flex' : 'none';
         if (isShow) { 
@@ -615,7 +781,7 @@
             body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem('ht_sys_session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('pq-status').style.display = 'none';
-            if (result.status === 'success') { clearUserForm(); loadUsers(); loadDesktopData(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
+            if (result.status === 'success') { clearUserForm(); loadUsers(); xacThucPhienDangNhap(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
         });
     }
 
@@ -627,137 +793,11 @@
                 body: JSON.stringify({ action: 'deleteUser', tsb: tsb, khoaBaoMat: localStorage.getItem('ht_sys_session') })
             }).then(response => response.json()).then(result => {
                 document.getElementById('pq-status').style.display = 'none';
-                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); loadUsers(); loadDesktopData(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
+                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); loadUsers(); xacThucPhienDangNhap(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
             });
         }
     }
 
-    /* =========================================================================
-       3. KHỐI TẠO HÌNH NỀN ICON VÀ KIỂM DUYỆT BẢO MẬT
-       ========================================================================= */
-    function showAlertModal(message) {
-        document.getElementById('alert-message').innerHTML = message;
-        document.getElementById('window-alert').style.display = 'flex';
-    }
-
-    function closeAlertModal() {
-        document.getElementById('window-alert').style.display = 'none';
-    }
-
-    function renderIconsFromData(data) {
-        globalProfiles = data; 
-        desktopArea.innerHTML = ''; 
-        
-        data.forEach((item, index) => {
-            let type = item.iconType; 
-            let iconContent = '<span class="material-icons">apps</span>'; 
-            let bgClass = 'bg-default'; 
-
-            switch(type) {
-                case 'hocsinh': iconContent = '<span class="material-icons">school</span>'; bgClass = 'bg-4'; break;
-                case 'nhansu': iconContent = '<span class="material-icons">groups</span>'; bgClass = 'bg-5'; break;
-                case 'vanban': iconContent = '<span class="material-icons">description</span>'; bgClass = 'bg-2'; break;
-                case 'hoso': iconContent = '<span class="material-icons">folder_shared</span>'; bgClass = 'bg-2'; break;
-                case 'kiemtra': iconContent = '<span class="material-icons">fact_check</span>'; bgClass = 'bg-3'; break;
-                case 'danhgia': iconContent = '<span class="material-icons">assignment</span>'; bgClass = 'bg-3'; break;
-                case 'baocao': iconContent = '<span class="material-icons">bar_chart</span>'; bgClass = 'bg-10'; break;
-                case 'thi': iconContent = '<span class="material-icons">quiz</span>'; bgClass = 'bg-10'; break;
-                case 'khenthuong': iconContent = '<span class="material-icons">emoji_events</span>'; bgClass = 'bg-8'; break;
-                case 'kyluat': iconContent = '<span class="material-icons">gavel</span>'; bgClass = 'bg-6'; break;
-                case 'thoigian': iconContent = '<span class="material-icons">calendar_month</span>'; bgClass = 'bg-1'; break;
-                case 'taichinh': iconContent = '<span class="material-icons">account_balance_wallet</span>'; bgClass = 'bg-8'; break;
-                case 'csvc': iconContent = '<span class="material-icons">inventory</span>'; bgClass = 'bg-6'; break;
-                case 'thuvien': iconContent = '<span class="material-icons">local_library</span>'; bgClass = 'bg-4'; break;
-                case 'doandoi': iconContent = '<span class="material-icons">flag</span>'; bgClass = 'bg-1'; break;
-                case 'caidat': iconContent = '<span class="material-icons">settings</span>'; bgClass = 'bg-9'; break;
-                case 'congnghe': iconContent = '<span class="material-icons">memory</span>'; bgClass = 'bg-9'; break;
-                case 'mang': iconContent = '<span class="material-icons">wifi</span>'; bgClass = 'bg-1'; break;
-                case 'dienthoai': iconContent = '<span class="material-icons">smartphone</span>'; bgClass = 'bg-7'; break;
-                case 'trituemay': iconContent = '<span class="material-icons">smart_toy</span>'; bgClass = 'bg-9'; break;
-                case 'phantich': iconContent = '<span class="material-icons">query_stats</span>'; bgClass = 'bg-10'; break;
-                case 'yte': iconContent = '<span class="material-icons">health_and_safety</span>'; bgClass = 'bg-7'; break;
-                case 'thethao': iconContent = '<span class="material-icons">sports_soccer</span>'; bgClass = 'bg-2'; break;
-                case 'vanhoa': iconContent = '<span class="material-icons">theater_comedy</span>'; bgClass = 'bg-5'; break;
-                case 'amnhac': iconContent = '<span class="material-icons">music_note</span>'; bgClass = 'bg-5'; break;
-                case 'nhiepanh': iconContent = '<span class="material-icons">photo_camera</span>'; bgClass = 'bg-2'; break;
-                case 'truyenthong': iconContent = '<span class="material-icons">campaign</span>'; bgClass = 'bg-2'; break;
-                case 'baove': iconContent = '<span class="material-icons">security</span>'; bgClass = 'bg-9'; break;
-                case 'vesinh': iconContent = '<span class="material-icons">cleaning_services</span>'; bgClass = 'bg-3'; break;
-                case 'xeco': iconContent = '<span class="material-icons">directions_car</span>'; bgClass = 'bg-6'; break;
-                case 'doingoai': iconContent = '<span class="material-icons">public</span>'; bgClass = 'bg-1'; break;
-                case 'du_an': iconContent = '<span class="material-icons">rocket_launch</span>'; bgClass = 'bg-8'; break;
-                case 'khoa_hoc': iconContent = '<span class="material-icons">science</span>'; bgClass = 'bg-10'; break;
-                case 'nongnghiep': iconContent = '<span class="material-icons">agriculture</span>'; bgClass = 'bg-3'; break;
-                case 'congnghiep': iconContent = '<span class="material-icons">factory</span>'; bgClass = 'bg-9'; break;
-                case 'thuongmai': iconContent = '<span class="material-icons">store</span>'; bgClass = 'bg-2'; break;
-                case 'dulich': iconContent = '<span class="material-icons">flight_takeoff</span>'; bgClass = 'bg-1'; break;
-                case 'xaydung': iconContent = '<span class="material-icons">architecture</span>'; bgClass = 'bg-6'; break;
-                case 'kientruc': iconContent = '<span class="material-icons">home_work</span>'; bgClass = 'bg-6'; break;
-                case 'giaothong': iconContent = '<span class="material-icons">traffic</span>'; bgClass = 'bg-8'; break;
-                case 'logictics': iconContent = '<span class="material-icons">local_shipping</span>'; bgClass = 'bg-6'; break;
-                case 'baohiem': iconContent = '<span class="material-icons">shield</span>'; bgClass = 'bg-10'; break;
-                case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
-                case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
-                
-                /* ĐÃ CẬP NHẬT: SỬ DỤNG LIÊN KẾT TỪ KETNOI.JS ĐỂ HIỂN THỊ ẢNH TRỰC TIẾP */
-                case 'nam': 
-                    iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
-                    bgClass = 'bg-avatar'; 
-                    break;
-                case 'nu': 
-                    iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
-                    bgClass = 'bg-avatar'; 
-                    break;
-
-                case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
-                case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
-                case 'phucvu': iconContent = '<span class="material-icons">room_service</span>'; bgClass = 'bg-7'; break;
-                case 'bando': iconContent = '<span class="material-icons">map</span>'; bgClass = 'bg-1'; break;
-                case 'hotro': iconContent = '<span class="material-icons">support_agent</span>'; bgClass = 'bg-7'; break;
-                case 'khac': iconContent = '<span class="material-icons">apps</span>'; bgClass = 'bg-default'; break;
-                default: iconContent = '<span class="material-icons">folder</span>'; bgClass = 'bg-default'; break;
-            }
-
-            const div = document.createElement('div'); 
-            div.className = 'desktop-icon'; 
-            div.setAttribute('data-id', index + 1); 
-            div.setAttribute('data-desc', item.td1); 
-
-            div.innerHTML = `<div class="icon-box ${bgClass}">${iconContent}</div><span class="icon-text">${item.td1}</span>`;
-            
-            div.onclick = function() { 
-                if (sysRoles.includes('xx')) {
-                    navigateTo(item.td2, true);
-                    return;
-                }
-                
-                const allowedIcons = sysIconRoles ? sysIconRoles.split('|') : [];
-                if (allowedIcons.includes(item.td1.trim())) {
-                    navigateTo(item.td2, true);
-                } else {
-                    const warnMsg = "Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!";
-                    showAlertModal(warnMsg);
-                }
-            }; 
-
-            desktopArea.appendChild(div);
-        });
-        
-        icons = document.querySelectorAll('.desktop-icon'); setupTooltipEvents(); initializeLayout(); setupDragEvents();
-    }
-    
-    function navigateTo(url, isNewTab) { if (isDragging) { isDragging = false; return; } if (isNewTab) { window.open(url, '_blank'); } else { window.location.href = url; } }
-    function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
-    function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
-    function initializeLayout() { const savedPositions = JSON.parse(localStorage.getItem('ht_desktop_positions_v3')) || {}; icons.forEach(icon => { const id = icon.getAttribute('data-id'); if (savedPositions[id]) { icon.style.position = 'absolute'; icon.style.left = savedPositions[id].left; icon.style.top = savedPositions[id].top; icon.style.margin = '0'; } }); setTimeout(() => { icons.forEach(icon => { if (icon.style.position !== 'absolute') { const rect = icon.getBoundingClientRect(); const areaRect = desktopArea.getBoundingClientRect(); icon.style.left = (rect.left - areaRect.left) + 'px'; icon.style.top = (rect.top - areaRect.top) + 'px'; } }); icons.forEach(icon => { icon.style.position = 'absolute'; icon.style.margin = '0'; }); }, 50); }
-    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    function setupDragEvents() { icons.forEach(icon => { icon.addEventListener('mousedown', startDrag); icon.addEventListener('touchstart', startDrag, {passive: false}); }); }
-    function startDrag(e) { if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return; dragThresholdPassed = false; draggedIcon = this; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; startX = clientX; startY = clientY; const rect = draggedIcon.getBoundingClientRect(); offsetX = clientX - rect.left; offsetY = clientY - rect.top; tooltip.style.opacity = '0'; document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, {passive: false}); document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag); }
-    function drag(e) { if (!draggedIcon) return; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { dragThresholdPassed = true; isDragging = true; draggedIcon.style.zIndex = '9999'; draggedIcon.style.opacity = '0.7'; e.preventDefault(); } if (dragThresholdPassed) { const areaRect = desktopArea.getBoundingClientRect(); let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); draggedIcon.style.left = newLeft + 'px'; draggedIcon.style.top = newTop + 'px'; } }
-    function stopDrag(e) { if (!draggedIcon) return; draggedIcon.style.zIndex = ''; draggedIcon.style.opacity = '1'; if (dragThresholdPassed) { savePositions(); } document.removeEventListener('mousemove', drag); document.removeEventListener('touchmove', drag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag); draggedIcon = null; setTimeout(() => { isDragging = false; }, 50); }
-    function savePositions() { const positions = {}; icons.forEach(icon => { positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; }); localStorage.setItem('ht_desktop_positions_v3', JSON.stringify(positions)); }
-    function resetPositions() { localStorage.removeItem('ht_desktop_positions_v3'); icons.forEach(icon => { icon.style.position = ''; icon.style.left = ''; icon.style.top = ''; icon.style.margin = ''; }); initializeLayout(); }
-    
     function changeBackgroundImage() { 
         var currentUrl = localStorage.getItem("ht_dashboard_bg") || ""; 
         var newUrl = prompt("CẤU HÌNH HÌNH NỀN DESKTOP\n\nNhập đường dẫn (URL) hình ảnh:\n(Để trống nếu muốn quay về hình nền mặc định)", currentUrl); 
