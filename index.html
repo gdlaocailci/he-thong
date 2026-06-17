@@ -403,21 +403,43 @@
     
     function dangXuat() { 
         localStorage.removeItem('ht_sys_session'); 
+        localStorage.removeItem('ht_sys_data_cache'); // Bổ sung xóa cache khi đăng xuất
         pickerAccessToken = null; 
         location.reload(); 
     }
 
     function loadDesktopData(sysSession) {
+        // THUẬT TOÁN MỚI: Dựng giao diện ngay lập tức từ LocalStorage (Tốc độ mở 0.1 giây)
+        let cachedSysData = localStorage.getItem('ht_sys_data_cache');
+        if (cachedSysData) {
+            try {
+                let parsedData = JSON.parse(cachedSysData);
+                document.getElementById('sys-name').innerText = parsedData.taiKhoanXacThuc || parsedData.verifiedEmail; 
+                sysRoles = parsedData.roles || "";
+                sysIconRoles = parsedData.iconRoles || "";
+                renderIconsFromData(parsedData.data); 
+                apDungPhanQuyen(sysRoles);
+            } catch (e) {}
+        }
+
+        // Chạy ngầm Fetch API để đồng bộ dữ liệu mới (Stale-while-revalidate)
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
         }).then(response => response.json()).then(result => {
             if (result.status === 'success') { 
-                document.getElementById('sys-name').innerText = result.verifiedEmail; 
+                // Cập nhật lại bộ nhớ đệm
+                localStorage.setItem('ht_sys_data_cache', JSON.stringify(result));
+                
+                // Đồng bộ lại giao diện nếu có thay đổi từ nền tảng
+                document.getElementById('sys-name').innerText = result.taiKhoanXacThuc; 
                 sysRoles = result.roles || "";
                 sysIconRoles = result.iconRoles || "";
-                renderIconsFromData(result.data); apDungPhanQuyen(sysRoles); 
-            } else { alert(result.message); dangXuat(); }
+                renderIconsFromData(result.data); 
+                apDungPhanQuyen(sysRoles); 
+            } else { 
+                if (!cachedSysData) { alert(result.message); dangXuat(); }
+            }
         }).catch(error => console.error("Lỗi hệ thống:", error));
     }
 
