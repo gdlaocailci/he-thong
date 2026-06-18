@@ -5,6 +5,11 @@
  */
 
 const KETNOI = {
+    // 3. Đường dẫn máy chủ xử lý dữ liệu (Google Apps Script API)
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxJEriNwHp3twwlVk_yqViktUo96XOj71ciMdNsNY8TSuH_76t7gPt48DGnWU34gWVdeQ/exec",
+
+    // 4. Mã định danh ứng dụng Google (OAuth 2.0 Client ID)
+    CLIENT_ID: "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com",
     // 1. Thông tin định danh cơ quan/đơn vị
     TEN_DINH_DANH: "Hợp Thành OS",
     TIEU_DE_TRANG: "Cổng thông tin Quản lý hồ sơ - Trường TH&THCS Hợp Thành",
@@ -13,11 +18,6 @@ const KETNOI = {
     LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
     LINK_HINH_NEN: "https://i.ibb.co/h1CBtJNW/Hinh-Nen-Ruong-Bac-Thang-15.jpg",
     LINK_AVATAR_NAM: "https://lh3.googleusercontent.com/d/13OnSd7t73KO7GP6NB7FjkdpsO6vfH-dp",
-    LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU",
-    
-    // 3. Đường dẫn máy chủ xử lý dữ liệu (Google Apps Script API)
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxJEriNwHp3twwlVk_yqViktUo96XOj71ciMdNsNY8TSuH_76t7gPt48DGnWU34gWVdeQ/exec",
-
-    // 4. Mã định danh ứng dụng Google (OAuth 2.0 Client ID)
-    CLIENT_ID: "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com"
+    LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU"
+   
 };
