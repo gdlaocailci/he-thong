@@ -8,17 +8,20 @@
     <meta name="author" content="Thiết kế và phát triển Hoàng Ngọc Lâm">
     <title id="sys-title">Cổng thông tin Quản lý hồ sơ</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Phục hồi Thư viện Xác thực tài khoản Google -->
     <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
+        // Khởi tạo tiền tố bộ nhớ đệm phân lập cho từng dự án dựa trên App ID
+        let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
+        const PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
+
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
             document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
             document.getElementById('sys-logo').src = KETNOI.LINK_LOGO;
         });
         (function() {
-            var savedBgUrl = localStorage.getItem("ht_dashboard_bg");
+            var savedBgUrl = localStorage.getItem(PREFIX_MEM + "bg");
             if (savedBgUrl && savedBgUrl.trim() !== "") {
                 document.documentElement.style.setProperty('--default-bg', "url('" + savedBgUrl + "')");
             } else {
@@ -391,7 +394,7 @@
     // LUỒNG TẢI DỮ LIỆU CÔNG KHAI (HIỂN THỊ NGAY KHI MỞ TRANG)
     // =========================================================================
     function taiBieuTuongCongKhai() {
-        let cachedIcons = localStorage.getItem('ht_sys_icons_cache');
+        let cachedIcons = localStorage.getItem(PREFIX_MEM + 'icons_cache');
         if (cachedIcons) {
             try {
                 let parsedData = JSON.parse(cachedIcons);
@@ -407,7 +410,7 @@
             body: JSON.stringify({ action: 'getPublicIcons' }) 
         }).then(response => response.json()).then(result => {
             if (result.status === 'success') { 
-                localStorage.setItem('ht_sys_icons_cache', JSON.stringify(result.data));
+                localStorage.setItem(PREFIX_MEM + 'icons_cache', JSON.stringify(result.data));
                 renderIconsFromData(result.data); 
             }
         }).catch(error => console.error("Lỗi tải biểu tượng:", error));
@@ -417,7 +420,7 @@
     // LUỒNG XÁC THỰC BẢO MẬT
     // =========================================================================
     function kiemTraTrangThaiDangNhap() {
-        let sysSession = localStorage.getItem('ht_sys_session');
+        let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
             isLoggedIn = false;
             document.getElementById('sys-name').style.display = 'none'; 
@@ -433,12 +436,12 @@
     }
 
     function xuLyDangNhapThanhCong(response) { 
-        localStorage.setItem('ht_sys_session', response.credential); 
+        localStorage.setItem(PREFIX_MEM + 'session', response.credential); 
         kiemTraTrangThaiDangNhap(); 
     }
     
     function dangXuat() { 
-        localStorage.removeItem('ht_sys_session'); 
+        localStorage.removeItem(PREFIX_MEM + 'session'); 
         isLoggedIn = false;
         pickerAccessToken = null; 
         location.reload(); 
@@ -590,7 +593,7 @@
     }
 
     /* =========================================================================
-       CÁC TIỆN ÍCH KHÁC (GIỮ NGUYÊN BẢN)
+       CÁC TIỆN ÍCH KHÁC
        ========================================================================= */
     function showAlertModal(message) {
         document.getElementById('alert-message').innerHTML = message;
@@ -604,14 +607,14 @@
     function navigateTo(url, isNewTab) { if (isDragging) { isDragging = false; return; } if (isNewTab) { window.open(url, '_blank'); } else { window.location.href = url; } }
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
-    function initializeLayout() { const savedPositions = JSON.parse(localStorage.getItem('ht_desktop_positions_v3')) || {}; icons.forEach(icon => { const id = icon.getAttribute('data-id'); if (savedPositions[id]) { icon.style.position = 'absolute'; icon.style.left = savedPositions[id].left; icon.style.top = savedPositions[id].top; icon.style.margin = '0'; } }); setTimeout(() => { icons.forEach(icon => { if (icon.style.position !== 'absolute') { const rect = icon.getBoundingClientRect(); const areaRect = desktopArea.getBoundingClientRect(); icon.style.left = (rect.left - areaRect.left) + 'px'; icon.style.top = (rect.top - areaRect.top) + 'px'; } }); icons.forEach(icon => { icon.style.position = 'absolute'; icon.style.margin = '0'; }); }, 50); }
+    function initializeLayout() { const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; icons.forEach(icon => { const id = icon.getAttribute('data-id'); if (savedPositions[id]) { icon.style.position = 'absolute'; icon.style.left = savedPositions[id].left; icon.style.top = savedPositions[id].top; icon.style.margin = '0'; } }); setTimeout(() => { icons.forEach(icon => { if (icon.style.position !== 'absolute') { const rect = icon.getBoundingClientRect(); const areaRect = desktopArea.getBoundingClientRect(); icon.style.left = (rect.left - areaRect.left) + 'px'; icon.style.top = (rect.top - areaRect.top) + 'px'; } }); icons.forEach(icon => { icon.style.position = 'absolute'; icon.style.margin = '0'; }); }, 50); }
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
     function setupDragEvents() { icons.forEach(icon => { icon.addEventListener('mousedown', startDrag); icon.addEventListener('touchstart', startDrag, {passive: false}); }); }
     function startDrag(e) { if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return; dragThresholdPassed = false; draggedIcon = this; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; startX = clientX; startY = clientY; const rect = draggedIcon.getBoundingClientRect(); offsetX = clientX - rect.left; offsetY = clientY - rect.top; tooltip.style.opacity = '0'; document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, {passive: false}); document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag); }
     function drag(e) { if (!draggedIcon) return; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { dragThresholdPassed = true; isDragging = true; draggedIcon.style.zIndex = '9999'; draggedIcon.style.opacity = '0.7'; e.preventDefault(); } if (dragThresholdPassed) { const areaRect = desktopArea.getBoundingClientRect(); let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); draggedIcon.style.left = newLeft + 'px'; draggedIcon.style.top = newTop + 'px'; } }
     function stopDrag(e) { if (!draggedIcon) return; draggedIcon.style.zIndex = ''; draggedIcon.style.opacity = '1'; if (dragThresholdPassed) { savePositions(); } document.removeEventListener('mousemove', drag); document.removeEventListener('touchmove', drag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag); draggedIcon = null; setTimeout(() => { isDragging = false; }, 50); }
-    function savePositions() { const positions = {}; icons.forEach(icon => { positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; }); localStorage.setItem('ht_desktop_positions_v3', JSON.stringify(positions)); }
-    function resetPositions() { localStorage.removeItem('ht_desktop_positions_v3'); icons.forEach(icon => { icon.style.position = ''; icon.style.left = ''; icon.style.top = ''; icon.style.margin = ''; }); initializeLayout(); }
+    function savePositions() { const positions = {}; icons.forEach(icon => { positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; }); localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); }
+    function resetPositions() { localStorage.removeItem(PREFIX_MEM + 'positions'); icons.forEach(icon => { icon.style.position = ''; icon.style.left = ''; icon.style.top = ''; icon.style.margin = ''; }); initializeLayout(); }
     
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
@@ -650,7 +653,7 @@
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'deleteProfile', td1: profileToDelete.td1, td2: profileToDelete.td2, khoaBaoMat: localStorage.getItem('ht_sys_session') })
+            body: JSON.stringify({ action: 'deleteProfile', td1: profileToDelete.td1, td2: profileToDelete.td2, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             statusText.style.display = 'none';
             if (result.status === 'success') { 
@@ -689,7 +692,7 @@
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2, loaiIcon: loaiIcon, khoaBaoMat: localStorage.getItem('ht_sys_session') })
+            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2, loaiIcon: loaiIcon, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('form-status').style.display = 'none';
             if (result.status === 'success') {
@@ -716,7 +719,7 @@
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'getUsers', khoaBaoMat: localStorage.getItem('ht_sys_session') })
+            body: JSON.stringify({ action: 'getUsers', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             if (result.status === 'success') { renderUserTable(result.data); } else { alert(result.message); }
         }).catch(err => { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Sự cố truy xuất băng thông máy chủ!</td></tr>'; });
@@ -778,10 +781,10 @@
         document.getElementById('pq-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem('ht_sys_session') })
+            body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('pq-status').style.display = 'none';
-            if (result.status === 'success') { clearUserForm(); loadUsers(); xacThucPhienDangNhap(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
+            if (result.status === 'success') { clearUserForm(); loadUsers(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
         });
     }
 
@@ -790,23 +793,23 @@
             document.getElementById('pq-status').style.display = 'block';
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteUser', tsb: tsb, khoaBaoMat: localStorage.getItem('ht_sys_session') })
+                body: JSON.stringify({ action: 'deleteUser', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
             }).then(response => response.json()).then(result => {
                 document.getElementById('pq-status').style.display = 'none';
-                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); loadUsers(); xacThucPhienDangNhap(localStorage.getItem('ht_sys_session')); } else { alert("Cảnh báo: " + result.message); }
+                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); loadUsers(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
             });
         }
     }
 
     function changeBackgroundImage() { 
-        var currentUrl = localStorage.getItem("ht_dashboard_bg") || ""; 
+        var currentUrl = localStorage.getItem(PREFIX_MEM + "bg") || ""; 
         var newUrl = prompt("CẤU HÌNH HÌNH NỀN DESKTOP\n\nNhập đường dẫn (URL) hình ảnh:\n(Để trống nếu muốn quay về hình nền mặc định)", currentUrl); 
         if (newUrl !== null) { 
             if (newUrl.trim() === "") { 
-                localStorage.removeItem("ht_dashboard_bg"); 
+                localStorage.removeItem(PREFIX_MEM + "bg"); 
                 document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')"); 
             } else { 
-                localStorage.setItem("ht_dashboard_bg", newUrl.trim()); 
+                localStorage.setItem(PREFIX_MEM + "bg", newUrl.trim()); 
                 document.documentElement.style.setProperty('--default-bg', "url('" + newUrl.trim() + "')"); 
             } 
         } 
