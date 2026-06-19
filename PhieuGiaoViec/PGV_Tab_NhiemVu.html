@@ -720,6 +720,7 @@ function addNv() {
     const lastRow = tbody.find('tr.dongNv:last');
     
     if (lastRow.length === 0) {
+        // Đã thêm thuộc tính readonly vào ô nhapDiemMax
         let defaultRow = `<tr class="dongNv">
             <td class="text-center align-middle oStt fw-bold"></td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
@@ -727,7 +728,7 @@ function addNv() {
                 <input type="hidden" class="oColJ" value=""><input type="hidden" class="oColK" value="">
                 <input type="hidden" class="oColL" value=""><input type="hidden" class="oColM" value="">
             </td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td>
+            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" readonly></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
@@ -739,7 +740,10 @@ function addNv() {
         var $newRow = lastRow.clone();
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
-        $newRow.find('.nhapDiemMax, .nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
+        
+        $newRow.find('.nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
+        // Nhân bản giá trị Điểm Max từ dòng trên (thuộc tính readonly tự động được bảo toàn qua lệnh clone)
+        $newRow.find('.nhapDiemMax').val(lastRow.find('.nhapDiemMax').val());
         
         var $chonKq = $newRow.find('.chonKq');
         $chonKq.val(''); 
