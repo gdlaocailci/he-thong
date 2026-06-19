@@ -53,6 +53,14 @@
     }
     .b-tuong { margin-right: 12px; font-size: 18px; display: inline-block; width: 24px; text-align: center;}
     
+    /* Hiệu ứng xoay mũi tên của Menu cha khi mở/đóng */
+    .the-chuyen[aria-expanded="true"] .icon-xoay { transform: rotate(180deg); }
+    .icon-xoay { transition: transform 0.3s ease; }
+    
+    /* Phân biệt giao diện của menu con */
+    .menu-con .the-chuyen { font-size: 14px; background: rgba(0,0,0,0.05); border-bottom: none; }
+    .menu-con .the-chuyen:hover, .menu-con .the-chuyen.active { border-left: 4px solid #0dcaf0; }
+
     .thong-tin-dev {
         margin-top: auto;
         padding: 12px 20px;
@@ -86,9 +94,9 @@
          <span class="tt-giatri" id="chuTenGv">Đang tải...</span>
        </div>
         <div class="dong-tt-1">
-     <span class="tt-nhan">Email:</span>
-     <span class="tt-giatri" id="chuAccount" style="font-size: 14px;">Đang tải...</span>
-   </div>
+         <span class="tt-nhan">Email:</span>
+         <span class="tt-giatri" id="chuAccount" style="font-size: 14px;">Đang tải...</span>
+       </div>
         <div class="dong-tt-mid">
          <span class="tt-nhan">Trạng thái:</span>
          <span class="tt-trangthai" id="chuTrangThai">...</span>
@@ -121,9 +129,21 @@
             <span class="b-tuong"><i class="bi bi-chat-text"></i></span> Tổng hợp ý kiến
         </button>
         
-        <button class="the-chuyen nav-link" id="tabTieuChi" data-bs-toggle="tab" data-bs-target="#khuTieuChi" type="button" role="tab" style="display: none;">
-            <span class="b-tuong"><i class="bi bi-list-check"></i></span> Tiêu chí đánh giá
-        </button>
+        <!-- [CẬP NHẬT] Gộp Tiêu chí Đánh giá thành Menu Cha chứa 2 Menu con -->
+        <div id="menuChaTieuChi" style="display: none; width: 100%;">
+            <button class="the-chuyen" data-bs-toggle="collapse" data-bs-target="#collapseTieuChi" aria-expanded="false">
+                <span class="b-tuong"><i class="bi bi-ui-checks"></i></span> Tiêu chí đánh giá
+                <i class="bi bi-chevron-down ms-auto icon-xoay" style="font-size: 13px;"></i>
+            </button>
+            <div class="collapse w-100 menu-con" id="collapseTieuChi">
+                <button class="the-chuyen nav-link ps-5" id="tabTieuChi" data-bs-toggle="tab" data-bs-target="#khuTieuChi" type="button" role="tab">
+                    <i class="bi bi-person-video3 me-2"></i> Tiêu chí Giáo viên
+                </button>
+                <button class="the-chuyen nav-link ps-5" id="tabTieuChiNV" data-bs-toggle="tab" data-bs-target="#khuTieuChiNV" type="button" role="tab">
+                    <i class="bi bi-person-badge me-2"></i> Tiêu chí Nhân viên
+                </button>
+            </div>
+        </div>
         
         <a href="https://gdlaocailci.github.io/he-thong/DanhGiaVienChuc/index.html" target="_blank" class="the-chuyen">
             <span class="b-tuong"><i class="bi bi-award"></i></span> Đánh giá cuối năm
@@ -162,10 +182,11 @@
             }
         };
 
+        // [CẬP NHẬT] Hàm bật/tắt toàn bộ khối Menu Cha Tiêu Chí
         window.kiemTraHienThiTabTieuChi = function() {
-            var tabTieuChi = document.getElementById('tabTieuChi');
-            if (tabTieuChi) {
-                tabTieuChi.style.display = (window.PGV_SHOW_TIEUCHI === true) ? 'flex' : 'none';
+            var menuChaTieuChi = document.getElementById('menuChaTieuChi');
+            if (menuChaTieuChi) {
+                menuChaTieuChi.style.display = (window.PGV_SHOW_TIEUCHI === true) ? 'block' : 'none';
             }
         };
         
