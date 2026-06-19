@@ -1,0 +1,267 @@
+<style>
+  #vungTieuChiNV { height: calc(100vh - 60px); display: flex; flex-direction: column; background-color: #f8f9fa; width: 100%; overflow: hidden; }
+  .tDeTieuChiNV { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; padding: 15px 0; text-align: center; }
+  
+  .bangTieuChiNV-wrapper { flex: 1 1 auto; overflow: auto; width: 100%; padding: 0; border-top: 2px solid #0d6efd; background: #fff; display: block; position: relative; }
+  
+  #bangTieuChiNV { width: 100%; min-width: 1800px; border-collapse: collapse; table-layout: fixed; }
+  #bangTieuChiNV thead th { position: sticky; top: 0; background-color: #0d6efd !important; color: white !important; text-align: center; vertical-align: middle; padding: 8px 4px; font-size: 13px; z-index: 10; border: none; border-right: 1px solid #7ea8f8; border-bottom: 2px solid #0a58ca; }
+  #bangTieuChiNV th:last-child { border-right: none; }
+  #bangTieuChiNV td { border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; padding: 0; vertical-align: middle; }
+  #bangTieuChiNV td:last-child { border-right: none !important; }
+  
+  #bangTieuChiNV input, #bangTieuChiNV textarea { width: 100%; border: none; outline: none; padding: 6px; font-size: 13px; background: transparent; resize: none; overflow: hidden; display: block; }
+  #bangTieuChiNV input::placeholder, #bangTieuChiNV textarea::placeholder { color: #adb5bd; font-style: italic; font-size: 12px; }
+  #bangTieuChiNV textarea { min-height: 35px; white-space: pre-wrap; word-wrap: break-word; }
+  
+  .nutDieuKhienNV { padding: 2px 6px; font-size: 12px; margin: 1px; }
+  .cotHanhDongNV { text-align: center; background-color: #f1f4f8; }
+  .cotSttNV { text-align: center; font-weight: bold; background-color: #f1f4f8; }
+</style>
+
+<div id="vungTieuChiNV">
+  <div class="d-flex justify-content-between align-items-center px-3" style="background: white; border-bottom: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <div>
+      <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm" onclick="themDongTieuChiNV()">
+        <i class="bi bi-plus-circle"></i> Thêm dòng (Lên đầu)
+      </button>
+    </div>
+    <div class="tDeTieuChiNV">TIÊU CHÍ ĐÁNH GIÁ XẾP LOẠI - NHÂN VIÊN</div>
+    <div>
+      <button class="btn btn-success btn-sm fw-bold shadow-sm" onclick="capNhatTieuChiNV()" id="nutLuuTieuChiNV">
+        <i class="bi bi-save"></i> Cập nhật đồng bộ
+      </button>
+    </div>
+  </div>
+
+  <div class="bangTieuChiNV-wrapper shadow-sm">
+    <table id="bangTieuChiNV" class="table table-hover table-bordered mb-0">
+      <thead>
+        <tr>
+          <th style="width: 90px;" class="cotHanhDongNV">Công cụ</th>
+          <th style="width: 60px;" class="cotSttNV">STT (Cột A)</th>
+          <th style="width: 300px;">Nội dung tiêu chí (Cột B)</th>
+          <th style="width: 120px;">Thang điểm tối đa (Cột C)</th>
+          <th style="width: 120px;">Thời gian giao (Cột D)</th>
+          <th style="width: 150px;">Tiến độ (Cột E)</th>
+          <th style="width: 130px;">Thời gian hoàn thành (Cột F)</th>
+          <th style="width: 130px;">Người thực hiện (Cột G)</th>
+          <th style="width: 200px;">Điểm đánh giá (Cột H)</th>
+          <th style="width: 150px;">Ghi chú (Cột I)</th>
+          <th style="width: 90px;">Xếp loại XS (J)</th>
+          <th style="width: 90px;">Xếp loại HTT (Cột K)</th>
+          <th style="width: 90px;">Xếp loại HT (Cột L)</th>
+          <th style="width: 100px;">Chưa hoàn thành (Cột M)</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function cdangTCNV(ptu) { 
+    if(!ptu) return;
+    ptu.style.height = 'auto'; 
+    ptu.style.height = (ptu.scrollHeight) + 'px'; 
+}
+
+function themDongTieuChiNV() {
+    const bg = document.querySelector('#bangTieuChiNV tbody');
+    const tr = document.createElement('tr');
+    tr.className = "dongTieuChiNV";
+    
+    tr.innerHTML = `
+        <td class="cotHanhDongNV align-middle text-center">
+            <button class="btn btn-sm btn-light nutDieuKhienNV border text-primary shadow-sm" title="Lên" onclick="diChuyenLenNV(this)"><i class="bi bi-arrow-up"></i></button>
+            <button class="btn btn-sm btn-light nutDieuKhienNV border text-primary shadow-sm" title="Xuống" onclick="diChuyenXuongNV(this)"><i class="bi bi-arrow-down"></i></button>
+            <button class="btn btn-sm btn-danger nutDieuKhienNV shadow-sm" title="Xóa" onclick="xoaDongTieuChiNV(this)"><i class="bi bi-x"></i></button>
+        </td>
+        <td class="cotSttNV align-middle"><input type="text" class="nhapSttTCNV text-center fw-bold" placeholder="1"></td>
+        <td><textarea class="nhapNoiDungTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="VD: *Nhiệm vụ chung..."></textarea></td>
+        <td><input type="text" class="nhapDiemMaxTCNV text-center text-danger fw-bold" placeholder="10"></td>
+        <td><input type="text" class="nhapTgGiaoTCNV text-center" placeholder="dd/mm/yyyy"></td>
+        <td><textarea class="nhapTienDoTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="Nhiệm vụ chung" rows="1"></textarea></td>
+        <td><input type="text" class="nhapTgHtTCNV text-center" placeholder="dd/mm/yyyy"></td>
+        <td><textarea class="nhapNguoiThTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="ALL" rows="1"></textarea></td>
+        <td><textarea class="nhapDiemDgTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="Hoàn thành|10; Chưa xong|0"></textarea></td>
+        <td><textarea class="nhapGhiChuTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="TOÀN TRƯỜNG"></textarea></td>
+        <td><input type="text" class="nhapXSTCNV text-center text-success fw-bold" placeholder=">=9"></td>
+        <td><input type="text" class="nhapHTTTCNV text-center text-primary fw-bold" placeholder=">=7"></td>
+        <td><input type="text" class="nhapHTTCNV text-center fw-bold" placeholder=">=5"></td>
+        <td><input type="text" class="nhapCHTTCNV text-center text-danger fw-bold" placeholder="<5"></td>
+    `;
+    
+    if (bg.firstChild) bg.insertBefore(tr, bg.firstChild);
+    else bg.appendChild(tr);
+    cdangTCNV(tr.querySelector('.nhapNoiDungTCNV'));
+}
+
+function xoaDongTieuChiNV(btn) {
+    if (confirm("Đồng chí có chắc chắn muốn xóa dòng tiêu chí NHÂN VIÊN này không?")) btn.closest('tr').remove();
+}
+
+function diChuyenLenNV(btn) {
+    const tr = btn.closest('tr');
+    if (tr.previousElementSibling) tr.parentNode.insertBefore(tr, tr.previousElementSibling);
+}
+
+function diChuyenXuongNV(btn) {
+    const tr = btn.closest('tr');
+    if (tr.nextElementSibling) tr.parentNode.insertBefore(tr.nextElementSibling, tr);
+}
+
+function hienThiTieuChiNV(mangDl) {
+    const bg = document.querySelector('#bangTieuChiNV tbody');
+    bg.innerHTML = "";
+    if (!mangDl || mangDl.length === 0) {
+        themDongTieuChiNV();
+        return;
+    }
+    
+    mangDl.forEach(dong => {
+        const tr = document.createElement('tr');
+        tr.className = "dongTieuChiNV";
+        
+        let es = (val) => {
+            if (val === undefined || val === null) return "";
+            if (Object.prototype.toString.call(val) === '[object Date]') {
+                return new Date(val.getTime() - (val.getTimezoneOffset() * 60000)).toISOString().split('T')[0].split('-').reverse().join('/');
+            }
+            return String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        };
+        
+        tr.innerHTML = `
+            <td class="cotHanhDongNV align-middle text-center">
+                <button class="btn btn-sm btn-light nutDieuKhienNV border text-primary shadow-sm" title="Lên" onclick="diChuyenLenNV(this)"><i class="bi bi-arrow-up"></i></button>
+                <button class="btn btn-sm btn-light nutDieuKhienNV border text-primary shadow-sm" title="Xuống" onclick="diChuyenXuongNV(this)"><i class="bi bi-arrow-down"></i></button>
+                <button class="btn btn-sm btn-danger nutDieuKhienNV shadow-sm" title="Xóa" onclick="xoaDongTieuChiNV(this)"><i class="bi bi-x"></i></button>
+            </td>
+            <td class="cotSttNV align-middle"><input type="text" class="nhapSttTCNV text-center fw-bold" placeholder="1" value="${es(dong[0])}"></td>
+            <td><textarea class="nhapNoiDungTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="VD: *Nhiệm vụ chung...">${es(dong[1])}</textarea></td>
+            <td><input type="text" class="nhapDiemMaxTCNV text-center text-danger fw-bold" placeholder="10" value="${es(dong[2])}"></td>
+            <td><input type="text" class="nhapTgGiaoTCNV text-center" placeholder="dd/mm/yyyy" value="${es(dong[3])}"></td>
+            <td><textarea class="nhapTienDoTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="Nhiệm vụ chung" rows="1">${es(dong[4])}</textarea></td>
+            <td><input type="text" class="nhapTgHtTCNV text-center" placeholder="dd/mm/yyyy" value="${es(dong[5])}"></td>
+            <td><textarea class="nhapNguoiThTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="ALL" rows="1">${es(dong[6])}</textarea></td>
+            <td><textarea class="nhapDiemDgTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="Hoàn thành|10; Chưa xong|0">${es(dong[7])}</textarea></td>
+            <td><textarea class="nhapGhiChuTCNV" oninput="cdangTCNV(this)" onfocus="cdangTCNV(this)" placeholder="TOÀN TRƯỜNG">${es(dong[8])}</textarea></td>
+            <td><input type="text" class="nhapXSTCNV text-center text-success fw-bold" placeholder=">=9" value="${es(dong[9])}"></td>
+            <td><input type="text" class="nhapHTTTCNV text-center text-primary fw-bold" placeholder=">=7" value="${es(dong[10])}"></td>
+            <td><input type="text" class="nhapHTTCNV text-center fw-bold" placeholder=">=5" value="${es(dong[11])}"></td>
+            <td><input type="text" class="nhapCHTTCNV text-center text-danger fw-bold" placeholder="<5" value="${es(dong[12])}"></td>
+        `;
+        bg.appendChild(tr);
+    });
+    
+    setTimeout(() => { document.querySelectorAll('#bangTieuChiNV textarea').forEach(txt => cdangTCNV(txt)); }, 100);
+}
+
+function capNhatTieuChiNV() {
+    if (!confirm("Đồng chí có chắc chắn muốn ghi đè toàn bộ dữ liệu hiện tại lên trang tính hệ thống (Sheet: TieuChiNV) không?")) return;
+    
+    const nutLuu = document.getElementById("nutLuuTieuChiNV");
+    if(nutLuu) nutLuu.disabled = true;
+    if(typeof hienTaiDl === 'function') hienTaiDl("🚀 Đang đồng bộ dữ liệu Tiêu chí Nhân viên...");
+    
+    let mangMoi = [];
+    document.querySelectorAll('#bangTieuChiNV tbody tr.dongTieuChiNV').forEach(tr => {
+        let r0 = tr.querySelector('.nhapSttTCNV').value;
+        let r1 = tr.querySelector('.nhapNoiDungTCNV').value;
+        let r2 = tr.querySelector('.nhapDiemMaxTCNV').value;
+        let r3 = tr.querySelector('.nhapTgGiaoTCNV').value;
+        let r4 = tr.querySelector('.nhapTienDoTCNV').value;
+        let r5 = tr.querySelector('.nhapTgHtTCNV').value;
+        let r6 = tr.querySelector('.nhapNguoiThTCNV').value;
+        let r7 = tr.querySelector('.nhapDiemDgTCNV').value;
+        let r8 = tr.querySelector('.nhapGhiChuTCNV').value;
+        let r9 = tr.querySelector('.nhapXSTCNV').value;
+        let r10 = tr.querySelector('.nhapHTTTCNV').value;
+        let r11 = tr.querySelector('.nhapHTTCNV').value;
+        let r12 = tr.querySelector('.nhapCHTTCNV').value;
+        
+        if(String(r1).trim() !== "") {
+            mangMoi.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
+        }
+    });
+
+    const dlGoi = { hdong: "capnhatTieuChiNV", dlbang: mangMoi };
+
+    const fnThanhCong = function(kqTho) {
+        if(typeof anTaiDl === 'function') anTaiDl();
+        if(nutLuu) nutLuu.disabled = false;
+        
+        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        let laThanhCong = (kq === true || (kq && kq.ttai === 'tcong'));
+        
+        if(laThanhCong) {
+            if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã cập nhật đồng bộ Tiêu chí Nhân viên lên máy chủ thành công!');
+            else alert("Cập nhật thành công!");
+        } else {
+            let tb = kq ? (kq.tbao || "Lỗi không xác định") : "Không có phản hồi hợp lệ.";
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi cập nhật: ' + tb);
+            else alert("Lỗi: " + tb);
+        }
+    };
+
+    const fnLoi = function(loi) {
+        if(typeof anTaiDl === 'function') anTaiDl();
+        if(nutLuu) nutLuu.disabled = false;
+        let loiMsg = (loi && loi.message) ? loi.message : String(loi);
+        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi máy chủ: ' + loiMsg);
+        else alert("Lỗi máy chủ: " + loiMsg);
+    };
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(fnThanhCong).withFailureHandler(fnLoi).pgv_capnhat_tieuchi_nv(dlGoi);
+    } else if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong(dlGoi, fnThanhCong, fnLoi);
+    } else {
+        if(typeof anTaiDl === 'function') anTaiDl();
+        if(nutLuu) nutLuu.disabled = false;
+        alert("Lỗi: Chưa liên kết được API ghi dữ liệu hệ thống.");
+    }
+}
+
+function khoiDongTabTieuChiNV() {
+    if(typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải Tiêu chí đánh giá Nhân viên...");
+    
+    const fnThanhCong = function(kqTho) {
+        if(typeof anTaiDl === 'function') anTaiDl();
+        
+        let mangDuLieu = null;
+        
+        if (Array.isArray(kqTho)) {
+            mangDuLieu = kqTho;
+        } else if (kqTho && Array.isArray(kqTho.dliu)) {
+            mangDuLieu = kqTho.dliu;
+        }
+
+        if (mangDuLieu !== null) {
+            hienThiTieuChiNV(mangDuLieu);
+        } else {
+            hienThiTieuChiNV([]);
+            let tb = (kqTho && kqTho.tbao) ? kqTho.tbao : "Dữ liệu trả về trống hoặc trang tính đang rỗng.";
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Chưa tải được dữ liệu: ' + tb);
+        }
+    };
+    
+    const fnLoi = function(loi) {
+        if(typeof anTaiDl === 'function') anTaiDl();
+        hienThiTieuChiNV([]);
+        let loiMsg = (loi && loi.message) ? loi.message : String(loi);
+        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi kết nối Server: ' + loiMsg);
+    };
+    
+    const dlGoi = { hdong: "laydlTieuChiNV" };
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(fnThanhCong).withFailureHandler(fnLoi).pgv_laydl_tieuchi_nv();
+    } else if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong(dlGoi, fnThanhCong, fnLoi);
+    } else {
+        if(typeof anTaiDl === 'function') anTaiDl();
+        alert("Lỗi: API đọc dữ liệu hệ thống chưa được thiết lập.");
+    }
+}
+</script>
