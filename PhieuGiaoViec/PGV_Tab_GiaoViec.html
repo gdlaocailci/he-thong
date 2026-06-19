@@ -135,7 +135,7 @@
         <button id="btnCapNhatChung" class="btn btn-warning btn-sm fw-bold ms-3 shadow-sm" style="display:none;" onclick="gvCapNhatNhiemVuChung()"><i class="bi bi-pencil-square"></i> Cập nhật nhiệm vụ chung</button>
       </div>
       <div class="hopLoc">
-        <button id="gvNutChth" class="btn btn-danger btn-sm fw-bold nhapTuyChinh" style="color: white; border: none; padding: 4px 10px;" onclick="gvXlmChth(this)">Chuyển tháng mới</button>
+        <button id="gvNutChth" class="btn btn-danger btn-sm fw-bold nhapTuyChinh" style="display:none; color: white; border: none; padding: 4px 10px;" onclick="gvXlmChth(this)">Chuyển tháng mới</button>
         <input type="text" id="gvLocNam" class="form-control nhapTuyChinh" style="width: 140px; background-color: #ffffff;" disabled placeholder="Năm học">
         <select id="gvLocThang" class="form-select nhapTuyChinh" style="width: 120px;">
           <option value="Tháng 1">Tháng 1</option><option value="Tháng 2">Tháng 2</option><option value="Tháng 3">Tháng 3</option><option value="Tháng 4">Tháng 4</option><option value="Tháng 5">Tháng 5</option><option value="Tháng 6">Tháng 6</option><option value="Tháng 7">Tháng 7</option><option value="Tháng 8">Tháng 8</option><option value="Tháng 9">Tháng 9</option><option value="Tháng 10">Tháng 10</option><option value="Tháng 11">Tháng 11</option><option value="Tháng 12">Tháng 12</option>
@@ -192,19 +192,19 @@
         let btnClass = 'gv-modal-btn-primary';
         
         switch(loai) {
-            case 'tc': // thành công
+            case 'tc':
                 icon = '✓';
                 iconClass = 'gv-modal-icon-success';
                 title = 'THÀNH CÔNG';
                 btnClass = 'gv-modal-btn-success';
                 break;
-            case 'loi': // lỗi
+            case 'loi':
                 icon = '✗';
                 iconClass = 'gv-modal-icon-error';
                 title = 'LỖI';
                 btnClass = 'gv-modal-btn-danger';
                 break;
-            case 'cbh': // cảnh báo
+            case 'cbh':
                 icon = '⚠';
                 iconClass = 'gv-modal-icon-warning';
                 title = 'CẢNH BÁO';
@@ -216,11 +216,9 @@
                 title = 'THÔNG BÁO';
         }
         
-        // Xóa modal cũ nếu có
         const oldModal = document.querySelector('.gv-modal-overlay');
         if (oldModal) oldModal.remove();
         
-        // Tạo modal mới
         const modalOverlay = document.createElement('div');
         modalOverlay.className = 'gv-modal-overlay';
         modalOverlay.innerHTML = `
@@ -240,17 +238,14 @@
         
         document.body.appendChild(modalOverlay);
         
-        // Xử lý đóng modal
         const closeModal = () => {
             modalOverlay.remove();
             if (callback && typeof callback === 'function') callback();
         };
         
-        // Nút đóng
         const btn = modalOverlay.querySelector('.gv-modal-btn');
         if (btn) btn.addEventListener('click', closeModal);
         
-        // Click outside để đóng
         modalOverlay.addEventListener('click', function(e) {
             if (e.target === modalOverlay) closeModal();
         });
@@ -285,7 +280,6 @@
         }); 
     }
 
-    // HÀM CHUẨN: tự động giãn textarea SAU KHI RENDER HOÀN TẤT
     function gvAutoResizeAllTextareas() {
         requestAnimationFrame(() => {
             setTimeout(() => {
@@ -308,11 +302,9 @@
     function gvKhiTaiXong(dl) {
         gvDatTai(false);
         
-        // Kiểm tra dữ liệu đầu vào
         if (!dl || typeof dl !== 'object') {
             console.error("Dữ liệu trả về không hợp lệ:", dl);
             gvTbaoNhanh('loi', "Dữ liệu trả về bị lỗi hoặc không đúng định dạng. Vui lòng thử lại.");
-            // Vẫn hiển thị bảng trống để không bị treo
             document.getElementById('gvThanBang').innerHTML = '';
             return;
         }
@@ -353,26 +345,29 @@
             gvTbaoNhanh('loi', "Lỗi xử lý dữ liệu: " + err.message);
         }
 
-        // Phân quyền (giữ nguyên logic cũ)
+        // [ĐÃ FIX TRIỆT ĐỂ] Bóc tách định tuyến tường minh cho 3 cấp độ: xxx, xx và phần còn lại
         let quyen = ''; 
         if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen) { 
             quyen = canbHientai.quyen; 
         }
-        const isAdmin = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.qchon === true);
+        
         const btnChung = document.getElementById('btnCapNhatChung'); 
         const btnChuyenThang = document.getElementById('gvNutChth');
         
-        if (quyen === 'x') { 
-            if (btnChung) btnChung.style.display = 'none'; 
-            if (btnChuyenThang) btnChuyenThang.style.display = 'none'; 
+        if (quyen === 'xxx') { 
+            // Quyền XXX (Quản trị VIP): Toàn quyền kiểm soát
+            if (btnChung) btnChung.style.display = 'inline-block'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = 'flex'; 
         } 
         else if (quyen === 'xx') { 
+            // Quyền XX (Quản trị): Chỉ được chuyển tháng, KHÔNG được cập nhật tiêu chí chung
             if (btnChung) btnChung.style.display = 'none'; 
             if (btnChuyenThang) btnChuyenThang.style.display = 'flex'; 
         }
         else { 
-            if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; 
-            if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; 
+            // Quyền X (Giao việc lẻ), GS (Giám sát), hoặc rỗng: KHÔNG được chuyển tháng và cập nhật chung
+            if (btnChung) btnChung.style.display = 'none'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = 'none'; 
         }
     }
 
@@ -481,7 +476,7 @@
         ptu.value = v; 
     }
   
-    function gvThemDong() {
+   function gvThemDong() {
         const tbody = $('#gvThanBang');
         if (!tbody || tbody.length === 0) return;
         const lastRow = tbody.find('tr:last');
@@ -506,7 +501,10 @@
 
         $newRow.find('.oSttGv').val(newStt);
         $newRow.find('.oNdGv, .oGchuGv').val('');
-        $newRow.find('.oDmaxGv').val('');
+        
+        // [ĐÃ CẬP NHẬT] Nhân bản giá trị Điểm Max (Cột C) từ dòng trên
+        $newRow.find('.oDmaxGv').val(lastRow.find('.oDmaxGv').val()); 
+        
         $newRow.find('.oTGGiao').val('');
         $newRow.find('.oTdoGv').val('');
         $newRow.find('.oNnghanGv').val('');
