@@ -369,6 +369,7 @@
                         <th style="min-width: 180px">Hộp thư (Email)</th>
                         <th style="min-width: 150px">Tên hiển thị</th>
                         <th style="width: 130px">Quyền</th>
+                        <th style="width: 120px">Chức vụ</th>
                     </tr>
                 </thead>
                 <tbody id="quyenTableBodyPQ">
@@ -478,26 +479,32 @@
         
         // ==================== CÁC HÀM XỬ LÝ DỮ LIỆU ====================
         function layDanhSach() {
-            return new Promise(function(resolve, reject) {
-                callApi('laydlkhai bao', {}, function(res) {
-                    var raw = res.dliu || [];
-                    var list = raw.map(function(row) {
-                        return {
-                            idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
-                            email: (row[1] || '').trim(),
-                            tenHienThi: (row[2] || '').trim(),
-                            quyen: (row[3] || '').trim()
-                        };
-                    });
-                    resolve(list);
-                }, reject);
+    return new Promise(function(resolve, reject) {
+        callApi('laydlkhai bao', {}, function(res) {
+            var raw = res.dliu || [];
+            var list = raw.map(function(row) {
+                
+                // [ĐÃ FIX] Đọc cột F và ép giá trị mặc định nếu ô trên Sheet đang trống
+                var cv = (row[4] !== undefined && row[4] !== null) ? String(row[4]).trim() : '';
+                if (cv === '') cv = 'gv'; 
+
+                return {
+                    idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
+                    email: (row[1] || '').trim(),
+                    tenHienThi: (row[2] || '').trim(),
+                    quyen: (row[3] || '').trim(),
+                    chucVu: cv // Đưa vào mảng bộ nhớ với giá trị 'gv' chuẩn xác
+                };
             });
-        }
+            resolve(list);
+        }, reject);
+    });
+}
         
         function capNhatDanhSach(list) {
             return new Promise(function(resolve, reject) {
                 var dataToSave = list.map(function(item) {
-                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen];
+                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen, item.chucVu];
                 });
                 callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
             });
@@ -741,7 +748,26 @@
                 inpName.placeholder = 'Họ và tên';
                 inpName.maxLength = 200;
                 tdName.appendChild(inpName);
-                
+
+              // --- BẮT ĐẦU ĐOẠN BỔ SUNG CỘT CHỨC VỤ ---
+              var tdChucVu = document.createElement('td');
+              var selChucVu = document.createElement('select');
+              selChucVu.className = 'chucvu-select quyen-select'; // Tận dụng CSS của quyen-select
+              selChucVu.setAttribute('data-idx', i);
+              
+              var cvOpts = ['gv', 'nv'];
+              var cvLabels = ['Giáo viên', 'Nhân viên'];
+              var currentCv = item.chucVu || 'gv'; // Mặc định là giáo viên
+              
+              for (var j = 0; j < cvOpts.length; j++) {
+                  var optionCV = document.createElement('option');
+                  optionCV.value = cvOpts[j];
+                  optionCV.innerText = cvLabels[j];
+                  if (currentCv === cvOpts[j]) optionCV.selected = true;
+                  selChucVu.appendChild(optionCV);
+              }
+              tdChucVu.appendChild(selChucVu);
+             
                 // Cột Quyền
                 var tdQuyen = document.createElement('td');
                 var sel = document.createElement('select');
@@ -768,6 +794,7 @@
                 tr.appendChild(tdEmail);
                 tr.appendChild(tdName);
                 tr.appendChild(tdQuyen);
+                tr.appendChild(tdChucVu);
                 tbody.appendChild(tr);
             }
             
@@ -845,8 +872,14 @@
                     currentList[idx].quyen = this.value;
                 };
             });
+              $$('.chucvu-select').forEach(function(sel) {
+           sel.onchange = function() {
+               var idx = parseInt(this.getAttribute('data-idx'));
+               currentList[idx].chucVu = this.value;
+           };
+       });
         }
-        
+            
         // Hàm kiểm tra email hợp lệ
         function isValidEmail(email) {
             if (!email) return true;
@@ -860,6 +893,7 @@
                 idSheet: '', 
                 email: '', 
                 tenHienThi: '', 
+                chucVu: 'gv', // BỔ SUNG KHAI BÁO MẶC ĐỊNH LÀ GIÁO VIÊN
                 quyen: '' 
             });
             renderTable();
