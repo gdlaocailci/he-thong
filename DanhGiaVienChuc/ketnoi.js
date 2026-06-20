@@ -3,7 +3,7 @@
    CHỨC NĂNG: LƯU TRỮ VÀ ĐỒNG BỘ TOÀN BỘ CÁC THÔNG SỐ ĐỊNH DANH HỆ THỐNG
    ========================================================================== */
 
-var DG_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbyfW0HDpryuXX9HqqEAS7Ggec1iXbSdcUGjMxcZMvnREjhD5CkJuVZFvII899dKwrcV/exec";
+var DG_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbynhXlUEopWNlbpbRaD3e50Y0xwevEXIK53VpmOEWMZfhsSnfqxvFctSPeNMRc7709aHw/exec";
 
 var DG_LINK_LOGO = "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png"; 
 
