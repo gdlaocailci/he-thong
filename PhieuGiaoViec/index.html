@@ -672,29 +672,31 @@
         }, function(l) { if(!amtham) khiLoiMayChu(l); }); 
     }
     
-    function veBangThop() { 
-        if (!Array.isArray(dlThopGoc)) dlThopGoc = [];
-        const nchon = $('#locNamThop').val(), tb = $('#bangThop tbody').empty(); 
-        if (!nchon) { 
-            tb.append('<tr><td colspan="15" class="text-center text-muted">Vui lòng chọn Năm học.</td></tr>'); 
-            return; 
-        } 
-        let bc = {}; 
-        dlThopGoc.forEach(r => { 
-            if (String(r[2]) !== nchon || !r[0]) return; 
-            if (!bc[r[0]]) bc[r[0]] = { tenn: r[0], thangs: {} }; 
-            let mt = parseInt(String(r[3]).match(/(\d{1,2})/)?.[0]); 
-            if (mt) bc[r[0]].thangs[mt] = r[4]; 
-        }); 
-        let stth = 1; 
-        const tho = [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6]; 
-        for (const k in bc) { 
-            const gr = bc[k]; 
-            let dr = `<tr><td class="text-center">${stth++}</td><td class="fw-bold text-primary" style="font-size: 13px;">${gr.tenn}</td><td><input type="text" class="form-control form-control-sm border-0 bg-transparent text-center fw-bold text-danger" disabled placeholder="..."></td>`; 
-            tho.forEach(m => dr += `<td class="text-center small ${gr.thangs[m] ? 'bg-light' : ''}">${gr.thangs[m] || '-'}</td>`); 
-            tb.append(dr + '</tr>'); 
-        } 
-    }
+   function veBangThop() { 
+    if (!Array.isArray(dlThopGoc)) dlThopGoc = [];
+    const nchon = $('#locNamThop').val(), tb = $('#bangThop tbody').empty(); 
+    if (!nchon) { 
+        tb.append('<tr><td colspan="15" class="text-center text-muted">Vui lòng chọn Năm học.</td></tr>'); 
+        return; 
+    } 
+    let bc = {}; 
+    dlThopGoc.forEach(r => { 
+        if (String(r[2]) !== nchon || !r[0]) return; 
+        if (!bc[r[0]]) bc[r[0]] = { tenn: r[0], thangs: {} }; 
+        let mt = parseInt(String(r[3]).match(/(\d{1,2})/)?.[0]); 
+        if (mt) bc[r[0]].thangs[mt] = r[4]; 
+    }); 
+    let stth = 1; 
+    const tho = [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6]; 
+    let chuoi_html = ""; // TỐI ƯU: Khởi tạo biến gom chuỗi
+    for (const k in bc) { 
+        const gr = bc[k]; 
+        let dr = `<tr><td class="text-center">${stth++}</td><td class="fw-bold text-primary" style="font-size: 13px;">${gr.tenn}</td><td><input type="text" class="form-control form-control-sm border-0 bg-transparent text-center fw-bold text-danger" disabled placeholder="..."></td>`; 
+        tho.forEach(m => dr += `<td class="text-center small ${gr.thangs[m] ? 'bg-light' : ''}">${gr.thangs[m] || '-'}</td>`); 
+        chuoi_html += dr + '</tr>'; // TỐI ƯU: Nối chuỗi thay vì vẽ trực tiếp
+    } 
+    tb.html(chuoi_html); // TỐI ƯU: Gọi hàm cập nhật DOM 1 lần duy nhất
+}
     
     function veBangNghi() { 
         if (!Array.isArray(dlNghiGoc)) dlNghiGoc = [];
