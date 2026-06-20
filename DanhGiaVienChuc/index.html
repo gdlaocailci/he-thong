@@ -807,16 +807,28 @@ function f_x_c() {
         kDauH1.innerText = kDauH1.getAttribute('data-original-text');
     }
 
+    let vungThuNhat = document.getElementById("vungThuNhat");
     let vungThuHai = document.getElementById("vungThuHai");
     let oNhap = document.getElementById("oNhapChinh");
-    if (vungThuHai && !vungThuHai.classList.contains("a-di") && oNhap && oNhap.value.trim() !== "") {
+    let tbg = document.getElementById("t-b-g");
+
+    // XỬ LÝ GIAO DIỆN: Hiển thị lại vùng dữ liệu ngay lập tức
+    if (vungThuNhat) vungThuNhat.classList.add("a-di");
+    if (vungThuHai) vungThuHai.classList.remove("a-di");
+
+    // KIỂM TRA BỘ NHỚ ĐỆM (CACHE DOM) ĐỂ TRÁNH GỌI MÁY CHỦ
+    if (tbg && tbg.innerHTML.trim() !== "" && oNhap && oNhap.value.trim() !== "") {
+        // Tái kích hoạt tính toán điểm không qua mạng
         if (typeof f_x_h === "function") f_x_h();
+        
+        // Khôi phục bộ lọc theo quyền
         if (sessionStorage.getItem("HTDG_IS_ADMIN") === "true" || sessionStorage.getItem("HTDG_IS_ADMIN_VIP") === "true") {
             if(document.getElementById("vungChonAdmin")) document.getElementById("vungChonAdmin").style.display = "block";
         } else {
             if(document.getElementById("vungHienThiNamHoc")) document.getElementById("vungHienThiNamHoc").style.display = "block";
         }
     } else {
+        // Chỉ gọi máy chủ (GAS) khi thực sự chưa có dữ liệu
         if (typeof f_x_d === "function") f_x_d(); 
     }
 }
