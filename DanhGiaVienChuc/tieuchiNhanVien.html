@@ -1,8 +1,7 @@
 <script>
 /**
  * MODULE: QUẢN LÝ TIÊU CHÍ ĐÁNH GIÁ NHÂN VIÊN
- * Tham chiếu sheet: CHITIEUNV
- * Các chức năng: thêm/xóa dòng, di chuyển lên/xuống, lưu cập nhật, tự động resize textarea
+ * Tối ưu hóa: Gọi hàm Global AutoResizeTextarea từ index.html
  */
 (function() {
     if (document.getElementById('tieuchi-nhanvien-ui')) return;
@@ -139,12 +138,15 @@
     }
 })();
 
-// Biến toàn cục cho module nhân viên
 var tcnv_DuLieuGoc = [];
 var tcnv_NamHocGoc = "";
 
-// Hàm tải dữ liệu từ sheet CHITIEUNV
 async function tcnv_TaiDuLieu() {
+    if (tcnv_DuLieuGoc && tcnv_DuLieuGoc.length > 0) {
+        tcnv_HienThiBang();
+        return;
+    }
+
     if (typeof f_x_j === 'function') f_x_j(true);
     try {
         const gasUrl = (typeof DG_CONFIG_GAS_URL !== 'undefined') ? DG_CONFIG_GAS_URL : "";
@@ -155,9 +157,6 @@ async function tcnv_TaiDuLieu() {
                 tcnv_NamHocGoc = response.nam_hoc;
                 const inpNam = document.getElementById('tcnv-namhoc');
                 if (inpNam) inpNam.value = response.nam_hoc;
-            } else {
-                console.warn("API get_tieuchi_nhanvien không trả về nam_hoc. Vui lòng cập nhật backend.");
-                hienThiThongBaoUI("Lỗi: Hệ thống không đọc được năm học từ sheet. Vui lòng nhập tay hoặc kiểm tra backend.");
             }
             tcnv_HienThiBang();
         } else {
@@ -169,7 +168,6 @@ async function tcnv_TaiDuLieu() {
     if (typeof f_x_j === 'function') f_x_j(false);
 }
 
-// Hiển thị bảng từ dữ liệu gốc
 function tcnv_HienThiBang() {
     const tbody = document.getElementById('tcnv-tbody');
     if (!tbody) return;
@@ -177,11 +175,9 @@ function tcnv_HienThiBang() {
     tcnv_DuLieuGoc.forEach((item, idx) => {
         tbody.insertAdjacentHTML('beforeend', tcnv_TaoDong(idx, item));
     });
-    tcnv_AutoResizeTextarea();
-    setTimeout(tcnv_AutoResizeTextarea, 50);
+    if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcnv-tbody');
 }
 
-// Tạo một dòng HTML
 function tcnv_TaoDong(index, item) {
     const tieu_chi = escapeHtml(item.tieu_chi || '');
     const thang_gia_tri = escapeHtml(item.thang_gia_tri || '');
@@ -208,7 +204,6 @@ function tcnv_TaoDong(index, item) {
     </tr>`;
 }
 
-// Di chuyển dòng lên/xuống
 function tcnv_DiChuyen(btn, direction) {
     const row = btn.closest('tr');
     const tbody = row.parentNode;
@@ -223,47 +218,25 @@ function tcnv_DiChuyen(btn, direction) {
         return;
     }
     tcnv_CapNhatSTT();
-    tcnv_AutoResizeTextarea();
+    if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcnv-tbody');
 }
 
-// Tự động resize textarea
-function tcnv_AutoResizeTextarea() {
-    document.querySelectorAll('#tcnv-tbody textarea').forEach(ta => {
-        ta.style.overflow = 'hidden';
-        ta.style.height = 'auto';
-        let newHeight = ta.scrollHeight;
-        ta.style.height = newHeight + 'px';
-        ta.removeEventListener('input', tcnv_ResizeHandler);
-        ta.addEventListener('input', tcnv_ResizeHandler);
-    });
-}
-
-function tcnv_ResizeHandler(e) {
-    const ta = e.target;
-    ta.style.overflow = 'hidden';
-    ta.style.height = 'auto';
-    ta.style.height = ta.scrollHeight + 'px';
-}
-
-// Thêm dòng mới vào đầu bảng
 function tcnv_ThemDong() {
     const tbody = document.getElementById('tcnv-tbody');
     const emptyItem = { tieu_chi: '', thang_gia_tri: '', quy_diem: '', xuat_sac: '', htt: '', hoan_thanh: '', cht: '' };
     tbody.insertAdjacentHTML('afterbegin', tcnv_TaoDong(0, emptyItem));
     tcnv_CapNhatSTT();
-    tcnv_AutoResizeTextarea();
+    if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcnv-tbody');
 }
 
-// Xóa dòng
 function tcnv_XoaDong(btn) {
     if (confirm("Xóa tiêu chí này khỏi danh sách?")) {
         btn.closest('tr').remove();
         tcnv_CapNhatSTT();
-        tcnv_AutoResizeTextarea();
+        if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcnv-tbody');
     }
 }
 
-// Cập nhật lại số thứ tự
 function tcnv_CapNhatSTT() {
     const tbody = document.getElementById('tcnv-tbody');
     if (!tbody) return;
@@ -273,7 +246,6 @@ function tcnv_CapNhatSTT() {
     });
 }
 
-// Lưu cập nhật lên server
 async function tcnv_LuuCapNhat() {
     const tbody = document.getElementById('tcnv-tbody');
     const newData = [];
@@ -318,6 +290,7 @@ async function tcnv_LuuCapNhat() {
         setTimeout(() => {
             if (overlay) overlay.style.display = "none";
             tcnv_ThongBaoThanhCong("Đã cập nhật bảng tiêu chí nhân viên và năm học thành công!");
+            tcnv_DuLieuGoc = []; 
             tcnv_TaiDuLieu();
         }, 1500);
     } catch (err) {
@@ -326,7 +299,6 @@ async function tcnv_LuuCapNhat() {
     }
 }
 
-// Hiển thị thông báo thành công (dùng chung hộp thoại hệ thống)
 function tcnv_ThongBaoThanhCong(noiDung) {
     const hopThongBao = document.getElementById("o-thong-bao");
     if (hopThongBao) {
@@ -351,7 +323,6 @@ function tcnv_ThongBaoThanhCong(noiDung) {
     }
 }
 
-// Hàm escapeHtml dùng chung
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -362,7 +333,6 @@ function escapeHtml(str) {
     });
 }
 
-// Gắn các hàm vào window để có thể gọi từ onclick
 if (typeof window.tcnv_TaiDuLieu === 'undefined') {
     window.tcnv_TaiDuLieu = tcnv_TaiDuLieu;
     window.tcnv_ThemDong = tcnv_ThemDong;
