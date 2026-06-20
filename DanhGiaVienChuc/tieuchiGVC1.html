@@ -1,7 +1,7 @@
 <script>
 /**
  * MODULE: QUẢN LÝ TIÊU CHÍ ĐÁNH GIÁ GIÁO VIÊN CẤP 1
- * Bổ sung: Di chuyển dòng lên/xuống (dọc), giữ nguyên mọi chức năng khác.
+ * Tối ưu hóa: Gọi hàm Global AutoResizeTextarea từ index.html
  */
 (function() {
     if (document.getElementById('tieuchi-gvc1-ui')) return;
@@ -32,7 +32,6 @@
         .table-tieuchi th { background: #e9ecef; color: var(--mau-c); font-size: 15px; font-weight: bold; text-align: center; }
         .table-tieuchi td { text-align: left; }
         
-        /* Khử thanh cuộn textarea triệt để */
         .table-tieuchi textarea {
             width: 100%;
             border: none;
@@ -59,7 +58,6 @@
             background: #fef9e6;
         }
         
-        /* Nút bấm theo cột dọc */
         .td-buttons {
             text-align: center;
             white-space: nowrap;
@@ -144,12 +142,12 @@ var tcgvc1_DuLieuGoc = [];
 var tcgvc1_NamHocGoc = "";
 
 async function tcgvc1_TaiDuLieu() {
-    // Nếu đã có dữ liệu rồi thì chỉ hiển thị ra, không gọi API nữa
     if (tcgvc1_DuLieuGoc && tcgvc1_DuLieuGoc.length > 0) {
         tcgvc1_HienThiBang();
         return;
     }
-   if (typeof f_x_j === 'function') f_x_j(true);
+
+    if (typeof f_x_j === 'function') f_x_j(true);
     try {
         const gasUrl = (typeof DG_CONFIG_GAS_URL !== 'undefined') ? DG_CONFIG_GAS_URL : "";
         const response = await fetchAPI(gasUrl + "?z_p_a=get_tieuchi_gvc1");
@@ -159,9 +157,6 @@ async function tcgvc1_TaiDuLieu() {
                 tcgvc1_NamHocGoc = response.nam_hoc;
                 const inpNam = document.getElementById('tcgvc1-namhoc');
                 if (inpNam) inpNam.value = response.nam_hoc;
-            } else {
-                console.warn("API get_tieuchi_gvc1 không trả về nam_hoc. Vui lòng cập nhật backend.");
-                hienThiThongBaoUI("Lỗi: Hệ thống không đọc được năm học từ sheet. Vui lòng nhập tay hoặc kiểm tra backend.");
             }
             tcgvc1_HienThiBang();
         } else {
@@ -180,8 +175,7 @@ function tcgvc1_HienThiBang() {
     tcgvc1_DuLieuGoc.forEach((item, idx) => {
         tbody.insertAdjacentHTML('beforeend', tcgvc1_TaoDong(idx, item));
     });
-    tcgvc1_AutoResizeTextarea();
-  //  setTimeout(tcgvc1_AutoResizeTextarea, 50);
+    if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcgvc1-tbody');
 }
 
 function tcgvc1_TaoDong(index, item) {
@@ -224,33 +218,7 @@ function tcgvc1_DiChuyen(btn, direction) {
         return;
     }
     tcgvc1_CapNhatSTT();
-    tcgvc1_AutoResizeTextarea();
-}
-
-function tcgvc1_AutoResizeTextarea() {
-    const textareas = document.querySelectorAll('#tcgvc1-tbody textarea');
-    
-    // Gán sự kiện trước
-    textareas.forEach(ta => {
-        ta.removeEventListener('input', tcgvc1_ResizeHandler);
-        ta.addEventListener('input', tcgvc1_ResizeHandler);
-    });
-
-    // Đẩy việc tính toán chiều cao vào luồng render của trình duyệt để tránh Layout Thrashing
-    requestAnimationFrame(() => {
-        textareas.forEach(ta => {
-            ta.style.overflow = 'hidden';
-            ta.style.height = 'auto';
-            ta.style.height = ta.scrollHeight + 'px';
-        });
-    });
-}
-
-function tcgvc1_ResizeHandler(e) {
-    const ta = e.target;
-    ta.style.overflow = 'hidden';
-    ta.style.height = 'auto';
-    ta.style.height = ta.scrollHeight + 'px';
+    if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcgvc1-tbody');
 }
 
 function tcgvc1_ThemDong() {
@@ -258,14 +226,14 @@ function tcgvc1_ThemDong() {
     const emptyItem = { tieu_chi: '', thang_gia_tri: '', quy_diem: '', xuat_sac: '', htt: '', hoan_thanh: '', cht: '' };
     tbody.insertAdjacentHTML('afterbegin', tcgvc1_TaoDong(0, emptyItem));
     tcgvc1_CapNhatSTT();
-    tcgvc1_AutoResizeTextarea();
+    if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcgvc1-tbody');
 }
 
 function tcgvc1_XoaDong(btn) {
     if (confirm("Xóa tiêu chí này khỏi danh sách?")) {
         btn.closest('tr').remove();
         tcgvc1_CapNhatSTT();
-        tcgvc1_AutoResizeTextarea();
+        if (typeof f_x_auto_resize_textarea === 'function') f_x_auto_resize_textarea('tcgvc1-tbody');
     }
 }
 
@@ -322,6 +290,7 @@ async function tcgvc1_LuuCapNhat() {
         setTimeout(() => {
             if (overlay) overlay.style.display = "none";
             tcgvc1_ThongBaoThanhCong("Đã cập nhật bảng tiêu chí và năm học thành công!");
+            tcgvc1_DuLieuGoc = []; 
             tcgvc1_TaiDuLieu();
         }, 1500);
     } catch (err) {
