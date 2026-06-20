@@ -214,7 +214,6 @@
                 <span class="b-tuong">👥</span> Quản lý quyền
             </span>
             
-            <!-- Tab mẹ Tiêu chí đánh giá -->
             <span class="the-chuyen" id="menu-tieu-chi-cha" style="display: none;" onclick="toggleSubmenuTieuChi(event)">
                 <span class="b-tuong">📋</span> Tiêu chí đánh giá
                 <span style="margin-left: auto; font-size: 14px;">▼</span>
@@ -522,14 +521,10 @@ function v_hien_thi_menu_admin(hienThi) {
     if (mn1) mn1.style.display = kieu;
     if (mnCha) {
         mnCha.style.display = kieu;
-        // Không tự động mở submenu, giữ nguyên trạng thái đóng (display: none)
-        // Tuy nhiên, nếu muốn đảm bảo submenu đóng khi hiển thị menu cha, ta set:
-       submenu.style.display = hienThi ? "none" : "none"; // vẫn là none
-        // Mũi tên vẫn hiển thị hướng xuống ▼ (thu gọn)
+       submenu.style.display = hienThi ? "none" : "none";
         const arrowSpan = mnCha.querySelector('span:last-child');
         if (arrowSpan) arrowSpan.innerHTML = '▼';
     }
-    // Các mục con vẫn giữ style của riêng chúng, nhưng đã nằm trong submenu nên không cần set lại
     let mn2 = document.getElementById("menu-tieu-chi-gv-c1");
     let mn3 = document.getElementById("menu-tieu-chi-gv-c2");
     let mn4 = document.getElementById("menu-tieu-chi-nv");
@@ -604,7 +599,9 @@ async function f_x_vao_khach() {
     if (document.getElementById('bo-cuc-he-thong')) document.getElementById('bo-cuc-he-thong').style.display = 'flex';
     
     let theHien = document.getElementById('ui-ten-hien-thi');
-    if (theHien) theHien.innerText = "KHÁCH THAM QUAN";
+    if (theHien) {
+        theHien.innerText = "KHÁCH THAM QUAN";
+    }
     
     const p_n = objNhom.value;
     let hienNhom = document.getElementById('ui-phan-loai');
@@ -712,7 +709,6 @@ function f_x_mo_quan_ly_quyen() {
     }
 }
 
-// ================= MODULE TIÊU CHÍ =================
 function f_x_mo_tieu_chi_gv_c1() {
     if(document.getElementById("vungThuNhat")) document.getElementById("vungThuNhat").classList.add("a-di");
     if(document.getElementById("vungThuHai")) document.getElementById("vungThuHai").classList.add("a-di");
@@ -787,7 +783,6 @@ function f_x_mo_tieu_chi_nv() {
         hienThiThongBaoUI("Module quản lý tiêu chí nhân viên chưa được tải xong.");
     }
 }
-// ================= KẾT THÚC MODULE TIÊU CHÍ =================
 
 function f_x_c() {
     let vungQuyen = document.getElementById("cap-quyen-ui");
@@ -1477,6 +1472,32 @@ async function f_x_xuat_pdf() {
         if (typeof dongCanhBaoUI === "function") dongCanhBaoUI(); 
     }
 }
+
+// ================= HÀM DÙNG CHUNG: ĐIỀU CHỈNH KÍCH THƯỚC Ô NHẬP LIỆU =================
+function f_x_resize_handler(e) {
+    const ta = e.target;
+    ta.style.overflow = 'hidden';
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+}
+
+function f_x_auto_resize_textarea(containerId) {
+    const textareas = document.querySelectorAll('#' + containerId + ' textarea');
+    textareas.forEach(ta => {
+        ta.removeEventListener('input', f_x_resize_handler);
+        ta.addEventListener('input', f_x_resize_handler);
+    });
+    
+    // Tối ưu hóa hiệu năng render
+    requestAnimationFrame(() => {
+        textareas.forEach(ta => {
+            ta.style.overflow = 'hidden';
+            ta.style.height = 'auto';
+            ta.style.height = ta.scrollHeight + 'px';
+        });
+    });
+}
+// =====================================================================================
 </script>
 </body>
 </html>
