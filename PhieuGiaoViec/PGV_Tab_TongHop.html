@@ -198,6 +198,9 @@ function ghiKetQuaAI() {
     let table = document.getElementById("bangThop");
     if (!table) return;
     
+    // BỔ SUNG: Lấy giá trị năm học hiện tại trên giao diện
+    let namHoc = document.getElementById("locNamThop").value;
+    
     let tbody = table.getElementsByTagName("tbody")[0];
     let rows = tbody.getElementsByTagName("tr");
     let duLieuGhi = [];
@@ -225,7 +228,8 @@ function ghiKetQuaAI() {
         
         // Chỉ ghi các hồ sơ đã có kết quả
         if (hoTen && xepLoai && xepLoai !== "-" && xepLoai !== "Chưa có" && xepLoai !== "") {
-            duLieuGhi.push({ tenn: hoTen, kq: xepLoai });
+            // BỔ SUNG: Gắn thêm thuộc tính "nam" vào mảng dữ liệu
+            duLieuGhi.push({ tenn: hoTen, kq: xepLoai, nam: namHoc });
         }
     }
 
