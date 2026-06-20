@@ -144,7 +144,13 @@ var tcgvc1_DuLieuGoc = [];
 var tcgvc1_NamHocGoc = "";
 
 async function tcgvc1_TaiDuLieu() {
-    if (typeof f_x_j === 'function') f_x_j(true);
+    // Nếu đã có dữ liệu rồi thì chỉ hiển thị ra, không gọi API nữa
+    if (tcgvc1_DuLieuGoc && tcgvc1_DuLieuGoc.length > 0) {
+        tcgvc1_HienThiBang();
+        return;
+    }
+
+   if (typeof f_x_j === 'function') f_x_j(true);
     try {
         const gasUrl = (typeof DG_CONFIG_GAS_URL !== 'undefined') ? DG_CONFIG_GAS_URL : "";
         const response = await fetchAPI(gasUrl + "?z_p_a=get_tieuchi_gvc1");
@@ -176,7 +182,7 @@ function tcgvc1_HienThiBang() {
         tbody.insertAdjacentHTML('beforeend', tcgvc1_TaoDong(idx, item));
     });
     tcgvc1_AutoResizeTextarea();
-    setTimeout(tcgvc1_AutoResizeTextarea, 50);
+  //  setTimeout(tcgvc1_AutoResizeTextarea, 50);
 }
 
 function tcgvc1_TaoDong(index, item) {
@@ -223,13 +229,21 @@ function tcgvc1_DiChuyen(btn, direction) {
 }
 
 function tcgvc1_AutoResizeTextarea() {
-    document.querySelectorAll('#tcgvc1-tbody textarea').forEach(ta => {
-        ta.style.overflow = 'hidden';
-        ta.style.height = 'auto';
-        let newHeight = ta.scrollHeight;
-        ta.style.height = newHeight + 'px';
+    const textareas = document.querySelectorAll('#tcgvc1-tbody textarea');
+    
+    // Gán sự kiện trước
+    textareas.forEach(ta => {
         ta.removeEventListener('input', tcgvc1_ResizeHandler);
         ta.addEventListener('input', tcgvc1_ResizeHandler);
+    });
+
+    // Đẩy việc tính toán chiều cao vào luồng render của trình duyệt để tránh Layout Thrashing
+    requestAnimationFrame(() => {
+        textareas.forEach(ta => {
+            ta.style.overflow = 'hidden';
+            ta.style.height = 'auto';
+            ta.style.height = ta.scrollHeight + 'px';
+        });
     });
 }
 
