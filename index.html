@@ -725,12 +725,17 @@
             const iconListContainer = document.getElementById('icon-permission-list');
             iconListContainer.innerHTML = '';
             globalProfiles.forEach(profile => {
-                iconListContainer.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="icon-role-cb" value="${profile.td1}"> ${profile.td1}</label>`;
+                // [CẬP NHẬT]: Quét cờ isPublic và bổ sung nhãn nhận diện trực quan cho Ban quản trị
+                let pubLabel = profile.isPublic ? ' <span style="color: #2e7d32; font-weight: 600; font-size: 11px; background: #e8f5e9; padding: 2px 4px; border-radius: 3px; margin-left: 5px;">[Đã mở Công khai]</span>' : '';
+                
+                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;">
+                    <input type="checkbox" class="icon-role-cb" value="${profile.td1}"> 
+                    <span>${profile.td1}</span> ${pubLabel}
+                </label>`;
             });
             loadUsers(); 
         } else { clearUserForm(); }
     }
-
     function loadUsers() {
         const tbody = document.getElementById('user-table-body');
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
