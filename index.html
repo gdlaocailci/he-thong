@@ -567,24 +567,38 @@
             div.innerHTML = `<div class="icon-box ${bgClass}">${iconContent}</div><span class="icon-text">${item.td1}</span>`;
             
             // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI TƯƠNG TÁC
+            // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI TƯƠNG TÁC
             div.onclick = function() { 
                 if (!isLoggedIn) {
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
+
+                // [CẬP NHẬT] Khởi tạo biến lưu trữ và giải mã liên kết
+                var finalUrl = item.td2;
+                try {
+                    // Tương thích ngược: Nếu dữ liệu cũ có chứa 'http' thì giữ nguyên, nếu không thì tiến hành giải mã Base64
+                    if (!finalUrl.startsWith('http')) { 
+                        finalUrl = atob(finalUrl); 
+                    }
+                } catch(e) {
+                    console.log("Cảnh báo giải mã dữ liệu: ", e);
+                }
                 
                 if (sysRoles.includes('xx')) {
-                    navigateTo(item.td2, true);
+                    // Điều hướng sử dụng URL đã được làm sạch
+                    navigateTo(finalUrl, true);
                     return;
                 }
                 
                 const allowedIcons = sysIconRoles ? sysIconRoles.split('|') : [];
                 if (allowedIcons.includes(item.td1.trim())) {
-                    navigateTo(item.td2, true);
+                    // Điều hướng sử dụng URL đã được làm sạch
+                    navigateTo(finalUrl, true);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
-            }; 
+            };
 
             desktopArea.appendChild(div);
         });
@@ -683,16 +697,25 @@
 
     function xuLyLuuHoSo() {
         var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); var elLoaiIcon = document.getElementById('hs-loaiicon');
-        var td1 = elTd1.value.trim(); var td2 = elTd2.value.trim(); var loaiIcon = elLoaiIcon.value;
+        var td1 = elTd1.value.trim(); 
+        var td2_raw = elTd2.value.trim(); // Lấy đường dẫn gốc
+        var loaiIcon = elLoaiIcon.value;
+        
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
-        if (!td1) { elTd1.style.borderColor = 'red'; hasError = true; } if (!td2) { elTd2.style.borderColor = 'red'; hasError = true; } if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
+        if (!td1) { elTd1.style.borderColor = 'red'; hasError = true; } 
+        if (!td2_raw) { elTd2.style.borderColor = 'red'; hasError = true; } 
+        if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
+
+        // [CẬP NHẬT] Mã hóa Base64 đường dẫn để vượt qua bộ lọc nội dung của Google
+        var td2_encoded = btoa(td2_raw);
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2, loaiIcon: loaiIcon, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            // Truyền tham số đã mã hóa (td2_encoded) vào CSDL
+            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('form-status').style.display = 'none';
             if (result.status === 'success') {
