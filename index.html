@@ -11,7 +11,6 @@
     <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        // Khởi tạo tiền tố bộ nhớ đệm phân lập cho từng dự án dựa trên App ID
         let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
         const PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
 
@@ -30,7 +29,6 @@
         })();
     </script>
     <style>
-        /* Khối CSS Hệ thống */
         :root { --default-bg: #2c3e50; } 
         * { box-sizing: border-box; user-select: none; }
         html, body { height: 100vh; width: 100vw; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -274,6 +272,13 @@
                         </optgroup>
                     </select>
                 </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="checkbox-label" style="background: #e8f5e9; padding: 10px; border-radius: 4px; border: 1px solid #a5d6a7;">
+                        <input type="checkbox" id="hs-ispublic" value="public">
+                        <span style="color: #2e7d32; font-weight: 600;">Mở khóa Công khai (Tương tác không cần Đăng nhập)</span>
+                    </label>
+                </div>
+                
                 <button class="form-native btn-submit" onclick="xuLyLuuHoSo()">Ghi Nhận Dữ Liệu</button>
                 <div id="form-status" class="status-text">Đang xử lý, vui lòng chờ...</div>
             </div>
@@ -372,7 +377,6 @@
     let tokenClient; let pickerAccessToken = null;
     let globalProfiles = []; 
     
-    // Khai báo biến kiểm soát trạng thái đăng nhập
     let isLoggedIn = false;
     let sysRoles = "";       
     let sysIconRoles = "";   
@@ -384,15 +388,10 @@
             callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
         });
         
-        // Luồng 1: Tải biểu tượng lên ngay lập tức cho Khách
         taiBieuTuongCongKhai();
-        // Luồng 2: Kiểm tra nếu đã có phiên đăng nhập thì phục hồi quyền quản trị
         kiemTraTrangThaiDangNhap();
     };
 
-    // =========================================================================
-    // LUỒNG TẢI DỮ LIỆU CÔNG KHAI (HIỂN THỊ NGAY KHI MỞ TRANG)
-    // =========================================================================
     function taiBieuTuongCongKhai() {
         let cachedIcons = localStorage.getItem(PREFIX_MEM + 'icons_cache');
         if (cachedIcons) {
@@ -404,7 +403,6 @@
             desktopArea.innerHTML = '<div class="loading-screen"><span class="material-icons">sync</span><h3>Đang trích xuất không gian làm việc...</h3></div>';
         }
 
-        // Gọi API ngầm lấy danh sách mới nhất không cần Token
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getPublicIcons' }) 
@@ -416,9 +414,6 @@
         }).catch(error => console.error("Lỗi tải biểu tượng:", error));
     }
 
-    // =========================================================================
-    // LUỒNG XÁC THỰC BẢO MẬT
-    // =========================================================================
     function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
@@ -483,9 +478,6 @@
         }
     }
 
-    /* =========================================================================
-       KHỐI TẠO GIAO DIỆN VÀ PHÂN QUYỀN CLICK ICON
-       ========================================================================= */
     function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
@@ -564,20 +556,21 @@
             div.setAttribute('data-id', index + 1); 
             div.setAttribute('data-desc', item.td1); 
 
-            div.innerHTML = `<div class="icon-box ${bgClass}">${iconContent}</div><span class="icon-text">${item.td1}</span>`;
+            // CẬP NHẬT: Thêm huy hiệu (badge) ổ khóa màu xanh nếu Icon được đánh dấu Công khai
+            let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+
+            div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
-            // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI TƯƠNG TÁC
-            // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI TƯƠNG TÁC
+            // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP VÀ PHÂN QUYỀN
             div.onclick = function() { 
-                if (!isLoggedIn) {
+                // CẬP NHẬT KIỂM DUYỆT: Nếu chưa đăng nhập và icon cũng không phải dạng công khai -> Chặn
+                if (!isLoggedIn && !item.isPublic) {
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
 
-                // [CẬP NHẬT] Khởi tạo biến lưu trữ và giải mã liên kết
                 var finalUrl = item.td2;
                 try {
-                    // Tương thích ngược: Nếu dữ liệu cũ có chứa 'http' thì giữ nguyên, nếu không thì tiến hành giải mã Base64
                     if (!finalUrl.startsWith('http')) { 
                         finalUrl = atob(finalUrl); 
                     }
@@ -585,15 +578,19 @@
                     console.log("Cảnh báo giải mã dữ liệu: ", e);
                 }
                 
-                if (sysRoles.includes('xx')) {
-                    // Điều hướng sử dụng URL đã được làm sạch
+                // CẬP NHẬT: Nếu là Icon công khai, cho phép truy cập ngay lập tức
+                if (item.isPublic) {
+                    navigateTo(finalUrl, true);
+                    return;
+                }
+
+                if (sysRoles && sysRoles.includes('xx')) {
                     navigateTo(finalUrl, true);
                     return;
                 }
                 
                 const allowedIcons = sysIconRoles ? sysIconRoles.split('|') : [];
                 if (allowedIcons.includes(item.td1.trim())) {
-                    // Điều hướng sử dụng URL đã được làm sạch
                     navigateTo(finalUrl, true);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
@@ -606,9 +603,6 @@
         icons = document.querySelectorAll('.desktop-icon'); setupTooltipEvents(); initializeLayout(); setupDragEvents();
     }
 
-    /* =========================================================================
-       CÁC TIỆN ÍCH KHÁC
-       ========================================================================= */
     function showAlertModal(message) {
         document.getElementById('alert-message').innerHTML = message;
         document.getElementById('window-alert').style.display = 'flex';
@@ -635,6 +629,7 @@
         if(!isShow) {
             var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); var elLoaiIcon = document.getElementById('hs-loaiicon');
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc';
+            document.getElementById('hs-ispublic').checked = false; // Reset cờ công khai
             document.getElementById('huong-dan-tk').style.display = 'none'; 
         }
     }
@@ -698,8 +693,9 @@
     function xuLyLuuHoSo() {
         var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); var elLoaiIcon = document.getElementById('hs-loaiicon');
         var td1 = elTd1.value.trim(); 
-        var td2_raw = elTd2.value.trim(); // Lấy đường dẫn gốc
+        var td2_raw = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
+        var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; // Lấy trạng thái từ Checkbox
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
@@ -708,14 +704,12 @@
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
-        // [CẬP NHẬT] Mã hóa Base64 đường dẫn để vượt qua bộ lọc nội dung của Google
         var td2_encoded = btoa(td2_raw);
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            // Truyền tham số đã mã hóa (td2_encoded) vào CSDL
-            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('form-status').style.display = 'none';
             if (result.status === 'success') {
