@@ -153,7 +153,7 @@
                 <span class="material-icons">attachment</span> Gán hồ sơ
             </button>
             <button class="btn-taskbar red" id="btn-delete-profile" style="display:none;" onclick="toggleXoaHoSoModal(true)">
-                <span class="material-icons">delete</span> Xóa hồ sơ
+                <span class="material-icons">settings_applications</span> Quản lý Dự án
             </button>
             <button class="btn-taskbar purple" id="btn-auth-profile" style="display:none;" onclick="togglePhanQuyenModal(true)">
                 <span class="material-icons">manage_accounts</span> Cấp quyền
@@ -288,18 +288,24 @@
     <div id="window-xoa-hoso" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
-                <div class="window-title"><span class="material-icons" style="color:#ffffff">delete</span> Công cụ Hủy Hồ sơ / Dự án</div>
+                <div class="window-title"><span class="material-icons" style="color:#ffffff">settings_applications</span> Quản lý & Cấu hình Dự án</div>
                 <button class="window-close" onclick="toggleXoaHoSoModal(false)">✕</button>
             </div>
             <div class="form-native">
                 <div class="form-group">
-                    <label>Lựa chọn dữ liệu cần hủy bỏ:</label>
-                    <select id="del-hoso-select" style="cursor: pointer; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    <label>Lựa chọn dự án cần thao tác:</label>
+                    <select id="del-hoso-select" onchange="hienThiTrangThaiDuAn()" style="cursor: pointer; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                         <option value="">-- Đang tải danh sách --</option>
                     </select>
+                    <div id="hoso-current-status" style="margin-top: 12px; font-size: 14px; font-weight: 600; text-align: center; background: #f5f5f5; padding: 8px; border-radius: 4px; border: 1px dashed #ccc;">
+                        Vui lòng chọn một dự án
+                    </div>
                 </div>
-                <button class="form-native btn-submit" style="background-color: #d32f2f; color: white;" onclick="xuLyXoaHoSo()">Xác Nhận Hủy</button>
-                <div id="del-form-status" class="status-text" style="color: #d32f2f;">Đang xử lý...</div>
+                <div class="input-group" style="margin-top: 20px;">
+                    <button class="form-native btn-submit" style="background-color: #4CAF50; color: white; margin-top: 0;" onclick="xuLyDoiTrangThaiCongKhai()">Đảo Trạng Thái</button>
+                    <button class="form-native btn-submit" style="background-color: #d32f2f; color: white; margin-top: 0;" onclick="xuLyXoaHoSo()">Hủy Bỏ Dự Án</button>
+                </div>
+                <div id="del-form-status" class="status-text">Đang đồng bộ cơ sở dữ liệu...</div>
             </div>
         </div>
     </div>
@@ -326,7 +332,7 @@
                         <div class="checkbox-group">
                             <label class="checkbox-label"><input type="checkbox" id="role-taohoso" value="taohoso"> Nút Tạo dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-ganhoso" value="ganhoso"> Nút Gán dữ liệu</label>
-                            <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Hủy dữ liệu</label>
+                            <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Quản lý dữ liệu</label>
                             <label class="checkbox-label" style="color:#d32f2f; font-weight: bold;">
                                 <input type="checkbox" id="role-xx" value="xx"> Quản trị tối cao (Admin)
                             </label>
@@ -556,14 +562,11 @@
             div.setAttribute('data-id', index + 1); 
             div.setAttribute('data-desc', item.td1); 
 
-            // CẬP NHẬT: Thêm huy hiệu (badge) ổ khóa màu xanh nếu Icon được đánh dấu Công khai
             let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
-            // XỬ LÝ CLICK: KIỂM TRA ĐĂNG NHẬP VÀ PHÂN QUYỀN
             div.onclick = function() { 
-                // CẬP NHẬT KIỂM DUYỆT: Nếu chưa đăng nhập và icon cũng không phải dạng công khai -> Chặn
                 if (!isLoggedIn && !item.isPublic) {
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
@@ -578,7 +581,6 @@
                     console.log("Cảnh báo giải mã dữ liệu: ", e);
                 }
                 
-                // CẬP NHẬT: Nếu là Icon công khai, cho phép truy cập ngay lập tức
                 if (item.isPublic) {
                     navigateTo(finalUrl, true);
                     return;
@@ -629,24 +631,69 @@
         if(!isShow) {
             var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); var elLoaiIcon = document.getElementById('hs-loaiicon');
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc';
-            document.getElementById('hs-ispublic').checked = false; // Reset cờ công khai
+            document.getElementById('hs-ispublic').checked = false; 
             document.getElementById('huong-dan-tk').style.display = 'none'; 
         }
     }
 
+    // [CẬP NHẬT] LUỒNG KIỂM SOÁT GIAO DIỆN QUẢN LÝ DỰ ÁN
     function toggleXoaHoSoModal(isShow) {
         document.getElementById('window-xoa-hoso').style.display = isShow ? 'flex' : 'none';
         if (isShow) {
             const select = document.getElementById('del-hoso-select');
-            select.innerHTML = '<option value="">-- Lựa chọn dự án cần hủy --</option>';
+            select.innerHTML = '<option value="">-- Lựa chọn dự án cần thao tác --</option>';
             globalProfiles.forEach((item, index) => {
                 const opt = document.createElement('option');
                 opt.value = index; 
                 opt.text = item.td1;
                 select.appendChild(opt);
             });
+            document.getElementById('hoso-current-status').innerHTML = 'Vui lòng chọn một dự án để xem cấu hình';
             document.getElementById('del-form-status').style.display = 'none';
         }
+    }
+
+    // [CẬP NHẬT] HIỂN THỊ TRẠNG THÁI KHÓA/MỞ KHI CHỌN DỰ ÁN
+    function hienThiTrangThaiDuAn() {
+        const select = document.getElementById('del-hoso-select');
+        const statusDiv = document.getElementById('hoso-current-status');
+        if (select.value === "") {
+            statusDiv.innerHTML = "Vui lòng chọn một dự án để xem cấu hình";
+            return;
+        }
+        const profile = globalProfiles[select.value];
+        if (profile.isPublic) {
+            statusDiv.innerHTML = '<span style="color: #2e7d32;"><span class="material-icons" style="font-size: 16px; vertical-align: middle;">lock_open</span> Trạng thái: ĐANG MỞ CÔNG KHAI</span>';
+        } else {
+            statusDiv.innerHTML = '<span style="color: #d32f2f;"><span class="material-icons" style="font-size: 16px; vertical-align: middle;">lock</span> Trạng thái: ĐANG KHÓA (CẦN ĐĂNG NHẬP)</span>';
+        }
+    }
+
+    // [CẬP NHẬT] XỬ LÝ ĐẢO TRẠNG THÁI
+    function xuLyDoiTrangThaiCongKhai() {
+        const select = document.getElementById('del-hoso-select');
+        const selectedIndex = select.value;
+        if (selectedIndex === "") { alert("Vui lòng chọn một dự án cụ thể để thao tác!"); return; }
+
+        const profile = globalProfiles[selectedIndex];
+        const newStatus = profile.isPublic ? "" : "public";
+        const confirmMsg = profile.isPublic ? "KHÓA LẠI (yêu cầu cán bộ đăng nhập)" : "MỞ CÔNG KHAI (không cần đăng nhập)";
+        
+        if (!confirm("Thầy/Cô có chắc chắn muốn " + confirmMsg + " đối với dự án '" + profile.td1 + "' ?")) { return; }
+
+        const statusText = document.getElementById('del-form-status');
+        statusText.innerText = "Đang đồng bộ cấu hình..."; statusText.style.display = 'block';
+
+        fetch(KETNOI.WEB_APP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'togglePublicProfile', td1: profile.td1, newStatus: newStatus, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+        }).then(response => response.json()).then(result => {
+            statusText.style.display = 'none';
+            if (result.status === 'success') { 
+                toggleXoaHoSoModal(false); 
+                taiBieuTuongCongKhai(); 
+            } else { alert("Cảnh báo: " + result.message); }
+        }).catch(err => { statusText.style.display = 'none'; alert("Lỗi kết nối máy chủ: " + err); });
     }
 
     function xuLyXoaHoSo() {
@@ -655,10 +702,10 @@
         if (selectedIndex === "") { alert("Vui lòng chọn một dự án cụ thể để cấu hình!"); return; }
 
         const profileToDelete = globalProfiles[selectedIndex];
-        if (!confirm("CẢNH BÁO: Thầy/Cô có chắc chắn muốn hủy cấu hình dự án '" + profileToDelete.td1 + "' khỏi hệ thống?")) { return; }
+        if (!confirm("CẢNH BÁO: Thầy/Cô có chắc chắn muốn HỦY BỎ dự án '" + profileToDelete.td1 + "' khỏi hệ thống?")) { return; }
 
         const statusText = document.getElementById('del-form-status');
-        statusText.innerText = "Đang xử lý cấu hình..."; statusText.style.display = 'block';
+        statusText.innerText = "Đang xử lý thu hồi dữ liệu..."; statusText.style.display = 'block';
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -695,7 +742,7 @@
         var td1 = elTd1.value.trim(); 
         var td2_raw = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
-        var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; // Lấy trạng thái từ Checkbox
+        var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
@@ -725,17 +772,13 @@
             const iconListContainer = document.getElementById('icon-permission-list');
             iconListContainer.innerHTML = '';
             globalProfiles.forEach(profile => {
-                // [CẬP NHẬT]: Quét cờ isPublic và bổ sung nhãn nhận diện trực quan cho Ban quản trị
                 let pubLabel = profile.isPublic ? ' <span style="color: #2e7d32; font-weight: 600; font-size: 11px; background: #e8f5e9; padding: 2px 4px; border-radius: 3px; margin-left: 5px;">[Đã mở Công khai]</span>' : '';
-                
-                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;">
-                    <input type="checkbox" class="icon-role-cb" value="${profile.td1}"> 
-                    <span>${profile.td1}</span> ${pubLabel}
-                </label>`;
+                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;"><input type="checkbox" class="icon-role-cb" value="${profile.td1}"> <span>${profile.td1}</span> ${pubLabel}</label>`;
             });
             loadUsers(); 
         } else { clearUserForm(); }
     }
+
     function loadUsers() {
         const tbody = document.getElementById('user-table-body');
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
@@ -754,7 +797,7 @@
             const tr = document.createElement('tr'); let displayRoles = [];
             if (user.roles.includes('taohoso')) displayRoles.push('Tạo dữ liệu');
             if (user.roles.includes('ganhoso')) displayRoles.push('Gán dữ liệu');
-            if (user.roles.includes('xoahoso')) displayRoles.push('Hủy dữ liệu');
+            if (user.roles.includes('xoahoso')) displayRoles.push('Quản lý dữ liệu');
             if (user.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Quản trị tối cao</b>');
             
             const safeTsa = user.tsa.replace(/'/g, "\\'");
