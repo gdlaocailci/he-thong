@@ -174,10 +174,33 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // --- MẠNG LƯỚI KHAI BÁO BỘ NHỚ ĐỆM (CACHE CỤC BỘ) ---
-  // KHÔNG CÒN SỬ DỤNG BIẾN hks_khoDuLieuTong_arr
+  // --- HÀM KIỂM TRA ĐỊNH DANH TRƯỚC KHI GỌI API ---
+  function hks_kiemTraVaLayDinhDanh_fn() {
+      // Nếu chưa có, thử khôi phục từ session
+      if (!hks_hoSoNguoiDungHienTai_obj || !hks_hoSoNguoiDungHienTai_obj.reqId) {
+          let data = sessionStorage.getItem("sys_data_hs");
+          if (data) {
+              try {
+                  hks_hoSoNguoiDungHienTai_obj = JSON.parse(data);
+              } catch(e) {
+                  hks_hoSoNguoiDungHienTai_obj = null;
+              }
+          }
+      }
+      return hks_hoSoNguoiDungHienTai_obj ? hks_hoSoNguoiDungHienTai_obj.reqId : '';
+  }
 
   async function hks_thucThiGiaoTiep_fn(hks_lenhDieuPhoi_str, hks_goiDuLieu_obj = {}) {
+      // Đảm bảo có định danh nếu là API yêu cầu (trừ đăng nhập)
+      if (hks_lenhDieuPhoi_str !== 'hks_khoiDongChuongTrinh_api' && hks_lenhDieuPhoi_str !== 'hks_kiemDuyetTrangThai_api') {
+          let dinhDanh = hks_kiemTraVaLayDinhDanh_fn();
+          if (dinhDanh) {
+              hks_goiDuLieu_obj.hks_dinhTuyenNguon_str = dinhDanh;
+          } else {
+              // Nếu không có định danh, không gửi request, báo lỗi
+              throw new Error("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
+          }
+      }
       hks_goiDuLieu_obj.hks_lenhKichHoat_str = hks_lenhDieuPhoi_str;
       try {
           const hks_phanHoiNhanCung_obj = await fetch(HKS_CAU_HINH_WEBAPP_STR, {
