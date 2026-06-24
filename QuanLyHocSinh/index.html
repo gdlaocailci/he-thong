@@ -280,17 +280,7 @@
                     } else {
                         // Trường hợp chưa có config, gọi API
                         hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_duLieuTaiVe_obj => {
-                        if(hks_duLieuTaiVe_obj.success === false) {hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs");  Swal.fire({
-        title: "Từ chối truy cập",
-        text: hks_duLieuTaiVe_obj.message || "Định danh chưa được cấp phép hoặc đã bị thu hồi quyền truy cập!",
-        icon: "error",
-        confirmButtonText: "Quay lại trang chủ",
-        allowOutsideClick: false
-    }).then(() => {
-        location.reload();
-    });
-    return; 
-}
+                            if(hks_duLieuTaiVe_obj.success === false) { hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs"); location.reload(); return; }
                             hks_bienKhungHeThong_obj = hks_duLieuTaiVe_obj;
                             sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
                             hks_doDuLieuVaoHopChon_fn(); 
@@ -410,15 +400,18 @@
         return;
     }
 
+    // Hiển thị loading nhẹ
     Swal.fire({
         title: 'Đang tải cấu hình...',
         text: 'Vui lòng chờ trong giây lát',
         allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
+        didOpen: () => {
+            Swal.showLoading();
+        }
     });
 
     setTimeout(() => {
-        // Đổ dữ liệu danh mục tĩnh
+        // Đổ dữ liệu danh mục
         document.getElementById('t4_danToc').value = (hks_bienKhungHeThong_obj.hks_rawDanToc_arr || []).join(', ');
         document.getElementById('t4_xepLoai').value = (hks_bienKhungHeThong_obj.hks_rawXepLoai_arr || []).join(', ');
         document.getElementById('t4_capThanhTich').value = (hks_bienKhungHeThong_obj.hks_rawCapThanhTich_arr || []).join(', ');
@@ -445,20 +438,7 @@
                 tbody.appendChild(tr);
             });
         }
-
-        // --- ĐOẠN MÃ MỚI BỔ SUNG: Khôi phục trạng thái nút gạt từ LocalStorage ---
-        let hks_trangThaiLuu_str = localStorage.getItem('sys_toggle_khoa_t4');
-        let hks_nutGatUI_el = document.getElementById('t4_toggleKhoa');
-        if (hks_nutGatUI_el) {
-            if (hks_trangThaiLuu_str === 'khoa') {
-                hks_nutGatUI_el.checked = false;
-                if(typeof hks_xuLyKhoaCapNhat_fn === 'function') hks_xuLyKhoaCapNhat_fn(hks_nutGatUI_el);
-            } else {
-                hks_nutGatUI_el.checked = true;
-                if(typeof hks_xuLyKhoaCapNhat_fn === 'function') hks_xuLyKhoaCapNhat_fn(hks_nutGatUI_el);
-            }
-        }
-          Swal.close();
+        Swal.close();
     }, 200);
   }
 
