@@ -72,7 +72,6 @@
     }, 10);
   }
 
-  // KHỐI HIỂN THỊ CỬA SỔ NHẬP THÀNH TÍCH (BỔ SUNG PLACEHOLDER HƯỚNG DẪN MỜ)
   function hks_hienThiUINhapThanhTich_fn(hks_input_el, hks_dong_el, hks_nhom_num, hks_id_str) {
       let hks_giaTriHienTai_str = hks_input_el.value || ""; let hks_ghiChuHienTai_str = hks_input_el.getAttribute('data-note') || "";
       let hks_hoDem_str = hks_dong_el.cells[1].innerText.trim(); let hks_ten_str = hks_dong_el.cells[2].innerText.trim();
@@ -109,20 +108,15 @@
       });
   }
 
-  // THUẬT TOÁN TỐI ƯU: Ứng dụng kỹ thuật khối đệm ảo DocumentFragment xử lý lặp dữ liệu trước khi kết xuất Live DOM
   function hks_veBangPhanHai_fn(hks_duLieuBang_arr) {
     const hks_thanBang_el = document.querySelector('#bang2 tbody'); 
     hks_thanBang_el.innerHTML = '';
-    
-    // Khởi tạo phân đoạn mã ảo trong bộ nhớ đệm ẩn
     const hks_doanMaAo_frag = document.createDocumentFragment();
-    
+
     hks_duLieuBang_arr.forEach(hks_dongDuLieu_arr => {
       let hks_theDong_el = document.createElement('tr');
       let hks_htmlCoDinh_str = `<td class="text-primary fw-bold">${hks_dongDuLieu_arr[2]}</td><td>${hks_dongDuLieu_arr[3]}</td><td>${hks_dongDuLieu_arr[4]}</td><td>${hks_dongDuLieu_arr[5]}</td><td>${hks_dongDuLieu_arr[6]}</td>`;
-      hks_theDong_el.innerHTML = hks_htmlCoDinh_str; 
-      let hks_voHieuHoa_bol = !hks_trangThaiSuaHai_bol;
-      
+      hks_theDong_el.innerHTML = hks_htmlCoDinh_str; let hks_voHieuHoa_bol = !hks_trangThaiSuaHai_bol;
       for (let i = 19; i <= 46; i++) {
         let hks_theCot_el = document.createElement('td'); hks_theCot_el.className = 'text-center';
         if (i >= 19 && i <= 26) {
@@ -144,11 +138,8 @@
         }
         hks_theDong_el.appendChild(hks_theCot_el);
       }
-      // Gom dòng vào khối đệm ảo thay vì append trực tiếp vào màn hình
       hks_doanMaAo_frag.appendChild(hks_theDong_el);
     });
-    
-    // Đẩy toàn bộ cấu trúc bảng từ bộ nhớ ra màn hình thực tế
     hks_thanBang_el.appendChild(hks_doanMaAo_frag);
     hks_hienThiManHinhTai_fn(false);
   }
