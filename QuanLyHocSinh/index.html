@@ -280,7 +280,17 @@
                     } else {
                         // Trường hợp chưa có config, gọi API
                         hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_duLieuTaiVe_obj => {
-                            if(hks_duLieuTaiVe_obj.success === false) { hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs"); location.reload(); return; }
+                        if(hks_duLieuTaiVe_obj.success === false) {hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs");  Swal.fire({
+        title: "Từ chối truy cập",
+        text: hks_duLieuTaiVe_obj.message || "Định danh chưa được cấp phép hoặc đã bị thu hồi quyền truy cập!",
+        icon: "error",
+        confirmButtonText: "Quay lại trang chủ",
+        allowOutsideClick: false
+    }).then(() => {
+        location.reload();
+    });
+    return; 
+}
                             hks_bienKhungHeThong_obj = hks_duLieuTaiVe_obj;
                             sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
                             hks_doDuLieuVaoHopChon_fn(); 
