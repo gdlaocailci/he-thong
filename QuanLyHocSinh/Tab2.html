@@ -65,8 +65,7 @@
         hks_truongDinhTuyen_str: c,
         hks_truongPhuTro_str: h,
         hks_truongGiaTri_str: t
-      },
-      hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
+      }
     }).then(hks_ketQuaAPI_obj => {
       hks_hienThiManHinhTai_fn(false);
       if (hks_ketQuaAPI_obj.success) {
@@ -165,7 +164,7 @@
       hks_duLieuCanLuu_arr.push(hks_mangKetQuaLuu_arr);
     }
     hks_hienThiManHinhTai_fn(true);
-    hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeHai_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
+    hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeHai_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr}).then(hks_ketQuaAPI_obj => { 
         if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Không có tín hiệu lưu trữ!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
         Swal.fire("Hoàn tất", hks_ketQuaAPI_obj.message, "success");
         hks_khoiPhucTrangThaiGoc_fn(2);
