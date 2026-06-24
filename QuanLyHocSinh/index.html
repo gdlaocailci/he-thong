@@ -363,7 +363,7 @@
     }
   }
 
-  function hks_taiDuLieuPhanBon_fn() {
+function hks_taiDuLieuPhanBon_fn() {
     if (!hks_bienKhungHeThong_obj) return;
     
     if (hks_bienKhungHeThong_obj.hks_rawDanToc_arr) {
@@ -377,6 +377,16 @@
     }
     if (hks_bienKhungHeThong_obj.hks_rawToanQuyen_arr) {
       document.getElementById('t4_toanQuyen').value = hks_bienKhungHeThong_obj.hks_rawToanQuyen_arr.join(', ');
+    }
+    
+    // Đảm bảo đưa công tắc gạt về trạng thái "Mở cập nhật" khi tải dữ liệu
+    let hks_toggle_el = document.getElementById('t4_toggleKhoa');
+    let hks_lbl_el = document.getElementById('t4_lblToggleKhoa');
+    if(hks_toggle_el && hks_lbl_el) {
+        hks_toggle_el.checked = true;
+        hks_lbl_el.innerText = "Mở cập nhật";
+        hks_lbl_el.classList.remove('text-danger');
+        hks_lbl_el.classList.add('text-dark');
     }
     
     let hks_tbody_el = document.getElementById('tbodyPhanQuyen');
