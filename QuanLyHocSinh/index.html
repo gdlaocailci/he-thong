@@ -164,7 +164,6 @@
       <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1" type="button" onclick="hks_khoiPhucTrangThaiGoc_fn(1)"><i class="bi bi-person-vcard"></i> 1. Thông tin học sinh</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2" type="button" onclick="hks_khoiPhucTrangThaiGoc_fn(2)"><i class="bi bi-journal-check"></i> 2. Kết quả học tập & Thành tích</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3" type="button"><i class="bi bi-bar-chart-line-fill"></i> 3. Thống kê - Tổng hợp</button></li>
-      <!-- Tab4 sẽ được thêm động qua JavaScript nếu là admin -->
     </ul>
 
     <div class="tab-content" id="khung-chua-tab"></div>
@@ -176,7 +175,7 @@
 
 <script>
   // --- MẠNG LƯỚI KHAI BÁO BỘ NHỚ ĐỆM (CACHE CỤC BỘ) ---
-  let hks_khoDuLieuTong_arr = [];
+  // KHÔNG CÒN SỬ DỤNG BIẾN hks_khoDuLieuTong_arr
 
   async function hks_thucThiGiaoTiep_fn(hks_lenhDieuPhoi_str, hks_goiDuLieu_obj = {}) {
       hks_goiDuLieu_obj.hks_lenhKichHoat_str = hks_lenhDieuPhoi_str;
@@ -190,13 +189,6 @@
       } catch (hks_loiNgoaiLe_obj) {
           throw new Error("Lỗi kết nối Server!");
       }
-  }
-
-  async function hks_capNhatBoNhoDem_fn() {
-      try {
-          let res = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
-          if(res.success) hks_khoDuLieuTong_arr = res.data;
-      } catch(e) { console.error("Lỗi đệm:", e); }
   }
 
   let hks_tooltip_timer;
@@ -233,72 +225,91 @@
           hks_hoSoNguoiDungHienTai_obj = hks_ketQuaAPI_obj.data;
           hks_bienKhungHeThong_obj = hks_ketQuaAPI_obj.config;
           
-          // Lưu vào sessionStorage để dùng sau
           sessionStorage.setItem("sys_data_hs", JSON.stringify(hks_hoSoNguoiDungHienTai_obj));
           sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
 
-          hks_capNhatBoNhoDem_fn().then(() => {
-              hks_doDuLieuVaoHopChon_fn();
-              hks_thietLapBoLoc_fn();
-              hks_kiemTraQuyenVaNapTabBon_fn(); // Kích hoạt nạp hệ thống phân quyền
-              document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
-              document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
-              document.getElementById('gate-overlay').style.display = 'none'; 
-              hks_hienThiManHinhTai_fn(false);
-              let hks_ungDungChinh_el = document.getElementById('main-app');
-              hks_ungDungChinh_el.style.display = 'block'; setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
-          });
+          // KHÔNG GỌI hks_capNhatBoNhoDem_fn Ở ĐÂY NỮA
+          hks_doDuLieuVaoHopChon_fn();
+          hks_thietLapBoLoc_fn();
+          hks_kiemTraQuyenVaNapTabBon_fn();
+          document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
+          document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
+          document.getElementById('gate-overlay').style.display = 'none'; 
+          hks_hienThiManHinhTai_fn(false);
+          let hks_ungDungChinh_el = document.getElementById('main-app');
+          hks_ungDungChinh_el.style.display = 'block'; setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
       }).catch(e => { Swal.fire("Sự cố hệ thống", e.message, "warning"); hks_hienThiManHinhTai_fn(false); });
+  }
+
+  // Hàm tạo tab4 (phân quyền) nếu admin
+  function hks_kiemTraQuyenVaNapTabBon_fn() {
+    $('#nav-li-tab4').remove();
+    $('#tab4').remove();
+    if (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin') {
+      $('#bangDieuKhien').append(`
+        <li class="nav-item" id="nav-li-tab4">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab4" type="button" onclick="hks_taiDuLieuPhanBon_fn()">
+            <i class="bi bi-shield-lock"></i> 4. Phân quyền hệ thống
+          </button>
+        </li>
+      `);
+      $.get("Tab4.html", function(hks_giaoDienTab4_str) {
+        $("#khung-chua-tab").append(hks_giaoDienTab4_str);
+      });
+    }
   }
 
   $(document).ready(function() {
     hks_hienThiManHinhTai_fn(true);
-    $.get("Tab1.html", function(data1) { $("#khung-chua-tab").append(data1);
-        $.get("Tab2.html", function(data2) { $("#khung-chua-tab").append(data2);
-            $.get("Tab3.html", function(data3) { $("#khung-chua-tab").append(data3);
-                // Nếu đã có session, khôi phục
-                let hks_duLieuLuuTru_str = sessionStorage.getItem("sys_data_hs");
-                let hks_cauHinhLuuTru_str = sessionStorage.getItem("sys_config_hs");
-                if(hks_duLieuLuuTru_str) {
-                    hks_hoSoNguoiDungHienTai_obj = JSON.parse(hks_duLieuLuuTru_str);
-                    document.getElementById('gate-overlay').style.display = 'none';
-                    document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name;
-                    document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
-                    hks_thietLapBoLoc_fn(); 
-                    
-                    // Nếu đã có config trong session, dùng luôn, không gọi API
-                    if(hks_cauHinhLuuTru_str) {
-                        hks_bienKhungHeThong_obj = JSON.parse(hks_cauHinhLuuTru_str);
-                        hks_doDuLieuVaoHopChon_fn();
-                        hks_kiemTraQuyenVaNapTabBon_fn();
-                        hks_capNhatBoNhoDem_fn().then(() => {
-                            hks_hienThiManHinhTai_fn(false);
-                            let hks_ungDungChinh_el = document.getElementById('main-app');
-                            hks_ungDungChinh_el.style.display = 'block'; 
-                            setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
-                        });
-                    } else {
-                        // Trường hợp chưa có config, gọi API
-                        hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_duLieuTaiVe_obj => {
-                            if(hks_duLieuTaiVe_obj.success === false) { hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs"); location.reload(); return; }
-                            hks_bienKhungHeThong_obj = hks_duLieuTaiVe_obj;
-                            sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
-                            hks_doDuLieuVaoHopChon_fn(); 
-                            hks_kiemTraQuyenVaNapTabBon_fn();
-                            hks_capNhatBoNhoDem_fn().then(() => {
-                                hks_hienThiManHinhTai_fn(false);
-                                let hks_ungDungChinh_el = document.getElementById('main-app');
-                                hks_ungDungChinh_el.style.display = 'block'; 
-                                setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
-                            });
-                        }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
-                    }
-                } else { 
-                    hks_hienThiManHinhTai_fn(false); 
-                    document.getElementById('gate-overlay').style.display = 'flex'; 
-                }
-            });
-        });
+    // Tải các file HTML song song
+    Promise.all([
+      $.get("Tab1.html"),
+      $.get("Tab2.html"),
+      $.get("Tab3.html")
+    ]).then(function(responses) {
+      responses.forEach(function(html) {
+        $("#khung-chua-tab").append(html);
+      });
+      // Sau khi tải xong, kiểm tra session
+      let hks_duLieuLuuTru_str = sessionStorage.getItem("sys_data_hs");
+      let hks_cauHinhLuuTru_str = sessionStorage.getItem("sys_config_hs");
+      if(hks_duLieuLuuTru_str) {
+          hks_hoSoNguoiDungHienTai_obj = JSON.parse(hks_duLieuLuuTru_str);
+          document.getElementById('gate-overlay').style.display = 'none';
+          document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name;
+          document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
+          hks_thietLapBoLoc_fn(); 
+          
+          if(hks_cauHinhLuuTru_str) {
+              hks_bienKhungHeThong_obj = JSON.parse(hks_cauHinhLuuTru_str);
+              hks_doDuLieuVaoHopChon_fn();
+              hks_kiemTraQuyenVaNapTabBon_fn();
+              // KHÔNG GỌI hks_capNhatBoNhoDem_fn
+              hks_hienThiManHinhTai_fn(false);
+              let hks_ungDungChinh_el = document.getElementById('main-app');
+              hks_ungDungChinh_el.style.display = 'block'; 
+              setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
+          } else {
+              // Trường hợp chưa có config, gọi API
+              hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_duLieuTaiVe_obj => {
+                  if(hks_duLieuTaiVe_obj.success === false) { hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs"); location.reload(); return; }
+                  hks_bienKhungHeThong_obj = hks_duLieuTaiVe_obj;
+                  sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
+                  hks_doDuLieuVaoHopChon_fn(); 
+                  hks_kiemTraQuyenVaNapTabBon_fn();
+                  hks_hienThiManHinhTai_fn(false);
+                  let hks_ungDungChinh_el = document.getElementById('main-app');
+                  hks_ungDungChinh_el.style.display = 'block'; 
+                  setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
+              }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
+          }
+      } else { 
+          hks_hienThiManHinhTai_fn(false); 
+          document.getElementById('gate-overlay').style.display = 'flex'; 
+      }
+    }).catch(function() {
+      Swal.fire("Lỗi tải giao diện", "Vui lòng kiểm tra kết nối mạng.", "error");
+      hks_hienThiManHinhTai_fn(false);
     });
   });
 
@@ -375,156 +386,15 @@
   }
 
   // ===================== PHÂN QUYỀN HỆ THỐNG (TAB4) =====================
-  function hks_kiemTraQuyenVaNapTabBon_fn() {
-    // Xóa tab4 cũ nếu có
-    $('#nav-li-tab4').remove();
-    $('#tab4').remove();
-    
-    if (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin') {
-      $('#bangDieuKhien').append(`
-        <li class="nav-item" id="nav-li-tab4">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab4" type="button" onclick="hks_taiDuLieuPhanBon_fn()">
-            <i class="bi bi-shield-lock"></i> 4. Phân quyền hệ thống
-          </button>
-        </li>
-      `);
-      $.get("Tab4.html", function(hks_giaoDienTab4_str) {
-        $("#khung-chua-tab").append(hks_giaoDienTab4_str);
-      });
-    }
+  // Hàm này đã được định nghĩa trong index, nhưng cần có phần xử lý Tab4
+  // Do Tab4 được tải động, các hàm của nó (hks_taiDuLieuPhanBon_fn, hks_themDongPhanQuyen_fn, hks_luuCauHinhPhanBon_fn)
+  // sẽ được định nghĩa trong Tab4.html, vì vậy không cần khai báo ở đây.
+  // Tuy nhiên, để đảm bảo không lỗi, ta khai báo hàm rỗng nếu chưa được load.
+  if (typeof hks_taiDuLieuPhanBon_fn === 'undefined') {
+    window.hks_taiDuLieuPhanBon_fn = function() {};
+    window.hks_themDongPhanQuyen_fn = function() {};
+    window.hks_luuCauHinhPhanBon_fn = function() {};
   }
-
-  function hks_taiDuLieuPhanBon_fn() {
-    if (!hks_bienKhungHeThong_obj) {
-        Swal.fire("Thông báo", "Dữ liệu cấu hình chưa sẵn sàng, vui lòng tải lại trang!", "info");
-        return;
-    }
-
-    // Hiển thị loading nhẹ
-    Swal.fire({
-        title: 'Đang tải cấu hình...',
-        text: 'Vui lòng chờ trong giây lát',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    setTimeout(() => {
-        // Đổ dữ liệu danh mục
-        document.getElementById('t4_danToc').value = (hks_bienKhungHeThong_obj.hks_rawDanToc_arr || []).join(', ');
-        document.getElementById('t4_xepLoai').value = (hks_bienKhungHeThong_obj.hks_rawXepLoai_arr || []).join(', ');
-        document.getElementById('t4_capThanhTich').value = (hks_bienKhungHeThong_obj.hks_rawCapThanhTich_arr || []).join(', ');
-        document.getElementById('t4_toanQuyen').value = (hks_bienKhungHeThong_obj.hks_rawToanQuyen_arr || []).join(', ');
-
-        // Xây dựng bảng phân quyền
-        let tbody = document.getElementById('tbodyPhanQuyen');
-        if (tbody) {
-            tbody.innerHTML = '';
-            (hks_bienKhungHeThong_obj.hks_rawPhanQuyen_arr || []).forEach(item => {
-                let tr = document.createElement('tr');
-                let radioName = 'radio_' + Math.random().toString(36).substr(2, 6);
-                tr.innerHTML = `
-                    <td><input type="text" class="cell-input text-center hks-nam-hoc" value="${item.namHoc || ''}" placeholder="VD: 2026-2027"></td>
-                    <td><input type="text" class="cell-input text-center hks-lop" value="${item.lop || ''}" placeholder="VD: 1A"></td>
-                    <td class="text-center align-middle">
-                        <input class="form-check-input hks-kich-hoat" type="radio" name="${radioName}" ${item.kichHoat === 'x' ? 'checked' : ''}>
-                    </td>
-                    <td><input type="text" class="cell-input hks-dinh-danh" value="${item.dinhDanh || ''}" placeholder="Cán bộ phụ trách..."></td>
-                    <td class="text-center align-middle">
-                        <i class="bi bi-x-circle-fill text-danger hks-input-thanhtich" onclick="this.closest('tr').remove()" title="Thu hồi cấu hình"></i>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        Swal.close();
-    }, 200);
-  }
-
-  function hks_themDongPhanQuyen_fn() {
-      let tbody = document.getElementById('tbodyPhanQuyen');
-      if (!tbody) return;
-      let tr = document.createElement('tr');
-      let radioName = 'radio_' + Math.random().toString(36).substr(2, 6);
-      tr.innerHTML = `
-          <td><input type="text" class="cell-input text-center hks-nam-hoc" placeholder="VD: 2026-2027"></td>
-          <td><input type="text" class="cell-input text-center hks-lop" placeholder="VD: 1A"></td>
-          <td class="text-center align-middle">
-              <input class="form-check-input hks-kich-hoat" type="radio" name="${radioName}">
-          </td>
-          <td><input type="text" class="cell-input hks-dinh-danh" placeholder="Cán bộ phụ trách..."></td>
-          <td class="text-center align-middle">
-              <i class="bi bi-x-circle-fill text-danger hks-input-thanhtich" onclick="this.closest('tr').remove()" title="Thu hồi cấu hình"></i>
-          </td>
-      `;
-      tbody.appendChild(tr);
-  }
-
-  function hks_luuCauHinhPhanBon_fn() {
-    Swal.fire({
-        title: "Xác nhận lưu cấu hình?",
-        text: "Hệ thống sẽ tái cấu trúc ma trận phân quyền và thiết lập lại toàn bộ danh mục!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#003366",
-        cancelButtonColor: "#dc3545",
-        confirmButtonText: "Đồng ý ghi nhận",
-        cancelButtonText: "Hủy bỏ"
-    }).then((result) => {
-        if (result.isConfirmed) {
-            hks_hienThiManHinhTai_fn(true);
-            
-            let hks_mangPhanQuyen_arr = [];
-            document.querySelectorAll('#tbodyPhanQuyen tr').forEach(tr => {
-                let namHoc = tr.querySelector('.hks-nam-hoc').value.trim();
-                let lop = tr.querySelector('.hks-lop').value.trim();
-                let kichHoat = tr.querySelector('.hks-kich-hoat').checked ? 'x' : '';
-                let dinhDanh = tr.querySelector('.hks-dinh-danh').value.trim();
-                
-                if (namHoc || lop) {
-                    hks_mangPhanQuyen_arr.push({ namHoc, lop, kichHoat, dinhDanh });
-                }
-            });
-            
-            let hks_goiCauHinh_obj = {
-                hks_danToc_str: document.getElementById('t4_danToc').value.trim(),
-                hks_xepLoai_str: document.getElementById('t4_xepLoai').value.trim(),
-                hks_capThanhTich_str: document.getElementById('t4_capThanhTich').value.trim(),
-                hks_toanQuyen_str: document.getElementById('t4_toanQuyen').value.trim(),
-                hks_danhSachPhanQuyen_arr: hks_mangPhanQuyen_arr
-            };
-            
-            hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeBon_api', {
-                hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId,
-                hks_goiCauHinh_obj: hks_goiCauHinh_obj
-            }).then(res => {
-                hks_hienThiManHinhTai_fn(false);
-                if (res.success) {
-                    Swal.fire("Thành công", res.message, "success").then(() => {
-                        // Xóa cache config để lấy mới sau reload
-                        sessionStorage.removeItem("sys_config_hs");
-                        location.reload(); 
-                    });
-                } else {
-                    Swal.fire("Lỗi phân quyền", res.message, "error");
-                }
-            }).catch(e => {
-                hks_hienThiManHinhTai_fn(false);
-                Swal.fire("Lỗi kết nối", e.message, "error");
-            });
-        }
-    });
-  }
-
-  // --- CÁC HÀM TỪ TAB1, TAB2, TAB3 ĐƯỢC GIỮ NGUYÊN ---
-  // (Các hàm này không thay đổi, nhưng cần có trong file để tránh lỗi undefined)
-  // Tuy nhiên, do đây là file chính, tôi sẽ giữ nguyên các hàm này từ bản gốc.
-  // Lưu ý: Các hàm hks_layDuLieuPhanMot_fn, hks_dayDuLieuPhanMot_fn, hks_thucHienDoiLop_fn, hks_xuLyHanhDongXoa_fn, ...
-  // và hks_layDuLieuPhanHai_fn, hks_dayDuLieuPhanHai_fn, hks_layDuLieuPhanBa_fn, hks_veBangPhanBa_fn, ...
-  // đã được định nghĩa trong Tab1.html, Tab2.html, Tab3.html.
-  // Chúng được tải động và sẵn sàng sử dụng, nên không cần nhắc lại ở đây.
-  // Chỉ cần đảm bảo các file Tab1.html, Tab2.html, Tab3.html vẫn giữ nguyên nội dung.
 </script>
 </body>
 </html>
