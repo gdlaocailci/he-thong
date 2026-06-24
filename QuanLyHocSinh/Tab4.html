@@ -35,7 +35,14 @@
             <div class="card shadow-sm border-0 mb-3" style="border-top: 3px solid #b71c1c !important; background: rgba(255,255,255,0.95);">
                 <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center" style="color: #b71c1c;">
                     <span><i class="bi bi-person-lines-fill"></i> Phân công Cán bộ phụ trách & Năm học hiện tại</span>
-                    <button class="btn btn-outline-danger btn-sm fw-bold" onclick="hks_themDongPhanQuyen_fn()"><i class="bi bi-plus-circle"></i> Thêm hàng</button>
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-check form-switch mb-0" title="Gạt để khóa/mở cột Năm học hiện tại">
+                            <input class="form-check-input" type="checkbox" id="t4_toggleKhoa" checked onchange="hks_xuLyKhoaCapNhat_fn(this)" style="cursor: pointer; border-color: #003366;">
+                            <label class="form-check-label text-dark small fw-bold" for="t4_toggleKhoa" id="t4_lblToggleKhoa" style="cursor: pointer;">Mở cập nhật</label>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm fw-bold" onclick="hks_themDongPhanQuyen_fn()"><i class="bi bi-plus-circle"></i> Thêm hàng</button>
+                    </div>
                 </div>
                 <div class="card-body p-0 table-container" style="max-height: 52vh; overflow-y: auto;">
                     <table class="table table-bordered table-hover w-100 mb-0" id="bangPhanQuyen">
@@ -63,17 +70,44 @@
 </div>
 
 <script>
-    // Module UI cục bộ hỗ trợ Tab 4
+    // --- MODULE: XỬ LÝ SỰ KIỆN KHÓA/MỞ NÚT GẠT ---
+    function hks_xuLyKhoaCapNhat_fn(hks_phanTuGat_el) {
+        let hks_nhanTrangThai_el = document.getElementById('t4_lblToggleKhoa');
+        let hks_danhSachRadio_node = document.querySelectorAll('.hks-kich-hoat');
+
+        if (hks_phanTuGat_el.checked) {
+            // Trường hợp: Mở cập nhật
+            hks_nhanTrangThai_el.innerText = "Mở cập nhật";
+            hks_nhanTrangThai_el.classList.remove('text-danger');
+            hks_nhanTrangThai_el.classList.add('text-dark');
+            hks_danhSachRadio_node.forEach(radio => radio.disabled = false);
+        } else {
+            // Trường hợp: Khóa cập nhật (Hủy bỏ chọn & Vô hiệu hóa)
+            hks_nhanTrangThai_el.innerText = "Khóa cập nhật";
+            hks_nhanTrangThai_el.classList.remove('text-dark');
+            hks_nhanTrangThai_el.classList.add('text-danger');
+            hks_danhSachRadio_node.forEach(radio => {
+                radio.checked = false; // Xóa kích hoạt
+                radio.disabled = true; // Khóa tương tác
+            });
+        }
+    }
+
+    // --- MODULE: THÊM HÀNG (ĐÃ ĐỒNG BỘ TRẠNG THÁI KHÓA) ---
     function hks_themDongPhanQuyen_fn() {
         let hks_khungChuaTbody_el = document.getElementById('tbodyPhanQuyen');
         let hks_dongMoi_el = document.createElement('tr');
         let hks_maDinhDanhRadio_str = 'radio_' + Date.now();
         
+        // Kiểm tra trạng thái khóa hiện tại để áp dụng cho hàng mới thêm
+        let hks_trangThaiKhoa_bol = !document.getElementById('t4_toggleKhoa').checked;
+        let hks_thuocTinhDisabled_str = hks_trangThaiKhoa_bol ? 'disabled' : '';
+        
         hks_dongMoi_el.innerHTML = `
             <td><input type="text" class="cell-input text-center hks-nam-hoc" placeholder="VD: 2026-2027"></td>
             <td><input type="text" class="cell-input text-center hks-lop" placeholder="VD: 1A"></td>
             <td class="text-center align-middle">
-                <input class="form-check-input hks-kich-hoat" type="radio" name="namHienTaiRadio" id="${hks_maDinhDanhRadio_str}">
+                <input class="form-check-input hks-kich-hoat" type="radio" name="namHienTaiRadio" id="${hks_maDinhDanhRadio_str}" ${hks_thuocTinhDisabled_str}>
             </td>
             <td><input type="text" class="cell-input hks-dinh-danh" placeholder="dinhdanh1@... , dinhdanh2@..."></td>
             <td class="text-center align-middle">
