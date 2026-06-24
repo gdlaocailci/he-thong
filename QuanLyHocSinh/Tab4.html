@@ -1,0 +1,65 @@
+<div class="tab-pane fade" id="tab4" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-shield-lock"></i> Cấu hình Hệ thống & Phân quyền</h4>
+        <button class="btn btn-primary btn-sm fw-bold" onclick="hks_luuCauHinhPhanBon_fn()"><i class="bi bi-save"></i> Ghi nhận thay đổi</button>
+    </div>
+
+    <div class="row">
+        <!-- KHU VỰC 1: QUẢN LÝ DANH MỤC TĨNH -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-3" style="border-top: 3px solid #003366 !important; background: rgba(255,255,255,0.95);">
+                <div class="card-header bg-white fw-bold" style="color: #003366;">
+                    <i class="bi bi-list-task"></i> Từ điển Danh mục Hệ thống
+                </div>
+                <div class="card-body p-3">
+                    <p class="small text-muted mb-2">Các tham số phân tách bằng dấu phẩy (,)</p>
+                    
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1" style="color:#003366;">Danh mục Dân tộc</label>
+                        <textarea class="form-control" id="t4_danToc" rows="3" style="font-family:'Times New Roman'; font-size:15px;"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1" style="color:#003366;">Danh mục Xếp loại Học tập</label>
+                        <textarea class="form-control" id="t4_xepLoai" rows="3" style="font-family:'Times New Roman'; font-size:15px;"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1" style="color:#003366;">Cấp khen thưởng / Thành tích</label>
+                        <textarea class="form-control" id="t4_capThanhTich" rows="3" style="font-family:'Times New Roman'; font-size:15px;"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KHU VỰC 2 & 3: PHÂN CẤP ĐỊNH DANH BAN QUẢN TRỊ -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 mb-3" style="border-top: 3px solid #b71c1c !important; background: rgba(255,255,255,0.95);">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center" style="color: #b71c1c;">
+                    <span><i class="bi bi-person-lines-fill"></i> Phân công Cán bộ phụ trách lớp</span>
+                    <button class="btn btn-outline-danger btn-sm fw-bold" onclick="hks_themDongPhanQuyen_fn()"><i class="bi bi-plus-circle"></i> Thêm hàng</button>
+                </div>
+                <div class="card-body p-0 table-container">
+                    <table class="table table-bordered table-hover w-100 mb-0" id="bangPhanQuyen">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Năm học</th>
+                                <th style="width: 20%;">Lớp phụ trách</th>
+                                <th>Định danh cán bộ (Cách nhau bởi dấu phẩy)</th>
+                                <th style="width: 10%;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dữ liệu kết nối động từ máy chủ sẽ đổ vào đây -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light p-3" style="border-top: 1px solid #ddd;">
+                    <label class="fw-bold text-danger mb-1"><i class="bi bi-star-fill"></i> Định danh Toàn quyền hệ thống (Super Admin)</label>
+                    <textarea class="form-control border-danger" id="t4_toanQuyen" rows="2" placeholder="Nhập các tài khoản toàn quyền, cách nhau bởi dấu phẩy..." style="font-family:'Times New Roman'; font-size:15px;"></textarea>
+                    <div class="small text-muted mt-1">Các định danh trong mục này có quyền quản trị tối cao, bỏ qua các bước lọc phân lớp thông thường.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
