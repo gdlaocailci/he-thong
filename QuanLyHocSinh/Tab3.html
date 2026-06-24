@@ -311,7 +311,7 @@
       </tr>`;
   }
 
-  // --- VẼ BÁO CÁO 1 LẦN DUY NHẤT (STRING BUILDER) ---
+// --- VẼ BÁO CÁO 1 LẦN DUY NHẤT (STRING BUILDER) ---
   function hks_veBangPhanBa_fn(data) {
     const hks_bangTH_el = document.querySelector('#bang3_1 tbody');
     const hks_bangTHCS_el = document.querySelector('#bang3_1_thcs tbody');
@@ -327,7 +327,8 @@
     let hks_soThuTuMot_num = 1, hks_soThuTuHai_num = 1, hks_soThuTuBa_num = 1;
 
     hks_danhSachLopThongKe_arr.forEach((item) => {
-        let hks_khopChuoi_arr = item.lop.match(/^\d+/);
+        // [CẬP NHẬT]: Bỏ dấu ^ để quét số trong mọi định dạng tên lớp (VD: "Lớp 6A", " 7B")
+        let hks_khopChuoi_arr = String(item.lop).match(/\d+/);
         let hks_khoiLop_num = hks_khopChuoi_arr ? parseInt(hks_khopChuoi_arr[0]) : 0;
         let hks_laCapMot_bol = (hks_khoiLop_num >= 1 && hks_khoiLop_num <= 5);
         let hks_laCapHai_bol = (hks_khoiLop_num >= 6 && hks_khoiLop_num <= 9);
