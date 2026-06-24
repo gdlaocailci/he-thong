@@ -317,56 +317,64 @@
       tbody.appendChild(tr);
   }
 
-  function hks_luuCauHinhPhanBon_fn() {
-      let danToc = document.getElementById('t4_danToc').value.split(',').map(e => e.trim()).filter(Boolean);
-      let xepLoai = document.getElementById('t4_xepLoai').value.split(',').map(e => e.trim()).filter(Boolean);
-      let capThanhTich = document.getElementById('t4_capThanhTich').value.split(',').map(e => e.trim()).filter(Boolean);
-      let toanQuyen = document.getElementById('t4_toanQuyen').value.split(',').map(e => e.trim()).filter(Boolean);
-      
-      let phanQuyenLop = [];
-      document.querySelectorAll('#bangPhanQuyen tbody tr').forEach(tr => {
-          let nam = tr.querySelector('.t4-nam').value.trim();
-          let lop = tr.querySelector('.t4-lop').value.trim();
-          let cb = tr.querySelector('.t4-cb').value.trim();
-          if(nam || lop || cb) {
-              phanQuyenLop.push({ hks_namHoc_str: nam, hks_tenLop_str: lop, hks_taiKhoanPhuTrach_str: cb });
-          }
-      });
+function hks_luuCauHinhPhanBon_fn() {
+    // 1. Thu thập dữ liệu từ form
+    let danToc = document.getElementById('t4_danToc').value.split(',').map(e => e.trim()).filter(Boolean);
+    let xepLoai = document.getElementById('t4_xepLoai').value.split(',').map(e => e.trim()).filter(Boolean);
+    let capThanhTich = document.getElementById('t4_capThanhTich').value.split(',').map(e => e.trim()).filter(Boolean);
+    let toanQuyen = document.getElementById('t4_toanQuyen').value.split(',').map(e => e.trim()).filter(Boolean);
+    
+    let phanQuyenLop = [];
+    document.querySelectorAll('#bangPhanQuyen tbody tr').forEach(tr => {
+        let nam = tr.querySelector('.t4-nam').value.trim();
+        let lop = tr.querySelector('.t4-lop').value.trim();
+        let cb = tr.querySelector('.t4-cb').value.trim();
+        if(nam || lop || cb) {
+            phanQuyenLop.push({ hks_namHoc_str: nam, hks_tenLop_str: lop, hks_taiKhoanPhuTrach_str: cb });
+        }
+    });
 
-      let hks_duLieuCauHinh_obj = { 
-          danToc: danToc, 
-          xepLoai: xepLoai, 
-          capThanhTich: capThanhTich, 
-          toanQuyen: toanQuyen, 
-          phanQuyenLop: phanQuyenLop 
-      };
-      
-      hks_hienThiManHinhTai_fn(true);
-      
-      hks_thucThiGiaoTiep_fn('hks_ghiNhanCauHinh_api', { 
-          hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId, 
-          hks_duLieuCauHinh_obj: hks_duLieuCauHinh_obj 
-      }).then(res => {
-          if(res.success) {
-              // Tải lại cấu hình hệ thống
-              return hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {
-                  hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
-              }).then(configRes => {
-                  hks_bienKhungHeThong_obj = configRes;
-                  hks_doDuLieuVaoHopChon_fn();
-                  Swal.fire("Thành công", res.message, "success").then(() => {
-                      location.reload();
-                  });
-              });
-          } else {
-              hks_hienThiManHinhTai_fn(false);
-              Swal.fire("Thất bại", res.message, "error");
-          }
-      }).catch(e => {
-          hks_hienThiManHinhTai_fn(false);
-          Swal.fire("Lỗi kết nối", e.message, "error");
-      });
-  }
+    let hks_duLieuCauHinh_obj = { 
+        danToc: danToc, 
+        xepLoai: xepLoai, 
+        capThanhTich: capThanhTich, 
+        toanQuyen: toanQuyen, 
+        phanQuyenLop: phanQuyenLop 
+    };
+    
+    hks_hienThiManHinhTai_fn(true); // Hiện loading
+
+    // 2. Gọi API lưu cấu hình
+    hks_thucThiGiaoTiep_fn('hks_ghiNhanCauHinh_api', { 
+        hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId, 
+        hks_duLieuCauHinh_obj: hks_duLieuCauHinh_obj 
+    }).then(res => {
+        if(res.success) {
+            // 3. Lấy lại cấu hình mới nhất từ server
+            return hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {
+                hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
+            }).then(configRes => {
+                // 4. Cập nhật biến toàn cục
+                hks_bienKhungHeThong_obj = configRes;
+                // 5. Làm mới các dropdown (năm học, lớp)
+                hks_doDuLieuVaoHopChon_fn();
+                // 6. Cập nhật lại trạng thái các tab hiện tại (nếu đang mở)
+                //    - Tab1: reset chế độ sửa và làm mới bảng nếu đang hiển thị
+                //    - Tab2: tương tự
+                // 7. Thông báo và reload để đảm bảo toàn bộ giao diện áp dụng quyền mới
+                Swal.fire("Thành công", res.message, "success").then(() => {
+                    location.reload(); // Reload để cập nhật toàn bộ quyền
+                });
+            });
+        } else {
+            hks_hienThiManHinhTai_fn(false);
+            Swal.fire("Thất bại", res.message, "error");
+        }
+    }).catch(e => {
+        hks_hienThiManHinhTai_fn(false);
+        Swal.fire("Lỗi kết nối", e.message, "error");
+    });
+}
 </script>
 </body>
 </html>
