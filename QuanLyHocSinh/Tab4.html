@@ -70,7 +70,7 @@
 </div>
 
 <script>
-    // --- MODULE: XỬ LÝ SỰ KIỆN KHÓA/MỞ NÚT GẠT ---
+    // --- MODULE: XỬ LÝ SỰ KIỆN KHÓA/MỞ NÚT GẠT (Đã bổ sung bộ nhớ lưu vết) ---
     function hks_xuLyKhoaCapNhat_fn(hks_phanTuGat_el) {
         let hks_nhanTrangThai_el = document.getElementById('t4_lblToggleKhoa');
         let hks_danhSachRadio_node = document.querySelectorAll('.hks-kich-hoat');
@@ -81,25 +81,29 @@
             hks_nhanTrangThai_el.classList.remove('text-danger');
             hks_nhanTrangThai_el.classList.add('text-dark');
             hks_danhSachRadio_node.forEach(radio => radio.disabled = false);
+            // Ghi nhận trạng thái vào bộ nhớ cục bộ
+            localStorage.setItem('sys_toggle_khoa_t4', 'mo'); 
         } else {
-            // Trường hợp: Khóa cập nhật (Hủy bỏ chọn & Vô hiệu hóa)
+            // Trường hợp: Khóa cập nhật
             hks_nhanTrangThai_el.innerText = "Khóa cập nhật";
             hks_nhanTrangThai_el.classList.remove('text-dark');
             hks_nhanTrangThai_el.classList.add('text-danger');
             hks_danhSachRadio_node.forEach(radio => {
-                radio.checked = false; // Xóa kích hoạt
-                radio.disabled = true; // Khóa tương tác
+                radio.checked = false; 
+                radio.disabled = true; 
             });
+            // Ghi nhận trạng thái vào bộ nhớ cục bộ
+            localStorage.setItem('sys_toggle_khoa_t4', 'khoa');
         }
     }
 
-    // --- MODULE: THÊM HÀNG (ĐÃ ĐỒNG BỘ TRẠNG THÁI KHÓA, CUỘN TRANG VÀ FOCUS) ---
+    // --- MODULE: THÊM HÀNG (Khắc phục lỗi lấp khuất thanh cuộn) ---
     function hks_themDongPhanQuyen_fn() {
         let hks_khungChuaTbody_el = document.getElementById('tbodyPhanQuyen');
         let hks_dongMoi_el = document.createElement('tr');
         let hks_maDinhDanhRadio_str = 'radio_' + Date.now();
         
-        // Kiểm tra trạng thái khóa hiện tại để áp dụng cho hàng mới thêm
+        // Kiểm tra trạng thái khóa hiện tại
         let hks_trangThaiKhoa_bol = !document.getElementById('t4_toggleKhoa').checked;
         let hks_thuocTinhDisabled_str = hks_trangThaiKhoa_bol ? 'disabled' : '';
         
@@ -116,10 +120,13 @@
         `;
         hks_khungChuaTbody_el.appendChild(hks_dongMoi_el);
 
-        // Đưa hàng mới hiển thị vào chính giữa khung nhìn (tránh lấp khuất dưới thanh cuộn)
-        hks_dongMoi_el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // XỬ LÝ LỖI CUỘN: Trỏ trực tiếp vào vùng chứa bảng và ép đẩy thanh cuộn xuống vị trí sâu nhất
+        let hks_khungCuon_el = hks_khungChuaTbody_el.closest('.table-container');
+        if (hks_khungCuon_el) {
+            hks_khungCuon_el.scrollTop = hks_khungCuon_el.scrollHeight;
+        }
         
-        // Kích hoạt ngay con trỏ nhấp nháy tại ô "Năm học" của hàng vừa tạo
+        // Kích hoạt con trỏ
         setTimeout(() => {
             let hks_oNhapNamHoc_el = hks_dongMoi_el.querySelector('.hks-nam-hoc');
             if (hks_oNhapNamHoc_el) hks_oNhapNamHoc_el.focus();
