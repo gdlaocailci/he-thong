@@ -99,6 +99,9 @@
     .spinner-ring { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #dc3545; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
     .loader-text { font-family: 'Times New Roman', serif; font-weight: bold; color: #dc3545; letter-spacing: 1px; font-size: 14px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* Ghi đè Z-index của thư viện SweetAlert2 vượt qua màn hình đăng nhập */
+    .swal2-container { z-index: 2147483647 !important; }
   </style>
 </head>
 <body>
@@ -164,8 +167,7 @@
       <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1" type="button" onclick="hks_khoiPhucTrangThaiGoc_fn(1)"><i class="bi bi-person-vcard"></i> 1. Thông tin học sinh</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2" type="button" onclick="hks_khoiPhucTrangThaiGoc_fn(2)"><i class="bi bi-journal-check"></i> 2. Kết quả học tập & Thành tích</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3" type="button"><i class="bi bi-bar-chart-line-fill"></i> 3. Thống kê - Tổng hợp</button></li>
-      <!-- Tab4 sẽ được thêm động qua JavaScript nếu là admin -->
-    </ul>
+      </ul>
 
     <div class="tab-content" id="khung-chua-tab"></div>
   </div>
@@ -175,7 +177,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // --- MẠNG LƯỚI KHAI BÁO BỘ NHỚ ĐỆM (CACHE CỤC BỘ) ---
   let hks_khoDuLieuTong_arr = [];
 
   async function hks_thucThiGiaoTiep_fn(hks_lenhDieuPhoi_str, hks_goiDuLieu_obj = {}) {
@@ -218,7 +219,6 @@
 
   function hks_hienThiManHinhTai_fn(hks_trangThai_bol) { document.getElementById('instant-loader').style.display = hks_trangThai_bol ? 'flex' : 'none'; }
   
-  // --- Hàm xử lý đăng nhập ---
   function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
       hks_hienThiManHinhTai_fn(true);
       const hks_chuoiGiaoTiep_str = hks_phanHoiGG_obj.credential;
@@ -226,21 +226,20 @@
       hks_thucThiGiaoTiep_fn('hks_khoiDongChuongTrinh_api', {hks_chuoiDinhDanh_str: hks_chuoiGiaoTiep_str, hks_maXacThuc_str: ""}).then(hks_ketQuaAPI_obj => {
           if(!hks_ketQuaAPI_obj.success) { 
               hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs");
-              Swal.fire({ title: "Từ chối truy cập", text: hks_ketQuaAPI_obj.message, icon: "warning", confirmButtonText: "Thử lại", allowOutsideClick: false }).then((res) => { if (res.isConfirmed) location.reload(); });
+              Swal.fire({ title: "Từ chối truy cập", text: hks_ketQuaAPI_obj.message, icon: "error", confirmButtonText: "Quay lại trang chủ", allowOutsideClick: false }).then((res) => { if (res.isConfirmed) location.reload(); });
               return; 
           }
           
           hks_hoSoNguoiDungHienTai_obj = hks_ketQuaAPI_obj.data;
           hks_bienKhungHeThong_obj = hks_ketQuaAPI_obj.config;
           
-          // Lưu vào sessionStorage để dùng sau
           sessionStorage.setItem("sys_data_hs", JSON.stringify(hks_hoSoNguoiDungHienTai_obj));
           sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
 
           hks_capNhatBoNhoDem_fn().then(() => {
               hks_doDuLieuVaoHopChon_fn();
               hks_thietLapBoLoc_fn();
-              hks_kiemTraQuyenVaNapTabBon_fn(); // Kích hoạt nạp hệ thống phân quyền
+              hks_kiemTraQuyenVaNapTabBon_fn(); 
               document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
               document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
               document.getElementById('gate-overlay').style.display = 'none'; 
@@ -256,7 +255,7 @@
     $.get("Tab1.html", function(data1) { $("#khung-chua-tab").append(data1);
         $.get("Tab2.html", function(data2) { $("#khung-chua-tab").append(data2);
             $.get("Tab3.html", function(data3) { $("#khung-chua-tab").append(data3);
-                // Nếu đã có session, khôi phục
+                
                 let hks_duLieuLuuTru_str = sessionStorage.getItem("sys_data_hs");
                 let hks_cauHinhLuuTru_str = sessionStorage.getItem("sys_config_hs");
                 if(hks_duLieuLuuTru_str) {
@@ -266,7 +265,6 @@
                     document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
                     hks_thietLapBoLoc_fn(); 
                     
-                    // Nếu đã có config trong session, dùng luôn, không gọi API
                     if(hks_cauHinhLuuTru_str) {
                         hks_bienKhungHeThong_obj = JSON.parse(hks_cauHinhLuuTru_str);
                         hks_doDuLieuVaoHopChon_fn();
@@ -278,9 +276,21 @@
                             setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
                         });
                     } else {
-                        // Trường hợp chưa có config, gọi API
                         hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_duLieuTaiVe_obj => {
-                            if(hks_duLieuTaiVe_obj.success === false) { hks_hienThiManHinhTai_fn(false); sessionStorage.removeItem("sys_data_hs"); location.reload(); return; }
+                            if(hks_duLieuTaiVe_obj.success === false) { 
+                                hks_hienThiManHinhTai_fn(false); 
+                                sessionStorage.removeItem("sys_data_hs"); 
+                                Swal.fire({
+                                    title: "Từ chối truy cập",
+                                    text: hks_duLieuTaiVe_obj.message || "Định danh chưa được cấp phép hoặc đã bị thu hồi quyền truy cập!",
+                                    icon: "error",
+                                    confirmButtonText: "Quay lại trang chủ",
+                                    allowOutsideClick: false
+                                }).then(() => {
+                                    location.reload();
+                                });
+                                return; 
+                            }
                             hks_bienKhungHeThong_obj = hks_duLieuTaiVe_obj;
                             sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
                             hks_doDuLieuVaoHopChon_fn(); 
@@ -376,7 +386,6 @@
 
   // ===================== PHÂN QUYỀN HỆ THỐNG (TAB4) =====================
   function hks_kiemTraQuyenVaNapTabBon_fn() {
-    // Xóa tab4 cũ nếu có
     $('#nav-li-tab4').remove();
     $('#tab4').remove();
     
@@ -400,24 +409,19 @@
         return;
     }
 
-    // Hiển thị loading nhẹ
     Swal.fire({
         title: 'Đang tải cấu hình...',
         text: 'Vui lòng chờ trong giây lát',
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => { Swal.showLoading(); }
     });
 
     setTimeout(() => {
-        // Đổ dữ liệu danh mục
         document.getElementById('t4_danToc').value = (hks_bienKhungHeThong_obj.hks_rawDanToc_arr || []).join(', ');
         document.getElementById('t4_xepLoai').value = (hks_bienKhungHeThong_obj.hks_rawXepLoai_arr || []).join(', ');
         document.getElementById('t4_capThanhTich').value = (hks_bienKhungHeThong_obj.hks_rawCapThanhTich_arr || []).join(', ');
         document.getElementById('t4_toanQuyen').value = (hks_bienKhungHeThong_obj.hks_rawToanQuyen_arr || []).join(', ');
 
-        // Xây dựng bảng phân quyền
         let tbody = document.getElementById('tbodyPhanQuyen');
         if (tbody) {
             tbody.innerHTML = '';
@@ -438,6 +442,18 @@
                 tbody.appendChild(tr);
             });
         }
+
+        let hks_trangThaiLuu_str = localStorage.getItem('sys_toggle_khoa_t4');
+        let hks_nutGatUI_el = document.getElementById('t4_toggleKhoa');
+        if (hks_nutGatUI_el) {
+            if (hks_trangThaiLuu_str === 'khoa') {
+                hks_nutGatUI_el.checked = false;
+                if(typeof hks_xuLyKhoaCapNhat_fn === 'function') hks_xuLyKhoaCapNhat_fn(hks_nutGatUI_el);
+            } else {
+                hks_nutGatUI_el.checked = true;
+                if(typeof hks_xuLyKhoaCapNhat_fn === 'function') hks_xuLyKhoaCapNhat_fn(hks_nutGatUI_el);
+            }
+        }
         Swal.close();
     }, 200);
   }
@@ -447,11 +463,15 @@
       if (!tbody) return;
       let tr = document.createElement('tr');
       let radioName = 'radio_' + Math.random().toString(36).substr(2, 6);
+      
+      let hks_trangThaiKhoa_bol = !document.getElementById('t4_toggleKhoa').checked;
+      let hks_thuocTinhDisabled_str = hks_trangThaiKhoa_bol ? 'disabled' : '';
+
       tr.innerHTML = `
           <td><input type="text" class="cell-input text-center hks-nam-hoc" placeholder="VD: 2026-2027"></td>
           <td><input type="text" class="cell-input text-center hks-lop" placeholder="VD: 1A"></td>
           <td class="text-center align-middle">
-              <input class="form-check-input hks-kich-hoat" type="radio" name="${radioName}">
+              <input class="form-check-input hks-kich-hoat" type="radio" name="${radioName}" ${hks_thuocTinhDisabled_str}>
           </td>
           <td><input type="text" class="cell-input hks-dinh-danh" placeholder="Cán bộ phụ trách..."></td>
           <td class="text-center align-middle">
@@ -459,6 +479,14 @@
           </td>
       `;
       tbody.appendChild(tr);
+
+      let hks_khungCuon_el = tbody.closest('.table-container');
+      if (hks_khungCuon_el) hks_khungCuon_el.scrollTop = hks_khungCuon_el.scrollHeight;
+      
+      setTimeout(() => {
+          let hks_oNhapNamHoc_el = tr.querySelector('.hks-nam-hoc');
+          if (hks_oNhapNamHoc_el) hks_oNhapNamHoc_el.focus();
+      }, 100);
   }
 
   function hks_luuCauHinhPhanBon_fn() {
@@ -502,7 +530,6 @@
                 hks_hienThiManHinhTai_fn(false);
                 if (res.success) {
                     Swal.fire("Thành công", res.message, "success").then(() => {
-                        // Xóa cache config để lấy mới sau reload
                         sessionStorage.removeItem("sys_config_hs");
                         location.reload(); 
                     });
@@ -516,15 +543,6 @@
         }
     });
   }
-
-  // --- CÁC HÀM TỪ TAB1, TAB2, TAB3 ĐƯỢC GIỮ NGUYÊN ---
-  // (Các hàm này không thay đổi, nhưng cần có trong file để tránh lỗi undefined)
-  // Tuy nhiên, do đây là file chính, tôi sẽ giữ nguyên các hàm này từ bản gốc.
-  // Lưu ý: Các hàm hks_layDuLieuPhanMot_fn, hks_dayDuLieuPhanMot_fn, hks_thucHienDoiLop_fn, hks_xuLyHanhDongXoa_fn, ...
-  // và hks_layDuLieuPhanHai_fn, hks_dayDuLieuPhanHai_fn, hks_layDuLieuPhanBa_fn, hks_veBangPhanBa_fn, ...
-  // đã được định nghĩa trong Tab1.html, Tab2.html, Tab3.html.
-  // Chúng được tải động và sẵn sàng sử dụng, nên không cần nhắc lại ở đây.
-  // Chỉ cần đảm bảo các file Tab1.html, Tab2.html, Tab3.html vẫn giữ nguyên nội dung.
 </script>
 </body>
 </html>
