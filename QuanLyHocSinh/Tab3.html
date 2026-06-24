@@ -25,7 +25,7 @@
               <th rowspan="2" class="col-compact">TS</th>
               <th rowspan="2" class="col-compact">DT</th><th rowspan="2" class="col-compact">Nữ</th>
               <th rowspan="2" class="col-compact">Nữ DT</th><th rowspan="2" class="col-compact">K.Tật</th><th rowspan="2" class="col-compact">Nữ KT</th>
-              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact">BHYT</th>
+              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact">HS ngoại tuyến</th><th rowspan="2" class="col-compact">BHYT</th>
               <th colspan="2" class="col-age">6 tuổi</th><th colspan="2" class="col-age">7 tuổi</th><th colspan="2" class="col-age">8 tuổi</th>
               <th colspan="2" class="col-age">9 tuổi</th><th colspan="2" class="col-age">10 tuổi</th><th colspan="2" class="col-age">11 tuổi</th>
               <th colspan="2" class="col-age">12 tuổi</th><th colspan="2" class="col-age">13 tuổi</th><th colspan="2" class="col-age">14 tuổi</th>
@@ -56,7 +56,7 @@
               <th rowspan="2" class="col-compact">TS</th>
               <th rowspan="2" class="col-compact">DT</th><th rowspan="2" class="col-compact">Nữ</th>
               <th rowspan="2" class="col-compact">Nữ DT</th><th rowspan="2" class="col-compact">K.Tật</th><th rowspan="2" class="col-compact">Nữ KT</th>
-              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact">BHYT</th>
+              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact">HS ngoại tuyến</th><th rowspan="2" class="col-compact">BHYT</th>
               <th colspan="2" class="col-age">11 tuổi</th><th colspan="2" class="col-age">12 tuổi</th><th colspan="2" class="col-age">13 tuổi</th>
               <th colspan="2" class="col-age">14 tuổi</th><th colspan="2" class="col-age">15 tuổi</th><th colspan="2" class="col-age">16 tuổi</th>
               <th colspan="2" class="col-age">17 tuổi</th><th colspan="2" class="col-age">18 tuổi</th><th colspan="2" class="col-age">19 tuổi</th>
@@ -121,7 +121,7 @@
       let hks_namHienTai_num = new Date().getFullYear(); 
 
       let hks_thongKe_obj = {};
-      let hks_tongBangMot_obj = { tongSo: 0, danToc: 0, nu: 0, nuDanToc: 0, khuyetTat: 0, nuKhuyetTat: 0, ngheo: 0, canNgheo: 0, chinhSach: 0, bhyt: 0, tuoi: {} };
+      let hks_tongBangMot_obj = { tongSo: 0, danToc: 0, nu: 0, nuDanToc: 0, khuyetTat: 0, nuKhuyetTat: 0, ngheo: 0, canNgheo: 0, chinhSach: 0, hsNgoaiTuyen: 0, bhyt: 0, tuoi: {} };
       for(let i=6; i<=19; i++) hks_tongBangMot_obj.tuoi[i] = {ts: 0, nu: 0};
       
       let hks_tongBangHai_obj = { 
@@ -135,7 +135,7 @@
         if (!hks_thongKe_obj[hks_phomHienTai_str]) {
           let hks_doiTuongTuoi_obj = {}; for(let i=6; i<=19; i++) hks_doiTuongTuoi_obj[i] = {ts: 0, nu: 0};
           hks_thongKe_obj[hks_phomHienTai_str] = {
-            lop: hks_phomHienTai_str, tongSo: 0, danToc: 0, nu: 0, nuDanToc: 0, khuyetTat: 0, nuKhuyetTat: 0, ngheo: 0, canNgheo: 0, chinhSach: 0, bhyt: 0, tuoi: hks_doiTuongTuoi_obj, 
+            lop: hks_phomHienTai_str, tongSo: 0, danToc: 0, nu: 0, nuDanToc: 0, khuyetTat: 0, nuKhuyetTat: 0, ngheo: 0, canNgheo: 0, chinhSach: 0, hsNgoaiTuyen: 0, bhyt: 0, tuoi: hks_doiTuongTuoi_obj, 
             htxs: 0, htt: 0, ht: 0, cht: 0,
             thanhTich: { xa: hks_khoiTaoMauThanhTich_fn(), huyen: hks_khoiTaoMauThanhTich_fn(), tinh: hks_khoiTaoMauThanhTich_fn(), qg: hks_khoiTaoMauThanhTich_fn(), qt: hks_khoiTaoMauThanhTich_fn() }
           };
@@ -153,6 +153,9 @@
         if (String(r[12]).trim() == String(hks_namHienTai_num)) { hks_thongKe_obj[hks_phomHienTai_str].ngheo++; hks_tongBangMot_obj.ngheo++; }
         if (String(r[13]).trim() == String(hks_namHienTai_num)) { hks_thongKe_obj[hks_phomHienTai_str].canNgheo++; hks_tongBangMot_obj.canNgheo++; }
         if (String(r[14]).trim() == String(hks_namHienTai_num)) { hks_thongKe_obj[hks_phomHienTai_str].bhyt++; hks_tongBangMot_obj.bhyt++; }
+        
+        // Cột S (chỉ số 18) - HS Ngoại tuyến
+        if (String(r[18]).trim().toLowerCase() === 'x') { hks_thongKe_obj[hks_phomHienTai_str].hsNgoaiTuyen++; hks_tongBangMot_obj.hsNgoaiTuyen++; }
         
         let hks_chuKySinh_num = 0;
         if (String(r[5]).length >= 4) {
@@ -205,7 +208,7 @@
           let hks_dongTongCong_obj = {
             lop: "TỔNG", 
             tongSo: hks_tongBangMot_obj.tongSo, danToc: hks_tongBangMot_obj.danToc, nu: hks_tongBangMot_obj.nu, nuDanToc: hks_tongBangMot_obj.nuDanToc, khuyetTat: hks_tongBangMot_obj.khuyetTat, nuKhuyetTat: hks_tongBangMot_obj.nuKhuyetTat, 
-            ngheo: hks_tongBangMot_obj.ngheo, canNgheo: hks_tongBangMot_obj.canNgheo, chinhSach: hks_tongBangMot_obj.chinhSach, bhyt: hks_tongBangMot_obj.bhyt, tuoi: hks_tongBangMot_obj.tuoi, 
+            ngheo: hks_tongBangMot_obj.ngheo, canNgheo: hks_tongBangMot_obj.canNgheo, chinhSach: hks_tongBangMot_obj.chinhSach, hsNgoaiTuyen: hks_tongBangMot_obj.hsNgoaiTuyen, bhyt: hks_tongBangMot_obj.bhyt, tuoi: hks_tongBangMot_obj.tuoi, 
             htxs: hks_tongBangHai_obj.htxs, htt: hks_tongBangHai_obj.htt, ht: hks_tongBangHai_obj.ht, cht: hks_tongBangHai_obj.cht,
             thanhTich: { xa: hks_tongBangHai_obj.xa, huyen: hks_tongBangHai_obj.huyen, tinh: hks_tongBangHai_obj.tinh, qg: hks_tongBangHai_obj.qg, qt: hks_tongBangHai_obj.qt }
           };
@@ -233,7 +236,7 @@
   function hks_khoiTaoDoiTuong_fn(tenLop) {
       let obj = {
           lop: tenLop, tongSo: 0, danToc: 0, nu: 0, nuDanToc: 0, khuyetTat: 0, nuKhuyetTat: 0,
-          ngheo: 0, canNgheo: 0, chinhSach: 0, bhyt: 0, htxs: 0, htt: 0, ht: 0, cht: 0,
+          ngheo: 0, canNgheo: 0, chinhSach: 0, hsNgoaiTuyen: 0, bhyt: 0, htxs: 0, htt: 0, ht: 0, cht: 0,
           tuoi: {}, thanhTich: { xa: hks_khoiTaoMauThanhTich_fn(), huyen: hks_khoiTaoMauThanhTich_fn(), tinh: hks_khoiTaoMauThanhTich_fn(), qg: hks_khoiTaoMauThanhTich_fn(), qt: hks_khoiTaoMauThanhTich_fn() }
       };
       for(let i=6; i<=19; i++) obj.tuoi[i] = {ts:0, nu:0};
@@ -243,7 +246,7 @@
   function hks_tinhTongGop_fn(goc, them) {
       goc.tongSo += them.tongSo || 0; goc.danToc += them.danToc || 0; goc.nu += them.nu || 0; goc.nuDanToc += them.nuDanToc || 0;
       goc.khuyetTat += them.khuyetTat || 0; goc.nuKhuyetTat += them.nuKhuyetTat || 0; goc.ngheo += them.ngheo || 0; goc.canNgheo += them.canNgheo || 0;
-      goc.chinhSach += them.chinhSach || 0; goc.bhyt += them.bhyt || 0;
+      goc.chinhSach += them.chinhSach || 0; goc.hsNgoaiTuyen += them.hsNgoaiTuyen || 0; goc.bhyt += them.bhyt || 0;
       goc.htxs += them.htxs || 0; goc.htt += them.htt || 0; goc.ht += them.ht || 0; goc.cht += them.cht || 0;
 
       for(let i=6; i<=19; i++) { if(them.tuoi[i]) { goc.tuoi[i].ts += them.tuoi[i].ts || 0; goc.tuoi[i].nu += them.tuoi[i].nu || 0; } }
@@ -271,7 +274,7 @@
         <td class="col-compact">${hks_dinhDangOChua_fn(item.nu)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuDanToc)}</td>
         <td class="col-compact">${hks_dinhDangOChua_fn(item.khuyetTat)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuKhuyetTat)}</td>
         <td class="col-compact">${hks_dinhDangOChua_fn(item.ngheo)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.canNgheo)}</td> 
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.chinhSach)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.bhyt)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.chinhSach)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.hsNgoaiTuyen)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.bhyt)}</td>
         ${hks_mangTuoi_arr.map(age => { 
             let cellTS = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].ts : 0); 
             let cellNu = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].nu : 0); 
