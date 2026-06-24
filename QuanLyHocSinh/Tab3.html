@@ -25,7 +25,7 @@
               <th rowspan="2" class="col-compact">TS</th>
               <th rowspan="2" class="col-compact">DT</th><th rowspan="2" class="col-compact">Nữ</th>
               <th rowspan="2" class="col-compact">Nữ DT</th><th rowspan="2" class="col-compact">K.Tật</th><th rowspan="2" class="col-compact">Nữ KT</th>
-              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact">HS ngoại tuyến</th><th rowspan="2" class="col-compact">BHYT</th>
+              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact" style="white-space: normal; font-size: 12px; line-height: 1.2;">HS ngoại<br>tuyến</th><th rowspan="2" class="col-compact">BHYT</th>
               <th colspan="2" class="col-age">6 tuổi</th><th colspan="2" class="col-age">7 tuổi</th><th colspan="2" class="col-age">8 tuổi</th>
               <th colspan="2" class="col-age">9 tuổi</th><th colspan="2" class="col-age">10 tuổi</th><th colspan="2" class="col-age">11 tuổi</th>
               <th colspan="2" class="col-age">12 tuổi</th><th colspan="2" class="col-age">13 tuổi</th><th colspan="2" class="col-age">14 tuổi</th>
@@ -56,7 +56,7 @@
               <th rowspan="2" class="col-compact">TS</th>
               <th rowspan="2" class="col-compact">DT</th><th rowspan="2" class="col-compact">Nữ</th>
               <th rowspan="2" class="col-compact">Nữ DT</th><th rowspan="2" class="col-compact">K.Tật</th><th rowspan="2" class="col-compact">Nữ KT</th>
-              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact">HS ngoại tuyến</th><th rowspan="2" class="col-compact">BHYT</th>
+              <th rowspan="2" class="col-compact">Nghèo</th><th rowspan="2" class="col-compact">Cận N</th><th rowspan="2" class="col-compact">C.Sách</th><th rowspan="2" class="col-compact" style="white-space: normal; font-size: 12px; line-height: 1.2;">HS ngoại<br>tuyến</th><th rowspan="2" class="col-compact">BHYT</th>
               <th colspan="2" class="col-age">11 tuổi</th><th colspan="2" class="col-age">12 tuổi</th><th colspan="2" class="col-age">13 tuổi</th>
               <th colspan="2" class="col-age">14 tuổi</th><th colspan="2" class="col-age">15 tuổi</th><th colspan="2" class="col-age">16 tuổi</th>
               <th colspan="2" class="col-age">17 tuổi</th><th colspan="2" class="col-age">18 tuổi</th><th colspan="2" class="col-age">19 tuổi</th>
@@ -222,7 +222,6 @@
     if(!hks_namChon_str) { Swal.fire("Cảnh báo!", "Giá trị trục gốc bằng null!", "warning"); return; }
     hks_hienThiManHinhTai_fn(true);
     
-    // TÍNH TOÁN BÁO CÁO CỤC BỘ KHÔNG CẦN CHỜ MÁY CHỦ
     setTimeout(() => {
         let hks_ketQuaThongKe_arr = hks_xuLyThongKeBoNhoDem_fn(hks_namChon_str);
         hks_veBangPhanBa_fn(hks_ketQuaThongKe_arr);
@@ -314,7 +313,6 @@
       </tr>`;
   }
 
-// --- VẼ BÁO CÁO 1 LẦN DUY NHẤT (STRING BUILDER) ---
   function hks_veBangPhanBa_fn(data) {
     const hks_bangTH_el = document.querySelector('#bang3_1 tbody');
     const hks_bangTHCS_el = document.querySelector('#bang3_1_thcs tbody');
@@ -330,7 +328,6 @@
     let hks_soThuTuMot_num = 1, hks_soThuTuHai_num = 1, hks_soThuTuBa_num = 1;
 
     hks_danhSachLopThongKe_arr.forEach((item) => {
-        // [CẬP NHẬT]: Bỏ dấu ^ để quét số trong mọi định dạng tên lớp (VD: "Lớp 6A", " 7B")
         let hks_khopChuoi_arr = String(item.lop).match(/\d+/);
         let hks_khoiLop_num = hks_khopChuoi_arr ? parseInt(hks_khopChuoi_arr[0]) : 0;
         let hks_laCapMot_bol = (hks_khoiLop_num >= 1 && hks_khoiLop_num <= 5);
