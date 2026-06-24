@@ -62,7 +62,7 @@
                 <div class="card-footer bg-light p-3" style="border-top: 1px solid #ddd;">
                     <label class="fw-bold text-danger mb-1"><i class="bi bi-star-fill"></i> Định danh Toàn quyền hệ thống (Quản trị cấp cao)</label>
                     <textarea class="form-control border-danger" id="t4_toanQuyen" rows="2" placeholder="Nhập các tài khoản định danh toàn quyền, cách nhau bởi dấu phẩy..." style="font-family:'Times New Roman'; font-size:15px;"></textarea>
-                    <div class="small text-muted mt-1">Các định danh trong mục này có quyền quản trị tối cao.</div>
+                    <div class="small text-muted mt-1">Các định danh trong mục này có quyền quản trị tối cao, can thiệp toàn bộ dữ liệu nhà trường. Phục vụ ánh xạ trực tiếp sang cột Q.</div>
                 </div>
             </div>
         </div>
@@ -93,7 +93,7 @@
         }
     }
 
-    // --- MODULE: THÊM HÀNG (ĐÃ ĐỒNG BỘ TRẠNG THÁI KHÓA) ---
+    // --- MODULE: THÊM HÀNG (ĐÃ ĐỒNG BỘ TRẠNG THÁI KHÓA, CUỘN TRANG VÀ FOCUS) ---
     function hks_themDongPhanQuyen_fn() {
         let hks_khungChuaTbody_el = document.getElementById('tbodyPhanQuyen');
         let hks_dongMoi_el = document.createElement('tr');
@@ -115,5 +115,14 @@
             </td>
         `;
         hks_khungChuaTbody_el.appendChild(hks_dongMoi_el);
+
+        // Đưa hàng mới hiển thị vào chính giữa khung nhìn (tránh lấp khuất dưới thanh cuộn)
+        hks_dongMoi_el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Kích hoạt ngay con trỏ nhấp nháy tại ô "Năm học" của hàng vừa tạo
+        setTimeout(() => {
+            let hks_oNhapNamHoc_el = hks_dongMoi_el.querySelector('.hks-nam-hoc');
+            if (hks_oNhapNamHoc_el) hks_oNhapNamHoc_el.focus();
+        }, 100);
     }
 </script>
