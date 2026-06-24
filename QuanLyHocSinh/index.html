@@ -217,7 +217,6 @@
 
   function hks_hienThiManHinhTai_fn(hks_trangThai_bol) { document.getElementById('instant-loader').style.display = hks_trangThai_bol ? 'flex' : 'none'; }
   
-  // XÓA BỎ HÀM atob() Ở CLIENT. ĐẨY GÓI DỮ LIỆU GỐC VỀ MÁY CHỦ
   function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
       hks_hienThiManHinhTai_fn(true);
       const hks_chuoiGiaoTiep_str = hks_phanHoiGG_obj.credential;
@@ -236,6 +235,7 @@
           hks_capNhatBoNhoDem_fn().then(() => {
               hks_doDuLieuVaoHopChon_fn();
               hks_thietLapBoLoc_fn();
+              hks_kiemTraQuyenVaNapTabBon_fn(); // Kích hoạt nạp hệ thống phân quyền
               document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
               document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
               document.getElementById('gate-overlay').style.display = 'none'; 
@@ -265,6 +265,7 @@
                         hks_doDuLieuVaoHopChon_fn(); 
 
                         hks_capNhatBoNhoDem_fn().then(() => {
+                            hks_kiemTraQuyenVaNapTabBon_fn(); // Kích hoạt nạp hệ thống phân quyền
                             hks_hienThiManHinhTai_fn(false);
                             let hks_ungDungChinh_el = document.getElementById('main-app');
                             hks_ungDungChinh_el.style.display = 'block'; setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
@@ -340,6 +341,122 @@
     });
     b.querySelectorAll('.bi-x-circle-fill, .btn-xoa-nguon').forEach(btn => { let ok = !hks_voHieuHoa_bol; if (!hks_laQuanTriCapCao_bol && hks_danhDauBang_str !== '#bang1') ok = false; btn.style.display = ok ? 'inline-block' : 'none'; });
     if (hks_laQuanTriCapCao_bol && hks_danhDauBang_str === '#bang1') { b.querySelectorAll('.stt-label').forEach(lbl => { lbl.style.display = hks_voHieuHoa_bol ? 'inline-block' : 'none'; }); }
+  }
+
+  // --- MODULE KẾT NỐI VÀ ĐỒNG BỘ DỮ LIỆU PHÂN HỆ PHÂN QUYỀN HỆ THỐNG (TAB 4) ---
+  
+  function hks_kiemTraQuyenVaNapTabBon_fn() {
+    $('#nav-li-tab4').remove();
+    $('#tab4').remove();
+    
+    if (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin') {
+      $('#bangDieuKhien').append(`
+        <li class="nav-item" id="nav-li-tab4">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab4" type="button" onclick="hks_taiDuLieuPhanBon_fn()">
+            <i class="bi bi-shield-lock"></i> 4. Phân quyền hệ thống
+          </button>
+        </li>
+      `);
+      $.get("Tab4.html", function(hks_giaoDienTab4_str) {
+        $("#khung-chua-tab").append(hks_giaoDienTab4_str);
+      });
+    }
+  }
+
+  function hks_taiDuLieuPhanBon_fn() {
+    if (!hks_bienKhungHeThong_obj) return;
+    
+    if (hks_bienKhungHeThong_obj.hks_rawDanToc_arr) {
+      document.getElementById('t4_danToc').value = hks_bienKhungHeThong_obj.hks_rawDanToc_arr.join(', ');
+    }
+    if (hks_bienKhungHeThong_obj.hks_rawXepLoai_arr) {
+      document.getElementById('t4_xepLoai').value = hks_bienKhungHeThong_obj.hks_rawXepLoai_arr.join(', ');
+    }
+    if (hks_bienKhungHeThong_obj.hks_rawCapThanhTich_arr) {
+      document.getElementById('t4_capThanhTich').value = hks_bienKhungHeThong_obj.hks_rawCapThanhTich_arr.join(', ');
+    }
+    if (hks_bienKhungHeThong_obj.hks_rawToanQuyen_arr) {
+      document.getElementById('t4_toanQuyen').value = hks_bienKhungHeThong_obj.hks_rawToanQuyen_arr.join(', ');
+    }
+    
+    let hks_tbody_el = document.getElementById('tbodyPhanQuyen');
+    if (hks_tbody_el) {
+      hks_tbody_el.innerHTML = ''; 
+      if (hks_bienKhungHeThong_obj.hks_rawPhanQuyen_arr) {
+        hks_bienKhungHeThong_obj.hks_rawPhanQuyen_arr.forEach(hks_dong_obj => {
+          let hks_dongMoi_el = document.createElement('tr');
+          let hks_maDinhDanhRadio_str = 'radio_' + Math.floor(Math.random() * 1000000);
+          let hks_checked_str = hks_dong_obj.kichHoat === 'x' ? 'checked' : '';
+          
+          hks_dongMoi_el.innerHTML = `
+            <td><input type="text" class="cell-input text-center hks-nam-hoc" value="${hks_dong_obj.namHoc || ''}" placeholder="VD: 2026-2027"></td>
+            <td><input type="text" class="cell-input text-center hks-lop" value="${hks_dong_obj.lop || ''}" placeholder="VD: 1A"></td>
+            <td class="text-center align-middle">
+                <input class="form-check-input hks-kich-hoat" type="radio" name="namHienTaiRadio" id="${hks_maDinhDanhRadio_str}" ${hks_checked_str}>
+            </td>
+            <td><input type="text" class="cell-input hks-dinh-danh" value="${hks_dong_obj.dinhDanh || ''}" placeholder="Cán bộ phụ trách..."></td>
+            <td class="text-center align-middle">
+                <i class="bi bi-x-circle-fill text-danger hks-input-thanhtich" onclick="this.closest('tr').remove()" title="Thu hồi cấu hình"></i>
+            </td>
+          `;
+          hks_tbody_el.appendChild(hks_dongMoi_el);
+        });
+      }
+    }
+  }
+
+  function hks_luuCauHinhPhanBon_fn() {
+    Swal.fire({
+      title: "Xác nhận lưu cấu hình?",
+      text: "Hệ thống sẽ tái cấu trúc ma trận phân quyền và thiết lập lại toàn bộ danh mục!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#003366",
+      cancelButtonColor: "#dc3545",
+      confirmButtonText: "Đồng ý ghi nhận",
+      cancelButtonText: "Hủy bỏ"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        hks_hienThiManHinhTai_fn(true);
+        
+        let hks_mangPhanQuyen_arr = [];
+        document.querySelectorAll('#tbodyPhanQuyen tr').forEach(tr => {
+          let namHoc = tr.querySelector('.hks-nam-hoc').value.trim();
+          let lop = tr.querySelector('.hks-lop').value.trim();
+          let kichHoat = tr.querySelector('.hks-kich-hoat').checked ? 'x' : '';
+          let dinhDanh = tr.querySelector('.hks-dinh-danh').value.trim();
+          
+          if (namHoc || lop) {
+            hks_mangPhanQuyen_arr.push({ namHoc: namHoc, lop: lop, kichHoat: kichHoat, dinhDanh: dinhDanh });
+          }
+        });
+        
+        let hks_goiCauHinh_obj = {
+          hks_danToc_str: document.getElementById('t4_danToc').value.trim(),
+          hks_xepLoai_str: document.getElementById('t4_xepLoai').value.trim(),
+          hks_capThanhTich_str: document.getElementById('t4_capThanhTich').value.trim(),
+          hks_toanQuyen_str: document.getElementById('t4_toanQuyen').value.trim(),
+          hks_danhSachPhanQuyen_arr: hks_mangPhanQuyen_arr
+        };
+        
+        hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeBon_api', {
+          hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId,
+          hks_goiCauHinh_obj: hks_goiCauHinh_obj
+        }).then(res => {
+          hks_hienThiManHinhTai_fn(false);
+          if (res.success) {
+            Swal.fire("Thành công", res.message, "success").then(() => {
+              location.reload(); 
+            });
+          } else {
+            Swal.fire("Lỗi phân quyền", res.message, "error");
+          }
+        }).catch(e => {
+          hks_hienThiManHinhTai_fn(false);
+          Swal.fire("Lỗi kết nối", e.message, "error");
+        });
+      }
+    });
   }
 </script>
 </body>
