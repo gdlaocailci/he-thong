@@ -1,13 +1,18 @@
+<style>
+  .hks-an-cot { display: none !important; }
+</style>
+
 <div class="tab-pane fade" id="tab2">
   <div class="text-center"><h4>KẾT QUẢ HỌC TẬP VÀ THÀNH TÍCH</h4></div>
   <div class="filter-box">
     <div class="row g-2 align-items-end">
       <div class="col-md-2"><label>Năm học</label><select id="t2_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-1"><label>Lớp</label><select id="t2_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-2"><label>CCCD</label><input id="t2_cccd" class="form-control form-control-sm"></div>
+      <div class="col-md-2"><label>Lớp</label><select id="t2_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      <!-- Đã áp dụng lớp ẩn cưỡng chế cho ô tìm kiếm CCCD -->
+      <div class="col-md-2 hks-an-cot"><label>CCCD</label><input id="t2_cccd" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Họ đệm</label><input id="t2_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t2_ten" class="form-control form-control-sm"></div>
-      <div class="col-md-3 text-end">
+      <div class="col-md-4 text-end">
         <button class="btn btn-sm btn-warning fw-bold px-3 me-1" id="btnEdit2" onclick="hks_kichHoatChinhSua_fn(2)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3 me-1" onclick="hks_layDuLieuPhanHai_fn()"><i class="bi bi-search"></i> Tìm</button>
         <span id="groupEdit2" class="edit-mode-btn">
@@ -20,7 +25,11 @@
     <table class="table table-bordered table-striped table-hover table-sm mb-0" id="bang2">
       <thead>
         <tr>
-          <th rowspan="2" style="min-width:110px">CCCD</th><th rowspan="2" style="min-width:110px">Họ đệm</th>
+          <!-- Bổ sung cột STT ở đầu tiên -->
+          <th rowspan="2" style="min-width:40px; width:40px; text-align:center;">STT</th>
+          <!-- Cột ẩn CCCD -->
+          <th rowspan="2" class="hks-an-cot">CCCD</th>
+          <th rowspan="2" style="min-width:110px">Họ đệm</th>
           <th rowspan="2" style="min-width:60px">Tên</th><th rowspan="2" style="min-width:90px">Ngày sinh</th>
           <th rowspan="2" style="min-width:50px">GT</th>
           <th colspan="4" class="th-hk1">Kết quả Học Kỳ I</th>
@@ -115,9 +124,11 @@
 
     hks_duLieuBang_arr.forEach((hks_dongDuLieu_arr, hks_chiSoDong_num) => {
       let hks_theDong_el = document.createElement('tr');
-      // Chèn đúng vị trí gốc của CCCD (index 2)
-      let hks_htmlCoDinh_str = `<td class="text-primary fw-bold">${hks_dongDuLieu_arr[2]}</td><td>${hks_dongDuLieu_arr[3]}</td><td>${hks_dongDuLieu_arr[4]}</td><td>${hks_dongDuLieu_arr[5]}</td><td>${hks_dongDuLieu_arr[6]}</td>`;
+      
+      // Bổ sung STT (hks_chiSoDong_num + 1) và đẩy toàn bộ các cột HTML sang phải
+      let hks_htmlCoDinh_str = `<td class="text-center align-middle text-muted" style="font-size:12px;">${hks_chiSoDong_num + 1}</td><td class="hks-an-cot">${hks_dongDuLieu_arr[2]}</td><td class="text-primary fw-bold">${hks_dongDuLieu_arr[3]}</td><td>${hks_dongDuLieu_arr[4]}</td><td>${hks_dongDuLieu_arr[5]}</td><td>${hks_dongDuLieu_arr[6]}</td>`;
       hks_theDong_el.innerHTML = hks_htmlCoDinh_str; 
+      
       let hks_voHieuHoa_bol = !hks_trangThaiSuaHai_bol;
       let hks_tenHS_str = (hks_dongDuLieu_arr[3] + " " + hks_dongDuLieu_arr[4]).trim();
 
@@ -158,22 +169,26 @@
     const hks_thanBang_el = document.querySelector('#bang2 tbody'); let hks_duLieuCanLuu_arr = [];
     
     for (let hks_theDong_el of hks_thanBang_el.rows) {
-      let hks_truong1 = hks_theDong_el.cells[0].innerText; // CCCD
-      let hks_truong2 = hks_theDong_el.cells[1].innerText; // Họ đệm
-      let hks_truong3 = hks_theDong_el.cells[2].innerText; // Tên
+      // Do có cột STT (chỉ số 0), tọa độ lấy dữ liệu định danh dịch +1
+      let hks_truong1 = hks_theDong_el.cells[1].textContent.trim(); // CCCD (ẩn)
+      let hks_truong2 = hks_theDong_el.cells[2].textContent.trim(); // Họ đệm
+      let hks_truong3 = hks_theDong_el.cells[3].textContent.trim(); // Tên
       
       let hks_namChon_str = document.getElementById('t2_nam').value; 
       let hks_lopChon_str = document.getElementById('t2_lop').value;
       if(!hks_namChon_str || !hks_lopChon_str) { Swal.fire("Cảnh báo!", "Dữ liệu biên sai lệch!", "warning"); return; }
       
       let hks_mangKetQuaLuu_arr = [hks_namChon_str, hks_lopChon_str, hks_truong1, hks_truong2, hks_truong3];
-      for(let i=5; i < hks_theDong_el.cells.length; i++) {
+      
+      // Vòng lặp lấy giá trị nhập liệu dịch +1 (bắt đầu từ cột index 6)
+      for(let i=6; i < hks_theDong_el.cells.length; i++) {
         let hks_phanTuLayDuLieu_el = hks_theDong_el.cells[i].querySelector('input');
         if(hks_phanTuLayDuLieu_el.type === 'checkbox') { 
             hks_mangKetQuaLuu_arr.push(hks_phanTuLayDuLieu_el.checked ? 'x' : ''); 
         } else { 
             let hks_giaTri_str = hks_phanTuLayDuLieu_el.value; 
-            if (i >= 13) {
+            // Cột thành tích dịch +1 (bắt đầu từ cột index 14)
+            if (i >= 14) {
                 let hks_ghiChu_str = hks_phanTuLayDuLieu_el.getAttribute('data-note'); 
                 if (hks_giaTri_str && String(hks_giaTri_str).trim() !== "" && hks_ghiChu_str && String(hks_ghiChu_str).trim() !== "") { 
                     hks_giaTri_str = hks_giaTri_str + "|" + hks_ghiChu_str; 
