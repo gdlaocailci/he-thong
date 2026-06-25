@@ -71,6 +71,22 @@
     hks_hienThiManHinhTai_fn(false);
   }
 
+  // --- HÀM MỚI: ĐÁNH DẤU CỜ KHI CÓ CHỈNH SỬA ---
+  function hks_danhDauChinhSua_fn(el) {
+      let tr = el.closest('tr');
+      if (!tr.classList.contains('hks-dong-da-sua')) {
+          tr.classList.add('hks-dong-da-sua');
+          let cellTen = tr.cells[5]; // Cột Tên ở vị trí số 5
+          if (cellTen) {
+              let icon = document.createElement('i');
+              icon.className = 'bi bi-pencil-fill text-warning ms-2 hks-icon-sua';
+              icon.title = "Đã chỉnh sửa";
+              cellTen.style.position = 'relative';
+              cellTen.appendChild(icon);
+          }
+      }
+  }
+
   function hks_chenDongPhanMot_fn(hks_duLieuBang_arr = null) {
     const hks_thanBang_el = document.querySelector('#bang1 tbody');
     const hks_theDong_el = document.createElement('tr');
@@ -79,6 +95,7 @@
     let hks_laQuanTriCapCao_bol = hks_bienKhungHeThong_obj.hks_quyenTuyetDoi_bol;
     
     if (!hks_duLieuBang_arr) {
+       hks_theDong_el.classList.add('hks-dong-da-sua'); // Dòng tạo mới mặc định bật cờ sửa
        let hks_hienThiXoa_str = hks_trangThaiSuaMot_bol ? 'inline-block' : 'none';
        hks_chuoiHtmlXoa_str = `<i class="bi bi-x-circle-fill text-secondary fs-6" style="cursor:pointer; display:${hks_hienThiXoa_str}" title="Hủy" onclick="this.closest('tr').remove()"></i>`;
     } else {
@@ -109,17 +126,31 @@
       if(hks_thietLapCot_obj.k === 'sel') {
         let hks_theChon_el = document.createElement('select'); hks_theChon_el.className = 'cell-input'; hks_theChon_el.disabled = hks_voHieuHoa_bol;
         if(hks_thietLapCot_obj.o) { hks_thietLapCot_obj.o.forEach(opt => { let hks_theTuyChon_el = document.createElement('option'); hks_theTuyChon_el.value = opt; hks_theTuyChon_el.text = opt; if(String(opt) === String(hks_giaTriCot_str)) hks_theTuyChon_el.selected = true; hks_theChon_el.add(hks_theTuyChon_el); }); }
+        hks_theChon_el.addEventListener('change', function() { hks_danhDauChinhSua_fn(this); });
         hks_theCot_el.appendChild(hks_theChon_el);
       } else if (hks_thietLapCot_obj.k === 'check') {
         let hks_theHopKiem_el = document.createElement('input'); hks_theHopKiem_el.type = 'checkbox'; hks_theHopKiem_el.disabled = hks_voHieuHoa_bol;
         if(String(hks_giaTriCot_str).toLowerCase() === 'x') hks_theHopKiem_el.checked = true;
+        hks_theHopKiem_el.addEventListener('change', function() { hks_danhDauChinhSua_fn(this); });
         hks_theCot_el.className = 'text-center'; hks_theCot_el.appendChild(hks_theHopKiem_el);
       } else {
         let hks_theNhap_el = document.createElement('input'); hks_theNhap_el.className = 'cell-input'; hks_theNhap_el.disabled = hks_voHieuHoa_bol;
         hks_theNhap_el.type = hks_thietLapCot_obj.k === 'date' ? 'date' : (hks_thietLapCot_obj.k === 'num' ? 'number' : 'text');
         hks_theNhap_el.value = hks_giaTriCot_str;
-        if(hks_chiSoCot_num === 5) hks_theNhap_el.placeholder = "dd/mm/yyyy"; hks_theCot_el.appendChild(hks_theNhap_el);
+        if(hks_chiSoCot_num === 5) hks_theNhap_el.placeholder = "dd/mm/yyyy"; 
+        hks_theNhap_el.addEventListener('input', function() { hks_danhDauChinhSua_fn(this); });
+        hks_theCot_el.appendChild(hks_theNhap_el);
       }
+      
+      // Thêm icon cho dòng mới rỗng
+      if (!hks_duLieuBang_arr && hks_chiSoCot_num === 5) {
+          let icon = document.createElement('i');
+          icon.className = 'bi bi-pencil-fill text-warning ms-2 hks-icon-sua';
+          icon.title = "Thêm mới";
+          hks_theCot_el.style.position = 'relative';
+          hks_theCot_el.appendChild(icon);
+      }
+
       hks_theDong_el.appendChild(hks_theCot_el);
     });
     hks_thanBang_el.appendChild(hks_theDong_el);
@@ -146,36 +177,64 @@
   function hks_dayDuLieuPhanMot_fn() {
     const hks_thanBang_el = document.querySelector('#bang1 tbody'); let hks_duLieuCanLuu_arr = [];
     for (let hks_theDong_el of hks_thanBang_el.rows) {
-      let hks_dongDuLieu_arr = [];
-      for (let i = 1; i < hks_theDong_el.cells.length; i++) {
-        let hks_phanTuUI_el = hks_theDong_el.cells[i].firstElementChild;
-        if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
+      if (hks_theDong_el.classList.contains('hks-dong-da-sua')) {
+          let hks_dongDuLieu_arr = [];
+          for (let i = 1; i < hks_theDong_el.cells.length; i++) {
+            let hks_phanTuUI_el = hks_theDong_el.cells[i].querySelector('.cell-input, input[type="checkbox"]');
+            if(hks_phanTuUI_el) {
+              if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
+              else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
+            } else hks_dongDuLieu_arr.push("");
+          }
+          if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
       }
-      if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
     }
-    if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Cảnh báo!", "Dữ liệu thiếu logic mảng!", "warning"); return; }
-    hks_hienThiManHinhTai_fn(true);
     
-    hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
-      if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Lỗi phân luồng!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
-      // ĐỒNG BỘ SAU KHI LƯU
-      hks_capNhatBoNhoDem_fn().then(() => { Swal.fire("Hoàn tất!", hks_ketQuaAPI_obj.message, "success"); hks_khoiPhucTrangThaiGoc_fn(1); hks_layDuLieuPhanMot_fn(); });
-    }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
+    if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Thông báo", "Chưa có bản ghi nào được chỉnh sửa hoặc tạo mới!", "info"); return; }
+    
+    Swal.fire({
+        title: 'Tùy chọn Cập nhật',
+        text: 'Bạn muốn lưu các dòng đã đánh dấu bằng hình thức nào?',
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Lưu đè (Sửa)',
+        denyButtonText: 'Tạo mới (Nhân bản)',
+        cancelButtonText: 'Hủy bỏ',
+        confirmButtonColor: '#28a745',
+        denyButtonColor: '#17a2b8'
+    }).then((result) => {
+        if (result.isConfirmed || result.isDenied) {
+            let hks_cheDo_str = result.isConfirmed ? 'cap_nhat' : 'tao_moi';
+            hks_hienThiManHinhTai_fn(true);
+            
+            hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_cheDo_str: hks_cheDo_str, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
+              if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Lỗi phân luồng!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
+              hks_capNhatBoNhoDem_fn().then(() => { Swal.fire("Hoàn tất!", hks_ketQuaAPI_obj.message, "success"); hks_khoiPhucTrangThaiGoc_fn(1); hks_layDuLieuPhanMot_fn(); });
+            }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
+        }
+    });
   }
   
   function hks_thucHienDoiLop_fn() {
-      Swal.fire({ title: 'Cập nhật cấu trúc', text: "Đồng bộ chuyển đổi thư mục?", icon: 'warning', showCancelButton: true, confirmButtonText: 'Đồng ý' }).then((result) => {
+      Swal.fire({ title: 'Cập nhật cấu trúc', text: "Đồng bộ chuyển đổi lớp cho các học sinh đã được đánh dấu chỉnh sửa?", icon: 'warning', showCancelButton: true, confirmButtonText: 'Đồng ý' }).then((result) => {
         if (result.isConfirmed) {
           const hks_thanBang_el = document.querySelector('#bang1 tbody'); let hks_duLieuCanLuu_arr = [];
           for (let hks_theDong_el of hks_thanBang_el.rows) {
-            let hks_dongDuLieu_arr = [];
-            for (let i = 1; i < hks_theDong_el.cells.length; i++) {
-              let hks_phanTuUI_el = hks_theDong_el.cells[i].firstElementChild;
-              if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
+            if (hks_theDong_el.classList.contains('hks-dong-da-sua')) {
+                let hks_dongDuLieu_arr = [];
+                for (let i = 1; i < hks_theDong_el.cells.length; i++) {
+                  let hks_phanTuUI_el = hks_theDong_el.cells[i].querySelector('.cell-input, input[type="checkbox"]');
+                  if(hks_phanTuUI_el) {
+                    if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
+                    else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
+                  } else hks_dongDuLieu_arr.push("");
+                }
+                if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
             }
-            if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
           }
-          if(hks_duLieuCanLuu_arr.length === 0) return;
+          if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Thông báo", "Vui lòng chỉnh sửa và đánh dấu ít nhất 1 học sinh để thao tác!", "info"); return; }
+          
           hks_hienThiManHinhTai_fn(true);
           
           hks_thucThiGiaoTiep_fn('hks_dieuChuyenThucThe_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
