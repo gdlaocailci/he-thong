@@ -2,16 +2,20 @@
   /* Lớp CSS cưỡng chế ẩn phần tử trên toàn bộ giao diện Bootstrap */
   .hks-an-cot { display: none !important; }
 </style>
+
 <div class="tab-pane fade show active" id="tab1">
   <div class="text-center"><h4>QUẢN LÝ THÔNG TIN HỌC SINH</h4></div>
   <div class="filter-box">
     <div class="row g-2 align-items-end">
       <div class="col-md-2"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-2"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-2 hks-an-cot"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
+      <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      
+      <!-- Đã KHÔI PHỤC hiển thị ô tìm kiếm CCCD -->
+      <div class="col-md-2"><label>Mã định danh</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Tìm theo mã..."></div>
+      
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
-      <div class="col-md-4 text-end">
+      <div class="col-md-3 text-end">
         <button class="btn btn-sm btn-warning fw-bold px-3 me-1" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3 me-1" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
         <span id="groupEdit1" class="edit-mode-btn">
@@ -26,13 +30,14 @@
     <table class="table table-bordered table-striped table-hover table-sm mb-0" id="bang1">
       <thead>
         <tr>
-          <th style="min-width:50px; width:50px;">#</th>
+          <th style="min-width:50px; width:50px; text-align:center;">STT</th>
           <th style="min-width:100px">Năm học</th><th style="min-width:60px">Lớp</th>
+          <!-- Cột CCCD trong bảng được thiết lập ẩn cưỡng chế để gọn giao diện -->
           <th class="hks-an-cot">CCCD</th>
           <th style="min-width:140px">Họ đệm</th><th style="min-width:80px">Tên</th>
           <th style="min-width:100px">Ngày sinh</th><th style="min-width:60px">Nam/nữ</th><th style="min-width:95px">Nơi ở (Thôn)</th><th style="min-width:200px">Thường trú (Xã/tỉnh)</th>
           <th style="min-width:80px">Dân tộc</th><th style="min-width:80px">C.Sách</th><th style="min-width:80px">K.Tật</th><th style="min-width:60px">Nghèo</th><th style="min-width:60px">Cận N</th><th style="min-width:60px">BHYT</th>
-          <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:100px">SĐT</th><th style="min-width:50px">Khẩu nơi khác</th>
+          <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:50px">Khẩu nơi khác</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -45,6 +50,7 @@
     hks_hienThiManHinhTai_fn(true);
     let hks_namChon_str = document.getElementById('t1_nam').value;
     let hks_lopChon_str = document.getElementById('t1_lop').value;
+    // Đọc giá trị tìm kiếm từ ô CCCD
     let hks_cccd_str = document.getElementById('t1_cccd').value.trim().toLowerCase();
     let hks_hoDem_str = document.getElementById('t1_hodem').value.trim().toLowerCase();
     let hks_ten_str = document.getElementById('t1_ten').value.trim().toLowerCase();
@@ -60,9 +66,11 @@
         let hks_ketQuaLoc_arr = hks_khoDuLieuTong_arr.filter(r => {
             let hks_khopNam_bol = hks_namChon_str ? String(r[0]) === hks_namChon_str : true;
             let hks_khopLop_bol = hks_lopChon_str ? String(r[1]) === hks_lopChon_str : true;
+            // Áp dụng điều kiện lọc theo CCCD
             let hks_khopCccd_bol = hks_cccd_str ? String(r[2]).toLowerCase().includes(hks_cccd_str) : true;
             let hks_khopHo_bol = hks_hoDem_str ? String(r[3]).toLowerCase().includes(hks_hoDem_str) : true;
             let hks_khopTen_bol = hks_ten_str ? String(r[4]).toLowerCase().includes(hks_ten_str) : true;
+            
             return hks_khopNam_bol && hks_khopLop_bol && hks_khopCccd_bol && hks_khopHo_bol && hks_khopTen_bol;
         });
         hks_veBangPhanMot_fn(hks_ketQuaLoc_arr);
@@ -106,11 +114,11 @@
     let hks_dienNamTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_nam').value : "";
     let hks_dienLopTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_lop').value : "";
     
-    // Thuộc tính an: true sẽ gán lớp hks-an-cot
+    // Thuộc tính an: true sẽ gán lớp hks-an-cot để ẩn cột đi nhưng vẫn mang dữ liệu
     const hks_cauHinhCot_arr = [
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr}, // 0: Năm
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_phomPhanLoai_arr},  // 1: Lớp
-      {k:'text', an: true}, // 2: CCCD (Ẩn hiển thị)
+      {k:'text', an: true}, // 2: CCCD (Ẩn hiển thị trên bảng lưới)
       {k:'text'}, // 3: Họ đệm
       {k:'text'}, // 4: Tên
       {k:'text'}, // 5: Ngày sinh
@@ -125,8 +133,7 @@
       {k:'num'},  // 14: BHYT
       {k:'text'}, // 15: Tên Bố
       {k:'text'}, // 16: Tên Mẹ
-      {k:'text'}, // 17: SĐT
-      {k:'check'} // 18: Khẩu nơi khác
+      {k:'check'} // 17: Khẩu nơi khác
     ];
 
     let hks_voHieuHoa_bol = !hks_trangThaiSuaMot_bol;
