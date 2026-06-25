@@ -8,7 +8,6 @@
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
       <div class="col-md-3 text-end">
-        <!-- Nút Sửa luôn hiển thị (đã sửa lỗi tê liệt) -->
         <button class="btn btn-sm btn-warning fw-bold px-3 me-1" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3 me-1" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
         <span id="groupEdit1" class="edit-mode-btn">
@@ -40,18 +39,38 @@
 
 <script>
   // ======= BIẾN TOÀN CỤC =======
-  var hks_dangSua_bol = false;
+  var hks_dangSua_bol = false; // true khi đang ở chế độ sửa
+  // Đồng bộ với biến cũ nếu có
+  if (typeof hks_trangThaiSuaMot_bol !== 'undefined') {
+    hks_trangThaiSuaMot_bol = hks_dangSua_bol;
+  }
 
   // ======= KÍCH HOẠT CHẾ ĐỘ SỬA =======
   function hks_kichHoatChinhSua_fn(pan) {
     if (pan === 1) {
       hks_dangSua_bol = true;
+      // Cập nhật biến cũ để tương thích
+      if (typeof hks_trangThaiSuaMot_bol !== 'undefined') hks_trangThaiSuaMot_bol = true;
+      
       document.getElementById('btnEdit1').style.display = 'none';
       document.getElementById('btnHuySua').style.display = 'inline-block';
+      
+      // Mở khóa tất cả ô input/select
       const rows = document.querySelectorAll('#bang1 tbody tr');
       rows.forEach(row => {
         const inputs = row.querySelectorAll('input, select');
-        inputs.forEach(input => input.disabled = false); // Mở khóa tất cả
+        inputs.forEach(input => input.disabled = false);
+      });
+      
+      // Hiển thị lại các nút xóa (cập nhật lại giao diện)
+      // Các nút xóa đã được hiển thị dựa trên hks_dangSua_bol trong hàm vẽ lại
+      // Nếu cần có thể gọi lại hàm vẽ lại bảng nhưng sẽ làm mất dữ liệu đang chỉnh sửa
+      // Thay vào đó, ta chỉ cần thay đổi style của các icon xóa đã tồn tại
+      document.querySelectorAll('#bang1 tbody .btn-xoa-nguon').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      document.querySelectorAll('#bang1 tbody .stt-label').forEach(el => {
+        el.style.display = 'none';
       });
     }
   }
@@ -59,12 +78,23 @@
   // ======= HỦY CHẾ ĐỘ SỬA =======
   function hks_huyChinhSua_fn() {
     hks_dangSua_bol = false;
+    if (typeof hks_trangThaiSuaMot_bol !== 'undefined') hks_trangThaiSuaMot_bol = false;
+    
     document.getElementById('btnEdit1').style.display = 'inline-block';
     document.getElementById('btnHuySua').style.display = 'none';
+    
     const rows = document.querySelectorAll('#bang1 tbody tr');
     rows.forEach(row => {
       const inputs = row.querySelectorAll('input, select');
       inputs.forEach(input => input.disabled = true);
+    });
+    
+    // Ẩn các nút xóa, hiện STT
+    document.querySelectorAll('#bang1 tbody .btn-xoa-nguon').forEach(el => {
+      el.style.display = 'none';
+    });
+    document.querySelectorAll('#bang1 tbody .stt-label').forEach(el => {
+      el.style.display = 'inline-block';
     });
   }
 
@@ -78,9 +108,6 @@
     let hks_cccd_str = document.getElementById('t1_cccd').value.trim().toLowerCase();
     let hks_hoDem_str = document.getElementById('t1_hodem').value.trim().toLowerCase();
     let hks_ten_str = document.getElementById('t1_ten').value.trim().toLowerCase();
-
-    // Bỏ qua kiểm tra quyền, nút Sửa luôn hiện
-    // document.getElementById('btnEdit1').style.display = 'inline-block'; // đã có sẵn
 
     hks_khoiPhucTrangThaiGoc_fn(1);
     
@@ -108,22 +135,22 @@
     hks_hienThiManHinhTai_fn(false);
   }
 
-  // ======= THÊM DÒNG =======
+  // ======= THÊM DÒNG (SỬA LỖI ĐỒNG BỘ BIẾN) =======
   function hks_chenDongPhanMot_fn(hks_duLieuBang_arr = null, hks_dichDen_frag = null, hks_soThuTu_num = 0) {
     const hks_thanBang_el = document.querySelector('#bang1 tbody');
     const hks_theDong_el = document.createElement('tr');
     let hks_theCotXoa_el = document.createElement('td'); hks_theCotXoa_el.className = 'text-center align-middle'; 
     let hks_chuoiHtmlXoa_str = '';
-    let hks_laQuanTriCapCao_bol = true; // Giả định có quyền để hiển thị nút xóa
-    // (có thể lấy từ biến toàn cục nếu cần)
+    let hks_laQuanTriCapCao_bol = true; // Giả định có quyền
     
+    // SỬA: dùng hks_dangSua_bol thay vì hks_trangThaiSuaMot_bol
     if (!hks_duLieuBang_arr) {
-       let hks_hienThiXoa_str = hks_trangThaiSuaMot_bol ? 'inline-block' : 'none';
+       let hks_hienThiXoa_str = hks_dangSua_bol ? 'inline-block' : 'none';
        hks_chuoiHtmlXoa_str = `<i class="bi bi-x-circle-fill text-secondary fs-6" style="cursor:pointer; display:${hks_hienThiXoa_str}" title="Hủy" onclick="this.closest('tr').remove()"></i>`;
     } else {
        let hks_chuoiSTT_str = hks_soThuTu_num > 0 ? hks_soThuTu_num : hks_thanBang_el.rows.length + 1;
-       let hks_hienThiXoa_str = (hks_trangThaiSuaMot_bol && hks_laQuanTriCapCao_bol) ? 'inline-block' : 'none'; 
-       let hks_hienThiSTT_str = (hks_trangThaiSuaMot_bol && hks_laQuanTriCapCao_bol) ? 'none' : 'inline-block';
+       let hks_hienThiXoa_str = (hks_dangSua_bol && hks_laQuanTriCapCao_bol) ? 'inline-block' : 'none'; 
+       let hks_hienThiSTT_str = (hks_dangSua_bol && hks_laQuanTriCapCao_bol) ? 'none' : 'inline-block';
        if (hks_laQuanTriCapCao_bol) {
            let hks_objXoa = {
                hks_truong1: hks_duLieuBang_arr[0],
@@ -152,7 +179,7 @@
       {k:'text'}, {k:'text'}, {k:'text'}, {k:'check'}
     ];
 
-    let hks_voHieuHoa_bol = !hks_trangThaiSuaMot_bol;
+    let hks_voHieuHoa_bol = !hks_dangSua_bol; // SỬA: dùng hks_dangSua_bol
     hks_cauHinhCot_arr.forEach((hks_thietLapCot_obj, hks_chiSoCot_num) => {
       let hks_theCot_el = document.createElement('td'); 
       let hks_giaTriCot_str = hks_duLieuBang_arr ? hks_duLieuBang_arr[hks_chiSoCot_num] : (hks_chiSoCot_num === 0 ? hks_dienNamTruoc_str : (hks_chiSoCot_num === 1 ? hks_dienLopTruoc_str : ""));
@@ -241,7 +268,6 @@
 
   // ======= CẬP NHẬT (HIỆN 2 LỰA CHỌN) =======
   function hks_dayDuLieuPhanMot_fn() {
-    // Lấy dữ liệu từ bảng
     const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
     let hks_duLieuCanLuu_arr = [];
     for (let hks_theDong_el of hks_thanBang_el.rows) {
@@ -251,14 +277,12 @@
         if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
         else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
       }
-      // Cần có mã định danh (cột 2) để xác định
-      if(hks_dongDuLieu_arr[2]) {
+      if(hks_dongDuLieu_arr[2]) { // chỉ cần mã định danh
           hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
       }
     }
     if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Cảnh báo!", "Không có dữ liệu hợp lệ để lưu! (cần có mã định danh)", "warning"); return; }
 
-    // Hiển thị hộp thoại chọn chế độ
     Swal.fire({
       title: 'Chọn chế độ cập nhật',
       text: 'Bạn muốn cập nhật dữ liệu hiện có hay tạo mới?',
@@ -273,11 +297,10 @@
       let hks_cheDo = result.isConfirmed ? 'update' : 'insert';
       hks_hienThiManHinhTai_fn(true);
       
-      // Gửi kèm trường cheDo để API phân biệt
       hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {
           hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr,
           hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId,
-          hks_cheDo: hks_cheDo   // thêm tham số này
+          hks_cheDo: hks_cheDo
       }).then(hks_ketQuaAPI_obj => { 
           if(hks_ketQuaAPI_obj.success === false) { 
               Swal.fire('Từ chối', hks_ketQuaAPI_obj.message || 'Lỗi xử lý!', 'warning'); 
