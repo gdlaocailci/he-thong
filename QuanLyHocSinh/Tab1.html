@@ -1,8 +1,3 @@
-<style>
-  /* Lớp CSS cưỡng chế ẩn phần tử trên toàn bộ giao diện Bootstrap */
-  .hks-an-cot { display: none !important; }
-</style>
-
 <div class="tab-pane fade show active" id="tab1">
   <div class="text-center"><h4>QUẢN LÝ THÔNG TIN HỌC SINH</h4></div>
   <div class="filter-box">
@@ -10,7 +5,6 @@
       <div class="col-md-2"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
       <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
       
-      <!-- Đã KHÔI PHỤC hiển thị ô tìm kiếm CCCD -->
       <div class="col-md-2"><label>Mã định danh</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Tìm theo mã..."></div>
       
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
@@ -32,12 +26,11 @@
         <tr>
           <th style="min-width:50px; width:50px; text-align:center;">STT</th>
           <th style="min-width:100px">Năm học</th><th style="min-width:60px">Lớp</th>
-          <!-- Cột CCCD trong bảng được thiết lập ẩn cưỡng chế để gọn giao diện -->
-          <th class="hks-an-cot">CCCD</th>
+          <th style="min-width:120px">Mã định danh</th>
           <th style="min-width:140px">Họ đệm</th><th style="min-width:80px">Tên</th>
           <th style="min-width:100px">Ngày sinh</th><th style="min-width:60px">Nam/nữ</th><th style="min-width:95px">Nơi ở (Thôn)</th><th style="min-width:200px">Thường trú (Xã/tỉnh)</th>
           <th style="min-width:80px">Dân tộc</th><th style="min-width:80px">C.Sách</th><th style="min-width:80px">K.Tật</th><th style="min-width:60px">Nghèo</th><th style="min-width:60px">Cận N</th><th style="min-width:60px">BHYT</th>
-          <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:50px">Khẩu nơi khác</th>
+          <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:100px">SĐT</th><th style="min-width:50px">Khẩu nơi khác</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -50,7 +43,6 @@
     hks_hienThiManHinhTai_fn(true);
     let hks_namChon_str = document.getElementById('t1_nam').value;
     let hks_lopChon_str = document.getElementById('t1_lop').value;
-    // Đọc giá trị tìm kiếm từ ô CCCD
     let hks_cccd_str = document.getElementById('t1_cccd').value.trim().toLowerCase();
     let hks_hoDem_str = document.getElementById('t1_hodem').value.trim().toLowerCase();
     let hks_ten_str = document.getElementById('t1_ten').value.trim().toLowerCase();
@@ -66,7 +58,6 @@
         let hks_ketQuaLoc_arr = hks_khoDuLieuTong_arr.filter(r => {
             let hks_khopNam_bol = hks_namChon_str ? String(r[0]) === hks_namChon_str : true;
             let hks_khopLop_bol = hks_lopChon_str ? String(r[1]) === hks_lopChon_str : true;
-            // Áp dụng điều kiện lọc theo CCCD
             let hks_khopCccd_bol = hks_cccd_str ? String(r[2]).toLowerCase().includes(hks_cccd_str) : true;
             let hks_khopHo_bol = hks_hoDem_str ? String(r[3]).toLowerCase().includes(hks_hoDem_str) : true;
             let hks_khopTen_bol = hks_ten_str ? String(r[4]).toLowerCase().includes(hks_ten_str) : true;
@@ -114,11 +105,10 @@
     let hks_dienNamTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_nam').value : "";
     let hks_dienLopTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_lop').value : "";
     
-    // Thuộc tính an: true sẽ gán lớp hks-an-cot để ẩn cột đi nhưng vẫn mang dữ liệu
     const hks_cauHinhCot_arr = [
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr}, // 0: Năm
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_phomPhanLoai_arr},  // 1: Lớp
-      {k:'text', an: true}, // 2: CCCD (Ẩn hiển thị trên bảng lưới)
+      {k:'text'}, // 2: Mã định danh (Hiển thị bình thường)
       {k:'text'}, // 3: Họ đệm
       {k:'text'}, // 4: Tên
       {k:'text'}, // 5: Ngày sinh
@@ -133,14 +123,13 @@
       {k:'num'},  // 14: BHYT
       {k:'text'}, // 15: Tên Bố
       {k:'text'}, // 16: Tên Mẹ
-      {k:'check'} // 17: Khẩu nơi khác
+      {k:'text'}, // 17: SĐT
+      {k:'check'} // 18: Khẩu nơi khác
     ];
 
     let hks_voHieuHoa_bol = !hks_trangThaiSuaMot_bol;
     hks_cauHinhCot_arr.forEach((hks_thietLapCot_obj, hks_chiSoCot_num) => {
       let hks_theCot_el = document.createElement('td'); 
-      if (hks_thietLapCot_obj.an) hks_theCot_el.className = 'hks-an-cot'; // Gắn class ẩn cưỡng chế
-      
       let hks_giaTriCot_str = hks_duLieuBang_arr ? hks_duLieuBang_arr[hks_chiSoCot_num] : (hks_chiSoCot_num === 0 ? hks_dienNamTruoc_str : (hks_chiSoCot_num === 1 ? hks_dienLopTruoc_str : ""));
       
       if(hks_thietLapCot_obj.k === 'sel') {
@@ -186,14 +175,18 @@
     const hks_thanBang_el = document.querySelector('#bang1 tbody'); let hks_duLieuCanLuu_arr = [];
     for (let hks_theDong_el of hks_thanBang_el.rows) {
       let hks_dongDuLieu_arr = [];
+      // Vòng lặp lấy dữ liệu từ các cột
       for (let i = 1; i < hks_theDong_el.cells.length; i++) {
         let hks_phanTuUI_el = hks_theDong_el.cells[i].firstElementChild;
         if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
-        else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value); // Giá trị value vẫn thu thập chuẩn xác dù thẻ HTML bị ẩn
+        else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
       }
-      if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
+      // Điều kiện lưu: Có đủ Năm, Lớp, Mã định danh, Họ đệm, Tên
+      if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[2] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) {
+          hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
+      }
     }
-    if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Cảnh báo!", "Dữ liệu thiếu logic mảng!", "warning"); return; }
+    if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Cảnh báo!", "Dữ liệu biên sai lệch hoặc thiếu thông tin gốc!", "warning"); return; }
     hks_hienThiManHinhTai_fn(true);
     
     hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
