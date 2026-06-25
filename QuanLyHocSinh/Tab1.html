@@ -52,8 +52,7 @@
     document.getElementById('btnEdit1').style.display = hks_quyenSua_bol ? 'inline-block' : 'none';
 
     hks_khoiPhucTrangThaiGoc_fn(1);
-    
-    setTimeout(() => {
+        setTimeout(() => {
         let hks_ketQuaLoc_arr = hks_khoDuLieuTong_arr.filter(r => {
             let hks_khopNam_bol = hks_namChon_str ? String(r[0]) === hks_namChon_str : true;
             let hks_khopLop_bol = hks_lopChon_str ? String(r[1]) === hks_lopChon_str : true;
