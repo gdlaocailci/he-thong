@@ -1,10 +1,15 @@
+<style>
+  /* Lớp CSS cưỡng chế ẩn phần tử trên toàn bộ giao diện Bootstrap */
+  .hks-an-cot { display: none !important; }
+</style>
+
 <div class="tab-pane fade show active" id="tab1">
   <div class="text-center"><h4>QUẢN LÝ THÔNG TIN HỌC SINH</h4></div>
   <div class="filter-box">
     <div class="row g-2 align-items-end">
-      <div class="col-md-1"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-2"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
+      <div class="col-md-2"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      <div class="col-md-2"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      <div class="col-md-2 hks-an-cot"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
       <div class="col-md-4 text-end">
@@ -24,8 +29,8 @@
         <tr>
           <th style="min-width:50px; width:50px;">#</th>
           <th style="min-width:100px">Năm học</th><th style="min-width:60px">Lớp</th>
-          <th style="display:none;">CCCD</th>
-          <th style="min-width:110px">Họ đệm</th><th style="min-width:60px">Tên</th>
+          <th class="hks-an-cot">CCCD</th>
+          <th style="min-width:140px">Họ đệm</th><th style="min-width:80px">Tên</th>
           <th style="min-width:100px">Ngày sinh</th><th style="min-width:60px">Nam/nữ</th><th style="min-width:95px">Nơi ở (Thôn)</th><th style="min-width:200px">Thường trú (Xã/tỉnh)</th>
           <th style="min-width:80px">Dân tộc</th><th style="min-width:80px">C.Sách</th><th style="min-width:80px">K.Tật</th><th style="min-width:60px">Nghèo</th><th style="min-width:60px">Cận N</th><th style="min-width:60px">BHYT</th>
           <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:100px">SĐT</th><th style="min-width:50px">Khẩu nơi khác</th>
@@ -102,7 +107,7 @@
     let hks_dienNamTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_nam').value : "";
     let hks_dienLopTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_lop').value : "";
     
-    // Cấu hình thuộc tính an: true cho cột 2 (CCCD) để ẩn hoàn toàn khỏi khung nhìn
+    // Thuộc tính an: true sẽ gán lớp hks-an-cot
     const hks_cauHinhCot_arr = [
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr}, // 0: Năm
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_phomPhanLoai_arr},  // 1: Lớp
@@ -128,7 +133,7 @@
     let hks_voHieuHoa_bol = !hks_trangThaiSuaMot_bol;
     hks_cauHinhCot_arr.forEach((hks_thietLapCot_obj, hks_chiSoCot_num) => {
       let hks_theCot_el = document.createElement('td'); 
-      if (hks_thietLapCot_obj.an) hks_theCot_el.style.display = 'none'; // Kích hoạt ẩn TD
+      if (hks_thietLapCot_obj.an) hks_theCot_el.className = 'hks-an-cot'; // Gắn class ẩn cưỡng chế
       
       let hks_giaTriCot_str = hks_duLieuBang_arr ? hks_duLieuBang_arr[hks_chiSoCot_num] : (hks_chiSoCot_num === 0 ? hks_dienNamTruoc_str : (hks_chiSoCot_num === 1 ? hks_dienLopTruoc_str : ""));
       
@@ -139,7 +144,7 @@
       } else if (hks_thietLapCot_obj.k === 'check') {
         let hks_theHopKiem_el = document.createElement('input'); hks_theHopKiem_el.type = 'checkbox'; hks_theHopKiem_el.disabled = hks_voHieuHoa_bol;
         if(String(hks_giaTriCot_str).toLowerCase() === 'x') hks_theHopKiem_el.checked = true;
-        hks_theCot_el.className = 'text-center'; hks_theCot_el.appendChild(hks_theHopKiem_el);
+        hks_theCot_el.className += ' text-center'; hks_theCot_el.appendChild(hks_theHopKiem_el);
       } else {
         let hks_theNhap_el = document.createElement('input'); hks_theNhap_el.className = 'cell-input'; hks_theNhap_el.disabled = hks_voHieuHoa_bol;
         hks_theNhap_el.type = hks_thietLapCot_obj.k === 'date' ? 'date' : (hks_thietLapCot_obj.k === 'num' ? 'number' : 'text');
@@ -178,7 +183,7 @@
       for (let i = 1; i < hks_theDong_el.cells.length; i++) {
         let hks_phanTuUI_el = hks_theDong_el.cells[i].firstElementChild;
         if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
-        else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value); // Thuộc tính .value lấy được dữ liệu ngay cả khi thẻ bị ẩn display: none
+        else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value); // Giá trị value vẫn thu thập chuẩn xác dù thẻ HTML bị ẩn
       }
       if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
     }
