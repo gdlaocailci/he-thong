@@ -79,9 +79,14 @@
           let cellTen = tr.cells[5]; // Cột Tên ở vị trí số 5
           if (cellTen) {
               let icon = document.createElement('i');
-              icon.className = 'bi bi-pencil-fill text-warning ms-2 hks-icon-sua';
+              icon.className = 'bi bi-pencil-fill hks-icon-sua';
+              // Màu đỏ đậm và ghim sát mép trong bên phải của ô
+              icon.style = 'color: #b71c1c; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 10; pointer-events: none;';
               icon.title = "Đã chỉnh sửa";
               cellTen.style.position = 'relative';
+              // Đẩy chữ bên trong input lùi lại để không bị đè lên cây bút
+              let input = cellTen.querySelector('input');
+              if(input) input.style.paddingRight = '20px';
               cellTen.appendChild(icon);
           }
       }
@@ -142,12 +147,15 @@
         hks_theCot_el.appendChild(hks_theNhap_el);
       }
       
-      // Thêm icon cho dòng mới rỗng
+      // Thêm icon định vị màu đỏ đậm cho dòng mới rỗng
       if (!hks_duLieuBang_arr && hks_chiSoCot_num === 5) {
           let icon = document.createElement('i');
-          icon.className = 'bi bi-pencil-fill text-warning ms-2 hks-icon-sua';
+          icon.className = 'bi bi-pencil-fill hks-icon-sua';
+          icon.style = 'color: #b71c1c; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 10; pointer-events: none;';
           icon.title = "Thêm mới";
           hks_theCot_el.style.position = 'relative';
+          let input = hks_theCot_el.querySelector('input');
+          if(input) input.style.paddingRight = '20px';
           hks_theCot_el.appendChild(icon);
       }
 
