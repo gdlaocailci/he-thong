@@ -162,6 +162,18 @@
       hks_theDong_el.appendChild(hks_theCot_el);
     });
     hks_thanBang_el.appendChild(hks_theDong_el);
+
+    // --- NÂNG CẤP: CUỘN VÀ ĐẶT TRỌNG TÂM CON TRỔ CHUỘT KHI THÊM MỚI ---
+    if (!hks_duLieuBang_arr) {
+        let hks_khungCuon_el = hks_thanBang_el.closest('.table-container');
+        if (hks_khungCuon_el) hks_khungCuon_el.scrollTop = hks_khungCuon_el.scrollHeight;
+        
+        setTimeout(() => {
+            // Cột chỉ mục 4 là ô Họ đệm (Theo cấu trúc: 0:STT, 1:Năm, 2:Lớp, 3:CCCD, 4:Họ đệm)
+            let hks_oHoDem_el = hks_theDong_el.cells[4].querySelector('input');
+            if (hks_oHoDem_el) hks_oHoDem_el.focus();
+        }, 100);
+    }
   }
 
   function hks_xuLyHanhDongXoa_fn(hks_nutBamUI_el, hks_thongTinTruyen_obj) {
