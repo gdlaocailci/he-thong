@@ -1,18 +1,13 @@
-<style>
-  .hks-an-cot { display: none !important; }
-</style>
-
 <div class="tab-pane fade" id="tab2">
   <div class="text-center"><h4>KẾT QUẢ HỌC TẬP VÀ THÀNH TÍCH</h4></div>
   <div class="filter-box">
     <div class="row g-2 align-items-end">
       <div class="col-md-2"><label>Năm học</label><select id="t2_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-2"><label>Lớp</label><select id="t2_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <!-- Đã áp dụng lớp ẩn cưỡng chế cho ô tìm kiếm CCCD -->
-      <div class="col-md-2 hks-an-cot"><label>CCCD</label><input id="t2_cccd" class="form-control form-control-sm"></div>
+      <div class="col-md-1"><label>Lớp</label><select id="t2_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      <div class="col-md-2"><label>CCCD</label><input id="t2_cccd" class="form-control form-control-sm" placeholder="Tìm theo CCCD..."></div>
       <div class="col-md-2"><label>Họ đệm</label><input id="t2_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t2_ten" class="form-control form-control-sm"></div>
-      <div class="col-md-4 text-end">
+      <div class="col-md-3 text-end">
         <button class="btn btn-sm btn-warning fw-bold px-3 me-1" id="btnEdit2" onclick="hks_kichHoatChinhSua_fn(2)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3 me-1" onclick="hks_layDuLieuPhanHai_fn()"><i class="bi bi-search"></i> Tìm</button>
         <span id="groupEdit2" class="edit-mode-btn">
@@ -25,10 +20,7 @@
     <table class="table table-bordered table-striped table-hover table-sm mb-0" id="bang2">
       <thead>
         <tr>
-          <!-- Bổ sung cột STT ở đầu tiên -->
-          <th rowspan="2" style="min-width:40px; width:40px; text-align:center;">STT</th>
-          <!-- Cột ẩn CCCD -->
-          <th rowspan="2" class="hks-an-cot">CCCD</th>
+          <th rowspan="2" style="min-width:40px; text-align:center;">STT</th>
           <th rowspan="2" style="min-width:110px">Họ đệm</th>
           <th rowspan="2" style="min-width:60px">Tên</th><th rowspan="2" style="min-width:90px">Ngày sinh</th>
           <th rowspan="2" style="min-width:50px">GT</th>
@@ -55,35 +47,36 @@
 <script>
   function hks_layDuLieuPhanHai_fn() {
     hks_hienThiManHinhTai_fn(true);
-    let hks_namChon_str = document.getElementById('t2_nam').value;
-    let hks_lopChon_str = document.getElementById('t2_lop').value;
-    let hks_cccd_str = document.getElementById('t2_cccd').value.trim().toLowerCase();
-    let hks_hoDem_str = document.getElementById('t2_hodem').value.trim().toLowerCase();
-    let hks_ten_str = document.getElementById('t2_ten').value.trim().toLowerCase();
+    let n = document.getElementById('t2_nam').value;
+    let l = document.getElementById('t2_lop').value;
+    let c = document.getElementById('t2_cccd').value.trim().toLowerCase();
+    let h = document.getElementById('t2_hodem').value.trim().toLowerCase();
+    let t = document.getElementById('t2_ten').value.trim().toLowerCase();
 
-    let hks_khoaBaoMat_str = `${hks_namChon_str}_${hks_lopChon_str}`;
-    let hks_laToanQuyen_bol = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
-    let hks_quyenSua_bol = hks_laToanQuyen_bol || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(hks_khoaBaoMat_str);
-    document.getElementById('btnEdit2').style.display = hks_quyenSua_bol ? 'inline-block' : 'none';
+    let khoa = `${n}_${l}`;
+    let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
+    let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
+    if(canEdit) document.getElementById('btnEdit2').style.display = 'inline-block'; else document.getElementById('btnEdit2').style.display = 'none';
     
     hks_khoiPhucTrangThaiGoc_fn(2);
     
     setTimeout(() => {
-        let hks_ketQuaLoc_arr = hks_khoDuLieuTong_arr.filter(r => {
-            let hks_khopNam_bol = hks_namChon_str ? String(r[0]) === hks_namChon_str : true;
-            let hks_khopLop_bol = hks_lopChon_str ? String(r[1]) === hks_lopChon_str : true;
-            let hks_khopCccd_bol = hks_cccd_str ? String(r[2]).toLowerCase().includes(hks_cccd_str) : true;
-            let hks_khopHo_bol = hks_hoDem_str ? String(r[3]).toLowerCase().includes(hks_hoDem_str) : true;
-            let hks_khopTen_bol = hks_ten_str ? String(r[4]).toLowerCase().includes(hks_ten_str) : true;
-            return hks_khopNam_bol && hks_khopLop_bol && hks_khopCccd_bol && hks_khopHo_bol && hks_khopTen_bol;
+        let kq = hks_khoDuLieuTong_arr.filter(r => {
+            let matchNam = n ? String(r[0]) == n : true;
+            let matchLop = l ? String(r[1]) == l : true;
+            let matchC = c ? String(r[2]).toLowerCase().includes(c) : true;
+            let matchH = h ? String(r[3]).toLowerCase().includes(h) : true;
+            let matchT = t ? String(r[4]).toLowerCase().includes(t) : true;
+            return matchNam && matchLop && matchC && matchH && matchT;
         });
-        hks_veBangPhanHai_fn(hks_ketQuaLoc_arr);
+        hks_veBangPhanHai_fn(kq);
     }, 10);
   }
 
-  function hks_hienThiUINhapThanhTich_fn(hks_input_el, hks_dong_el, hks_nhom_num, hks_danhXung_str) {
-      let hks_giaTriHienTai_str = hks_input_el.value || ""; 
-      let hks_ghiChuHienTai_str = hks_input_el.getAttribute('data-note') || "";
+  function hks_hienThiUINhapThanhTich_fn(hks_input_el, hks_dong_el, hks_nhom_num, hks_id_str) {
+      let hks_giaTriHienTai_str = hks_input_el.value || ""; let hks_ghiChuHienTai_str = hks_input_el.getAttribute('data-note') || "";
+      let hks_hoDem_str = hks_dong_el.cells[1].innerText.trim(); let hks_ten_str = hks_dong_el.cells[2].innerText.trim();
+      let hks_danhXung_str = (hks_hoDem_str + " " + hks_ten_str).trim();
 
       Swal.fire({
           title: '<h5 class="fw-bold text-danger text-uppercase mb-0 border-bottom border-danger pb-2">Hồ Sơ Thành Tích Học Sinh</h5>',
@@ -99,8 +92,7 @@
           preConfirm: () => { return { so: document.getElementById('swal-input-so').value, ghichu: document.getElementById('swal-input-ghichu').value } }
       }).then((result) => {
           if (result.isConfirmed) {
-              let hks_soMoi_num = parseInt(result.value.so, 10); 
-              let hks_ghiChuMoi_str = result.value.ghichu.trim();
+              let hks_soMoi_num = parseInt(result.value.so); let hks_ghiChuMoi_str = result.value.ghichu.trim();
               if (!isNaN(hks_soMoi_num) && hks_soMoi_num > 0) {
                   if (hks_ghiChuMoi_str !== "" && hks_danhXung_str !== "") { if (!hks_ghiChuMoi_str.includes(hks_danhXung_str)) { hks_ghiChuMoi_str = hks_danhXung_str + " - " + hks_ghiChuMoi_str; } }
                   hks_input_el.value = hks_soMoi_num; hks_input_el.setAttribute('data-note', hks_ghiChuMoi_str);
@@ -118,88 +110,58 @@
   }
 
   function hks_veBangPhanHai_fn(hks_duLieuBang_arr) {
-    const hks_thanBang_el = document.querySelector('#bang2 tbody'); 
-    hks_thanBang_el.innerHTML = '';
-    const hks_manhGhepBoNho_frag = document.createDocumentFragment();
-
+    const hks_thanBang_el = document.querySelector('#bang2 tbody'); hks_thanBang_el.innerHTML = '';
+    // Thêm index vào vòng lặp để tạo STT
     hks_duLieuBang_arr.forEach((hks_dongDuLieu_arr, hks_chiSoDong_num) => {
       let hks_theDong_el = document.createElement('tr');
-      
-      // Bổ sung STT (hks_chiSoDong_num + 1) và đẩy toàn bộ các cột HTML sang phải
-      let hks_htmlCoDinh_str = `<td class="text-center align-middle text-muted" style="font-size:12px;">${hks_chiSoDong_num + 1}</td><td class="hks-an-cot">${hks_dongDuLieu_arr[2]}</td><td class="text-primary fw-bold">${hks_dongDuLieu_arr[3]}</td><td>${hks_dongDuLieu_arr[4]}</td><td>${hks_dongDuLieu_arr[5]}</td><td>${hks_dongDuLieu_arr[6]}</td>`;
-      hks_theDong_el.innerHTML = hks_htmlCoDinh_str; 
-      
-      let hks_voHieuHoa_bol = !hks_trangThaiSuaHai_bol;
-      let hks_tenHS_str = (hks_dongDuLieu_arr[3] + " " + hks_dongDuLieu_arr[4]).trim();
-
+      // Ô đầu tiên hiển thị STT, nhưng cất giấu CCCD vào thuộc tính data-cccd
+      let hks_htmlCoDinh_str = `<td class="text-center align-middle fw-bold text-muted" data-cccd="${hks_dongDuLieu_arr[2]}">${hks_chiSoDong_num + 1}</td><td class="text-primary fw-bold">${hks_dongDuLieu_arr[3]}</td><td>${hks_dongDuLieu_arr[4]}</td><td>${hks_dongDuLieu_arr[5]}</td><td>${hks_dongDuLieu_arr[6]}</td>`;
+      hks_theDong_el.innerHTML = hks_htmlCoDinh_str; let hks_voHieuHoa_bol = !hks_trangThaiSuaHai_bol;
       for (let i = 19; i <= 46; i++) {
         let hks_theCot_el = document.createElement('td'); hks_theCot_el.className = 'text-center';
         if (i >= 19 && i <= 26) {
            let hks_theHopKiem_el = document.createElement('input'); hks_theHopKiem_el.type = 'checkbox'; hks_theHopKiem_el.disabled = hks_voHieuHoa_bol;
            if(String(hks_dongDuLieu_arr[i]).toLowerCase() === 'x') hks_theHopKiem_el.checked = true;
-           if(i >= 19 && i <= 22) { hks_theHopKiem_el.name = `kq_hk1_${hks_chiSoDong_num}`; hks_theHopKiem_el.onclick = function() { hks_theDong_el.querySelectorAll(`input[name="kq_hk1_${hks_chiSoDong_num}"]`).forEach(c => {if(c!==this)c.checked=false}) }; }
-           if(i >= 23 && i <= 26) { hks_theHopKiem_el.name = `kq_cn_${hks_chiSoDong_num}`; hks_theHopKiem_el.onclick = function() { hks_theDong_el.querySelectorAll(`input[name="kq_cn_${hks_chiSoDong_num}"]`).forEach(c => {if(c!==this)c.checked=false}) }; }
+           if(i >= 19 && i <= 22) { hks_theHopKiem_el.name = `kq_hk1_${hks_dongDuLieu_arr[2]}`; hks_theHopKiem_el.onclick = function() { hks_theDong_el.querySelectorAll(`input[name="kq_hk1_${hks_dongDuLieu_arr[2]}"]`).forEach(c => {if(c!==this)c.checked=false}) }; }
+           if(i >= 23 && i <= 26) { hks_theHopKiem_el.name = `kq_cn_${hks_dongDuLieu_arr[2]}`; hks_theHopKiem_el.onclick = function() { hks_theDong_el.querySelectorAll(`input[name="kq_cn_${hks_dongDuLieu_arr[2]}"]`).forEach(c => {if(c!==this)c.checked=false}) }; }
            hks_theCot_el.appendChild(hks_theHopKiem_el);
         } else {
            let hks_khungChua_el = document.createElement('div'); hks_khungChua_el.style.position = 'relative'; hks_khungChua_el.style.width = '100%'; hks_khungChua_el.style.height = '100%';
            let hks_theNhapSo_el = document.createElement('input'); hks_theNhapSo_el.type = 'text'; hks_theNhapSo_el.className = 'cell-input text-center fw-bold text-danger hks-input-thanhtich'; hks_theNhapSo_el.readOnly = true; hks_theNhapSo_el.disabled = hks_voHieuHoa_bol;
-           
-           let hks_nhomThuTu_num = Math.floor((i - 27) / 4); 
-           hks_theNhapSo_el.name = `tt_${hks_nhomThuTu_num}_${hks_chiSoDong_num}`;
+           let hks_nhomThuTu_num = Math.floor((i - 27) / 4); hks_theNhapSo_el.name = `tt_${hks_nhomThuTu_num}_${hks_dongDuLieu_arr[2]}`;
            let hks_chuoiGoc_str = String(hks_dongDuLieu_arr[i] || ""); let hks_giaTriSo_num = ""; let hks_ghiChu_str = "";
-           
-           if(hks_chuoiGoc_str && hks_chuoiGoc_str !== "undefined" && hks_chuoiGoc_str !== "null") { let hks_mangTach_arr = hks_chuoiGoc_str.split('|'); let hks_soTam_num = parseInt(hks_mangTach_arr[0], 10); if(!isNaN(hks_soTam_num) && hks_soTam_num > 0) hks_giaTriSo_num = hks_soTam_num; if(hks_mangTach_arr.length > 1) hks_ghiChu_str = hks_mangTach_arr[1]; }
-           
+           if(hks_chuoiGoc_str && hks_chuoiGoc_str !== "undefined" && hks_chuoiGoc_str !== "null") { let hks_mangTach_arr = hks_chuoiGoc_str.split('|'); let hks_soTam_num = parseInt(hks_mangTach_arr[0]); if(!isNaN(hks_soTam_num) && hks_soTam_num > 0) hks_giaTriSo_num = hks_soTam_num; if(hks_mangTach_arr.length > 1) hks_ghiChu_str = hks_mangTach_arr[1]; }
            hks_theNhapSo_el.value = hks_giaTriSo_num; hks_theNhapSo_el.setAttribute('data-note', hks_ghiChu_str);
            if(hks_ghiChu_str) { hks_khungChua_el.title = "Thông tin:\n" + hks_ghiChu_str; let hks_gocMau_el = document.createElement('div'); hks_gocMau_el.className = 'note-corner'; hks_khungChua_el.appendChild(hks_gocMau_el); }
-           hks_theNhapSo_el.onclick = function() { if(this.disabled) return; hks_hienThiUINhapThanhTich_fn(this, hks_theDong_el, hks_nhomThuTu_num, hks_tenHS_str); };
-           
+           hks_theNhapSo_el.onclick = function() { if(this.disabled) return; hks_hienThiUINhapThanhTich_fn(this, hks_theDong_el, hks_nhomThuTu_num, hks_dongDuLieu_arr[2]); };
            hks_khungChua_el.appendChild(hks_theNhapSo_el); hks_theCot_el.appendChild(hks_khungChua_el);
         }
         hks_theDong_el.appendChild(hks_theCot_el);
       }
-      hks_manhGhepBoNho_frag.appendChild(hks_theDong_el);
+      hks_thanBang_el.appendChild(hks_theDong_el);
     });
-    
-    hks_thanBang_el.appendChild(hks_manhGhepBoNho_frag);
     hks_hienThiManHinhTai_fn(false);
   }
 
   function hks_dayDuLieuPhanHai_fn() {
     const hks_thanBang_el = document.querySelector('#bang2 tbody'); let hks_duLieuCanLuu_arr = [];
-    
     for (let hks_theDong_el of hks_thanBang_el.rows) {
-      // Do có cột STT (chỉ số 0), tọa độ lấy dữ liệu định danh dịch +1
-      let hks_truong1 = hks_theDong_el.cells[1].textContent.trim(); // CCCD (ẩn)
-      let hks_truong2 = hks_theDong_el.cells[2].textContent.trim(); // Họ đệm
-      let hks_truong3 = hks_theDong_el.cells[3].textContent.trim(); // Tên
-      
-      let hks_namChon_str = document.getElementById('t2_nam').value; 
-      let hks_lopChon_str = document.getElementById('t2_lop').value;
+      // Đọc CCCD từ thuộc tính data-cccd đã được cất giấu
+      let hks_truong1 = hks_theDong_el.cells[0].getAttribute('data-cccd'); 
+      let hks_truong2 = hks_theDong_el.cells[1].innerText.trim(); 
+      let hks_truong3 = hks_theDong_el.cells[2].innerText.trim();
+      let hks_namChon_str = document.getElementById('t2_nam').value; let hks_lopChon_str = document.getElementById('t2_lop').value;
       if(!hks_namChon_str || !hks_lopChon_str) { Swal.fire("Cảnh báo!", "Dữ liệu biên sai lệch!", "warning"); return; }
       
       let hks_mangKetQuaLuu_arr = [hks_namChon_str, hks_lopChon_str, hks_truong1, hks_truong2, hks_truong3];
-      
-      // Vòng lặp lấy giá trị nhập liệu dịch +1 (bắt đầu từ cột index 6)
-      for(let i=6; i < hks_theDong_el.cells.length; i++) {
+      // Vòng lặp vẫn bắt đầu từ index 5 vì số lượng cột đầu không hề thay đổi
+      for(let i=5; i < hks_theDong_el.cells.length; i++) {
         let hks_phanTuLayDuLieu_el = hks_theDong_el.cells[i].querySelector('input');
-        if(hks_phanTuLayDuLieu_el.type === 'checkbox') { 
-            hks_mangKetQuaLuu_arr.push(hks_phanTuLayDuLieu_el.checked ? 'x' : ''); 
-        } else { 
-            let hks_giaTri_str = hks_phanTuLayDuLieu_el.value; 
-            // Cột thành tích dịch +1 (bắt đầu từ cột index 14)
-            if (i >= 14) {
-                let hks_ghiChu_str = hks_phanTuLayDuLieu_el.getAttribute('data-note'); 
-                if (hks_giaTri_str && String(hks_giaTri_str).trim() !== "" && hks_ghiChu_str && String(hks_ghiChu_str).trim() !== "") { 
-                    hks_giaTri_str = hks_giaTri_str + "|" + hks_ghiChu_str; 
-                } 
-            } 
-            hks_mangKetQuaLuu_arr.push(hks_giaTri_str); 
-        }
+        if(hks_phanTuLayDuLieu_el.type === 'checkbox') { hks_mangKetQuaLuu_arr.push(hks_phanTuLayDuLieu_el.checked ? 'x' : ''); } 
+        else { let hks_giaTri_str = hks_phanTuLayDuLieu_el.value; if (i >= 13) { let hks_ghiChu_str = hks_phanTuLayDuLieu_el.getAttribute('data-note'); if (hks_giaTri_str && String(hks_giaTri_str).trim() !== "" && hks_ghiChu_str && String(hks_ghiChu_str).trim() !== "") { hks_giaTri_str = hks_giaTri_str + "|" + hks_ghiChu_str; } } hks_mangKetQuaLuu_arr.push(hks_giaTri_str); }
       }
       hks_duLieuCanLuu_arr.push(hks_mangKetQuaLuu_arr);
     }
-    
     hks_hienThiManHinhTai_fn(true);
     hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeHai_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
         if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Không có tín hiệu lưu trữ!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
