@@ -4,9 +4,7 @@
     <div class="row g-2 align-items-end">
       <div class="col-md-2"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
       <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      
       <div class="col-md-2"><label>Mã định danh</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Tìm theo mã..."></div>
-      
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
       <div class="col-md-3 text-end">
@@ -108,7 +106,7 @@
     const hks_cauHinhCot_arr = [
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr}, // 0: Năm
       {k:'sel', o:hks_bienKhungHeThong_obj.hks_phomPhanLoai_arr},  // 1: Lớp
-      {k:'text'}, // 2: Mã định danh (Hiển thị bình thường)
+      {k:'text'}, // 2: Mã định danh
       {k:'text'}, // 3: Họ đệm
       {k:'text'}, // 4: Tên
       {k:'text'}, // 5: Ngày sinh
@@ -150,8 +148,24 @@
       hks_theDong_el.appendChild(hks_theCot_el);
     });
     
-    if (hks_dichDen_frag) { hks_dichDen_frag.appendChild(hks_theDong_el); } 
-    else { hks_thanBang_el.appendChild(hks_theDong_el); }
+    if (hks_dichDen_frag) { 
+        hks_dichDen_frag.appendChild(hks_theDong_el); 
+    } 
+    else { 
+        hks_thanBang_el.appendChild(hks_theDong_el); 
+        
+        // Bổ sung: Tự động cuộn trang và kích hoạt con trỏ chuột khi bấm nút "Thêm"
+        setTimeout(() => {
+            // Cuộn bảng đến dòng vừa tạo
+            hks_theDong_el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Tìm ô input đầu tiên có thể nhập liệu (Mã định danh) và kích hoạt
+            let hks_oNhapKichHoat_el = hks_theDong_el.querySelector('input.cell-input');
+            if (hks_oNhapKichHoat_el && !hks_oNhapKichHoat_el.disabled) {
+                hks_oNhapKichHoat_el.focus();
+            }
+        }, 100);
+    }
   }
 
   function hks_xuLyHanhDongXoa_fn(hks_nutBamUI_el, hks_thongTinTruyen_obj) {
@@ -175,13 +189,11 @@
     const hks_thanBang_el = document.querySelector('#bang1 tbody'); let hks_duLieuCanLuu_arr = [];
     for (let hks_theDong_el of hks_thanBang_el.rows) {
       let hks_dongDuLieu_arr = [];
-      // Vòng lặp lấy dữ liệu từ các cột
       for (let i = 1; i < hks_theDong_el.cells.length; i++) {
         let hks_phanTuUI_el = hks_theDong_el.cells[i].firstElementChild;
         if(hks_phanTuUI_el.type === 'checkbox') hks_dongDuLieu_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
         else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
       }
-      // Điều kiện lưu: Có đủ Năm, Lớp, Mã định danh, Họ đệm, Tên
       if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[2] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) {
           hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
       }
