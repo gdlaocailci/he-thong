@@ -307,22 +307,22 @@
   // ==========================================
   // KHỐI 3: KẾT XUẤT GIAO DIỆN BẢNG
   // ==========================================
-  function hks_taoGiaoDienSoLuong_fn(item, stt, cssClass, labelLop = null, cap = 'TH') {
+function hks_taoGiaoDienSoLuong_fn(item, stt, cssClass, labelLop = null, cap = 'TH') {
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
       let hks_mangTuoi_arr = cap === 'TH' ? [6,7,8,9,10,11,12,13,14] : [11,12,13,14,15,16,17,18,19];
-      let isTotal = cssClass.includes('total');
-      let textStyle = isTotal ? 'color: #b71c1c !important; font-weight: bold !important;' : 'color: #000 !important; font-weight: normal !important;';
+      // Nếu là dòng cộng (có chứa 'total'), class cssClass đã được truyền vào là 'row-grade-total'
       
       return `<tr class="${cssClass}">
-        <td style="${textStyle}">${stt}</td><td class="text-start px-2" style="${textStyle}">${hks_lopHienThi_str}</td>
-        <td class="col-compact" style="${textStyle}">${hks_dinhDangOChua_fn(item.tongSo, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.danToc, isTotal)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.nu, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuDanToc, isTotal)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.khuyetTat, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuKhuyetTat, isTotal)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.ngheo, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.canNgheo, isTotal)}</td> 
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.chinhSach, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.hsNgoaiTuyen, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.bhyt, isTotal)}</td>
+        <td>${stt}</td><td class="text-start px-2 ${cssClass === 'row-grade-total' ? 'fw-bold text-danger' : ''}">${hks_lopHienThi_str}</td>
+        <td class="col-compact ${cssClass === 'row-grade-total' ? 'fw-bold text-danger' : ''}">${hks_dinhDangOChua_fn(item.tongSo)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.danToc)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.nu)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuDanToc)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.khuyetTat)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuKhuyetTat)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.ngheo)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.canNgheo)}</td> 
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.chinhSach)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.hsNgoaiTuyen)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.bhyt)}</td>
         ${hks_mangTuoi_arr.map(age => { 
-            let cellTS = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].ts : 0, isTotal); 
-            let cellNu = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].nu : 0, isTotal); 
+            let cellTS = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].ts : 0); 
+            let cellNu = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].nu : 0); 
             return `<td class="col-compact">${cellTS}</td><td class="col-compact border-end">${cellNu}</td>`;
         }).join('')}
       </tr>`;
@@ -350,20 +350,23 @@
       return `<td class="col-compact" style="position: relative; cursor: pointer;" ${jsEvent}><span class="has-val" style="${style}">${val}</span>${noteHtml}</td>`;
   }
 
-  function hks_taoGiaoDienChatLuong_fn(item, stt, cssClass, labelLop = null) {
+function hks_taoGiaoDienChatLuong_fn(item, stt, cssClass, labelLop = null) {
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
       let isTotal = cssClass.includes('total');
-      let textStyle = isTotal ? 'color: #b71c1c !important; font-weight: bold !important;' : 'color: #000 !important; font-weight: normal !important;';
       
       return `<tr class="${cssClass}">
-        <td style="${textStyle}">${stt}</td><td class="text-start px-2" style="${textStyle}">${hks_lopHienThi_str}</td>
-        <td class="col-compact" style="${textStyle}">${hks_dinhDangOChua_fn(item.tongSo, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.htxs, isTotal)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.htt, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.ht, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.cht, isTotal)}</td>
-        ${hks_taoTdThanhTich_fn(item.thanhTich.xa[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.xa[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.xa[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.xa[4], isTotal)}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.huyen[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[4], isTotal)}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.tinh[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[4], isTotal)}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.qg[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qg[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qg[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qg[4], isTotal)}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.qt[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qt[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qt[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qt[4], isTotal)}
+        <td class="${isTotal ? 'fw-bold text-danger' : ''}">${stt}</td>
+        <td class="text-start px-2 ${isTotal ? 'fw-bold text-danger' : ''}">${hks_lopHienThi_str}</td>
+        <td class="col-compact ${isTotal ? 'fw-bold text-danger' : ''}">${hks_dinhDangOChua_fn(item.tongSo)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.htxs)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.htt)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.ht)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.cht)}</td>
+        ${hks_taoTdThanhTich_fn(item.thanhTich.xa[1])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[2])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[3])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[4])}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.huyen[1])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[2])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[3])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[4])}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.tinh[1])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[2])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[3])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[4])}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.qg[1])}${hks_taoTdThanhTich_fn(item.thanhTich.qg[2])}${hks_taoTdThanhTich_fn(item.thanhTich.qg[3])}${hks_taoTdThanhTich_fn(item.thanhTich.qg[4])}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.qt[1])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[2])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[3])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[4])}
       </tr>`;
   }
 
