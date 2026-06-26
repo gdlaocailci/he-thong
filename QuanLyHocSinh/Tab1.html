@@ -283,7 +283,7 @@ function hks_chenDongPhanMot_fn(hks_duLieuBang_arr = null) {
               hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_cheDo_str: 'tao_moi', hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
                 if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Lỗi phân luồng!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
                 hks_capNhatBoNhoDem_fn().then(() => { 
-                    Swal.fire("Hoàn tất!", "Đã nhân bản lên lớp thành công! Vui lòng chọn lại Năm học và Lớp mới trên bộ lọc để xem kết quả.", "success"); 
+                    Swal.fire("Hoàn tất!", "Đã xác nhận lên lớp thành công! Vui lòng chọn lại Năm học và Lớp mới trên bộ lọc để xem kết quả.", "success"); 
                     hks_layDuLieuPhanMot_fn(); 
                 });
               }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
