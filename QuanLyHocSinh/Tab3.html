@@ -267,7 +267,7 @@
   }
 
   function hks_dinhDangOChua_fn(val, isTotal = false) { 
-      let style = isTotal ? 'color: #b71c1c !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
+      let style = isTotal ? 'color: #003366 !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
       return val > 0 ? `<span class="has-val" style="${style}">${val}</span>` : `<span class="zero-val">0</span>`; 
   }
 
@@ -311,7 +311,7 @@
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
       let hks_mangTuoi_arr = cap === 'TH' ? [6,7,8,9,10,11,12,13,14] : [11,12,13,14,15,16,17,18,19];
       let isTotal = cssClass.includes('total');
-      let textStyle = isTotal ? 'color: #b71c1c !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
+      let textStyle = isTotal ? 'color: #003366 !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
       
       return `<tr class="${cssClass}">
         <td style="${textStyle}">${stt}</td><td class="text-start px-2" style="${textStyle}">${hks_lopHienThi_str}</td>
@@ -329,7 +329,7 @@
   }
 
   function hks_taoTdThanhTich_fn(tt, isTotal = false) {
-      let style = isTotal ? 'color: #b71c1c !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
+      let style = isTotal ? 'color: #003366 !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
       if (!tt || tt.c === 0) return `<td class="col-compact"><span class="zero-val">0</span></td>`;
       let val = tt.c; let notes = tt.n || []; let noteHtml = ''; let jsEvent = ''; let filteredNotes = notes.filter(n => n && String(n).trim() !== '');
       if (filteredNotes.length > 0) {
@@ -353,7 +353,7 @@
   function hks_taoGiaoDienChatLuong_fn(item, stt, cssClass, labelLop = null) {
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
       let isTotal = cssClass.includes('total');
-      let textStyle = isTotal ? 'color: #b71c1c !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
+      let textStyle = isTotal ? 'color: #003366 !important; font-weight: bold !important; font-style: normal !important;' : 'color: #000 !important; font-weight: normal !important; font-style: normal !important;';
       
       return `<tr class="${cssClass}">
         <td style="${textStyle}">${stt}</td><td class="text-start px-2" style="${textStyle}">${hks_lopHienThi_str}</td>
