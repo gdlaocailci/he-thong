@@ -271,8 +271,8 @@
       }
 
       Swal.fire({
-          title: 'Xác nhận Lên lớp (Nhân bản)',
-          html: `Hệ thống sẽ nhân bản toàn bộ <b style="color:#b71c1c; font-size:1.2rem;">${hks_thanBang_el.rows.length}</b> học sinh đang hiển thị.<br><br>` +
+          title: 'Xác nhận Lên lớp',
+          html: `Hệ thống sẽ cập nhật toàn bộ <b style="color:#b71c1c; font-size:1.2rem;">${hks_thanBang_el.rows.length}</b> học sinh đang hiển thị.<br><br>` +
                 `<div style="background:#f8f9fa; padding:10px; border-radius:5px; border:1px solid #ddd;">` +
                 `Năm học: <b class="text-danger">${hks_namCu}</b> <i class="bi bi-arrow-right"></i> <b class="text-success">${hks_namMoi}</b><br>` +
                 `Lớp học: <b class="text-danger">${hks_lopCu}</b> <i class="bi bi-arrow-right"></i> <b class="text-success">${hks_lopMoi}</b>` +
@@ -281,7 +281,7 @@
           showCancelButton: true,
           confirmButtonColor: '#28a745',
           cancelButtonColor: '#6c757d',
-          confirmButtonText: '<i class="bi bi-check-circle"></i> Đồng ý Nhân bản',
+          confirmButtonText: '<i class="bi bi-check-circle"></i> Đồng ý',
           cancelButtonText: 'Hủy'
       }).then((result) => {
           if (result.isConfirmed) {
@@ -309,7 +309,7 @@
               hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_cheDo_str: 'tao_moi', hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
                 if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Lỗi phân luồng!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
                 hks_capNhatBoNhoDem_fn().then(() => { 
-                    Swal.fire("Hoàn tất!", "Đã nhân bản lên lớp thành công! Vui lòng chọn lại Năm học và Lớp mới trên bộ lọc để xem kết quả.", "success"); 
+                    Swal.fire("Hoàn tất!", "Đã cập nhật lên lớp thành công! Vui lòng chọn lại Năm học và Lớp mới trên bộ lọc để xem kết quả.", "success"); 
                     hks_layDuLieuPhanMot_fn(); 
                 });
               }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
