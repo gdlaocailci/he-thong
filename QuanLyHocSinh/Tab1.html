@@ -71,20 +71,17 @@
     hks_hienThiManHinhTai_fn(false);
   }
 
-  // --- HÀM MỚI: ĐÁNH DẤU CỜ KHI CÓ CHỈNH SỬA ---
   function hks_danhDauChinhSua_fn(el) {
       let tr = el.closest('tr');
       if (!tr.classList.contains('hks-dong-da-sua')) {
           tr.classList.add('hks-dong-da-sua');
-          let cellTen = tr.cells[5]; // Cột Tên ở vị trí số 5
+          let cellTen = tr.cells[5]; 
           if (cellTen) {
               let icon = document.createElement('i');
               icon.className = 'bi bi-pencil-fill hks-icon-sua';
-              // Màu đỏ đậm và ghim sát mép trong bên phải của ô
               icon.style = 'color: #b71c1c; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 10; pointer-events: none;';
               icon.title = "Đã chỉnh sửa";
               cellTen.style.position = 'relative';
-              // Đẩy chữ bên trong input lùi lại để không bị đè lên cây bút
               let input = cellTen.querySelector('input');
               if(input) input.style.paddingRight = '20px';
               cellTen.appendChild(icon);
@@ -95,12 +92,17 @@
   function hks_chenDongPhanMot_fn(hks_duLieuBang_arr = null) {
     const hks_thanBang_el = document.querySelector('#bang1 tbody');
     const hks_theDong_el = document.createElement('tr');
+    
+    // Thu thập mã cá biệt (nếu có dữ liệu cũ tải xuống)
+    let hks_uuid_str = hks_duLieuBang_arr ? (hks_duLieuBang_arr[53] || "") : "";
+    hks_theDong_el.setAttribute('data-uuid', hks_uuid_str);
+
     let hks_theCotXoa_el = document.createElement('td'); hks_theCotXoa_el.className = 'text-center align-middle'; 
     let hks_chuoiHtmlXoa_str = '';
     let hks_laQuanTriCapCao_bol = hks_bienKhungHeThong_obj.hks_quyenTuyetDoi_bol;
     
     if (!hks_duLieuBang_arr) {
-       hks_theDong_el.classList.add('hks-dong-da-sua'); // Dòng tạo mới mặc định bật cờ sửa
+       hks_theDong_el.classList.add('hks-dong-da-sua'); 
        let hks_hienThiXoa_str = hks_trangThaiSuaMot_bol ? 'inline-block' : 'none';
        hks_chuoiHtmlXoa_str = `<i class="bi bi-x-circle-fill text-secondary fs-6" style="cursor:pointer; display:${hks_hienThiXoa_str}" title="Hủy" onclick="this.closest('tr').remove()"></i>`;
     } else {
@@ -108,7 +110,7 @@
        let hks_hienThiXoa_str = (hks_trangThaiSuaMot_bol && hks_laQuanTriCapCao_bol) ? 'inline-block' : 'none'; 
        let hks_hienThiSTT_str = (hks_trangThaiSuaMot_bol && hks_laQuanTriCapCao_bol) ? 'none' : 'inline-block';
        if (hks_laQuanTriCapCao_bol) {
-           let hks_chuoiDuLieu_str = JSON.stringify({ hks_truong1: hks_duLieuBang_arr[0], hks_truong2: hks_duLieuBang_arr[1], hks_truong3: hks_duLieuBang_arr[2], hks_truong4: hks_duLieuBang_arr[3], hks_truong5: hks_duLieuBang_arr[4] }).replace(/"/g, "&quot;");
+           let hks_chuoiDuLieu_str = JSON.stringify({ hks_truong1: hks_duLieuBang_arr[0], hks_truong2: hks_duLieuBang_arr[1], hks_truong3: hks_duLieuBang_arr[2], hks_truong4: hks_duLieuBang_arr[3], hks_truong5: hks_duLieuBang_arr[4], hks_uuid: hks_uuid_str }).replace(/"/g, "&quot;");
            hks_chuoiHtmlXoa_str = `<span class="text-muted stt-label" style="font-size:12px; display:${hks_hienThiSTT_str}">${hks_chuoiSTT_str}</span><i class="bi bi-trash3-fill text-danger fs-6 btn-xoa-nguon" style="cursor:pointer; display:${hks_hienThiXoa_str}" onclick="hks_xuLyHanhDongXoa_fn(this, ${hks_chuoiDuLieu_str})"></i>`;
        } else { hks_chuoiHtmlXoa_str = `<span class="text-muted stt-label" style="font-size:12px;">${hks_chuoiSTT_str}</span>`; }
     }
@@ -147,7 +149,6 @@
         hks_theCot_el.appendChild(hks_theNhap_el);
       }
       
-      // Thêm icon định vị màu đỏ đậm cho dòng mới rỗng
       if (!hks_duLieuBang_arr && hks_chiSoCot_num === 5) {
           let icon = document.createElement('i');
           icon.className = 'bi bi-pencil-fill hks-icon-sua';
@@ -163,13 +164,11 @@
     });
     hks_thanBang_el.appendChild(hks_theDong_el);
 
-    // --- NÂNG CẤP: CUỘN VÀ ĐẶT TRỌNG TÂM CON TRỔ CHUỘT KHI THÊM MỚI ---
     if (!hks_duLieuBang_arr) {
         let hks_khungCuon_el = hks_thanBang_el.closest('.table-container');
         if (hks_khungCuon_el) hks_khungCuon_el.scrollTop = hks_khungCuon_el.scrollHeight;
         
         setTimeout(() => {
-            // Cột chỉ mục 4 là ô Họ đệm (Theo cấu trúc: 0:STT, 1:Năm, 2:Lớp, 3:CCCD, 4:Họ đệm)
             let hks_oHoDem_el = hks_theDong_el.cells[4].querySelector('input');
             if (hks_oHoDem_el) hks_oHoDem_el.focus();
         }, 100);
@@ -186,7 +185,6 @@
           hks_thucThiGiaoTiep_fn('hks_thuHoiThucThe_api', {hks_thongTinXoa_obj: hks_thongTinTruyen_obj, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => {
               if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Vượt quyền ưu tiên hệ thống!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
               if(hks_ketQuaAPI_obj.message === 'SUCCESS') { 
-                  // ĐỒNG BỘ SAU KHI XÓA
                   hks_capNhatBoNhoDem_fn().then(() => { Swal.fire('Hoàn tất!', 'Đã loại bỏ node.', 'success'); hks_nutBamUI_el.closest('tr').remove(); hks_hienThiManHinhTai_fn(false); });
               } else { Swal.fire('Lỗi', hks_ketQuaAPI_obj.message, 'warning'); hks_hienThiManHinhTai_fn(false); }
           }).catch(e => { Swal.fire('Lỗi', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
@@ -206,6 +204,10 @@
               else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
             } else hks_dongDuLieu_arr.push("");
           }
+          
+          // Gắn thêm mã cá biệt vào cuối mảng (Index 53 tương ứng Cột BB)
+          hks_dongDuLieu_arr[53] = hks_theDong_el.getAttribute('data-uuid') || "";
+          
           if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
       }
     }
@@ -250,6 +252,9 @@
                     else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
                   } else hks_dongDuLieu_arr.push("");
                 }
+                
+                hks_dongDuLieu_arr[53] = hks_theDong_el.getAttribute('data-uuid') || "";
+                
                 if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
             }
           }
