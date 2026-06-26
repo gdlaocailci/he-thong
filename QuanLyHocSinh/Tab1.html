@@ -7,14 +7,15 @@
       <div class="col-md-2"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
-      <div class="col-md-4 text-end">
-        <button class="btn btn-sm btn-danger fw-bold px-3 me-1" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
-        <button class="btn btn-sm btn-warning fw-bold px-3 me-1" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
-        <button class="btn btn-sm btn-primary px-3 me-1" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
+      
+      <div class="col-md-4 d-flex flex-wrap justify-content-end align-items-center gap-2">
+        <button class="btn btn-sm btn-danger fw-bold px-3" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
+        <button class="btn btn-sm btn-warning fw-bold px-3" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
+        <button class="btn btn-sm btn-primary px-3" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
         <span id="groupEdit1" class="edit-mode-btn">
-          <button class="btn btn-sm btn-success px-3 me-1" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
-          <button class="btn btn-sm btn-secondary px-3" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
-          <button class="btn btn-sm btn-info px-3 me-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
+          <button class="btn btn-sm btn-success px-3" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
+          <button class="btn btn-sm btn-secondary px-3 ms-1" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
+          <button class="btn btn-sm btn-info px-3 ms-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
         </span>
       </div>
     </div>
@@ -208,7 +209,6 @@
             } else hks_dongDuLieu_arr.push("");
           }
           
-          // Gắn thêm mã cá biệt vào cuối mảng (Index 53 tương ứng Cột BB)
           hks_dongDuLieu_arr[53] = hks_theDong_el.getAttribute('data-uuid') || "";
           
           if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
@@ -224,7 +224,6 @@
     }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
   }
 
-  // --- HÀM MỚI: NHÂN BẢN LÊN LỚP TOÀN BỘ THEO LỚP ĐANG HIỂN THỊ ---
   function hks_nhanBanLenLop_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
       if (hks_thanBang_el.rows.length === 0) {
@@ -274,10 +273,8 @@
                       } else hks_dongDuLieu_arr.push("");
                   }
                   
-                  // Áp dụng tịnh tiến
                   hks_dongDuLieu_arr[0] = hks_namMoi;
                   hks_dongDuLieu_arr[1] = hks_lopMoi;
-                  // Xóa UUID để cấp mã mới tại Server
                   hks_dongDuLieu_arr[53] = ""; 
                   
                   if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
