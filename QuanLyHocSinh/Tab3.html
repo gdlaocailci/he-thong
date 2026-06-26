@@ -113,11 +113,9 @@
   // KHỐI 1: XỬ LÝ DỮ LIỆU TỔNG HỢP VÀ BỘ NHỚ ĐỆM
   // ==========================================
   function hks_xuLyThongKeBoNhoDem_fn(hks_chuKyHoatDong_str) {
-      // 1.1 Lọc dữ liệu theo năm học được chọn
       const hks_chuKy_str = String(hks_chuKyHoatDong_str);
       const hks_duLieuDaLoc_arr = hks_khoDuLieuTong_arr.filter(r => String(r[0]) === hks_chuKy_str);
 
-      // 1.2 Khởi tạo cấu trúc thời gian (Năm gốc tính tuổi)
       let hks_namGoc_num = 0;
       if(hks_chuKyHoatDong_str) {
          let hks_phanTach_arr = hks_chuKy_str.split(/[-–_]/);
@@ -129,7 +127,6 @@
       if(hks_namGoc_num === 0) hks_namGoc_num = new Date().getFullYear();
       let hks_namHienTai_str = String(new Date().getFullYear()); 
 
-      // 1.3 Khởi tạo bộ lưu trữ kết quả thống kê
       let hks_thongKe_obj = {};
       let hks_tongBangMot_obj = { tongSo: 0, danToc: 0, nu: 0, nuDanToc: 0, khuyetTat: 0, nuKhuyetTat: 0, ngheo: 0, canNgheo: 0, chinhSach: 0, hsNgoaiTuyen: 0, bhyt: 0, tuoi: {} };
       for(let i=6; i<=19; i++) hks_tongBangMot_obj.tuoi[i] = {ts: 0, nu: 0};
@@ -140,7 +137,6 @@
           tinh: hks_khoiTaoMauThanhTich_fn(), qg: hks_khoiTaoMauThanhTich_fn(), qt: hks_khoiTaoMauThanhTich_fn() 
       };
 
-      // 1.4 Duyệt qua từng hồ sơ học sinh (Đã tối ưu hóa ép kiểu bộ nhớ)
       hks_duLieuDaLoc_arr.forEach(r => {
         let hks_phomHienTai_str = String(r[1]).trim();
         if (!hks_thongKe_obj[hks_phomHienTai_str]) {
@@ -154,19 +150,16 @@
         
         let objTKLop = hks_thongKe_obj[hks_phomHienTai_str];
         
-        // Tăng tổng số
         objTKLop.tongSo++; 
         hks_tongBangMot_obj.tongSo++; 
         hks_tongBangHai_obj.tongSo++;
 
-        // Bộ nhớ đệm cho các phép tính điều kiện
         let hks_nhomNhanDan_str = String(r[9]).trim().toLowerCase(); 
         let hks_laDanToc_bol = (hks_nhomNhanDan_str && hks_nhomNhanDan_str !== 'kinh');
         
         let hks_nhomHinhThai_str = String(r[6]).trim().toLowerCase(); 
         let hks_laNu_bol = (hks_nhomHinhThai_str === 'nữ');
         
-        // Cập nhật Nhân khẩu học
         if (hks_laDanToc_bol) { objTKLop.danToc++; hks_tongBangMot_obj.danToc++; }
         
         if (hks_laNu_bol) { 
@@ -183,10 +176,8 @@
         if (String(r[13]).trim() === hks_namHienTai_str) { objTKLop.canNgheo++; hks_tongBangMot_obj.canNgheo++; }
         if (String(r[14]).trim() === hks_namHienTai_str) { objTKLop.bhyt++; hks_tongBangMot_obj.bhyt++; }
         
-        // Cột S (chỉ số 18) - HS Ngoại tuyến
         if (String(r[18]).trim().toLowerCase() === 'x') { objTKLop.hsNgoaiTuyen++; hks_tongBangMot_obj.hsNgoaiTuyen++; }
         
-        // Xử lý độ tuổi nhập học
         let hks_chuKySinh_num = 0;
         let hks_chuoiNgay_str = String(r[5]).trim();
         if (hks_chuoiNgay_str.length >= 4) {
@@ -211,7 +202,6 @@
           }
         }
         
-        // Kết quả học tập
         let r23 = String(r[23]).trim().toLowerCase();
         let r24 = String(r[24]).trim().toLowerCase();
         let r25 = String(r[25]).trim().toLowerCase();
@@ -221,7 +211,6 @@
         if (r25 === 'x') { objTKLop.ht++; hks_tongBangHai_obj.ht++; }
         if (r26 === 'x') { objTKLop.cht++; hks_tongBangHai_obj.cht++; }
         
-        // Trình cắm thành tích (Tối ưu đóng gói)
         const hks_tinhToanPhanCap_fn = (hks_cotBatDau_num, hks_doiTuongTam_obj, hks_tongDoiTuongTam_obj) => {
           for(let k=1; k<=4; k++) {
               let hks_chuoiGoc_str = String(r[hks_cotBatDau_num + k - 1] || "").trim();
@@ -249,7 +238,6 @@
         hks_tinhToanPhanCap_fn(43, objTKLop.thanhTich.qt, hks_tongBangHai_obj.qt);
       });
       
-      // 1.5 Tính tổng các dòng và chuẩn bị kết xuất mảng
       let hks_ketQuaCuoi_arr = Object.values(hks_thongKe_obj).sort((a,b) => a.lop.localeCompare(b.lop));
       if (hks_ketQuaCuoi_arr.length > 0) {
           let hks_dongTongCong_obj = {
@@ -278,7 +266,10 @@
     }, 10); 
   }
 
-  function hks_dinhDangOChua_fn(val) { return val > 0 ? `<span class="has-val">${val}</span>` : `<span class="zero-val">0</span>`; }
+  function hks_dinhDangOChua_fn(val, isTotal = false) { 
+      let style = isTotal ? 'color: #b71c1c !important; font-weight: bold !important;' : 'color: #000 !important; font-weight: normal !important;';
+      return val > 0 ? `<span class="has-val" style="${style}">${val}</span>` : `<span class="zero-val">0</span>`; 
+  }
 
   function hks_khoiTaoMauThanhTich_fn() { return {1: {c:0, n:[]}, 2: {c:0, n:[]}, 3: {c:0, n:[]}, 4: {c:0, n:[]}}; }
 
@@ -319,23 +310,26 @@
   function hks_taoGiaoDienSoLuong_fn(item, stt, cssClass, labelLop = null, cap = 'TH') {
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
       let hks_mangTuoi_arr = cap === 'TH' ? [6,7,8,9,10,11,12,13,14] : [11,12,13,14,15,16,17,18,19];
+      let isTotal = cssClass.includes('total');
+      let textStyle = isTotal ? 'color: #b71c1c !important; font-weight: bold !important;' : 'color: #000 !important; font-weight: normal !important;';
       
       return `<tr class="${cssClass}">
-        <td>${stt}</td><td class="fw-bold text-start px-2 ${cssClass === '' ? 'text-primary' : ''}">${hks_lopHienThi_str}</td>
-        <td class="col-compact fw-bold">${hks_dinhDangOChua_fn(item.tongSo)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.danToc)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.nu)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuDanToc)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.khuyetTat)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuKhuyetTat)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.ngheo)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.canNgheo)}</td> 
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.chinhSach)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.hsNgoaiTuyen)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.bhyt)}</td>
+        <td style="${textStyle}">${stt}</td><td class="text-start px-2" style="${textStyle}">${hks_lopHienThi_str}</td>
+        <td class="col-compact" style="${textStyle}">${hks_dinhDangOChua_fn(item.tongSo, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.danToc, isTotal)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.nu, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuDanToc, isTotal)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.khuyetTat, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.nuKhuyetTat, isTotal)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.ngheo, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.canNgheo, isTotal)}</td> 
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.chinhSach, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.hsNgoaiTuyen, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.bhyt, isTotal)}</td>
         ${hks_mangTuoi_arr.map(age => { 
-            let cellTS = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].ts : 0); 
-            let cellNu = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].nu : 0); 
+            let cellTS = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].ts : 0, isTotal); 
+            let cellNu = hks_dinhDangOChua_fn(item.tuoi[age] ? item.tuoi[age].nu : 0, isTotal); 
             return `<td class="col-compact">${cellTS}</td><td class="col-compact border-end">${cellNu}</td>`;
         }).join('')}
       </tr>`;
   }
 
-  function hks_taoTdThanhTich_fn(tt) {
+  function hks_taoTdThanhTich_fn(tt, isTotal = false) {
+      let style = isTotal ? 'color: #b71c1c !important; font-weight: bold !important;' : 'color: #000 !important; font-weight: normal !important;';
       if (!tt || tt.c === 0) return `<td class="col-compact"><span class="zero-val">0</span></td>`;
       let val = tt.c; let notes = tt.n || []; let noteHtml = ''; let jsEvent = ''; let filteredNotes = notes.filter(n => n && String(n).trim() !== '');
       if (filteredNotes.length > 0) {
@@ -353,20 +347,23 @@
           jsEvent = `onmouseenter="hks_showTooltip(this, '${encodedHtml}')" onmouseleave="hks_hideTooltip()"`;
           noteHtml = `<div class="note-corner"></div>`;
       }
-      return `<td class="col-compact" style="position: relative; cursor: pointer;" ${jsEvent}><span class="has-val">${val}</span>${noteHtml}</td>`;
+      return `<td class="col-compact" style="position: relative; cursor: pointer;" ${jsEvent}><span class="has-val" style="${style}">${val}</span>${noteHtml}</td>`;
   }
 
   function hks_taoGiaoDienChatLuong_fn(item, stt, cssClass, labelLop = null) {
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
+      let isTotal = cssClass.includes('total');
+      let textStyle = isTotal ? 'color: #b71c1c !important; font-weight: bold !important;' : 'color: #000 !important; font-weight: normal !important;';
+      
       return `<tr class="${cssClass}">
-        <td>${stt}</td><td class="fw-bold text-start px-2 ${cssClass === '' ? 'text-primary' : ''}">${hks_lopHienThi_str}</td>
-        <td class="col-compact fw-bold">${hks_dinhDangOChua_fn(item.tongSo)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.htxs)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.htt)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.ht)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.cht)}</td>
-        ${hks_taoTdThanhTich_fn(item.thanhTich.xa[1])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[2])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[3])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[4])}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.huyen[1])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[2])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[3])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[4])}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.tinh[1])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[2])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[3])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[4])}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.qg[1])}${hks_taoTdThanhTich_fn(item.thanhTich.qg[2])}${hks_taoTdThanhTich_fn(item.thanhTich.qg[3])}${hks_taoTdThanhTich_fn(item.thanhTich.qg[4])}
-        ${hks_taoTdThanhTich_fn(item.thanhTich.qt[1])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[2])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[3])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[4])}
+        <td style="${textStyle}">${stt}</td><td class="text-start px-2" style="${textStyle}">${hks_lopHienThi_str}</td>
+        <td class="col-compact" style="${textStyle}">${hks_dinhDangOChua_fn(item.tongSo, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.htxs, isTotal)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.htt, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.ht, isTotal)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.cht, isTotal)}</td>
+        ${hks_taoTdThanhTich_fn(item.thanhTich.xa[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.xa[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.xa[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.xa[4], isTotal)}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.huyen[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[4], isTotal)}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.tinh[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[4], isTotal)}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.qg[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qg[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qg[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qg[4], isTotal)}
+        ${hks_taoTdThanhTich_fn(item.thanhTich.qt[1], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qt[2], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qt[3], isTotal)}${hks_taoTdThanhTich_fn(item.thanhTich.qt[4], isTotal)}
       </tr>`;
   }
 
