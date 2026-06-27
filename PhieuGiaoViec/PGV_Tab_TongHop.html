@@ -26,7 +26,6 @@
           <tr>
             <th class="text-center align-middle" style="width: 50px; position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important;">STT</th>
             <th class="text-center align-middle" style="min-width: 170px; position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important;">Họ và tên</th> 
-            <!-- Đã điều chỉnh min-width từ 145px xuống 115px (~ giảm 20%) -->
             <th class="text-center align-middle" style="min-width: 115px; position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important;">Kết quả xếp loại</th>
             <th class="text-center align-middle" style="width: 100px; position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important;">T7</th>
             <th class="text-center align-middle" style="width: 100px; position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important;">T8</th>
@@ -49,6 +48,24 @@
 </div>
 
 <script>
+/* ==========================================================================
+   BIẾN CẤU HÌNH THI ĐUA ĐỘNG
+   Lưu ý: Mặc định được gán các hằng số. Đồng chí có thể móc nối hàm 
+   taiCauHinhThiDua() vào chu trình nạp trang của hệ thống (window.khachApi) 
+   để ghi đè cấu hình mới nhất từ Sheet KHAIBAO.
+   ========================================================================== */
+window.cauHinhThiDua = { diem_xs: 0, diem_tot: 0, diem_ht: 0, tyle_xs: 0, tyle_tot: 0 };
+
+function taiCauHinhThiDua() {
+    if(typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function(res) {
+            if(res && res.ttai === 'tcong') {
+                window.cauHinhThiDua = res.dliu;
+            }
+        }).doGet({hdong: "laydlcauhinh"});
+    }
+}
+
 /* ==========================================================================
    HÀM ĐIỀU KHIỂN GIAO DIỆN THÔNG BÁO NỔI (TOAST)
    ========================================================================== */
@@ -89,6 +106,8 @@ function runAIAssistant() {
         btn.style.opacity = "0.7";
     }
 
+    let cfg = window.cauHinhThiDua;
+
     setTimeout(() => {
         try {
             let cmd = document.getElementById("aiCommand").value.toLowerCase();
@@ -114,7 +133,8 @@ function runAIAssistant() {
                 if (tds.length < 15) continue; 
 
                 let countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
-                let totalScore = 0;
+                let tongDiemXepLoai = 0; 
+                let tongDiemSo = 0;      
                 let validMonths = 0;
 
                 for (let j = 3; j <= 14; j++) {
@@ -129,19 +149,23 @@ function runAIAssistant() {
 
                     let textLower = cellText.toLowerCase();
                     if (textLower.includes("xuất sắc")) {
-                        totalScore += (100 + diem);
+                        tongDiemXepLoai += cfg.diem_xs;
+                        tongDiemSo += diem;
                         countHTXS++;
                         validMonths++;
                     } else if (textLower.includes("chưa hoàn thành")) {
-                        totalScore += diem;
+                        tongDiemXepLoai += 0;
+                        tongDiemSo += diem;
                         countCHT++;
                         validMonths++;
                     } else if (textLower.includes("tốt")) {
-                        totalScore += (80 + diem);
+                        tongDiemXepLoai += cfg.diem_tot;
+                        tongDiemSo += diem;
                         countHTT++;
                         validMonths++;
                     } else if (textLower.includes("hoàn thành")) {
-                        totalScore += (60 + diem);
+                        tongDiemXepLoai += cfg.diem_ht;
+                        tongDiemSo += diem;
                         countHT++;
                         validMonths++;
                     }
@@ -150,14 +174,20 @@ function runAIAssistant() {
                 if (validMonths === 0) continue;
 
                 let D = customDivisor ? customDivisor : validMonths;
-                let avgScore = (totalScore / D).toFixed(1);
+                
+                // Giai đoạn 2: Tính độc lập 2 trung bình cộng rồi cộng lại
+                let diemTBXepLoai = tongDiemXepLoai / D;
+                let diemTBSo = tongDiemSo / D;
+                let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
                 let xepLoai = "Chưa hoàn thành";
+                
+                // Giai đoạn 3: Xét điều kiện
                 if (countCHT > 0) {
                     xepLoai = "Chưa hoàn thành";
-                } else if ((countHTXS / validMonths) >= 0.3 && (countHTXS + countHTT === validMonths)) {
+                } else if ((countHTXS / validMonths) >= cfg.tyle_xs && (countHTXS + countHTT === validMonths)) {
                     xepLoai = "Hoàn thành xuất sắc";
-                } else if (((countHTXS + countHTT) / validMonths) >= 0.7 && (countHTXS + countHTT + countHT === validMonths)) {
+                } else if (((countHTXS + countHTT) / validMonths) >= cfg.tyle_tot && (countHTXS + countHTT + countHT === validMonths)) {
                     xepLoai = "Hoàn thành tốt";
                 } else if ((countHTXS + countHTT + countHT) === validMonths) {
                     xepLoai = "Hoàn thành";
@@ -198,7 +228,6 @@ function ghiKetQuaAI() {
     let table = document.getElementById("bangThop");
     if (!table) return;
     
-    // BỔ SUNG: Lấy giá trị năm học hiện tại trên giao diện
     let namHoc = document.getElementById("locNamThop").value;
     
     let tbody = table.getElementsByTagName("tbody")[0];
@@ -213,11 +242,9 @@ function ghiKetQuaAI() {
         let htmlKq = tds[2];
         let xepLoai = "";
         
-        // Trích xuất văn bản kết quả bỏ qua định dạng HTML màu sắc
         if (htmlKq.innerText.trim() !== "") {
             let theSpan = htmlKq.getElementsByTagName("span");
             if (theSpan.length > 1) {
-                // Lấy cả 2 thẻ span (Chữ xếp loại và Điểm số), nối bằng dấu xuống dòng (\n)
                 xepLoai = theSpan[0].innerText.trim() + "\n" + theSpan[1].innerText.trim();
             } else if (theSpan.length > 0) {
                 xepLoai = theSpan[0].innerText.trim();
@@ -226,9 +253,7 @@ function ghiKetQuaAI() {
             }
         }
         
-        // Chỉ ghi các hồ sơ đã có kết quả
         if (hoTen && xepLoai && xepLoai !== "-" && xepLoai !== "Chưa có" && xepLoai !== "") {
-            // BỔ SUNG: Gắn thêm thuộc tính "nam" vào mảng dữ liệu
             duLieuGhi.push({ tenn: hoTen, kq: xepLoai, nam: namHoc });
         }
     }
@@ -243,7 +268,6 @@ function ghiKetQuaAI() {
     btn.innerHTML = "⏳ Đang ghi...";
     btn.disabled = true;
 
-    // Chú ý: Dùng window.khachApi để không bị lỗi không tìm thấy định danh
     window.khachApi.ghiKetQuaThop(duLieuGhi, function(kqra) {
         showAIToast("✅ <b>Ghi kết quả thành công!</b><br>" + kqra.tbao, "success");
         btn.innerHTML = originalText;
