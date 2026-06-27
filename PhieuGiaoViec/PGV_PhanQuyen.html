@@ -119,6 +119,20 @@
             vertical-align: middle;
         }
         
+        .bang-phanquyen tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .bang-phanquyen tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+        
+        .row-selected {
+            background-color: #e2eef9 !important;
+            border-left: 4px solid #007bff;
+        }
+        
         .id-sheet-input, .email-input, .name-input {
             width: 95%;
             min-width: 110px;
@@ -181,7 +195,6 @@
             cursor: not-allowed;
         }
         
-        /* Spinner cho nút xóa */
         .spinner-delete {
             display: inline-block;
             width: 16px;
@@ -202,7 +215,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Hiệu ứng cho dòng đang xóa */
         .row-deleting {
             opacity: 0.5;
             background-color: #f8f9fa;
@@ -243,7 +255,7 @@
         }
         
         .bang-wrapper {
-            max-height: 550px;
+            max-height: 400px;
             overflow-y: auto;
             overflow-x: auto;
             border: 1px solid #dee2e6;
@@ -258,7 +270,65 @@
             z-index: 5;
         }
         
-        /* Toast notification */
+        /* Cấu trúc thiết kế Khung Bảng phụ trợ */
+        .khung-bosung {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: none;
+        }
+        
+        .tieu-de-bosung {
+            font-size: 15px;
+            font-weight: bold;
+            color: #1e3c72;
+            border-bottom: 2px solid #1e3c72;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .bang-phanquyen-sub {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        
+        .bang-phanquyen-sub th {
+            background-color: #f1f3f5;
+            border: 1px solid #dee2e6;
+            padding: 6px 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .bang-phanquyen-sub td {
+            border: 1px solid #dee2e6;
+            padding: 4px;
+            vertical-align: middle;
+        }
+        
+        .sub-input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+        
+        .sub-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
         .toast-notification {
             position: fixed;
             bottom: 20px;
@@ -285,7 +355,6 @@
             }
         }
         
-        /* Note styles */
         .note-phanquyen {
             font-size: 13px;
             font-family: Arial, sans-serif;
@@ -374,12 +443,37 @@
                 </thead>
                 <tbody id="quyenTableBodyPQ">
                     <tr>
-                        <td colspan="6" class="text-center">
+                        <td colspan="7" class="text-center">
                             Đang tải dữ liệu...
                             <div class="spinner-sm ms-2"></div>
                         </td>
                     </tr>
                 </tbody>
+            </table>
+        </div>
+        
+        <div class="khung-bosung" id="khungBoSung">
+            <div class="tieu-de-bosung">
+                <div>
+                    <i class="bi bi-table"></i> BẢNG CẤU HÌNH THAM SỐ PHỤ: 
+                    <span id="tenNguoiDungDuocChon" style="color: #dc3545; text-transform: uppercase;">Chưa chọn</span>
+                </div>
+                <button class="btn btn-success btn-chucnang" id="btnThemDongSub" style="font-size: 11px; padding: 4px 10px;">
+                    <i class="bi bi-plus-circle"></i> Thêm dòng bảng này
+                </button>
+            </div>
+            <table class="bang-phanquyen-sub">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Xóa</th>
+                        <th style="width: 50px;">STT</th>
+                        <th>Tham số Cột H</th>
+                        <th>Tham số Cột I</th>
+                        <th>Tham số Cột J</th>
+                    </tr>
+                </thead>
+                <tbody id="subTableBody">
+                    </tbody>
             </table>
         </div>
         
@@ -407,15 +501,11 @@
 
     <script>
     (function() {
-        // ==================== CẤU HÌNH CƠ BẢN ====================
         var API_URL = null;
         var getToken = function() { 
             try {
-                // Thử lấy từ sessionStorage trước
                 var token = sessionStorage.getItem('PGV_TOKEN_SECURE');
                 if (token) return token;
-                
-                // Fallback sang cách cũ
                 if (window.parent && window.parent.PGV_TOKEN) {
                     token = window.parent.PGV_TOKEN;
                     if (token) sessionStorage.setItem('PGV_TOKEN_SECURE', token);
@@ -433,7 +523,6 @@
             }
         };
         
-        // Lấy API URL
         try {
             if (window.parent && window.parent.ddungApi) {
                 API_URL = window.parent.ddungApi;
@@ -444,7 +533,6 @@
             API_URL = ddungApi;
         }
         
-        // ==================== HÀM GỌI API ====================
         function callApi(action, data, onSuccess, onError) {
             if (!API_URL) {
                 if (onError) onError(new Error("Không tìm thấy API"));
@@ -459,16 +547,12 @@
                 body: JSON.stringify(payload)
             })
             .then(function(res) { 
-                if (!res.ok) {
-                    throw new Error('HTTP ' + res.status);
-                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.text();
             })
             .then(function(txt) {
                 var json = JSON.parse(txt);
-                if (json.ttai === 'loi') {
-                    throw new Error(json.tbao || 'Lỗi không xác định');
-                }
+                if (json.ttai === 'loi') throw new Error(json.tbao || 'Lỗi không xác định');
                 if (onSuccess) onSuccess(json);
             })
             .catch(function(err) { 
@@ -477,34 +561,34 @@
             });
         }
         
-        // ==================== CÁC HÀM XỬ LÝ DỮ LIỆU ====================
         function layDanhSach() {
-    return new Promise(function(resolve, reject) {
-        callApi('laydlkhai bao', {}, function(res) {
-            var raw = res.dliu || [];
-            var list = raw.map(function(row) {
-                
-                // [ĐÃ FIX] Đọc cột F và ép giá trị mặc định nếu ô trên Sheet đang trống
-                var cv = (row[4] !== undefined && row[4] !== null) ? String(row[4]).trim() : '';
-                if (cv === '') cv = 'gv'; 
+            return new Promise(function(resolve, reject) {
+                callApi('laydlkhai bao', {}, function(res) {
+                    var raw = res.dliu || [];
+                    var list = raw.map(function(row) {
+                        var cv = (row[4] !== undefined && row[4] !== null) ? String(row[4]).trim() : '';
+                        if (cv === '') cv = 'gv'; 
 
-                return {
-                    idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
-                    email: (row[1] || '').trim(),
-                    tenHienThi: (row[2] || '').trim(),
-                    quyen: (row[3] || '').trim(),
-                    chucVu: cv // Đưa vào mảng bộ nhớ với giá trị 'gv' chuẩn xác
-                };
+                        return {
+                            idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
+                            email: (row[1] || '').trim(),
+                            tenHienThi: (row[2] || '').trim(),
+                            quyen: (row[3] || '').trim(),
+                            chucVu: cv,
+                            cotH: (row[5] || '').trim(),
+                            cotI: (row[6] || '').trim(),
+                            cotJ: (row[7] || '').trim()
+                        };
+                    });
+                    resolve(list);
+                }, reject);
             });
-            resolve(list);
-        }, reject);
-    });
-}
+        }
         
         function capNhatDanhSach(list) {
             return new Promise(function(resolve, reject) {
                 var dataToSave = list.map(function(item) {
-                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen, item.chucVu];
+                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen, item.chucVu, item.cotH || '', item.cotI || '', item.cotJ || ''];
                 });
                 callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
             });
@@ -525,32 +609,28 @@
                 callApi('gvlaydlbdau', {}, function(res) {
                     var nam = (res.dliu && res.dliu.nam) ? res.dliu.nam : '';
                     var thang = (res.dliu && res.dliu.thang) ? res.dliu.thang : '';
-                    var ngaynop = (res.dliu && res.dliu.ngaynop) ? res.dliu.ngaynop : ''; // [BỔ SUNG] Lấy ngày nộp
+                    var ngaynop = (res.dliu && res.dliu.ngaynop) ? res.dliu.ngaynop : ''; 
                     resolve({ nam: nam, thang: thang, ngaynop: ngaynop }); 
                 }, reject);
             });
         }
         
-      function capNhatNamHoc(namMoi, thangHienTai, ngayNopMoi) { // [BỔ SUNG] Thêm tham số
+        function capNhatNamHoc(namMoi, thangHienTai, ngayNopMoi) { 
             return new Promise(function(resolve, reject) {
-                var payload = {
-                    nam: namMoi,
-                    thang: thangHienTai,
-                    ngaynop: ngayNopMoi, // [BỔ SUNG] Đẩy vào payload
-                    nviec: null
-                };
+                var payload = { nam: namMoi, thang: thangHienTai, ngaynop: ngayNopMoi, nviec: null };
                 callApi('gvxulynviec', { tdtai: payload }, resolve, reject);
             });
         }
         
-        // ==================== BIẾN TOÀN CỤC ====================
         var currentList = [];
         var currentThang = '';
-        var isDeleting = false; // Cờ chống xóa đồng thời
+        var isDeleting = false; 
+        var selectedRowIndex = -1; // Vị trí dòng Master đang chọn
+        var hstBangPhu = [];       // Bộ nhớ đệm lưu trữ dữ liệu Detail hiện tại
+        
         var $ = function(sel) { return document.querySelector(sel); };
         var $$ = function(sel) { return document.querySelectorAll(sel); };
         
-        // ==================== HIỂN THỊ THÔNG BÁO ====================
         function showNotification(message, type) {
             var toast = document.createElement('div');
             toast.className = 'toast-notification';
@@ -565,9 +645,7 @@
                 toast.innerHTML = '<i class="bi bi-info-circle"></i> ' + message;
             }
             document.body.appendChild(toast);
-            setTimeout(function() { 
-                if (toast.parentNode) toast.remove(); 
-            }, 3000);
+            setTimeout(function() { if (toast.parentNode) toast.remove(); }, 3000);
         }
         
         function showTempError(input, message) {
@@ -584,101 +662,176 @@
             }, 2500);
         }
         
-        // ==================== HÀM XÓA VỚI HIỆU ỨNG ĐỒNG HỒ CÁT ====================
         async function handleDelete(rowElement, idx, btnXoa) {
-            // Kiểm tra nếu đang có thao tác xóa khác
             if (isDeleting) {
                 showNotification('Đang có thao tác xóa khác, vui lòng đợi...', 'error');
                 return;
             }
-            
             var idSheet = currentList[idx].idSheet;
             if (!idSheet) {
                 showNotification('Không thể xóa: ID trống', 'error');
                 return;
             }
+            if (!confirm('⚠️ Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\n\nDữ liệu riêng của người này (nếu có) sẽ bị xóa vĩnh viễn!')) return;
+            if (!confirm('⚠️ XÁC NHẬN LẦN CUỐI: Bạn có chắc chắn muốn xóa người dùng "' + idSheet + '"?\n\nHành động này KHÔNG THỂ hoàn tác!')) return;
             
-            // Xác nhận xóa lần 1
-            if (!confirm('⚠️ Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\n\nDữ liệu riêng của người này (nếu có) sẽ bị xóa vĩnh viễn!')) {
-                return;
-            }
-            
-            // Xác nhận lần 2 để chắc chắn
-            var confirmAgain = confirm('⚠️ XÁC NHẬN LẦN CUỐI: Bạn có chắc chắn muốn xóa người dùng "' + idSheet + '"?\n\nHành động này KHÔNG THỂ hoàn tác!');
-            if (!confirmAgain) return;
-            
-            // Bắt đầu xóa
             isDeleting = true;
-            
-            // Lưu nội dung gốc của nút xóa
             var originalContent = btnXoa.innerHTML;
-            
-            // === HIỆU ỨNG ĐỒNG HỒ CÁT ===
-            // 1. Disable nút xóa
             btnXoa.disabled = true;
-            
-            // 2. Thay đổi nội dung nút thành spinner
             btnXoa.innerHTML = '<div class="spinner-delete spinner-delete-sm"></div>';
             
-            // 3. Thêm class mờ cho toàn bộ dòng
-            if (rowElement) {
-                rowElement.classList.add('row-deleting');
-            }
-            
-            // 4. Disable tất cả các input trong dòng (không cho sửa khi đang xóa)
+            if (rowElement) rowElement.classList.add('row-deleting');
             var inputsInRow = rowElement ? rowElement.querySelectorAll('input, select, button:not(.btn-xoa)') : [];
-            inputsInRow.forEach(function(input) {
-                input.disabled = true;
-            });
+            inputsInRow.forEach(function(input) { input.disabled = true; });
             
             try {
-                // Gọi API xóa (có thể mất vài giây)
                 await xoaSheetCaNhan(idSheet);
-                
-                // Xóa khỏi mảng currentList
                 currentList.splice(idx, 1);
-                
-                // Cập nhật lại bảng
+                if (selectedRowIndex === idx) {
+                    selectedRowIndex = -1;
+                    $('#khungBoSung').style.display = 'none';
+                } else if (selectedRowIndex > idx) {
+                    selectedRowIndex--;
+                }
                 renderTable();
-                
-                // Lưu danh sách mới lên server
                 await capNhatDanhSach(currentList);
-                
-                // Thông báo thành công
                 showNotification('✅ Đã xóa cán bộ "' + idSheet + '" thành công!', 'success');
-                
             } catch (err) {
-                // Thông báo lỗi
                 showNotification('❌ Lỗi khi xóa: ' + (err.message || 'Lỗi không xác định'), 'error');
-                
-                // Khôi phục nút xóa nếu có lỗi
                 if (btnXoa) {
                     btnXoa.disabled = false;
                     btnXoa.innerHTML = originalContent;
                 }
-                
-                // Bỏ class mờ
-                if (rowElement) {
-                    rowElement.classList.remove('row-deleting');
-                }
-                
-                // Enable lại các input
-                inputsInRow.forEach(function(input) {
-                    input.disabled = false;
-                });
+                if (rowElement) rowElement.classList.remove('row-deleting');
+                inputsInRow.forEach(function(input) { input.disabled = false; });
             } finally {
                 isDeleting = false;
             }
         }
         
-    // ==================== RENDER BẢNG (QUAN TRỌNG NHẤT) ====================
+        // Luồng nạp dữ liệu và mở khung bảng phụ (Detail)
+        function chonDongDuLieu(idx) {
+            selectedRowIndex = idx;
+            var item = currentList[idx];
+            
+            var rows = $$('#quyenTableBodyPQ tr');
+            rows.forEach(function(row) {
+                row.classList.remove('row-selected');
+                if (parseInt(row.getAttribute('data-idx')) === idx) row.classList.add('row-selected');
+            });
+            
+            $('#khungBoSung').style.display = 'block';
+            $('#tenNguoiDungDuocChon').innerText = item.tenHienThi || item.idSheet || 'Dòng ' + (idx + 1);
+            
+            var arrH = item.cotH ? item.cotH.split('\n') : [];
+            var arrI = item.cotI ? item.cotI.split('\n') : [];
+            var arrJ = item.cotJ ? item.cotJ.split('\n') : [];
+            var maxLen = Math.max(arrH.length, arrI.length, arrJ.length);
+            
+            hstBangPhu = [];
+            for (var r = 0; r < maxLen; r++) {
+                hstBangPhu.push({
+                    truongH: arrH[r] || '',
+                    truongI: arrI[r] || '',
+                    truongJ: arrJ[r] || ''
+                });
+            }
+            renderBangPhu();
+        }
+        
+        // Render cấu trúc bảng phụ chi tiết
+        function renderBangPhu() {
+            var tbody = $('#subTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (hstBangPhu.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:#6c757d; padding:10px;">Bảng phụ trống. Ấn nút thêm dòng để khai báo dữ liệu liên kết.</td></tr>';
+                return;
+            }
+            
+            for (var i = 0; i < hstBangPhu.length; i++) {
+                var subRow = hstBangPhu[i];
+                var stt = i + 1;
+                var tr = document.createElement('tr');
+                
+                var tdXoa = document.createElement('td');
+                tdXoa.className = 'text-center';
+                var btnXoaSub = document.createElement('button');
+                btnXoaSub.className = 'btn-xoa';
+                btnXoaSub.innerHTML = '<i class="bi bi-trash3" style="font-size:14px;"></i>';
+                btnXoaSub.onclick = (function(subIdx) {
+                    return function() {
+                        hstBangPhu.splice(subIdx, 1);
+                        epKieuDuLieuPhuVeMaster();
+                        renderBangPhu();
+                    };
+                })(i);
+                tdXoa.appendChild(btnXoaSub);
+                
+                var tdStt = document.createElement('td');
+                tdStt.className = 'stt-cell';
+                tdStt.innerText = stt;
+                
+                var tdH = document.createElement('td');
+                var inpH = document.createElement('input');
+                inpH.type = 'text';
+                inpH.className = 'sub-input';
+                inpH.value = subRow.truongH;
+                inpH.oninput = (function(subIdx) {
+                    return function() { hstBangPhu[subIdx].truongH = this.value; epKieuDuLieuPhuVeMaster(); };
+                })(i);
+                tdH.appendChild(inpH);
+                
+                var tdI = document.createElement('td');
+                var inpI = document.createElement('input');
+                inpI.type = 'text';
+                inpI.className = 'sub-input';
+                inpI.value = subRow.truongI;
+                inpI.oninput = (function(subIdx) {
+                    return function() { hstBangPhu[subIdx].truongI = this.value; epKieuDuLieuPhuVeMaster(); };
+                })(i);
+                tdI.appendChild(inpI);
+                
+                var tdJ = document.createElement('td');
+                var inpJ = document.createElement('input');
+                inpJ.type = 'text';
+                inpJ.className = 'sub-input';
+                inpJ.value = subRow.truongJ;
+                inpJ.oninput = (function(subIdx) {
+                    return function() { hstBangPhu[subIdx].truongJ = this.value; epKieuDuLieuPhuVeMaster(); };
+                })(i);
+                tdJ.appendChild(inpJ);
+                
+                tr.appendChild(tdXoa);
+                tr.appendChild(tdStt);
+                tr.appendChild(tdH);
+                tr.appendChild(tdI);
+                tr.appendChild(tdJ);
+                tbody.appendChild(tr);
+            }
+        }
+        
+        // Ép cấu trúc danh sách mảng của bảng Detail về dạng chuỗi danh bạ nạp vào dòng Master
+        function epKieuDuLieuPhuVeMaster() {
+            if (selectedRowIndex >= 0 && selectedRowIndex < currentList.length) {
+                var strH = hstBangPhu.map(function(r) { return r.truongH.trim(); }).join('\n');
+                var strI = hstBangPhu.map(function(r) { return r.truongI.trim(); }).join('\n');
+                var strJ = hstBangPhu.map(function(r) { return r.truongJ.trim(); }).join('\n');
+                
+                currentList[selectedRowIndex].cotH = strH;
+                currentList[selectedRowIndex].cotI = strI;
+                currentList[selectedRowIndex].cotJ = strJ;
+            }
+        }
+        
         function renderTable() {
             var tbody = $('#quyenTableBodyPQ');
             if (!tbody) return;
             tbody.innerHTML = '';
             
             if (currentList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">📭 Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">📭 Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
                 return;
             }
             
@@ -689,7 +842,15 @@
                 tr.setAttribute('data-idx', i);
                 tr.setAttribute('data-idsheet', item.idSheet);
                 
-                // Cột Xóa
+                if (i === selectedRowIndex) tr.classList.add('row-selected');
+                
+                tr.onclick = (function(idx) {
+                    return function(e) {
+                        if (e.target.closest('.btn-xoa') || e.target.closest('input') || e.target.closest('select')) return;
+                        chonDongDuLieu(idx);
+                    };
+                })(i);
+                
                 var tdXoa = document.createElement('td');
                 tdXoa.className = 'text-center';
                 var btnXoa = document.createElement('button');
@@ -699,86 +860,51 @@
                 btnXoa.setAttribute('data-idsheet', item.idSheet);
                 btnXoa.title = 'Xóa người dùng này';
                 
-                // Gắn sự kiện xóa với hiệu ứng đồng hồ cát
-                btnXoa.onclick = (function(idx, rowElement, btnElement) {
-                    return function() {
-                        handleDelete(rowElement, idx, btnElement);
-                    };
+                btnXoa.onclick = (function(idx, rowEl, btnEl) {
+                    return function() { handleDelete(rowEl, idx, btnEl); };
                 })(i, tr, btnXoa);
-                
                 tdXoa.appendChild(btnXoa);
                 
-                // Cột STT
                 var tdStt = document.createElement('td');
                 tdStt.className = 'stt-cell';
                 tdStt.innerText = stt;
                 
-                // Cột ID Sheet
                 var tdId = document.createElement('td');
                 var inpId = document.createElement('input');
                 inpId.type = 'text';
                 inpId.className = 'id-sheet-input';
                 inpId.value = item.idSheet;
-                inpId.setAttribute('data-field', 'idSheet');
                 inpId.setAttribute('data-idx', i);
                 inpId.placeholder = 'VD: GV01';
                 inpId.maxLength = 50;
                 tdId.appendChild(inpId);
                 
-                // Cột Email
                 var tdEmail = document.createElement('td');
                 var inpEmail = document.createElement('input');
                 inpEmail.type = 'email';
                 inpEmail.className = 'email-input';
                 inpEmail.value = item.email;
-                inpEmail.setAttribute('data-field', 'email');
                 inpEmail.setAttribute('data-idx', i);
                 inpEmail.placeholder = 'example@domain.com';
                 inpEmail.maxLength = 100;
                 tdEmail.appendChild(inpEmail);
                 
-                // Cột Tên hiển thị
                 var tdName = document.createElement('td');
                 var inpName = document.createElement('input');
                 inpName.type = 'text';
                 inpName.className = 'name-input';
                 inpName.value = item.tenHienThi;
-                inpName.setAttribute('data-field', 'tenHienThi');
                 inpName.setAttribute('data-idx', i);
                 inpName.placeholder = 'Họ và tên';
                 inpName.maxLength = 200;
                 tdName.appendChild(inpName);
-
-              // --- BẮT ĐẦU ĐOẠN BỔ SUNG CỘT CHỨC VỤ ---
-              var tdChucVu = document.createElement('td');
-              var selChucVu = document.createElement('select');
-              selChucVu.className = 'chucvu-select quyen-select'; // Tận dụng CSS của quyen-select
-              selChucVu.setAttribute('data-idx', i);
-              
-              var cvOpts = ['gv', 'nv'];
-              var cvLabels = ['Giáo viên', 'Nhân viên'];
-              var currentCv = item.chucVu || 'gv'; // Mặc định là giáo viên
-              
-              for (var j = 0; j < cvOpts.length; j++) {
-                  var optionCV = document.createElement('option');
-                  optionCV.value = cvOpts[j];
-                  optionCV.innerText = cvLabels[j];
-                  if (currentCv === cvOpts[j]) optionCV.selected = true;
-                  selChucVu.appendChild(optionCV);
-              }
-              tdChucVu.appendChild(selChucVu);
-             
-                // Cột Quyền
+                
                 var tdQuyen = document.createElement('td');
                 var sel = document.createElement('select');
                 sel.className = 'quyen-select';
-                sel.setAttribute('data-field', 'quyen');
                 sel.setAttribute('data-idx', i);
-                
-                // [ĐÃ BỔ SUNG] Cập nhật mảng tùy chọn thêm mã 'gs' và nhãn Giám sát
                 var opts = ['', 'gs', 'x', 'xx', 'xxx'];
                 var labels = ['👨‍🏫 Giáo viên', '👀 Giám sát', '📋 Người giao việc', '⚙️ Quản trị', '👑 Quản trị Vip'];
-                
                 for (var j = 0; j < opts.length; j++) {
                     var option = document.createElement('option');
                     option.value = opts[j];
@@ -787,6 +913,22 @@
                     sel.appendChild(option);
                 }
                 tdQuyen.appendChild(sel);
+
+                var tdChucVu = document.createElement('td');
+                var selChucVu = document.createElement('select');
+                selChucVu.className = 'chucvu-select quyen-select'; 
+                selChucVu.setAttribute('data-idx', i);
+                var cvOpts = ['gv', 'nv'];
+                var cvLabels = ['Giáo viên', 'Nhân viên'];
+                var currentCv = item.chucVu || 'gv'; 
+                for (var j = 0; j < cvOpts.length; j++) {
+                    var optionCV = document.createElement('option');
+                    optionCV.value = cvOpts[j];
+                    optionCV.innerText = cvLabels[j];
+                    if (currentCv === cvOpts[j]) optionCV.selected = true;
+                    selChucVu.appendChild(optionCV);
+                }
+                tdChucVu.appendChild(selChucVu);
                 
                 tr.appendChild(tdXoa);
                 tr.appendChild(tdStt);
@@ -798,9 +940,8 @@
                 tbody.appendChild(tr);
             }
             
-            // Gắn sự kiện cho các input
             $$('.id-sheet-input').forEach(function(inp) {
-                inp.onchange = function(e) {
+                inp.onchange = function() {
                     var idx = parseInt(this.getAttribute('data-idx'));
                     var newVal = this.value.trim();
                     if (newVal.length > 50) {
@@ -818,25 +959,7 @@
                         return;
                     }
                     currentList[idx].idSheet = newVal;
-                };
-                inp.onblur = function(e) {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    var newVal = this.value.trim();
-                    if (newVal.length > 50) {
-                        showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
-                        this.value = currentList[idx].idSheet;
-                        return;
-                    }
-                    var lowerNew = newVal.toLowerCase();
-                    var duplicate = currentList.some(function(item, i) { 
-                        return i !== idx && item.idSheet.toLowerCase() === lowerNew; 
-                    });
-                    if (duplicate) {
-                        showTempError(this, 'ID không được trùng!');
-                        this.value = currentList[idx].idSheet;
-                    } else {
-                        currentList[idx].idSheet = newVal;
-                    }
+                    if(selectedRowIndex === idx) $('#tenNguoiDungDuocChon').innerText = currentList[idx].tenHienThi || newVal;
                 };
             });
             
@@ -863,6 +986,7 @@
                         return;
                     }
                     currentList[idx].tenHienThi = name;
+                    if(selectedRowIndex === idx) $('#tenNguoiDungDuocChon').innerText = name || currentList[idx].idSheet;
                 };
             });
             
@@ -872,39 +996,36 @@
                     currentList[idx].quyen = this.value;
                 };
             });
-              $$('.chucvu-select').forEach(function(sel) {
-           sel.onchange = function() {
-               var idx = parseInt(this.getAttribute('data-idx'));
-               currentList[idx].chucVu = this.value;
-           };
-       });
+
+            $$('.chucvu-select').forEach(function(sel) {
+                sel.onchange = function() {
+                    var idx = parseInt(this.getAttribute('data-idx'));
+                    currentList[idx].chucVu = this.value;
+                };
+            });
         }
             
-        // Hàm kiểm tra email hợp lệ
         function isValidEmail(email) {
             if (!email) return true;
             var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return re.test(email);
         }
         
-        // ==================== THÊM DÒNG MỚI ====================
         function themDongMoi() {
             currentList.unshift({ 
-                idSheet: '', 
-                email: '', 
-                tenHienThi: '', 
-                chucVu: 'gv', // BỔ SUNG KHAI BÁO MẶC ĐỊNH LÀ GIÁO VIÊN
-                quyen: '' 
+                idSheet: '', email: '', tenHienThi: '', chucVu: 'gv', quyen: '',
+                cotH: '', cotI: '', cotJ: ''
             });
+            if (selectedRowIndex !== -1) selectedRowIndex++; 
             renderTable();
             showNotification('Đã thêm dòng mới, vui lòng nhập thông tin', 'info');
             setTimeout(function() {
                 var firstInput = document.querySelector('.id-sheet-input');
                 if (firstInput) firstInput.focus();
+                chonDongDuLieu(0);
             }, 100);
         }
         
-        // ==================== VALIDATE ====================
         function validateList() {
             var map = new Map();
             for (var i = 0; i < currentList.length; i++) {
@@ -924,7 +1045,6 @@
                 }
                 map.set(lower, i);
                 
-                // Kiểm tra email nếu có
                 var email = currentList[i].email.trim();
                 if (email && !isValidEmail(email)) {
                     showNotification('Email ở dòng ' + (i + 1) + ' không hợp lệ.', 'error');
@@ -932,31 +1052,23 @@
                 }
             }
             
-            // Kiểm tra có ít nhất 1 admin cấp cao
             var hasAdmin = false;
             for (var j = 0; j < currentList.length; j++) {
-                if (currentList[j].quyen === 'xxx') {
-                    hasAdmin = true;
-                    break;
-                }
+                if (currentList[j].quyen === 'xxx') { hasAdmin = true; break; }
             }
             if (!hasAdmin && currentList.length > 0) {
                 showNotification('⚠️ Danh sách phải có ít nhất một người có quyền Quản trị Vip (xxx)', 'error');
                 return false;
             }
-            
             return true;
         }
         
-    // ==================== LƯU DỮ LIỆU ====================
         async function luuDuLieu() {
             var namInput = $('#namHocInput');
             var ngayNopInput = $('#ngayNopInput'); 
-            
             var namMoi = namInput ? namInput.value.trim() : '';
             var ngayNopMoi = ngayNopInput ? ngayNopInput.value.trim() : ''; 
             
-            // [CHỐT CHẶN BẢO MẬT] Kiểm tra tính hợp lệ của Ngày nộp báo cáo
             if (ngayNopMoi !== "") {
                 var numNgay = parseInt(ngayNopMoi);
                 if (isNaN(numNgay) || numNgay < 1 || numNgay > 31) {
@@ -965,13 +1077,11 @@
                     return;
                 }
             }
-            
             if (namMoi === "") {
                 showNotification('⚠️ Vui lòng nhập Năm học trước khi cập nhật', 'error');
                 if (namInput) namInput.focus();
                 return;
             }
-            
             if (!validateList()) return;
             
             var btn = $('#btnCapNhatPQ');
@@ -980,7 +1090,6 @@
             btn.disabled = true;
             
             try {
-                // Truyền tham số ngayNopMoi xuống máy chủ thông qua API
                 await capNhatNamHoc(namMoi, currentThang, ngayNopMoi); 
                 await capNhatDanhSach(currentList);
                 showNotification('✅ Thành công! Đã cập nhật cấu hình và dữ liệu quyền.', 'success');
@@ -993,12 +1102,17 @@
             }
         }
         
-        // ==================== TẢI LẠI DỮ LIỆU ====================
         async function taiLaiDuLieu() {
             try {
                 var list = await layDanhSach();
                 currentList = list;
                 renderTable();
+                if(selectedRowIndex !== -1 && selectedRowIndex < currentList.length) {
+                    chonDongDuLieu(selectedRowIndex);
+                } else {
+                    selectedRowIndex = -1;
+                    $('#khungBoSung').style.display = 'none';
+                }
                 console.log('Đã tải ' + currentList.length + ' dòng dữ liệu');
             } catch (err) {
                 console.error('Lỗi tải dữ liệu:', err);
@@ -1008,44 +1122,47 @@
             }
         }
         
-        // ==================== KHỞI TẠO NĂM HỌC ====================
-       async function khoiTaoNamHocVaThang() {
+        async function khoiTaoNamHocVaThang() {
             try {
                 var data = await layNamHocVaThang();
                 var namInput = $('#namHocInput');
-                var ngayNopInput = $('#ngayNopInput'); // [BỔ SUNG]
-                
+                var ngayNopInput = $('#ngayNopInput'); 
                 if (namInput) namInput.value = data.nam || '';
-                if (ngayNopInput) ngayNopInput.value = data.ngaynop || ''; // [BỔ SUNG] Gán giá trị vào UI
-                
+                if (ngayNopInput) ngayNopInput.value = data.ngaynop || ''; 
                 currentThang = data.thang || '';
             } catch (err) {
                 console.error('Lỗi tải năm học/tháng/ngày nộp:', err);
             }
         }
         
-        // ==================== KHỞI CHẠY ỨNG DỤNG ====================
         if (!API_URL) {
-            $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
+            $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="7" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
             showNotification('Lỗi cấu hình: Không tìm thấy API', 'error');
             return;
         }
         
-        // Hiển thị cảnh báo nếu không dùng HTTPS
         if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
             showNotification('⚠️ Cảnh báo bảo mật: Trang đang chạy qua HTTP, không phải HTTPS!', 'error');
         }
         
-        // Tải dữ liệu và khởi tạo
         Promise.all([taiLaiDuLieu(), khoiTaoNamHocVaThang()]).catch(console.error);
         
-        // Gắn sự kiện cho nút bấm
         var btnThem = $('#btnThemMoiPQ');
         var btnCap = $('#btnCapNhatPQ');
+        var btnThemSub = $('#btnThemDongSub');
+        
         if (btnThem) btnThem.onclick = themDongMoi;
         if (btnCap) btnCap.onclick = luuDuLieu;
         
-        console.log('Ứng dụng quản lý phân quyền đã khởi động thành công!');
+        if (btnThemSub) {
+            btnThemSub.onclick = function() {
+                if (selectedRowIndex === -1) return;
+                hstBangPhu.push({ truongH: '', truongI: '', truongJ: '' });
+                epKieuDuLieuPhuVeMaster();
+                renderBangPhu();
+            };
+        }
         
+        console.log('Ứng dụng quản lý phân quyền đã khởi động thành công!');
     })();
     </script>
