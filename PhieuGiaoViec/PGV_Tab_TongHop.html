@@ -49,76 +49,90 @@
 
 <script>
 /* ==========================================================================
-   CẤU HÌNH KẾT NỐI API
+   CẤU HÌNH KẾT NỐI
    ========================================================================== */
-// URL cơ sở của Web App (thay đổi nếu cần)
-// Nếu file HTML được phục vụ từ cùng domain, dùng window.location.origin
-// Nếu không, hãy gán trực tiếp URL của Web App (ví dụ: 'https://script.google.com/macros/s/ABCDE/exec')
-var API_BASE_URL = window.location.origin; // Mặc định là domain hiện tại
-// Bạn có thể ghi đè bằng biến toàn cục nếu cần
-if (typeof window.API_BASE_URL !== 'undefined') {
-  API_BASE_URL = window.API_BASE_URL;
-}
+// Đặt URL Web App của bạn (nếu dùng fetch). Nếu chạy trong Web App, không cần.
+var API_BASE_URL = 'https://script.google.com/macros/s/__YOUR_SCRIPT_ID__/exec'; // THAY THẾ BẰNG URL THỰC TẾ
 
-console.log('🔗 API_BASE_URL:', API_BASE_URL);
-
-/* ==========================================================================
-   BIẾN CẤU HÌNH THI ĐUA ĐỘNG - MẶC ĐỊNH
-   ========================================================================== */
+// Cấu hình thi đua mặc định
 window.cauHinhThiDua = { diem_xs: 100, diem_tot: 80, diem_ht: 60, tyle_xs: 0.3, tyle_tot: 0.7 };
 
 /* ==========================================================================
-   HÀM GỌI API (GET / POST)
+   HÀM GỌI SERVER THÔNG MINH (tự chọn google.script.run hoặc fetch)
    ========================================================================== */
-function callAPI(params, method, body) {
-  method = method || 'GET';
-  var url = API_BASE_URL;
-  if (method === 'GET' && params) {
-    var query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
-    if (query) url += '?' + query;
-  }
-  var options = {
-    method: method,
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json'
+function callServer(action, payload) {
+  return new Promise(function(resolve, reject) {
+    // Nếu đang chạy trong Web App (có google.script.run)
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      // Gọi trực tiếp hàm backend (action là tên hàm)
+      google.script.run
+        .withSuccessHandler(function(result) {
+          resolve(result);
+        })
+        .withFailureHandler(function(err) {
+          reject(err);
+        })
+        [action](payload); // gọi hàm tên action, truyền payload
+    } else {
+      // Ngoài môi trường Web App -> dùng fetch
+      var url = API_BASE_URL;
+      var method = 'GET';
+      var body = null;
+
+      if (payload) {
+        // POST với payload
+        method = 'POST';
+        body = JSON.stringify(payload);
+        // Đảm bảo có hdong trong payload
+        if (!payload.hdong) payload.hdong = action;
+      } else {
+        // GET với query string
+        var params = { hdong: action };
+        var query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+        if (query) url += '?' + query;
+      }
+
+      fetch(url, {
+        method: method,
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: body
+      })
+      .then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
+        return response.json();
+      })
+      .then(function(data) {
+        resolve(data);
+      })
+      .catch(function(err) {
+        reject(err);
+      });
     }
-  };
-  if (method === 'POST' && body) {
-    options.body = JSON.stringify(body);
-  }
-  return fetch(url, options)
-    .then(response => {
-      if (!response.ok) throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
-      return response.json();
-    })
-    .catch(err => {
-      console.error('❌ Lỗi gọi API:', err);
-      throw err;
-    });
+  });
 }
 
 /* ==========================================================================
-   TẢI CẤU HÌNH TỪ SERVER (GỌI API GET)
+   TẢI CẤU HÌNH
    ========================================================================== */
 function taiCauHinhThiDua() {
-  callAPI({ hdong: 'laydlcauhinh' }, 'GET')
+  callServer('pgv_laydl_cauhinh', null)
     .then(function(res) {
       if (res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
         window.cauHinhThiDua = res.dliu;
-        console.log('✅ Đã tải cấu hình thi đua từ server:', window.cauHinhThiDua);
+        console.log('✅ Cấu hình đã tải:', window.cauHinhThiDua);
       } else {
-        console.warn('⚠️ Cấu hình server không hợp lệ, giữ nguyên mặc định.');
+        console.warn('⚠️ Cấu hình không hợp lệ, dùng mặc định.');
       }
     })
     .catch(function(err) {
-      console.error('❌ Lỗi tải cấu hình:', err);
-      showAIToast('❌ <b>Lỗi tải cấu hình:</b> ' + err.message, 'error');
+      console.warn('⚠️ Không tải được cấu hình từ server, dùng mặc định. Lỗi:', err.message);
+      // Không hiển thị toast vì có thể lỗi do chưa có kết nối, nhưng vẫn dùng mặc định.
     });
 }
 
 /* ==========================================================================
-   HÀM HIỂN THỊ THÔNG BÁO (TOAST)
+   HIỂN THỊ TOAST
    ========================================================================== */
 function showAIToast(message, type) {
   var toast = document.getElementById("aiToastMessage");
@@ -146,20 +160,19 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (SỬ DỤNG FETCH)
+   TÍNH TOÁN XẾP LOẠI (AI ASSISTANT)
    ========================================================================== */
 function runAIAssistant() {
   var btn = document.querySelector("button[onclick='runAIAssistant()']");
-  var originalText = "";
+  var originalText = btn ? btn.innerHTML : '';
   if (btn) {
-    originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Đang tải tham số...";
-    btn.disabled = true; 
+    btn.disabled = true;
     btn.style.opacity = "0.7";
   }
 
-  // Gọi API lấy cấu hình mới nhất
-  callAPI({ hdong: 'laydlcauhinh' }, 'GET')
+  // Gọi lấy cấu hình
+  callServer('pgv_laydl_cauhinh', null)
     .then(function(res) {
       if (res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
         window.cauHinhThiDua = res.dliu;
@@ -167,7 +180,6 @@ function runAIAssistant() {
       var cfg = window.cauHinhThiDua;
       if (btn) btn.innerHTML = "⏳ Đang tính toán...";
 
-      // Tiến hành tính toán
       setTimeout(function() {
         try {
           var cmd = document.getElementById("aiCommand").value.toLowerCase();
@@ -178,10 +190,10 @@ function runAIAssistant() {
           }
 
           var table = document.getElementById("bangThop");
-          if (!table) throw new Error("Không tìm thấy bảng dữ liệu 'bangThop'.");
+          if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
           
           var tbody = table.getElementsByTagName("tbody")[0];
-          if (!tbody) throw new Error("Bảng chưa có nội dung body.");
+          if (!tbody) throw new Error("Bảng chưa có dữ liệu.");
           
           var rows = tbody.getElementsByTagName("tr");
           var updatedCount = 0;
@@ -288,7 +300,7 @@ function runAIAssistant() {
 }
 
 /* ==========================================================================
-   GHI KẾT QUẢ ĐÃ TÍNH LÊN MÁY CHỦ (SỬ DỤNG FETCH POST)
+   GHI KẾT QUẢ
    ========================================================================== */
 function ghiKetQuaAI() {
   var table = document.getElementById("bangThop");
@@ -334,13 +346,12 @@ function ghiKetQuaAI() {
   btn.innerHTML = "⏳ Đang ghi...";
   btn.disabled = true;
 
-  // Gọi API ghi kết quả (POST)
   var payload = {
     hdong: 'ghiketquathop',
     dldeu: duLieuGhi
   };
 
-  callAPI(null, 'POST', payload)
+  callServer('ghiketquathop', payload)
     .then(function(res) {
       if (res.ttai === 'tcong') {
         showAIToast("✅ <b>Ghi kết quả thành công!</b><br>" + res.tbao, "success");
