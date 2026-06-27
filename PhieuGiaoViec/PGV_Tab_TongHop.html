@@ -50,17 +50,19 @@
 <script>
 /* ==========================================================================
    BIẾN CẤU HÌNH THI ĐUA ĐỘNG
-   Lưu ý: Mặc định được gán các hằng số. Đồng chí có thể móc nối hàm 
-   taiCauHinhThiDua() vào chu trình nạp trang của hệ thống (window.khachApi) 
-   để ghi đè cấu hình mới nhất từ Sheet KHAIBAO.
+   Đã khôi phục giá trị mặc định chuẩn để chống lỗi bất đồng bộ (Asynchronous)
+   khi mạng chậm chưa kịp tải trang KHAIBAO.
    ========================================================================== */
-window.cauHinhThiDua = { diem_xs: 0, diem_tot: 0, diem_ht: 0, tyle_xs: 0, tyle_tot: 0 };
+window.cauHinhThiDua = { diem_xs: 100, diem_tot: 80, diem_ht: 60, tyle_xs: 0.3, tyle_tot: 0.7 };
 
 function taiCauHinhThiDua() {
     if(typeof google !== 'undefined' && google.script) {
         google.script.run.withSuccessHandler(function(res) {
             if(res && res.ttai === 'tcong') {
-                window.cauHinhThiDua = res.dliu;
+                // Chỉ ghi đè nếu dữ liệu hợp lệ và lớn hơn 0
+                if (res.dliu && res.dliu.diem_xs > 0) {
+                    window.cauHinhThiDua = res.dliu;
+                }
             }
         }).doGet({hdong: "laydlcauhinh"});
     }
@@ -175,19 +177,23 @@ function runAIAssistant() {
 
                 let D = customDivisor ? customDivisor : validMonths;
                 
-                // Giai đoạn 2: Tính độc lập 2 trung bình cộng rồi cộng lại
+                // Giai đoạn 2: Tính độc lập 2 trung bình cộng rồi cộng lại (Chính xác theo công thức của đồng chí)
                 let diemTBXepLoai = tongDiemXepLoai / D;
                 let diemTBSo = tongDiemSo / D;
                 let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
                 let xepLoai = "Chưa hoàn thành";
                 
-                // Giai đoạn 3: Xét điều kiện
+                // Tính toán tỷ lệ thực tế
+                let tyLeXS = countHTXS / validMonths;
+                let tyLeTot = (countHTXS + countHTT) / validMonths;
+                
+                // Giai đoạn 3: Xét điều kiện (Đã khóa chặt điều kiện tỷ lệ > 0)
                 if (countCHT > 0) {
                     xepLoai = "Chưa hoàn thành";
-                } else if ((countHTXS / validMonths) >= cfg.tyle_xs && (countHTXS + countHTT === validMonths)) {
+                } else if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
                     xepLoai = "Hoàn thành xuất sắc";
-                } else if (((countHTXS + countHTT) / validMonths) >= cfg.tyle_tot && (countHTXS + countHTT + countHT === validMonths)) {
+                } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
                     xepLoai = "Hoàn thành tốt";
                 } else if ((countHTXS + countHTT + countHT) === validMonths) {
                     xepLoai = "Hoàn thành";
