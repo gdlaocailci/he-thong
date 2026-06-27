@@ -251,6 +251,21 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
+
+        /* BỔ SUNG: Khung Wrapper hỗ trợ thanh trượt dọc cho bảng Cấu hình */
+        .bang-cauhinh-wrapper {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .bang-cauhinh-wrapper thead th {
+            position: sticky;
+            top: 0;
+            background-color: #e9ecef;
+            z-index: 5;
+        }
         
         .tieu-de-cauhinh {
             font-size: 16px;
@@ -360,22 +375,25 @@
                     <i class="bi bi-plus-circle"></i> Thêm dòng cấu hình
                 </button>
             </div>
-            <table class="bang-phanquyen" style="margin-bottom: 0;">
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">Xóa</th>
-                        <th style="width: 50px;">STT</th>
-                        <th style="width: 30%;">Cột H (Mã tham số)</th>
-                        <th style="width: 40%;">Cột I (Tên tham số)</th>
-                        <th style="width: 30%;">Cột J (Giá trị)</th>
-                    </tr>
-                </thead>
-                <tbody id="cauHinhTableBody">
-                    <tr>
-                        <td colspan="5" class="text-center">Đang tải dữ liệu...</td>
-                    </tr>
-                </tbody>
-            </table>
+            
+            <div class="bang-cauhinh-wrapper">
+                <table class="bang-phanquyen" style="margin-bottom: 0; border-style: hidden;">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Xóa</th>
+                            <th style="width: 50px;">STT</th>
+                            <th style="width: 30%;">Cột H (Mã tham số)</th>
+                            <th style="width: 40%;">Cột I (Tên tham số)</th>
+                            <th style="width: 30%;">Cột J (Giá trị)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cauHinhTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center">Đang tải dữ liệu...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <div class="thong-bao-nho">
