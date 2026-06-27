@@ -54,27 +54,35 @@
 window.cauHinhThiDua = { diem_xs: 100, diem_tot: 80, diem_ht: 60, tyle_xs: 0.3, tyle_tot: 0.7 };
 
 /* ==========================================================================
+   KIỂM TRA MÔI TRƯỜNG GOOGLE APPS SCRIPT
+   ========================================================================== */
+function isGoogleAppsScriptEnvironment() {
+    return (typeof google !== 'undefined' && google.script && google.script.run);
+}
+
+/* ==========================================================================
    HÀM TẢI CẤU HÌNH TỪ SERVER (GỌI TRỰC TIẾP HÀM BACKEND)
    ========================================================================== */
 function taiCauHinhThiDua() {
-    // Kiểm tra môi trường Google Apps Script
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-            .withSuccessHandler(function(res) {
-                if (res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
-                    window.cauHinhThiDua = res.dliu;
-                    console.log('✅ Đã tải cấu hình thi đua từ server:', window.cauHinhThiDua);
-                } else {
-                    console.warn('⚠️ Cấu hình server không hợp lệ, giữ nguyên mặc định.');
-                }
-            })
-            .withFailureHandler(function(err) {
-                console.error('❌ Lỗi tải cấu hình:', err);
-            })
-            .pgv_laydl_cauhinh();   // Gọi trực tiếp hàm backend
-    } else {
+    if (!isGoogleAppsScriptEnvironment()) {
         console.warn('⚠️ Không tìm thấy google.script.run – sử dụng cấu hình mặc định.');
+        // Không hiển thị toast vì đây là lúc load trang, tránh làm phiền.
+        return;
     }
+
+    google.script.run
+        .withSuccessHandler(function(res) {
+            if (res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
+                window.cauHinhThiDua = res.dliu;
+                console.log('✅ Đã tải cấu hình thi đua từ server:', window.cauHinhThiDua);
+            } else {
+                console.warn('⚠️ Cấu hình server không hợp lệ, giữ nguyên mặc định.');
+            }
+        })
+        .withFailureHandler(function(err) {
+            console.error('❌ Lỗi tải cấu hình:', err);
+        })
+        .pgv_laydl_cauhinh();
 }
 
 /* ==========================================================================
@@ -102,11 +110,11 @@ function showAIToast(message, type) {
     setTimeout(function() {
         toast.style.opacity = "0";
         setTimeout(function() { toast.style.display = "none"; }, 300);
-    }, 4000);
+    }, 6000); // Tăng thời gian hiển thị để đọc kỹ
 }
 
 /* ==========================================================================
-   TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (ĐÃ SỬA LỖI KẾT NỐI)
+   TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (KIỂM TRA MÔI TRƯỜNG KỸ)
    ========================================================================== */
 function runAIAssistant() {
     var btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -118,9 +126,17 @@ function runAIAssistant() {
         btn.style.opacity = "0.7";
     }
 
-    // Kiểm tra môi trường Google Apps Script
-    if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        showAIToast("❌ <b>Không thể kết nối máy chủ!</b><br>Ứng dụng không chạy trong môi trường Google Apps Script.", "error");
+    // Kiểm tra môi trường một lần nữa trước khi gọi
+    if (!isGoogleAppsScriptEnvironment()) {
+        showAIToast(
+            "❌ <b>Không thể kết nối máy chủ!</b><br>" +
+            "Ứng dụng chưa được triển khai đúng cách hoặc đang mở ngoài môi trường Google Apps Script.<br><br>" +
+            "<b>Giải pháp:</b><br>" +
+            "1️⃣ Truy cập ứng dụng qua URL Web App (có dạng: <i>https://script.google.com/macros/s/.../exec</i>)<br>" +
+            "2️⃣ Nếu đã triển khai, hãy tải lại trang và thử lại.<br>" +
+            "3️⃣ Kiểm tra quyền truy cập (Deploy → New deployment → Web app).",
+            "error"
+        );
         if (btn) {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -140,7 +156,7 @@ function runAIAssistant() {
             var cfg = window.cauHinhThiDua;
             if (btn) btn.innerHTML = "⏳ Đang tính toán...";
 
-            // Tiến hành tính toán (dùng setTimeout để DOM kịp cập nhật)
+            // Tiến hành tính toán
             setTimeout(function() {
                 try {
                     var cmd = document.getElementById("aiCommand").value.toLowerCase();
@@ -258,7 +274,7 @@ function runAIAssistant() {
                 btn.style.opacity = "1";
             }
         })
-        .pgv_laydl_cauhinh();   // Gọi đúng tên hàm backend
+        .pgv_laydl_cauhinh();
 }
 
 /* ==========================================================================
@@ -326,8 +342,25 @@ function ghiKetQuaAI() {
     }
 }
 
-// Tự động tải cấu hình khi trang load
+// ==========================================================================
+// KHỞI CHẠY KHI TRANG LOAD
+// ==========================================================================
 document.addEventListener("DOMContentLoaded", function() {
     taiCauHinhThiDua();
+    
+    // Nếu không phải môi trường GAS, hiển thị hướng dẫn
+    if (!isGoogleAppsScriptEnvironment()) {
+        showAIToast(
+            "⚠️ <b>Chế độ xem trước ngoài môi trường GAS</b><br>" +
+            "Hãy triển khai ứng dụng lên Web App để sử dụng đầy đủ chức năng.<br>" +
+            "Xem hướng dẫn trong console (F12).",
+            "warning"
+        );
+        console.log('%c🚀 HƯỚNG DẪN TRIỂN KHAI GOOGLE APPS SCRIPT', 'font-size: 16px; font-weight: bold;');
+        console.log('1. Mở Script Editor (code.gs)');
+        console.log('2. Vào menu Deploy → New deployment');
+        console.log('3. Chọn loại Web app, đặt quyền Execute as: Me, Who has access: Anyone');
+        console.log('4. Sao chép URL và truy cập.');
+    }
 });
 </script>
