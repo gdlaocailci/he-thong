@@ -97,134 +97,152 @@ function showAIToast(message, type) {
 
 /* ==========================================================================
    HÀM TRỢ LÝ AI: ĐỌC DỮ LIỆU, TÍNH TOÁN VÀ ĐIỀN KẾT QUẢ XẾP LOẠI
+   (Bản cập nhật: Tự động đồng bộ tham số thời gian thực từ Sheet KHAIBAO)
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
     let originalText = "";
     if (btn) {
         originalText = btn.innerHTML;
-        btn.innerHTML = "⏳ Đang tính toán...";
+        btn.innerHTML = "⏳ Đang tải tham số...";
         btn.disabled = true; 
         btn.style.opacity = "0.7";
     }
 
-    let cfg = window.cauHinhThiDua;
-
-    setTimeout(() => {
-        try {
-            let cmd = document.getElementById("aiCommand").value.toLowerCase();
-            let customDivisor = null;
-            let matchDiv = cmd.match(/chia\s*(?:cho\s*)?(\d+)/);
-            if (matchDiv && matchDiv[1]) {
-                customDivisor = parseInt(matchDiv[1]);
+    // Yêu cầu máy chủ trả về cấu hình mới nhất
+    if(typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function(res) {
+            // Cập nhật biến toàn cục nếu tải thành công
+            if(res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
+                window.cauHinhThiDua = res.dliu;
             }
-
-            let table = document.getElementById("bangThop");
-            if (!table) throw new Error("Không tìm thấy bảng dữ liệu 'bangThop'.");
             
-            let tbody = table.getElementsByTagName("tbody")[0];
-            if (!tbody) throw new Error("Bảng chưa có nội dung body.");
+            let cfg = window.cauHinhThiDua;
             
-            let rows = tbody.getElementsByTagName("tr");
-            let updatedCount = 0;
+            if (btn) btn.innerHTML = "⏳ Đang tính toán...";
 
-            for (let i = 0; i < rows.length; i++) {
-                let row = rows[i];
-                let tds = row.getElementsByTagName("td");
-                
-                if (tds.length < 15) continue; 
+            setTimeout(() => {
+                try {
+                    let cmd = document.getElementById("aiCommand").value.toLowerCase();
+                    let customDivisor = null;
+                    let matchDiv = cmd.match(/chia\s*(?:cho\s*)?(\d+)/);
+                    if (matchDiv && matchDiv[1]) {
+                        customDivisor = parseInt(matchDiv[1]);
+                    }
 
-                let countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
-                let tongDiemXepLoai = 0; 
-                let tongDiemSo = 0;      
-                let validMonths = 0;
-
-                for (let j = 3; j <= 14; j++) {
-                    if (!tds[j]) continue; 
+                    let table = document.getElementById("bangThop");
+                    if (!table) throw new Error("Không tìm thấy bảng dữ liệu 'bangThop'.");
                     
-                    let cellText = tds[j].innerText.trim();
-                    if (cellText === "" || cellText === "-" || cellText.includes("...")) continue;
+                    let tbody = table.getElementsByTagName("tbody")[0];
+                    if (!tbody) throw new Error("Bảng chưa có nội dung body.");
+                    
+                    let rows = tbody.getElementsByTagName("tr");
+                    let updatedCount = 0;
 
-                    let diem = 0;
-                    let matchDiem = cellText.match(/(\d+)/);
-                    if (matchDiem) diem = parseFloat(matchDiem[1]);
+                    for (let i = 0; i < rows.length; i++) {
+                        let row = rows[i];
+                        let tds = row.getElementsByTagName("td");
+                        
+                        if (tds.length < 15) continue; 
 
-                    let textLower = cellText.toLowerCase();
-                    if (textLower.includes("xuất sắc")) {
-                        tongDiemXepLoai += cfg.diem_xs;
-                        tongDiemSo += diem;
-                        countHTXS++;
-                        validMonths++;
-                    } else if (textLower.includes("chưa hoàn thành")) {
-                        tongDiemXepLoai += 0;
-                        tongDiemSo += diem;
-                        countCHT++;
-                        validMonths++;
-                    } else if (textLower.includes("tốt")) {
-                        tongDiemXepLoai += cfg.diem_tot;
-                        tongDiemSo += diem;
-                        countHTT++;
-                        validMonths++;
-                    } else if (textLower.includes("hoàn thành")) {
-                        tongDiemXepLoai += cfg.diem_ht;
-                        tongDiemSo += diem;
-                        countHT++;
-                        validMonths++;
+                        let countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
+                        let tongDiemXepLoai = 0; 
+                        let tongDiemSo = 0;      
+                        let validMonths = 0;
+
+                        for (let j = 3; j <= 14; j++) {
+                            if (!tds[j]) continue; 
+                            
+                            let cellText = tds[j].innerText.trim();
+                            if (cellText === "" || cellText === "-" || cellText.includes("...")) continue;
+
+                            let diem = 0;
+                            let matchDiem = cellText.match(/(\d+)/);
+                            if (matchDiem) diem = parseFloat(matchDiem[1]);
+
+                            let textLower = cellText.toLowerCase();
+                            if (textLower.includes("xuất sắc")) {
+                                tongDiemXepLoai += cfg.diem_xs;
+                                tongDiemSo += diem;
+                                countHTXS++;
+                                validMonths++;
+                            } else if (textLower.includes("chưa hoàn thành")) {
+                                tongDiemXepLoai += 0;
+                                tongDiemSo += diem;
+                                countCHT++;
+                                validMonths++;
+                            } else if (textLower.includes("tốt")) {
+                                tongDiemXepLoai += cfg.diem_tot;
+                                tongDiemSo += diem;
+                                countHTT++;
+                                validMonths++;
+                            } else if (textLower.includes("hoàn thành")) {
+                                tongDiemXepLoai += cfg.diem_ht;
+                                tongDiemSo += diem;
+                                countHT++;
+                                validMonths++;
+                            }
+                        }
+
+                        if (validMonths === 0) continue;
+
+                        let D = customDivisor ? customDivisor : validMonths;
+                        
+                        let diemTBXepLoai = tongDiemXepLoai / D;
+                        let diemTBSo = tongDiemSo / D;
+                        let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
+
+                        let xepLoai = "Chưa hoàn thành";
+                        let tyLeXS = countHTXS / validMonths;
+                        let tyLeTot = (countHTXS + countHTT) / validMonths;
+                        
+                        if (countCHT > 0) {
+                            xepLoai = "Chưa hoàn thành";
+                        } else if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
+                            xepLoai = "Hoàn thành xuất sắc";
+                        } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
+                            xepLoai = "Hoàn thành tốt";
+                        } else if ((countHTXS + countHTT + countHT) === validMonths) {
+                            xepLoai = "Hoàn thành";
+                        }
+
+                        if (tds[2]) {
+                            tds[2].innerHTML = `<div style="text-align: center; line-height: 1.5;">
+                                                  <span style="color: #b91c1c; font-weight: bold;">${xepLoai}</span><br>
+                                                  <span style="font-weight: bold; color: #1e3a8a;">${avgScore} điểm</span>
+                                                </div>`;
+                            tds[2].style.verticalAlign = "middle"; 
+                            updatedCount++;
+                        }
+                    }
+
+                    if (updatedCount > 0) {
+                        showAIToast("✅ <b>Hoàn tất tính toán!</b><br>Đã điền kết quả tự động cho " + updatedCount + " cán bộ.", "success");
+                    } else {
+                        showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu đang trống, không thể tính toán.", "warning");
+                    }
+
+                } catch (error) {
+                    showAIToast("❌ <b>Hệ thống gặp sự cố:</b><br>" + error.message, "error");
+                } finally {
+                    if (btn) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        btn.style.opacity = "1";
                     }
                 }
+            }, 100); 
 
-                if (validMonths === 0) continue;
-
-                let D = customDivisor ? customDivisor : validMonths;
-                
-                // Giai đoạn 2: Tính độc lập 2 trung bình cộng rồi cộng lại (Chính xác theo công thức của đồng chí)
-                let diemTBXepLoai = tongDiemXepLoai / D;
-                let diemTBSo = tongDiemSo / D;
-                let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
-
-                let xepLoai = "Chưa hoàn thành";
-                
-                // Tính toán tỷ lệ thực tế
-                let tyLeXS = countHTXS / validMonths;
-                let tyLeTot = (countHTXS + countHTT) / validMonths;
-                
-                // Giai đoạn 3: Xét điều kiện (Đã khóa chặt điều kiện tỷ lệ > 0)
-                if (countCHT > 0) {
-                    xepLoai = "Chưa hoàn thành";
-                } else if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
-                    xepLoai = "Hoàn thành xuất sắc";
-                } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
-                    xepLoai = "Hoàn thành tốt";
-                } else if ((countHTXS + countHTT + countHT) === validMonths) {
-                    xepLoai = "Hoàn thành";
-                }
-
-                if (tds[2]) {
-                    tds[2].innerHTML = `<div style="text-align: center; line-height: 1.5;">
-                                          <span style="color: #b91c1c; font-weight: bold;">${xepLoai}</span><br>
-                                          <span style="font-weight: bold; color: #1e3a8a;">${avgScore} điểm</span>
-                                        </div>`;
-                    tds[2].style.verticalAlign = "middle"; 
-                    updatedCount++;
-                }
-            }
-
-            if (updatedCount > 0) {
-                showAIToast("✅ <b>Hoàn tất tính toán!</b><br>Đã điền kết quả tự động cho " + updatedCount + " cán bộ.", "success");
-            } else {
-                showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu đang trống, không thể tính toán.", "warning");
-            }
-
-        } catch (error) {
-            showAIToast("❌ <b>Hệ thống gặp sự cố:</b><br>" + error.message, "error");
-        } finally {
-            if (btn) {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.style.opacity = "1";
-            }
+        }).doGet({hdong: "laydlcauhinh"}); // Kích hoạt lấy dữ liệu từ Google Apps Script
+    } else {
+        // Dự phòng khi chạy offline hoặc test giao diện
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.style.opacity = "1";
         }
-    }, 150); 
+        showAIToast("❌ <b>Không thể kết nối máy chủ!</b>", "error");
+    }
 }
 
 /* ==========================================================================
