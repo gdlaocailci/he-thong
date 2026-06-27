@@ -82,7 +82,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN (LÕI)
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI CẢ NĂM (DÀNH CHO GITHUB/EXTERNAL SERVER)
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -93,17 +93,39 @@ function runAIAssistant() {
         btn.style.opacity = "0.7";
     }
 
-    // Khối lượng tính toán lõi (Chỉ chạy khi đã có cấu hình hợp lệ)
-    const thucHienTinhToan = (cfg) => {
+    // BƯỚC 1: KÍCH HOẠT LẤY CẤU HÌNH (Giao tiếp với App Script qua khachApi)
+    try {
+        if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.layDlCauHinh === 'function') {
+            window.khachApi.layDlCauHinh(function(kqra) {
+                if(kqra && kqra.ttai === 'tcong' && kqra.dliu && kqra.dliu.diem_xs > 0) {
+                    window.cauHinhThiDua = kqra.dliu;
+                    thucHienTinhToan(window.cauHinhThiDua); // Chuyển sang Bước 2
+                } else {
+                    showAIToast("❌ <b>Lỗi thông số:</b><br>Cấu hình tại trang KHAIBAO trống hoặc không hợp lệ.", "error");
+                    if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+                }
+            }, function(loie) {
+                showAIToast("❌ <b>Lỗi kết nối API:</b><br>Không thể tải cấu hình qua khachApi.", "error");
+                if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+            });
+        } else {
+            showAIToast("❌ <b>Lỗi hệ thống:</b><br>Thiếu định nghĩa hàm window.khachApi.layDlCauHinh để giao tiếp từ GitHub về Google Sheets.", "error");
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+        }
+    } catch(e) {
+        showAIToast("❌ <b>Lỗi thực thi hệ thống:</b><br>" + e.message, "error");
+        if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+    }
+
+    // BƯỚC 2: KHỐI LOGIC XỬ LÝ TÍNH TOÁN (Được bọc kín, chỉ kích hoạt khi có tham số)
+    function thucHienTinhToan(cfg) {
         if (btn) btn.innerHTML = "⏳ Đang tính toán...";
         setTimeout(() => {
             try {
                 let cmd = document.getElementById("aiCommand").value.toLowerCase();
                 let customDivisor = null;
                 let matchDiv = cmd.match(/chia\s*(?:cho\s*)?(\d+)/);
-                if (matchDiv && matchDiv[1]) {
-                    customDivisor = parseInt(matchDiv[1]);
-                }
+                if (matchDiv && matchDiv[1]) customDivisor = parseInt(matchDiv[1]);
 
                 let table = document.getElementById("bangThop");
                 if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
@@ -117,7 +139,6 @@ function runAIAssistant() {
                 for (let i = 0; i < rows.length; i++) {
                     let row = rows[i];
                     let tds = row.getElementsByTagName("td");
-                    
                     if (tds.length < 15) continue; 
 
                     let countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
@@ -199,47 +220,17 @@ function runAIAssistant() {
                 }
             }
         }, 100);
-    };
-
-    // Kích hoạt lấy cấu hình từ máy chủ (Bắt buộc phải qua bước này)
-    try {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-            google.script.run
-                .withSuccessHandler(function(res) {
-                    // Kiểm tra nghiêm ngặt: Dữ liệu phải tồn tại và điểm xuất sắc > 0
-                    if(res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
-                        window.cauHinhThiDua = res.dliu;
-                        thucHienTinhToan(window.cauHinhThiDua);
-                    } else {
-                        // Báo lỗi và từ chối tính toán nếu sheet KHAIBAO chưa cấu hình
-                        showAIToast("❌ <b>Lỗi thông số:</b><br>Vui lòng cập nhật thang điểm và tỷ lệ trên trang KHAIBAO trước khi tính toán.", "error");
-                        if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
-                    }
-                })
-                .withFailureHandler(function(err) {
-                    showAIToast("❌ <b>Lỗi kết nối máy chủ!</b><br>Không thể tải cấu hình từ Google Sheets.", "error");
-                    if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
-                })
-                .pgv_laydl_cauhinh(); 
-        } else {
-            showAIToast("❌ <b>Môi trường không hợp lệ:</b><br>Thiếu thư viện kết nối đến Google Sheets.", "error");
-            if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
-        }
-    } catch(e) {
-        showAIToast("❌ <b>Lỗi thực thi:</b><br>" + e.message, "error");
-        if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
     }
 }
 
 /* ==========================================================================
-   HÀM BỔ SUNG: GHI KẾT QUẢ ĐÃ TÍNH TOÁN LÊN MÁY CHỦ
+   HÀM GHI KẾT QUẢ ĐÃ TÍNH TOÁN LÊN MÁY CHỦ (BẢO MẬT KHACHAPI)
    ========================================================================== */
 function ghiKetQuaAI() {
     let table = document.getElementById("bangThop");
     if (!table) return;
     
     let namHoc = document.getElementById("locNamThop").value;
-    
     let tbody = table.getElementsByTagName("tbody")[0];
     let rows = tbody.getElementsByTagName("tr");
     let duLieuGhi = [];
@@ -278,14 +269,20 @@ function ghiKetQuaAI() {
     btn.innerHTML = "⏳ Đang ghi...";
     btn.disabled = true;
 
-    window.khachApi.ghiKetQuaThop(duLieuGhi, function(kqra) {
-        showAIToast("✅ <b>Ghi kết quả thành công!</b><br>" + kqra.tbao, "success");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }, function(loie) {
-        showAIToast("❌ <b>Lỗi ghi dữ liệu:</b><br>" + loie.message, "error");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    });
+    if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.ghiKetQuaThop === 'function') {
+        window.khachApi.ghiKetQuaThop(duLieuGhi, function(kqra) {
+            showAIToast("✅ <b>Ghi kết quả thành công!</b><br>" + kqra.tbao, "success");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, function(loie) {
+            showAIToast("❌ <b>Lỗi ghi dữ liệu:</b><br>" + loie.message, "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    } else {
+         showAIToast("❌ <b>Lỗi hệ thống:</b><br>Không tìm thấy hàm API ghi dữ liệu.", "error");
+         btn.innerHTML = originalText;
+         btn.disabled = false;
+    }
 }
 </script>
