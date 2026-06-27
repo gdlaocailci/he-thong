@@ -87,19 +87,11 @@
             background-color: #0056b3;
         }
         
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
         .bang-phanquyen {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            margin-bottom: 15px;
         }
         
         .bang-phanquyen th {
@@ -119,21 +111,7 @@
             vertical-align: middle;
         }
         
-        .bang-phanquyen tbody tr {
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .bang-phanquyen tbody tr:hover {
-            background-color: #f1f3f5;
-        }
-        
-        .row-selected {
-            background-color: #e2eef9 !important;
-            border-left: 4px solid #007bff;
-        }
-        
-        .id-sheet-input, .email-input, .name-input {
+        .id-sheet-input, .email-input, .name-input, .sub-input {
             width: 95%;
             min-width: 110px;
             padding: 6px 8px;
@@ -143,7 +121,9 @@
             transition: border-color 0.2s;
         }
         
-        .id-sheet-input:focus, .email-input:focus, .name-input:focus {
+        .sub-input { width: 100%; min-width: auto; }
+        
+        .id-sheet-input:focus, .email-input:focus, .name-input:focus, .sub-input:focus {
             outline: none;
             border-color: #007bff;
             box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
@@ -260,30 +240,20 @@
             overflow-x: auto;
             border: 1px solid #dee2e6;
             border-radius: 4px;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
         
-        .bang-phanquyen thead th {
-            position: sticky;
-            top: 0;
-            background-color: #e9ecef;
-            z-index: 5;
-        }
-        
-        /* Cấu trúc thiết kế Khung Bảng phụ trợ */
-        .khung-bosung {
+        .khung-cauhinh {
             background: #ffffff;
             border: 1px solid #dee2e6;
             border-radius: 6px;
             padding: 15px;
-            margin-top: 20px;
             margin-bottom: 15px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            display: none;
         }
         
-        .tieu-de-bosung {
-            font-size: 15px;
+        .tieu-de-cauhinh {
+            font-size: 16px;
             font-weight: bold;
             color: #1e3c72;
             border-bottom: 2px solid #1e3c72;
@@ -292,41 +262,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        
-        .bang-phanquyen-sub {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-        
-        .bang-phanquyen-sub th {
-            background-color: #f1f3f5;
-            border: 1px solid #dee2e6;
-            padding: 6px 4px;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .bang-phanquyen-sub td {
-            border: 1px solid #dee2e6;
-            padding: 4px;
-            vertical-align: middle;
-        }
-        
-        .sub-input {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 13px;
-            transition: border-color 0.2s;
-        }
-        
-        .sub-input:focus {
-            outline: none;
-            border-color: #007bff;
         }
         
         .toast-notification {
@@ -345,14 +280,8 @@
         }
         
         @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
         
         .note-phanquyen {
@@ -367,38 +296,10 @@
             line-height: 1.5;
         }
         
-        .text-danger {
-            color: #dc3545;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .ms-2 {
-            margin-left: 8px;
-        }
-        
-        .gap-2 {
-            gap: 8px;
-        }
-        
-        .d-flex {
-            display: flex;
-        }
-        
-        .align-items-center {
-            align-items: center;
-        }
-        
-        .justify-content-between {
-            justify-content: space-between;
-        }
-        
-        .stt-cell {
-            text-align: center;
-            font-weight: 500;
-        }
+        .text-danger { color: #dc3545; }
+        .text-center { text-align: center; }
+        .ms-2 { margin-left: 8px; }
+        .stt-cell { text-align: center; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -419,10 +320,10 @@
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-success btn-chucnang" id="btnThemMoiPQ">
-                        <i class="bi bi-plus-circle"></i> Thêm mới
+                        <i class="bi bi-person-plus"></i> Thêm Cán bộ
                     </button>
                     <button class="btn btn-primary btn-chucnang" id="btnCapNhatPQ">
-                        <i class="bi bi-save"></i> Cập nhật
+                        <i class="bi bi-save"></i> Cập nhật Hệ thống
                     </button>
                 </div>
             </div>
@@ -452,34 +353,34 @@
             </table>
         </div>
         
-        <div class="khung-bosung" id="khungBoSung">
-            <div class="tieu-de-bosung">
-                <div>
-                    <i class="bi bi-table"></i> BẢNG CẤU HÌNH THAM SỐ PHỤ: 
-                    <span id="tenNguoiDungDuocChon" style="color: #dc3545; text-transform: uppercase;">Chưa chọn</span>
-                </div>
-                <button class="btn btn-success btn-chucnang" id="btnThemDongSub" style="font-size: 11px; padding: 4px 10px;">
-                    <i class="bi bi-plus-circle"></i> Thêm dòng bảng này
+        <div class="khung-cauhinh" id="khungCauHinh">
+            <div class="tieu-de-cauhinh">
+                <div><i class="bi bi-gear"></i> BẢNG THAM SỐ CẤU HÌNH HỆ THỐNG</div>
+                <button class="btn btn-success btn-chucnang" id="btnThemDongCauHinh" style="font-size: 12px; padding: 5px 10px;">
+                    <i class="bi bi-plus-circle"></i> Thêm dòng cấu hình
                 </button>
             </div>
-            <table class="bang-phanquyen-sub">
+            <table class="bang-phanquyen" style="margin-bottom: 0;">
                 <thead>
                     <tr>
                         <th style="width: 50px;">Xóa</th>
                         <th style="width: 50px;">STT</th>
-                        <th>Tham số Cột H</th>
-                        <th>Tham số Cột I</th>
-                        <th>Tham số Cột J</th>
+                        <th style="width: 30%;">Cột H (Mã tham số)</th>
+                        <th style="width: 40%;">Cột I (Tên tham số)</th>
+                        <th style="width: 30%;">Cột J (Giá trị)</th>
                     </tr>
                 </thead>
-                <tbody id="subTableBody">
-                    </tbody>
+                <tbody id="cauHinhTableBody">
+                    <tr>
+                        <td colspan="5" class="text-center">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
         
         <div class="thong-bao-nho">
             <i class="bi bi-info-circle" style="color: #0056b3;"></i> 
-            <span><strong>Ghi chú:</strong> <strong>ID</strong> không được trùng nhau (không phân biệt hoa/thường).</span>
+            <span><strong>Ghi chú:</strong> <strong>ID</strong> Cán bộ không được trùng nhau (không phân biệt hoa/thường).</span>
         </div>
         
         <div class="note-phanquyen">
@@ -495,7 +396,7 @@
         
         <strong class="text-danger">
             <i class="bi bi-exclamation-triangle"></i> 
-            ⚠️ Khi xóa, dữ liệu riêng của người đó (nếu có) sẽ bị xóa vĩnh viễn!
+            ⚠️ Khi xóa cán bộ, dữ liệu riêng của người đó (nếu có) sẽ bị xóa vĩnh viễn!
         </strong>
     </div>
 
@@ -523,15 +424,8 @@
             }
         };
         
-        try {
-            if (window.parent && window.parent.ddungApi) {
-                API_URL = window.parent.ddungApi;
-            }
-        } catch(e) {}
-        
-        if (!API_URL && typeof ddungApi !== 'undefined') {
-            API_URL = ddungApi;
-        }
+        try { if (window.parent && window.parent.ddungApi) { API_URL = window.parent.ddungApi; } } catch(e) {}
+        if (!API_URL && typeof ddungApi !== 'undefined') { API_URL = ddungApi; }
         
         function callApi(action, data, onSuccess, onError) {
             if (!API_URL) {
@@ -564,33 +458,44 @@
         function layDanhSach() {
             return new Promise(function(resolve, reject) {
                 callApi('laydlkhai bao', {}, function(res) {
-                    var raw = res.dliu || [];
-                    var list = raw.map(function(row) {
+                    var data = res.dliu || { canBo: [], cauHinh: [] };
+                    
+                    var listCanBo = (data.canBo || []).map(function(row) {
                         var cv = (row[4] !== undefined && row[4] !== null) ? String(row[4]).trim() : '';
                         if (cv === '') cv = 'gv'; 
-
                         return {
-                            idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
-                            email: (row[1] || '').trim(),
-                            tenHienThi: (row[2] || '').trim(),
-                            quyen: (row[3] || '').trim(),
-                            chucVu: cv,
-                            cotH: (row[5] || '').trim(),
-                            cotI: (row[6] || '').trim(),
-                            cotJ: (row[7] || '').trim()
+                            idSheet: String(row[0] || '').trim(),
+                            email: String(row[1] || '').trim(),
+                            tenHienThi: String(row[2] || '').trim(),
+                            quyen: String(row[3] || '').trim(),
+                            chucVu: cv
                         };
                     });
-                    resolve(list);
+                    
+                    var listCauHinh = (data.cauHinh || []).map(function(row) {
+                        return {
+                            maThamSo: String(row[0] || '').trim(),
+                            tenThamSo: String(row[1] || '').trim(),
+                            giaTri: String(row[2] || '').trim()
+                        };
+                    });
+                    
+                    resolve({ listCanBo: listCanBo, listCauHinh: listCauHinh });
                 }, reject);
             });
         }
         
-        function capNhatDanhSach(list) {
+        function capNhatDanhSachHienTai(listCanBo, listCauHinh) {
             return new Promise(function(resolve, reject) {
-                var dataToSave = list.map(function(item) {
-                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen, item.chucVu, item.cotH || '', item.cotI || '', item.cotJ || ''];
+                var dataCanBo = listCanBo.map(function(item) {
+                    return [item.idSheet, item.email, item.tenHienThi, item.quyen, item.chucVu];
                 });
-                callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
+                var dataCauHinh = listCauHinh.map(function(item) {
+                    return [item.maThamSo, item.tenThamSo, item.giaTri];
+                });
+                
+                var payload = { canBo: dataCanBo, cauHinh: dataCauHinh };
+                callApi('capnhatkhai bao', { dliu: payload }, resolve, reject);
             });
         }
         
@@ -622,11 +527,11 @@
             });
         }
         
-        var currentList = [];
+        // BIẾN TOÀN CỤC HOÀN TOÀN ĐỘC LẬP
+        var currentList = [];    // Chứa dữ liệu bảng B:F (Cán bộ)
+        var currentCauHinh = []; // Chứa dữ liệu bảng H:J (Cấu hình)
         var currentThang = '';
         var isDeleting = false; 
-        var selectedRowIndex = -1; // Vị trí dòng Master đang chọn
-        var hstBangPhu = [];       // Bộ nhớ đệm lưu trữ dữ liệu Detail hiện tại
         
         var $ = function(sel) { return document.querySelector(sel); };
         var $$ = function(sel) { return document.querySelectorAll(sel); };
@@ -663,15 +568,9 @@
         }
         
         async function handleDelete(rowElement, idx, btnXoa) {
-            if (isDeleting) {
-                showNotification('Đang có thao tác xóa khác, vui lòng đợi...', 'error');
-                return;
-            }
+            if (isDeleting) { showNotification('Đang có thao tác xóa khác, vui lòng đợi...', 'error'); return; }
             var idSheet = currentList[idx].idSheet;
-            if (!idSheet) {
-                showNotification('Không thể xóa: ID trống', 'error');
-                return;
-            }
+            if (!idSheet) { showNotification('Không thể xóa: ID trống', 'error'); return; }
             if (!confirm('⚠️ Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\n\nDữ liệu riêng của người này (nếu có) sẽ bị xóa vĩnh viễn!')) return;
             if (!confirm('⚠️ XÁC NHẬN LẦN CUỐI: Bạn có chắc chắn muốn xóa người dùng "' + idSheet + '"?\n\nHành động này KHÔNG THỂ hoàn tác!')) return;
             
@@ -687,21 +586,12 @@
             try {
                 await xoaSheetCaNhan(idSheet);
                 currentList.splice(idx, 1);
-                if (selectedRowIndex === idx) {
-                    selectedRowIndex = -1;
-                    $('#khungBoSung').style.display = 'none';
-                } else if (selectedRowIndex > idx) {
-                    selectedRowIndex--;
-                }
                 renderTable();
-                await capNhatDanhSach(currentList);
+                await capNhatDanhSachHienTai(currentList, currentCauHinh);
                 showNotification('✅ Đã xóa cán bộ "' + idSheet + '" thành công!', 'success');
             } catch (err) {
                 showNotification('❌ Lỗi khi xóa: ' + (err.message || 'Lỗi không xác định'), 'error');
-                if (btnXoa) {
-                    btnXoa.disabled = false;
-                    btnXoa.innerHTML = originalContent;
-                }
+                if (btnXoa) { btnXoa.disabled = false; btnXoa.innerHTML = originalContent; }
                 if (rowElement) rowElement.classList.remove('row-deleting');
                 inputsInRow.forEach(function(input) { input.disabled = false; });
             } finally {
@@ -709,129 +599,14 @@
             }
         }
         
-        // Luồng nạp dữ liệu và mở khung bảng phụ (Detail)
-        function chonDongDuLieu(idx) {
-            selectedRowIndex = idx;
-            var item = currentList[idx];
-            
-            var rows = $$('#quyenTableBodyPQ tr');
-            rows.forEach(function(row) {
-                row.classList.remove('row-selected');
-                if (parseInt(row.getAttribute('data-idx')) === idx) row.classList.add('row-selected');
-            });
-            
-            $('#khungBoSung').style.display = 'block';
-            $('#tenNguoiDungDuocChon').innerText = item.tenHienThi || item.idSheet || 'Dòng ' + (idx + 1);
-            
-            var arrH = item.cotH ? item.cotH.split('\n') : [];
-            var arrI = item.cotI ? item.cotI.split('\n') : [];
-            var arrJ = item.cotJ ? item.cotJ.split('\n') : [];
-            var maxLen = Math.max(arrH.length, arrI.length, arrJ.length);
-            
-            hstBangPhu = [];
-            for (var r = 0; r < maxLen; r++) {
-                hstBangPhu.push({
-                    truongH: arrH[r] || '',
-                    truongI: arrI[r] || '',
-                    truongJ: arrJ[r] || ''
-                });
-            }
-            renderBangPhu();
-        }
-        
-        // Render cấu trúc bảng phụ chi tiết
-        function renderBangPhu() {
-            var tbody = $('#subTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            
-            if (hstBangPhu.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:#6c757d; padding:10px;">Bảng phụ trống. Ấn nút thêm dòng để khai báo dữ liệu liên kết.</td></tr>';
-                return;
-            }
-            
-            for (var i = 0; i < hstBangPhu.length; i++) {
-                var subRow = hstBangPhu[i];
-                var stt = i + 1;
-                var tr = document.createElement('tr');
-                
-                var tdXoa = document.createElement('td');
-                tdXoa.className = 'text-center';
-                var btnXoaSub = document.createElement('button');
-                btnXoaSub.className = 'btn-xoa';
-                btnXoaSub.innerHTML = '<i class="bi bi-trash3" style="font-size:14px;"></i>';
-                btnXoaSub.onclick = (function(subIdx) {
-                    return function() {
-                        hstBangPhu.splice(subIdx, 1);
-                        epKieuDuLieuPhuVeMaster();
-                        renderBangPhu();
-                    };
-                })(i);
-                tdXoa.appendChild(btnXoaSub);
-                
-                var tdStt = document.createElement('td');
-                tdStt.className = 'stt-cell';
-                tdStt.innerText = stt;
-                
-                var tdH = document.createElement('td');
-                var inpH = document.createElement('input');
-                inpH.type = 'text';
-                inpH.className = 'sub-input';
-                inpH.value = subRow.truongH;
-                inpH.oninput = (function(subIdx) {
-                    return function() { hstBangPhu[subIdx].truongH = this.value; epKieuDuLieuPhuVeMaster(); };
-                })(i);
-                tdH.appendChild(inpH);
-                
-                var tdI = document.createElement('td');
-                var inpI = document.createElement('input');
-                inpI.type = 'text';
-                inpI.className = 'sub-input';
-                inpI.value = subRow.truongI;
-                inpI.oninput = (function(subIdx) {
-                    return function() { hstBangPhu[subIdx].truongI = this.value; epKieuDuLieuPhuVeMaster(); };
-                })(i);
-                tdI.appendChild(inpI);
-                
-                var tdJ = document.createElement('td');
-                var inpJ = document.createElement('input');
-                inpJ.type = 'text';
-                inpJ.className = 'sub-input';
-                inpJ.value = subRow.truongJ;
-                inpJ.oninput = (function(subIdx) {
-                    return function() { hstBangPhu[subIdx].truongJ = this.value; epKieuDuLieuPhuVeMaster(); };
-                })(i);
-                tdJ.appendChild(inpJ);
-                
-                tr.appendChild(tdXoa);
-                tr.appendChild(tdStt);
-                tr.appendChild(tdH);
-                tr.appendChild(tdI);
-                tr.appendChild(tdJ);
-                tbody.appendChild(tr);
-            }
-        }
-        
-        // Ép cấu trúc danh sách mảng của bảng Detail về dạng chuỗi danh bạ nạp vào dòng Master
-        function epKieuDuLieuPhuVeMaster() {
-            if (selectedRowIndex >= 0 && selectedRowIndex < currentList.length) {
-                var strH = hstBangPhu.map(function(r) { return r.truongH.trim(); }).join('\n');
-                var strI = hstBangPhu.map(function(r) { return r.truongI.trim(); }).join('\n');
-                var strJ = hstBangPhu.map(function(r) { return r.truongJ.trim(); }).join('\n');
-                
-                currentList[selectedRowIndex].cotH = strH;
-                currentList[selectedRowIndex].cotI = strI;
-                currentList[selectedRowIndex].cotJ = strJ;
-            }
-        }
-        
+        // RENDER BẢNG 1: QUẢN LÝ CÁN BỘ
         function renderTable() {
             var tbody = $('#quyenTableBodyPQ');
             if (!tbody) return;
             tbody.innerHTML = '';
             
             if (currentList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">📭 Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">📭 Chưa có dữ liệu. Nhấn "Thêm Cán bộ" để tạo.</td></tr>';
                 return;
             }
             
@@ -839,27 +614,13 @@
                 var item = currentList[i];
                 var stt = i + 1;
                 var tr = document.createElement('tr');
-                tr.setAttribute('data-idx', i);
-                tr.setAttribute('data-idsheet', item.idSheet);
-                
-                if (i === selectedRowIndex) tr.classList.add('row-selected');
-                
-                tr.onclick = (function(idx) {
-                    return function(e) {
-                        if (e.target.closest('.btn-xoa') || e.target.closest('input') || e.target.closest('select')) return;
-                        chonDongDuLieu(idx);
-                    };
-                })(i);
                 
                 var tdXoa = document.createElement('td');
                 tdXoa.className = 'text-center';
                 var btnXoa = document.createElement('button');
                 btnXoa.className = 'btn-xoa';
                 btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
-                btnXoa.setAttribute('data-idx', i);
-                btnXoa.setAttribute('data-idsheet', item.idSheet);
-                btnXoa.title = 'Xóa người dùng này';
-                
+                btnXoa.title = 'Xóa Cán bộ';
                 btnXoa.onclick = (function(idx, rowEl, btnEl) {
                     return function() { handleDelete(rowEl, idx, btnEl); };
                 })(i, tr, btnXoa);
@@ -875,8 +636,6 @@
                 inpId.className = 'id-sheet-input';
                 inpId.value = item.idSheet;
                 inpId.setAttribute('data-idx', i);
-                inpId.placeholder = 'VD: GV01';
-                inpId.maxLength = 50;
                 tdId.appendChild(inpId);
                 
                 var tdEmail = document.createElement('td');
@@ -885,8 +644,6 @@
                 inpEmail.className = 'email-input';
                 inpEmail.value = item.email;
                 inpEmail.setAttribute('data-idx', i);
-                inpEmail.placeholder = 'example@domain.com';
-                inpEmail.maxLength = 100;
                 tdEmail.appendChild(inpEmail);
                 
                 var tdName = document.createElement('td');
@@ -895,8 +652,6 @@
                 inpName.className = 'name-input';
                 inpName.value = item.tenHienThi;
                 inpName.setAttribute('data-idx', i);
-                inpName.placeholder = 'Họ và tên';
-                inpName.maxLength = 200;
                 tdName.appendChild(inpName);
                 
                 var tdQuyen = document.createElement('td');
@@ -920,12 +675,11 @@
                 selChucVu.setAttribute('data-idx', i);
                 var cvOpts = ['gv', 'nv'];
                 var cvLabels = ['Giáo viên', 'Nhân viên'];
-                var currentCv = item.chucVu || 'gv'; 
                 for (var j = 0; j < cvOpts.length; j++) {
                     var optionCV = document.createElement('option');
                     optionCV.value = cvOpts[j];
                     optionCV.innerText = cvLabels[j];
-                    if (currentCv === cvOpts[j]) optionCV.selected = true;
+                    if (item.chucVu === cvOpts[j]) optionCV.selected = true;
                     selChucVu.appendChild(optionCV);
                 }
                 tdChucVu.appendChild(selChucVu);
@@ -945,111 +699,141 @@
                     var idx = parseInt(this.getAttribute('data-idx'));
                     var newVal = this.value.trim();
                     if (newVal.length > 50) {
-                        showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
+                        showTempError(this, 'ID quá dài');
                         this.value = currentList[idx].idSheet;
                         return;
                     }
                     var lowerNew = newVal.toLowerCase();
-                    var duplicate = currentList.some(function(item, i) { 
-                        return i !== idx && item.idSheet.toLowerCase() === lowerNew; 
-                    });
+                    var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
                     if (duplicate) {
                         showTempError(this, 'ID đã tồn tại!');
                         this.value = currentList[idx].idSheet;
                         return;
                     }
                     currentList[idx].idSheet = newVal;
-                    if(selectedRowIndex === idx) $('#tenNguoiDungDuocChon').innerText = currentList[idx].tenHienThi || newVal;
                 };
             });
             
             $$('.email-input').forEach(function(inp) {
                 inp.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    var email = this.value.trim();
-                    if (email && !isValidEmail(email)) {
-                        showTempError(this, 'Email không hợp lệ');
-                        this.value = currentList[idx].email;
-                        return;
-                    }
-                    currentList[idx].email = email;
+                    currentList[parseInt(this.getAttribute('data-idx'))].email = this.value.trim();
                 };
             });
             
             $$('.name-input').forEach(function(inp) {
                 inp.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    var name = this.value.trim();
-                    if (name.length > 200) {
-                        showTempError(this, 'Tên quá dài (tối đa 200 ký tự)');
-                        this.value = currentList[idx].tenHienThi;
-                        return;
-                    }
-                    currentList[idx].tenHienThi = name;
-                    if(selectedRowIndex === idx) $('#tenNguoiDungDuocChon').innerText = name || currentList[idx].idSheet;
+                    currentList[parseInt(this.getAttribute('data-idx'))].tenHienThi = this.value.trim();
                 };
             });
             
             $$('.quyen-select').forEach(function(sel) {
                 sel.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    currentList[idx].quyen = this.value;
+                    currentList[parseInt(this.getAttribute('data-idx'))].quyen = this.value;
                 };
             });
 
             $$('.chucvu-select').forEach(function(sel) {
                 sel.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    currentList[idx].chucVu = this.value;
+                    currentList[parseInt(this.getAttribute('data-idx'))].chucVu = this.value;
                 };
             });
         }
+        
+        // RENDER BẢNG 2: CẤU HÌNH HỆ THỐNG
+        function renderCauHinh() {
+            var tbody = $('#cauHinhTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
             
+            if (currentCauHinh.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">📭 Chưa có tham số cấu hình nào.</td></tr>';
+                return;
+            }
+            
+            for (var i = 0; i < currentCauHinh.length; i++) {
+                var item = currentCauHinh[i];
+                var stt = i + 1;
+                var tr = document.createElement('tr');
+                
+                var tdXoa = document.createElement('td');
+                tdXoa.className = 'text-center';
+                var btnXoa = document.createElement('button');
+                btnXoa.className = 'btn-xoa';
+                btnXoa.innerHTML = '<i class="bi bi-trash3" style="font-size:14px;"></i>';
+                btnXoa.onclick = (function(idx) {
+                    return function() { currentCauHinh.splice(idx, 1); renderCauHinh(); };
+                })(i);
+                tdXoa.appendChild(btnXoa);
+                
+                var tdStt = document.createElement('td');
+                tdStt.className = 'stt-cell';
+                tdStt.innerText = stt;
+                
+                var tdH = document.createElement('td');
+                var inpH = document.createElement('input');
+                inpH.type = 'text';
+                inpH.className = 'sub-input';
+                inpH.value = item.maThamSo;
+                inpH.placeholder = "Ví dụ: DIEM_XS";
+                inpH.oninput = (function(idx) { return function() { currentCauHinh[idx].maThamSo = this.value; }; })(i);
+                tdH.appendChild(inpH);
+                
+                var tdI = document.createElement('td');
+                var inpI = document.createElement('input');
+                inpI.type = 'text';
+                inpI.className = 'sub-input';
+                inpI.value = item.tenThamSo;
+                inpI.placeholder = "Ví dụ: Điểm cơ sở tháng Xuất sắc";
+                inpI.oninput = (function(idx) { return function() { currentCauHinh[idx].tenThamSo = this.value; }; })(i);
+                tdI.appendChild(inpI);
+                
+                var tdJ = document.createElement('td');
+                var inpJ = document.createElement('input');
+                inpJ.type = 'text';
+                inpJ.className = 'sub-input';
+                inpJ.value = item.giaTri;
+                inpJ.placeholder = "Ví dụ: 100";
+                inpJ.oninput = (function(idx) { return function() { currentCauHinh[idx].giaTri = this.value; }; })(i);
+                tdJ.appendChild(inpJ);
+                
+                tr.appendChild(tdXoa);
+                tr.appendChild(tdStt);
+                tr.appendChild(tdH);
+                tr.appendChild(tdI);
+                tr.appendChild(tdJ);
+                tbody.appendChild(tr);
+            }
+        }
+        
         function isValidEmail(email) {
             if (!email) return true;
             var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return re.test(email);
         }
         
-        function themDongMoi() {
-            currentList.unshift({ 
-                idSheet: '', email: '', tenHienThi: '', chucVu: 'gv', quyen: '',
-                cotH: '', cotI: '', cotJ: ''
-            });
-            if (selectedRowIndex !== -1) selectedRowIndex++; 
+        function themDongMoiCanBo() {
+            currentList.unshift({ idSheet: '', email: '', tenHienThi: '', chucVu: 'gv', quyen: '' });
             renderTable();
-            showNotification('Đã thêm dòng mới, vui lòng nhập thông tin', 'info');
             setTimeout(function() {
                 var firstInput = document.querySelector('.id-sheet-input');
                 if (firstInput) firstInput.focus();
-                chonDongDuLieu(0);
             }, 100);
+        }
+        
+        function themDongMoiCauHinh() {
+            currentCauHinh.push({ maThamSo: '', tenThamSo: '', giaTri: '' });
+            renderCauHinh();
         }
         
         function validateList() {
             var map = new Map();
             for (var i = 0; i < currentList.length; i++) {
                 var id = currentList[i].idSheet.trim();
-                if (id === '') {
-                    showNotification('Dòng thứ ' + (i + 1) + ' chưa nhập ID.', 'error');
-                    return false;
-                }
-                if (id.length > 50) {
-                    showNotification('ID ở dòng ' + (i + 1) + ' quá dài (tối đa 50 ký tự).', 'error');
-                    return false;
-                }
+                if (id === '') { showNotification('Dòng thứ ' + (i + 1) + ' của bảng Cán bộ chưa nhập ID.', 'error'); return false; }
+                if (id.length > 50) { showNotification('ID ở dòng ' + (i + 1) + ' quá dài (tối đa 50 ký tự).', 'error'); return false; }
                 var lower = id.toLowerCase();
-                if (map.has(lower)) {
-                    showNotification('ID "' + id + '" bị trùng (dòng ' + (map.get(lower) + 1) + ' và ' + (i + 1) + ').', 'error');
-                    return false;
-                }
+                if (map.has(lower)) { showNotification('ID "' + id + '" bị trùng (dòng ' + (map.get(lower) + 1) + ' và ' + (i + 1) + ').', 'error'); return false; }
                 map.set(lower, i);
-                
-                var email = currentList[i].email.trim();
-                if (email && !isValidEmail(email)) {
-                    showNotification('Email ở dòng ' + (i + 1) + ' không hợp lệ.', 'error');
-                    return false;
-                }
             }
             
             var hasAdmin = false;
@@ -1057,7 +841,7 @@
                 if (currentList[j].quyen === 'xxx') { hasAdmin = true; break; }
             }
             if (!hasAdmin && currentList.length > 0) {
-                showNotification('⚠️ Danh sách phải có ít nhất một người có quyền Quản trị Vip (xxx)', 'error');
+                showNotification('⚠️ Danh sách cán bộ phải có ít nhất một người có quyền Quản trị Vip (xxx)', 'error');
                 return false;
             }
             return true;
@@ -1091,8 +875,8 @@
             
             try {
                 await capNhatNamHoc(namMoi, currentThang, ngayNopMoi); 
-                await capNhatDanhSach(currentList);
-                showNotification('✅ Thành công! Đã cập nhật cấu hình và dữ liệu quyền.', 'success');
+                await capNhatDanhSachHienTai(currentList, currentCauHinh);
+                showNotification('✅ Thành công! Đã cập nhật 2 bảng dữ liệu.', 'success');
                 await taiLaiDuLieu();
             } catch (err) {
                 showNotification('❌ Lỗi lưu: ' + (err.message || 'Lỗi không xác định'), 'error');
@@ -1104,21 +888,16 @@
         
         async function taiLaiDuLieu() {
             try {
-                var list = await layDanhSach();
-                currentList = list;
+                var payload = await layDanhSach();
+                currentList = payload.listCanBo;
+                currentCauHinh = payload.listCauHinh;
                 renderTable();
-                if(selectedRowIndex !== -1 && selectedRowIndex < currentList.length) {
-                    chonDongDuLieu(selectedRowIndex);
-                } else {
-                    selectedRowIndex = -1;
-                    $('#khungBoSung').style.display = 'none';
-                }
-                console.log('Đã tải ' + currentList.length + ' dòng dữ liệu');
+                renderCauHinh();
+                console.log('Đã tải thành công Dữ liệu Cán bộ & Cấu hình.');
             } catch (err) {
-                console.error('Lỗi tải dữ liệu:', err);
                 showNotification('Lỗi tải dữ liệu: ' + (err.message || 'Lỗi không xác định'), 'error');
-                currentList = [];
-                renderTable();
+                currentList = []; currentCauHinh = [];
+                renderTable(); renderCauHinh();
             }
         }
         
@@ -1130,9 +909,7 @@
                 if (namInput) namInput.value = data.nam || '';
                 if (ngayNopInput) ngayNopInput.value = data.ngaynop || ''; 
                 currentThang = data.thang || '';
-            } catch (err) {
-                console.error('Lỗi tải năm học/tháng/ngày nộp:', err);
-            }
+            } catch (err) {}
         }
         
         if (!API_URL) {
@@ -1141,28 +918,15 @@
             return;
         }
         
-        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-            showNotification('⚠️ Cảnh báo bảo mật: Trang đang chạy qua HTTP, không phải HTTPS!', 'error');
-        }
-        
         Promise.all([taiLaiDuLieu(), khoiTaoNamHocVaThang()]).catch(console.error);
         
-        var btnThem = $('#btnThemMoiPQ');
-        var btnCap = $('#btnCapNhatPQ');
-        var btnThemSub = $('#btnThemDongSub');
+        var btnThemCanBo = $('#btnThemMoiPQ');
+        var btnThemCauHinh = $('#btnThemDongCauHinh');
+        var btnCapNhat = $('#btnCapNhatPQ');
         
-        if (btnThem) btnThem.onclick = themDongMoi;
-        if (btnCap) btnCap.onclick = luuDuLieu;
+        if (btnThemCanBo) btnThemCanBo.onclick = themDongMoiCanBo;
+        if (btnThemCauHinh) btnThemCauHinh.onclick = themDongMoiCauHinh;
+        if (btnCapNhat) btnCapNhat.onclick = luuDuLieu;
         
-        if (btnThemSub) {
-            btnThemSub.onclick = function() {
-                if (selectedRowIndex === -1) return;
-                hstBangPhu.push({ truongH: '', truongI: '', truongJ: '' });
-                epKieuDuLieuPhuVeMaster();
-                renderBangPhu();
-            };
-        }
-        
-        console.log('Ứng dụng quản lý phân quyền đã khởi động thành công!');
     })();
     </script>
