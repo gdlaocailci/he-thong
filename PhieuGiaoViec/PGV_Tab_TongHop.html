@@ -49,329 +49,243 @@
 
 <script>
 /* ==========================================================================
-   CẤU HÌNH KẾT NỐI
+   BIẾN CẤU HÌNH THI ĐUA ĐỘNG
+   Loại bỏ hoàn toàn tham số cứng. Bắt buộc lấy cấu hình từ trang KHAIBAO.
    ========================================================================== */
-// Đặt URL Web App của bạn (nếu dùng fetch). Nếu chạy trong Web App, không cần.
-var API_BASE_URL = 'https://script.google.com/macros/s/__YOUR_SCRIPT_ID__/exec'; // THAY THẾ BẰNG URL THỰC TẾ
-
-// Cấu hình thi đua mặc định
-window.cauHinhThiDua = { diem_xs: 100, diem_tot: 80, diem_ht: 60, tyle_xs: 0.3, tyle_tot: 0.7 };
+window.cauHinhThiDua = null;
 
 /* ==========================================================================
-   HÀM GỌI SERVER THÔNG MINH (tự chọn google.script.run hoặc fetch)
-   ========================================================================== */
-function callServer(action, payload) {
-  return new Promise(function(resolve, reject) {
-    // Nếu đang chạy trong Web App (có google.script.run)
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      // Gọi trực tiếp hàm backend (action là tên hàm)
-      google.script.run
-        .withSuccessHandler(function(result) {
-          resolve(result);
-        })
-        .withFailureHandler(function(err) {
-          reject(err);
-        })
-        [action](payload); // gọi hàm tên action, truyền payload
-    } else {
-      // Ngoài môi trường Web App -> dùng fetch
-      var url = API_BASE_URL;
-      var method = 'GET';
-      var body = null;
-
-      if (payload) {
-        // POST với payload
-        method = 'POST';
-        body = JSON.stringify(payload);
-        // Đảm bảo có hdong trong payload
-        if (!payload.hdong) payload.hdong = action;
-      } else {
-        // GET với query string
-        var params = { hdong: action };
-        var query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
-        if (query) url += '?' + query;
-      }
-
-      fetch(url, {
-        method: method,
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: body
-      })
-      .then(function(response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
-        return response.json();
-      })
-      .then(function(data) {
-        resolve(data);
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-    }
-  });
-}
-
-/* ==========================================================================
-   TẢI CẤU HÌNH
-   ========================================================================== */
-function taiCauHinhThiDua() {
-  callServer('pgv_laydl_cauhinh', null)
-    .then(function(res) {
-      if (res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
-        window.cauHinhThiDua = res.dliu;
-        console.log('✅ Cấu hình đã tải:', window.cauHinhThiDua);
-      } else {
-        console.warn('⚠️ Cấu hình không hợp lệ, dùng mặc định.');
-      }
-    })
-    .catch(function(err) {
-      console.warn('⚠️ Không tải được cấu hình từ server, dùng mặc định. Lỗi:', err.message);
-      // Không hiển thị toast vì có thể lỗi do chưa có kết nối, nhưng vẫn dùng mặc định.
-    });
-}
-
-/* ==========================================================================
-   HIỂN THỊ TOAST
+   HÀM ĐIỀU KHIỂN GIAO DIỆN THÔNG BÁO NỔI (TOAST)
    ========================================================================== */
 function showAIToast(message, type) {
-  var toast = document.getElementById("aiToastMessage");
-  if (!toast) return;
-  toast.innerHTML = message;
-  
-  if (type === "success") {
-    toast.style.background = "linear-gradient(to right, #15803d, #16a34a)";
-    toast.style.borderLeft = "5px solid #052e16";
-  } else if (type === "warning") {
-    toast.style.background = "linear-gradient(to right, #b45309, #d97706)";
-    toast.style.borderLeft = "5px solid #78350f";
-  } else {
-    toast.style.background = "linear-gradient(to right, #b91c1c, #dc2626)";
-    toast.style.borderLeft = "5px solid #450a0a";
-  }
-  
-  toast.style.display = "block";
-  setTimeout(function() { toast.style.opacity = "1"; }, 10);
-  
-  setTimeout(function() {
-    toast.style.opacity = "0";
-    setTimeout(function() { toast.style.display = "none"; }, 300);
-  }, 4000);
+    let toast = document.getElementById("aiToastMessage");
+    toast.innerHTML = message;
+    
+    if (type === "success") {
+        toast.style.background = "linear-gradient(to right, #15803d, #16a34a)";
+        toast.style.borderLeft = "5px solid #052e16";
+    } else if (type === "warning") {
+        toast.style.background = "linear-gradient(to right, #b45309, #d97706)";
+        toast.style.borderLeft = "5px solid #78350f";
+    } else {
+        toast.style.background = "linear-gradient(to right, #b91c1c, #dc2626)";
+        toast.style.borderLeft = "5px solid #450a0a";
+    }
+    
+    toast.style.display = "block";
+    setTimeout(() => { toast.style.opacity = "1"; }, 10);
+    
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => { toast.style.display = "none"; }, 300);
+    }, 4000);
 }
 
 /* ==========================================================================
-   TÍNH TOÁN XẾP LOẠI (AI ASSISTANT)
+   HÀM TRỢ LÝ AI: TÍNH TOÁN (LÕI)
    ========================================================================== */
 function runAIAssistant() {
-  var btn = document.querySelector("button[onclick='runAIAssistant()']");
-  var originalText = btn ? btn.innerHTML : '';
-  if (btn) {
-    btn.innerHTML = "⏳ Đang tải tham số...";
-    btn.disabled = true;
-    btn.style.opacity = "0.7";
-  }
+    let btn = document.querySelector("button[onclick='runAIAssistant()']");
+    let originalText = btn ? btn.innerHTML : "";
+    if (btn) {
+        btn.innerHTML = "⏳ Đang kết nối máy chủ...";
+        btn.disabled = true; 
+        btn.style.opacity = "0.7";
+    }
 
-  // Gọi lấy cấu hình
-  callServer('pgv_laydl_cauhinh', null)
-    .then(function(res) {
-      if (res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
-        window.cauHinhThiDua = res.dliu;
-      }
-      var cfg = window.cauHinhThiDua;
-      if (btn) btn.innerHTML = "⏳ Đang tính toán...";
+    // Khối lượng tính toán lõi (Chỉ chạy khi đã có cấu hình hợp lệ)
+    const thucHienTinhToan = (cfg) => {
+        if (btn) btn.innerHTML = "⏳ Đang tính toán...";
+        setTimeout(() => {
+            try {
+                let cmd = document.getElementById("aiCommand").value.toLowerCase();
+                let customDivisor = null;
+                let matchDiv = cmd.match(/chia\s*(?:cho\s*)?(\d+)/);
+                if (matchDiv && matchDiv[1]) {
+                    customDivisor = parseInt(matchDiv[1]);
+                }
 
-      setTimeout(function() {
-        try {
-          var cmd = document.getElementById("aiCommand").value.toLowerCase();
-          var customDivisor = null;
-          var matchDiv = cmd.match(/chia\s*(?:cho\s*)?(\d+)/);
-          if (matchDiv && matchDiv[1]) {
-            customDivisor = parseInt(matchDiv[1]);
-          }
+                let table = document.getElementById("bangThop");
+                if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
+                
+                let tbody = table.getElementsByTagName("tbody")[0];
+                if (!tbody) throw new Error("Bảng chưa có nội dung.");
+                
+                let rows = tbody.getElementsByTagName("tr");
+                let updatedCount = 0;
 
-          var table = document.getElementById("bangThop");
-          if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
-          
-          var tbody = table.getElementsByTagName("tbody")[0];
-          if (!tbody) throw new Error("Bảng chưa có dữ liệu.");
-          
-          var rows = tbody.getElementsByTagName("tr");
-          var updatedCount = 0;
+                for (let i = 0; i < rows.length; i++) {
+                    let row = rows[i];
+                    let tds = row.getElementsByTagName("td");
+                    
+                    if (tds.length < 15) continue; 
 
-          for (var i = 0; i < rows.length; i++) {
-            var row = rows[i];
-            var tds = row.getElementsByTagName("td");
-            if (tds.length < 15) continue;
+                    let countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
+                    let tongDiemXepLoai = 0, tongDiemSo = 0, validMonths = 0;
 
-            var countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
-            var tongDiemXepLoai = 0;
-            var tongDiemSo = 0;
-            var validMonths = 0;
+                    for (let j = 3; j <= 14; j++) {
+                        if (!tds[j]) continue; 
+                        let cellText = tds[j].innerText.trim();
+                        if (cellText === "" || cellText === "-" || cellText.includes("...")) continue;
 
-            for (var j = 3; j <= 14; j++) {
-              if (!tds[j]) continue;
-              var cellText = tds[j].innerText.trim();
-              if (cellText === "" || cellText === "-" || cellText.includes("...")) continue;
+                        let diem = 0;
+                        let matchDiem = cellText.match(/(\d+)/);
+                        if (matchDiem) diem = parseFloat(matchDiem[1]);
 
-              var diem = 0;
-              var matchDiem = cellText.match(/(\d+)/);
-              if (matchDiem) diem = parseFloat(matchDiem[1]);
+                        let textLower = cellText.toLowerCase();
+                        if (textLower.includes("xuất sắc")) {
+                            tongDiemXepLoai += cfg.diem_xs;
+                            tongDiemSo += diem;
+                            countHTXS++; validMonths++;
+                        } else if (textLower.includes("chưa hoàn thành")) {
+                            tongDiemXepLoai += 0;
+                            tongDiemSo += diem;
+                            countCHT++; validMonths++;
+                        } else if (textLower.includes("tốt")) {
+                            tongDiemXepLoai += cfg.diem_tot;
+                            tongDiemSo += diem;
+                            countHTT++; validMonths++;
+                        } else if (textLower.includes("hoàn thành")) {
+                            tongDiemXepLoai += cfg.diem_ht;
+                            tongDiemSo += diem;
+                            countHT++; validMonths++;
+                        }
+                    }
 
-              var textLower = cellText.toLowerCase();
-              if (textLower.includes("xuất sắc")) {
-                tongDiemXepLoai += cfg.diem_xs;
-                tongDiemSo += diem;
-                countHTXS++;
-                validMonths++;
-              } else if (textLower.includes("chưa hoàn thành")) {
-                tongDiemXepLoai += 0;
-                tongDiemSo += diem;
-                countCHT++;
-                validMonths++;
-              } else if (textLower.includes("tốt")) {
-                tongDiemXepLoai += cfg.diem_tot;
-                tongDiemSo += diem;
-                countHTT++;
-                validMonths++;
-              } else if (textLower.includes("hoàn thành")) {
-                tongDiemXepLoai += cfg.diem_ht;
-                tongDiemSo += diem;
-                countHT++;
-                validMonths++;
-              }
+                    if (validMonths === 0) continue;
+
+                    let D = customDivisor ? customDivisor : validMonths;
+                    let diemTBXepLoai = tongDiemXepLoai / D;
+                    let diemTBSo = tongDiemSo / D;
+                    let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
+
+                    let xepLoai = "Chưa hoàn thành";
+                    let tyLeXS = countHTXS / validMonths;
+                    let tyLeTot = (countHTXS + countHTT) / validMonths;
+                    
+                    if (countCHT > 0) {
+                        xepLoai = "Chưa hoàn thành";
+                    } else if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
+                        xepLoai = "Hoàn thành xuất sắc";
+                    } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
+                        xepLoai = "Hoàn thành tốt";
+                    } else if ((countHTXS + countHTT + countHT) === validMonths) {
+                        xepLoai = "Hoàn thành";
+                    }
+
+                    if (tds[2]) {
+                        tds[2].innerHTML = `<div style="text-align: center; line-height: 1.5;">
+                                              <span style="color: #b91c1c; font-weight: bold;">${xepLoai}</span><br>
+                                              <span style="font-weight: bold; color: #1e3a8a;">${avgScore} điểm</span>
+                                            </div>`;
+                        tds[2].style.verticalAlign = "middle"; 
+                        updatedCount++;
+                    }
+                }
+
+                if (updatedCount > 0) {
+                    showAIToast("✅ <b>Hoàn tất!</b><br>Đã điền kết quả cho " + updatedCount + " cán bộ.", "success");
+                } else {
+                    showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu đang trống.", "warning");
+                }
+
+            } catch (error) {
+                showAIToast("❌ <b>Hệ thống gặp sự cố:</b><br>" + error.message, "error");
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                }
             }
+        }, 100);
+    };
 
-            if (validMonths === 0) continue;
-
-            var D = customDivisor ? customDivisor : validMonths;
-            var diemTBXepLoai = tongDiemXepLoai / D;
-            var diemTBSo = tongDiemSo / D;
-            var avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
-
-            var xepLoai = "Chưa hoàn thành";
-            var tyLeXS = countHTXS / validMonths;
-            var tyLeTot = (countHTXS + countHTT) / validMonths;
-            
-            if (countCHT > 0) {
-              xepLoai = "Chưa hoàn thành";
-            } else if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
-              xepLoai = "Hoàn thành xuất sắc";
-            } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
-              xepLoai = "Hoàn thành tốt";
-            } else if ((countHTXS + countHTT + countHT) === validMonths) {
-              xepLoai = "Hoàn thành";
-            }
-
-            if (tds[2]) {
-              tds[2].innerHTML = '<div style="text-align: center; line-height: 1.5;">' +
-                                  '<span style="color: #b91c1c; font-weight: bold;">' + xepLoai + '</span><br>' +
-                                  '<span style="font-weight: bold; color: #1e3a8a;">' + avgScore + ' điểm</span>' +
-                                '</div>';
-              tds[2].style.verticalAlign = "middle";
-              updatedCount++;
-            }
-          }
-
-          if (updatedCount > 0) {
-            showAIToast("✅ <b>Hoàn tất tính toán!</b><br>Đã điền kết quả tự động cho " + updatedCount + " cán bộ.", "success");
-          } else {
-            showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu đang trống, không thể tính toán.", "warning");
-          }
-
-        } catch (error) {
-          showAIToast("❌ <b>Hệ thống gặp sự cố:</b><br>" + error.message, "error");
-        } finally {
-          if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            btn.style.opacity = "1";
-          }
+    // Kích hoạt lấy cấu hình từ máy chủ (Bắt buộc phải qua bước này)
+    try {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    // Kiểm tra nghiêm ngặt: Dữ liệu phải tồn tại và điểm xuất sắc > 0
+                    if(res && res.ttai === 'tcong' && res.dliu && res.dliu.diem_xs > 0) {
+                        window.cauHinhThiDua = res.dliu;
+                        thucHienTinhToan(window.cauHinhThiDua);
+                    } else {
+                        // Báo lỗi và từ chối tính toán nếu sheet KHAIBAO chưa cấu hình
+                        showAIToast("❌ <b>Lỗi thông số:</b><br>Vui lòng cập nhật thang điểm và tỷ lệ trên trang KHAIBAO trước khi tính toán.", "error");
+                        if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showAIToast("❌ <b>Lỗi kết nối máy chủ!</b><br>Không thể tải cấu hình từ Google Sheets.", "error");
+                    if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+                })
+                .pgv_laydl_cauhinh(); 
+        } else {
+            showAIToast("❌ <b>Môi trường không hợp lệ:</b><br>Thiếu thư viện kết nối đến Google Sheets.", "error");
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
         }
-      }, 100);
-    })
-    .catch(function(err) {
-      showAIToast("❌ <b>Lỗi kết nối máy chủ:</b><br>" + err.message, "error");
-      if (btn) {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        btn.style.opacity = "1";
-      }
-    });
+    } catch(e) {
+        showAIToast("❌ <b>Lỗi thực thi:</b><br>" + e.message, "error");
+        if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
+    }
 }
 
 /* ==========================================================================
-   GHI KẾT QUẢ
+   HÀM BỔ SUNG: GHI KẾT QUẢ ĐÃ TÍNH TOÁN LÊN MÁY CHỦ
    ========================================================================== */
 function ghiKetQuaAI() {
-  var table = document.getElementById("bangThop");
-  if (!table) return;
-  
-  var namHoc = document.getElementById("locNamThop").value;
-  
-  var tbody = table.getElementsByTagName("tbody")[0];
-  var rows = tbody.getElementsByTagName("tr");
-  var duLieuGhi = [];
+    let table = document.getElementById("bangThop");
+    if (!table) return;
+    
+    let namHoc = document.getElementById("locNamThop").value;
+    
+    let tbody = table.getElementsByTagName("tbody")[0];
+    let rows = tbody.getElementsByTagName("tr");
+    let duLieuGhi = [];
 
-  for (var i = 0; i < rows.length; i++) {
-    var tds = rows[i].getElementsByTagName("td");
-    if (tds.length < 15) continue;
-    
-    var hoTen = tds[1].innerText.trim();
-    var htmlKq = tds[2];
-    var xepLoai = "";
-    
-    if (htmlKq.innerText.trim() !== "") {
-      var theSpan = htmlKq.getElementsByTagName("span");
-      if (theSpan.length > 1) {
-        xepLoai = theSpan[0].innerText.trim() + "\n" + theSpan[1].innerText.trim();
-      } else if (theSpan.length > 0) {
-        xepLoai = theSpan[0].innerText.trim();
-      } else {
-        xepLoai = htmlKq.innerText.trim();
-      }
+    for (let i = 0; i < rows.length; i++) {
+        let tds = rows[i].getElementsByTagName("td");
+        if (tds.length < 15) continue; 
+        
+        let hoTen = tds[1].innerText.trim();
+        let htmlKq = tds[2];
+        let xepLoai = "";
+        
+        if (htmlKq.innerText.trim() !== "") {
+            let theSpan = htmlKq.getElementsByTagName("span");
+            if (theSpan.length > 1) {
+                xepLoai = theSpan[0].innerText.trim() + "\n" + theSpan[1].innerText.trim();
+            } else if (theSpan.length > 0) {
+                xepLoai = theSpan[0].innerText.trim();
+            } else {
+                xepLoai = htmlKq.innerText.trim();
+            }
+        }
+        
+        if (hoTen && xepLoai && xepLoai !== "-" && xepLoai !== "Chưa có" && xepLoai !== "") {
+            duLieuGhi.push({ tenn: hoTen, kq: xepLoai, nam: namHoc });
+        }
     }
-    
-    if (hoTen && xepLoai && xepLoai !== "-" && xepLoai !== "Chưa có" && xepLoai !== "") {
-      duLieuGhi.push({ tenn: hoTen, kq: xepLoai, nam: namHoc });
+
+    if (duLieuGhi.length === 0) {
+        showAIToast("⚠️ <b>Chưa có dữ liệu để ghi!</b><br>Vui lòng chạy 'Tính toán xếp loại' trước khi ghi.", "warning");
+        return;
     }
-  }
 
-  if (duLieuGhi.length === 0) {
-    showAIToast("⚠️ <b>Chưa có dữ liệu để ghi!</b><br>Vui lòng chạy 'Tính toán xếp loại' trước khi ghi.", "warning");
-    return;
-  }
+    let btn = document.getElementById("btnGhiKq");
+    let originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ Đang ghi...";
+    btn.disabled = true;
 
-  var btn = document.getElementById("btnGhiKq");
-  var originalText = btn.innerHTML;
-  btn.innerHTML = "⏳ Đang ghi...";
-  btn.disabled = true;
-
-  var payload = {
-    hdong: 'ghiketquathop',
-    dldeu: duLieuGhi
-  };
-
-  callServer('ghiketquathop', payload)
-    .then(function(res) {
-      if (res.ttai === 'tcong') {
-        showAIToast("✅ <b>Ghi kết quả thành công!</b><br>" + res.tbao, "success");
-      } else {
-        showAIToast("❌ <b>Lỗi ghi dữ liệu:</b><br>" + res.tbao, "error");
-      }
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    })
-    .catch(function(err) {
-      showAIToast("❌ <b>Lỗi kết nối máy chủ:</b><br>" + err.message, "error");
-      btn.innerHTML = originalText;
-      btn.disabled = false;
+    window.khachApi.ghiKetQuaThop(duLieuGhi, function(kqra) {
+        showAIToast("✅ <b>Ghi kết quả thành công!</b><br>" + kqra.tbao, "success");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, function(loie) {
+        showAIToast("❌ <b>Lỗi ghi dữ liệu:</b><br>" + loie.message, "error");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     });
 }
-
-/* ==========================================================================
-   TẢI CẤU HÌNH KHI TRANG LOAD
-   ========================================================================== */
-document.addEventListener("DOMContentLoaded", function() {
-  taiCauHinhThiDua();
-});
 </script>
