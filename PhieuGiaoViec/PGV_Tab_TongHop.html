@@ -49,6 +49,29 @@
 
 <script>
 /* ==========================================================================
+   BỔ SUNG API CỤC BỘ: KẾT NỐI MÁY CHỦ TỪ GITHUB
+   (Tự động khai báo thêm hàm layDlCauHinh vào hệ thống)
+   ========================================================================== */
+if (typeof window.khachApi === 'undefined') { window.khachApi = {}; }
+
+window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
+    // Sử dụng biến ddungApi đã khai báo ở tệp ketnoi.js
+    if (typeof ddungApi === 'undefined' || ddungApi === "") {
+        thatBai(new Error("Chưa cấu hình đường dẫn máy chủ ddungApi."));
+        return;
+    }
+    
+    // Gửi lệnh truy xuất cấu hình tới Google Apps Script
+    fetch(ddungApi + "?hdong=laydlcauhinh", {
+        method: "GET",
+        redirect: "follow"
+    })
+    .then(response => response.json())
+    .then(data => thanhCong(data))
+    .catch(error => thatBai(error));
+};
+
+/* ==========================================================================
    BIẾN CẤU HÌNH THI ĐUA ĐỘNG
    Loại bỏ hoàn toàn tham số cứng. Bắt buộc lấy cấu hình từ trang KHAIBAO.
    ========================================================================== */
@@ -93,7 +116,7 @@ function runAIAssistant() {
         btn.style.opacity = "0.7";
     }
 
-    // BƯỚC 1: KÍCH HOẠT LẤY CẤU HÌNH (Giao tiếp với App Script qua khachApi)
+    // BƯỚC 1: KÍCH HOẠT LẤY CẤU HÌNH
     try {
         if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.layDlCauHinh === 'function') {
             window.khachApi.layDlCauHinh(function(kqra) {
@@ -105,11 +128,11 @@ function runAIAssistant() {
                     if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
                 }
             }, function(loie) {
-                showAIToast("❌ <b>Lỗi kết nối API:</b><br>Không thể tải cấu hình qua khachApi.", "error");
+                showAIToast("❌ <b>Lỗi kết nối API:</b><br>Không thể tải cấu hình từ máy chủ.", "error");
                 if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
             });
         } else {
-            showAIToast("❌ <b>Lỗi hệ thống:</b><br>Thiếu định nghĩa hàm window.khachApi.layDlCauHinh để giao tiếp từ GitHub về Google Sheets.", "error");
+            showAIToast("❌ <b>Lỗi hệ thống:</b><br>Hàm kết nối API chưa được khởi tạo.", "error");
             if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
         }
     } catch(e) {
