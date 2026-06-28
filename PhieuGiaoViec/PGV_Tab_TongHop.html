@@ -68,6 +68,7 @@ window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
     .then(data => thanhCong(data))
     .catch(error => thatBai(error));
 };
+
 /* ==========================================================================
    BIẾN CẤU HÌNH THI ĐUA ĐỘNG
    ========================================================================== */
@@ -202,17 +203,17 @@ function runAIAssistant() {
                     let tyLeTot = (countHTXS + countHTT) / validMonths;
                     let tyLeHT = (countHTXS + countHTT + countHT) / validMonths;
                     
-                    // Logic xử lý mới: Có xét thêm số tháng CHT tối đa được phép
+                    // XỬ LÝ FIX BUGS: Đánh giá tỷ lệ CHT thực tế 
+                    let tyLeCHT = countCHT / validMonths;
                     let max_cht = (cfg.so_cht_max !== undefined) ? cfg.so_cht_max : 0;
                     
                     if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
                         xepLoai = "Hoàn thành xuất sắc";
                     } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
                         xepLoai = "Hoàn thành tốt";
-                    } else if (cfg.tyle_ht > 0 && tyLeHT >= cfg.tyle_ht && countCHT <= max_cht) {
+                    } else if (cfg.tyle_ht > 0 && tyLeHT >= cfg.tyle_ht && tyLeCHT <= max_cht) {
                         xepLoai = "Hoàn thành";
-                    } else if (cfg.tyle_ht === 0 && countCHT <= max_cht) {
-                        // Mặc định an toàn: Nếu chưa cấu hình TYLE_HT thì xét chuẩn số tháng CHT tối đa
+                    } else if (cfg.tyle_ht === 0 && tyLeCHT <= max_cht) {
                         xepLoai = "Hoàn thành";
                     } else {
                         xepLoai = "Chưa hoàn thành";
