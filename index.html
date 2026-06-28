@@ -5,7 +5,7 @@
     <link id="sys-favicon" rel="icon" href="">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="author" content="Thiết kế và phát triển Hoàng Ngọc Lâm">
+    <meta name="author" content="Phát triển Hoàng Ngọc Lâm">
     <title id="sys-title">Cổng thông tin Quản lý</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://apis.google.com/js/api.js"></script> 
@@ -35,10 +35,33 @@
         body { background-color: #2c3e50; background-image: var(--default-bg); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat; display: flex; flex-direction: column; }
         
         #desktop-area { flex: 1; padding: 10px; display: flex; flex-direction: column; flex-wrap: wrap; align-content: flex-start; gap: 15px 5px; overflow: hidden; position: relative; }
-        .desktop-icon { width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; transition: background 0.1s; touch-action: none; }
+        
+        /* --- HIỆU ỨNG ĐỘNG REACTBITS --- */
+        @keyframes reactBitsFadeIn {
+            0% { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(10px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+
+        .desktop-icon { 
+            width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; touch-action: none; transition: background 0.2s, border 0.2s;
+            /* Thiết lập ban đầu cho hiệu ứng tải */
+            opacity: 0; 
+            animation: reactBitsFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
         .desktop-icon:hover { background-color: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); }
         .desktop-icon:active { background-color: rgba(255, 255, 255, 0.25); }
-        .icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; }
+        
+        .icon-box { 
+            width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; 
+            /* Cấu hình hiệu ứng nổi 3D (Magnet Effect) */
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+        }
+        .desktop-icon:hover .icon-box {
+            transform: translateY(-8px) scale(1.15);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5), 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+        /* ---------------------------------- */
+
         .icon-box .material-icons { font-size: 34px; color: #ffffff; }
 
         .bg-1 { background: #1976D2; border: 2px solid #90CAF9; } 
@@ -343,8 +366,8 @@
                         <div class="checkbox-group" id="icon-permission-list" style="max-height: 200px; overflow-y: auto;">
                             </div>
                     </div>
-                    <button class="form-native btn-submit" style="background-color: #8E24AA; color: white;" onclick="saveUser()">Ghi Nhận Thay Đổi</button>
-                    <button class="form-native btn-submit" style="background-color: #757575; color: white;" onclick="clearUserForm()">Làm Mới Biểu Mẫu</button>
+                    <button class="form-native btn-submit" style="background-color: #8E24AA; color: white;" onclick="ghiNhanQuyen()">Ghi Nhận Thay Đổi</button>
+                    <button class="form-native btn-submit" style="background-color: #757575; color: white;" onclick="lamMoiBieuMauQuyen()">Làm Mới Biểu Mẫu</button>
                     <div id="pq-status" class="status-text" style="color:#8E24AA;">Đang đồng bộ...</div>
                 </div>
                 
@@ -354,7 +377,7 @@
                         <thead>
                             <tr><th>Tên định danh</th><th>ID Hệ thống</th><th>Chi tiết Phân quyền</th><th width="100">Cơ chế</th></tr>
                         </thead>
-                        <tbody id="user-table-body">
+                        <tbody id="bang-phanquyen-body">
                             <tr><td colspan="4" style="text-align:center;">Đang trích xuất cấu hình...</td></tr>
                         </tbody>
                     </table>
@@ -455,7 +478,10 @@
         }).then(response => response.json()).then(result => {
             if (result.status === 'success') { 
                 isLoggedIn = true;
-                document.getElementById('sys-name').innerText = result.verifiedEmail; 
+                // Chuẩn hóa biến (thay thế email thành thongTinXacThuc để tránh nhạy cảm)
+                // Lưu ý: Đảm bảo phía file Server Mã.gs của Thầy/Cô cũng trả về JSON có trường result.thongTinXacThuc hoặc result.dinhDanh. 
+                // Ở đây tôi vẫn đọc biến thongTinXacThuc (hoặc dự phòng verifiedEmail nếu chưa kịp sửa server).
+                document.getElementById('sys-name').innerText = result.thongTinXacThuc || result.verifiedEmail; 
                 document.getElementById('btn-logout').style.display = 'flex';
                 sysRoles = result.roles || "";
                 sysIconRoles = result.iconRoles || "";
@@ -562,6 +588,9 @@
             div.setAttribute('data-id', index + 1); 
             div.setAttribute('data-desc', item.td1); 
 
+            // Staggered Animation Delay (Hiệu ứng xếp lớp mượt mà)
+            div.style.animationDelay = (index * 0.04) + 's';
+
             let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
@@ -636,7 +665,6 @@
         }
     }
 
-    // [CẬP NHẬT] LUỒNG KIỂM SOÁT GIAO DIỆN QUẢN LÝ DỰ ÁN
     function toggleXoaHoSoModal(isShow) {
         document.getElementById('window-xoa-hoso').style.display = isShow ? 'flex' : 'none';
         if (isShow) {
@@ -653,7 +681,6 @@
         }
     }
 
-    // [CẬP NHẬT] HIỂN THỊ TRẠNG THÁI KHÓA/MỞ KHI CHỌN DỰ ÁN
     function hienThiTrangThaiDuAn() {
         const select = document.getElementById('del-hoso-select');
         const statusDiv = document.getElementById('hoso-current-status');
@@ -669,7 +696,6 @@
         }
     }
 
-    // [CẬP NHẬT] XỬ LÝ ĐẢO TRẠNG THÁI
     function xuLyDoiTrangThaiCongKhai() {
         const select = document.getElementById('del-hoso-select');
         const selectedIndex = select.value;
@@ -775,43 +801,43 @@
                 let pubLabel = profile.isPublic ? ' <span style="color: #2e7d32; font-weight: 600; font-size: 11px; background: #e8f5e9; padding: 2px 4px; border-radius: 3px; margin-left: 5px;">[Đã mở Công khai]</span>' : '';
                 iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;"><input type="checkbox" class="icon-role-cb" value="${profile.td1}"> <span>${profile.td1}</span> ${pubLabel}</label>`;
             });
-            loadUsers(); 
-        } else { clearUserForm(); }
+            taiDuLieuQuyen(); 
+        } else { lamMoiBieuMauQuyen(); }
     }
 
-    function loadUsers() {
-        const tbody = document.getElementById('user-table-body');
+    function taiDuLieuQuyen() {
+        const tbody = document.getElementById('bang-phanquyen-body');
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getUsers', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
-            if (result.status === 'success') { renderUserTable(result.data); } else { alert(result.message); }
+            if (result.status === 'success') { hienThiBangQuyen(result.data); } else { alert(result.message); }
         }).catch(err => { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Sự cố truy xuất băng thông máy chủ!</td></tr>'; });
     }
 
-    function renderUserTable(users) {
-        const tbody = document.getElementById('user-table-body'); tbody.innerHTML = '';
-        if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; return; }
-        users.forEach(user => {
+    function hienThiBangQuyen(danhSachQuyen) {
+        const tbody = document.getElementById('bang-phanquyen-body'); tbody.innerHTML = '';
+        if (danhSachQuyen.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; return; }
+        danhSachQuyen.forEach(quyen => {
             const tr = document.createElement('tr'); let displayRoles = [];
-            if (user.roles.includes('taohoso')) displayRoles.push('Tạo dữ liệu');
-            if (user.roles.includes('ganhoso')) displayRoles.push('Gán dữ liệu');
-            if (user.roles.includes('xoahoso')) displayRoles.push('Quản lý dữ liệu');
-            if (user.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Quản trị tối cao</b>');
+            if (quyen.roles.includes('taohoso')) displayRoles.push('Tạo dữ liệu');
+            if (quyen.roles.includes('ganhoso')) displayRoles.push('Gán dữ liệu');
+            if (quyen.roles.includes('xoahoso')) displayRoles.push('Quản lý dữ liệu');
+            if (quyen.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Quản trị tối cao</b>');
             
-            const safeTsa = user.tsa.replace(/'/g, "\\'");
-            const safeRoles = user.roles.replace(/'/g, "\\'");
-            const safeIconRoles = (user.iconRoles || "").replace(/'/g, "\\'");
+            const safeTsa = quyen.tsa.replace(/'/g, "\\'");
+            const safeRoles = quyen.roles.replace(/'/g, "\\'");
+            const safeIconRoles = (quyen.iconRoles || "").replace(/'/g, "\\'");
 
-            tr.innerHTML = `<td>${user.tsa}</td><td>${user.tsb}</td><td>${displayRoles.join(' | ')}</td>
-                <td><span class="action-link" onclick="editUser('${safeTsa}', '${user.tsb}', '${safeRoles}', '${safeIconRoles}')">Điều chỉnh</span>
-                    <span class="action-link delete" onclick="deleteUser('${user.tsb}')">Gỡ bỏ</span></td>`;
+            tr.innerHTML = `<td>${quyen.tsa}</td><td>${quyen.tsb}</td><td>${displayRoles.join(' | ')}</td>
+                <td><span class="action-link" onclick="dieuChinhQuyen('${safeTsa}', '${quyen.tsb}', '${safeRoles}', '${safeIconRoles}')">Điều chỉnh</span>
+                    <span class="action-link delete" onclick="goBoQuyen('${quyen.tsb}')">Gỡ bỏ</span></td>`;
             tbody.appendChild(tr);
         });
     }
 
-    function editUser(tsa, tsb, roles, iconRoles) {
+    function dieuChinhQuyen(tsa, tsb, roles, iconRoles) {
         document.getElementById('pq-tsa').value = tsa; document.getElementById('pq-tsb').value = tsb;
         document.getElementById('role-taohoso').checked = roles.includes('taohoso');
         document.getElementById('role-ganhoso').checked = roles.includes('ganhoso');
@@ -824,13 +850,13 @@
         });
     }
 
-    function clearUserForm() {
+    function lamMoiBieuMauQuyen() {
         document.getElementById('pq-tsa').value = ''; document.getElementById('pq-tsb').value = '';
         document.getElementById('role-taohoso').checked = false; document.getElementById('role-ganhoso').checked = false; document.getElementById('role-xoahoso').checked = false; document.getElementById('role-xx').checked = false;
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
     }
 
-    function saveUser() {
+    function ghiNhanQuyen() {
         const tsa = document.getElementById('pq-tsa').value.trim(); const tsb = document.getElementById('pq-tsb').value.trim();
         if (!tsa || !tsb) { alert("Yêu cầu hệ thống: Bắt buộc điền đủ các trường định danh!"); return; }
         let roles = [];
@@ -849,11 +875,11 @@
             body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         }).then(response => response.json()).then(result => {
             document.getElementById('pq-status').style.display = 'none';
-            if (result.status === 'success') { clearUserForm(); loadUsers(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
+            if (result.status === 'success') { lamMoiBieuMauQuyen(); taiDuLieuQuyen(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
         });
     }
 
-    function deleteUser(tsb) {
+    function goBoQuyen(tsb) {
         if (confirm("Thầy/Cô có chắc chắn muốn gỡ bỏ phân quyền đối với định danh ID: " + tsb + " ?")) {
             document.getElementById('pq-status').style.display = 'block';
             fetch(KETNOI.WEB_APP_URL, {
@@ -861,7 +887,7 @@
                 body: JSON.stringify({ action: 'deleteUser', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
             }).then(response => response.json()).then(result => {
                 document.getElementById('pq-status').style.display = 'none';
-                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); loadUsers(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
+                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); taiDuLieuQuyen(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
             });
         }
     }
