@@ -55,13 +55,11 @@
 if (typeof window.khachApi === 'undefined') { window.khachApi = {}; }
 
 window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
-    // Sử dụng biến ddungApi đã khai báo ở tệp ketnoi.js
     if (typeof ddungApi === 'undefined' || ddungApi === "") {
         thatBai(new Error("Chưa cấu hình đường dẫn máy chủ ddungApi."));
         return;
     }
     
-    // Gửi lệnh truy xuất cấu hình tới Google Apps Script
     fetch(ddungApi + "?hdong=laydlcauhinh", {
         method: "GET",
         redirect: "follow"
@@ -73,7 +71,6 @@ window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
 
 /* ==========================================================================
    BIẾN CẤU HÌNH THI ĐUA ĐỘNG
-   Loại bỏ hoàn toàn tham số cứng. Bắt buộc lấy cấu hình từ trang KHAIBAO.
    ========================================================================== */
 window.cauHinhThiDua = null;
 
@@ -105,7 +102,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI CẢ NĂM (DÀNH CHO GITHUB/EXTERNAL SERVER)
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI CẢ NĂM
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -116,13 +113,12 @@ function runAIAssistant() {
         btn.style.opacity = "0.7";
     }
 
-    // BƯỚC 1: KÍCH HOẠT LẤY CẤU HÌNH
     try {
         if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.layDlCauHinh === 'function') {
             window.khachApi.layDlCauHinh(function(kqra) {
                 if(kqra && kqra.ttai === 'tcong' && kqra.dliu && kqra.dliu.diem_xs > 0) {
                     window.cauHinhThiDua = kqra.dliu;
-                    thucHienTinhToan(window.cauHinhThiDua); // Chuyển sang Bước 2
+                    thucHienTinhToan(window.cauHinhThiDua); 
                 } else {
                     showAIToast("❌ <b>Lỗi thông số:</b><br>Cấu hình tại trang KHAIBAO trống hoặc không hợp lệ.", "error");
                     if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
@@ -140,7 +136,6 @@ function runAIAssistant() {
         if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
     }
 
-    // BƯỚC 2: KHỐI LOGIC XỬ LÝ TÍNH TOÁN (Được bọc kín, chỉ kích hoạt khi có tham số)
     function thucHienTinhToan(cfg) {
         if (btn) btn.innerHTML = "⏳ Đang tính toán...";
         setTimeout(() => {
@@ -206,15 +201,22 @@ function runAIAssistant() {
                     let xepLoai = "Chưa hoàn thành";
                     let tyLeXS = countHTXS / validMonths;
                     let tyLeTot = (countHTXS + countHTT) / validMonths;
+                    let tyLeHT = (countHTXS + countHTT + countHT) / validMonths;
                     
-                    if (countCHT > 0) {
-                        xepLoai = "Chưa hoàn thành";
-                    } else if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
+                    // Logic xử lý mới: Có xét thêm số tháng CHT tối đa được phép
+                    let max_cht = (cfg.so_cht_max !== undefined) ? cfg.so_cht_max : 0;
+                    
+                    if (tyLeXS >= cfg.tyle_xs && cfg.tyle_xs > 0 && (countHTXS + countHTT === validMonths)) {
                         xepLoai = "Hoàn thành xuất sắc";
                     } else if (tyLeTot >= cfg.tyle_tot && cfg.tyle_tot > 0 && (countHTXS + countHTT + countHT === validMonths)) {
                         xepLoai = "Hoàn thành tốt";
-                    } else if ((countHTXS + countHTT + countHT) === validMonths) {
+                    } else if (cfg.tyle_ht > 0 && tyLeHT >= cfg.tyle_ht && countCHT <= max_cht) {
                         xepLoai = "Hoàn thành";
+                    } else if (cfg.tyle_ht === 0 && countCHT <= max_cht) {
+                        // Mặc định an toàn: Nếu chưa cấu hình TYLE_HT thì xét chuẩn số tháng CHT tối đa
+                        xepLoai = "Hoàn thành";
+                    } else {
+                        xepLoai = "Chưa hoàn thành";
                     }
 
                     if (tds[2]) {
@@ -246,9 +248,6 @@ function runAIAssistant() {
     }
 }
 
-/* ==========================================================================
-   HÀM GHI KẾT QUẢ ĐÃ TÍNH TOÁN LÊN MÁY CHỦ (BẢO MẬT KHACHAPI)
-   ========================================================================== */
 function ghiKetQuaAI() {
     let table = document.getElementById("bangThop");
     if (!table) return;
