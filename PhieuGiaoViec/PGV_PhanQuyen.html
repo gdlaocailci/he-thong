@@ -317,7 +317,6 @@
         .text-center { text-align: center; }
         .ms-2 { margin-left: 8px; }
         .stt-cell { text-align: center; font-weight: 500; }
-       
     </style>
 </head>
 <body>
@@ -845,10 +844,28 @@
             }, 100);
         }
         
+        // --- CHỈNH SỬA TẠI KHỐI NÀY: Nâng cấp tính năng thêm dòng ---
         function themDongMoiCauHinh() {
             currentCauHinh.push({ maThamSo: '', tenThamSo: '', giaTri: '' });
             renderCauHinh();
+            
+            // Bổ sung: Cuộn đến cuối bảng và kích hoạt con trỏ tại ô nhập liệu đầu tiên của dòng mới
+            setTimeout(function() {
+                var wrapper = $('.bang-cauhinh-wrapper');
+                if (wrapper) {
+                    wrapper.scrollTop = wrapper.scrollHeight;
+                }
+                var tbody = $('#cauHinhTableBody');
+                if (tbody) {
+                    var lastRow = tbody.lastElementChild;
+                    if (lastRow) {
+                        var firstInput = lastRow.querySelector('input.sub-input');
+                        if (firstInput) firstInput.focus();
+                    }
+                }
+            }, 100);
         }
+        // -----------------------------------------------------------
         
         function validateList() {
             var map = new Map();
@@ -961,3 +978,5 @@
         
     })();
     </script>
+</body>
+</html>
