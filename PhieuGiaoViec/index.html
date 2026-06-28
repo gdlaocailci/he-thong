@@ -151,8 +151,7 @@
                 hienThongbLoi("Cảnh báo: Tệp ketnoi.js chưa được khai báo Client ID Google.");
                 return;
             }
-            
-            google.accounts.id.initialize({
+           google.accounts.id.initialize({
                 client_id: PGV_GOOGLE_CLIENT_ID,
                 callback: xulyPhienDn,
                 auto_prompt: false
