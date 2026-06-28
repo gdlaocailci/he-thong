@@ -59,7 +59,6 @@ window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
         thatBai(new Error("Chưa cấu hình đường dẫn máy chủ ddungApi."));
         return;
     }
-    
     fetch(ddungApi + "?hdong=laydlcauhinh", {
         method: "GET",
         redirect: "follow"
