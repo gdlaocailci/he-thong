@@ -28,9 +28,7 @@ const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.app
     var metaCharset = document.createElement('meta');
     metaCharset.setAttribute('charset', 'utf-8');
     document.head.appendChild(metaCharset);
-
     document.title = SKT_TEN_PM + " - " + SKT_TEN_TRUONG;
-
     var linkIcon = document.createElement('link');
     linkIcon.rel = 'icon';
     linkIcon.href = SKT_LOGO_URL;
