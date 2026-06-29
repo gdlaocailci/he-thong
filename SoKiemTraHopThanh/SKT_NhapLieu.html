@@ -383,43 +383,68 @@ function kiemtlqsu(dg) {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (ĐÃ FIX: KHÓA Ý KIẾN/KÝ TÊN VỚI NGƯỜI KT)    */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (CHỐT CHẶN PHÂN QUYỀN CHẶT CHẼ)             */
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
     const hpnkt = document.getElementById('cbNguoiKiemTra');
+    
+    // Lấy giá trị tên đang chọn trên dropdown
+    const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
+    const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
+    
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
 
-    // Tìm thông tin người kiểm tra được chọn trong danh sách
-    const selectedInspectorName = hpnkt.value;
-    const inspectorData = dlnktra.find(x => chuanhchu(x.tenn) === chuanhchu(selectedInspectorName));
+    // XÁC ĐỊNH VAI TRÒ CHÍNH XÁC: 
+    // Người kiểm tra là người đang đăng nhập VÀ khớp với tên chọn trong dropdown
+    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     
-    // Kiểm tra: Có phải người đang đăng nhập chính là người kiểm tra này không?
-    const isOwner = inspectorData && chuanhchu(inspectorData.taik) === emcan;
+    // Người được kiểm tra là người đang đăng nhập VÀ khớp với tên chọn trong dropdown
+    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    // Quản lý các nút
+    // Cấu hình các nút chức năng
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
-    // Chỉ cho phép người kiểm tra tương tác dữ liệu và nộp kết quả
-    btnSave.disabled = !isOwner;
-    btnSubmit.disabled = !isOwner;
-    if (addRowBtn) addRowBtn.style.display = isOwner ? 'block' : 'none';
+    // Nút Lưu/Nộp chỉ mở khi xác định đúng quyền tương ứng
+    btnSave.disabled = !isInspector && !isInspectee;
+    btnSubmit.disabled = !isInspector;
+    if (addRowBtn) addRowBtn.style.display = isInspector ? 'block' : 'none';
 
-    // Khóa/Mở ô nhập liệu theo dòng
+    // Duyệt từng dòng để khóa/mở cột theo vai trò
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        cacn.forEach((input, index) => {
-            // Nếu là người kiểm tra (đúng tài khoản), mở hết. Nếu không, khóa hết.
-            input.disabled = !isOwner;
-        });
         
-        // Ẩn/Hiện nút đính kèm/xóa
+        cacn.forEach((input, index) => {
+            // Index 0-8: Thời gian, Nội dung, Ưu điểm, Tồn tại, Biện pháp, XL (0-8 là 9 cột đầu)
+            // Index 9: Ý kiến (Locked cho Inspector)
+            // Index 10: Ký tên (Locked cho Inspector)
+            
+            if (isInspector) {
+                // Người kiểm tra: Sửa 0-8, KHÓA 9-10
+                input.disabled = (index >= 9);
+            } else if (isInspectee) {
+                // Người được kiểm tra: KHÓA 0-8, Sửa 9-10
+                input.disabled = (index < 9);
+            } else {
+                // Trường hợp không có quyền: Khóa tất cả
+                input.disabled = true;
+            }
+        });
+
+        // Xử lý các nút phụ trong dòng
+        const ntsu = dg.querySelector('.link-edit-corner');
+        const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
         const ntxo = dg.querySelector('.btn-icon-del');
-        if (ntta) ntta.style.display = isOwner ? 'inline-block' : 'none';
-        if (ntxo) ntxo.style.visibility = isOwner ? 'visible' : 'hidden';
+
+        if (ntsu) {
+            ntsu.style.display = isInspector ? 'block' : 'none';
+            if (ntai) ntai.style.display = isInspector ? 'block' : 'none';
+        }
+        if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
+        if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
     });
 }
 
