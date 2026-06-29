@@ -512,8 +512,9 @@ function thuchms(ha, nt, ch) {
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
+    // Chốt chặn cơ bản: Phải đúng quyền (Người kiểm tra hoặc Người được kiểm tra) mới được lưu
     if (!isInspector && !isInspectee) {
-        hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa!");
+        hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa hồ sơ này!");
         return; 
     }
 
@@ -523,25 +524,33 @@ function thuchms(ha, nt, ch) {
     const mbp = document.getElementById('txtMaBoPhan').value;
     const dlg = [];
     
-    let hasError = false;
-
+    // Thu thập dữ liệu từ tất cả các dòng trên lưới
+    // (Dòng đã khóa sẽ tự động lấy dữ liệu cũ, dòng đang mở sẽ lấy dữ liệu mới nhập)
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        const isSigned = (cacn[9].value.trim() !== "" && cacn[10].value.trim() !== "");
         
-        // CHỐT CHẶN: Nếu dòng đã ký mà người dùng cố tình gửi dữ liệu sửa (trừ trường hợp Inspector)
-        if (isSigned && !isInspector) {
-            hasError = true;
-        }
-        
-        dlg.push([gv, nkt, bp, mbp, cacn[0].value, cacn[1].value, cacn[2].value, cacn[3].value, cacn[4].value, cacn[5].value, cacn[6].value, cacn[7].value, cacn[8].value, cacn[9].value, cacn[10].value, cacn[11].value, dg.querySelector('.ma-ho-so-cell').innerText]);
+        dlg.push([
+            gv, 
+            nkt, 
+            bp, 
+            mbp, 
+            cacn[0].value, 
+            cacn[1].value, 
+            cacn[2].value, 
+            cacn[3].value, 
+            cacn[4].value, 
+            cacn[5].value, 
+            cacn[6].value, 
+            cacn[7].value, 
+            cacn[8].value, 
+            cacn[9].value, 
+            cacn[10].value, 
+            cacn[11].value, 
+            dg.querySelector('.ma-ho-so-cell').innerText
+        ]);
     });
     
-    if (hasError) {
-        hienhth("⛔ LỖI: Dòng đã được ký xác nhận không thể sửa đổi!");
-        return;
-    }
-    
+    // Bắt đầu quá trình lưu
     nt.disabled = true; 
     nt.innerText = "⏳ XỬ LÝ..."; 
     nt.classList.add('loading-spin');
@@ -552,7 +561,12 @@ function thuchms(ha, nt, ch) {
       nt.innerText = ch; 
       nt.classList.remove('loading-spin'); 
       hienhth(kq);
-      if(!kq.includes("⚠️") && !kq.includes("❌")) { setTimeout(lammdsm, 500); datlbie(); }
+      
+      // Nếu không có cảnh báo lỗi từ server, làm mới giao diện
+      if(!kq.includes("⚠️") && !kq.includes("❌")) { 
+          setTimeout(lammdsm, 500); 
+          datlbie(); 
+      }
     })
     .withFailureHandler(lo => {
         nt.disabled = false;
