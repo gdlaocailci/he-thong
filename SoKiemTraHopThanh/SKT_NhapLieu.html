@@ -488,7 +488,8 @@ function apdquye() {
             if (ntsu) ntsu.style.display = 'none';
             if (ntai) ntai.style.display = 'none';
             if (ntta) ntta.style.display = (isInspector) ? 'inline-block' : 'none';
-            if (ntxo) ntxo.style.visibility = 'hidden';
+            // ĐIỀU CHỈNH: Cho phép người kiểm tra (x) hiển thị nút xóa dù dòng đã khóa/ký
+            if (ntxo) ntxo.style.visibility = (isInspector) ? 'visible' : 'hidden';
         } else {
             if (ntsu) ntsu.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
             if (ntai) ntai.style.display = (isInspector || quyenQuanTri) ? 'inline-block' : 'none';
