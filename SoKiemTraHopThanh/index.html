@@ -275,6 +275,72 @@
     }
     
     #MinhChungContainer { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; min-height: 0; }
+    
+    /* HIỆU ỨNG NÚT NỔI HƯỚNG DẪN BÊN PHẢI */
+    .btn-float-guide {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1100;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-float-guide .circle {
+        width: 55px;
+        height: 55px;
+        background-color: #1e3a8a;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+        position: relative;
+    }
+    
+    .btn-float-guide .circle::before {
+        content: '';
+        position: absolute;
+        top: -4px; left: -4px; right: -4px; bottom: -4px;
+        border-radius: 50%;
+        border: 2px solid #3b82f6;
+        opacity: 0;
+        transition: all 0.4s ease;
+    }
+
+    .btn-float-guide .text {
+        margin-top: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        color: #1e3a8a;
+        font-family: 'Segoe UI', sans-serif;
+        text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+        transition: color 0.3s ease;
+    }
+    
+    .btn-float-guide:hover .circle {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
+        background-color: #2563eb;
+    }
+
+    .btn-float-guide:hover .circle::before {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    .btn-float-guide:hover .text {
+        color: #2563eb;
+    }
   </style>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -411,23 +477,12 @@
         <button class="modal-btn" onclick="document.getElementById('modal_overlay').style.display='none'">ĐÓNG</button>
       </div>
     </div>
-    
-    <div id="ai-chat-box">
-       <div class="ai-chat-header">
-          <span>🤖 Trợ lý AI Hướng dẫn</span>
-          <button onclick="toggleAIChat()" style="background: none; border: none; color: white; font-size: 22px; cursor: pointer; line-height: 1;">&times;</button>
-       </div>
-       <div id="ai-chat-history">
-          <div class="ai-msg-bot">Kính chào Thầy/Cô! Đây là hệ thống Trợ lý thông minh. Thầy/Cô có thể tra cứu thông tin hướng dẫn về sổ kiểm tra nội bộ tại đây.</div>
-       </div>
-       <div style="padding: 12px; background: white; border-top: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: flex; gap: 8px;">
-              <input type="text" id="ai-chat-input" placeholder="Nhập câu hỏi tra cứu..." onkeypress="if(event.key === 'Enter') guiCauHoiAI()" style="flex: 1; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; font-family: inherit; font-size: 14px;">
-              <button onclick="guiCauHoiAI()" id="btn-send-ai" style="background: #1e3a8a; color: white; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s;">Gửi</button>
-          </div>
-       </div>
-    </div>
   </div>
+  
+  <a href="javascript:void(0)" onclick="window.open(typeof SKT_LINK_YOUTUBE !== 'undefined' ? SKT_LINK_YOUTUBE : 'https://youtube.com', '_blank')" class="btn-float-guide">
+     <div class="circle">?</div>
+     <div class="text">Hướng dẫn</div>
+  </a>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -482,68 +537,6 @@
         
         hienThongBaoUI(title, text, type);
     };
-
-    function toggleAIChat() {
-        const hopChat = document.getElementById('ai-chat-box');
-        hopChat.style.display = (hopChat.style.display === 'none' || hopChat.style.display === '') ? 'flex' : 'none';
-        if(hopChat.style.display === 'flex') {
-            document.getElementById('ai-chat-input').focus();
-        }
-    }
-
-    function guiCauHoiAI() {
-        const phanTuNhap = document.getElementById('ai-chat-input');
-        const cauHoi = phanTuNhap.value.trim();
-        if(!cauHoi) return;
-
-        const lichSuChat = document.getElementById('ai-chat-history');
-        const nutGui = document.getElementById('btn-send-ai');
-
-        const tinNhanNguoiDung = document.createElement('div');
-        tinNhanNguoiDung.className = "ai-msg-user";
-        tinNhanNguoiDung.innerText = cauHoi;
-        lichSuChat.appendChild(tinNhanNguoiDung);
-        phanTuNhap.value = "";
-        lichSuChat.scrollTop = lichSuChat.scrollHeight;
-
-        const tinNhanCho = document.createElement('div');
-        tinNhanCho.id = "ai-loading-msg";
-        tinNhanCho.className = "ai-msg-loading";
-        tinNhanCho.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span> Đang tìm câu trả lời...';
-        lichSuChat.appendChild(tinNhanCho);
-        lichSuChat.scrollTop = lichSuChat.scrollHeight;
-
-        phanTuNhap.disabled = true;
-        nutGui.disabled = true;
-
-        google.script.run
-            .withSuccessHandler(kq => {
-                document.getElementById('ai-loading-msg').remove();
-                phanTuNhap.disabled = false;
-                nutGui.disabled = false;
-                phanTuNhap.focus();
-                
-                const tinNhanBot = document.createElement('div');
-                tinNhanBot.className = "ai-msg-bot";
-                tinNhanBot.innerText = kq.tcon ? kq.kqua : "Lỗi: " + kq.tbao;
-                lichSuChat.appendChild(tinNhanBot);
-                lichSuChat.scrollTop = lichSuChat.scrollHeight;
-            })
-            .withFailureHandler(loi => {
-                document.getElementById('ai-loading-msg').remove();
-                phanTuNhap.disabled = false;
-                nutGui.disabled = false;
-                
-                const tinNhanLoi = document.createElement('div');
-                tinNhanLoi.className = "ai-msg-bot";
-                tinNhanLoi.style.backgroundColor = "#fee2e2";
-                tinNhanLoi.style.color = "#991b1b";
-                tinNhanLoi.innerText = "Lỗi kết nối hệ thống: " + loi.message;
-                lichSuChat.appendChild(tinNhanLoi);
-                lichSuChat.scrollTop = lichSuChat.scrollHeight;
-            })
-            .skt_notebooklm_qa(cauHoi);
-    }
 
     let html5QrCode = null;
     let resolveKhoaPromise = null;
