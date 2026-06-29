@@ -742,30 +742,48 @@ function thuchms(ha, nt, ch) {
       document.getElementById('customConfirmModal').style.display = 'none'; 
   }
   
-  function xulyxo() {
+function xulyxo() {
       if (!dongcxoa) return;
       
       const dgd = dongcxoa; 
       const mh = dgd.querySelector('.ma-ho-so-cell').innerText;
-      
       const nhlk = dgd.querySelector('.link-input');
       const dl = nhlk ? nhlk.value : "";
-      
       const ntx = dgd.querySelector('.btn-icon-del');
-      if (ntx) { ntx.setAttribute('data-original', ntx.innerHTML); ntx.innerHTML = '⏳'; ntx.disabled = true; }
+      
+      // Đánh dấu trạng thái đang xử lý
+      if (ntx) { 
+          ntx.setAttribute('data-original', ntx.innerHTML); 
+          ntx.innerHTML = '⏳'; 
+          ntx.disabled = true; 
+      }
       
       donghthx(); 
-      
       hienhth("⏳ Đang xử lý xóa dữ liệu trên hệ thống. Vui lòng chờ...");
+      
       const ntd = document.querySelector('#modal_overlay_nhap .btn-cancel');
       if (ntd) ntd.style.display = 'none'; 
       
       const tl = mh + (dl ? "|||" + dl : "");
       
-      google.script.run.withSuccessHandler(function(kq) {
+      // Cơ chế timeout để tránh treo vĩnh viễn
+      let daPhanHoi = false;
+      const timer = setTimeout(() => {
+          if (!daPhanHoi) {
+              donghth();
+              hienhth("❌ Lỗi: Hệ thống phản hồi quá chậm (Timeout). Vui lòng kiểm tra lại kết nối mạng.");
+              if (ntd) ntd.style.display = 'inline-block';
+              datlntxo(ntx);
+          }
+      }, 20000); // 20 giây
+
+      google.script.run
+      .withSuccessHandler(function(kq) {
+          daPhanHoi = true;
+          clearTimeout(timer);
           if (ntd) ntd.style.display = 'inline-block'; 
 
-          if (kq === "SUCCESS" || kq === "NOT_FOUND" || kq.includes("Không tìm thấy")) {
+          if (kq === "SUCCESS") {
               donghth(); 
               dgd.style.transition = "all 0.5s ease"; 
               dgd.style.opacity = "0"; 
@@ -776,18 +794,25 @@ function thuchms(ha, nt, ch) {
                   dongcxoa = null; 
                   if(document.getElementById('tableContent').rows.length === 0) themdongmo(); 
               }, 500);
+          } else if (kq === "NOT_FOUND") {
+              hienhth("⚠️ Dữ liệu đã bị xóa trước đó hoặc không tồn tại.");
+              datlntxo(ntx);
           } else if (kq === "NO_PERMISSION") { 
               hienhth("⛔ Bạn không có quyền xóa dữ liệu này!"); 
               datlntxo(ntx);
           } else { 
-              hienhth("❌ " + kq); 
+              hienhth("❌ Hệ thống phản hồi: " + kq); 
               datlntxo(ntx); 
           }
-      }).withFailureHandler(function(lo) { 
+      })
+      .withFailureHandler(function(lo) { 
+          daPhanHoi = true;
+          clearTimeout(timer);
           if (ntd) ntd.style.display = 'inline-block';
-          hienhth("❌ Lỗi kết nối: " + lo); 
+          hienhth("❌ Lỗi kết nối mạng hoặc máy chủ: " + lo.message); 
           datlntxo(ntx); 
-      }).skt_xoadon_nki_thc_bg(tl);
+      })
+      .skt_xoadon_nki_thc_bg(tl);
   }
 
   function datlntxo(nt) { 
