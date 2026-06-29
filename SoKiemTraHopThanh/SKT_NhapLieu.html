@@ -389,7 +389,7 @@ function taidli() {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (BỔ SUNG KHÓA BỘ LỌC TỰ ĐỘNG)                 */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (NÂNG CẤP MỞ KHÓA CHO QUYỀN XX)             */
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
@@ -400,14 +400,14 @@ function apdquye() {
     const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
 
-    // 1. KIỂM TRA QUYỀN TỔNG THỂ: Người dùng có phải là Người kiểm tra (x hoặc xx) không?
+    // Xác định quyền quản trị tối cao (xx)
+    const isSuperAdmin = (window.sktquyenht === 'xx');
     const isGeneralInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
     
-    // 2. Kiểm tra vai trò trực tiếp trên dữ liệu đang hiển thị
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    // 3. KHÓA CÁC Ô LỌC (GIÁO VIÊN, NGƯỜI KT, BỘ PHẬN) NẾU KHÔNG PHẢI NGƯỜI KIỂM TRA
+    // KHÓA CÁC Ô LỌC NẾU KHÔNG PHẢI NGƯỜI KIỂM TRA (x hoặc xx)
     if (!isGeneralInspector) {
         if (hpgv) hpgv.disabled = true;
         if (hpnkt) hpnkt.disabled = true;
@@ -418,57 +418,61 @@ function apdquye() {
         if (hpbp) hpbp.disabled = false;
     }
 
-    // 4. Các nút chức năng chung
+    // Các nút chức năng chung (xx có quyền tương tác mọi nơi)
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
-    if (btnSave) btnSave.disabled = !isInspector && !isInspectee;
-    if (btnSubmit) btnSubmit.disabled = !isInspector;
-    if (addRowBtn) addRowBtn.style.display = isInspector ? 'block' : 'none';
+    if (btnSave) btnSave.disabled = !isInspector && !isInspectee && !isSuperAdmin;
+    if (btnSubmit) btnSubmit.disabled = !isInspector && !isSuperAdmin;
+    if (addRowBtn) addRowBtn.style.display = (isInspector || isSuperAdmin) ? 'block' : 'none';
 
-    // 5. Mọi logic khóa/mở cột dữ liệu và thao tác File, AI (GIỮ NGUYÊN THEO YÊU CẦU)
+    // Xử lý khóa/mở từng ô trên lưới dữ liệu
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        // Kiểm tra xem dòng đã được ký hay chưa (Cột 9 là Ý kiến, Cột 10 là Ký tên)
         const isSigned = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
 
+        // CHỐT CHẶN: Dòng bị khóa nếu đã ký VÀ người dùng KHÔNG PHẢI quyền xx
+        const rowLocked = isSigned && !isSuperAdmin;
+
         cacn.forEach((input, index) => {
-            if (isSigned) {
-                // ĐÃ KÝ: Khóa tất cả các ô văn bản (trừ ô ẩn lưu link file)
+            if (rowLocked) {
+                // Khóa cứng dòng đối với người được kiểm tra và người kiểm tra (x)
                 if (!input.classList.contains('link-input')) {
                     input.disabled = true;
                 }
             } else {
-                // CHƯA KÝ: Phân quyền như bình thường
-                if (isInspector) {
-                    input.disabled = (index >= 9);
+                // Nếu chưa khóa, hoặc người dùng là (xx)
+                if (isSuperAdmin) {
+                    input.disabled = false; // Quyền xx được mở khóa 100% các ô
+                } else if (isInspector) {
+                    input.disabled = (index >= 9); // Quyền x chỉ sửa 0-8
                 } else if (isInspectee) {
-                    input.disabled = (index < 9);
+                    input.disabled = (index < 9);  // Người được kiểm tra chỉ sửa 9-10
                 } else {
                     input.disabled = true;
                 }
             }
         });
 
-        // Xử lý ẩn/hiện nút thao tác
+        // Xử lý ẩn/hiện nút tương tác minh chứng và AI
         const ntsu = dg.querySelector('.link-edit-corner');
         const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
         const ntxo = dg.querySelector('.btn-icon-del');
 
-        if (isSigned) {
-            // ĐÃ KÝ: Ẩn nút sửa/AI, chỉ giữ nút Xem/Đính kèm cho Inspector
+        if (rowLocked) {
+            // Khi dòng khóa: Ẩn nút sửa, ẩn AI, chỉ giữ tải file cho Inspector (x)
             if (ntsu) ntsu.style.display = 'none';
             if (ntai) ntai.style.display = 'none';
-            if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
+            if (ntta) ntta.style.display = (isInspector) ? 'inline-block' : 'none';
             if (ntxo) ntxo.style.visibility = 'hidden';
         } else {
-            // CHƯA KÝ: Inspector có toàn quyền
-            if (ntsu) ntsu.style.display = isInspector ? 'block' : 'none';
-            if (ntai) ntai.style.display = isInspector ? 'inline-block' : 'none';
-            if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
-            if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
+            // Mở lại toàn bộ cho xx hoặc x
+            if (ntsu) ntsu.style.display = (isInspector || isSuperAdmin) ? 'block' : 'none';
+            if (ntai) ntai.style.display = (isInspector || isSuperAdmin) ? 'inline-block' : 'none';
+            if (ntta) ntta.style.display = (isInspector || isSuperAdmin) ? 'inline-block' : 'none';
+            if (ntxo) ntxo.style.visibility = (isInspector || isSuperAdmin) ? 'visible' : 'hidden';
         }
     });
 }
@@ -532,11 +536,12 @@ function thuchms(ha, nt, ch) {
     const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
     
+    const isSuperAdmin = (window.sktquyenht === 'xx');
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    // Chốt chặn cơ bản: Phải đúng quyền (Người kiểm tra hoặc Người được kiểm tra) mới được lưu
-    if (!isInspector && !isInspectee) {
+    // Chốt chặn cơ bản: Phải đúng quyền hoặc có quyền xx mới được gửi dữ liệu
+    if (!isInspector && !isInspectee && !isSuperAdmin) {
         hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa hồ sơ này!");
         return; 
     }
@@ -547,12 +552,10 @@ function thuchms(ha, nt, ch) {
     const mbp = document.getElementById('txtMaBoPhan').value;
     const dlg = [];
     
-    // Thu thập dữ liệu từ tất cả các dòng trên lưới
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         const maHoSoCell = dg.querySelector('.ma-ho-so-cell');
         
-        // BẪY LỖI: Chỉ thu thập dữ liệu khi dòng đó có đầy đủ các thẻ đầu vào
         if (cacn && cacn.length >= 12) {
             dlg.push([
                 gv, 
@@ -576,13 +579,11 @@ function thuchms(ha, nt, ch) {
         }
     });
 
-    // BẪY LỖI 2: Ngăn gửi mảng rỗng lên Server
     if (dlg.length === 0) {
         hienhth("⚠️ Không có dữ liệu hợp lệ trên lưới để lưu trữ!");
         return;
     }
     
-    // Bắt đầu quá trình lưu
     nt.disabled = true; 
     nt.innerText = "⏳ XỬ LÝ..."; 
     nt.classList.add('loading-spin');
@@ -594,7 +595,6 @@ function thuchms(ha, nt, ch) {
       nt.classList.remove('loading-spin'); 
       hienhth(kq);
       
-      // Nếu không có cảnh báo lỗi từ server, làm mới giao diện
       if(typeof kq === 'string' && !kq.includes("⚠️") && !kq.includes("❌")) { 
           setTimeout(lammdsm, 500); 
           datlbie(); 
