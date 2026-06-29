@@ -247,34 +247,36 @@ function trallkch(ddn) {
     const oo = donghtta.querySelector('.evidence-cell');
     const nh = donghtta.querySelector('.link-input');
     const vg = donghtta.querySelector('.link-display-area');
-    const nt = donghtta.querySelector('.btn-upload-icon'); // Nút Đính kèm
+    const nt = donghtta.querySelector('.btn-upload-icon'); // Nút Đính kèm gốc
 
     if (ddn && ddn.trim()) {
         nh.value = ddn;
         oo.classList.add('evidence-uploaded'); 
         
-        // VẪN HIỂN THỊ NÚT ĐÍNH KÈM: Để dùng làm nút "Sửa" hoặc "Thêm"
-        if(nt) nt.style.display = 'inline-block'; 
+        // Ẩn nút đính kèm gốc để hiển thị phiên bản tối ưu bên dưới
+        if(nt) nt.style.display = 'none'; 
         
         const clk = ddn.split(',').filter(l => l.trim() !== "");
         let htlk = clk.map((l1, c1) => 
-            `<a href="${l1}" target="_blank" style="display:block; color:#0369a1; text-decoration:none; font-size:11px; margin-bottom:2px;">📎 File ${c1 + 1}</a>`
+            `<a href="${l1}" target="_blank" style="display:block; color:#0369a1; text-decoration:none; font-size:11px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📎 File ${c1 + 1}</a>`
         ).join('');
 
-        // CHỈ GIỮ LẠI NÚT AI (Bỏ nút Sửa)
+        // Cấu trúc mới: AI (rộng) + Đính kèm (thu gọn) trên 1 dòng
         vg.innerHTML = `
             <div style="max-height:60px; overflow-y:auto; margin-bottom:5px;">${htlk}</div>
-            <div style="display: flex; gap: 4px;">
-                <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="background:#10b981; color:white; border:none; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; font-weight:bold;">🤖 AI</button>
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="flex: 1; background:#10b981; color:white; border:none; border-radius:3px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold;">🤖 AI</button>
+                <button class="btn-upload-icon" onclick="kichhta(this)" style="padding:4px 8px; font-size:11px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; cursor:pointer;">📎</button>
             </div>`;
     } else {
         nh.value = "";
         oo.classList.remove('evidence-uploaded');
+        // Nếu chưa có file, hiển thị lại nút Đính kèm gốc
         if(nt) nt.style.display = 'inline-block';
         vg.innerHTML = "";
     }
     
-    // Kiểm tra quyền (ẩn nút AI nếu không phải người kiểm tra)
+    // Kiểm tra quyền hiển thị
     kiemtlqsu(donghtta);
 }
 
