@@ -324,10 +324,16 @@ function kiemtlqsu(dg) {
     const lank = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
     const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
     
+    const cacn = dg.querySelectorAll('.cell-input');
+    const isSigned = (cacn && cacn.length > 10 && cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
+    const rowLocked = isSigned && !quyenQuanTri;
+
     const ntai = dg.querySelector('.btn-ai-nhanxet');
     
     if(ntai) {
-        if(lank || quyenQuanTri) {
+        if (rowLocked) {
+            ntai.style.display = 'none';
+        } else if(lank || quyenQuanTri) {
             ntai.style.display = 'inline-block'; 
         } else {
             ntai.style.display = 'none'; 
