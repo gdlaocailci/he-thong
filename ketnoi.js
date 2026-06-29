@@ -19,3 +19,9 @@ const KETNOI = {
     LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU"
    
 };
+// Đồng bộ liên kết YouTube vào nút hướng dẫn
+var DG_LINK_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
+    if(typeof DG_LINK_YOUTUBE !== 'undefined') {
+        document.querySelectorAll('.app-link-hd').forEach(el => {
+            if (el.tagName === 'A') el.href = DG_LINK_YOUTUBE;
+        });
