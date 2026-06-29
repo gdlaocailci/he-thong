@@ -312,43 +312,51 @@ function kiemtlqsu(dg) {
     }
 }
 
-  function taidli() {
+function taidli() {
     chuyentxo('initial', true);
     google.script.run.withSuccessHandler(kq => {
-      if (kq.cquy === false) {
-          document.getElementById('main_content').style.display = 'none';
-          document.getElementById('access_denied_msg').style.display = 'block';
-          document.getElementById('denied_reason').innerText = kq.tbao;
-          chuyentxo('initial', false);
-          return; 
-      }
-      
-      if(kq.tkngd) tknd = kq.tkngd; 
-      dlgvi = kq.dlgv; 
-      dlnktra = kq.dlnk; 
-      dlbpha = kq.dlbp; 
-      dlmhso = kq.dlmh;
-      document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
-      dienho('cbGiaoVien', dlgvi); 
-      dienho('cbNguoiKiemTra', dlnktra); 
-      dienhopd('cbBoPhan', Object.keys(dlbpha)); 
-      capnhopm(); 
+        if (kq.cquy === false) {
+            document.getElementById('main_content').style.display = 'none';
+            document.getElementById('access_denied_msg').style.display = 'block';
+            document.getElementById('denied_reason').innerText = kq.tbao;
+            chuyentxo('initial', false);
+            return; 
+        }
+        
+        if(kq.tkngd) tknd = kq.tkngd; 
+        dlgvi = kq.dlgv; 
+        dlnktra = kq.dlnk; 
+        dlbpha = kq.dlbp; 
+        dlmhso = kq.dlmh;
+        
+        document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
+        dienho('cbGiaoVien', dlgvi); 
+        dienho('cbNguoiKiemTra', dlnktra); 
+        dienhopd('cbBoPhan', Object.keys(dlbpha)); 
+        capnhopm(); 
 
-      let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-      let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-      let tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-      
-      if (tgvc && !tnktc) {
-          dathopc('cbGiaoVien', tgvc);
-          document.getElementById('cbGiaoVien').disabled = true; 
-          capnticd();
-          apdquye();
-      }
+        let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
+        let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
+        let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
+        
+        // Logic tự động nhận diện và load dữ liệu
+        if (tgvc && !isInspector) {
+            // Tự động chọn giáo viên là người đang đăng nhập
+            dathopc('cbGiaoVien', tgvc);
+            // Tự động kích hoạt tải hồ sơ của chính họ
+            // Lưu ý: Đảm bảo hàm này load dữ liệu và kích hoạt apdquye() sau khi xong
+            khindthd('GV'); 
+        } else if (tgvc) {
+            dathopc('cbGiaoVien', tgvc);
+        }
 
-      chuyentxo('initial', false); 
-      dattr(1);
+        chuyentxo('initial', false); 
+        dattr(1);
+        
+        // Đảm bảo trạng thái khóa được áp dụng ngay sau khi load
+        apdquye();
     }).skt_laydl_bda();
-  }
+}
 
   function khindthd(lo) {
     if ((lo === 'GV' || lo === 'NKT') && kiemttrem(lo)) return;
@@ -388,52 +396,50 @@ function kiemtlqsu(dg) {
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
     const hpnkt = document.getElementById('cbNguoiKiemTra');
-    
-    // Lấy giá trị tên đang chọn trên dropdown
-    const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
-    const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
+    const hpbp = document.getElementById('cbBoPhan');
+    const hpmhs = document.getElementById('cbMaHoSo');
     
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-
-    // XÁC ĐỊNH VAI TRÒ CHÍNH XÁC: 
-    // Người kiểm tra là người đang đăng nhập VÀ khớp với tên chọn trong dropdown
-    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     
-    // Người được kiểm tra là người đang đăng nhập VÀ khớp với tên chọn trong dropdown
-    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
+    // Kiểm tra quyền
+    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
+    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan);
+    
+    // Logic khóa các ô lọc: Nếu là người được kiểm tra (và không phải người kiểm tra), khóa bộ lọc
+    const shouldLockFilters = isInspectee && !isInspector;
+    
+    [hpgv, hpnkt, hpbp, hpmhs].forEach(el => {
+        el.disabled = shouldLockFilters;
+    });
 
-    // Cấu hình các nút chức năng
+    // Nút chức năng
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
-    // Nút Lưu/Nộp chỉ mở khi xác định đúng quyền tương ứng
+    // Mở nút lưu/nộp dựa trên quyền
     btnSave.disabled = !isInspector && !isInspectee;
     btnSubmit.disabled = !isInspector;
     if (addRowBtn) addRowBtn.style.display = isInspector ? 'block' : 'none';
 
-    // Duyệt từng dòng để khóa/mở cột theo vai trò
+    // Xử lý khóa/mở cột dữ liệu
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         
         cacn.forEach((input, index) => {
-            // Index 0-8: Thời gian, Nội dung, Ưu điểm, Tồn tại, Biện pháp, XL (0-8 là 9 cột đầu)
-            // Index 9: Ý kiến (Locked cho Inspector)
-            // Index 10: Ký tên (Locked cho Inspector)
-            
             if (isInspector) {
-                // Người kiểm tra: Sửa 0-8, KHÓA 9-10
+                // Người kiểm tra sửa cột 0-8, khóa 9-10
                 input.disabled = (index >= 9);
             } else if (isInspectee) {
-                // Người được kiểm tra: KHÓA 0-8, Sửa 9-10
+                // Người được kiểm tra: khóa 0-8, chỉ sửa cột 9-10
                 input.disabled = (index < 9);
             } else {
-                // Trường hợp không có quyền: Khóa tất cả
+                // Mặc định khóa tất cả nếu không có quyền
                 input.disabled = true;
             }
         });
 
-        // Xử lý các nút phụ trong dòng
+        // Nút phụ
         const ntsu = dg.querySelector('.link-edit-corner');
         const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
@@ -441,7 +447,7 @@ function apdquye() {
 
         if (ntsu) {
             ntsu.style.display = isInspector ? 'block' : 'none';
-            if (ntai) ntai.style.display = isInspector ? 'block' : 'none';
+            if (ntai) ntai.style.display = isInspector ? 'inline-block' : 'none';
         }
         if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
         if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
