@@ -502,6 +502,9 @@ function apdquye() {
   function xulylu() { if(hopllu()) thuchms("skt_luubg_nha", document.getElementById('btnSave'), "LƯU KẾT QUẢ"); }
   function xulyno() { if(hoplno()) thuchms("skt_nopbg_cuo", document.getElementById('btnSubmit'), "NỘP KẾT QUẢ"); }
 
+/* ========================================================================== */
+/* HÀM THỰC THI LƯU/NỘP DỮ LIỆU ĐÃ ĐƯỢC CHUẨN HÓA TRÁNH LỖI FETCH             */
+/* ========================================================================== */
 function thuchms(ha, nt, ch) {
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     const hpgv = document.getElementById('cbGiaoVien');
@@ -525,30 +528,39 @@ function thuchms(ha, nt, ch) {
     const dlg = [];
     
     // Thu thập dữ liệu từ tất cả các dòng trên lưới
-    // (Dòng đã khóa sẽ tự động lấy dữ liệu cũ, dòng đang mở sẽ lấy dữ liệu mới nhập)
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
+        const maHoSoCell = dg.querySelector('.ma-ho-so-cell');
         
-        dlg.push([
-            gv, 
-            nkt, 
-            bp, 
-            mbp, 
-            cacn[0].value, 
-            cacn[1].value, 
-            cacn[2].value, 
-            cacn[3].value, 
-            cacn[4].value, 
-            cacn[5].value, 
-            cacn[6].value, 
-            cacn[7].value, 
-            cacn[8].value, 
-            cacn[9].value, 
-            cacn[10].value, 
-            cacn[11].value, 
-            dg.querySelector('.ma-ho-so-cell').innerText
-        ]);
+        // BẪY LỖI: Chỉ thu thập dữ liệu khi dòng đó có đầy đủ các thẻ đầu vào
+        if (cacn && cacn.length >= 12) {
+            dlg.push([
+                gv, 
+                nkt, 
+                bp, 
+                mbp, 
+                cacn[0] ? cacn[0].value : "", 
+                cacn[1] ? cacn[1].value : "", 
+                cacn[2] ? cacn[2].value : "", 
+                cacn[3] ? cacn[3].value : "", 
+                cacn[4] ? cacn[4].value : "", 
+                cacn[5] ? cacn[5].value : "", 
+                cacn[6] ? cacn[6].value : "", 
+                cacn[7] ? cacn[7].value : "", 
+                cacn[8] ? cacn[8].value : "", 
+                cacn[9] ? cacn[9].value : "", 
+                cacn[10] ? cacn[10].value : "", 
+                cacn[11] ? cacn[11].value : "", 
+                maHoSoCell ? maHoSoCell.innerText.trim() : ""
+            ]);
+        }
     });
+
+    // BẪY LỖI 2: Ngăn gửi mảng rỗng lên Server
+    if (dlg.length === 0) {
+        hienhth("⚠️ Không có dữ liệu hợp lệ trên lưới để lưu trữ!");
+        return;
+    }
     
     // Bắt đầu quá trình lưu
     nt.disabled = true; 
@@ -563,7 +575,7 @@ function thuchms(ha, nt, ch) {
       hienhth(kq);
       
       // Nếu không có cảnh báo lỗi từ server, làm mới giao diện
-      if(!kq.includes("⚠️") && !kq.includes("❌")) { 
+      if(typeof kq === 'string' && !kq.includes("⚠️") && !kq.includes("❌")) { 
           setTimeout(lammdsm, 500); 
           datlbie(); 
       }
@@ -572,7 +584,7 @@ function thuchms(ha, nt, ch) {
         nt.disabled = false;
         nt.innerText = ch;
         nt.classList.remove('loading-spin');
-        hienhth("❌ Lỗi hệ thống: " + lo.message);
+        hienhth("❌ Lỗi hệ thống hoặc đường truyền mạng: " + lo.message);
     })[ha](dlg);
 }
   function kiemttrem(lo) {
