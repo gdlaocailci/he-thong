@@ -389,16 +389,20 @@ function taidli() {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (NÂNG CẤP MỞ KHÓA CHO QUYỀN XX)             */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (BỔ SUNG KHÓA LỌC KHI XEM LỊCH SỬ BẤT KỲ AI)*/
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
     const hpnkt = document.getElementById('cbNguoiKiemTra');
     const hpbp = document.getElementById('cbBoPhan');
+    const hpmhs = document.getElementById('cbMaHoSo');
     
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
+    
+    // Kiểm tra xem người dùng có đang load dữ liệu từ lịch sử không
+    const isHistoryView = (hpmhs && hpmhs.value.trim() !== "");
 
     // Xác định quyền quản trị tối cao (xx)
     const isSuperAdmin = (window.sktquyenht === 'xx');
@@ -407,8 +411,9 @@ function apdquye() {
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    // KHÓA CÁC Ô LỌC NẾU KHÔNG PHẢI NGƯỜI KIỂM TRA (x hoặc xx)
-    if (!isGeneralInspector) {
+    // CHỐT CHẶN BỘ LỌC: 
+    // Khóa các ô lọc nếu KHÔNG PHẢI người kiểm tra, HOẶC ĐANG TRONG CHẾ ĐỘ XEM LỊCH SỬ
+    if (!isGeneralInspector || isHistoryView) {
         if (hpgv) hpgv.disabled = true;
         if (hpnkt) hpnkt.disabled = true;
         if (hpbp) hpbp.disabled = true;
