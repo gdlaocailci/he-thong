@@ -242,40 +242,47 @@
       .skt_pt_mc_ai(lk, prompt);
   }
 
-  function trallkch(ddn) {
-      if (donghtta) {
-          const oo = donghtta.querySelector('.evidence-cell');
-          const nh = donghtta.querySelector('.link-input');
-          const vg = donghtta.querySelector('.link-display-area');
-          const nt = donghtta.querySelector('.btn-upload-icon');
+/* ========================================================================== */
+/* HÀM XỬ LÝ GIAO DIỆN MINH CHỨNG (CẬP NHẬT GIAO DIỆN NÚT SỬA/THÊM)          */
+/* ========================================================================== */
+function trallkch(ddn) {
+    if (donghtta) {
+        const oo = donghtta.querySelector('.evidence-cell');
+        const nh = donghtta.querySelector('.link-input');
+        const vg = donghtta.querySelector('.link-display-area');
+        const nt = donghtta.querySelector('.btn-upload-icon');
 
-          if (ddn && ddn.trim()) {
-              nh.value = ddn;
-              oo.classList.add('evidence-uploaded'); 
-              if(nt) nt.style.display = 'none';
-              
-              const clk = ddn.split(',').map(l1 => l1.trim()).filter(l1 => l1 !== "");
-              let htlk = clk.map((l1, c1) => 
-                  `<a href="${l1}" target="_blank" style="display:block; text-decoration:none; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:4px; padding:4px; margin-bottom:4px; font-size:12px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="Xem tài liệu ${c1 + 1}">📎 Tài liệu ${c1 + 1}</a>`
-              ).join('');
+        if (ddn && ddn.trim()) {
+            nh.value = ddn;
+            oo.classList.add('evidence-uploaded'); 
+            if(nt) nt.style.display = 'none'; // Ẩn nút "Đính kèm" khi đã có file
+            
+            const clk = ddn.split(',').map(l1 => l1.trim()).filter(l1 => l1 !== "");
+            let htlk = clk.map((l1, c1) => 
+                `<a href="${l1}" target="_blank" style="display:block; text-decoration:none; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:4px; padding:4px; margin-bottom:4px; font-size:12px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="Xem tài liệu ${c1 + 1}">📎 Tài liệu ${c1 + 1}</a>`
+            ).join('');
 
-              vg.innerHTML = `
+            // Cập nhật giao diện bao gồm nút Sửa/Thêm và nút AI
+            vg.innerHTML = `
                 <div style="max-height:75px; overflow-y:auto; padding:2px; text-align:left;" class="evidence-links-container">${htlk}</div>
                 <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px; padding-bottom: 2px;">
                     <button class="link-edit-corner" onclick="kichhta(this)" title="Sửa hoặc thêm tài liệu" style="position: static; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; border-radius: 3px; font-size: 11px; font-weight: bold; width: 100%; padding: 4px; cursor: pointer; box-sizing: border-box; text-align: center;">✏️ Sửa / Thêm</button>
                     <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="background: #10b981; color: white; border: none; border-radius: 3px; font-size: 11px; font-weight: bold; width: 100%; padding: 4px; cursor: pointer; box-sizing: border-box; text-align: center;" title="Dùng AI phân tích minh chứng này">🤖 AI Nhận xét</button>
                 </div>`;
-          } else {
-              nh.value = "";
-              oo.classList.remove('evidence-uploaded');
-              if(nt) nt.style.display = 'inline-block';
-              vg.innerHTML = "";
-          }
-          kiemtlqsu(donghtta);
-          if(typeof donghth === 'function') donghth(); 
-          if(typeof donghopthta === 'function') donghopthta(); 
-      }
-  }
+        } else {
+            nh.value = "";
+            oo.classList.remove('evidence-uploaded');
+            if(nt) nt.style.display = 'inline-block'; // Hiển thị nút "Đính kèm" nếu chưa có file
+            vg.innerHTML = "";
+        }
+        
+        // Kiểm tra lại quyền hiển thị các nút thao tác
+        kiemtlqsu(donghtta);
+        
+        if(typeof donghth === 'function') donghth(); 
+        if(typeof donghopthta === 'function') donghopthta(); 
+    }
+}
 
   function kichhta(nt) {
       const dg = nt.closest('tr');
