@@ -11,6 +11,7 @@ var PGV_PHIEN_BAN = "V17.6.2026";
 var PGV_TAC_GIA = "HOÀNG NGỌC LÂM";
 var PGV_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
 var PGV_MO_TA = "Hệ thống quản lý hiệu quả công việc nội bộ - " + PGV_TEN_TRUONG;
+
 // Bổ sung biến lưu trữ liên kết video hướng dẫn
 var DG_LINK_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
 
@@ -35,5 +36,14 @@ var PGV_ID_TC = "";
     
     if (!ddungApi || ddungApi === "") {
         console.error("❌ LỖI NGHIÊM TRỌNG: ddungApi chưa được cấu hình!");
+    }
+
+    // Đồng bộ liên kết YouTube vào nút hướng dẫn (bổ sung độ trễ an toàn)
+    if(typeof DG_LINK_YOUTUBE !== 'undefined') {
+        setTimeout(function() {
+            document.querySelectorAll('.app-link-hd').forEach(el => {
+                if (el.tagName === 'A') el.href = DG_LINK_YOUTUBE;
+            });
+        }, 500); // Chờ 0.5 giây để đảm bảo giao diện đã load xong
     }
 })();
