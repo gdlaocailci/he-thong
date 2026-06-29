@@ -389,38 +389,58 @@ function taidli() {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (CHỐT CHẶN PHÂN QUYỀN CHẶT CHẼ)             */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (BỔ SUNG KHÓA BỘ LỌC TỰ ĐỘNG)                 */
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
     const hpnkt = document.getElementById('cbNguoiKiemTra');
-    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
+    const hpbp = document.getElementById('cbBoPhan');
     
+    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
+
+    // 1. KIỂM TRA QUYỀN TỔNG THỂ: Người dùng có phải là Người kiểm tra (x hoặc xx) không?
+    const isGeneralInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
     
+    // 2. Kiểm tra vai trò trực tiếp trên dữ liệu đang hiển thị
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
+    // 3. KHÓA CÁC Ô LỌC (GIÁO VIÊN, NGƯỜI KT, BỘ PHẬN) NẾU KHÔNG PHẢI NGƯỜI KIỂM TRA
+    if (!isGeneralInspector) {
+        if (hpgv) hpgv.disabled = true;
+        if (hpnkt) hpnkt.disabled = true;
+        if (hpbp) hpbp.disabled = true;
+    } else {
+        if (hpgv) hpgv.disabled = false;
+        if (hpnkt) hpnkt.disabled = false;
+        if (hpbp) hpbp.disabled = false;
+    }
+
+    // 4. Các nút chức năng chung
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
-    btnSave.disabled = !isInspector && !isInspectee;
-    btnSubmit.disabled = !isInspector;
+    if (btnSave) btnSave.disabled = !isInspector && !isInspectee;
+    if (btnSubmit) btnSubmit.disabled = !isInspector;
     if (addRowBtn) addRowBtn.style.display = isInspector ? 'block' : 'none';
 
+    // 5. Mọi logic khóa/mở cột dữ liệu và thao tác File, AI (GIỮ NGUYÊN THEO YÊU CẦU)
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        // Kiểm tra dòng hiện tại đã ký chưa (Cột 9 là Ý kiến, 10 là Ký tên)
+        // Kiểm tra xem dòng đã được ký hay chưa (Cột 9 là Ý kiến, Cột 10 là Ký tên)
         const isSigned = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
 
         cacn.forEach((input, index) => {
             if (isSigned) {
-                // NẾU DÒNG ĐÃ KÝ: Khóa tất cả, bất kể là ai
-                input.disabled = true;
+                // ĐÃ KÝ: Khóa tất cả các ô văn bản (trừ ô ẩn lưu link file)
+                if (!input.classList.contains('link-input')) {
+                    input.disabled = true;
+                }
             } else {
-                // NẾU CHƯA KÝ: Phân quyền theo vai trò
+                // CHƯA KÝ: Phân quyền như bình thường
                 if (isInspector) {
                     input.disabled = (index >= 9);
                 } else if (isInspectee) {
@@ -431,20 +451,20 @@ function apdquye() {
             }
         });
 
-        // Xử lý nút điều khiển của dòng
+        // Xử lý ẩn/hiện nút thao tác
         const ntsu = dg.querySelector('.link-edit-corner');
         const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
         const ntxo = dg.querySelector('.btn-icon-del');
 
         if (isSigned) {
-            // Đã ký: Ẩn các nút sửa, chỉ cho xem (nếu cần)
+            // ĐÃ KÝ: Ẩn nút sửa/AI, chỉ giữ nút Xem/Đính kèm cho Inspector
             if (ntsu) ntsu.style.display = 'none';
             if (ntai) ntai.style.display = 'none';
-            if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none'; // Chỉ Inspector xem lại file
+            if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
             if (ntxo) ntxo.style.visibility = 'hidden';
         } else {
-            // Chưa ký: Hiển thị theo quyền
+            // CHƯA KÝ: Inspector có toàn quyền
             if (ntsu) ntsu.style.display = isInspector ? 'block' : 'none';
             if (ntai) ntai.style.display = isInspector ? 'inline-block' : 'none';
             if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
