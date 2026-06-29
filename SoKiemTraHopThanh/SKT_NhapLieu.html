@@ -259,12 +259,12 @@ function trallkch(ddn) {
             `<a href="${l1}" target="_blank" style="display:block; color:#0369a1; text-decoration:none; font-size:11px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📎 File ${c1 + 1}</a>`
         ).join('');
 
-        // Cấu trúc mới: AI (rộng) + Đính kèm (thu gọn) trên 1 dòng
+        // Cấu trúc mới: Cả 2 nút đều dùng flex: 1 và white-space: normal để co giãn, chia đều 50% và bằng chiều cao nhau
         vg.innerHTML = `
             <div style="max-height:60px; overflow-y:auto; margin-bottom:5px;">${htlk}</div>
-            <div style="display: flex; gap: 4px; align-items: center;">
-                <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="flex: 1; background:#10b981; color:white; border:none; border-radius:3px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold;">🤖 AI Nhận xét</button>
-                <button class="btn-upload-icon" onclick="kichhta(this)" style="padding:4px 8px; font-size:11px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; cursor:pointer; white-space:nowrap;">📎 File đính kèm</button>
+            <div style="display: flex; gap: 4px; align-items: stretch; justify-content: space-between;">
+                <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="flex: 1; background:#10b981; color:white; border:none; border-radius:3px; padding:4px 2px; font-size:11px; cursor:pointer; font-weight:bold; white-space: normal; line-height: 1.2; word-wrap: break-word;">🤖 AI<br>Nhận xét</button>
+                <button class="btn-upload-icon" onclick="kichhta(this)" style="flex: 1; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; padding:4px 2px; font-size:11px; cursor:pointer; color:#333; font-weight:bold; white-space: normal; line-height: 1.2; word-wrap: break-word;">📎 File<br>đính kèm</button>
             </div>`;
     } else {
         nh.value = "";
@@ -273,6 +273,7 @@ function trallkch(ddn) {
         if(nt) {
             nt.style.display = 'inline-block';
             nt.innerHTML = '📎 File đính kèm';
+            nt.style.whiteSpace = 'normal'; // Cho phép nút gốc xuống dòng nếu cột quá hẹp
         }
         vg.innerHTML = "";
     }
