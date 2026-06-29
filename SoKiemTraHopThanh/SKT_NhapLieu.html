@@ -513,34 +513,79 @@ function apdquye() {
   function xulyno() { if(hoplno()) thuchms("skt_nopbg_cuo", document.getElementById('btnSubmit'), "NỘP KẾT QUẢ"); }
 
 function thuchms(ha, nt, ch) {
-    // KIỂM TRA CHỐT CHẶN: Kiểm tra lại quyền trước khi gửi dữ liệu
+    // 1. Lấy thông tin tài khoản đang đăng nhập
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-    const selectedInspectorName = document.getElementById('cbNguoiKiemTra').value;
-    const inspectorData = dlnktra.find(x => chuanhchu(x.tenn) === chuanhchu(selectedInspectorName));
     
-    if (!inspectorData || chuanhchu(inspectorData.taik) !== emcan) {
-        hienhth("⛔ LỖI PHÂN QUYỀN: Tài khoản của Thầy/Cô không được phép thực hiện hành động này với Người kiểm tra đã chọn!");
-        return; // Dừng lại không gửi dữ liệu
+    // 2. Lấy thông tin người kiểm tra và giáo viên đang được chọn trên giao diện
+    const hpgv = document.getElementById('cbGiaoVien');
+    const hpnkt = document.getElementById('cbNguoiKiemTra');
+    const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
+    const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
+    
+    // 3. Xác định vai trò của người dùng hiện tại
+    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
+    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
+
+    // 4. CHỐT CHẶN PHÂN QUYỀN: 
+    // Cho phép Lưu nếu người dùng là Người kiểm tra HOẶC Người được kiểm tra (của hồ sơ này)
+    if (!isInspector && !isInspectee) {
+        hienhth("⛔ LỖI PHÂN QUYỀN: Tài khoản của Thầy/Cô không được phép chỉnh sửa hồ sơ này!");
+        return; 
     }
 
-    // Nếu qua được chốt chặn, tiếp tục logic lưu dữ liệu cũ
+    // 5. Chuẩn bị dữ liệu để gửi lên Server
     const gv = document.getElementById('cbGiaoVien').value;
-    const nkt = selectedInspectorName;
+    const nkt = selectedNKTName;
     const bp = document.getElementById('cbBoPhan').value;
     const mbp = document.getElementById('txtMaBoPhan').value;
     const dlg = [];
     
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        dlg.push([gv, nkt, bp, mbp, cacn[0].value, cacn[1].value, cacn[2].value, cacn[3].value, cacn[4].value, cacn[5].value, cacn[6].value, cacn[7].value, cacn[8].value, cacn[9].value, cacn[10].value, cacn[11].value, dg.querySelector('.ma-ho-so-cell').innerText]);
+        dlg.push([
+            gv, 
+            nkt, 
+            bp, 
+            mbp, 
+            cacn[0].value, 
+            cacn[1].value, 
+            cacn[2].value, 
+            cacn[3].value, 
+            cacn[4].value, 
+            cacn[5].value, 
+            cacn[6].value, 
+            cacn[7].value, 
+            cacn[8].value, 
+            cacn[9].value, 
+            cacn[10].value, 
+            cacn[11].value, 
+            dg.querySelector('.ma-ho-so-cell').innerText
+        ]);
     });
     
-    nt.disabled = true; nt.innerText = "⏳ XỬ LÝ..."; nt.classList.add('loading-spin');
+    // 6. Thực hiện gửi dữ liệu
+    nt.disabled = true; 
+    nt.innerText = "⏳ XỬ LÝ..."; 
+    nt.classList.add('loading-spin');
     
     google.script.run
     .withSuccessHandler(kq => {
-      nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin'); hienhth(kq);
-      if(!kq.includes("⚠️") && !kq.includes("❌")) { setTimeout(lammdsm, 500); datlbie(); }
+      nt.disabled = false; 
+      nt.innerText = ch; 
+      nt.classList.remove('loading-spin'); 
+      hienhth(kq);
+      
+      // Nếu thành công thì tải lại dữ liệu hoặc làm mới
+      if(!kq.includes("⚠️") && !kq.includes("❌")) { 
+          setTimeout(lammdsm, 500); 
+          datlbie(); 
+      }
+    })
+    .withFailureHandler(lo => {
+        nt.disabled = false;
+        nt.innerText = ch;
+        nt.classList.remove('loading-spin');
+        hienhth("❌ Lỗi hệ thống: " + lo.message);
     })[ha](dlg);
 }
 
