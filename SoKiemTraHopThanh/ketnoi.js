@@ -16,7 +16,7 @@ const SKT_TAC_GIA = "Hoàng Ngọc Lâm";
 const SKT_TAC_GIA_UP = "HOÀNG NGỌC LÂM";
 
 // LIÊN KẾT YOUTUBE HƯỚNG DẪN SỬ DỤNG
-const SKT_HD_YOUTUBE = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID";
+const SKT_HD_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
 
 // MÃ CLIENT ID CỦA GOOGLE ĐĂNG NHẬP
 const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
