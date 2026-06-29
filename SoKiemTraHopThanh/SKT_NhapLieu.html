@@ -380,91 +380,63 @@
     } else apdquye();
   }
 
-  function apdquye() {
-    const hpg = document.getElementById('cbGiaoVien');
-    const hpn = document.getElementById('cbNguoiKiemTra');
-    
-    const gv = String(hpg.options[hpg.selectedIndex]?.text || hpg.value || "").trim();
-    const nkt = String(hpn.options[hpn.selectedIndex]?.text || hpn.value || "").trim();
-    
-    const ntl = document.getElementById('btnSave');
-    const ntn = document.getElementById('btnSubmit');
-    const vtd = document.querySelector('.add-row-container'); 
-    
+/* ========================================================================== */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN NHẬP LIỆU                                     */
+/* ========================================================================== */
+function apdquye() {
+    const hpgv = document.getElementById('cbGiaoVien');
+    const hpnkt = document.getElementById('cbNguoiKiemTra');
+
+    // Xác định tên giáo viên/người kiểm tra đang được chọn trên giao diện
+    const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-    const tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-    const tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
 
-    const lgv = (tgvc && chuanhchu(tgvc) === chuanhchu(gv));
-    const lnk = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
+    // Xác định vai trò của người dùng hiện tại
+    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
+    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    if (lnk) { ntn.disabled = false; ntn.style.opacity = "1"; } 
-    else { ntn.disabled = true; ntn.style.opacity = "0.5"; }
+    // Cấu hình các nút chức năng chính
+    const btnSave = document.getElementById('btnSave');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const addRowBtn = document.querySelector('.add-row-container');
 
-    if (lgv || lnk) { ntl.disabled = false; ntl.style.opacity = "1"; } 
-    else { ntl.disabled = true; ntl.style.opacity = "0.5"; }
+    // Nút Lưu/Nộp chỉ khả dụng nếu là Người kiểm tra hoặc Người được kiểm tra (tương ứng quyền sửa)
+    btnSave.disabled = !isInspector && !isInspectee;
+    btnSubmit.disabled = !isInspector; // Chỉ người kiểm tra mới có quyền nộp kết quả cuối
+    if (addRowBtn) addRowBtn.style.display = isInspector ? 'block' : 'none';
 
-    if(vtd) vtd.style.display = lnk ? 'block' : 'none';
-
+    // Duyệt từng dòng để khóa/mở cột theo vai trò
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        cacn.forEach((o1, c1) => {
-            const layk = (c1 === 9 || c1 === 10); 
-            
-            if (lgv && lnk) {
-                o1.removeAttribute('disabled');
-            } else if (lgv) {
-                if (layk) o1.removeAttribute('disabled');
-                else o1.setAttribute('disabled', 'true');
-            } else if (lnk) {
-                if (!layk) o1.removeAttribute('disabled');
-                else o1.setAttribute('disabled', 'true');
-            } else {
-                o1.setAttribute('disabled', 'true');
-            }
-        });
         
+        cacn.forEach((input, index) => {
+            // index 0: Thời gian, 1-7: Nội dung đến XL khác (Tổng 9 cột đầu của Inspector)
+            // index 8: Ý kiến, 9: Ký tên
+            let canEditField = false;
+            
+            if (isInspector) {
+                canEditField = true; // Người kiểm tra toàn quyền
+            } else if (isInspectee) {
+                if (index >= 8) canEditField = true; // Chỉ được sửa Ý kiến & Ký tên
+            }
+            
+            input.disabled = !canEditField;
+        });
+
+        // Tùy chỉnh hiển thị các nút thao tác file/AI cho người kiểm tra
+        const ntsu = dg.querySelector('.link-edit-corner');
+        const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
         const ntxo = dg.querySelector('.btn-icon-del');
-        const ntsu = dg.querySelector('.link-edit-corner'); 
-        const ntai = dg.querySelector('.btn-ai-nhanxet');
 
-        if(ntta) ntta.disabled = !lnk;
-        if(ntxo) { ntxo.disabled = !lnk; ntxo.style.visibility = lnk ? 'visible' : 'hidden'; }
-        if(ntsu) {
-            if(!lnk) { 
-                ntsu.classList.add('disabled'); ntsu.style.pointerEvents = 'none'; ntsu.style.opacity = '0.5'; 
-                if(ntai) { ntai.disabled = true; ntai.style.opacity = '0.5'; }
-            } 
-            else { 
-                ntsu.classList.remove('disabled'); ntsu.style.pointerEvents = 'auto'; ntsu.style.opacity = '1'; 
-                if(ntai) { ntai.disabled = false; ntai.style.opacity = '1'; }
-            }
+        if (ntsu) {
+            ntsu.style.display = isInspector ? 'block' : 'none';
+            if (ntai) ntai.style.display = isInspector ? 'block' : 'none';
         }
-
-        const vhtl = dg.querySelector('.link-display-area');
-        if (vhtl) {
-            const clk = vhtl.querySelectorAll('a');
-            let tbkh = vhtl.querySelector('.locked-file-msg');
-            const vgcl = vhtl.querySelector('.evidence-links-container');
-
-            if (!lgv && !lnk) {
-                if(vgcl) vgcl.style.display = 'none';
-                if (clk.length > 0 && !tbkh) {
-                    vhtl.insertAdjacentHTML('afterbegin', '<div class="locked-file-msg" style="color:#dc3545; font-size:11px; font-weight:bold; text-align:center; padding: 4px; border: 1px dashed #dc3545; border-radius: 4px; background: #f8d7da; margin-bottom:4px;">🔒 Không có quyền xem</div>');
-                }
-            } else {
-                if(vgcl) vgcl.style.display = 'block';
-                if (tbkh) tbkh.remove();
-            }
-        }
+        if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
+        if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
     });
-
-    if (!gv || !nkt) {
-        ntl.disabled = true; ntn.disabled = true;
-        ntl.style.opacity = "0.5"; ntn.style.opacity = "0.5";
-    }
-  }
+}
 
   function themdongmo(dld = null) {
     const datg = new Date().getTime().toString().slice(-5);
