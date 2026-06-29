@@ -4,6 +4,32 @@
   select.cell-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231e3a8a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 5px top 50%; background-size: 8px auto; padding-right: 15px; text-align-last: center; }
     th { text-align: center !important; vertical-align: middle !important; }
   .filter-section { grid-template-columns: 220px 220px 220px 175px 1fr !important; }
+
+  /* Hiệu ứng trích xuất từ ReactBits (Shiny Button Effect) */
+  .reactbits-btn {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .reactbits-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -150%; width: 50%; height: 100%;
+      background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-25deg);
+      transition: all 0.5s ease;
+  }
+  .reactbits-btn:hover::before {
+      animation: reactbits-shine 1.5s infinite;
+  }
+  .reactbits-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  }
+  @keyframes reactbits-shine {
+      0% { left: -150%; }
+      100% { left: 200%; }
+  }
 </style>
 
 <div id="main_content">
@@ -24,8 +50,8 @@
       <div id="step2" class="step">2. NẠP DỮ LIỆU</div>
       <div id="step3" class="step">3. PHÂN QUYỀN</div>
       <div id="step4" class="step">4. SẴN SÀNG</div>
-      <button id="btnSubmit" class="btn-row btn-submit" onclick="xulyno()">NỘP KẾT QUẢ</button>
-      <button id="btnReset" class="btn-row btn-reset" onclick="datlbie()">LÀM MỚI</button>
+      <button id="btnSubmit" class="btn-row btn-submit reactbits-btn" onclick="xulyno()">NỘP KẾT QUẢ</button>
+      <button id="btnReset" class="btn-row btn-reset reactbits-btn" onclick="datlbie()">LÀM MỚI</button>
       <span id="user_display"></span>
     </div>
   </div>
@@ -53,11 +79,11 @@
       <tbody id="tableContent"></tbody>
     </table>
     <div class="add-row-container">
-        <button type="button" class="btn-add-row" onclick="themdongmo()"><span>➕</span> Thêm dòng</button>
+        <button type="button" class="btn-add-row reactbits-btn" onclick="themdongmo()"><span>➕</span> Thêm dòng</button>
     </div>
   </div>
 
-  <button id="btnSave" class="btn-save" onclick="xulylu()">LƯU KẾT QUẢ</button>
+  <button id="btnSave" class="btn-save reactbits-btn" onclick="xulylu()">LƯU KẾT QUẢ</button>
   <div style="clear:both"></div>
 
   <div id="customConfirmModal" class="modal-overlay" style="display: none;">
@@ -96,7 +122,7 @@
       
       <div class="modal-actions" style="margin-top: 20px; text-align: center;">
         <button class="btn-cancel" onclick="dong_ai_modal()">Hủy bỏ</button>
-        <button class="btn-confirm" style="background: #10b981;" onclick="xac_nhan_ai()">Bắt đầu phân tích tài liệu</button>
+        <button class="btn-confirm reactbits-btn" style="background: #10b981;" onclick="xac_nhan_ai()">Bắt đầu phân tích tài liệu</button>
       </div>
     </div>
   </div>
@@ -245,13 +271,12 @@ function trallkch(ddn) {
     const oo = donghtta.querySelector('.evidence-cell');
     const nh = donghtta.querySelector('.link-input');
     const vg = donghtta.querySelector('.link-display-area');
-    const nt = donghtta.querySelector('.btn-upload-icon'); // Nút Đính kèm gốc
+    const nt = donghtta.querySelector('.btn-upload-icon'); 
 
     if (ddn && ddn.trim()) {
         nh.value = ddn;
         oo.classList.add('evidence-uploaded'); 
         
-        // Ẩn nút đính kèm gốc để hiển thị phiên bản tối ưu bên dưới
         if(nt) nt.style.display = 'none'; 
         
         const clk = ddn.split(',').filter(l => l.trim() !== "");
@@ -259,26 +284,23 @@ function trallkch(ddn) {
             `<a href="${l1}" target="_blank" style="display:block; color:#0369a1; text-decoration:none; font-size:11px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📎 File ${c1 + 1}</a>`
         ).join('');
 
-        // Cấu trúc mới: Cả 2 nút đều dùng flex: 1 và white-space: normal để co giãn, chia đều 50% và bằng chiều cao nhau
         vg.innerHTML = `
             <div style="max-height:60px; overflow-y:auto; margin-bottom:5px;">${htlk}</div>
             <div style="display: flex; gap: 4px; align-items: stretch; justify-content: space-between;">
-                <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="flex: 1; background:#10b981; color:white; border:none; border-radius:3px; padding:4px 2px; font-size:11px; cursor:pointer; font-weight:bold; white-space: normal; line-height: 1.2; word-wrap: break-word;">🤖 AI<br>Nhận xét</button>
-                <button class="btn-upload-icon" onclick="kichhta(this)" style="flex: 1; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; padding:4px 2px; font-size:11px; cursor:pointer; color:#333; font-weight:bold; white-space: normal; line-height: 1.2; word-wrap: break-word;">📎 File<br>đính kèm</button>
+                <button class="btn-ai-nhanxet reactbits-btn" onclick="goi_ai_nhanxet(this)" style="flex: 1; background:#10b981; color:white; border:none; border-radius:3px; padding:4px 2px; font-size:11px; cursor:pointer; font-weight:bold; white-space: normal; line-height: 1.2; word-wrap: break-word;">🤖 AI<br>Nhận xét</button>
+                <button class="btn-upload-icon reactbits-btn" onclick="kichhta(this)" style="flex: 1; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; padding:4px 2px; font-size:11px; cursor:pointer; color:#333; font-weight:bold; white-space: normal; line-height: 1.2; word-wrap: break-word;">📎 File<br>đính kèm</button>
             </div>`;
     } else {
         nh.value = "";
         oo.classList.remove('evidence-uploaded');
-        // Nếu chưa có file, hiển thị lại nút Đính kèm gốc
         if(nt) {
             nt.style.display = 'inline-block';
             nt.innerHTML = '📎 File đính kèm';
-            nt.style.whiteSpace = 'normal'; // Cho phép nút gốc xuống dòng nếu cột quá hẹp
+            nt.style.whiteSpace = 'normal'; 
         }
         vg.innerHTML = "";
     }
     
-    // Kiểm tra quyền hiển thị
     kiemtlqsu(donghtta);
 }
 
@@ -300,13 +322,12 @@ function kiemtlqsu(dg) {
     const tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
     const nkt = document.getElementById('cbNguoiKiemTra').value;
     const lank = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
+    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
     
     const ntai = dg.querySelector('.btn-ai-nhanxet');
     
     if(ntai) {
-        // Nếu LÀ Người kiểm tra (lank == true) -> HIỆN nút AI
-        // Nếu KHÔNG PHẢI Người kiểm tra -> ẨN nút AI
-        if(lank) {
+        if(lank || quyenQuanTri) {
             ntai.style.display = 'inline-block'; 
         } else {
             ntai.style.display = 'none'; 
@@ -341,12 +362,8 @@ function taidli() {
         let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
         let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
         
-        // Logic tự động nhận diện và load dữ liệu
         if (tgvc && !isInspector) {
-            // Tự động chọn giáo viên là người đang đăng nhập
             dathopc('cbGiaoVien', tgvc);
-            // Tự động kích hoạt tải hồ sơ của chính họ
-            // Lưu ý: Đảm bảo hàm này load dữ liệu và kích hoạt apdquye() sau khi xong
             khindthd('GV'); 
         } else if (tgvc) {
             dathopc('cbGiaoVien', tgvc);
@@ -355,7 +372,6 @@ function taidli() {
         chuyentxo('initial', false); 
         dattr(1);
         
-        // Đảm bảo trạng thái khóa được áp dụng ngay sau khi load
         apdquye();
     }).skt_laydl_bda();
 }
@@ -376,8 +392,9 @@ function taidli() {
             let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
             let tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
             const bggv = String(bg[0][0] || ""); 
+            const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
 
-            if (tgvc && !tnktc && chuanhchu(bggv) !== chuanhchu(tgvc)) {
+            if (tgvc && !tnktc && chuanhchu(bggv) !== chuanhchu(tgvc) && !quyenQuanTri) {
                 hienhth("⛔ BẠN CHỈ ĐƯỢC XEM VÀ KÝ NHẬN HỒ SƠ CỦA CHÍNH MÌNH!");
                 datlbie(); 
                 return;
@@ -393,7 +410,7 @@ function taidli() {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (BỔ SUNG KHÓA LỌC KHI XEM LỊCH SỬ BẤT KỲ AI)*/
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (ĐÃ MỞ KHÓA TUYỆT ĐỐI CHO QUYỀN XX)          */
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
@@ -405,18 +422,15 @@ function apdquye() {
     const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
     
-    // Kiểm tra xem người dùng có đang load dữ liệu từ lịch sử không
     const isHistoryView = (hpmhs && hpmhs.value.trim() !== "");
 
-    // Xác định quyền quản trị tối cao (xx)
-    const isSuperAdmin = (window.sktquyenht === 'xx');
+    // Ép kiểu chuỗi để nhận diện quyền Quản trị tuyệt đối
+    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
     const isGeneralInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
     
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    // CHỐT CHẶN BỘ LỌC: 
-    // Khóa các ô lọc nếu KHÔNG PHẢI người kiểm tra, HOẶC ĐANG TRONG CHẾ ĐỘ XEM LỊCH SỬ
     if (!isGeneralInspector || isHistoryView) {
         if (hpgv) hpgv.disabled = true;
         if (hpnkt) hpnkt.disabled = true;
@@ -427,61 +441,60 @@ function apdquye() {
         if (hpbp) hpbp.disabled = false;
     }
 
-    // Các nút chức năng chung (xx có quyền tương tác mọi nơi)
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
-    if (btnSave) btnSave.disabled = !isInspector && !isInspectee && !isSuperAdmin;
-    if (btnSubmit) btnSubmit.disabled = !isInspector && !isSuperAdmin;
-    if (addRowBtn) addRowBtn.style.display = (isInspector || isSuperAdmin) ? 'block' : 'none';
+    if (btnSave) btnSave.disabled = !isInspector && !isInspectee && !quyenQuanTri;
+    if (btnSubmit) btnSubmit.disabled = !isInspector && !quyenQuanTri;
+    
+    // Ghi đè: Ép mở khóa các nút chức năng nếu là quản trị viên
+    if (quyenQuanTri) {
+        if (btnSave) btnSave.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = false;
+    }
 
-    // Xử lý khóa/mở từng ô trên lưới dữ liệu
+    if (addRowBtn) addRowBtn.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
+
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         const isSigned = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
 
-        // CHỐT CHẶN: Dòng bị khóa nếu đã ký VÀ người dùng KHÔNG PHẢI quyền xx
-        const rowLocked = isSigned && !isSuperAdmin;
+        const rowLocked = isSigned && !quyenQuanTri;
 
         cacn.forEach((input, index) => {
             if (rowLocked) {
-                // Khóa cứng dòng đối với người được kiểm tra và người kiểm tra (x)
                 if (!input.classList.contains('link-input')) {
                     input.disabled = true;
                 }
             } else {
-                // Nếu chưa khóa, hoặc người dùng là (xx)
-                if (isSuperAdmin) {
-                    input.disabled = false; // Quyền xx được mở khóa 100% các ô
+                if (quyenQuanTri) {
+                    input.disabled = false; 
                 } else if (isInspector) {
-                    input.disabled = (index >= 9); // Quyền x chỉ sửa 0-8
+                    input.disabled = (index >= 9); 
                 } else if (isInspectee) {
-                    input.disabled = (index < 9);  // Người được kiểm tra chỉ sửa 9-10
+                    input.disabled = (index < 9);  
                 } else {
                     input.disabled = true;
                 }
             }
         });
 
-        // Xử lý ẩn/hiện nút tương tác minh chứng và AI
         const ntsu = dg.querySelector('.link-edit-corner');
         const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
         const ntxo = dg.querySelector('.btn-icon-del');
 
         if (rowLocked) {
-            // Khi dòng khóa: Ẩn nút sửa, ẩn AI, chỉ giữ tải file cho Inspector (x)
             if (ntsu) ntsu.style.display = 'none';
             if (ntai) ntai.style.display = 'none';
             if (ntta) ntta.style.display = (isInspector) ? 'inline-block' : 'none';
             if (ntxo) ntxo.style.visibility = 'hidden';
         } else {
-            // Mở lại toàn bộ cho xx hoặc x
-            if (ntsu) ntsu.style.display = (isInspector || isSuperAdmin) ? 'block' : 'none';
-            if (ntai) ntai.style.display = (isInspector || isSuperAdmin) ? 'inline-block' : 'none';
-            if (ntta) ntta.style.display = (isInspector || isSuperAdmin) ? 'inline-block' : 'none';
-            if (ntxo) ntxo.style.visibility = (isInspector || isSuperAdmin) ? 'visible' : 'hidden';
+            if (ntsu) ntsu.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
+            if (ntai) ntai.style.display = (isInspector || quyenQuanTri) ? 'inline-block' : 'none';
+            if (ntta) ntta.style.display = (isInspector || quyenQuanTri) ? 'inline-block' : 'none';
+            if (ntxo) ntxo.style.visibility = (isInspector || quyenQuanTri) ? 'visible' : 'hidden';
         }
     });
 }
@@ -514,7 +527,7 @@ function apdquye() {
       <td style="text-align:center;vertical-align:middle; padding:5px;" class="evidence-cell">
           <input type="hidden" class="cell-input link-input">
           <div class="link-display-area" style="width:100%;"></div>
-          <button class="btn-upload-icon" onclick="kichhta(this)" title="Chèn minh chứng">📎 File đính kèm</button>
+          <button class="btn-upload-icon reactbits-btn" onclick="kichhta(this)" title="Chèn minh chứng">📎 File đính kèm</button>
       </td>
       <td class="ma-ho-so-cell">MS-${datg}-${idng}</td>
     `;
@@ -545,12 +558,11 @@ function thuchms(ha, nt, ch) {
     const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
     const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
     
-    const isSuperAdmin = (window.sktquyenht === 'xx');
+    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
     const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
-    // Chốt chặn cơ bản: Phải đúng quyền hoặc có quyền xx mới được gửi dữ liệu
-    if (!isInspector && !isInspectee && !isSuperAdmin) {
+    if (!isInspector && !isInspectee && !quyenQuanTri) {
         hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa hồ sơ này!");
         return; 
     }
@@ -732,7 +744,10 @@ function thuchms(ha, nt, ch) {
       const nkt = document.getElementById('cbNguoiKiemTra').value;
       const lnk = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
       
-      if (!lnk) { hienhth("⚠️ Bạn không có quyền xóa dòng này!"); return; }
+      // Bổ sung quyền bypass cho tài khoản xx (Quản trị tuyệt đối)
+      const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
+      
+      if (!lnk && !quyenQuanTri) { hienhth("⚠️ Bạn không có quyền xóa dòng này!"); return; }
       const tb = document.getElementById('tableContent');
       if(tb.rows.length <= 1) { hienhth("⚠️ Phải giữ lại ít nhất một dòng!"); return; }
       dongcxoa = nt.closest('tr'); document.getElementById('customConfirmModal').style.display = 'flex';
@@ -751,7 +766,6 @@ function xulyxo() {
       const dl = nhlk ? nhlk.value : "";
       const ntx = dgd.querySelector('.btn-icon-del');
       
-      // Đánh dấu trạng thái đang xử lý
       if (ntx) { 
           ntx.setAttribute('data-original', ntx.innerHTML); 
           ntx.innerHTML = '⏳'; 
@@ -766,7 +780,6 @@ function xulyxo() {
       
       const tl = mh + (dl ? "|||" + dl : "");
       
-      // Cơ chế timeout để tránh treo vĩnh viễn
       let daPhanHoi = false;
       const timer = setTimeout(() => {
           if (!daPhanHoi) {
@@ -775,7 +788,7 @@ function xulyxo() {
               if (ntd) ntd.style.display = 'inline-block';
               datlntxo(ntx);
           }
-      }, 20000); // 20 giây
+      }, 20000); 
 
       google.script.run
       .withSuccessHandler(function(kq) {
