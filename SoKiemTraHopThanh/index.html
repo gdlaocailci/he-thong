@@ -92,80 +92,6 @@
   </script>
 
   <style>
-    /* ========================================================================= */
-    /* HIỆU ỨNG TỪ REACTBITS.DEV (SHINY SWEEP EFFECT)                            */
-    /* ========================================================================= */
-    .ef-reactbits {
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .ef-reactbits::before {
-        content: '';
-        position: absolute;
-        top: 0; left: -100%;
-        width: 50%; height: 100%;
-        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
-        transform: skewX(-25deg);
-        animation: reactbits-shine 4s infinite;
-        z-index: 1;
-        pointer-events: none;
-    }
-    .ef-reactbits:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    @keyframes reactbits-shine {
-        0% { left: -100%; }
-        20% { left: 200%; }
-        100% { left: 200%; }
-    }
-
-    /* KHỐI NÚT HƯỚNG DẪN NỔI CẤP CAO (TOÀN CỤC) ĐƯỢC TÁCH CHỮ VÀ ICON */
-    #guide-float-container {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        z-index: 9995;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-    }
-    #btn-guide-float {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #1e3a8a, #2563eb);
-        color: white;
-        border: none;
-        box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4);
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    #btn-guide-float:hover {
-        transform: scale(1.1) rotate(5deg);
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    }
-    #btn-guide-float i {
-        font-size: 28px;
-    }
-    .guide-float-text {
-        font-size: 12px;
-        font-weight: bold;
-        color: #1e3a8a;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 3px 10px;
-        border-radius: 12px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        border: 1px solid #e2e8f0;
-    }
-
     #instant-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 1050; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .spinner-ring { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #1e3a8a; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
     .loader-text { font-family: 'Segoe UI', sans-serif; font-weight: bold; color: #1e3a8a; letter-spacing: 1px; font-size: 14px; }
@@ -252,6 +178,19 @@
     .btn-upload-icon { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 14px; }
     .btn-upload-icon:disabled { opacity: 0.5; cursor: not-allowed; }
     .evidence-uploaded { background-color: #f0fdf4; }
+
+    #ai-chat-box {
+        display: none; position: fixed; bottom: 20px; right: 20px; width: 450px; max-width: 95%;
+        background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        z-index: 1100; flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb; font-family: "Segoe UI", sans-serif;
+    }
+    .ai-chat-header { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 15px 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+    #ai-chat-history { height: 450px; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 15px; background: #f8fafc; font-size: 14.5px; }
+    
+    .ai-msg-bot { align-self: flex-start; background: #e0f2fe; padding: 14px 18px; border-radius: 12px 12px 12px 0; max-width: 100%; color: #0c4a6e; border: 1px solid #bae6fd; white-space: pre-line; text-align: justify; line-height: 1.5; }
+    
+    .ai-msg-user { align-self: flex-end; background: #1e3a8a; color: white; padding: 14px 18px; border-radius: 12px 12px 0 12px; max-width: 90%; word-wrap: break-word; line-height: 1.5; }
+    .ai-msg-loading { align-self: flex-start; background: #f1f5f9; padding: 12px 18px; border-radius: 12px 12px 12px 0; color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px; }
 
     #custom-alert-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -348,7 +287,7 @@
       <div id="custom-alert-icon" class="custom-alert-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
       <div id="custom-alert-title" class="custom-alert-title">Thông báo</div>
       <div id="custom-alert-message" class="custom-alert-message">Nội dung thông báo</div>
-      <button class="custom-alert-btn ef-reactbits" onclick="dongCustomAlert()">ĐÓNG</button>
+      <button class="custom-alert-btn" onclick="dongCustomAlert()">ĐÓNG</button>
     </div>
   </div>
 
@@ -367,7 +306,7 @@
 
       <div style="display: flex; gap: 10px; justify-content: center;">
           <button onclick="dongKhoaModal(false)" style="flex: 1; padding: 12px; background: #f1f5f9; color: #475569; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">HỦY BỎ</button>
-          <button id="btn-khoa-submit" class="ef-reactbits" onclick="dongKhoaModal(true)" style="flex: 1; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">XÁC NHẬN</button>
+          <button id="btn-khoa-submit" onclick="dongKhoaModal(true)" style="flex: 1; padding: 12px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;">XÁC NHẬN</button>
       </div>
     </div>
   </div>
@@ -382,7 +321,7 @@
         <p class="fs-5 text-secondary" style="font-family: 'Segoe UI', sans-serif;" id="trialMessage">
           Bạn đang trong thời gian dùng thử 14 ngày. Ngày bắt đầu: 07/02/2026.
         </p>
-        <button type="button" id="btnTrialOk" class="btn btn-primary px-5 mt-3 fw-bold ef-reactbits" data-bs-dismiss="modal">Đồng ý</button>
+        <button type="button" id="btnTrialOk" class="btn btn-primary px-5 mt-3 fw-bold" data-bs-dismiss="modal">Đồng ý</button>
       </div>
     </div>
   </div>
@@ -411,17 +350,17 @@
       
       <div class="lua-chon-group">
           <span class="label-lua-chon">— Hoặc lựa chọn đăng nhập phụ —</span>
-          <button class="btn-qr-login ef-reactbits" id="btn-start-qr" onclick="batDauQuetQR()">
+          <button class="btn-qr-login" id="btn-start-qr" onclick="batDauQuetQR()">
               <i class="bi bi-camera"></i> Đăng nhập bằng Thẻ QR
           </button>
           
-          <button class="btn-qr-login ef-reactbits" id="btn-guest-login" onclick="dangNhapKhach()" style="margin-top: 10px; background: #f0fdf4; color: #166534; border-color: #bbf7d0;">
+          <button class="btn-qr-login" id="btn-guest-login" onclick="dangNhapKhach()" style="margin-top: 10px; background: #f0fdf4; color: #166534; border-color: #bbf7d0;">
               <i class="bi bi-person-badge"></i> Đăng nhập bằng quyền Khách
           </button>
           
           <div id="qr-reader-container">
               <div id="reader" style="width: 100%;"></div>
-              <button class="btn-cancel-qr ef-reactbits" onclick="huyQuetQR()">Hủy quét</button>
+              <button class="btn-cancel-qr" onclick="huyQuetQR()">Hủy quét</button>
           </div>
       </div>
       
@@ -440,13 +379,20 @@
     <div id="ContentContainer">
         <div id="so_wrapper">
           <div class="tab-container">
-            <button class="tab-button active ef-reactbits" onclick="chuyentth('TabNhapLieu', this)">📝 GHI SỔ</button>
-            <button class="tab-button ef-reactbits" onclick="chuyentth('TabTimKiem', this)">🔍 THỐNG KÊ</button>
-            <button class="tab-button ef-reactbits" onclick="chuyentth('TabPhanQuyen', this)">🔑 CẤP QUYỀN</button>
+            <button class="tab-button active" onclick="chuyentth('TabNhapLieu', this)">📝 GHI SỔ</button>
+            <button class="tab-button" onclick="chuyentth('TabTimKiem', this)">🔍 THỐNG KÊ</button>
+            <button class="tab-button" onclick="chuyentth('TabHuongDan', this)">ℹ️ HƯỚNG DẪN</button>
+            <button class="tab-button" onclick="chuyentth('TabPhanQuyen', this)">🔑 CẤP QUYỀN</button>
           </div>
           
           <div id="TabNhapLieu" class="tab-content active"></div>
           <div id="TabTimKiem" class="tab-content"></div>
+          <div id="TabHuongDan" class="tab-content">
+            <h3>Thông báo:</h3>
+            <p><b>1. Nhập liệu:</b> Chọn đủ thông tin GV, Người KT. Bấm "Thêm dòng" để nhập nhiều nội dung.</p>
+            <p><b>2. Trợ giúp:</b> Bạn có thể hỏi đáp các quy định, thông tin hệ thống thông qua Trợ lý AI Hướng dẫn ở góc phải.</p>
+            <p><b id="huong-dan-tac-gia"></b></p>
+          </div>
           <div id="TabPhanQuyen" class="tab-content"></div> 
         </div>
 
@@ -455,7 +401,7 @@
         <div id="access_denied_msg" style="display:none; text-align:center; margin-top:50px;">
           <h2 style="color:#b91c1c;">⛔ TRUY CẬP BỊ TỪ CHỐI</h2>
           <p id="denied_reason" style="font-weight:bold;"></p>
-          <button class="modal-btn ef-reactbits" onclick="dangxg()" style="background:#b91c1c; border:none; margin-top:20px;">ĐĂNG NHẬP LẠI</button>
+          <button class="modal-btn" onclick="dangxg()" style="background:#b91c1c; border:none; margin-top:20px;">ĐĂNG NHẬP LẠI</button>
         </div>
     </div>
 
@@ -463,16 +409,25 @@
       <div id="modal_box">
         <h3>✅ THÔNG BÁO</h3>
         <p id="modal_message"></p>
-        <button class="modal-btn ef-reactbits" onclick="document.getElementById('modal_overlay').style.display='none'">ĐÓNG</button>
+        <button class="modal-btn" onclick="document.getElementById('modal_overlay').style.display='none'">ĐÓNG</button>
       </div>
     </div>
-  </div>
-
-  <div id="guide-float-container">
-    <button id="btn-guide-float" class="ef-reactbits" onclick="if(typeof SKT_HD_YOUTUBE !== 'undefined') window.open(SKT_HD_YOUTUBE, '_blank'); else alert('Chưa cấu hình liên kết hướng dẫn.');" title="Hướng dẫn sử dụng">
-      <i class="bi bi-question-circle"></i>
-    </button>
-    <span class="guide-float-text">Hướng dẫn</span>
+    
+    <div id="ai-chat-box">
+       <div class="ai-chat-header">
+          <span>🤖 Trợ lý AI Hướng dẫn</span>
+          <button onclick="toggleAIChat()" style="background: none; border: none; color: white; font-size: 22px; cursor: pointer; line-height: 1;">&times;</button>
+       </div>
+       <div id="ai-chat-history">
+          <div class="ai-msg-bot">Kính chào Thầy/Cô! Đây là hệ thống Trợ lý thông minh. Thầy/Cô có thể tra cứu thông tin hướng dẫn về sổ kiểm tra nội bộ tại đây.</div>
+       </div>
+       <div style="padding: 12px; background: white; border-top: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; gap: 8px;">
+              <input type="text" id="ai-chat-input" placeholder="Nhập câu hỏi tra cứu..." onkeypress="if(event.key === 'Enter') guiCauHoiAI()" style="flex: 1; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; font-family: inherit; font-size: 14px;">
+              <button onclick="guiCauHoiAI()" id="btn-send-ai" style="background: #1e3a8a; color: white; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s;">Gửi</button>
+          </div>
+       </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -528,6 +483,68 @@
         
         hienThongBaoUI(title, text, type);
     };
+
+    function toggleAIChat() {
+        const hopChat = document.getElementById('ai-chat-box');
+        hopChat.style.display = (hopChat.style.display === 'none' || hopChat.style.display === '') ? 'flex' : 'none';
+        if(hopChat.style.display === 'flex') {
+            document.getElementById('ai-chat-input').focus();
+        }
+    }
+
+    function guiCauHoiAI() {
+        const phanTuNhap = document.getElementById('ai-chat-input');
+        const cauHoi = phanTuNhap.value.trim();
+        if(!cauHoi) return;
+
+        const lichSuChat = document.getElementById('ai-chat-history');
+        const nutGui = document.getElementById('btn-send-ai');
+
+        const tinNhanNguoiDung = document.createElement('div');
+        tinNhanNguoiDung.className = "ai-msg-user";
+        tinNhanNguoiDung.innerText = cauHoi;
+        lichSuChat.appendChild(tinNhanNguoiDung);
+        phanTuNhap.value = "";
+        lichSuChat.scrollTop = lichSuChat.scrollHeight;
+
+        const tinNhanCho = document.createElement('div');
+        tinNhanCho.id = "ai-loading-msg";
+        tinNhanCho.className = "ai-msg-loading";
+        tinNhanCho.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span> Đang tìm câu trả lời...';
+        lichSuChat.appendChild(tinNhanCho);
+        lichSuChat.scrollTop = lichSuChat.scrollHeight;
+
+        phanTuNhap.disabled = true;
+        nutGui.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(kq => {
+                document.getElementById('ai-loading-msg').remove();
+                phanTuNhap.disabled = false;
+                nutGui.disabled = false;
+                phanTuNhap.focus();
+                
+                const tinNhanBot = document.createElement('div');
+                tinNhanBot.className = "ai-msg-bot";
+                tinNhanBot.innerText = kq.tcon ? kq.kqua : "Lỗi: " + kq.tbao;
+                lichSuChat.appendChild(tinNhanBot);
+                lichSuChat.scrollTop = lichSuChat.scrollHeight;
+            })
+            .withFailureHandler(loi => {
+                document.getElementById('ai-loading-msg').remove();
+                phanTuNhap.disabled = false;
+                nutGui.disabled = false;
+                
+                const tinNhanLoi = document.createElement('div');
+                tinNhanLoi.className = "ai-msg-bot";
+                tinNhanLoi.style.backgroundColor = "#fee2e2";
+                tinNhanLoi.style.color = "#991b1b";
+                tinNhanLoi.innerText = "Lỗi kết nối hệ thống: " + loi.message;
+                lichSuChat.appendChild(tinNhanLoi);
+                lichSuChat.scrollTop = lichSuChat.scrollHeight;
+            })
+            .skt_notebooklm_qa(cauHoi);
+    }
 
     let html5QrCode = null;
     let resolveKhoaPromise = null;
