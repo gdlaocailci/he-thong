@@ -813,20 +813,19 @@ function kiemtqvata() {
       google.script.run
         .withSuccessHandler(dlu => {
           if (dlu.cquy === false) {
-            // Trường hợp không có quyền hoặc tài khoản không tồn tại trong B1:D
             xoaluutrant("SKT_USER_TAIK");
             window.skttktoanc = null;
 
             document.getElementById('instant-loader').style.display = 'none';
             document.getElementById('main-wrapper').style.display = 'flex';
-            document.getElementById('main-wrapper').style.opacity = '1';
+            setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
             
             document.getElementById('so_wrapper').style.display = 'none';
             document.getElementById('MinhChungContainer').style.display = 'none';
             document.getElementById('access_denied_msg').style.display = 'block';
             document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
           } else {
-            // Xác định quyền dựa trên danh sách từ server (tự động load từ dòng 5)
+            // Xác định quyền dựa trên danh sách load từ dòng 5 (dropdown)
             let nduyq = false;
             if(dlu.dlgv) {
                 let userMatch = dlu.dlgv.find(m1 => String(m1.taik).toLowerCase() === taikht);
@@ -840,10 +839,13 @@ function kiemtqvata() {
                 window.sktquyenht = 'x'; 
             }
             
-            // Nếu không tìm thấy trong danh sách load từ dòng 5, coi như Khách
+            /* ========================================================================= */
+            /* ĐIỂM NGHẼN ĐÃ KHẮC PHỤC: Nếu đã qua kiểm tra quyền (cquy=true)           */
+            /* nhưng không nằm trong danh sách (dòng 5), ta cấp quyền xx cho thầy.        */
+            /* ========================================================================= */
             if (!nduyq) {
-                vohienhapkh();
-                return;
+                nduyq = true;
+                window.sktquyenht = 'xx'; 
             }
             
             window.sktduocuyq = nduyq; 
