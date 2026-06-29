@@ -6,6 +6,9 @@ var DG_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbynhXlUEopWNlbp
 
 var DG_LINK_LOGO = "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png"; 
 
+// Bổ sung biến lưu trữ liên kết video hướng dẫn
+var DG_LINK_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
+
 var DG_TEN_TRUONG = "Trường TH&THCS Hợp Thành";
 var DG_TEN_TRUONG_UP = "TRƯỜNG TH&THCS HỢP THÀNH";
 
@@ -61,5 +64,12 @@ function applyDGConfig() {
     if(typeof DG_GOOGLE_CLIENT_ID !== 'undefined') {
         let gId = document.getElementById('g_id_onload');
         if(gId) gId.setAttribute('data-client_id', DG_GOOGLE_CLIENT_ID);
+    }
+    
+    // Đồng bộ liên kết YouTube vào nút hướng dẫn
+    if(typeof DG_LINK_YOUTUBE !== 'undefined') {
+        document.querySelectorAll('.app-link-hd').forEach(el => {
+            if (el.tagName === 'A') el.href = DG_LINK_YOUTUBE;
+        });
     }
 }
