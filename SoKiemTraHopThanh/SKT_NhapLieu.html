@@ -22,7 +22,7 @@
   .reactbits-btn:hover::before {
       animation: reactbits-shine 1.5s infinite;
   }
-  .reactbits-btn:hover {
+  .reactbits-btn:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 6px 15px rgba(0,0,0,0.15);
   }
@@ -410,7 +410,7 @@ function taidli() {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (ĐÃ MỞ KHÓA TUYỆT ĐỐI CHO QUYỀN XX)          */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN                                              */
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
@@ -424,7 +424,6 @@ function apdquye() {
     
     const isHistoryView = (hpmhs && hpmhs.value.trim() !== "");
 
-    // Ép kiểu chuỗi để nhận diện quyền Quản trị tuyệt đối
     const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
     const isGeneralInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
     
@@ -446,12 +445,12 @@ function apdquye() {
     const addRowBtn = document.querySelector('.add-row-container');
 
     if (btnSave) btnSave.disabled = !isInspector && !isInspectee && !quyenQuanTri;
-    if (btnSubmit) btnSubmit.disabled = !isInspector && !quyenQuanTri;
     
-    // Ghi đè: Ép mở khóa các nút chức năng nếu là quản trị viên
+    // Nút Nộp báo cáo chỉ kích hoạt cho người kiểm tra (x) và khóa hoàn toàn đối với (xx)
+    if (btnSubmit) btnSubmit.disabled = !isInspector || quyenQuanTri;
+    
     if (quyenQuanTri) {
-        if (btnSave) btnSave.disabled = false;
-        if (btnSubmit) btnSubmit.disabled = false;
+        if (btnSave) btnSave.disabled = false; 
     }
 
     if (addRowBtn) addRowBtn.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
@@ -546,7 +545,15 @@ function apdquye() {
   }
 
   function xulylu() { if(hopllu()) thuchms("skt_luubg_nha", document.getElementById('btnSave'), "LƯU KẾT QUẢ"); }
-  function xulyno() { if(hoplno()) thuchms("skt_nopbg_cuo", document.getElementById('btnSubmit'), "NỘP KẾT QUẢ"); }
+  
+  function xulyno() { 
+      const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
+      if (quyenQuanTri) {
+          hienhth("⛔ Hệ thống đã khóa chức năng Nộp báo cáo đối với tài khoản Quản trị (xx).");
+          return;
+      }
+      if(hoplno()) thuchms("skt_nopbg_cuo", document.getElementById('btnSubmit'), "NỘP KẾT QUẢ"); 
+  }
 
 /* ========================================================================== */
 /* HÀM THỰC THI LƯU/NỘP DỮ LIỆU ĐÃ ĐƯỢC CHUẨN HÓA TRÁNH LỖI FETCH             */
@@ -744,7 +751,6 @@ function thuchms(ha, nt, ch) {
       const nkt = document.getElementById('cbNguoiKiemTra').value;
       const lnk = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
       
-      // Bổ sung quyền bypass cho tài khoản xx (Quản trị tuyệt đối)
       const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
       
       if (!lnk && !quyenQuanTri) { hienhth("⚠️ Bạn không có quyền xóa dòng này!"); return; }
