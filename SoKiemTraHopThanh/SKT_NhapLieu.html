@@ -264,13 +264,16 @@ function trallkch(ddn) {
             <div style="max-height:60px; overflow-y:auto; margin-bottom:5px;">${htlk}</div>
             <div style="display: flex; gap: 4px; align-items: center;">
                 <button class="btn-ai-nhanxet" onclick="goi_ai_nhanxet(this)" style="flex: 1; background:#10b981; color:white; border:none; border-radius:3px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold;">🤖 AI Nhận xét</button>
-                <button class="btn-upload-icon" onclick="kichhta(this)" style="padding:4px 8px; font-size:11px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; cursor:pointer;">📎Đính kèm</button>
+                <button class="btn-upload-icon" onclick="kichhta(this)" style="padding:4px 8px; font-size:11px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:3px; cursor:pointer; white-space:nowrap;">📎 File đính kèm</button>
             </div>`;
     } else {
         nh.value = "";
         oo.classList.remove('evidence-uploaded');
         // Nếu chưa có file, hiển thị lại nút Đính kèm gốc
-        if(nt) nt.style.display = 'inline-block';
+        if(nt) {
+            nt.style.display = 'inline-block';
+            nt.innerHTML = '📎 File đính kèm';
+        }
         vg.innerHTML = "";
     }
     
