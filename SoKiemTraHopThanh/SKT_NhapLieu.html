@@ -412,17 +412,15 @@ function apdquye() {
 
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        // Kiểm tra xem dòng đã được ký hay chưa (Cột 9 là Ý kiến, Cột 10 là Ký tên)
+        // Kiểm tra dòng hiện tại đã ký chưa (Cột 9 là Ý kiến, 10 là Ký tên)
         const isSigned = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
 
         cacn.forEach((input, index) => {
-            // NẾU ĐÃ KÝ: Khóa tất cả các ô văn bản (trừ ô ẩn lưu link file)
             if (isSigned) {
-                if (!input.classList.contains('link-input')) {
-                    input.disabled = true;
-                }
+                // NẾU DÒNG ĐÃ KÝ: Khóa tất cả, bất kể là ai
+                input.disabled = true;
             } else {
-                // CHƯA KÝ: Phân quyền như cũ
+                // NẾU CHƯA KÝ: Phân quyền theo vai trò
                 if (isInspector) {
                     input.disabled = (index >= 9);
                 } else if (isInspectee) {
@@ -433,20 +431,20 @@ function apdquye() {
             }
         });
 
-        // Xử lý nút chức năng
+        // Xử lý nút điều khiển của dòng
         const ntsu = dg.querySelector('.link-edit-corner');
         const ntai = dg.querySelector('.btn-ai-nhanxet');
         const ntta = dg.querySelector('.btn-upload-icon');
         const ntxo = dg.querySelector('.btn-icon-del');
 
         if (isSigned) {
-            // ĐÃ KÝ: Khóa sửa nội dung, nhưng vẫn cho phép dùng file (nếu là người kiểm tra)
+            // Đã ký: Ẩn các nút sửa, chỉ cho xem (nếu cần)
             if (ntsu) ntsu.style.display = 'none';
-            if (ntai) ntai.style.display = isInspector ? 'inline-block' : 'none';
-            if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
-            if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
+            if (ntai) ntai.style.display = 'none';
+            if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none'; // Chỉ Inspector xem lại file
+            if (ntxo) ntxo.style.visibility = 'hidden';
         } else {
-            // CHƯA KÝ: Inspector toàn quyền
+            // Chưa ký: Hiển thị theo quyền
             if (ntsu) ntsu.style.display = isInspector ? 'block' : 'none';
             if (ntai) ntai.style.display = isInspector ? 'inline-block' : 'none';
             if (ntta) ntta.style.display = isInspector ? 'inline-block' : 'none';
@@ -515,7 +513,7 @@ function thuchms(ha, nt, ch) {
     const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
 
     if (!isInspector && !isInspectee) {
-        hienhth("⛔ LỖI PHÂN QUYỀN: Tài khoản của Thầy/Cô không được phép chỉnh sửa!");
+        hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa!");
         return; 
     }
 
@@ -525,19 +523,24 @@ function thuchms(ha, nt, ch) {
     const mbp = document.getElementById('txtMaBoPhan').value;
     const dlg = [];
     
+    let hasError = false;
+
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        // Kiểm tra trạng thái ký
         const isSigned = (cacn[9].value.trim() !== "" && cacn[10].value.trim() !== "");
         
-        // Nếu đã ký mà không phải Inspector thì chặn lưu
+        // CHỐT CHẶN: Nếu dòng đã ký mà người dùng cố tình gửi dữ liệu sửa (trừ trường hợp Inspector)
         if (isSigned && !isInspector) {
-            hienhth("⛔ HỒ SƠ ĐÃ KHÓA: Dòng này đã ký xác nhận, không thể sửa!");
-            return;
+            hasError = true;
         }
-
+        
         dlg.push([gv, nkt, bp, mbp, cacn[0].value, cacn[1].value, cacn[2].value, cacn[3].value, cacn[4].value, cacn[5].value, cacn[6].value, cacn[7].value, cacn[8].value, cacn[9].value, cacn[10].value, cacn[11].value, dg.querySelector('.ma-ho-so-cell').innerText]);
     });
+    
+    if (hasError) {
+        hienhth("⛔ LỖI: Dòng đã được ký xác nhận không thể sửa đổi!");
+        return;
+    }
     
     nt.disabled = true; 
     nt.innerText = "⏳ XỬ LÝ..."; 
@@ -558,7 +561,6 @@ function thuchms(ha, nt, ch) {
         hienhth("❌ Lỗi hệ thống: " + lo.message);
     })[ha](dlg);
 }
-
   function kiemttrem(lo) {
     const gv = document.getElementById('cbGiaoVien').value;
     const nkt = document.getElementById('cbNguoiKiemTra').value;
