@@ -498,11 +498,14 @@ function apdquye() {
     });
 }
 
-  function themdongmo(dld = null) {
+function themdongmo(dld = null) {
     const datg = new Date().getTime().toString().slice(-5);
     const idng = Math.floor(Math.random() * 1000); 
     const tbg = document.getElementById('tableContent');
     const dmo = document.createElement('tr');
+    
+    // GẮN CỜ: Đánh dấu đây là dòng mới tạo, chưa lưu vào CSDL
+    if (!dld) dmo.setAttribute('data-isnew', '1');
     
     const tchs = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="TB">TB</option>';
     const tcgd = '<option value=""></option><option value="Giỏi">Giỏi</option><option value="Khá">Khá</option><option value="TB">TB</option><option value="Yếu">Yếu</option>';
@@ -767,6 +770,23 @@ function xulyxo() {
       if (!dongcxoa) return;
       
       const dgd = dongcxoa; 
+      
+      // BƯỚC 1: NẾU LÀ DÒNG CHƯA LƯU, XÓA NGAY TRÊN GIAO DIỆN (BỎ QUA GỌI MÁY CHỦ)
+      if (dgd.getAttribute('data-isnew') === '1') {
+          donghthx();
+          dgd.style.transition = "all 0.5s ease"; 
+          dgd.style.opacity = "0"; 
+          dgd.style.transform = "translateX(50px)";
+          setTimeout(() => { 
+              dgd.remove(); 
+              capnst(); 
+              dongcxoa = null; 
+              if(document.getElementById('tableContent').rows.length === 0) themdongmo(); 
+          }, 500);
+          return;
+      }
+
+      // BƯỚC 2: NẾU DÒNG ĐÃ LƯU, THỰC HIỆN XÓA API NHƯ CŨ
       const mh = dgd.querySelector('.ma-ho-so-cell').innerText;
       const nhlk = dgd.querySelector('.link-input');
       const dl = nhlk ? nhlk.value : "";
@@ -802,7 +822,8 @@ function xulyxo() {
           clearTimeout(timer);
           if (ntd) ntd.style.display = 'inline-block'; 
 
-          if (kq === "SUCCESS") {
+          // Đồng bộ linh hoạt: Dù kết quả SUCCESS hay bị kẹt NOT_FOUND đều cho phép dọn dẹp khỏi giao diện
+          if (kq === "SUCCESS" || kq === "NOT_FOUND") { 
               donghth(); 
               dgd.style.transition = "all 0.5s ease"; 
               dgd.style.opacity = "0"; 
@@ -813,9 +834,6 @@ function xulyxo() {
                   dongcxoa = null; 
                   if(document.getElementById('tableContent').rows.length === 0) themdongmo(); 
               }, 500);
-          } else if (kq === "NOT_FOUND") {
-              hienhth("⚠️ Dữ liệu đã bị xóa trước đó hoặc không tồn tại.");
-              datlntxo(ntx);
           } else if (kq === "NO_PERMISSION") { 
               hienhth("⛔ Bạn không có quyền xóa dữ liệu này!"); 
               datlntxo(ntx);
