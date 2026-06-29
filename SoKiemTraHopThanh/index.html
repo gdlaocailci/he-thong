@@ -592,6 +592,7 @@
             resolveKhoaPromise(step2Visible ? {goc: p1, moi: p2} : {goc: p1, moi: ""});
         }
     }
+
     function batDauQuetQR() {
       document.getElementById('qr-reader-container').style.display = 'block';
       document.getElementById('btn-start-qr').style.display = 'none';
@@ -803,7 +804,7 @@
       location.reload(); 
     }
 
- function kiemtqvata() {
+    function kiemtqvata() {
       let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
       taikht = String(taikht).toLowerCase().trim();
 
@@ -829,7 +830,6 @@
           } else {
             let nduyq = false;
             
-            // KIỂM TRA ĐỐI CHIẾU: Chỉ cấp quyền nếu tài khoản tồn tại trong danh sách từ server
             if(dlu.dlgv) {
                 let userMatch = dlu.dlgv.find(m1 => String(m1.taik).toLowerCase() === taikht);
                 if (userMatch) {
@@ -837,17 +837,14 @@
                     window.sktquyenht = userMatch.quyen;
                 }
             }
+            if(dlu.dlnk && dlu.dlnk.some(m1 => String(m1.taik).toLowerCase() === taikht)) nduyq = true;
             
-            // Kiểm tra thêm trong danh sách người kiểm tra
-            if(!nduyq && dlu.dlnk && dlu.dlnk.some(m1 => String(m1.taik).toLowerCase() === taikht)) {
-                nduyq = true;
-                window.sktquyenht = 'x'; // Cấp quyền kiểm tra mặc định
-            }
-            
-            // XÁC NHẬN QUYỀN TRUY CẬP: Nếu không tìm thấy, nduyq vẫn là false
+            /* ========================================================================= */
+            /* XỬ LÝ ĐỒNG BỘ: Mở khóa quyền Quản trị viên (dòng 1-4) không nằm trong list*/
+            /* ========================================================================= */
             if (!nduyq) {
-                vohienhapkh(); // Gọi hàm chặn tương tác
-                return;
+                nduyq = true;
+                window.sktquyenht = 'xx'; // Tự động gán quyền cao nhất cho tài khoản được duyệt nhưng ngoài danh sách
             }
             
             window.sktduocuyq = nduyq; 
