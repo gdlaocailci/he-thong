@@ -293,25 +293,24 @@ function trallkch(ddn) {
       else hienhth("⚠️ Chưa tải được chức năng upload!"); 
   }
 
-  function kiemtlqsu(dg) {
-      const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-      const tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-      const nkt = document.getElementById('cbNguoiKiemTra').value;
-      const lank = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
-      
-      const nts = dg.querySelector('.link-edit-corner');
-      const ntai = dg.querySelector('.btn-ai-nhanxet');
-      
-      if(nts) {
-          if(!lank) {
-              nts.classList.add('disabled'); nts.style.pointerEvents = 'none'; nts.style.opacity = '0.5'; 
-              if(ntai) { ntai.disabled = true; ntai.style.opacity = '0.5'; }
-          } else {
-              nts.classList.remove('disabled'); nts.style.pointerEvents = 'auto'; nts.style.opacity = '1';
-              if(ntai) { ntai.disabled = false; ntai.style.opacity = '1'; }
-          }
-      }
-  }
+function kiemtlqsu(dg) {
+    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
+    const tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
+    const nkt = document.getElementById('cbNguoiKiemTra').value;
+    const lank = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
+    
+    const ntai = dg.querySelector('.btn-ai-nhanxet');
+    
+    if(ntai) {
+        // Nếu LÀ Người kiểm tra (lank == true) -> HIỆN nút AI
+        // Nếu KHÔNG PHẢI Người kiểm tra -> ẨN nút AI
+        if(lank) {
+            ntai.style.display = 'inline-block'; 
+        } else {
+            ntai.style.display = 'none'; 
+        }
+    }
+}
 
   function taidli() {
     chuyentxo('initial', true);
