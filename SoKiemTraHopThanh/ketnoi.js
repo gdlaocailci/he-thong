@@ -18,6 +18,9 @@ const SKT_TAC_GIA_UP = "HOÀNG NGỌC LÂM";
 // MÃ CLIENT ID CỦA GOOGLE ĐĂNG NHẬP
 const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
 
+// GHI CHÚ: Bổ sung biến lưu trữ liên kết video hướng dẫn
+const SKT_LINK_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
+
 /* ========================================================================= */
 /* KHỞI TẠO CẤU TRÚC HEADER TỰ ĐỘNG TỪ FILE JS                               */
 /* ========================================================================= */
@@ -32,4 +35,13 @@ const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.app
     linkIcon.rel = 'icon';
     linkIcon.href = SKT_LOGO_URL;
     document.head.appendChild(linkIcon);
+
+    // GHI CHÚ: Tự động gán link YouTube vào nút hướng dẫn (Đợi DOM tải xong)
+    if(typeof SKT_LINK_YOUTUBE !== 'undefined') {
+        setTimeout(function() {
+            document.querySelectorAll('.app-link-hd').forEach(el => {
+                if (el.tagName === 'A') el.href = SKT_LINK_YOUTUBE;
+            });
+        }, 500);
+    }
 })();
