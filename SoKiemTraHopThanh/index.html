@@ -55,7 +55,7 @@
                     if (res.trth === "tcon") { if (onSuccess) onSuccess(res.dliu); } 
                     else {
                         if (onFailure) onFailure(new Error(res.tbao));
-                        else console.error("Lỗi từ máy chủ Google:", res.tbao);
+                        else console.error("Lỗi từ máy chủ:", res.tbao);
                     }
                 })
                 .catch(err => {
@@ -81,7 +81,7 @@
             skt_ktra_trangthai_qr: function(chuoi_dinhdanh) { this._call('skt_ktra_trangthai_qr', { chuoi_dinhdanh: chuoi_dinhdanh }); },
             skt_xacthuc_qr: function(chuoi_dinhdanh, khoa_nhap, kieu_xthuc, khoa_moi) { this._call('skt_xacthuc_qr', { chuoi_dinhdanh: chuoi_dinhdanh, khoa_nhap: khoa_nhap, kieu_xthuc: kieu_xthuc, khoa_moi: khoa_moi }); },
             
-            // CÁC HÀM API CHO QUẢN TRỊ VIÊN XX
+            // CÁC HÀM API CHO QUẢN TRỊ VIÊN
             skt_lay_phanquyen: function() { this._call('skt_lay_phanquyen', {}); },
             skt_luu_phanquyen: function(phamvi, mangdl) { this._call('skt_luu_phanquyen', { phamvi: phamvi, mangdl: mangdl }); },
             skt_lay_bophan: function() { this._call('skt_lay_bophan', {}); },
@@ -121,29 +121,39 @@
         100% { left: 200%; }
     }
 
-    /* KHỐI NÚT HƯỚNG DẪN NỔI CẤP CAO */
+    /* KHỐI NÚT HƯỚNG DẪN NỔI CẤP CAO (TOÀN CỤC) */
     #btn-guide-float {
         position: fixed;
         bottom: 25px;
         right: 25px;
-        width: 60px;
-        height: 60px;
+        width: 75px;
+        height: 75px;
         border-radius: 50%;
         background: linear-gradient(135deg, #1e3a8a, #2563eb);
         color: white;
-        font-size: 28px;
         border: none;
         box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4);
         cursor: pointer;
-        z-index: 1099;
+        z-index: 9995;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     #btn-guide-float:hover {
-        transform: scale(1.1) rotate(5deg);
+        transform: scale(1.05) rotate(3deg);
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+    #btn-guide-float i {
+        font-size: 26px;
+        margin-bottom: 2px;
+    }
+    #btn-guide-float span {
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     #instant-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 1050; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -232,20 +242,6 @@
     .btn-upload-icon { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 14px; }
     .btn-upload-icon:disabled { opacity: 0.5; cursor: not-allowed; }
     .evidence-uploaded { background-color: #f0fdf4; }
-
-    #ai-chat-box {
-        display: none; position: fixed; bottom: 95px; right: 25px; width: 450px; max-width: 95%;
-        background: white; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        z-index: 1100; flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb; font-family: "Segoe UI", sans-serif;
-        animation: alertSlideDown 0.3s ease-out;
-    }
-    .ai-chat-header { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 15px 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-    #ai-chat-history { height: 400px; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 15px; background: #f8fafc; font-size: 14.5px; }
-    
-    .ai-msg-bot { align-self: flex-start; background: #e0f2fe; padding: 14px 18px; border-radius: 12px 12px 12px 0; max-width: 100%; color: #0c4a6e; border: 1px solid #bae6fd; white-space: pre-line; text-align: justify; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    
-    .ai-msg-cb { align-self: flex-end; background: #1e3a8a; color: white; padding: 14px 18px; border-radius: 12px 12px 0 12px; max-width: 90%; word-wrap: break-word; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .ai-msg-loading { align-self: flex-start; background: #f1f5f9; padding: 12px 18px; border-radius: 12px 12px 12px 0; color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px; }
 
     #custom-alert-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -453,10 +449,6 @@
         </div>
     </div>
 
-    <button id="btn-guide-float" onclick="toggleAIChat()" title="Tra cứu hướng dẫn & Hỏi đáp">
-      <i class="bi bi-question-circle"></i>
-    </button>
-
     <div id="modal_overlay">
       <div id="modal_box">
         <h3>✅ THÔNG BÁO</h3>
@@ -464,23 +456,13 @@
         <button class="modal-btn ef-reactbits" onclick="document.getElementById('modal_overlay').style.display='none'">ĐÓNG</button>
       </div>
     </div>
-    
-    <div id="ai-chat-box">
-       <div class="ai-chat-header">
-          <span>🤖 Trợ lý AI Hướng dẫn</span>
-          <button onclick="toggleAIChat()" style="background: none; border: none; color: white; font-size: 22px; cursor: pointer; line-height: 1;">&times;</button>
-       </div>
-       <div id="ai-chat-history">
-          <div class="ai-msg-bot">Kính chào Thầy/Cô! Hệ thống hỗ trợ nghiệp vụ sẵn sàng. Thầy/Cô có thể tra cứu thông tin hướng dẫn, quy định về sổ kiểm tra nội bộ tại đây.</div>
-       </div>
-       <div style="padding: 12px; background: white; border-top: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: flex; gap: 8px;">
-              <input type="text" id="ai-chat-input" placeholder="Nhập câu hỏi tra cứu..." onkeypress="if(event.key === 'Enter') guiCauHoiAI()" style="flex: 1; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; font-family: inherit; font-size: 14px;">
-              <button onclick="guiCauHoiAI()" id="btn-send-ai" class="ef-reactbits" style="background: #1e3a8a; color: white; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: bold;">Gửi</button>
-          </div>
-       </div>
-    </div>
   </div>
+
+  <!-- NÚT TRỢ GIÚP NỔI HƯỚNG DẪN YOUTUBE TOÀN CỤC -->
+  <button id="btn-guide-float" class="ef-reactbits" onclick="if(typeof SKT_HD_YOUTUBE !== 'undefined') window.open(SKT_HD_YOUTUBE, '_blank'); else alert('Chưa cấu hình liên kết hướng dẫn.');" title="Hướng dẫn sử dụng">
+    <i class="bi bi-question-circle"></i>
+    <span>Hướng dẫn</span>
+  </button>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -535,68 +517,6 @@
         
         hienThongBaoUI(title, text, type);
     };
-
-    function toggleAIChat() {
-        const hopChat = document.getElementById('ai-chat-box');
-        hopChat.style.display = (hopChat.style.display === 'none' || hopChat.style.display === '') ? 'flex' : 'none';
-        if(hopChat.style.display === 'flex') {
-            document.getElementById('ai-chat-input').focus();
-        }
-    }
-
-    function guiCauHoiAI() {
-        const phanTuNhap = document.getElementById('ai-chat-input');
-        const cauHoi = phanTuNhap.value.trim();
-        if(!cauHoi) return;
-
-        const lichSuChat = document.getElementById('ai-chat-history');
-        const nutGui = document.getElementById('btn-send-ai');
-
-        const tinNhanCanBo = document.createElement('div');
-        tinNhanCanBo.className = "ai-msg-cb";
-        tinNhanCanBo.innerText = cauHoi;
-        lichSuChat.appendChild(tinNhanCanBo);
-        phanTuNhap.value = "";
-        lichSuChat.scrollTop = lichSuChat.scrollHeight;
-
-        const tinNhanCho = document.createElement('div');
-        tinNhanCho.id = "ai-loading-msg";
-        tinNhanCho.className = "ai-msg-loading";
-        tinNhanCho.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span> Đang xử lý chỉ báo...';
-        lichSuChat.appendChild(tinNhanCho);
-        lichSuChat.scrollTop = lichSuChat.scrollHeight;
-
-        phanTuNhap.disabled = true;
-        nutGui.disabled = true;
-
-        google.script.run
-            .withSuccessHandler(kq => {
-                document.getElementById('ai-loading-msg').remove();
-                phanTuNhap.disabled = false;
-                nutGui.disabled = false;
-                phanTuNhap.focus();
-                
-                const tinNhanBot = document.createElement('div');
-                tinNhanBot.className = "ai-msg-bot";
-                tinNhanBot.innerText = kq.tcon ? kq.kqua : "Cảnh báo lỗi: " + kq.tbao;
-                lichSuChat.appendChild(tinNhanBot);
-                lichSuChat.scrollTop = lichSuChat.scrollHeight;
-            })
-            .withFailureHandler(loi => {
-                document.getElementById('ai-loading-msg').remove();
-                phanTuNhap.disabled = false;
-                nutGui.disabled = false;
-                
-                const tinNhanLoi = document.createElement('div');
-                tinNhanLoi.className = "ai-msg-bot";
-                tinNhanLoi.style.backgroundColor = "#fee2e2";
-                tinNhanLoi.style.color = "#991b1b";
-                tinNhanLoi.innerText = "Lỗi gián đoạn kết nối máy chủ: " + loi.message;
-                lichSuChat.appendChild(tinNhanLoi);
-                lichSuChat.scrollTop = lichSuChat.scrollHeight;
-            })
-            .skt_notebooklm_qa(cauHoi);
-    }
 
     let html5QrCode = null;
     let resolveKhoaPromise = null;
