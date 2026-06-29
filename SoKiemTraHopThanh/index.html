@@ -804,7 +804,7 @@
       location.reload(); 
     }
 
-    function kiemtqvata() {
+function kiemtqvata() {
       let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
       taikht = String(taikht).toLowerCase().trim();
 
@@ -813,23 +813,21 @@
       google.script.run
         .withSuccessHandler(dlu => {
           if (dlu.cquy === false) {
+            // Trường hợp không có quyền hoặc tài khoản không tồn tại trong B1:D
             xoaluutrant("SKT_USER_TAIK");
             window.skttktoanc = null;
 
             document.getElementById('instant-loader').style.display = 'none';
             document.getElementById('main-wrapper').style.display = 'flex';
-            setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
+            document.getElementById('main-wrapper').style.opacity = '1';
             
-            const daut = document.querySelector('.school-header');
-            if (daut) daut.style.display = 'none';
             document.getElementById('so_wrapper').style.display = 'none';
             document.getElementById('MinhChungContainer').style.display = 'none';
-            
             document.getElementById('access_denied_msg').style.display = 'block';
-            document.getElementById('denied_reason').innerText = dlu.tbao;
+            document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
           } else {
+            // Xác định quyền dựa trên danh sách từ server (tự động load từ dòng 5)
             let nduyq = false;
-            
             if(dlu.dlgv) {
                 let userMatch = dlu.dlgv.find(m1 => String(m1.taik).toLowerCase() === taikht);
                 if (userMatch) {
@@ -837,14 +835,15 @@
                     window.sktquyenht = userMatch.quyen;
                 }
             }
-            if(dlu.dlnk && dlu.dlnk.some(m1 => String(m1.taik).toLowerCase() === taikht)) nduyq = true;
-            
-            /* ========================================================================= */
-            /* XỬ LÝ ĐỒNG BỘ: Mở khóa quyền Quản trị viên (dòng 1-4) không nằm trong list*/
-            /* ========================================================================= */
-            if (!nduyq) {
+            if(!nduyq && dlu.dlnk && dlu.dlnk.some(m1 => String(m1.taik).toLowerCase() === taikht)) {
                 nduyq = true;
-                window.sktquyenht = 'xx'; // Tự động gán quyền cao nhất cho tài khoản được duyệt nhưng ngoài danh sách
+                window.sktquyenht = 'x'; 
+            }
+            
+            // Nếu không tìm thấy trong danh sách load từ dòng 5, coi như Khách
+            if (!nduyq) {
+                vohienhapkh();
+                return;
             }
             
             window.sktduocuyq = nduyq; 
