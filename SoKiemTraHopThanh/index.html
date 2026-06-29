@@ -803,7 +803,7 @@
       location.reload(); 
     }
 
-    function kiemtqvata() {
+ function kiemtqvata() {
       let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
       taikht = String(taikht).toLowerCase().trim();
 
@@ -828,6 +828,8 @@
             document.getElementById('denied_reason').innerText = dlu.tbao;
           } else {
             let nduyq = false;
+            
+            // KIỂM TRA ĐỐI CHIẾU: Chỉ cấp quyền nếu tài khoản tồn tại trong danh sách từ server
             if(dlu.dlgv) {
                 let userMatch = dlu.dlgv.find(m1 => String(m1.taik).toLowerCase() === taikht);
                 if (userMatch) {
@@ -835,7 +837,18 @@
                     window.sktquyenht = userMatch.quyen;
                 }
             }
-            if(dlu.dlnk && dlu.dlnk.some(m1 => String(m1.taik).toLowerCase() === taikht)) nduyq = true;
+            
+            // Kiểm tra thêm trong danh sách người kiểm tra
+            if(!nduyq && dlu.dlnk && dlu.dlnk.some(m1 => String(m1.taik).toLowerCase() === taikht)) {
+                nduyq = true;
+                window.sktquyenht = 'x'; // Cấp quyền kiểm tra mặc định
+            }
+            
+            // XÁC NHẬN QUYỀN TRUY CẬP: Nếu không tìm thấy, nduyq vẫn là false
+            if (!nduyq) {
+                vohienhapkh(); // Gọi hàm chặn tương tác
+                return;
+            }
             
             window.sktduocuyq = nduyq; 
             taimdunht();
