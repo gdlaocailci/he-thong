@@ -1,26 +1,38 @@
 /**
- * TỆP KẾT NỐI HỆ THỐNG (ketnoi.js)
- * Vị trí lưu trữ: GitHub (Cùng cấp với tệp index.html)
- * Chức năng: Cấu hình tập trung thông tin định danh và địa chỉ máy chủ (API).
+ * CẤU HÌNH GIAO DIỆN & KẾT NỐI HỆ THỐNG WEB APP
+ * Hệ thống: Sổ Kiểm Tra Nội Bộ (SKT)
+ * Tác giả: Hoàng Ngọc Lâm
  */
+const SKT_GAS_URL = "https://script.google.com/macros/s/AKfycbxeQAXxsFNGjJlnnaimCshsK8wLVea9wnVePCR-ioB9Xr3Q4mVVUsDXIUIEYQ1vIZHb/exec";
+const SKT_LOGO_URL = "https://i.ibb.co/S46wLjDt/logo-tr-ng-TH-THCS-Hop-Thanh3-removebg-preview.png";
 
-const KETNOI = {
-    // 1. Thông tin định danh cơ quan/đơn vị
-    TEN_DINH_DANH: "Hợp Thành OS",
-    TIEU_DE_TRANG: "Cổng thông tin Quản trị - Trường TH&THCS Hợp Thành",
-    
-    // 2. Tài nguyên hình ảnh đại diện (Logo & Giao diện)
-    LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
-    LINK_HINH_NEN: "https://i.ibb.co/hJy3vH7y/hinh-nen-win-11-50-1.jpg",
-    LINK_AVATAR_NAM: "https://lh3.googleusercontent.com/d/13OnSd7t73KO7GP6NB7FjkdpsO6vfH-dp",
-    LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU",
-    
-    // Bổ sung liên kết YouTube Hướng dẫn
-    LINK_YOUTUBE: "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q",
-    
-    // 3. Đường dẫn máy chủ xử lý dữ liệu (Google Apps Script API)
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwatqZkT9zencA2tHQu9xvbjkzduBkZq42jxnqSqFaHEJcBREoWNFVCvUK17BKVe4PHHw/exec",
+const SKT_TEN_TRUONG = "Trường TH&THCS Hợp Thành";
+const SKT_TEN_TRUONG_UP = "TRƯỜNG TH&THCS HỢP THÀNH";
+const SKT_TEN_PM = "Sổ Kiểm Tra Nội Bộ";
+const SKT_TEN_PM_UP = "SỔ KIỂM TRA NỘI BỘ";
+const SKT_TEN_PM_DAY_DU = "PHẦN MỀM KIỂM TRA NỘI BỘ";
+const SKT_PHIEN_BAN = "V3.1.2026";
+const SKT_TAC_GIA = "Hoàng Ngọc Lâm";
+const SKT_TAC_GIA_UP = "HOÀNG NGỌC LÂM";
 
-    // 4. Mã định danh ứng dụng Google (OAuth 2.0 Client ID)
-    CLIENT_ID: "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com"
-};
+// LIÊN KẾT YOUTUBE HƯỚNG DẪN SỬ DỤNG
+const SKT_HD_YOUTUBE = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID";
+
+// MÃ CLIENT ID CỦA GOOGLE ĐĂNG NHẬP
+const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
+
+/* ========================================================================= */
+/* KHỞI TẠO CẤU TRÚC HEADER TỰ ĐỘNG TỪ FILE JS                               */
+/* ========================================================================= */
+(function() {
+    var metaCharset = document.createElement('meta');
+    metaCharset.setAttribute('charset', 'utf-8');
+    document.head.appendChild(metaCharset);
+
+    document.title = SKT_TEN_PM + " - " + SKT_TEN_TRUONG;
+
+    var linkIcon = document.createElement('link');
+    linkIcon.rel = 'icon';
+    linkIcon.href = SKT_LOGO_URL;
+    document.head.appendChild(linkIcon);
+})();
