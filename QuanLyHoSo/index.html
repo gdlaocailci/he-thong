@@ -5,8 +5,8 @@
     <link id="sys-favicon" rel="icon" href="">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="author" content="Thiết kế và phát triển Hoàng Ngọc Lâm">
-    <title id="sys-title">Cổng thông tin Quản lý</title>
+    <meta name="author" content="Phát triển Hoàng Ngọc Lâm">
+    <title id="sys-title">Cổng thông tin Quản lý hồ sơ</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -18,6 +18,10 @@
             document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
             document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
             document.getElementById('sys-logo').src = KETNOI.LINK_LOGO;
+            // Tự động gán link hướng dẫn từ tệp ketnoi.js
+            if (KETNOI.LINK_YOUTUBE) {
+                document.getElementById('btn-huong-dan').href = KETNOI.LINK_YOUTUBE;
+            }
         });
         (function() {
             var savedBgUrl = localStorage.getItem(PREFIX_MEM + "bg");
@@ -44,7 +48,6 @@
 
         .desktop-icon { 
             width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; touch-action: none; transition: background 0.2s, border 0.2s;
-            /* Thiết lập ban đầu cho hiệu ứng tải */
             opacity: 0; 
             animation: reactBitsFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -53,15 +56,13 @@
         
         .icon-box { 
             width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; 
-            /* Cấu hình hiệu ứng nổi 3D (Magnet Effect) */
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
         }
         .desktop-icon:hover .icon-box {
             transform: translateY(-8px) scale(1.15);
             box-shadow: 0 12px 24px rgba(0,0,0,0.5), 0 0 15px rgba(255, 255, 255, 0.3);
         }
-        /* ---------------------------------- */
-
+       
         .icon-box .material-icons { font-size: 34px; color: #ffffff; }
 
         .bg-1 { background: #1976D2; border: 2px solid #90CAF9; } 
@@ -156,6 +157,12 @@
         .loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: rgba(255,255,255,0.9); z-index: 10; background: rgba(0,0,0,0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
         .loading-screen .material-icons { font-size: 50px; animation: spinHT 1.2s linear infinite; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .loading-screen h3 { font-weight: 600; font-size: 16px; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.5); letter-spacing: 0.5px;}
+
+        /* CSS CHO NÚT HƯỚNG DẪN */
+        .nut-huong-dan { position: fixed; bottom: 75px; right: 20px; z-index: 10001; width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #198754, #20c997); color: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s ease; }
+        .nut-huong-dan .kytu-hoi { font-size: 32px; font-weight: 900; font-family: 'Arial Black', Arial, sans-serif; line-height: 1; padding-top: 2px; }
+        .nut-huong-dan span { position: absolute; top: 52px; font-size: 11px; font-weight: bold; color: #198754; white-space: nowrap; background: rgba(255,255,255,0.95); padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); pointer-events: none; }
+        .nut-huong-dan:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.25); color: white; }
     </style>
 </head>
 <body>
@@ -401,6 +408,11 @@
         </div>
     </div>
 
+    <a href="#" target="_blank" class="nut-huong-dan" title="Hướng dẫn sử dụng" id="btn-huong-dan">
+      <div class="kytu-hoi">?</div>
+      <span>Hướng dẫn</span>
+    </a>
+
 <script>
     let icons = []; let isDragging = false; const tooltip = document.getElementById('win-tooltip'); const desktopArea = document.getElementById('desktop-area');
     let tokenClient; let pickerAccessToken = null;
@@ -480,7 +492,6 @@
                 isLoggedIn = true;
                 // Chuẩn hóa biến (thay thế email thành thongTinXacThuc để tránh nhạy cảm)
                 // Lưu ý: Đảm bảo phía file Server Mã.gs của Thầy/Cô cũng trả về JSON có trường result.thongTinXacThuc hoặc result.dinhDanh. 
-                // Ở đây tôi vẫn đọc biến thongTinXacThuc (hoặc dự phòng verifiedEmail nếu chưa kịp sửa server).
                 document.getElementById('sys-name').innerText = result.thongTinXacThuc || result.verifiedEmail; 
                 document.getElementById('btn-logout').style.display = 'flex';
                 sysRoles = result.roles || "";
@@ -588,7 +599,6 @@
             div.setAttribute('data-id', index + 1); 
             div.setAttribute('data-desc', item.td1); 
 
-            // Staggered Animation Delay (Hiệu ứng xếp lớp mượt mà)
             div.style.animationDelay = (index * 0.04) + 's';
 
             let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
