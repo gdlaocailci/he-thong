@@ -39,13 +39,36 @@
     .tt-giatri-kq { color: #0d6efd; font-weight: bold; }
 
     .danh-muc-trai { width: 100%; display: flex; flex-direction: column; padding: 0; box-sizing: border-box;}
+    
+    /* Tích hợp hiệu ứng Shiny mô phỏng từ reactbits.dev */
     .the-chuyen { 
         color: #ffffff !important; font-size: 15px; font-family: 'Segoe UI', sans-serif; 
         text-decoration: none; cursor: pointer; transition: 0.2s; display: flex; 
         align-items: center; padding: 10px 20px; border: none; 
         border-bottom: 1px solid rgba(255, 255, 255, 0.15); box-sizing: border-box; 
         background: transparent; width: 100%; text-align: left; border-radius: 0;
+        position: relative;
+        overflow: hidden;
     }
+    
+    .the-chuyen::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
+        transform: skewX(-20deg);
+        animation: reactbits-sweep 4s infinite;
+    }
+    
+    @keyframes reactbits-sweep {
+        0% { left: -100%; }
+        20% { left: 200%; }
+        100% { left: 200%; }
+    }
+
     .the-chuyen:first-child { border-top: 1px solid rgba(255, 255, 255, 0.15); }
     .the-chuyen:hover, .the-chuyen.active { 
         background-color: rgba(255, 255, 255, 0.15) !important; 
@@ -94,7 +117,7 @@
          <span class="tt-giatri" id="chuTenGv">Đang tải...</span>
        </div>
         <div class="dong-tt-1">
-         <span class="tt-nhan">Email:</span>
+         <span class="tt-nhan">Tài khoản:</span>
          <span class="tt-giatri" id="chuAccount" style="font-size: 14px;">Đang tải...</span>
        </div>
         <div class="dong-tt-mid">
@@ -129,7 +152,6 @@
             <span class="b-tuong"><i class="bi bi-chat-text"></i></span> Tổng hợp ý kiến
         </button>
         
-        <!-- [CẬP NHẬT] Gộp Tiêu chí Đánh giá thành Menu Cha chứa 2 Menu con -->
         <div id="menuChaTieuChi" style="display: none; width: 100%;">
             <button class="the-chuyen" data-bs-toggle="collapse" data-bs-target="#collapseTieuChi" aria-expanded="false">
                 <span class="b-tuong"><i class="bi bi-ui-checks"></i></span> Tiêu chí đánh giá
@@ -182,7 +204,6 @@
             }
         };
 
-        // [CẬP NHẬT] Hàm bật/tắt toàn bộ khối Menu Cha Tiêu Chí
         window.kiemTraHienThiTabTieuChi = function() {
             var menuChaTieuChi = document.getElementById('menuChaTieuChi');
             if (menuChaTieuChi) {
