@@ -13,6 +13,7 @@
     <script>
         let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
         const PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
+
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
             document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
@@ -601,33 +602,21 @@
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
             div.onclick = function() { 
-                if (!isLoggedIn && !item.isPublic) {
+                if (!isDragging && !isLoggedIn && !item.isPublic) {
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
+                if (isDragging) return;
 
                 var finalUrl = item.td2;
                 try {
                     if (!finalUrl.startsWith('http')) { 
                         finalUrl = atob(finalUrl); 
                     }
-                } catch(e) {
-                    console.log("Cảnh báo giải mã dữ liệu: ", e);
-                }
+                } catch(e) {}
                 
-                if (item.isPublic) {
-                    navigateTo(finalUrl, true);
-                    return;
-                }
-
-                if (sysRoles && sysRoles.includes('xx')) {
-                    navigateTo(finalUrl, true);
-                    return;
-                }
-                
-                const allowedIcons = sysIconRoles ? sysIconRoles.split('|') : [];
-                if (allowedIcons.includes(item.td1.trim())) {
-                    navigateTo(finalUrl, true);
+                if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
+                    window.open(finalUrl, '_blank');
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -651,7 +640,6 @@
         document.getElementById('window-alert').style.display = 'none';
     }
     
-    function navigateTo(url, isNewTab) { if (isDragging) { isDragging = false; return; } if (isNewTab) { window.open(url, '_blank'); } else { window.location.href = url; } }
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
     
@@ -661,6 +649,7 @@
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
+        const maxColHeight = window.innerHeight - 150; 
 
         icons.forEach((icon, index) => { 
             const id = icon.getAttribute('data-id'); 
@@ -668,9 +657,10 @@
                 icon.style.left = savedPositions[id].left; 
                 icon.style.top = savedPositions[id].top; 
             } else { 
-                // Cấu trúc chiều dọc: Cố định X, tăng dần Y
-                icon.style.left = startX + 'px';
-                icon.style.top = (startY + index * iconHeight) + 'px';
+                let col = Math.floor(index * iconHeight / maxColHeight);
+                let row = Math.floor((index * iconHeight) % maxColHeight / iconHeight);
+                icon.style.left = (startX + col * iconWidth) + 'px';
+                icon.style.top = (startY + row * iconHeight) + 'px';
             } 
             icon.style.margin = '0'; 
         }); 
@@ -698,7 +688,7 @@
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
-        if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { 
+        if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) { 
             dragThresholdPassed = true; 
             isDragging = true; 
             draggedIcon.style.zIndex = '9999'; 
@@ -725,7 +715,7 @@
         document.removeEventListener('mouseup', stopDrag); 
         document.removeEventListener('touchend', stopDrag); 
         draggedIcon = null; 
-        setTimeout(() => { isDragging = false; }, 50); 
+        setTimeout(() => { isDragging = false; }, 100); 
     }
     function savePositions() { 
         const positions = {}; 
@@ -737,11 +727,17 @@
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
         icons.forEach((icon, index) => {
+            const iconWidth = 100;
             const iconHeight = 120;
             const startX = 20;
             const startY = 20;
-            icon.style.left = startX + 'px';
-            icon.style.top = (startY + index * iconHeight) + 'px';
+            const maxColHeight = window.innerHeight - 150; 
+            
+            let col = Math.floor(index * iconHeight / maxColHeight);
+            let row = Math.floor((index * iconHeight) % maxColHeight / iconHeight);
+            
+            icon.style.left = (startX + col * iconWidth) + 'px';
+            icon.style.top = (startY + row * iconHeight) + 'px';
         });
     }
     
