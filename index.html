@@ -592,12 +592,19 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getPublicIcons' }) 
-        }).then(response => response.json()).then(result => {
-            if (result.status === 'success') { 
-                localStorage.setItem(PREFIX_MEM + 'icons_cache', JSON.stringify(result.data));
-                renderIconsFromData(result.data); 
+        })
+        .then(response => response.text())
+        .then(text => {
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') { 
+                    localStorage.setItem(PREFIX_MEM + 'icons_cache', JSON.stringify(result.data));
+                    renderIconsFromData(result.data); 
+                }
+            } catch (jsonError) {
+                console.error("Cảnh báo từ máy chủ khi tải biểu tượng:", text);
             }
-        }).catch(error => console.error("Lỗi tải biểu tượng:", error));
+        }).catch(error => console.error("Lỗi mạng khi tải biểu tượng:", error));
     }
 
     function kiemTraTrangThaiDangNhap() {
@@ -632,18 +639,27 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
-        }).then(response => response.json()).then(result => {
-            if (result.status === 'success') { 
-                isLoggedIn = true;
-                document.getElementById('sys-name').innerText = result.thongTinXacThuc || result.verifiedEmail; 
-                document.getElementById('btn-logout').style.display = 'flex';
-                sysRoles = result.roles || "";
-                sysIconRoles = result.iconRoles || "";
-                apDungPhanQuyen(sysRoles); 
-            } else { 
-                alert(result.message); dangXuat(); 
+        })
+        .then(response => response.text())
+        .then(text => {
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') { 
+                    isLoggedIn = true;
+                    document.getElementById('sys-name').innerText = result.thongTinXacThuc || result.verifiedEmail; 
+                    document.getElementById('btn-logout').style.display = 'flex';
+                    sysRoles = result.roles || "";
+                    sysIconRoles = result.iconRoles || "";
+                    apDungPhanQuyen(sysRoles); 
+                } else { 
+                    alert(result.message); dangXuat(); 
+                }
+            } catch (jsonError) {
+                console.error("Cảnh báo máy chủ khi xác thực:", text);
+                alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Vui lòng kiểm tra lại cấu hình phân quyền Web App.");
+                dangXuat();
             }
-        }).catch(error => console.error("Lỗi xác thực:", error));
+        }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
     }
 
     function apDungPhanQuyen(roles) {
@@ -958,13 +974,26 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        }).then(response => response.json()).then(result => {
+        })
+        .then(response => response.text())
+        .then(text => {
             document.getElementById('edit-form-status').style.display = 'none';
-            if (result.status === 'success') {
-                toggleSuaHoSoModal(false);
-                taiBieuTuongCongKhai();
-            } else { alert("Phát sinh sự cố: " + result.message); }
-        }).catch(err => { document.getElementById('edit-form-status').style.display = 'none'; alert("Lỗi kết nối máy chủ: " + err); });
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') {
+                    toggleSuaHoSoModal(false);
+                    taiBieuTuongCongKhai();
+                } else { 
+                    alert("Phát sinh sự cố: " + result.message); 
+                }
+            } catch (jsonError) {
+                console.error("Lỗi từ backend máy chủ Google:", text);
+                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: File Code.gs ở dự án thứ 2 rất có thể đã gặp lỗi (crash) khi thực thi thao tác lưu. Đề nghị Thầy kiểm tra lại mục 'Lịch sử thực thi' (Executions) bên trong Apps Script để rà soát dòng code gây lỗi.");
+            }
+        }).catch(err => { 
+            document.getElementById('edit-form-status').style.display = 'none'; 
+            alert("Lỗi kết nối đường truyền: " + err); 
+        });
     }
 
     function toggleXoaHoSoModal(isShow) {
@@ -1015,13 +1044,26 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'togglePublicProfile', td1: profile.td1, newStatus: newStatus, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        }).then(response => response.json()).then(result => {
+        })
+        .then(response => response.text())
+        .then(text => {
             statusText.style.display = 'none';
-            if (result.status === 'success') { 
-                toggleXoaHoSoModal(false); 
-                taiBieuTuongCongKhai(); 
-            } else { alert("Cảnh báo: " + result.message); }
-        }).catch(err => { statusText.style.display = 'none'; alert("Lỗi kết nối máy chủ: " + err); });
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') { 
+                    toggleXoaHoSoModal(false); 
+                    taiBieuTuongCongKhai(); 
+                } else { 
+                    alert("Cảnh báo: " + result.message); 
+                }
+            } catch (jsonError) {
+                console.error("Lỗi từ backend:", text);
+                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+            }
+        }).catch(err => { 
+            statusText.style.display = 'none'; 
+            alert("Lỗi kết nối máy chủ: " + err); 
+        });
     }
 
     function xuLyXoaHoSo() {
@@ -1038,13 +1080,26 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'deleteProfile', td1: profileToDelete.td1, td2: profileToDelete.td2, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        }).then(response => response.json()).then(result => {
+        })
+        .then(response => response.text())
+        .then(text => {
             statusText.style.display = 'none';
-            if (result.status === 'success') { 
-                toggleXoaHoSoModal(false); 
-                taiBieuTuongCongKhai(); 
-            } else { alert("Cảnh báo: " + result.message); }
-        }).catch(err => { statusText.style.display = 'none'; alert("Lỗi kết nối máy chủ: " + err); });
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') { 
+                    toggleXoaHoSoModal(false); 
+                    taiBieuTuongCongKhai(); 
+                } else { 
+                    alert("Cảnh báo: " + result.message); 
+                }
+            } catch (jsonError) {
+                console.error("Lỗi từ backend:", text);
+                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+            }
+        }).catch(err => { 
+            statusText.style.display = 'none'; 
+            alert("Lỗi kết nối máy chủ: " + err); 
+        });
     }
 
     function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); document.getElementById('huong-dan-tk').style.display = 'block'; }
@@ -1085,12 +1140,22 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        }).then(response => response.json()).then(result => {
+        })
+        .then(response => response.text())
+        .then(text => {
             document.getElementById('form-status').style.display = 'none';
-            if (result.status === 'success') {
-                toggleHoSoModal(false);
-                taiBieuTuongCongKhai();
-            } else { alert("Phát sinh sự cố: " + result.message); }
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') {
+                    toggleHoSoModal(false);
+                    taiBieuTuongCongKhai();
+                } else { 
+                    alert("Phát sinh sự cố: " + result.message); 
+                }
+            } catch (jsonError) {
+                console.error("Lỗi từ backend:", text);
+                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+            }
         });
     }
 
@@ -1113,9 +1178,23 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getUsers', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        }).then(response => response.json()).then(result => {
-            if (result.status === 'success') { hienThiBangQuyen(result.data); } else { alert(result.message); }
-        }).catch(err => { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Sự cố truy xuất băng thông máy chủ!</td></tr>'; });
+        })
+        .then(response => response.text())
+        .then(text => {
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') { 
+                    hienThiBangQuyen(result.data); 
+                } else { 
+                    alert(result.message); 
+                }
+            } catch (jsonError) {
+                console.error("Lỗi từ backend khi tải quyền:", text);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Máy chủ trả về dữ liệu HTML (Crash Backend). Vui lòng kiểm tra log!</td></tr>';
+            }
+        }).catch(err => { 
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Sự cố truy xuất băng thông máy chủ!</td></tr>'; 
+        });
     }
 
     function hienThiBangQuyen(danhSachQuyen) {
@@ -1175,9 +1254,23 @@
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        }).then(response => response.json()).then(result => {
+        })
+        .then(response => response.text())
+        .then(text => {
             document.getElementById('pq-status').style.display = 'none';
-            if (result.status === 'success') { lamMoiBieuMauQuyen(); taiDuLieuQuyen(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') { 
+                    lamMoiBieuMauQuyen(); 
+                    taiDuLieuQuyen(); 
+                    xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
+                } else { 
+                    alert("Cảnh báo: " + result.message); 
+                }
+            } catch (jsonError) {
+                console.error("Lỗi từ backend:", text);
+                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+            }
         });
     }
 
@@ -1187,9 +1280,23 @@
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'deleteUser', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-            }).then(response => response.json()).then(result => {
+            })
+            .then(response => response.text())
+            .then(text => {
                 document.getElementById('pq-status').style.display = 'none';
-                if (result.status === 'success') { alert("Đã hoàn tất quá trình gỡ bỏ!"); taiDuLieuQuyen(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } else { alert("Cảnh báo: " + result.message); }
+                try {
+                    let result = JSON.parse(text);
+                    if (result.status === 'success') { 
+                        alert("Đã hoàn tất quá trình gỡ bỏ!"); 
+                        taiDuLieuQuyen(); 
+                        xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
+                    } else { 
+                        alert("Cảnh báo: " + result.message); 
+                    }
+                } catch (jsonError) {
+                    console.error("Lỗi từ backend:", text);
+                    alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+                }
             });
         }
     }
