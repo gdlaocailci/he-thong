@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Phát triển Hoàng Ngọc Lâm">
-    <title id="sys-title">Cổng thông tin Quản lý</title>
+    <title id="sys-title">Hồ sơ</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -256,6 +256,12 @@
                         <optgroup label="Công nghệ & Kỹ thuật">
                             <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
                             <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
+                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
+                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
+                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
+                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
+                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
+                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
                             <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
                             <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
                             <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
@@ -545,6 +551,12 @@
                 case 'doandoi': iconContent = '<span class="material-icons">flag</span>'; bgClass = 'bg-1'; break;
                 case 'caidat': iconContent = '<span class="material-icons">settings</span>'; bgClass = 'bg-9'; break;
                 case 'congnghe': iconContent = '<span class="material-icons">memory</span>'; bgClass = 'bg-9'; break;
+                case 'cntt': iconContent = '<span class="material-icons">computer</span>'; bgClass = 'bg-9'; break;
+                case 'vimach': iconContent = '<span class="material-icons">developer_board</span>'; bgClass = 'bg-9'; break;
+                case 'hieuung': iconContent = '<span class="material-icons">auto_fix_high</span>'; bgClass = 'bg-5'; break;
+                case 'trangchu': iconContent = '<span class="material-icons">home</span>'; bgClass = 'bg-1'; break;
+                case 'suaicon': iconContent = '<span class="material-icons">build</span>'; bgClass = 'bg-2'; break;
+                case 'sualink': iconContent = '<span class="material-icons">link</span>'; bgClass = 'bg-4'; break;
                 case 'mang': iconContent = '<span class="material-icons">wifi</span>'; bgClass = 'bg-1'; break;
                 case 'dienthoai': iconContent = '<span class="material-icons">smartphone</span>'; bgClass = 'bg-7'; break;
                 case 'trituemay': iconContent = '<span class="material-icons">smart_toy</span>'; bgClass = 'bg-9'; break;
@@ -608,7 +620,6 @@
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
-
                 var finalUrl = item.td2;
                 try {
                     if (!finalUrl.startsWith('http')) { 
@@ -720,7 +731,6 @@
         document.removeEventListener('mouseup', stopDrag); 
         document.removeEventListener('touchend', stopDrag); 
         draggedIcon = null; 
-        // Đợi 1 chút để click không bị kích hoạt
         setTimeout(() => { isDragging = false; }, 100); 
     }
     function savePositions() { 
