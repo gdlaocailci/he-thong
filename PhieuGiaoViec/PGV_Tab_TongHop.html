@@ -12,30 +12,58 @@
 
   <div id="aiToastMessage" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px 25px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: white; font-family: 'Times New Roman', serif; font-size: 16px; transition: opacity 0.3s ease-in-out; opacity: 0;"></div>
   
-  <div class="bg-light p-2 mb-1 mx-2 rounded border" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
- 
-    <span class="fw-bold text-secondary" style="font-size: 14px;">Thời gian tính:</span>
-    <select id="tuThang" class="form-select form-select-sm" style="width: auto; font-family: 'Times New Roman', serif;">
-      <option value="">Từ tháng...</option>
-      <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
-      <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
-      <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
-      <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
-    </select>
-    
-    <span class="fw-bold text-secondary" style="font-size: 14px;">-</span>
-    
-    <select id="denThang" class="form-select form-select-sm" style="width: auto; font-family: 'Times New Roman', serif;">
-      <option value="">Đến tháng...</option>
-      <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
-      <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
-      <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
-      <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
-    </select>
+  <style>
+  /* Hiệu ứng Shiny mô phỏng từ nền tảng reactbits.dev (Chuyển đổi sang thuần CSS) */
+  .btn-reactbits-shiny {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .btn-reactbits-shiny::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-20deg);
+    animation: reactbits-sweep 3s infinite;
+  }
+  @keyframes reactbits-sweep {
+    0% { left: -100%; }
+    20% { left: 200%; }
+    100% { left: 200%; }
+  }
+  .btn-reactbits-shiny:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+  }
+</style>
 
-    <button class="btn btn-sm btn-success fw-bold" onclick="runAIAssistant()" style="white-space: nowrap;">⚡ Tính toán xếp loại</button>
-    <button id="btnGhiKq" class="btn btn-sm btn-primary fw-bold" onclick="ghiKetQuaAI()" style="white-space: nowrap;">💾 Ghi kết quả</button>
-  </div>
+<div class="bg-light p-2 mb-1 mx-2 rounded border" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+  <span class="fw-bold text-secondary" style="font-size: 14px;">Thời gian tính:</span>
+  <select id="tuThang" class="form-select form-select-sm" style="width: auto; font-family: 'Times New Roman', serif;">
+    <option value="">Từ tháng...</option>
+    <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+    <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+    <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+    <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+  </select>
+  
+  <span class="fw-bold text-secondary" style="font-size: 14px;">-</span>
+  
+  <select id="denThang" class="form-select form-select-sm" style="width: auto; font-family: 'Times New Roman', serif;">
+    <option value="">Đến tháng...</option>
+    <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+    <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+    <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+    <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+  </select>
+
+  <button type="button" class="btn btn-sm btn-success fw-bold btn-reactbits-shiny" onclick="runAIAssistant()" style="white-space: nowrap;">⚡ Tính toán xếp loại</button>
+  <button type="button" id="btnGhiKq" class="btn btn-sm btn-primary fw-bold btn-reactbits-shiny" onclick="ghiKetQuaAI()" style="white-space: nowrap;">💾 Ghi kết quả</button>
+</div>
   
   <div class="card-body p-0">
     <div class="table-responsive" style="max-height: 80vh; overflow-y: auto;">
