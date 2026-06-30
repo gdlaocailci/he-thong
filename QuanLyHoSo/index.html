@@ -271,13 +271,12 @@
                     <label>Lĩnh vực Dự án (Cột C): <span style="color: red;">*</span></label>
                     <select id="hs-loaiicon">
                         <option value="">-- Chọn phân loại lĩnh vực --</option>
-                        
-                        <optgroup label="Thanh tra & Kỷ cương (Bổ sung)">
+
+                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)">
                             <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
                             <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
                             <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
                         </optgroup>
-
                         <optgroup label="Giáo dục & Hành chính">
                             <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
                             <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
@@ -388,13 +387,11 @@
                     <label>Thay đổi Icon lĩnh vực (Cột C):</label>
                     <select id="edit-loaiicon">
                         <option value="">-- Chọn phân loại lĩnh vực --</option>
-
-                        <optgroup label="Thanh tra & Kỷ cương (Bổ sung)">
+                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)">
                             <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
                             <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
                             <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
                         </optgroup>
-
                         <optgroup label="Giáo dục & Hành chính">
                             <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
                             <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
@@ -707,12 +704,10 @@
             let bgClass = 'bg-default'; 
 
             switch(type) {
-                // Khối nghiệp vụ bổ sung
                 case 'cong_ly': iconContent = '<span class="material-icons">balance</span>'; bgClass = 'bg-6'; break;
                 case 'thanh_tra': iconContent = '<span class="material-icons">manage_search</span>'; bgClass = 'bg-9'; break;
                 case 'cong_bang': iconContent = '<span class="material-icons">verified_user</span>'; bgClass = 'bg-4'; break;
-
-                // Các khối mặc định hiện tại
+                
                 case 'hocsinh': iconContent = '<span class="material-icons">school</span>'; bgClass = 'bg-4'; break;
                 case 'nhansu': iconContent = '<span class="material-icons">groups</span>'; bgClass = 'bg-5'; break;
                 case 'vanban': iconContent = '<span class="material-icons">description</span>'; bgClass = 'bg-2'; break;
