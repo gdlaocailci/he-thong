@@ -493,7 +493,6 @@
             if (result.status === 'success') { 
                 isLoggedIn = true;
                 // Chuẩn hóa biến (thay thế email thành thongTinXacThuc để tránh nhạy cảm)
-                // Lưu ý: Đảm bảo phía file Server Mã.gs của Thầy/Cô cũng trả về JSON có trường result.thongTinXacThuc hoặc result.dinhDanh. 
                 document.getElementById('sys-name').innerText = result.thongTinXacThuc || result.verifiedEmail; 
                 document.getElementById('btn-logout').style.display = 'flex';
                 sysRoles = result.roles || "";
@@ -643,7 +642,10 @@
             desktopArea.appendChild(div);
         });
         
-        icons = document.querySelectorAll('.desktop-icon'); setupTooltipEvents(); initializeLayout(); setupDragEvents();
+        icons = document.querySelectorAll('.desktop-icon'); 
+        setupTooltipEvents(); 
+        setupDragEvents();
+        initializeLayout(); 
     }
 
     function showAlertModal(message) {
@@ -658,14 +660,101 @@
     function navigateTo(url, isNewTab) { if (isDragging) { isDragging = false; return; } if (isNewTab) { window.open(url, '_blank'); } else { window.location.href = url; } }
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
-    function initializeLayout() { const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; icons.forEach(icon => { const id = icon.getAttribute('data-id'); if (savedPositions[id]) { icon.style.position = 'absolute'; icon.style.left = savedPositions[id].left; icon.style.top = savedPositions[id].top; icon.style.margin = '0'; } }); setTimeout(() => { icons.forEach(icon => { if (icon.style.position !== 'absolute') { const rect = icon.getBoundingClientRect(); const areaRect = desktopArea.getBoundingClientRect(); icon.style.left = (rect.left - areaRect.left) + 'px'; icon.style.top = (rect.top - areaRect.top) + 'px'; } }); icons.forEach(icon => { icon.style.position = 'absolute'; icon.style.margin = '0'; }); }, 50); }
+    
+    function initializeLayout() { 
+        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        icons.forEach(icon => { 
+            const id = icon.getAttribute('data-id'); 
+            if (savedPositions[id]) { 
+                icon.style.position = 'absolute'; 
+                icon.style.left = savedPositions[id].left; 
+                icon.style.top = savedPositions[id].top; 
+                icon.style.margin = '0'; 
+            } 
+        }); 
+        // Đảm bảo không bị lệch sau khi render
+        setTimeout(() => { 
+            icons.forEach(icon => { 
+                if (icon.style.position !== 'absolute') { 
+                    const rect = icon.getBoundingClientRect(); 
+                    const areaRect = desktopArea.getBoundingClientRect(); 
+                    icon.style.left = (rect.left - areaRect.left) + 'px'; 
+                    icon.style.top = (rect.top - areaRect.top) + 'px'; 
+                    icon.style.position = 'absolute'; 
+                    icon.style.margin = '0'; 
+                } 
+            }); 
+        }, 100); 
+    }
+
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
     function setupDragEvents() { icons.forEach(icon => { icon.addEventListener('mousedown', startDrag); icon.addEventListener('touchstart', startDrag, {passive: false}); }); }
-    function startDrag(e) { if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return; dragThresholdPassed = false; draggedIcon = this; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; startX = clientX; startY = clientY; const rect = draggedIcon.getBoundingClientRect(); offsetX = clientX - rect.left; offsetY = clientY - rect.top; tooltip.style.opacity = '0'; document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, {passive: false}); document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag); }
-    function drag(e) { if (!draggedIcon) return; const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { dragThresholdPassed = true; isDragging = true; draggedIcon.style.zIndex = '9999'; draggedIcon.style.opacity = '0.7'; e.preventDefault(); } if (dragThresholdPassed) { const areaRect = desktopArea.getBoundingClientRect(); let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); draggedIcon.style.left = newLeft + 'px'; draggedIcon.style.top = newTop + 'px'; } }
-    function stopDrag(e) { if (!draggedIcon) return; draggedIcon.style.zIndex = ''; draggedIcon.style.opacity = '1'; if (dragThresholdPassed) { savePositions(); } document.removeEventListener('mousemove', drag); document.removeEventListener('touchmove', drag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag); draggedIcon = null; setTimeout(() => { isDragging = false; }, 50); }
-    function savePositions() { const positions = {}; icons.forEach(icon => { positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; }); localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); }
-    function resetPositions() { localStorage.removeItem(PREFIX_MEM + 'positions'); icons.forEach(icon => { icon.style.position = ''; icon.style.left = ''; icon.style.top = ''; icon.style.margin = ''; }); initializeLayout(); }
+    function startDrag(e) { 
+        if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return; 
+        dragThresholdPassed = false; 
+        draggedIcon = this; 
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
+        startX = clientX; startY = clientY; 
+        const rect = draggedIcon.getBoundingClientRect(); 
+        offsetX = clientX - rect.left; 
+        offsetY = clientY - rect.top; 
+        tooltip.style.opacity = '0'; 
+        document.addEventListener('mousemove', drag); 
+        document.addEventListener('touchmove', drag, {passive: false}); 
+        document.addEventListener('mouseup', stopDrag); 
+        document.addEventListener('touchend', stopDrag); 
+    }
+    function drag(e) { 
+        if (!draggedIcon) return; 
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
+        if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { 
+            dragThresholdPassed = true; 
+            isDragging = true; 
+            draggedIcon.style.zIndex = '9999'; 
+            draggedIcon.style.opacity = '0.7'; 
+            e.preventDefault(); 
+        } 
+        if (dragThresholdPassed) { 
+            const areaRect = desktopArea.getBoundingClientRect(); 
+            let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); 
+            let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); 
+            draggedIcon.style.left = newLeft + 'px'; 
+            draggedIcon.style.top = newTop + 'px'; 
+        } 
+    }
+    function stopDrag(e) { 
+        if (!draggedIcon) return; 
+        draggedIcon.style.zIndex = ''; 
+        draggedIcon.style.opacity = '1'; 
+        if (dragThresholdPassed) { 
+            savePositions(); 
+        } 
+        document.removeEventListener('mousemove', drag); 
+        document.removeEventListener('touchmove', drag); 
+        document.removeEventListener('mouseup', stopDrag); 
+        document.removeEventListener('touchend', stopDrag); 
+        draggedIcon = null; 
+        setTimeout(() => { isDragging = false; }, 50); 
+    }
+    function savePositions() { 
+        const positions = {}; 
+        icons.forEach(icon => { 
+            positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; 
+        }); 
+        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
+    }
+    function resetPositions() { 
+        localStorage.removeItem(PREFIX_MEM + 'positions'); 
+        icons.forEach(icon => { 
+            icon.style.position = ''; 
+            icon.style.left = ''; 
+            icon.style.top = ''; 
+            icon.style.margin = ''; 
+        }); 
+        initializeLayout(); 
+    }
     
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
