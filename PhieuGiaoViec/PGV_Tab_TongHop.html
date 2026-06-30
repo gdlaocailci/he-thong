@@ -12,10 +12,29 @@
 
   <div id="aiToastMessage" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px 25px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: white; font-family: 'Times New Roman', serif; font-size: 16px; transition: opacity 0.3s ease-in-out; opacity: 0;"></div>
   
-  <div class="bg-light p-2 mb-1 mx-2 rounded border" style="display: flex; gap: 10px; align-items: center;">
+  <div class="bg-light p-2 mb-1 mx-2 rounded border" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
     <span class="fw-bold text-success" style="white-space: nowrap;">🤖 Lệnh AI:</span>
-    <input type="text" id="aiCommand" class="form-control form-control-sm" placeholder="VD: 'Chia cho 9 tháng'. Để trống tự động chia theo số tháng có điểm." style="max-width: 450px; font-family: 'Times New Roman', serif; font-size: 15px;">
-    <button class="btn btn-sm btn-success fw-bold" onclick="runAIAssistant()" style="white-space: nowrap;">⚡ Tính toán xếp loại cả năm</button>
+    
+    <span class="fw-bold text-secondary" style="font-size: 14px;">Thời gian tính:</span>
+    <select id="tuThang" class="form-select form-select-sm" style="width: auto; font-family: 'Times New Roman', serif;">
+      <option value="">Từ tháng...</option>
+      <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+      <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+      <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+      <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+    </select>
+    
+    <span class="fw-bold text-secondary" style="font-size: 14px;">-</span>
+    
+    <select id="denThang" class="form-select form-select-sm" style="width: auto; font-family: 'Times New Roman', serif;">
+      <option value="">Đến tháng...</option>
+      <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+      <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+      <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+      <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+    </select>
+
+    <button class="btn btn-sm btn-success fw-bold" onclick="runAIAssistant()" style="white-space: nowrap;">⚡ Tính toán xếp loại</button>
     <button id="btnGhiKq" class="btn btn-sm btn-primary fw-bold" onclick="ghiKetQuaAI()" style="white-space: nowrap;">💾 Ghi kết quả</button>
   </div>
   
@@ -101,7 +120,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI CẢ NĂM
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (BẢN NÂNG CẤP CHỌN KHOẢNG THỜI GIAN)
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -139,10 +158,24 @@ function runAIAssistant() {
         if (btn) btn.innerHTML = "⏳ Đang tính toán...";
         setTimeout(() => {
             try {
-                let cmd = document.getElementById("aiCommand").value.toLowerCase();
-                let customDivisor = null;
-                let matchDiv = cmd.match(/chia\s*(?:cho\s*)?(\d+)/);
-                if (matchDiv && matchDiv[1]) customDivisor = parseInt(matchDiv[1]);
+                // [NÂNG CẤP] Xử lý tham số thời gian đầu vào
+                let tuThangVal = document.getElementById("tuThang").value;
+                let denThangVal = document.getElementById("denThang").value;
+                
+                // Ánh xạ tháng theo thứ tự cột trên bảng (Từ T7 ở cột chỉ số 3 đến T6 ở cột chỉ số 14)
+                const anhXaThang = { 7: 3, 8: 4, 9: 5, 10: 6, 11: 7, 12: 8, 1: 9, 2: 10, 3: 11, 4: 12, 5: 13, 6: 14 };
+                let cotBatDau = 3;  // Mặc định chạy từ T7
+                let cotKetThuc = 14; // Mặc định chạy đến T6
+
+                if (tuThangVal !== "" && denThangVal !== "") {
+                    let idxTu = anhXaThang[parseInt(tuThangVal)];
+                    let idxDen = anhXaThang[parseInt(denThangVal)];
+                    if (idxTu !== undefined && idxDen !== undefined) {
+                        // Math.min/max đảm bảo vòng lặp luôn đúng chiều dù người dùng chọn ngược lại
+                        cotBatDau = Math.min(idxTu, idxDen);
+                        cotKetThuc = Math.max(idxTu, idxDen);
+                    }
+                }
 
                 let table = document.getElementById("bangThop");
                 if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
@@ -161,7 +194,8 @@ function runAIAssistant() {
                     let countHTXS = 0, countHTT = 0, countHT = 0, countCHT = 0;
                     let tongDiemXepLoai = 0, tongDiemSo = 0, validMonths = 0;
 
-                    for (let j = 3; j <= 14; j++) {
+                    // [NÂNG CẤP] Chỉ lặp tính điểm trong giới hạn các cột đã được cấu hình từ giao diện
+                    for (let j = cotBatDau; j <= cotKetThuc; j++) {
                         if (!tds[j]) continue; 
                         let cellText = tds[j].innerText.trim();
                         if (cellText === "" || cellText === "-" || cellText.includes("...")) continue;
@@ -192,7 +226,7 @@ function runAIAssistant() {
 
                     if (validMonths === 0) continue;
 
-                    let D = customDivisor ? customDivisor : validMonths;
+                    let D = validMonths;
                     let diemTBXepLoai = tongDiemXepLoai / D;
                     let diemTBSo = tongDiemSo / D;
                     let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
@@ -202,7 +236,6 @@ function runAIAssistant() {
                     let tyLeTot = (countHTXS + countHTT) / validMonths;
                     let tyLeHT = (countHTXS + countHTT + countHT) / validMonths;
                     
-                    // XỬ LÝ FIX BUGS: Đánh giá tỷ lệ CHT thực tế 
                     let tyLeCHT = countCHT / validMonths;
                     let max_cht = (cfg.so_cht_max !== undefined) ? cfg.so_cht_max : 0;
                     
@@ -229,9 +262,9 @@ function runAIAssistant() {
                 }
 
                 if (updatedCount > 0) {
-                    showAIToast("✅ <b>Hoàn tất!</b><br>Đã điền kết quả cho " + updatedCount + " cán bộ.", "success");
+                    showAIToast("✅ <b>Hoàn tất!</b><br>Đã điền kết quả cho " + updatedCount + " cán bộ trong khoảng thời gian đã chọn.", "success");
                 } else {
-                    showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu đang trống.", "warning");
+                    showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu trong giới hạn tháng này đang trống.", "warning");
                 }
 
             } catch (error) {
