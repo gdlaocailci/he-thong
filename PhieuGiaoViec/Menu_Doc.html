@@ -40,7 +40,7 @@
 
     .danh-muc-trai { width: 100%; display: flex; flex-direction: column; padding: 0; box-sizing: border-box;}
     
-    /* Tích hợp hiệu ứng Shiny mô phỏng từ reactbits.dev */
+    /* Hiệu ứng Shiny mô phỏng từ reactbits.dev */
     .the-chuyen { 
         color: #ffffff !important; font-size: 15px; font-family: 'Segoe UI', sans-serif; 
         text-decoration: none; cursor: pointer; transition: 0.2s; display: flex; 
@@ -70,10 +70,22 @@
     }
 
     .the-chuyen:first-child { border-top: 1px solid rgba(255, 255, 255, 0.15); }
-    .the-chuyen:hover, .the-chuyen.active { 
+    
+    /* Trạng thái di chuột qua thẻ (Giữ viền màu vàng ấm) */
+    .the-chuyen:hover { 
         background-color: rgba(255, 255, 255, 0.15) !important; 
         font-weight: bold; border-left: 4px solid #ffc107; padding-left: 16px;
     }
+    
+    /* [CẬP NHẬT] Trạng thái thẻ đang kích hoạt: Đổi chữ và viền sang màu xanh lá chuối */
+    .the-chuyen.active { 
+        background-color: rgba(255, 255, 255, 0.2) !important; 
+        color: #9eff33 !important; /* Màu xanh lá chuối cho chữ và icon */
+        font-weight: bold; 
+        border-left: 4px solid #9eff33; /* Màu xanh lá chuối cho viền dọc */
+        padding-left: 16px;
+    }
+    
     .b-tuong { margin-right: 12px; font-size: 18px; display: inline-block; width: 24px; text-align: center;}
     
     /* Hiệu ứng xoay mũi tên của Menu cha khi mở/đóng */
@@ -82,7 +94,13 @@
     
     /* Phân biệt giao diện của menu con */
     .menu-con .the-chuyen { font-size: 14px; background: rgba(0,0,0,0.05); border-bottom: none; }
-    .menu-con .the-chuyen:hover, .menu-con .the-chuyen.active { border-left: 4px solid #0dcaf0; }
+    .menu-con .the-chuyen:hover { border-left: 4px solid #0dcaf0; }
+    
+    /* [CẬP NHẬT] Thẻ con trong menu khi được kích hoạt */
+    .menu-con .the-chuyen.active { 
+        color: #9eff33 !important;
+        border-left: 4px solid #9eff33; 
+    }
 
     .thong-tin-dev {
         margin-top: auto;
@@ -191,7 +209,7 @@
     </div>
 </div>
 
-<script>
+<script {isSafeContext="true"}>
     (function() {
         if (typeof PGV_TAC_GIA !== 'undefined' && document.getElementById('dev_author_name_menu')) {
             document.getElementById('dev_author_name_menu').innerText = PGV_TAC_GIA;
