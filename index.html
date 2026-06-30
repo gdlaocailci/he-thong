@@ -50,6 +50,7 @@
             width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 4px; cursor: move; touch-action: none; transition: background 0.2s, border 0.2s;
             opacity: 0; 
             animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            z-index: 10;
         }
         .desktop-icon:hover { background-color: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); }
         .desktop-icon:active { background-color: rgba(255, 255, 255, 0.25); }
@@ -602,11 +603,11 @@
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
             div.onclick = function() { 
-                if (!isDragging && !isLoggedIn && !item.isPublic) {
+                if (isDragging) { isDragging = false; return; }
+                if (!isLoggedIn && !item.isPublic) {
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
-                if (isDragging) return;
 
                 var finalUrl = item.td2;
                 try {
@@ -667,9 +668,13 @@
     }
 
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    function setupDragEvents() { icons.forEach(icon => { icon.addEventListener('mousedown', startDrag); icon.addEventListener('touchstart', startDrag, {passive: false}); }); }
+    function setupDragEvents() { icons.forEach(icon => { 
+        icon.removeEventListener('mousedown', startDrag); 
+        icon.removeEventListener('touchstart', startDrag); 
+        icon.addEventListener('mousedown', startDrag); 
+        icon.addEventListener('touchstart', startDrag, {passive: false}); 
+    }); }
     function startDrag(e) { 
-        if (e.target.closest('.icon-box') === null && e.target.closest('.icon-text') === null && e.target !== this) return; 
         dragThresholdPassed = false; 
         draggedIcon = this; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
@@ -688,7 +693,7 @@
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
-        if (Math.abs(clientX - startX) > 5 || Math.abs(clientY - startY) > 5) { 
+        if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { 
             dragThresholdPassed = true; 
             isDragging = true; 
             draggedIcon.style.zIndex = '9999'; 
@@ -715,6 +720,7 @@
         document.removeEventListener('mouseup', stopDrag); 
         document.removeEventListener('touchend', stopDrag); 
         draggedIcon = null; 
+        // Đợi 1 chút để click không bị kích hoạt
         setTimeout(() => { isDragging = false; }, 100); 
     }
     function savePositions() { 
@@ -726,13 +732,13 @@
     }
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
+        const iconWidth = 100;
+        const iconHeight = 120;
+        const startX = 20;
+        const startY = 20;
+        const maxColHeight = window.innerHeight - 150; 
+        
         icons.forEach((icon, index) => {
-            const iconWidth = 100;
-            const iconHeight = 120;
-            const startX = 20;
-            const startY = 20;
-            const maxColHeight = window.innerHeight - 150; 
-            
             let col = Math.floor(index * iconHeight / maxColHeight);
             let row = Math.floor((index * iconHeight) % maxColHeight / iconHeight);
             
