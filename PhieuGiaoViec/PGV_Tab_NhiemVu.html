@@ -721,7 +721,9 @@ function veBangNviec(db) {
             }
 
             let textHienThi = (valChon !== "") ? valChon : "-- Trống --";
-            let danhSachHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal;" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
+            
+            // [CẬP NHẬT MÀU] Thêm hiệu ứng màu xanh nhạt (#cfe2ff) cho mục Trống
+            let danhSachHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
 
             // Xây dựng lại giao diện danh sách
             optsArray.forEach(opt => {
@@ -735,7 +737,8 @@ function veBangNviec(db) {
                     
                     let isSel = (val === valChon);
                     
-                    danhSachHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
+                    // [CẬP NHẬT MÀU] Thay '#f8f9fa' thành '#cfe2ff' (Xanh dương nhạt) để làm nổi bật khi di chuột
+                    danhSachHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
                 }
             });
 
