@@ -170,16 +170,20 @@ function moRongHienThiDiem(sel) {
 }
 
 function thuGonHienThiDiem(sel) {
+    // Luôn khôi phục lại toàn bộ option thành text đầy đủ trước để bảo toàn chữ trong danh sách
     Array.from(sel.options).forEach(opt => {
         let full = opt.getAttribute('data-full');
         if (full) opt.text = full;
     });
     
+    // Chỉ thu gọn text hiển thị ở bề mặt của lựa chọn hiện tại
     if (sel.selectedIndex > 0) { 
         let opt = sel.options[sel.selectedIndex];
         let short = opt.getAttribute('data-short');
         if (short) opt.text = short;
         sel.setAttribute('data-dang-thu-gon', 'true');
+    } else {
+        sel.removeAttribute('data-dang-thu-gon');
     }
 }
 
@@ -666,7 +670,8 @@ function veBangNviec(db) {
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="thuGonHienThiDiem(this); tinhtTdong();" onfocus="moRongHienThiDiem(this)" onblur="thuGonHienThiDiem(this)">`;
+            // [ĐÃ SỬA LỖI] Thêm onmouseenter, onmouseleave và ép this.blur() ở onchange
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onmouseenter="moRongHienThiDiem(this)" onmouseleave="if(document.activeElement !== this) thuGonHienThiDiem(this)" onfocus="moRongHienThiDiem(this)" onblur="thuGonHienThiDiem(this)" onchange="this.blur(); tinhtTdong();">`;
             htmlDiem += `<option value="" data-short="-- Trống --" data-full="-- Trống --" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
             
             let optsArray = [];
@@ -694,7 +699,6 @@ function veBangNviec(db) {
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 
                 if(txt !== "") {
-                    // [NÂNG CẤP] Tự động trích xuất cấu hình để chỉ hiển thị phần số điểm khi đã lựa chọn
                     let matchNum = txt.match(/[-+]?\d*\.?\d+/);
                     if (matchNum && kv.length === 1) { val = matchNum[0]; }
                     let shortText = val; 
@@ -731,8 +735,10 @@ function veBangNviec(db) {
    setTimeout(() => { 
         $('#bangNviec textarea').each(function() { cdang(this); }); 
         
-        // [NÂNG CẤP] Thu gọn tự động ngay sau khi vẽ bảng xong
-        $('#bangNviec select.chonKq').each(function() { thuGonHienThiDiem(this); }); 
+        $('#bangNviec select.chonKq').each(function() { 
+            this.removeAttribute('data-dang-thu-gon');
+            thuGonHienThiDiem(this); 
+        }); 
         
         tinhtTdong(); 
         khaBcao(); 
