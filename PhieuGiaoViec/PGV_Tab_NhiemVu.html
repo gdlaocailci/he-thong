@@ -426,13 +426,11 @@ function doiTrangThaiKhoa() {
                 if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi hệ thống: " + (kq ? kq.tbao : "Không xác định"));
             }
         };
-        
         let goiLoi = function(loi) {
             if(typeof anTaiDl === 'function') anTaiDl();
             btnAll.disabled = false;
             if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message);
         };
-
         if (typeof khachApi.goiThuCong === 'function') {
             khachApi.goiThuCong({ hdong: "luutrangthaikhoatatca", khoa: trangThaiMoi, ngayKhoa: ngayGui }, goiThanhCong, goiLoi);
         } else if (typeof khachApi.yeucauApi === 'function') {
