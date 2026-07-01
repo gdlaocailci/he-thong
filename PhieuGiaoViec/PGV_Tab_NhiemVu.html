@@ -683,7 +683,7 @@ function veBangNviec(db) {
         
         if (valConfig.includes("|")) {
             let optsArray = [];
-            // Cơ chế nhận diện thông minh kép
+            // Cơ chế nhận diện thông minh: Ưu tiên (;) cho hệ số thập phân mới, dự phòng (,) cho dữ liệu cũ
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
@@ -699,13 +699,31 @@ function veBangNviec(db) {
                     }
                 }
             } else {
-                // [ĐÃ SỬA LỖI] Khôi phục lại việc cắt chuỗi bằng dấu phẩy (,) cho các dòng dữ liệu cũ
                 optsArray = valConfig.split(",");
             }
 
-            let textHienThi = (valChon !== "") ? valChon : "-- Trống --";
-            let listHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal;" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
+            // [TỰ ĐỘNG CHỮA LỖI] Thu thập danh sách giá trị điểm hợp lệ
+            let mangGiaTriDiem = [];
+            optsArray.forEach(opt => {
+                let kv = opt.split("|"); 
+                let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
+                let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
+                if(txt !== "") {
+                    let matchNum = txt.match(/[-+]?\d*\.?\d+/);
+                    if (matchNum && kv.length === 1) { val = matchNum[0]; }
+                    mangGiaTriDiem.push(val);
+                }
+            });
 
+            // XÓA RÁC: Nếu dữ liệu lưu bị lỗi (valChon là chuỗi dài khổng lồ), tự động reset về Trống
+            if (valChon !== "" && !mangGiaTriDiem.includes(valChon)) {
+                valChon = ""; 
+            }
+
+            let textHienThi = (valChon !== "") ? valChon : "-- Trống --";
+            let danhSachHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal;" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
+
+            // Xây dựng lại giao diện danh sách
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
@@ -717,7 +735,7 @@ function veBangNviec(db) {
                     
                     let isSel = (val === valChon);
                     
-                    listHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
+                    danhSachHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
                 }
             });
 
@@ -728,7 +746,7 @@ function veBangNviec(db) {
                     <span class="chu-diem-chon">${textHienThi}</span>
                 </div>
                 <div class="khung-danh-sach shadow" style="display:none; position:absolute; top:100%; right:0; width: 350px; max-height:280px; overflow-y:auto; background:#ffffff; border:1px solid #adb5bd; z-index:9999; border-radius:4px; font-size:13px; text-align:left;">
-                    ${listHtml}
+                    ${danhSachHtml}
                 </div>
             </div>`;
         }
