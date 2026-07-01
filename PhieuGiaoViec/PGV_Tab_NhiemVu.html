@@ -683,6 +683,7 @@ function veBangNviec(db) {
         
         if (valConfig.includes("|")) {
             let optsArray = [];
+            // Cơ chế nhận diện thông minh kép
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
@@ -698,10 +699,10 @@ function veBangNviec(db) {
                     }
                 }
             } else {
-                optsArray = valConfig.split(";");
+                // [ĐÃ SỬA LỖI] Khôi phục lại việc cắt chuỗi bằng dấu phẩy (,) cho các dòng dữ liệu cũ
+                optsArray = valConfig.split(",");
             }
 
-            // [CẬP NHẬT] Khởi tạo hiển thị ban đầu lấy trực tiếp giá trị điểm (valChon)
             let textHienThi = (valChon !== "") ? valChon : "-- Trống --";
             let listHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal;" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
 
@@ -716,7 +717,6 @@ function veBangNviec(db) {
                     
                     let isSel = (val === valChon);
                     
-                    // Khối danh sách được ép xuống dòng, thiết kế chuẩn hành chính, không lược bỏ chữ
                     listHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
                 }
             });
