@@ -171,7 +171,7 @@
         
         // NGĂN CHẶN LỖI CACHE UNDEFINED
         if (!idht || String(idht).trim() === "" || String(idht) === "undefined" || String(idht) === "null") {
-            hienThongbLoi("Tài khoản Google này chưa được cấp quyền chia sẻ địa chỉ định danh (Email) trong bộ token. Vui lòng cấp quyền hoặc sử dụng tài khoản khác.");
+            hienThongbLoi("Tài khoản Google này chưa được cấp quyền chia sẻ địa chỉ định danh trong bộ token. Vui lòng cấp quyền hoặc sử dụng tài khoản khác.");
             return;
         }
         
@@ -271,7 +271,7 @@
 
         <div class="mt-3 px-2">
            <p class="text-success fw-bold mb-0" style="font-size: 13px; line-height: 1.4; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px dashed #4caf50;">
-             <i class="bi bi-shield-check"></i>Hệ thống sử dụng token an toàn của Google.
+             <i class="bi bi-shield-check"></i> Hệ thống sử dụng token an toàn của Google.
            </p>
         </div>
         <div class="w-100 text-center text-muted" style="margin-top: 25px; font-size: 11px; font-weight: bold;">Phiên bản: <span id="login_version"></span> <br> <span id="login_author"></span></div>
