@@ -677,9 +677,6 @@ function veBangNviec(db) {
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onmouseenter="moRongHienThiDiem(this)" onmouseleave="if(document.activeElement !== this) thuGonHienThiDiem(this)" onfocus="moRongHienThiDiem(this)" onblur="thuGonHienThiDiem(this)" onchange="this.blur(); tinhtTdong();">`;
-            htmlDiem += `<option value="" data-short="-- Trống --" data-full="-- Trống --" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
-            
             let optsArray = [];
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
@@ -699,6 +696,9 @@ function veBangNviec(db) {
                 optsArray = valConfig.split(";");
             }
 
+            let textHienThi = "-- Trống --";
+            let listHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal;" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
+
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
@@ -707,18 +707,26 @@ function veBangNviec(db) {
                 if(txt !== "") {
                     let matchNum = txt.match(/[-+]?\d*\.?\d+/);
                     if (matchNum && kv.length === 1) { val = matchNum[0]; }
-                    let shortText = val; 
                     
-                    let safeTxt = txt.replace(/"/g, '&quot;');
+                    let isSel = (val === valChon);
+                    if (isSel) textHienThi = txt;
                     
-                    // [NÂNG CẤP] Giữ nguyên 100% văn bản, không sử dụng substring để cắt ngắn
-                    let displayTxt = txt;
-                    
-                    let isSel = (val === valChon) ? "selected" : "";
-                    htmlDiem += `<option value="${val}" ${isSel} title="${safeTxt}" data-short="${shortText}" data-full="${safeTxt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word;">${displayTxt}</option>`;
+                    // Khối danh sách được ép xuống dòng, thiết kế chuẩn hành chính, không lược bỏ chữ
+                    listHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
                 }
             });
-            htmlDiem += `</select>`;
+
+            // NÂNG CẤP: Chuyển đổi sang Khung chọn tùy chỉnh, khống chế độ rộng 350px
+            htmlDiem = `
+            <div class="vung-chon-diem" style="position: relative; width: 100%; ${dsp}">
+                <input type="text" class="chonKq" data-config="${safeConfig}" value="${valChon}" style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; ${dsp}">
+                <div class="form-control form-control-sm text-center fw-bold bg-white shadow-sm" style="color:red; cursor:pointer; min-height:30px; height:auto; display:flex; align-items:center; justify-content:center; white-space:normal; word-wrap:break-word;" onclick="moDanhSachDiem(event, this)">
+                    <span class="chu-diem-chon">${textHienThi}</span>
+                </div>
+                <div class="khung-danh-sach shadow" style="display:none; position:absolute; top:100%; right:0; width: 350px; max-height:280px; overflow-y:auto; background:#ffffff; border:1px solid #adb5bd; z-index:9999; border-radius:4px; font-size:13px; text-align:left;">
+                    ${listHtml}
+                </div>
+            </div>`;
         }
 
         let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
@@ -744,12 +752,6 @@ function veBangNviec(db) {
     });
    setTimeout(() => { 
         $('#bangNviec textarea').each(function() { cdang(this); }); 
-        
-        $('#bangNviec select.chonKq').each(function() { 
-            this.removeAttribute('data-dang-thu-gon');
-            thuGonHienThiDiem(this); 
-        }); 
-        
         tinhtTdong(); 
         khaBcao(); 
         if (typeof canbHientai !== 'undefined' && canbHientai.tde) {
@@ -757,7 +759,61 @@ function veBangNviec(db) {
         }
     }, 100);
 }
+/* ==========================================================================
+   HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM TÙY CHỈNH (CUSTOM DROPDOWN)
+   ========================================================================== */
+function moDanhSachDiem(suKien, ptu) {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
+    
+    // Đóng toàn bộ các danh sách đang mở khác trên màn hình
+    document.querySelectorAll('.khung-danh-sach').forEach(ds => ds.style.display = 'none');
+    
+    let vungChon = ptu.closest('.vung-chon-diem');
+    let danhSach = vungChon.querySelector('.khung-danh-sach');
+    
+    // Đảo trạng thái hiển thị của danh sách hiện tại
+    if (danhSach.style.display === 'none' || danhSach.style.display === '') {
+        danhSach.style.display = 'block';
+    } else {
+        danhSach.style.display = 'none';
+    }
+    
+    // Ngăn chặn sự kiện click lan truyền ra bên ngoài làm đóng danh sách ngay lập tức
+    suKien.stopPropagation(); 
+}
 
+function chonGiaTriDiem(ptu, giaTriDiem) {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
+    let vungChon = ptu.closest('.vung-chon-diem');
+    if (!vungChon) return;
+
+    let theDauVao = vungChon.querySelector('.chonKq');
+    let theHienThi = vungChon.querySelector('.chu-diem-chon');
+    let danhSach = vungChon.querySelector('.khung-danh-sach');
+
+    // Gắn giá trị số vào thẻ Input ẩn để hệ thống nhận diện và tính điểm
+    theDauVao.value = giaTriDiem;
+    
+    // Hiển thị đoạn văn bản dài ra giao diện
+    theHienThi.innerText = ptu.innerText;
+    
+    // Đóng danh sách và làm nổi bật (highlight) mục vừa chọn
+    danhSach.style.display = 'none';
+    let cacMuc = danhSach.querySelectorAll('.muc-chon');
+    cacMuc.forEach(m => m.classList.remove('bg-light', 'fw-bold', 'text-primary'));
+    ptu.classList.add('bg-light', 'fw-bold', 'text-primary');
+
+    // Kích hoạt tính lại tổng điểm trên toàn bảng
+    tinhtTdong();
+}
+
+// Tự động đóng khung chọn khi bấm chuột ra vùng trống bất kỳ trên trang
+document.addEventListener('click', function(suKien) {
+    if (!suKien.target.closest('.vung-chon-diem')) {
+        document.querySelectorAll('.khung-danh-sach').forEach(ds => ds.style.display = 'none');
+    }
+});
+  
 function addNv() {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     var isBGH = kiemTraLaBGH();
