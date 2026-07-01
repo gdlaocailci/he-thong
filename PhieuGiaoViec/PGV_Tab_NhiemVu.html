@@ -10,7 +10,14 @@
   #bangNviec { table-layout: fixed; width: 100%; word-wrap: break-word; border-collapse: collapse; border: none; }
   #bangNviec thead th { position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important; vertical-align: middle; text-align: center; padding: 8px 5px; font-size: 13px; border: none; border-right: 1px solid #7ea8f8;}
   #bangNviec th:last-child { border-right: none; }
-  #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
+  #bangNviec td { 
+      vertical-align: middle !important; 
+      padding: 0 !important; 
+      border: none !important; 
+      border-bottom: 1px dashed #dee2e6 !important; 
+      border-right: 1px solid #dee2e6 !important; 
+      overflow: visible !important; /* [Cập nhật] Bắt buộc dùng visible để danh sách tùy chỉnh không bị cắt mất */
+  }
   #bangNviec td:last-child { border-right: none !important; }
 
   #bangNviec textarea.form-control, #bangNviec input.form-control, #bangNviec select.form-select { 
@@ -858,7 +865,7 @@ function addNv() {
         
         var $chonKq = $newRow.find('.chonKq');
         
-        // [NÂNG CẤP] Phục hồi trạng thái select box trong dòng mới để không bị lỗi co rút vĩnh viễn khi nhân bản
+        // Phục hồi trạng thái cho thẻ select cũ (nếu có)
         if ($chonKq.is('select')) {
             $chonKq.find('option').each(function() {
                 let full = $(this).attr('data-full');
@@ -867,6 +874,14 @@ function addNv() {
             $chonKq.removeAttr('data-dang-thu-gon');
         }
         $chonKq.val(''); 
+
+        // [NÂNG CẤP] Xóa trạng thái của Khung chọn tùy chỉnh (Custom Dropdown) khi nhân bản dòng mới
+        var $chuDiem = $newRow.find('.chu-diem-chon');
+        if ($chuDiem.length > 0) {
+            $chuDiem.text('-- Trống --');
+            $newRow.find('.muc-chon').removeClass('bg-light fw-bold text-primary');
+            $newRow.find('.khung-danh-sach').css('display', 'none');
+        }
         
         var $tdNoiDung = $newRow.find('td:first-child');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
