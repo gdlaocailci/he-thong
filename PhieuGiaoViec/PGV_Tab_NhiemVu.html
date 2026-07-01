@@ -782,25 +782,60 @@ function veBangNviec(db) {
     }, 100);
 }
 /* ==========================================================================
-   HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM TÙY CHỈNH (CUSTOM DROPDOWN)
+   HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM TÙY CHỈNH (CÓ THUẬT TOÁN ĐẢO CHIỀU)
    ========================================================================== */
 function moDanhSachDiem(suKien, ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     
-    // Đóng toàn bộ các danh sách đang mở khác trên màn hình
-    document.querySelectorAll('.khung-danh-sach').forEach(ds => ds.style.display = 'none');
+    // Đóng tất cả các danh sách khác đang mở trên màn hình để tránh chồng chéo
+    document.querySelectorAll('.khung-danh-sach').forEach(ds => {
+        if (ds !== ptu.closest('.vung-chon-diem').querySelector('.khung-danh-sach')) {
+            ds.style.display = 'none';
+        }
+    });
     
     let vungChon = ptu.closest('.vung-chon-diem');
     let danhSach = vungChon.querySelector('.khung-danh-sach');
     
-    // Đảo trạng thái hiển thị của danh sách hiện tại
     if (danhSach.style.display === 'none' || danhSach.style.display === '') {
+        // 1. Tạm thời hiển thị (nhưng làm trong suốt) để trình duyệt tính toán kích thước thực
+        danhSach.style.visibility = 'hidden';
         danhSach.style.display = 'block';
+        
+        // 2. Lấy tọa độ của nút bấm, chiều cao danh sách và khung cuộn chứa bảng
+        let toaDoNut = ptu.getBoundingClientRect();
+        let chieuCaoDanhSach = danhSach.getBoundingClientRect().height;
+        let vungCuonBang = ptu.closest('.table-responsive');
+        let khoangTrongBenDuoi = 0;
+        
+        // 3. Tính toán chính xác khoảng trống còn lại ở phía dưới
+        if (vungCuonBang) {
+            let toaDoVungCuon = vungCuonBang.getBoundingClientRect();
+            khoangTrongBenDuoi = toaDoVungCuon.bottom - toaDoNut.bottom;
+        } else {
+            khoangTrongBenDuoi = window.innerHeight - toaDoNut.bottom;
+        }
+        
+        // 4. Thuật toán đảo chiều: Nếu dưới thiếu chỗ VÀ trên đủ chỗ
+        if (khoangTrongBenDuoi < (chieuCaoDanhSach + 10) && toaDoNut.top > chieuCaoDanhSach) {
+            // Lật danh sách nảy lên trên
+            danhSach.style.top = 'auto';
+            danhSach.style.bottom = '100%';
+            danhSach.style.boxShadow = '0 -4px 8px rgba(0,0,0,0.15)'; // Đảo chiều bóng đổ
+        } else {
+            // Thả danh sách xuống dưới (mặc định cho các dòng ở trên cùng/giữa)
+            danhSach.style.top = '100%';
+            danhSach.style.bottom = 'auto';
+            danhSach.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+        }
+        
+        // 5. Bật hiển thị chính thức
+        danhSach.style.visibility = 'visible';
     } else {
         danhSach.style.display = 'none';
     }
     
-    // Ngăn chặn sự kiện click lan truyền ra bên ngoài làm đóng danh sách ngay lập tức
+    // Ngăn chặn sự kiện click lan truyền ra bên ngoài
     suKien.stopPropagation(); 
 }
 
