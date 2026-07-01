@@ -156,6 +156,33 @@
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 let trangThaiKhoa = "Mở";
 
+/* ==========================================================================
+   [NÂNG CẤP] THUẬT TOÁN AUTO-COLLAPSE (TỰ ĐỘNG THU GỌN TEXT CHO Ô ĐIỂM)
+   ========================================================================== */
+function moRongHienThiDiem(sel) {
+    if (sel.hasAttribute('data-dang-thu-gon')) {
+        Array.from(sel.options).forEach(opt => {
+            let full = opt.getAttribute('data-full');
+            if (full) opt.text = full;
+        });
+        sel.removeAttribute('data-dang-thu-gon');
+    }
+}
+
+function thuGonHienThiDiem(sel) {
+    Array.from(sel.options).forEach(opt => {
+        let full = opt.getAttribute('data-full');
+        if (full) opt.text = full;
+    });
+    
+    if (sel.selectedIndex > 0) { 
+        let opt = sel.options[sel.selectedIndex];
+        let short = opt.getAttribute('data-short');
+        if (short) opt.text = short;
+        sel.setAttribute('data-dang-thu-gon', 'true');
+    }
+}
+
 function kiemTraLaBGH() {
     if (typeof window.PGV_QUYEN !== 'undefined' && (window.PGV_QUYEN === 'xxx' || window.PGV_QUYEN === 'xx')) return true;
     if (typeof canbHientai !== 'undefined' && (canbHientai.quyen === 'xxx' || canbHientai.quyen === 'xx')) return true;
@@ -435,6 +462,7 @@ function apDungKhoaGiaoDien() {
     
     kiemTraQuyenTruyCap();
 }
+
 function kiemTraLaGS() {
     if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN === 'gs') return true;
     if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'gs') return true;
@@ -563,6 +591,7 @@ function nopBcaoChinh() {
       });
     });
 }
+
 function mokBcao() { 
     mbcMo = true; 
     const nt = document.getElementById('nutNopBcao'); 
@@ -637,8 +666,8 @@ function veBangNviec(db) {
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
-            htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="thuGonHienThiDiem(this); tinhtTdong();" onfocus="moRongHienThiDiem(this)" onblur="thuGonHienThiDiem(this)">`;
+            htmlDiem += `<option value="" data-short="-- Trống --" data-full="-- Trống --" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
             
             let optsArray = [];
             if (valConfig.includes(";")) {
@@ -665,9 +694,14 @@ function veBangNviec(db) {
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 
                 if(txt !== "") {
+                    // [NÂNG CẤP] Tự động trích xuất cấu hình để chỉ hiển thị phần số điểm khi đã lựa chọn
+                    let matchNum = txt.match(/[-+]?\d*\.?\d+/);
+                    if (matchNum && kv.length === 1) { val = matchNum[0]; }
+                    let shortText = val; 
+                    
                     let isSel = (val === valChon) ? "selected" : "";
                     let safeTxt = txt.replace(/"/g, '&quot;');
-                    htmlDiem += `<option value="${val}" ${isSel} title="${safeTxt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
+                    htmlDiem += `<option value="${val}" ${isSel} title="${safeTxt}" data-short="${shortText}" data-full="${safeTxt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
                 }
             });
             htmlDiem += `</select>`;
@@ -696,6 +730,10 @@ function veBangNviec(db) {
     });
    setTimeout(() => { 
         $('#bangNviec textarea').each(function() { cdang(this); }); 
+        
+        // [NÂNG CẤP] Thu gọn tự động ngay sau khi vẽ bảng xong
+        $('#bangNviec select.chonKq').each(function() { thuGonHienThiDiem(this); }); 
+        
         tinhtTdong(); 
         khaBcao(); 
         if (typeof canbHientai !== 'undefined' && canbHientai.tde) {
@@ -749,6 +787,15 @@ function addNv() {
         $newRow.find('.nhapDiemMax').val(lastRow.find('.nhapDiemMax').val());
         
         var $chonKq = $newRow.find('.chonKq');
+        
+        // [NÂNG CẤP] Phục hồi trạng thái select box trong dòng mới để không bị lỗi co rút vĩnh viễn khi nhân bản
+        if ($chonKq.is('select')) {
+            $chonKq.find('option').each(function() {
+                let full = $(this).attr('data-full');
+                if (full) $(this).text(full);
+            });
+            $chonKq.removeAttr('data-dang-thu-gon');
+        }
         $chonKq.val(''); 
         
         var $tdNoiDung = $newRow.find('td:first-child');
