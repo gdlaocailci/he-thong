@@ -692,7 +692,8 @@ function veBangNviec(db) {
         
         let valChon = ""; let valConfig = rawH;
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
-        else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
+        /* [ĐÃ SỬA] Ngăn chặn ghi đè cấu hình nếu có dấu chấm phẩy hoặc xuống dòng */
+        else if(!rawH.includes("|") && !rawH.includes(";") && !rawH.includes("\n") && rawH !== "") { valChon = rawH; valConfig = rawH; }
         
         let safeConfig = valConfig.replace(/"/g, '&quot;');
 
@@ -706,9 +707,9 @@ function veBangNviec(db) {
 
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         
-        if (valConfig.includes("|")) {
+        /* [ĐÃ SỬA] Kích hoạt hộp chọn cho cả dấu gạch đứng, chấm phẩy và xuống dòng */
+        if (valConfig.includes("|") || valConfig.includes(";") || valConfig.includes("\n")) {
             let optsArray = [];
-            // Cơ chế nhận diện thông minh: Ưu tiên (;) cho hệ số thập phân mới, dự phòng (,) cho dữ liệu cũ
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
@@ -727,7 +728,6 @@ function veBangNviec(db) {
                 optsArray = valConfig.split(",");
             }
 
-            // [TỰ ĐỘNG CHỮA LỖI] Thu thập danh sách giá trị điểm hợp lệ
             let mangGiaTriDiem = [];
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
@@ -740,17 +740,14 @@ function veBangNviec(db) {
                 }
             });
 
-            // XÓA RÁC: Nếu dữ liệu lưu bị lỗi (valChon là chuỗi dài khổng lồ), tự động reset về Trống
             if (valChon !== "" && !mangGiaTriDiem.includes(valChon)) {
                 valChon = ""; 
             }
 
             let textHienThi = (valChon !== "") ? valChon : "-- Trống --";
             
-            // [CẬP NHẬT MÀU] Thêm hiệu ứng màu xanh nhạt (#cfe2ff) cho mục Trống
             let danhSachHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
 
-            // Xây dựng lại giao diện danh sách
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
@@ -759,10 +756,7 @@ function veBangNviec(db) {
                 if(txt !== "") {
                     let matchNum = txt.match(/[-+]?\d*\.?\d+/);
                     if (matchNum && kv.length === 1) { val = matchNum[0]; }
-                    
                     let isSel = (val === valChon);
-                    
-                    // [CẬP NHẬT MÀU] Thay '#f8f9fa' thành '#cfe2ff' (Xanh dương nhạt) để làm nổi bật khi di chuột
                     danhSachHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
                 }
             });
