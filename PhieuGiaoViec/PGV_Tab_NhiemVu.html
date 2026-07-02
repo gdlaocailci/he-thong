@@ -256,8 +256,7 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     if (ds && !Array.isArray(ds) && ds.dliu) {
         ds = ds.dliu;
     }
-    
-    if (ds && ds.length > 0) { 
+  if (ds && ds.length > 0) { 
         /* [NÂNG CẤP] Phân nhóm chức vụ Quản lý, Giáo viên, Nhân viên */
         var nhomQL = document.createElement("optgroup"); nhomQL.label = "Ban Quản lý";
         var nhomGV = document.createElement("optgroup"); nhomGV.label = "Giáo viên";
