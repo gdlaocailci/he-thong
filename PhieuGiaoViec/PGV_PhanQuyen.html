@@ -616,7 +616,7 @@
             }
         }
         
-        function renderTable() {
+function renderTable() {
             var tbody = $('#quyenTableBodyPQ');
             if (!tbody) return;
             tbody.innerHTML = '';
@@ -689,8 +689,9 @@
                 var selChucVu = document.createElement('select');
                 selChucVu.className = 'chucvu-select quyen-select'; 
                 selChucVu.setAttribute('data-idx', i);
-                var cvOpts = ['gv', 'nv'];
-                var cvLabels = ['Giáo viên', 'Nhân viên'];
+                /* [BỔ SUNG] Mã phân quyền dành cho Quản lý */
+                var cvOpts = ['gv', 'nv', 'ql'];
+                var cvLabels = ['Giáo viên', 'Nhân viên', 'Quản lý'];
                 for (var j = 0; j < cvOpts.length; j++) {
                     var optionCV = document.createElement('option');
                     optionCV.value = cvOpts[j];
