@@ -231,7 +231,8 @@ function kiemTraQuyenTruyCap() {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
                 if (diemThuong) diemThuong.disabled = true;
-                if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của giáo viên khác. Chỉ giáo viên đó hoặc Ban Giám hiệu mới được lưu.'); 
+                /* [ĐÃ FIX] Thay đổi từ vựng bao quát */
+                if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của nhân sự khác. Chỉ nhân sự đó hoặc Ban Giám hiệu mới được lưu.'); 
             }
         } else { 
             if (nutLuu) nutLuu.disabled = false; 
@@ -253,7 +254,7 @@ function kiemTraQuyenTruyCap() {
 
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     var selectGv = document.getElementById("hopChonGv"); if (!selectGv) return;
-    selectGv.innerHTML = '<option value="">-- Lựa chọn giáo viên --</option>';
+    selectGv.innerHTML = '<option value="">-- Lựa chọn hồ sơ --</option>';
     
     var ds = danhSachGiaoVien;
     if (ds && !Array.isArray(ds) && ds.dliu) {
@@ -261,12 +262,34 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     }
     
     if (ds && ds.length > 0) { 
-        ds.forEach(function(gv) { 
+        /* [NÂNG CẤP] Phân nhóm chức vụ Quản lý, Giáo viên, Nhân viên */
+        var nhomQL = document.createElement("optgroup"); nhomQL.label = "Ban Quản lý";
+        var nhomGV = document.createElement("optgroup"); nhomGV.label = "Giáo viên";
+        var nhomNV = document.createElement("optgroup"); nhomNV.label = "Nhân viên";
+        var nhomKhac = document.createElement("optgroup"); nhomKhac.label = "Khác";
+
+        ds.forEach(function(cb) { 
             var option = document.createElement("option"); 
-            option.value = gv.id || gv.ma || gv.ttrg; 
-            option.textContent = gv.ten || gv.hoTen || gv.tenn; 
-            selectGv.appendChild(option); 
+            option.value = cb.id || cb.ma || cb.ttrg; 
+            option.textContent = cb.ten || cb.hoTen || cb.tenn; 
+            
+            var cv = String(cb.chucvu || "").toLowerCase().trim();
+            if (cv === "ql" || cv.includes("quản lý") || cv.includes("quan ly") || cv.includes("hiệu trưởng") || cv.includes("ht")) {
+                nhomQL.appendChild(option);
+            } else if (cv === "nv" || cv.includes("nhân viên") || cv.includes("nhan vien")) {
+                nhomNV.appendChild(option);
+            } else if (cv === "gv" || cv.includes("giáo viên") || cv.includes("giao vien")) {
+                nhomGV.appendChild(option);
+            } else {
+                nhomKhac.appendChild(option);
+            }
         }); 
+
+        if (nhomQL.children.length > 0) selectGv.appendChild(nhomQL);
+        if (nhomGV.children.length > 0) selectGv.appendChild(nhomGV);
+        if (nhomNV.children.length > 0) selectGv.appendChild(nhomNV);
+        if (nhomKhac.children.length > 0) selectGv.appendChild(nhomKhac);
+
         selectGv.style.setProperty('display', 'inline-block', 'important');
         selectGv.disabled = false; 
     } 
@@ -499,7 +522,8 @@ function xulyLuuTam(ath = false, xltc = null) {
             maTrangDich = selectGv.value;
         } else if (isBGH) {
             if (!maTrangDich || maTrangDich.trim() === "") {
-                if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một giáo viên từ danh sách trước khi lưu.");
+                /* [ĐÃ FIX] */
+                if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một nhân sự từ danh sách trước khi lưu.");
                 return;
             }
         }
@@ -511,7 +535,8 @@ function xulyLuuTam(ath = false, xltc = null) {
     }
 
     if (!maTrangDich || maTrangDich.trim() === "") {
-        let thongBaoLoi = isBGH ? "Đồng chí vui lòng chọn một giáo viên từ danh sách để lưu nhật ký." : "Lỗi hệ thống: Trang dữ liệu đích không xác định. Đồng chí kiểm tra lại Cột B tại Trang Khai Báo.";
+        /* [ĐÃ FIX] */
+        let thongBaoLoi = isBGH ? "Đồng chí vui lòng chọn một nhân sự từ danh sách để lưu nhật ký." : "Lỗi hệ thống: Trang dữ liệu đích không xác định. Đồng chí kiểm tra lại Cột B tại Trang Khai Báo.";
         if (typeof hienThongb === 'function') hienThongb('loi', thongBaoLoi);
         return;
     }
