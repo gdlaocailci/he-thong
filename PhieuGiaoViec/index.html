@@ -300,6 +300,8 @@
           <div class="tab-pane fade px-4 py-3" id="khuTieuChi"></div>
           <div class="tab-pane fade px-4 py-3" id="khuLichSu"></div>
           <div class="tab-pane fade px-4 py-3" id="khuTieuChiNV"></div>
+          <!-- Bổ sung khu vực hiển thị Tiêu chí Quản lý -->
+          <div class="tab-pane fade px-4 py-3" id="khuTieuChiQL"></div>
         </div>
     </div>
   </div>
@@ -350,7 +352,7 @@
 
     function giaiMaBcao(toanchu) { if (!toanchu) return { chu: "", tepdinhk: [] }; let cactep = []; let chuloc = toanchu.replace(/\[FILE:(.+?)\|([^\]]+)\]/g, function(khop, ten, ddan) { cactep.push({ tentep: ten, duongd: ddan }); return ""; }); return { chu: chuloc.trim(), tepdinhk: cactep }; }
 
-    async function chbiHt() {
+async function chbiHt() {
       try {
         datTaiDl(true, "✨ PHẦN MỀM QUẢN LÝ HIỆU QUẢ CÔNG VIỆC");
         await taiCacPhan();
@@ -371,6 +373,8 @@
         
         $(document).on('click', '#tabTieuChi', () => { if(typeof khoiDongTabTieuChi === 'function') khoiDongTabTieuChi(); });
         $(document).on('click', '#tabTieuChiNV', () => { if(typeof khoiDongTabTieuChiNV === 'function') khoiDongTabTieuChiNV(); });
+        /* [BỔ SUNG] Lắng nghe sự kiện cho Tiêu chí Quản lý */
+        $(document).on('click', '#tabTieuChiQL', () => { if(typeof khoiDongTabTieuChiQL === 'function') khoiDongTabTieuChiQL(); });
         
         $('#locNamThop').on('change', () => veBangThop()); 
         $('#locNamNghi').on('change', () => veBangNghi()); 
@@ -380,14 +384,14 @@
       } catch(loiHthong) { khiLoiMayChu(loiHthong); }
     }
 
-    async function taiCacPhan() {
+ async function taiCacPhan() {
       try {
         const mb = "?v=" + new Date().getTime();
-        const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen, phTieuChi, phLichSu, phTieuChiNV] = await Promise.all([
+        const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen, phTieuChi, phLichSu, phTieuChiNV, phTieuChiQL] = await Promise.all([
             fetch('./Menu_Doc.html' + mb), fetch('./PGV_Tab_NhiemVu.html' + mb), fetch('./PGV_Tab_GiaoViec.html' + mb),
             fetch('./PGV_Tab_TongHop.html' + mb), fetch('./PGV_Tab_Nghi.html' + mb), fetch('./PGV_Tab_YKien.html' + mb), 
             fetch('./PGV_Tab_BaoCao.html' + mb), fetch('./PGV_PhanQuyen.html' + mb), fetch('./TieuChiDanhGia.html' + mb),
-            fetch('./LichSuDangNhap.html' + mb), fetch('./Tieuchinhanvien.html' + mb)
+            fetch('./LichSuDangNhap.html' + mb), fetch('./Tieuchinhanvien.html' + mb), fetch('./TieuChiQuanLy.html' + mb)
         ]);
         
         document.getElementById('khuVucMenu').innerHTML = await phMenu.text(); 
@@ -401,11 +405,12 @@
         document.getElementById('khuTieuChi').innerHTML = await phTieuChi.text(); 
         document.getElementById('khuLichSu').innerHTML = await phLichSu.text(); 
         document.getElementById('khuTieuChiNV').innerHTML = await phTieuChiNV.text(); 
+        document.getElementById('khuTieuChiQL').innerHTML = await phTieuChiQL.text(); 
         
         if (typeof PGV_LINK_LOGO !== 'undefined') { var mnLg = document.getElementById('menu_logo'); if(mnLg) mnLg.src = PGV_LINK_LOGO; }
         if (typeof PGV_TEN_TRUONG !== 'undefined') { var mnSc = document.getElementById('menu_school_name'); if(mnSc) mnSc.innerText = PGV_TEN_TRUONG; }
         
-        ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen', 'khuTieuChi', 'khuLichSu', 'khuTieuChiNV'].forEach(i => thuchScript(document.getElementById(i)));
+        ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen', 'khuTieuChi', 'khuLichSu', 'khuTieuChiNV', 'khuTieuChiQL'].forEach(i => thuchScript(document.getElementById(i)));
       } catch (e) { throw new Error("LỖI KẾT NỐI TỆP GIAO DIỆN: " + e.message); }
     }
 
