@@ -691,7 +691,6 @@ function veBangNviec(db) {
         
         let valChon = ""; let valConfig = rawH;
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
-        /* [ĐÃ SỬA] Ngăn chặn ghi đè cấu hình nếu có dấu chấm phẩy hoặc xuống dòng */
         else if(!rawH.includes("|") && !rawH.includes(";") && !rawH.includes("\n") && rawH !== "") { valChon = rawH; valConfig = rawH; }
         
         let safeConfig = valConfig.replace(/"/g, '&quot;');
@@ -706,7 +705,6 @@ function veBangNviec(db) {
 
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         
-        /* [ĐÃ SỬA] Kích hoạt hộp chọn cho cả dấu gạch đứng, chấm phẩy và xuống dòng */
         if (valConfig.includes("|") || valConfig.includes(";") || valConfig.includes("\n")) {
             let optsArray = [];
             if (valConfig.includes(";")) {
@@ -724,12 +722,14 @@ function veBangNviec(db) {
                     }
                 }
             } else {
-                optsArray = valConfig.split(",");
+                /* [ĐÃ FIX LỖI] Đổi dấu phẩy "," thành dấu gạch đứng "|" */
+                optsArray = valConfig.split("|");
             }
 
             let mangGiaTriDiem = [];
             optsArray.forEach(opt => {
-                let kv = opt.split("|"); 
+                /* [ĐÃ FIX] Xử lý an toàn tránh lỗi Key-Value */
+                let kv = opt.includes("|") ? opt.split("|") : [opt]; 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 if(txt !== "") {
@@ -748,7 +748,8 @@ function veBangNviec(db) {
             let danhSachHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
 
             optsArray.forEach(opt => {
-                let kv = opt.split("|"); 
+                /* [ĐÃ FIX] Đồng bộ an toàn Key-Value */
+                let kv = opt.includes("|") ? opt.split("|") : [opt]; 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 
