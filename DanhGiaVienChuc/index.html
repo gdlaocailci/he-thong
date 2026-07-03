@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống Đánh giá viên chức</title>
- <style>
+    
+    <style>
         :root { --mau-c: #0056b3; --mau-n: #f4f7f6; --mau-t: #333333; }
         body { font-family: 'Times New Roman', Times, serif; background-color: var(--mau-n); color: var(--mau-t); line-height: 1.4; margin: 0; padding: 0; }
         
@@ -61,24 +62,6 @@
         .n-do { background: #dc3545; color: white; }
         .n-cam { background: #ffc107; color: #333; }
         .n-cam:hover { background: #e0a800; }
-        
-        .khung-trai .n-dx {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: bold;
-            padding: 6px 15px;
-            display: inline-block;
-            margin: 0 auto;
-            position: static;
-            top: auto;
-            right: auto;
-        }
-        .khung-trai .n-dx:hover { background: #b02a37; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 0px; }
         th, td { border: 1px solid #dee2e6; padding: 8px 10px; text-align: left; vertical-align: middle; }
@@ -140,6 +123,46 @@
             transition: background 0.2s;
         }
         .btn-copy-ai:hover { background: #bae6fd; }
+
+        /* ==========================================================================
+           HIỆU ỨNG NỔI 3D VÀ SHINY MÔ PHỎNG TỪ REACTBITS.DEV (ÁP DỤNG MỌI NÚT)
+           ========================================================================== */
+        .btn-reactbits-shiny {
+            position: relative;
+            overflow: hidden;
+            /* Tạo độ nảy mượt mà khi nổi lên và hạ xuống */
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease !important; 
+            will-change: transform, box-shadow; /* Tối ưu hóa render cho trình duyệt */
+        }
+        .btn-reactbits-shiny::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-20deg);
+            animation: reactbits-sweep 4s infinite;
+        }
+        @keyframes reactbits-sweep {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+        
+        /* Hiệu ứng 3D NỔI LÊN khi di chuột vào (Hover) */
+        .btn-reactbits-shiny:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.03) !important; /* Nhấc cao lên 4px và phóng to 3% */
+            box-shadow: 0 8px 18px rgba(0,0,0,0.25), inset 0 -2px 4px rgba(0,0,0,0.1) !important; /* Bóng đổ sâu hơn */
+            z-index: 10; /* Đảm bảo nút không bị che khuất khi nở ra */
+        }
+        
+        /* Hiệu ứng LÚN XUỐNG khi click chuột (Active) */
+        .btn-reactbits-shiny:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98) !important; /* Lún nhẹ xuống dưới vị trí gốc */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important; /* Thu gọn bóng đổ */
+        }
     </style>
 </head>
 <body>
@@ -177,7 +200,7 @@
             </div>
             
             <div style="margin-top: 20px; display: flex; justify-content: center; border-top: 1px dashed #b8daff; padding-top: 15px;">
-                <button onclick="f_x_vao_khach()" style="background: transparent; border: 1px solid #ccc; border-radius: 4px; padding: 6px 15px; color: #555; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;">Vào xem với tư cách Khách</button>
+                <button onclick="f_x_vao_khach()" class="btn-reactbits-shiny" style="background: transparent; border: 1px solid #ccc; border-radius: 4px; padding: 6px 15px; color: #555; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;">Vào xem với tư cách Khách</button>
             </div>
         </div>
         
@@ -234,8 +257,14 @@
             </span>
         </div>
         
-        <div style="margin-top: auto; padding: 15px 0; text-align: center; width: 100%;">
-            <button class="n-dx" onclick="f_x_logout()">Đăng xuất</button>
+        <div style="margin-top: auto; padding: 15px 0; width: 100%; display: flex; justify-content: center;">
+            <button onclick="f_x_logout()" class="btn-reactbits-shiny" style="border: none; background: linear-gradient(145deg, #ff6b6b, #c82333); color: #ffffff; font-weight: bold; padding: 10px 20px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 -3px 4px rgba(0,0,0,0.2); cursor: pointer; transition: all 0.2s ease; width: 85%;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-power" viewBox="0 0 16 16" style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
+                  <path d="M7.5 1v7h1V1h-1z"/>
+                  <path d="M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z"/>
+                </svg>
+                <span style="font-size: 15px; letter-spacing: 0.5px;">Đăng xuất</span>
+            </button>
         </div>
     </div>
     <div class="k-ngoai" id="main-ui">
@@ -288,8 +317,8 @@
                 </div>
                 
                 <div id="vungNutBam" style="display: flex; gap: 15px; margin-top: 15px;">
-                    <button id="btnLuuKetQua" class="n-bam n-xanh-l" style="flex: 2; margin-top: 0;" onclick="f_x_i()">LƯU KẾT QUẢ</button>
-                    <button id="btnXuatPDF" class="n-bam n-cam" style="flex: 1; margin-top: 0; font-size: 18px; padding: 12px;" onclick="f_x_xuat_pdf()">XUẤT BẢN PDF</button>
+                    <button id="btnLuuKetQua" class="n-bam n-xanh-l btn-reactbits-shiny" style="flex: 2; margin-top: 0;" onclick="f_x_i()">LƯU KẾT QUẢ</button>
+                    <button id="btnXuatPDF" class="n-bam n-cam btn-reactbits-shiny" style="flex: 1; margin-top: 0; font-size: 18px; padding: 12px;" onclick="f_x_xuat_pdf()">XUẤT BẢN PDF</button>
                 </div>
             </div>
         </div>
@@ -309,7 +338,7 @@
         </div>
         <div class="ai-modal-footer">
             <textarea id="aiQueryInput" placeholder="Ví dụ: Tiêu chí xếp loại của giáo viên thế nào?" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px; resize:none; height:45px; font-family:inherit; font-size: 15px;"></textarea>
-            <button onclick="guiCauHoiAI()" id="btnSendAI" style="background:var(--mau-c); color:white; border:none; padding:0 25px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 15px;">Hỏi AI</button>
+            <button onclick="guiCauHoiAI()" id="btnSendAI" class="btn-reactbits-shiny" style="background:var(--mau-c); color:white; border:none; padding:0 25px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 15px;">Hỏi AI</button>
         </div>
     </div>
 </div>
@@ -322,7 +351,7 @@
     </svg>
     <div style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">GHI NHẬN THÀNH CÔNG</div>
     <div style="font-size: 16px; color: #333;">Dữ liệu tự đánh giá của bạn đã được lưu trữ an toàn.</div>
-    <button class="n-dong-tb" onclick="dongThongBao()">Xác nhận</button>
+    <button class="n-dong-tb btn-reactbits-shiny" onclick="dongThongBao()">Xác nhận</button>
 </div>
 
 <div id="ui-canh-bao">
@@ -331,7 +360,7 @@
     </svg>
     <div style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">THÔNG BÁO HỆ THỐNG</div>
     <div id="noi-dung-canh-bao" style="font-size: 16px; color: #333; line-height: 1.5;"></div>
-    <button class="n-dong-cb" onclick="dongCanhBaoUI()">Đóng</button>
+    <button class="n-dong-cb btn-reactbits-shiny" onclick="dongCanhBaoUI()">Đóng</button>
 </div>
 
 <script src="ketnoi.js"></script>
@@ -1207,7 +1236,7 @@ function f_x_e(m_n) {
             html = `<input type="text" class="o-n-bang k-o-n h-dong-bo k-hoat-t" value="${kq}" readonly title="Khóa - Dữ liệu tự động đồng bộ">`;
         } 
         else if (tg === "THANHTICH_HS_DONG") {
-            html = `<div class="k-phu"><div class="k-d-k"><select id="h_c_${index}"><option value="QUOCGIA">Quốc gia</option><option value="TINH">Cấp Tỉnh</option><option value="XA">Xã/Cụm</option></select><select id="h_g_${index}"><option value="0">Giải Nhất</option><option value="1">Giải Nhìn</option><option value="2">Giải Ba</option><option value="3">KK</option></select><select id="h_l_${index}"><option value="1">Cá nhân</option><option value="1.5">Tập thể (x1.5)</option></select><input type="number" id="h_s_${index}" value="1" min="1" style="width: 50px;"><button class="n-bam n-xanh-b n-nho" onclick="${fnThem}(${index})">Thêm</button><button class="n-bam n-do n-nho" onclick="${fnXoa}(${index})">Xóa</button></div><div id="h_t_${index}" class="k-k-q" style="font-weight: normal; font-size: 14px;">${kq ? kq.replace(/\\n/g, '<br>') : '...'}</div><input type="hidden" class="o-n-bang k-hoat-t" id="h_a_${index}" value="${kq}"></div>`;
+            html = `<div class="k-phu"><div class="k-d-k"><select id="h_c_${index}"><option value="QUOCGIA">Quốc gia</option><option value="TINH">Cấp Tỉnh</option><option value="XA">Xã/Cụm</option></select><select id="h_g_${index}"><option value="0">Giải Nhất</option><option value="1">Giải Nhìn</option><option value="2">Giải Ba</option><option value="3">KK</option></select><select id="h_l_${index}"><option value="1">Cá nhân</option><option value="1.5">Tập thể (x1.5)</option></select><input type="number" id="h_s_${index}" value="1" min="1" style="width: 50px;"><button class="n-bam n-xanh-b n-nho btn-reactbits-shiny" onclick="${fnThem}(${index})">Thêm</button><button class="n-bam n-do n-nho btn-reactbits-shiny" onclick="${fnXoa}(${index})">Xóa</button></div><div id="h_t_${index}" class="k-k-q" style="font-weight: normal; font-size: 14px;">${kq ? kq.replace(/\\n/g, '<br>') : '...'}</div><input type="hidden" class="o-n-bang k-hoat-t" id="h_a_${index}" value="${kq}"></div>`;
         } else if (tg.includes("|")) {
             let t_c = kq ? "" : `<option value="" data-p="0" disabled selected>-- Chọn mức --</option>`;
             html = `<select class="o-n-bang k-hoat-t">` + t_c + tg.split(",").map(opt => {
