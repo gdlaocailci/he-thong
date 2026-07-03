@@ -95,9 +95,17 @@ function themDongTieuChiQL() {
         <td><input type="text" class="nhapCHTTCQL text-center text-danger fw-bold" placeholder="<5"></td>
     `;
     
-    if (bg.firstChild) bg.insertBefore(tr, bg.firstChild);
-    else bg.appendChild(tr);
-    cdangTCQL(tr.querySelector('.nhapNoiDungTCQL'));
+    /* [ĐÃ SỬA] Thêm dòng mới xuống dưới cùng của bảng */
+    bg.appendChild(tr);
+    
+    let oNhapNoiDung = tr.querySelector('.nhapNoiDungTCQL');
+    cdangTCQL(oNhapNoiDung);
+    
+    /* [ĐÃ SỬA] Đẩy dòng mới lên vùng nhìn thấy (cuộn mượt) và kích hoạt con trỏ chuột vào ô Nội dung */
+    setTimeout(() => {
+        tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        oNhapNoiDung.focus();
+    }, 100);
 }
 
 function xoaDongTieuChiQL(btn) {
