@@ -1,4 +1,3 @@
-
 <style>
   .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
   .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
@@ -886,7 +885,7 @@ function tuDongDinhDangNgayOnBlur(ptu) {
     }
 }
 /* ==========================================================================
-   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (LOGIC TIẾN ĐỘ & THỜI GIAN)
+   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (BỔ SUNG ĐIỀU KIỆN TIẾN ĐỘ)
    ========================================================================== */
 function moDanhSachDiem(suKien, ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
@@ -973,11 +972,12 @@ function moDanhSachDiem(suKien, ptu) {
             } else {
                 // HOÀN THÀNH ĐÚNG HOẶC SỚM HẠN (>= 0)
                 if (gtriTdo !== "") {
-                    // Trưởng hợp 1: Tiến độ CÓ yêu cầu (khác rỗng)
+                    // Trường hợp 1: Tiến độ CÓ yêu cầu (khác rỗng)
                     if (khoangCachNgay >= 2) {
                         mucToiDaDuocChon = tongSoMuc - 1; // Sớm từ 2 ngày trở lên -> Chọn tối đa
-                    } else {
-                        mucToiDaDuocChon = Math.max(0, tongSoMuc - 2); // Đúng hạn hoặc sớm 1 ngày -> Trừ mức cao nhất
+                    } else if (khoangCachNgay >= 0 && khoangCachNgay <= 1) {
+                        // [NÂNG CẤP MỚI]: Khoảng cách >=0 và <=1 -> Chọn đến mức cao thứ 2 (trừ mức cao nhất)
+                        mucToiDaDuocChon = Math.max(0, tongSoMuc - 2); 
                     }
                 } else {
                     // Trường hợp 2: Tiến độ RỖNG
