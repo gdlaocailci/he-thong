@@ -831,7 +831,7 @@ function phanTichNgayVN(chuoiNgay) {
     return null; // Trả về null nếu nhập chữ hoặc không đúng định dạng ngày
 }
 /* ==========================================================================
-   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (ĐÃ VÁ LỖI CÔNG THỨC THỜI GIAN)
+   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (LOGIC TIẾN ĐỘ & THỜI GIAN)
    ========================================================================== */
 function moDanhSachDiem(suKien, ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
@@ -852,7 +852,7 @@ function moDanhSachDiem(suKien, ptu) {
         return; 
     }
 
-    // Đóng tất cả các danh sách khác đang mở
+    // Đóng tất cả các danh sách khác đang mở để tránh chồng chéo
     document.querySelectorAll('.khung-danh-sach').forEach(ds => {
         if (ds !== ptu.closest('.vung-chon-diem').querySelector('.khung-danh-sach')) {
             ds.style.display = 'none';
@@ -863,12 +863,12 @@ function moDanhSachDiem(suKien, ptu) {
     let danhSach = vungChon.querySelector('.khung-danh-sach');
     
     if (danhSach.style.display === 'none' || danhSach.style.display === '') {
-        // --- BẮT ĐẦU: XỬ LÝ RÀNG BUỘC ĐIỂM THEO CÔNG THỨC (GIAO - HT) ---
+        // --- BẮT ĐẦU: XỬ LÝ RÀNG BUỘC ĐIỂM (GIAO - HT) KẾT HỢP TIẾN ĐỘ ---
         let theTgGiao = dongHienTai.querySelector('.nhapTgGiao');
-        let theTdo = dongHienTai.querySelector('.nhapTdo'); // Cột tiến độ
+        let theTdo = dongHienTai.querySelector('.nhapTdo'); 
         
         let gtriTgGiao = theTgGiao ? theTgGiao.value.trim() : "";
-        let gtriTdo = theTdo ? theTdo.value.trim() : "";
+        let gtriTdo = theTdo ? theTdo.value.trim() : ""; 
         
         let ngayGiao = phanTichNgayVN(gtriTgGiao);
         let ngayHt = phanTichNgayVN(gtriTgHt);
@@ -907,24 +907,31 @@ function moDanhSachDiem(suKien, ptu) {
             // TÍNH TOÁN: Thời gian Giao - Thời gian Hoàn thành
             let khoangCachNgay = (timeGiao - timeHt) / msMotNgay; 
             
-            if (khoangCachNgay >= 2) {
-                // >= 2: Hoàn thành sớm (ví dụ Giao 12, HT 8, 9, 10) -> Chọn toàn diện các mức
-                mucToiDaDuocChon = tongSoMuc - 1; 
-            } else if (khoangCachNgay >= 0 && khoangCachNgay < 2) {
-                // 0 hoặc 1: Hoàn thành đúng hạn hoặc sớm 1 ngày -> Trừ mức cao nhất
-                mucToiDaDuocChon = Math.max(0, tongSoMuc - 2); 
-            } else {
-                // < 0: Hoàn thành muộn (ví dụ Giao 12, HT 13, 14) -> Chỉ được chọn mức > 0 một bậc
+            if (khoangCachNgay < 0) {
+                // HOÀN THÀNH MUỘN (< 0): Chỉ được chọn mức > 0 một bậc
                 let viTriLonHon0 = dsGiaTriSo.findIndex(v => v > 0);
                 if (viTriLonHon0 !== -1) {
                     mucToiDaDuocChon = viTriLonHon0;
                 } else {
                     mucToiDaDuocChon = 0;
                 }
+            } else {
+                // HOÀN THÀNH ĐÚNG HOẶC SỚM HẠN (>= 0)
+                if (gtriTdo !== "") {
+                    // Trưởng hợp 1: Tiến độ CÓ yêu cầu (khác rỗng)
+                    if (khoangCachNgay >= 2) {
+                        mucToiDaDuocChon = tongSoMuc - 1; // Sớm từ 2 ngày trở lên -> Chọn tối đa
+                    } else {
+                        mucToiDaDuocChon = Math.max(0, tongSoMuc - 2); // Đúng hạn hoặc sớm 1 ngày -> Trừ mức cao nhất
+                    }
+                } else {
+                    // Trường hợp 2: Tiến độ RỖNG
+                    mucToiDaDuocChon = tongSoMuc - 1; // Chỉ cần >= 0 là được chọn tối đa
+                }
             }
         }
         
-        // Áp dụng thuật toán hiển thị/ẩn
+        // Áp dụng hiển thị/ẩn các mức điểm theo logic đã xét
         cacMucChon.forEach((muc, index) => {
             if (index === 0) {
                 muc.style.display = 'block'; // Luôn cho phép dòng "-- Trống --"
