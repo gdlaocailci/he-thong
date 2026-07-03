@@ -75,7 +75,13 @@ function cdangTC(ptu) {
 }
 
 function themDongTieuChi() {
+    // 1. Kiểm tra an toàn: Tìm bảng trước khi thao tác
     const bg = document.querySelector('#bangTieuChi tbody');
+    if (!bg) {
+        console.error("Lỗi: Không tìm thấy bảng có ID là #bangTieuChi trong trang này. Vui lòng kiểm tra lại file HTML.");
+        return;
+    }
+
     const tr = document.createElement('tr');
     tr.className = "dongTieuChi";
     
@@ -99,16 +105,22 @@ function themDongTieuChi() {
         <td><input type="text" class="nhapHTTC text-center fw-bold" placeholder=">=5"></td>
         <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5"></td>
     `;
-    /* [ĐÃ SỬA] Thêm dòng mới xuống dưới cùng của bảng */
+    
+    // Thêm dòng
     bg.appendChild(tr);
     
+    // 2. Kiểm tra an toàn trước khi gọi hàm bổ trợ
     let oNhapNoiDung = tr.querySelector('.nhapNoiDungTC');
-    cdangTC(oNhapNoiDung);
+    if (typeof cdangTC === 'function') {
+        cdangTC(oNhapNoiDung);
+    } else {
+        console.warn("Cảnh báo: Hàm cdangTC chưa được định nghĩa.");
+    }
     
-    /* [ĐÃ SỬA] Đẩy dòng mới lên vùng nhìn thấy (cuộn mượt) và kích hoạt con trỏ chuột vào ô Nội dung */
+    // 3. Cuộn và Focus an toàn
     setTimeout(() => {
-        tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        oNhapNoiDung.focus();
+        if (tr) tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        if (oNhapNoiDung) oNhapNoiDung.focus();
     }, 100);
 }
    
