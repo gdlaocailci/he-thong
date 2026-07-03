@@ -99,12 +99,19 @@ function themDongTieuChi() {
         <td><input type="text" class="nhapHTTC text-center fw-bold" placeholder=">=5"></td>
         <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5"></td>
     `;
+    /* [ĐÃ SỬA] Thêm dòng mới xuống dưới cùng của bảng */
+    bg.appendChild(tr);
     
-    if (bg.firstChild) bg.insertBefore(tr, bg.firstChild);
-    else bg.appendChild(tr);
-    cdangTC(tr.querySelector('.nhapNoiDungTC'));
+    let oNhapNoiDung = tr.querySelector('.nhapNoiDungTC');
+    cdangTC(oNhapNoiDung);
+    
+    /* [ĐÃ SỬA] Đẩy dòng mới lên vùng nhìn thấy (cuộn mượt) và kích hoạt con trỏ chuột vào ô Nội dung */
+    setTimeout(() => {
+        tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        oNhapNoiDung.focus();
+    }, 100);
 }
-
+   
 function xoaDongTieuChi(btn) {
     if (confirm("Đồng chí có chắc chắn muốn xóa dòng tiêu chí này không?")) btn.closest('tr').remove();
 }
