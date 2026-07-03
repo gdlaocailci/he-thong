@@ -1343,25 +1343,53 @@
         }
     }
 
-    document.addEventListener('fullscreenchange', (event) => {
+    // =========================================================================
+    // KHỐI XỬ LÝ TOÀN MÀN HÌNH TỰ ĐỘNG (TỐI ƯU HÓA HIỆU SUẤT)
+    // =========================================================================
+    
+    // Tối ưu hóa: Cờ trạng thái giúp ngăn chặn gọi API liên tục gây nghẽn trình duyệt
+    let dangChoTuongTac = true; 
+    const danhSachSuKien = ['click', 'touchstart', 'keydown'];
+
+    // Hàm xử lý bung màn hình với tốc độ phản hồi ngay lập tức
+    function xuLyBungManHinh(e) {
+        // 1. Chốt chặn an toàn: Bỏ qua nếu đang không chờ tương tác HOẶC click vào nút Bật/Tắt thủ công
+        if (!dangChoTuongTac || (e && e.target && e.target.closest && e.target.closest('.tray-icon'))) return;
+
+        // 2. Kích hoạt toàn màn hình
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log("Hệ thống: Trình duyệt từ chối lệnh full màn hình do chính sách bảo mật.");
+            });
+        }
+
+        // 3. Khóa cờ và gỡ bỏ bộ lắng nghe ngay lập tức để tiết kiệm RAM
+        dangChoTuongTac = false;
+        danhSachSuKien.forEach(suKien => document.removeEventListener(suKien, xuLyBungManHinh));
+    }
+
+    // Gài bộ lắng nghe cho lần tải trang đầu tiên
+    danhSachSuKien.forEach(suKien => document.addEventListener(suKien, xuLyBungManHinh));
+
+    // Gộp chung bộ lắng nghe sự kiện thay đổi trạng thái (Đổi icon + Gài lại lệnh chờ)
+    document.addEventListener('fullscreenchange', () => {
         const icon = document.getElementById('fullscreen-icon');
-        if (icon) {
-            if (document.fullscreenElement) {
-                icon.innerText = 'fullscreen_exit';
-            } else {
-                icon.innerText = 'fullscreen';
-            }
+        
+        if (document.fullscreenElement) {
+            // Đang ở chế độ Full màn hình
+            if (icon) icon.innerText = 'fullscreen_exit';
+        } else {
+            // Đã thoát Full màn hình
+            if (icon) icon.innerText = 'fullscreen';
+            
+            // Đợi 300ms rồi gài lại sự kiện để tránh xung đột với chính thao tác click thoát
+            setTimeout(() => {
+                dangChoTuongTac = true;
+                danhSachSuKien.forEach(suKien => document.addEventListener(suKien, xuLyBungManHinh));
+            }, 300);
         }
     });
 
-    desktopArea.addEventListener('click', function autoFullscreen(e) {
-        if (e.target === desktopArea) {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {});
-            }
-            desktopArea.removeEventListener('click', autoFullscreen);
-        }
-    });
 </script>
 </body>
 </html>
