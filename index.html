@@ -1374,6 +1374,49 @@
     cacSuKienKichHoat.forEach(suKien => {
         document.addEventListener(suKien, kichHoatToanManHinhTuDong, { once: true });
     });
+    //===================================================
+    // Khai báo tập hợp các tương tác vật lý cơ bản
+    const cacSuKienKichHoat = ['click', 'touchstart', 'keydown'];
+    
+    // Hàm xử lý gọi API toàn màn hình
+    function kichHoatToanManHinhTuDong() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log("Trình duyệt từ chối full màn hình: ", err.message);
+            });
+        }
+    }
+
+    // Khai báo hàm lắng nghe tương tác để bung màn hình
+    function choDoiTuongTacDeBungManHinh(e) {
+        // Bỏ qua nếu người dùng chủ động bấm vào nút "Bật/Tắt" dưới Taskbar để tránh xung đột lệnh
+        if (e && e.target && e.target.closest && e.target.closest('.tray-icon')) return;
+
+        kichHoatToanManHinhTuDong();
+
+        // Sau khi bung màn hình thành công, gỡ bộ lắng nghe để tối ưu tài nguyên bộ nhớ
+        cacSuKienKichHoat.forEach(suKien => {
+            document.removeEventListener(suKien, choDoiTuongTacDeBungManHinh);
+        });
+    }
+
+    // 1. Gắn bộ lắng nghe cho lần tương tác đầu tiên khi trang vừa tải xong
+    cacSuKienKichHoat.forEach(suKien => {
+        document.addEventListener(suKien, choDoiTuongTacDeBungManHinh);
+    });
+
+    // 2. Lắng nghe sự kiện của hệ thống khi trạng thái màn hình thay đổi (ví dụ: bấm ESC để thoát)
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            // Nếu phát hiện đã thoát toàn màn hình, đợi 300 mili-giây rồi "gài" lại bộ lắng nghe
+            // (Độ trễ nhỏ này giúp hệ thống không bắt nhầm chính thao tác click vừa dùng để thoát)
+            setTimeout(() => {
+                cacSuKienKichHoat.forEach(suKien => {
+                    document.addEventListener(suKien, choDoiTuongTacDeBungManHinh);
+                });
+            }, 300);
+        }
+    });
 </script>
 </body>
 </html>
