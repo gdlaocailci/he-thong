@@ -67,8 +67,17 @@ function cdangTCNV(ptu) {
     ptu.style.height = (ptu.scrollHeight) + 'px'; 
 }
 
+//=============================================================================
+// KHỐI HÀM: THÊM DÒNG TIÊU CHÍ NHÂN VIÊN
+//=============================================================================
 function themDongTieuChiNV() {
+    // Kiểm tra an toàn sự tồn tại của bảng
     const bg = document.querySelector('#bangTieuChiNV tbody');
+    if (!bg) {
+        console.error("Lỗi hệ thống: Không tìm thấy bảng #bangTieuChiNV");
+        return;
+    }
+    
     const tr = document.createElement('tr');
     tr.className = "dongTieuChiNV";
     
@@ -93,11 +102,21 @@ function themDongTieuChiNV() {
         <td><input type="text" class="nhapCHTTCNV text-center text-danger fw-bold" placeholder="<5"></td>
     `;
     
-    if (bg.firstChild) bg.insertBefore(tr, bg.firstChild);
-    else bg.appendChild(tr);
-    cdangTCNV(tr.querySelector('.nhapNoiDungTCNV'));
+    // Thêm dòng mới xuống vị trí dưới cùng của bảng
+    bg.appendChild(tr);
+    
+    // Xác định ô nhập liệu chính và kích hoạt định dạng
+    let oNhapNoiDung = tr.querySelector('.nhapNoiDungTCNV');
+    if (typeof cdangTCNV === 'function') {
+        cdangTCNV(oNhapNoiDung);
+    }
+    
+    // Xử lý cuộn màn hình và tự động đặt con trỏ chuột
+    setTimeout(() => {
+        tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        oNhapNoiDung.focus();
+    }, 100);
 }
-
 function xoaDongTieuChiNV(btn) {
     if (confirm("Đồng chí có chắc chắn muốn xóa dòng tiêu chí NHÂN VIÊN này không?")) btn.closest('tr').remove();
 }
