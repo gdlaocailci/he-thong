@@ -1,4 +1,5 @@
 <style>
+  /* --- KHỐI BỐ CỤC CHUNG --- */
   .sidebar-menu { 
       width: 260px; 
       background: #1e3a8a; 
@@ -43,75 +44,113 @@
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 12px; /* Mở rộng khoảng cách để hiệu ứng nổi không bị chồng lấn */
       padding: 0 15px;
   }
   
-  /* HIỆU ỨNG NÚT BẤM (CẢM HỨNG TỪ REACTBITS) */
+  /* --- KHỐI HIỆU ỨNG NÚT BẤM (Nguồn cảm hứng: ReactBits.dev) --- */
   .menu-btn {
-      background: transparent;
+      background: rgba(255, 255, 255, 0.05);
       color: #e2e8f0;
-      border: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 12px 15px;
-      border-radius: 8px;
+      border-radius: 10px; 
       text-align: left;
       font-size: 14px;
       font-weight: bold;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s, color 0.3s;
+      /* Cấu hình transition mô phỏng gia tốc chuyển động mượt mà */
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   
+  /* Hiệu ứng vệt sáng lướt qua (Shine/Glare effect) */
   .menu-btn::before {
       content: '';
       position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: width 0.4s ease-out, height 0.4s ease-out;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
       z-index: 0;
   }
   
+  /* Trạng thái Hover: Hiệu ứng nổi (Floating) */
+  .menu-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
   .menu-btn:hover::before {
-      width: 300px;
-      height: 300px;
+      left: 100%;
   }
 
   .menu-btn i, .menu-btn span {
       position: relative;
       z-index: 1;
+      transition: transform 0.3s ease;
   }
 
-  .menu-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
-      transform: scale(1.02) translateX(3px);
+  /* Tạo hoạt ảnh nghiêng và phóng to nhẹ cho Icon khi Hover */
+  .menu-btn:hover i {
+      transform: scale(1.1) rotate(-5deg);
   }
   
+  /* Trạng thái Menu đang kích hoạt */
   .menu-btn.active {
       background: #3b82f6;
       color: #ffffff;
       box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+      border-color: #60a5fa;
   }
   
+  /* --- KHỐI HIỆU ỨNG NÚT ĐĂNG XUẤT 3D --- */
   .menu-logout {
-      color: #fca5a5 !important;
+      background: linear-gradient(145deg, #ef4444, #dc2626) !important;
+      color: #ffffff !important;
+      border: 1px solid #f87171;
+      margin-top: auto; 
+      justify-content: center;
+      /* Hiệu ứng hình khối 3D với viền bóng cứng */
+      box-shadow: 0 4px 0 #991b1b, 0 8px 15px rgba(239, 68, 68, 0.4) !important;
+      transition: all 0.2s ease !important;
   }
   
+  /* Hover: Đẩy khối 3D nổi bật hơn */
   .menu-logout:hover {
-      background: rgba(239, 68, 68, 0.1) !important;
-      color: #fef2f2 !important;
-      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+      background: linear-gradient(145deg, #f87171, #ef4444) !important;
+      transform: translateY(-5px) scale(1.03) !important;
+      box-shadow: 0 6px 0 #991b1b, 0 15px 25px rgba(239, 68, 68, 0.5) !important;
+  }
+
+  /* Active: Cảm giác lún xuống khi Click */
+  .menu-logout:active {
+      transform: translateY(2px) scale(0.98) !important;
+      box-shadow: 0 2px 0 #991b1b, 0 4px 10px rgba(239, 68, 68, 0.4) !important;
   }
   
+  /* Icon 3D với lớp drop-shadow đa chiều */
+  .menu-logout i {
+      font-size: 1.2rem;
+      filter: drop-shadow(1px 1px 0 #7f1d1d) drop-shadow(2px 2px 0 #7f1d1d) drop-shadow(3px 3px 0 #450a0a);
+      transition: transform 0.3s ease;
+  }
+  
+  .menu-logout:hover i {
+      transform: scale(1.15) rotate(5deg);
+  }
+
+  /* --- KHỐI CHÂN MENU --- */
   .menu-bottom-section {
       padding: 20px 15px;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -139,7 +178,7 @@
           <i class="bi bi-shield-lock"></i> <span>CẤP QUYỀN TRUY CẬP</span>
       </button>
 
-     <button class="menu-btn menu-logout" onclick="dangxg()" style="margin-top: auto; justify-content: center;">
+     <button class="menu-btn menu-logout" onclick="dangxg()">
           <i class="bi bi-box-arrow-right"></i> <span>ĐĂNG XUẤT</span>
       </button>
   </div>
