@@ -663,6 +663,9 @@ function ktraAnHienTieuDe(ptu) {
     tinhtTdong();
 }
 
+//=============================================================================
+// KHỐI HÀM VẼ BẢNG NHIỆM VỤ - ĐÃ VÁ LỖI HIỂN THỊ DROPDOWN CỦA QUẢN LÝ
+//=============================================================================
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
     if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
@@ -715,13 +718,12 @@ function veBangNviec(db) {
                     }
                 }
             } else {
-                /* [ĐÃ FIX LỖI] Đổi dấu phẩy "," thành dấu gạch đứng "|" */
+                /* [ĐÃ VÁ LỖI CỐT LÕI] - Chuyển dấu phẩy (,) thành dấu gạch đứng (|) */
                 optsArray = valConfig.split("|");
             }
 
             let mangGiaTriDiem = [];
             optsArray.forEach(opt => {
-                /* [ĐÃ FIX] Xử lý an toàn tránh lỗi Key-Value */
                 let kv = opt.includes("|") ? opt.split("|") : [opt]; 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
@@ -741,7 +743,6 @@ function veBangNviec(db) {
             let danhSachHtml = `<div class="muc-chon p-2 border-bottom text-dark" style="cursor:pointer; font-weight:normal; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '')">-- Trống --</div>`;
 
             optsArray.forEach(opt => {
-                /* [ĐÃ FIX] Đồng bộ an toàn Key-Value */
                 let kv = opt.includes("|") ? opt.split("|") : [opt]; 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
