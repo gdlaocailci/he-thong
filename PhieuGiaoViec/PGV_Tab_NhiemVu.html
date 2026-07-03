@@ -885,22 +885,26 @@ function tuDongDinhDangNgayOnBlur(ptu) {
     }
 }
 /* ==========================================================================
-   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (BỔ SUNG ĐIỀU KIỆN TIẾN ĐỘ)
+   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (KIỂM TRA CHẶT ĐỊNH DẠNG NGÀY)
    ========================================================================== */
 function moDanhSachDiem(suKien, ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     
     let dongHienTai = ptu.closest('tr');
     
-    // 1. KIỂM TRA NGÀY HOÀN THÀNH: Nếu chưa nhập thì chặn mở khung chọn điểm
+    // 1. KIỂM TRA NGÀY HOÀN THÀNH: Bắt buộc phải nhập và đúng chuẩn định dạng
     let theTgHt = dongHienTai.querySelector('.nhapTgHt');
     let gtriTgHt = theTgHt ? theTgHt.value.trim() : "";
     
-    if (!gtriTgHt) {
+    // Gọi hàm phân tích ngày để xác thực tính hợp lệ của chuỗi nhập vào
+    let ngayHt = phanTichNgayVN(gtriTgHt); 
+    
+    // Nếu rỗng HOẶC nhập sai định dạng (hàm phanTichNgayVN trả về null) -> Chặn mở danh sách
+    if (!gtriTgHt || ngayHt === null) {
         if (typeof hienThongb === 'function') {
-            hienThongb('cbh', '⚠️ Đồng chí cần nhập [Thời gian hoàn thành] trước khi đánh giá kết quả.');
+            hienThongb('cbh', '⚠️ Đồng chí cần nhập đầy đủ và đúng định dạng [Thời gian hoàn thành] (VD: 08/09/2026) trước khi đánh giá kết quả.');
         } else {
-            alert('⚠️ Đồng chí cần nhập [Thời gian hoàn thành] trước khi đánh giá kết quả.');
+            alert('⚠️ Đồng chí cần nhập đầy đủ và đúng định dạng [Thời gian hoàn thành] (VD: 08/09/2026) trước khi đánh giá kết quả.');
         }
         suKien.stopPropagation();
         return; 
@@ -925,7 +929,6 @@ function moDanhSachDiem(suKien, ptu) {
         let gtriTdo = theTdo ? theTdo.value.trim() : ""; 
         
         let ngayGiao = phanTichNgayVN(gtriTgGiao);
-        let ngayHt = phanTichNgayVN(gtriTgHt);
         
         let cacMucChon = danhSach.querySelectorAll('.muc-chon');
         let dsGiaTriSo = [];
@@ -976,7 +979,7 @@ function moDanhSachDiem(suKien, ptu) {
                     if (khoangCachNgay >= 2) {
                         mucToiDaDuocChon = tongSoMuc - 1; // Sớm từ 2 ngày trở lên -> Chọn tối đa
                     } else if (khoangCachNgay >= 0 && khoangCachNgay <= 1) {
-                        // [NÂNG CẤP MỚI]: Khoảng cách >=0 và <=1 -> Chọn đến mức cao thứ 2 (trừ mức cao nhất)
+                        // Khoảng cách >=0 và <=1 -> Chọn đến mức cao thứ 2 (trừ mức cao nhất)
                         mucToiDaDuocChon = Math.max(0, tongSoMuc - 2); 
                     }
                 } else {
