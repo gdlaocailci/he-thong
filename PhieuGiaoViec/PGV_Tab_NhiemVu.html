@@ -678,6 +678,33 @@ function ktraAnHienTieuDe(ptu) {
     }
     tinhtTdong();
 }
+//=============================================================================
+// HÀM CHUYỂN ĐỔI CHUỖI SỐ THÀNH ĐỊNH DẠNG NGÀY TRỰC TIẾP KHI NHẬP (ONINPUT)
+//=============================================================================
+function tuDongDinhDangNgay(ptu) {
+    // Ép kiểu, loại bỏ các ký tự không phải là số và chỉ lấy tối đa 8 chữ số đầu tiên
+    let giatri = ptu.value.replace(/\D/g, '').substring(0, 8);
+    let ketQua = '';
+    
+    // Tự động chèn dấu / theo từng mốc ký tự
+    if (giatri.length >= 1) {
+        ketQua += giatri.substring(0, 2);
+    }
+    if (giatri.length >= 3) {
+        ketQua += '/' + giatri.substring(2, 4);
+    }
+    if (giatri.length >= 5) {
+        ketQua += '/' + giatri.substring(4, 8);
+    }
+    
+    // Ghi đè lại giá trị hiển thị trên ô nhập liệu
+    ptu.value = ketQua;
+    
+    // Kích hoạt tính toán nếu có thay đổi ảnh hưởng kết quả đánh giá
+    if (typeof tinhtTdong === 'function') {
+        tinhtTdong();
+    }
+}
 
 //=============================================================================
 // KHỐI HÀM VẼ BẢNG NHIỆM VỤ - ĐÃ VÁ LỖI HIỂN THỊ DROPDOWN CỦA QUẢN LÝ
@@ -798,7 +825,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
-         <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}" onblur="tuDongDinhDangNgayOnBlur(this)"></td>
+          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}" oninput="tuDongDinhDangNgay(this)"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
          </tr>`;
