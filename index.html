@@ -1354,13 +1354,25 @@
         }
     });
 
-    desktopArea.addEventListener('click', function autoFullscreen(e) {
-        if (e.target === desktopArea) {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {});
-            }
-            desktopArea.removeEventListener('click', autoFullscreen);
+    // Khai báo tập hợp các tương tác vật lý cơ bản
+    const cacSuKienKichHoat = ['click', 'touchstart', 'keydown'];
+    
+    // Hàm xử lý mở toàn màn hình tự động ngay khi có tương tác đầu tiên
+    function kichHoatToanManHinhTuDong() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log("Trình duyệt từ chối full màn hình: ", err.message);
+            });
         }
+        // Gỡ bỏ bộ lắng nghe ngay sau khi kích hoạt thành công để tối ưu hiệu suất bộ nhớ
+        cacSuKienKichHoat.forEach(suKien => {
+            document.removeEventListener(suKien, kichHoatToanManHinhTuDong);
+        });
+    }
+
+    // Gắn bộ lắng nghe sự kiện lên toàn bộ tài liệu (chỉ chạy 1 lần duy nhất)
+    cacSuKienKichHoat.forEach(suKien => {
+        document.addEventListener(suKien, kichHoatToanManHinhTuDong, { once: true });
     });
 </script>
 </body>
