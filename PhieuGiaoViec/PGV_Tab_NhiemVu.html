@@ -831,14 +831,14 @@ function phanTichNgayVN(chuoiNgay) {
     return null; // Trả về null nếu nhập chữ hoặc không đúng định dạng ngày
 }
 /* ==========================================================================
-   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM TÙY CHỈNH KÈM RÀNG BUỘC
+   [CẬP NHẬT] HỆ THỐNG XỬ LÝ KHUNG CHỌN ĐIỂM (ĐÃ VÁ LỖI CÔNG THỨC THỜI GIAN)
    ========================================================================== */
 function moDanhSachDiem(suKien, ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     
     let dongHienTai = ptu.closest('tr');
     
-    // 1. KIỂM TRA NGÀY HOÀN THÀNH: Nếu chưa nhập thì không cho chọn điểm đánh giá
+    // 1. KIỂM TRA NGÀY HOÀN THÀNH: Nếu chưa nhập thì chặn mở khung chọn điểm
     let theTgHt = dongHienTai.querySelector('.nhapTgHt');
     let gtriTgHt = theTgHt ? theTgHt.value.trim() : "";
     
@@ -849,10 +849,10 @@ function moDanhSachDiem(suKien, ptu) {
             alert('⚠️ Đồng chí cần nhập [Thời gian hoàn thành] trước khi đánh giá kết quả.');
         }
         suKien.stopPropagation();
-        return; // Dừng ngay, chặn mở khung chọn điểm
+        return; 
     }
 
-    // Đóng tất cả các danh sách khác đang mở trên màn hình để tránh chồng chéo
+    // Đóng tất cả các danh sách khác đang mở
     document.querySelectorAll('.khung-danh-sach').forEach(ds => {
         if (ds !== ptu.closest('.vung-chon-diem').querySelector('.khung-danh-sach')) {
             ds.style.display = 'none';
@@ -863,9 +863,12 @@ function moDanhSachDiem(suKien, ptu) {
     let danhSach = vungChon.querySelector('.khung-danh-sach');
     
     if (danhSach.style.display === 'none' || danhSach.style.display === '') {
-        // --- BẮT ĐẦU: XỬ LÝ RÀNG BUỘC ĐIỂM THEO CÔNG THỨC (HT - GIAO) ---
+        // --- BẮT ĐẦU: XỬ LÝ RÀNG BUỘC ĐIỂM THEO CÔNG THỨC (GIAO - HT) ---
         let theTgGiao = dongHienTai.querySelector('.nhapTgGiao');
+        let theTdo = dongHienTai.querySelector('.nhapTdo'); // Cột tiến độ
+        
         let gtriTgGiao = theTgGiao ? theTgGiao.value.trim() : "";
+        let gtriTdo = theTdo ? theTdo.value.trim() : "";
         
         let ngayGiao = phanTichNgayVN(gtriTgGiao);
         let ngayHt = phanTichNgayVN(gtriTgHt);
@@ -873,7 +876,7 @@ function moDanhSachDiem(suKien, ptu) {
         let cacMucChon = danhSach.querySelectorAll('.muc-chon');
         let dsGiaTriSo = [];
         
-        // Thu thập và phân loại các mức điểm hiện có trong danh sách
+        // Thu thập và phân loại các mức điểm
         cacMucChon.forEach((muc, index) => {
             if (index > 0) { 
                 let valClick = muc.getAttribute('onclick');
@@ -901,18 +904,17 @@ function moDanhSachDiem(suKien, ptu) {
             let timeHt = Date.UTC(ngayHt.getFullYear(), ngayHt.getMonth(), ngayHt.getDate());
             let msMotNgay = 1000 * 60 * 60 * 24;
             
-            // Tính số ngày chênh lệch chính xác
-            let khoangCachNgay = (timeHt - timeGiao) / msMotNgay; 
+            // TÍNH TOÁN: Thời gian Giao - Thời gian Hoàn thành
+            let khoangCachNgay = (timeGiao - timeHt) / msMotNgay; 
             
             if (khoangCachNgay >= 2) {
-                // >= 2: Lựa chọn toàn diện không ngoại trừ
+                // >= 2: Hoàn thành sớm (ví dụ Giao 12, HT 8, 9, 10) -> Chọn toàn diện các mức
                 mucToiDaDuocChon = tongSoMuc - 1; 
             } else if (khoangCachNgay >= 0 && khoangCachNgay < 2) {
-                // >= 0 và < 2: Chọn tất cả NGOẠI TRỪ mức cao nhất
+                // 0 hoặc 1: Hoàn thành đúng hạn hoặc sớm 1 ngày -> Trừ mức cao nhất
                 mucToiDaDuocChon = Math.max(0, tongSoMuc - 2); 
             } else {
-                // < 0: Chỉ được chọn ở mức tối đa > 0 một bậc
-                // Tìm vị trí của mức điểm đầu tiên lớn hơn 0
+                // < 0: Hoàn thành muộn (ví dụ Giao 12, HT 13, 14) -> Chỉ được chọn mức > 0 một bậc
                 let viTriLonHon0 = dsGiaTriSo.findIndex(v => v > 0);
                 if (viTriLonHon0 !== -1) {
                     mucToiDaDuocChon = viTriLonHon0;
@@ -922,10 +924,10 @@ function moDanhSachDiem(suKien, ptu) {
             }
         }
         
-        // Áp dụng thuật toán hiển thị/ẩn cho từng dòng điểm
+        // Áp dụng thuật toán hiển thị/ẩn
         cacMucChon.forEach((muc, index) => {
             if (index === 0) {
-                muc.style.display = 'block'; // Luôn cho phép hiển thị dòng "-- Trống --"
+                muc.style.display = 'block'; // Luôn cho phép dòng "-- Trống --"
                 return;
             }
             if (xetDieuKien && tongSoMuc > 0) {
@@ -936,7 +938,6 @@ function moDanhSachDiem(suKien, ptu) {
                         let num = parseFloat(match[1]);
                         let thuHang = dsGiaTriSo.indexOf(num);
                         
-                        // Khóa mức điểm vượt quá điều kiện quy định
                         if (thuHang > mucToiDaDuocChon) {
                             muc.style.display = 'none'; 
                         } else {
@@ -945,17 +946,16 @@ function moDanhSachDiem(suKien, ptu) {
                     }
                 }
             } else {
-                // Nếu Thời gian giao là chữ (VD: Xuyên suốt) -> Cho phép chọn toàn diện
+                // Nếu Thời gian giao là chữ -> Không xét điều kiện, cho phép chọn toàn diện
                 muc.style.display = 'block';
             }
         });
         // --- KẾT THÚC: XỬ LÝ RÀNG BUỘC ĐIỂM ---
 
-        // Tạm thời hiển thị để trình duyệt tính toán kích thước thực
+        // Thuật toán UI: Mở khung và tránh bị che khuất
         danhSach.style.visibility = 'hidden';
         danhSach.style.display = 'block';
         
-        // Lấy tọa độ để áp dụng thuật toán đảo chiều danh sách (tránh bị che khuất)
         let toaDoNut = ptu.getBoundingClientRect();
         let chieuCaoDanhSach = danhSach.getBoundingClientRect().height;
         let vungCuonBang = ptu.closest('.table-responsive');
@@ -978,13 +978,11 @@ function moDanhSachDiem(suKien, ptu) {
             danhSach.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
         }
         
-        // Bật hiển thị chính thức
         danhSach.style.visibility = 'visible';
     } else {
         danhSach.style.display = 'none';
     }
     
-    // Ngăn chặn sự kiện click lan truyền
     suKien.stopPropagation(); 
 }
 //================================================================================
