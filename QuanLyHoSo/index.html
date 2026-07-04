@@ -66,13 +66,13 @@
         .desktop-icon { 
             position: absolute; 
             width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; touch-action: none; 
-            transition: all 0.3s ease;
-            opacity: 0; /* Mặc định tàng hình để đợi hiệu ứng PopIn */
+            transition: all 0.3s ease, transform 0.2s;
+            opacity: 0;
             z-index: 10;
             background: rgba(255, 255, 255, 0);
         }
 
-        /* ÁP DỤNG CÁC LỚP HIỆU ỨNG TÙY CHỌN (CHAINING ANIMATION) */
+        /* ÁP DỤNG CÁC LỚP HIỆU ỨNG TÙY CHỌN */
         .effect-none { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .effect-float { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsFloat 3s ease-in-out infinite 0.6s; }
         .effect-pulse { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsPulse 2s ease-in-out infinite 0.6s; }
@@ -376,7 +376,6 @@
                         </optgroup>
                     </select>
                 </div>
-                <!-- KHỐI BỔ SUNG: Chỉnh hiệu ứng React Bits -->
                 <div class="form-group">
                     <label>Hiệu ứng hiển thị (từ React Bits):</label>
                     <select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -498,7 +497,6 @@
                         </optgroup>
                     </select>
                 </div>
-                <!-- KHỐI BỔ SUNG: Chỉnh hiệu ứng cho Thư mục -->
                 <div class="form-group">
                     <label>Hiệu ứng hiển thị (từ React Bits):</label>
                     <select id="tm-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -509,13 +507,20 @@
                         <option value="glow">Tỏa sáng (Glow)</option>
                     </select>
                 </div>
-                <div class="form-group" style="margin-top: 15px;">
+                
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Gom nhanh các hồ sơ vào thư mục này:</label>
+                    <div id="tm-danhsach-hoso" style="max-height: 120px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
                     <label class="checkbox-label" style="background: #e8f5e9; padding: 10px; border-radius: 4px; border: 1px solid #a5d6a7;">
                         <input type="checkbox" id="tm-ispublic" value="public">
                         <span style="color: #2e7d32; font-weight: 600;">Mở khóa Công khai (Tương tác không cần Đăng nhập)</span>
                     </label>
                 </div>
-                <button class="form-native btn-submit" style="background-color: #8E24AA;" onclick="xuLyLuuThuMuc()">Ghi Nhận Dữ Liệu</button>
+                <button class="form-native btn-submit" style="background-color: #8E24AA;" onclick="xuLyLuuThuMuc()">Khởi tạo & Gom dữ liệu</button>
                 <div id="tm-form-status" class="status-text" style="color: #8E24AA;">Đang xử lý dữ liệu, vui lòng chờ...</div>
             </div>
         </div>
@@ -547,7 +552,7 @@
                     <select id="edit-loaiicon">
                         <option value="">-- Chọn phân loại lĩnh vực --</option>
                         <option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
-                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)">
+                        <optgroup label="Thanh tra & Pháp chế">
                             <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
                             <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
                             <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
@@ -624,7 +629,6 @@
                         </optgroup>
                     </select>
                 </div>
-                <!-- KHỐI BỔ SUNG: Chỉnh hiệu ứng React Bits Sửa -->
                 <div class="form-group">
                     <label>Hiệu ứng hiển thị (từ React Bits):</label>
                     <select id="edit-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -998,7 +1002,6 @@
         return { iconContent: iconContent, bgClass: bgClass };
     }
 
-    // LẤY MÃ CLASS HIỆU ỨNG TỪ BIẾN hieuung
     function layClassHieuUng(hieuUng) {
         switch(hieuUng) {
             case 'float': return 'effect-float';
@@ -1021,7 +1024,7 @@
             let cfg = layCauHinhIcon(type);
             let iconContent = cfg.iconContent;
             let bgClass = cfg.bgClass;
-            let effectClass = layClassHieuUng(item.hieuung); // Nạp class hiệu ứng
+            let effectClass = layClassHieuUng(item.hieuung);
 
             const div = document.createElement('div'); 
             div.className = `desktop-icon ${effectClass}`; 
@@ -1067,9 +1070,6 @@
         initializeLayout(); 
     }
 
-    // =========================================================================
-    // KHỐI QUẢN LÝ TƯƠNG TÁC THƯ MỤC CON & ĐIỀU CHUYỂN DỮ LIỆU
-    // =========================================================================
     function dongCuaSoThuMuc() {
         document.getElementById('window-folder-view').style.display = 'none';
         document.getElementById('folder-content-area').innerHTML = '';
@@ -1087,7 +1087,7 @@
         } else {
             childItems.forEach((item, index) => {
                 let cfg = layCauHinhIcon(item.iconType);
-                let effectClass = layClassHieuUng(item.hieuung); // Tải hiệu ứng vào icon con
+                let effectClass = layClassHieuUng(item.hieuung); 
 
                 const div = document.createElement('div');
                 div.className = `desktop-icon ${effectClass}`;
@@ -1179,19 +1179,31 @@
 
     function toggleTaoThuMucModal(isShow) {
         document.getElementById('window-tao-thumuc').style.display = isShow ? 'flex' : 'none';
-        if (!isShow) {
-            var elTd1 = document.getElementById('tm-td1');
-            var elLoaiIcon = document.getElementById('tm-loaiicon');
-            var elHieuUng = document.getElementById('tm-hieuung');
-            elTd1.value = ''; 
-            elTd1.style.borderColor = '#ccc'; 
-            elLoaiIcon.value = 'hoso_thumuc'; 
-            elHieuUng.value = 'none';
+        if (isShow) {
+            const containerDanhSach = document.getElementById('tm-danhsach-hoso');
+            containerDanhSach.innerHTML = '';
+            let countHoso = 0;
+            globalProfiles.forEach(p => {
+                // Chỉ lấy các hồ sơ đang ở desktop và không phải là thư mục
+                if ((!p.vitri || p.vitri === 'desktop') && !kiemTraLaThuMuc(p)) {
+                    countHoso++;
+                    containerDanhSach.innerHTML += `<label class="checkbox-label" style="display:block; margin-bottom:5px;"><input type="checkbox" class="cb-chon-hoso" value="${p.td1}"> ${p.td1}</label>`;
+                }
+            });
+            if (countHoso === 0) {
+                containerDanhSach.innerHTML = '<span style="color:#777; font-size:12px;">Không có hồ sơ nào trên màn hình để gom.</span>';
+            }
+        } else {
+            document.getElementById('tm-td1').value = ''; 
+            document.getElementById('tm-td1').style.borderColor = '#ccc'; 
+            document.getElementById('tm-loaiicon').value = 'hoso_thumuc'; 
+            document.getElementById('tm-hieuung').value = 'none';
             document.getElementById('tm-ispublic').checked = false; 
             document.getElementById('tm-form-status').style.display = 'none';
         }
     }
 
+    // NÂNG CẤP XỬ LÝ LƯU VÀ GOM HỒ SƠ CHUỖI LIÊN HOÀN (PROMISE ALL)
     function xuLyLuuThuMuc() {
         var elTd1 = document.getElementById('tm-td1');
         var elLoaiIcon = document.getElementById('tm-loaiicon');
@@ -1208,11 +1220,15 @@
             return; 
         }
 
+        let danhSachGom = [];
+        document.querySelectorAll('.cb-chon-hoso:checked').forEach(cb => danhSachGom.push(cb.value));
+
         var td2_encoded = btoa('#INTERNAL_FOLDER_CONTAINER#');
         var statusText = document.getElementById('tm-form-status');
-        statusText.innerText = "Đang đồng bộ cơ sở dữ liệu thư mục..."; 
+        statusText.innerText = "Đang khởi tạo thư mục..."; 
         statusText.style.display = 'block';
 
+        // 1. Tạo thư mục trước
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1229,18 +1245,45 @@
         })
         .then(response => response.text())
         .then(text => {
-            statusText.style.display = 'none';
             try {
                 let result = JSON.parse(text);
                 if (result.status === 'success') {
-                    toggleTaoThuMucModal(false);
-                    taiBieuTuongCongKhai(); 
+                    
+                    // 2. Nếu có chọn gom icon, chạy chuỗi Promise All để đổi vị trí từng icon
+                    if (danhSachGom.length > 0) {
+                        statusText.innerText = "Đang gom " + danhSachGom.length + " hồ sơ vào thư mục...";
+                        
+                        let gomPromises = danhSachGom.map(tenHoso Gom => {
+                            let item = globalProfiles.find(p => p.td1 === tenHoso Gom);
+                            if(!item) return Promise.resolve();
+                            
+                            let decodedUrl = item.td2;
+                            try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
+                            let safeEncodedTd2 = btoa(decodedUrl);
+
+                            return fetch(KETNOI.WEB_APP_URL, {
+                                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: td1, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+                            }).then(r => r.json()).catch(e => null);
+                        });
+
+                        Promise.all(gomPromises).then(() => {
+                            toggleTaoThuMucModal(false);
+                            taiBieuTuongCongKhai(); 
+                        });
+                    } else {
+                        toggleTaoThuMucModal(false);
+                        taiBieuTuongCongKhai(); 
+                    }
+
                 } else { 
+                    statusText.style.display = 'none';
                     alert("Phát sinh sự cố từ máy chủ: " + result.message); 
                 }
             } catch (jsonError) {
+                statusText.style.display = 'none';
                 console.error("Lỗi đồng bộ cấu hình:", text);
-                alert("Cảnh báo hệ thống: Máy chủ Google không phản hồi định dạng dữ liệu chuẩn JSON.");
+                alert("Cảnh báo hệ thống: Đảm bảo Thầy đã cập nhật Cột vitri trong Code.gs nhé!");
             }
         }).catch(err => {
             statusText.style.display = 'none';
@@ -1324,6 +1367,28 @@
             let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); 
             draggedIcon.style.left = newLeft + 'px'; 
             draggedIcon.style.top = newTop + 'px'; 
+            
+            // Nâng cấp: Phát sáng thư mục khi kéo Icon đè lên để dễ nhận diện
+            const draggedRect = draggedIcon.getBoundingClientRect();
+            const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
+            
+            document.querySelectorAll('.desktop-icon').forEach(iconEl => {
+                if (iconEl === draggedIcon) return;
+                const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
+                if (isNaN(idx)) return;
+                const profile = globalProfiles[idx];
+                
+                if (kiemTraLaThuMuc(profile)) {
+                    const rect = iconEl.getBoundingClientRect();
+                    if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
+                        iconEl.style.transform = 'scale(1.15)';
+                        iconEl.style.boxShadow = '0 0 20px #4CAF50'; // Phát sáng xanh lá
+                    } else {
+                        iconEl.style.transform = '';
+                        iconEl.style.boxShadow = '';
+                    }
+                }
+            });
         } 
     }
     
@@ -1331,6 +1396,12 @@
         if (!draggedIcon) return; 
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
+        
+        // Reset lại toàn bộ hiệu ứng phát sáng của các thư mục
+        document.querySelectorAll('.desktop-icon').forEach(iconEl => {
+            iconEl.style.transform = '';
+            iconEl.style.boxShadow = '';
+        });
         
         if (dragThresholdPassed) { 
             if (isLoggedIn && sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
@@ -1478,7 +1549,7 @@
                 }
             } catch (jsonError) {
                 console.error("Lỗi từ backend máy chủ Google:", text);
-                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: File Code.gs ở dự án thứ 2 rất có thể đã gặp lỗi (crash) khi thực thi thao tác lưu.");
+                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: Rất có thể chưa lưu biến vitri trong Code.gs.");
             }
         }).catch(err => { 
             document.getElementById('edit-form-status').style.display = 'none'; 
