@@ -831,7 +831,7 @@
         });
     }
 
-    function kiemTraTrangThaiDangNhap() {
+function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
             isLoggedIn = false;
@@ -842,8 +842,25 @@
         } else {
             document.getElementById('btn-google-login').style.display = 'none'; 
             document.getElementById('sys-name').style.display = 'block';
-            document.getElementById('sys-name').innerText = "Đang xác thực...";
-            xacThucPhienDangNhap(sysSession);
+            
+            // Trích xuất bộ nhớ đệm cục bộ
+            let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
+            let cachedIconRoles = localStorage.getItem(PREFIX_MEM + 'sysIconRoles');
+            let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
+
+            if (cachedRoles !== null) {
+                // Kích hoạt ngay lập tức từ Cache
+                isLoggedIn = true;
+                document.getElementById('sys-name').innerText = cachedName || "Đã đăng nhập"; 
+                document.getElementById('btn-logout').style.display = 'flex';
+                sysRoles = cachedRoles;
+                sysIconRoles = cachedIconRoles || "";
+                apDungPhanQuyen(sysRoles);
+            } else {
+                // Nếu chưa có Cache thì gọi máy chủ xác thực
+                document.getElementById('sys-name').innerText = "Đang xác thực...";
+                xacThucPhienDangNhap(sysSession);
+            }
         }
     }
 
@@ -852,14 +869,19 @@
         kiemTraTrangThaiDangNhap(); 
     }
     
-    function dangXuat() { 
+   function dangXuat() { 
+        // Dọn dẹp toàn bộ phiên làm việc cục bộ
         localStorage.removeItem(PREFIX_MEM + 'session'); 
+        localStorage.removeItem(PREFIX_MEM + 'sysRoles'); 
+        localStorage.removeItem(PREFIX_MEM + 'sysIconRoles'); 
+        localStorage.removeItem(PREFIX_MEM + 'sysName'); 
+        
         isLoggedIn = false;
         pickerAccessToken = null; 
         location.reload(); 
     }
 
-    function xacThucPhienDangNhap(sysSession) {
+function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -870,10 +892,18 @@
                 let result = JSON.parse(text);
                 if (result.status === 'success') { 
                     isLoggedIn = true;
-                    document.getElementById('sys-name').innerText = result.thongTinXacThuc || "Đã đăng nhập"; 
+                    let accountName = result.thongTinXacThuc || "Đã đăng nhập";
+                    
+                    document.getElementById('sys-name').innerText = accountName; 
                     document.getElementById('btn-logout').style.display = 'flex';
                     sysRoles = result.roles || "";
                     sysIconRoles = result.iconRoles || "";
+                    
+                    // Ghi nhận Cache để tái sử dụng cho các lần tải sau
+                    localStorage.setItem(PREFIX_MEM + 'sysRoles', sysRoles);
+                    localStorage.setItem(PREFIX_MEM + 'sysIconRoles', sysIconRoles);
+                    localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
+
                     apDungPhanQuyen(sysRoles); 
                 } else { 
                     alert(result.message); dangXuat(); 
