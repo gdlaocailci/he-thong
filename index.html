@@ -1058,7 +1058,7 @@ function renderIconsFromData(data) {
             const div = document.createElement('div'); 
             div.className = `desktop-icon ${effectClass}`; 
             div.setAttribute('data-id', index + 1); 
-            div.setAttribute('data-title', item.td1.trim()); // Bổ sung khóa định danh cố định theo tên phân hệ
+            div.setAttribute('data-title', item.td1.trim()); 
             div.setAttribute('data-desc', item.td1); 
 
             div.style.animationDelay = (index * 0.04) + 's';
@@ -1097,7 +1097,7 @@ function renderIconsFromData(data) {
         icons = document.querySelectorAll('.desktop-icon'); 
         setupTooltipEvents(); 
         setupDragEvents();
-        initializeLayout(); 
+        rearrangeGrid(); // CẬP NHẬT: Gọi đúng tên hàm sắp xếp lưới mới
     }
 
     function dongCuaSoThuMuc() {
@@ -1334,27 +1334,23 @@ function initializeLayout() {
     }
 
 // Hàm cấu hình cấu trúc lưới: Tự động sắp xếp hoặc giữ nguyên vị trí thủ công
-    function rearrangeGrid() {
+function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
-        
-        // Đo đạc không gian hiển thị thực tế hành chính của trình duyệt
         const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
         
-        let gridIndex = 0; // Bộ đếm vị trí tự động cho các phân hệ chưa ghim
+        let gridIndex = 0; 
 
         icons.forEach((icon) => { 
-            const titleKey = icon.getAttribute('data-title'); // Truy xuất khóa định danh cố định bằng chữ
+            const titleKey = icon.getAttribute('data-title'); 
             
             if (savedPositions[titleKey]) { 
-                // Bảo lưu vị trí tuyệt đối đối với các icon đã được định vị thủ công trước đó
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
             } else { 
-                // Tự động dồn các icon chưa ghim lên lấp khoảng trống của màn hình hiện tại
                 let col = Math.floor(gridIndex * iconHeight / maxColHeight);
                 let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1364,6 +1360,8 @@ function initializeLayout() {
             icon.style.margin = '0'; 
         }); 
     }
+
+    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
 
     // Ghi nhận tọa độ di chuyển vào bộ nhớ đệm cục bộ ổn định
     function savePositions() { 
@@ -1387,36 +1385,7 @@ function initializeLayout() {
 
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
     
-    function setupDragEvents() { 
-        icons.forEach(icon => { 
-            icon.removeEventListener('mousedown', startDrag); 
-            icon.removeEventListener('touchstart', startDrag); 
-            icon.addEventListener('mousedown', startDrag); 
-            icon.addEventListener('touchstart', startDrag, {passive: false}); 
-        }); 
-    }
-    
-    function startDrag(e) { 
-        dragThresholdPassed = false; 
-        draggedIcon = this; 
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
-        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
-        startX = clientX; startY = clientY; 
-        const rect = draggedIcon.getBoundingClientRect(); 
-        offsetX = clientX - rect.left; 
-        offsetY = clientY - rect.top; 
-        tooltip.style.opacity = '0'; 
-        
-        // Vô hiệu hóa hiệu ứng chuyển động CSS để icon bám sát chuột tức thì
-        draggedIcon.style.transition = 'none';
-
-        document.addEventListener('mousemove', drag); 
-        document.addEventListener('touchmove', drag, {passive: false}); 
-        document.addEventListener('mouseup', stopDrag); 
-        document.addEventListener('touchend', stopDrag); 
-    }
-    
-    function drag(e) { 
+function drag(e) { 
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
@@ -1461,8 +1430,6 @@ function initializeLayout() {
         if (!draggedIcon) return; 
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
-        
-        // Khôi phục lại hiệu ứng chuyển động sau khi thả chuột
         draggedIcon.style.transition = '';
         
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
@@ -1514,19 +1481,17 @@ function initializeLayout() {
     function savePositions() { 
         if (!draggedIcon) return;
         const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        const id = draggedIcon.getAttribute('data-id'); 
+        const titleKey = draggedIcon.getAttribute('data-title'); 
         
-        // Chỉ lưu vị trí của Icon vừa được di chuyển
-        positions[id] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
+        positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
         localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
         
-        // Cập nhật lại không gian, dồn các icon chưa ghim lên lấp chỗ trống
         rearrangeGrid(); 
     }
     
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
-        rearrangeGrid(); // Khôi phục và sắp xếp lại toàn bộ lưới
+        rearrangeGrid(); 
     }
     
     function toggleHoSoModal(isShow) {
