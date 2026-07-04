@@ -1041,7 +1041,65 @@ function xacThucPhienDangNhap(sysSession) {
         }
     }
 
-function renderIconsFromData(data)
+function renderIconsFromData(data) {
+        globalProfiles = data; 
+        desktopArea.innerHTML = ''; 
+        capNhatDropdownThuMuc();
+        
+        data.forEach((item, index) => {
+            if (item.vitri && item.vitri !== 'desktop' && item.vitri !== '') return;
+
+            let type = item.iconType; 
+            let cfg = layCauHinhIcon(type);
+            let iconContent = cfg.iconContent;
+            let bgClass = cfg.bgClass;
+            let effectClass = layClassHieuUng(item.hieuung);
+
+            const div = document.createElement('div'); 
+            div.className = `desktop-icon ${effectClass}`; 
+            div.setAttribute('data-id', index + 1); 
+            // Bổ sung khóa định danh cố định theo tên để giữ vị trí tuyệt đối
+            div.setAttribute('data-title', item.td1.trim()); 
+            div.setAttribute('data-desc', item.td1); 
+
+            div.style.animationDelay = (index * 0.04) + 's';
+
+            let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+
+            div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
+            
+            div.onclick = function() { 
+                if (isDragging) { isDragging = false; return; }
+                if (kiemTraLaThuMuc(item)) {
+                    moCuaSoThuMuc(item.td1);
+                    return;
+                }
+                if (!isLoggedIn && !item.isPublic) {
+                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
+                    return;
+                }
+                var finalUrl = item.td2;
+                try {
+                    if (!finalUrl.startsWith('http')) { 
+                        finalUrl = atob(finalUrl); 
+                    }
+                } catch(e) {}
+                
+                if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
+                    window.open(finalUrl, '_blank');
+                } else {
+                    showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
+                }
+            };
+
+            desktopArea.appendChild(div);
+        });
+        
+        icons = document.querySelectorAll('.desktop-icon'); 
+        setupTooltipEvents(); 
+        setupDragEvents();
+        initializeLayout(); 
+    }
 
     // Tự động sắp xếp: Lấp chỗ trống cho icon chưa ghim, giữ nguyên tọa độ cho icon đã ghim
  function rearrangeGrid() {
