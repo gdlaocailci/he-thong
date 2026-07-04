@@ -1328,36 +1328,49 @@ function xacThucPhienDangNhap(sysSession) {
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
     
-    function initializeLayout() { 
+function initializeLayout() { 
+        rearrangeGrid(); 
+    }
+
+    // Hàm mới: Tính toán và lấp đầy khoảng trống cho các icon chưa ghim
+    function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
         const maxColHeight = window.innerHeight - 150; 
+        
+        let gridIndex = 0; // Đếm số thứ tự cho các icon tự động (chưa ghim)
 
-        icons.forEach((icon, index) => { 
+        icons.forEach((icon) => { 
             const id = icon.getAttribute('data-id'); 
             if (savedPositions[id]) { 
+                // Đã di chuyển trước đó -> nạp vị trí thủ công
                 icon.style.left = savedPositions[id].left; 
                 icon.style.top = savedPositions[id].top; 
             } else { 
-                let col = Math.floor(index * iconHeight / maxColHeight);
-                let row = Math.floor((index * iconHeight) % maxColHeight / iconHeight);
+                // Chưa di chuyển -> tự động xếp nối tiếp vào không gian trống
+                let col = Math.floor(gridIndex * iconHeight / maxColHeight);
+                let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
                 icon.style.left = (startX + col * iconWidth) + 'px';
                 icon.style.top = (startY + row * iconHeight) + 'px';
+                gridIndex++;
             } 
             icon.style.margin = '0'; 
         }); 
     }
 
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    function setupDragEvents() { icons.forEach(icon => { 
-        icon.removeEventListener('mousedown', startDrag); 
-        icon.removeEventListener('touchstart', startDrag); 
-        icon.addEventListener('mousedown', startDrag); 
-        icon.addEventListener('touchstart', startDrag, {passive: false}); 
-    }); }
+    
+    function setupDragEvents() { 
+        icons.forEach(icon => { 
+            icon.removeEventListener('mousedown', startDrag); 
+            icon.removeEventListener('touchstart', startDrag); 
+            icon.addEventListener('mousedown', startDrag); 
+            icon.addEventListener('touchstart', startDrag, {passive: false}); 
+        }); 
+    }
     
     function startDrag(e) { 
         dragThresholdPassed = false; 
@@ -1369,6 +1382,10 @@ function xacThucPhienDangNhap(sysSession) {
         offsetX = clientX - rect.left; 
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
+        
+        // Vô hiệu hóa hiệu ứng chuyển động CSS để icon bám sát chuột tức thì
+        draggedIcon.style.transition = 'none';
+
         document.addEventListener('mousemove', drag); 
         document.addEventListener('touchmove', drag, {passive: false}); 
         document.addEventListener('mouseup', stopDrag); 
@@ -1421,6 +1438,9 @@ function xacThucPhienDangNhap(sysSession) {
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
         
+        // Khôi phục lại hiệu ứng chuyển động sau khi thả chuột
+        draggedIcon.style.transition = '';
+        
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
             iconEl.style.transform = '';
             iconEl.style.boxShadow = '';
@@ -1468,28 +1488,21 @@ function xacThucPhienDangNhap(sysSession) {
     }
     
     function savePositions() { 
-        const positions = {}; 
-        icons.forEach(icon => { 
-            positions[icon.getAttribute('data-id')] = { left: icon.style.left, top: icon.style.top }; 
-        }); 
+        if (!draggedIcon) return;
+        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        const id = draggedIcon.getAttribute('data-id'); 
+        
+        // Chỉ lưu vị trí của Icon vừa được di chuyển
+        positions[id] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
         localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
+        
+        // Cập nhật lại không gian, dồn các icon chưa ghim lên lấp chỗ trống
+        rearrangeGrid(); 
     }
     
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
-        const iconWidth = 100;
-        const iconHeight = 120;
-        const startX = 20;
-        const startY = 20;
-        const maxColHeight = window.innerHeight - 150; 
-        
-        icons.forEach((icon, index) => {
-            let col = Math.floor(index * iconHeight / maxColHeight);
-            let row = Math.floor((index * iconHeight) % maxColHeight / iconHeight);
-            
-            icon.style.left = (startX + col * iconWidth) + 'px';
-            icon.style.top = (startY + row * iconHeight) + 'px';
-        });
+        rearrangeGrid(); // Khôi phục và sắp xếp lại toàn bộ lưới
     }
     
     function toggleHoSoModal(isShow) {
