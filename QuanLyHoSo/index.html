@@ -487,7 +487,7 @@
                             <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
                         </optgroup>
                         <optgroup label="Khác">
-                            <option value="danso">Dân số & Xã hội (Gia định)</option>
+                            <option value="danso">Dân số & Xã hội (Gia đình)</option>
                             <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
                             <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
                             <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
@@ -510,7 +510,7 @@
                 <div class="form-group" style="margin-top: 10px;">
                     <label>Gom nhanh các hồ sơ vào thư mục này:</label>
                     <div id="tm-danhsach-hoso" style="max-height: 120px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group" style="margin-top: 10px;">
@@ -706,7 +706,7 @@
                     <div class="form-group">
                         <label>Ma trận quyền truy cập thư mục (Dấu x):</label>
                         <div class="checkbox-group" id="icon-permission-list" style="max-height: 200px; overflow-y: auto;">
-                            </div>
+                        </div>
                     </div>
                     <button class="form-native btn-submit" style="background-color: #8E24AA; color: white;" onclick="ghiNhanQuyen()">Ghi Nhận Thay Đổi</button>
                     <button class="form-native btn-submit" style="background-color: #757575; color: white;" onclick="lamMoiBieuMauQuyen()">Làm Mới Biểu Mẫu</button>
@@ -1225,7 +1225,6 @@
         statusText.innerText = "Đang khởi tạo thư mục..."; 
         statusText.style.display = 'block';
 
-        // 1. Tạo thư mục trước
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1246,11 +1245,9 @@
                 let result = JSON.parse(text);
                 if (result.status === 'success') {
                     
-                    // 2. Gom icon
                     if (danhSachGom.length > 0) {
                         statusText.innerText = "Đang gom " + danhSachGom.length + " hồ sơ vào thư mục...";
                         
-                        // Đã sửa lỗi khoảng trắng trong tên biến tenHosoGom
                         let gomPromises = danhSachGom.map(tenHosoGom => {
                             let item = globalProfiles.find(p => p.td1 === tenHosoGom);
                             if(!item) return Promise.resolve();
@@ -1715,6 +1712,10 @@
                 console.error("Lỗi từ backend:", text);
                 alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
             }
+        })
+        .catch(err => {
+            document.getElementById('form-status').style.display = 'none';
+            alert("Mất kết nối đường truyền mạng khi lưu hồ sơ: " + err);
         });
     }
 
@@ -1735,7 +1736,6 @@
         const tbody = document.getElementById('bang-phanquyen-body');
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
         
-        // Đã sửa từ getUsers thành getAccounts để tránh cảnh báo bảo mật
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getAccounts', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
@@ -1813,7 +1813,6 @@
 
         document.getElementById('pq-status').style.display = 'block';
         
-        // Đã sửa action thành saveAccount
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'saveAccount', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
@@ -1841,7 +1840,6 @@
         if (confirm("Thầy/Cô có chắc chắn muốn gỡ bỏ phân quyền đối với định danh ID: " + tsb + " ?")) {
             document.getElementById('pq-status').style.display = 'block';
             
-            // Đã sửa action thành deleteAccount
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'deleteAccount', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
@@ -1894,9 +1892,6 @@
         }
     }
 
-    // =========================================================================
-    // KHỐI XỬ LÝ TOÀN MÀN HÌNH TỰ ĐỘNG (TỐI ƯU HÓA HIỆU SUẤT)
-    // =========================================================================
     let dangChoTuongTac = true; 
     const danhSachSuKien = ['click', 'touchstart', 'keydown'];
 
