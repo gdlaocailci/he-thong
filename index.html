@@ -1041,7 +1041,7 @@ function xacThucPhienDangNhap(sysSession) {
         }
     }
 
-    function renderIconsFromData(data) {
+function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
         capNhatDropdownThuMuc();
@@ -1058,6 +1058,7 @@ function xacThucPhienDangNhap(sysSession) {
             const div = document.createElement('div'); 
             div.className = `desktop-icon ${effectClass}`; 
             div.setAttribute('data-id', index + 1); 
+            div.setAttribute('data-title', item.td1.trim()); // Bổ sung khóa định danh cố định theo tên phân hệ
             div.setAttribute('data-desc', item.td1); 
 
             div.style.animationDelay = (index * 0.04) + 's';
@@ -1332,25 +1333,28 @@ function initializeLayout() {
         rearrangeGrid(); 
     }
 
-    // Hàm mới: Tính toán và lấp đầy khoảng trống cho các icon chưa ghim
+// Hàm cấu hình cấu trúc lưới: Tự động sắp xếp hoặc giữ nguyên vị trí thủ công
     function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
-        const maxColHeight = window.innerHeight - 150; 
         
-        let gridIndex = 0; // Đếm số thứ tự cho các icon tự động (chưa ghim)
+        // Đo đạc không gian hiển thị thực tế hành chính của trình duyệt
+        const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
+        
+        let gridIndex = 0; // Bộ đếm vị trí tự động cho các phân hệ chưa ghim
 
         icons.forEach((icon) => { 
-            const id = icon.getAttribute('data-id'); 
-            if (savedPositions[id]) { 
-                // Đã di chuyển trước đó -> nạp vị trí thủ công
-                icon.style.left = savedPositions[id].left; 
-                icon.style.top = savedPositions[id].top; 
+            const titleKey = icon.getAttribute('data-title'); // Truy xuất khóa định danh cố định bằng chữ
+            
+            if (savedPositions[titleKey]) { 
+                // Bảo lưu vị trí tuyệt đối đối với các icon đã được định vị thủ công trước đó
+                icon.style.left = savedPositions[titleKey].left; 
+                icon.style.top = savedPositions[titleKey].top; 
             } else { 
-                // Chưa di chuyển -> tự động xếp nối tiếp vào không gian trống
+                // Tự động dồn các icon chưa ghim lên lấp khoảng trống của màn hình hiện tại
                 let col = Math.floor(gridIndex * iconHeight / maxColHeight);
                 let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1359,6 +1363,26 @@ function initializeLayout() {
             } 
             icon.style.margin = '0'; 
         }); 
+    }
+
+    // Ghi nhận tọa độ di chuyển vào bộ nhớ đệm cục bộ ổn định
+    function savePositions() { 
+        if (!draggedIcon) return;
+        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        const titleKey = draggedIcon.getAttribute('data-title'); // Lấy tên phân hệ làm khóa lưu trữ
+        
+        // Ghi đè tọa độ mới cho duy nhất icon vừa thao tác kéo thả
+        positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
+        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
+        
+        // Tái cấu trúc lưới để tự động dồn các icon còn lại một cách mượt mà
+        rearrangeGrid(); 
+    }
+    
+    // Khôi phục trạng thái sắp xếp lưới mặc định ban đầu
+    function resetPositions() { 
+        localStorage.removeItem(PREFIX_MEM + 'positions'); 
+        rearrangeGrid(); 
     }
 
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
