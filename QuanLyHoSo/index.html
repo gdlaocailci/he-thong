@@ -39,20 +39,45 @@
         
         #desktop-area { flex: 1; position: relative; overflow: hidden; }
         
+        /* BỘ HIỆU ỨNG TỪ REACT BITS */
         @keyframes reactBitsPopIn {
             0% { opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(10px); }
             60% { opacity: 1; transform: translateY(-5px) scale(1.05); filter: blur(0); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
+        @keyframes reactBitsFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes reactBitsPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        @keyframes reactBitsWobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-4deg); }
+            75% { transform: rotate(4deg); }
+        }
+        @keyframes reactBitsGlow {
+            0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); }
+            50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
+        }
+
         .desktop-icon { 
             position: absolute; 
             width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; touch-action: none; 
             transition: all 0.3s ease;
-            opacity: 0; 
-            animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0; /* Mặc định tàng hình để đợi hiệu ứng PopIn */
             z-index: 10;
             background: rgba(255, 255, 255, 0);
         }
+
+        /* ÁP DỤNG CÁC LỚP HIỆU ỨNG TÙY CHỌN (CHAINING ANIMATION) */
+        .effect-none { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .effect-float { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsFloat 3s ease-in-out infinite 0.6s; }
+        .effect-pulse { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsPulse 2s ease-in-out infinite 0.6s; }
+        .effect-wobble { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsWobble 2.5s ease-in-out infinite 0.6s; }
+        .effect-glow { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsGlow 2s ease-in-out infinite 0.6s; }
         
         .desktop-icon:hover { 
             background: rgba(255, 255, 255, 0.15); 
@@ -268,16 +293,13 @@
                         <button class="btn-picker" onclick="khoiTaoGooglePicker()" title="Dùng tài khoản hiện tại"><span class="material-icons" style="font-size: 16px;">folder_shared</span> Kho hiện tại</button>
                         <button class="btn-picker" style="background: #546E7A; color: white;" onclick="moDriveTaiKhoanKhac()"><span class="material-icons" style="font-size: 16px;">switch_account</span> Kho khác</button>
                     </div>
-                    <div id="huong-dan-tk" style="display:none; font-size: 12px; color: #c62828; margin-top: 8px; background: #ffebee; padding: 8px; border-radius: 4px; line-height: 1.4;">
-                        <b>Lưu ý:</b> Hệ thống vừa mở trang chuyển đổi bộ nhớ. Thầy/Cô hãy copy đường dẫn thư mục và dán vào ô trống phía trên.
-                    </div>
                 </div>
                 <div class="form-group">
                     <label>Lĩnh vực Dự án (Cột C): <span style="color: red;">*</span></label>
                     <select id="hs-loaiicon">
                         <option value="">-- Chọn phân loại lĩnh vực --</option>
                         <option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
-                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)">
+                        <optgroup label="Thanh tra & Pháp chế">
                             <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
                             <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
                             <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
@@ -354,6 +376,17 @@
                         </optgroup>
                     </select>
                 </div>
+                <!-- KHỐI BỔ SUNG: Chỉnh hiệu ứng React Bits -->
+                <div class="form-group">
+                    <label>Hiệu ứng hiển thị (từ React Bits):</label>
+                    <select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="none">Mặc định (Nổi bật một lần)</option>
+                        <option value="float">Lơ lửng (Float)</option>
+                        <option value="pulse">Nhịp đập (Pulse)</option>
+                        <option value="wobble">Lắc lư (Wobble)</option>
+                        <option value="glow">Tỏa sáng (Glow)</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Vị trí hiển thị lưu trữ:</label>
                     <select id="hs-vitri">
@@ -373,7 +406,6 @@
         </div>
     </div>
 
-    <!-- KHỐI ĐƯỢC CHỈNH SỬA: Cửa sổ Cấu hình Tạo Thư mục -->
     <div id="window-tao-thumuc" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar" style="background: #8E24AA;">
@@ -464,6 +496,17 @@
                             <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
                             <option value="khac">Dự án Khác (Biểu tượng chung)</option>
                         </optgroup>
+                    </select>
+                </div>
+                <!-- KHỐI BỔ SUNG: Chỉnh hiệu ứng cho Thư mục -->
+                <div class="form-group">
+                    <label>Hiệu ứng hiển thị (từ React Bits):</label>
+                    <select id="tm-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="none">Mặc định (Nổi bật một lần)</option>
+                        <option value="float">Lơ lửng (Float)</option>
+                        <option value="pulse">Nhịp đập (Pulse)</option>
+                        <option value="wobble">Lắc lư (Wobble)</option>
+                        <option value="glow">Tỏa sáng (Glow)</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
@@ -579,6 +622,17 @@
                             <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
                             <option value="khac">Dự án Khác (Biểu tượng chung)</option>
                         </optgroup>
+                    </select>
+                </div>
+                <!-- KHỐI BỔ SUNG: Chỉnh hiệu ứng React Bits Sửa -->
+                <div class="form-group">
+                    <label>Hiệu ứng hiển thị (từ React Bits):</label>
+                    <select id="edit-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="none">Mặc định (Nổi bật một lần)</option>
+                        <option value="float">Lơ lửng (Float)</option>
+                        <option value="pulse">Nhịp đập (Pulse)</option>
+                        <option value="wobble">Lắc lư (Wobble)</option>
+                        <option value="glow">Tỏa sáng (Glow)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -857,11 +911,6 @@
         }
     }
 
-    // =========================================================================
-    // KHỐI QUẢN LÝ ĐỊNH DẠNG HÌNH ẢNH / ICON CHUNG & NHẬN DIỆN THƯ MỤC
-    // =========================================================================
-    
-    // KHỐI CẬP NHẬT: Mở rộng khả năng nhận diện thư mục cho cả thư mục cũ và mới
     function kiemTraLaThuMuc(item) {
         if (item.iconType === 'hoso_thumuc') return true; 
         try {
@@ -949,6 +998,17 @@
         return { iconContent: iconContent, bgClass: bgClass };
     }
 
+    // LẤY MÃ CLASS HIỆU ỨNG TỪ BIẾN hieuung
+    function layClassHieuUng(hieuUng) {
+        switch(hieuUng) {
+            case 'float': return 'effect-float';
+            case 'pulse': return 'effect-pulse';
+            case 'wobble': return 'effect-wobble';
+            case 'glow': return 'effect-glow';
+            default: return 'effect-none';
+        }
+    }
+
     function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
@@ -961,9 +1021,10 @@
             let cfg = layCauHinhIcon(type);
             let iconContent = cfg.iconContent;
             let bgClass = cfg.bgClass;
+            let effectClass = layClassHieuUng(item.hieuung); // Nạp class hiệu ứng
 
             const div = document.createElement('div'); 
-            div.className = 'desktop-icon'; 
+            div.className = `desktop-icon ${effectClass}`; 
             div.setAttribute('data-id', index + 1); 
             div.setAttribute('data-desc', item.td1); 
 
@@ -1025,19 +1086,19 @@
             folderArea.innerHTML = '<div style="width:100%; text-align:center; color:#ffffff; font-weight: 600; margin-top:50px; opacity: 0.7;">Thư mục trống hoặc chưa có phân hệ liên kết.</div>';
         } else {
             childItems.forEach((item, index) => {
+                let cfg = layCauHinhIcon(item.iconType);
+                let effectClass = layClassHieuUng(item.hieuung); // Tải hiệu ứng vào icon con
+
                 const div = document.createElement('div');
-                div.className = 'desktop-icon';
+                div.className = `desktop-icon ${effectClass}`;
                 div.style.position = 'relative'; 
                 div.style.opacity = '1';
-                div.style.animation = 'none'; 
                 
-                let cfg = layCauHinhIcon(item.iconType);
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
                 let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
                 
-                // Nút Đưa ra Desktop khi mở trong thư mục
                 let moveOutBtn = "";
                 if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
                     moveOutBtn = `<div onclick="event.stopPropagation(); xuLyDiChuyenHoSo('${item.td1}', 'desktop')" style="position: absolute; top: -5px; left: -5px; background: #d32f2f; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; cursor: pointer; transition: all 0.2s;" title="Chuyển Icon này ra Desktop"><span class="material-icons" style="font-size: 14px; color: white;">logout</span></div>`;
@@ -1065,7 +1126,6 @@
         document.getElementById('window-folder-view').style.display = 'flex';
     }
 
-    // Hàm gọi API đồng bộ vị trí khi có lệnh di chuyển
     function xuLyDiChuyenHoSo(tenHoSo, viTriMoi) {
         const item = globalProfiles.find(p => p.td1 === tenHoSo);
         if (!item) return;
@@ -1082,7 +1142,7 @@
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: viTriMoi, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: viTriMoi, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(r => r.text())
         .then(text => {
@@ -1122,9 +1182,11 @@
         if (!isShow) {
             var elTd1 = document.getElementById('tm-td1');
             var elLoaiIcon = document.getElementById('tm-loaiicon');
+            var elHieuUng = document.getElementById('tm-hieuung');
             elTd1.value = ''; 
             elTd1.style.borderColor = '#ccc'; 
             elLoaiIcon.value = 'hoso_thumuc'; 
+            elHieuUng.value = 'none';
             document.getElementById('tm-ispublic').checked = false; 
             document.getElementById('tm-form-status').style.display = 'none';
         }
@@ -1133,8 +1195,10 @@
     function xuLyLuuThuMuc() {
         var elTd1 = document.getElementById('tm-td1');
         var elLoaiIcon = document.getElementById('tm-loaiicon');
+        var elHieuUng = document.getElementById('tm-hieuung');
         var td1 = elTd1.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
+        var hieuung = elHieuUng.value;
         var isPublic = document.getElementById('tm-ispublic').checked ? 'public' : ''; 
         
         elTd1.style.borderColor = '#ccc';
@@ -1159,6 +1223,7 @@
                 loaiIcon: loaiIcon, 
                 isPublic: isPublic,
                 vitri: 'desktop',
+                hieuung: hieuung,
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
             })
         })
@@ -1262,7 +1327,6 @@
         } 
     }
     
-    // BỔ SUNG LẠI NHẬN DIỆN KÉO THẢ ĐỂ BẢO ĐẢM TƯƠNG TÁC NGƯỜI DÙNG QUẢN TRỊ
     function stopDrag(e) { 
         if (!draggedIcon) return; 
         draggedIcon.style.zIndex = ''; 
@@ -1337,8 +1401,10 @@
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
         if(!isShow) {
-            var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); var elLoaiIcon = document.getElementById('hs-loaiicon');
-            elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc';
+            var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
+            var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
+            elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; 
+            elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc'; elHieuUng.value = 'none';
             document.getElementById('hs-ispublic').checked = false; 
             document.getElementById('huong-dan-tk').style.display = 'none'; 
             document.getElementById('hs-vitri').value = 'desktop';
@@ -1359,6 +1425,7 @@
             document.getElementById('edit-td1').value = '';
             document.getElementById('edit-td2').value = '';
             document.getElementById('edit-loaiicon').value = '';
+            document.getElementById('edit-hieuung').value = 'none';
             document.getElementById('edit-vitri').value = 'desktop';
             document.getElementById('edit-form-status').style.display = 'none';
         }
@@ -1373,6 +1440,7 @@
         try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
         document.getElementById('edit-td2').value = decodedUrl;
         document.getElementById('edit-loaiicon').value = profile.iconType;
+        document.getElementById('edit-hieuung').value = profile.hieuung || 'none';
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
     }
 
@@ -1384,6 +1452,7 @@
         var td1 = document.getElementById('edit-td1').value.trim(); 
         var td2_raw = document.getElementById('edit-td2').value.trim(); 
         var loaiIcon = document.getElementById('edit-loaiicon').value;
+        var hieuung = document.getElementById('edit-hieuung').value;
         var vitri = document.getElementById('edit-vitri').value;
         
         if (!td1 || !td2_raw || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
@@ -1394,7 +1463,7 @@
         
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, vitri: vitri, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
         .then(text => {
@@ -1542,11 +1611,13 @@
     }
 
     function xuLyLuuHoSo() {
-        var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); var elLoaiIcon = document.getElementById('hs-loaiicon');
+        var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
+        var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
         var vitri = document.getElementById('hs-vitri').value;
         var td1 = elTd1.value.trim(); 
         var td2_raw = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
+        var hieuung = elHieuUng.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
@@ -1561,7 +1632,7 @@
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
         .then(text => {
