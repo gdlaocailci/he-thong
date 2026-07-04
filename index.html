@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -1042,311 +1041,23 @@ function xacThucPhienDangNhap(sysSession) {
         }
     }
 
-function renderIconsFromData(data) {
-        globalProfiles = data; 
-        desktopArea.innerHTML = ''; 
-        capNhatDropdownThuMuc();
-        
-        data.forEach((item, index) => {
-            if (item.vitri && item.vitri !== 'desktop' && item.vitri !== '') return;
+function renderIconsFromData(data)
 
-            let type = item.iconType; 
-            let cfg = layCauHinhIcon(type);
-            let iconContent = cfg.iconContent;
-            let bgClass = cfg.bgClass;
-            let effectClass = layClassHieuUng(item.hieuung);
-
-            const div = document.createElement('div'); 
-            div.className = `desktop-icon ${effectClass}`; 
-            div.setAttribute('data-id', index + 1); 
-            div.setAttribute('data-title', item.td1.trim()); 
-            div.setAttribute('data-desc', item.td1); 
-
-            div.style.animationDelay = (index * 0.04) + 's';
-
-            let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
-
-            div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
-            
-            div.onclick = function() { 
-                if (isDragging) { isDragging = false; return; }
-                if (kiemTraLaThuMuc(item)) {
-                    moCuaSoThuMuc(item.td1);
-                    return;
-                }
-                if (!isLoggedIn && !item.isPublic) {
-                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
-                    return;
-                }
-                var finalUrl = item.td2;
-                try {
-                    if (!finalUrl.startsWith('http')) { 
-                        finalUrl = atob(finalUrl); 
-                    }
-                } catch(e) {}
-                
-                if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    window.open(finalUrl, '_blank');
-                } else {
-                    showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
-                }
-            };
-
-            desktopArea.appendChild(div);
-        });
-        
-        icons = document.querySelectorAll('.desktop-icon'); 
-        setupTooltipEvents(); 
-        setupDragEvents();
-        rearrangeGrid(); // CẬP NHẬT: Gọi đúng tên hàm sắp xếp lưới mới
-    }
-
-    function dongCuaSoThuMuc() {
-        document.getElementById('window-folder-view').style.display = 'none';
-        document.getElementById('folder-content-area').innerHTML = '';
-    }
-
-    function moCuaSoThuMuc(tenThuMuc) {
-        document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
-        const folderArea = document.getElementById('folder-content-area');
-        folderArea.innerHTML = ''; 
-
-        let childItems = globalProfiles.filter(item => item.vitri === tenThuMuc);
-        
-        if (childItems.length === 0) {
-            folderArea.innerHTML = '<div style="width:100%; text-align:center; color:#ffffff; font-weight: 600; margin-top:50px; opacity: 0.7;">Thư mục trống hoặc chưa có phân hệ liên kết.</div>';
-        } else {
-            childItems.forEach((item, index) => {
-                let cfg = layCauHinhIcon(item.iconType);
-                let effectClass = layClassHieuUng(item.hieuung); 
-
-                const div = document.createElement('div');
-                div.className = `desktop-icon ${effectClass}`;
-                div.style.position = 'relative'; 
-                div.style.opacity = '1';
-                
-                let iconContent = cfg.iconContent;
-                let bgClass = cfg.bgClass;
-                
-                let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
-                
-                let moveOutBtn = "";
-                if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
-                    moveOutBtn = `<div onclick="event.stopPropagation(); xuLyDiChuyenHoSo('${item.td1}', 'desktop')" style="position: absolute; top: -5px; left: -5px; background: #d32f2f; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; cursor: pointer; transition: all 0.2s;" title="Chuyển Icon này ra Desktop"><span class="material-icons" style="font-size: 14px; color: white;">logout</span></div>`;
-                }
-
-                div.innerHTML = `<div style="position:relative;">${moveOutBtn}${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
-                
-                div.onclick = function() { 
-                    if (!isLoggedIn && !item.isPublic) {
-                        showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để có thể tương tác với cơ sở dữ liệu này!");
-                        return;
-                    }
-                    var finalUrl = item.td2;
-                    try { if (!finalUrl.startsWith('http')) finalUrl = atob(finalUrl); } catch(e) {}
-                    
-                    if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        window.open(finalUrl, '_blank');
-                    } else {
-                        showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
-                    }
-                };
-                folderArea.appendChild(div);
-            });
-        }
-        document.getElementById('window-folder-view').style.display = 'flex';
-    }
-
-    function xuLyDiChuyenHoSo(tenHoSo, viTriMoi) {
-        const item = globalProfiles.find(p => p.td1 === tenHoSo);
-        if (!item) return;
-
-        let decodedUrl = item.td2;
-        try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
-        let safeEncodedTd2 = btoa(decodedUrl);
-
-        let loading = document.createElement('div');
-        loading.className = 'loading-screen';
-        loading.id = 'move-loading';
-        loading.innerHTML = '<span class="material-icons">sync</span><h3>Đang đồng bộ cấu hình vị trí...</h3>';
-        document.body.appendChild(loading);
-
-        fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: viTriMoi, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        })
-        .then(r => r.text())
-        .then(text => {
-            let loadingEl = document.getElementById('move-loading');
-            if(loadingEl) loadingEl.remove();
-            
-            try {
-                let result = JSON.parse(text);
-                if (result.status === 'success') {
-                    dongCuaSoThuMuc();
-                    taiBieuTuongCongKhai();
-                } else { alert("Lỗi đồng bộ: " + result.message); }
-            } catch(e) { alert("Lỗi xử lý máy chủ Google."); }
-        }).catch(err => {
-            let loadingEl = document.getElementById('move-loading');
-            if(loadingEl) loadingEl.remove();
-            alert("Mất kết nối đường truyền!");
-        });
-    }
-
-    function capNhatDropdownThuMuc() {
-        let danhSachThuMuc = globalProfiles.filter(item => kiemTraLaThuMuc(item));
-        const selGan = document.getElementById('hs-vitri');
-        const selSua = document.getElementById('edit-vitri');
-        
-        let optionsHtml = '<option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option>';
-        danhSachThuMuc.forEach(tm => {
-            optionsHtml += `<option value="${tm.td1}">${tm.td1}</option>`;
-        });
-        
-        if (selGan) selGan.innerHTML = optionsHtml;
-        if (selSua) selSua.innerHTML = optionsHtml;
-    }
-
-    function toggleTaoThuMucModal(isShow) {
-        document.getElementById('window-tao-thumuc').style.display = isShow ? 'flex' : 'none';
-        if (isShow) {
-            const containerDanhSach = document.getElementById('tm-danhsach-hoso');
-            containerDanhSach.innerHTML = '';
-            let countHoso = 0;
-            globalProfiles.forEach(p => {
-                if ((!p.vitri || p.vitri === 'desktop') && !kiemTraLaThuMuc(p)) {
-                    countHoso++;
-                    containerDanhSach.innerHTML += `<label class="checkbox-label" style="display:block; margin-bottom:5px;"><input type="checkbox" class="cb-chon-hoso" value="${p.td1}"> ${p.td1}</label>`;
-                }
-            });
-            if (countHoso === 0) {
-                containerDanhSach.innerHTML = '<span style="color:#777; font-size:12px;">Không có hồ sơ nào trên màn hình để gom.</span>';
-            }
-        } else {
-            document.getElementById('tm-td1').value = ''; 
-            document.getElementById('tm-td1').style.borderColor = '#ccc'; 
-            document.getElementById('tm-loaiicon').value = 'hoso_thumuc'; 
-            document.getElementById('tm-hieuung').value = 'none';
-            document.getElementById('tm-ispublic').checked = false; 
-            document.getElementById('tm-form-status').style.display = 'none';
-        }
-    }
-
-    function xuLyLuuThuMuc() {
-        var elTd1 = document.getElementById('tm-td1');
-        var elLoaiIcon = document.getElementById('tm-loaiicon');
-        var elHieuUng = document.getElementById('tm-hieuung');
-        var td1 = elTd1.value.trim(); 
-        var loaiIcon = elLoaiIcon.value;
-        var hieuung = elHieuUng.value;
-        var isPublic = document.getElementById('tm-ispublic').checked ? 'public' : ''; 
-        
-        elTd1.style.borderColor = '#ccc';
-        if (!td1) { 
-            elTd1.style.borderColor = 'red'; 
-            alert("Yêu cầu hệ thống: Vui lòng nhập tên thư mục cần tạo!"); 
-            return; 
-        }
-
-        let danhSachGom = [];
-        document.querySelectorAll('.cb-chon-hoso:checked').forEach(cb => danhSachGom.push(cb.value));
-
-        var td2_encoded = btoa('#INTERNAL_FOLDER_CONTAINER#');
-        var statusText = document.getElementById('tm-form-status');
-        statusText.innerText = "Đang khởi tạo thư mục..."; 
-        statusText.style.display = 'block';
-
-        fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                action: 'saveProfile', 
-                td1: td1, 
-                td2: td2_encoded, 
-                loaiIcon: loaiIcon, 
-                isPublic: isPublic,
-                vitri: 'desktop',
-                hieuung: hieuung,
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-            })
-        })
-        .then(response => response.text())
-        .then(text => {
-            try {
-                let result = JSON.parse(text);
-                if (result.status === 'success') {
-                    
-                    if (danhSachGom.length > 0) {
-                        statusText.innerText = "Đang gom " + danhSachGom.length + " hồ sơ vào thư mục...";
-                        
-                        let gomPromises = danhSachGom.map(tenHosoGom => {
-                            let item = globalProfiles.find(p => p.td1 === tenHosoGom);
-                            if(!item) return Promise.resolve();
-                            
-                            let decodedUrl = item.td2;
-                            try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
-                            let safeEncodedTd2 = btoa(decodedUrl);
-
-                            return fetch(KETNOI.WEB_APP_URL, {
-                                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: td1, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-                            }).then(r => r.json()).catch(e => null);
-                        });
-
-                        Promise.all(gomPromises).then(() => {
-                            toggleTaoThuMucModal(false);
-                            taiBieuTuongCongKhai(); 
-                        });
-                    } else {
-                        toggleTaoThuMucModal(false);
-                        taiBieuTuongCongKhai(); 
-                    }
-
-                } else { 
-                    statusText.style.display = 'none';
-                    alert("Phát sinh sự cố từ máy chủ: " + result.message); 
-                }
-            } catch (jsonError) {
-                statusText.style.display = 'none';
-                console.error("Lỗi đồng bộ cấu hình:", text);
-                alert("Cảnh báo hệ thống: Kiểm tra lại cấu hình phân quyền Web App.");
-            }
-        }).catch(err => {
-            statusText.style.display = 'none';
-            alert("Lỗi kết nối đường truyền băng thông: " + err);
-        });
-    }
-
-    function showAlertModal(message) {
-        document.getElementById('alert-message').innerHTML = message;
-        document.getElementById('window-alert').style.display = 'flex';
-    }
-
-    function closeAlertModal() {
-        document.getElementById('window-alert').style.display = 'none';
-    }
-    
-    function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
-    function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
-    
-function initializeLayout() { 
-        rearrangeGrid(); 
-    }
-
-// Hàm cấu hình cấu trúc lưới: Tự động sắp xếp hoặc giữ nguyên vị trí thủ công
-function rearrangeGrid() {
+    // Tự động sắp xếp: Lấp chỗ trống cho icon chưa ghim, giữ nguyên tọa độ cho icon đã ghim
+ function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
-        const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
+        
+        let maxColHeight = window.innerHeight - 150; 
+        if (maxColHeight < 200) maxColHeight = 500; // Bảo vệ nếu trình duyệt đo sai chiều cao lúc đầu
         
         let gridIndex = 0; 
 
         icons.forEach((icon) => { 
-            const titleKey = icon.getAttribute('data-title'); 
+            const titleKey = icon.getAttribute('data-title'); // Dùng Tên thay vì số đếm
             
             if (savedPositions[titleKey]) { 
                 icon.style.left = savedPositions[titleKey].left; 
@@ -1363,30 +1074,36 @@ function rearrangeGrid() {
     }
 
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-
-    // Ghi nhận tọa độ di chuyển vào bộ nhớ đệm cục bộ ổn định
-    function savePositions() { 
-        if (!draggedIcon) return;
-        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        const titleKey = draggedIcon.getAttribute('data-title'); // Lấy tên phân hệ làm khóa lưu trữ
-        
-        // Ghi đè tọa độ mới cho duy nhất icon vừa thao tác kéo thả
-        positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
-        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
-        
-        // Tái cấu trúc lưới để tự động dồn các icon còn lại một cách mượt mà
-        rearrangeGrid(); 
+    
+    function setupDragEvents() { 
+        icons.forEach(icon => { 
+            icon.removeEventListener('mousedown', startDrag); 
+            icon.removeEventListener('touchstart', startDrag); 
+            icon.addEventListener('mousedown', startDrag); 
+            icon.addEventListener('touchstart', startDrag, {passive: false}); 
+        }); 
     }
     
-    // Khôi phục trạng thái sắp xếp lưới mặc định ban đầu
-    function resetPositions() { 
-        localStorage.removeItem(PREFIX_MEM + 'positions'); 
-        rearrangeGrid(); 
-    }
+    function startDrag(e) { 
+        dragThresholdPassed = false; 
+        draggedIcon = this; 
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
+        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
+        startX = clientX; startY = clientY; 
+        const rect = draggedIcon.getBoundingClientRect(); 
+        offsetX = clientX - rect.left; 
+        offsetY = clientY - rect.top; 
+        tooltip.style.opacity = '0'; 
+        
+        draggedIcon.style.transition = 'none';
 
-    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
+        document.addEventListener('mousemove', drag); 
+        document.addEventListener('touchmove', drag, {passive: false}); 
+        document.addEventListener('mouseup', stopDrag); 
+        document.addEventListener('touchend', stopDrag); 
+    }
     
-function drag(e) { 
+    function drag(e) { 
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
@@ -1479,13 +1196,15 @@ function drag(e) {
         setTimeout(() => { isDragging = false; }, 100); 
     }
     
-    function savePositions() { 
+  function savePositions() { 
         if (!draggedIcon) return;
         const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const titleKey = draggedIcon.getAttribute('data-title'); 
         
-        positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
-        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
+        if (titleKey) {
+            positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
+            localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
+        }
         
         rearrangeGrid(); 
     }
@@ -1494,6 +1213,16 @@ function drag(e) {
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
         rearrangeGrid(); 
     }
+
+    // Đảm bảo không gian không bị xô lệch khi Thầy xoay dọc/ngang màn hình hoặc mở Fullscreen
+    window.addEventListener('resize', () => {
+        if (typeof rearrangeGrid === 'function') rearrangeGrid();
+    });
+
+    // Đảm bảo lưới tự động thích ứng mượt mà khi đổi kích thước trình duyệt
+    window.addEventListener('resize', () => {
+        if (typeof rearrangeGrid === 'function') rearrangeGrid();
+    });
     
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
