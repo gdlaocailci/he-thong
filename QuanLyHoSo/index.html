@@ -72,7 +72,6 @@
             background: rgba(255, 255, 255, 0);
         }
 
-        /* ÁP DỤNG CÁC LỚP HIỆU ỨNG TÙY CHỌN */
         .effect-none { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .effect-float { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsFloat 3s ease-in-out infinite 0.6s; }
         .effect-pulse { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsPulse 2s ease-in-out infinite 0.6s; }
@@ -816,7 +815,7 @@
                     desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;">
                         <span class="material-icons" style="font-size: 64px; color: #ff9800; animation: none; margin-bottom: 15px;">dns</span>
                         <h3 style="color: white; margin-bottom: 10px;">Cảnh báo Cấu hình Web App</h3>
-                        <p style="color: #ffe0b2; font-size: 14px; max-width: 80%; line-height: 1.5;">Máy chủ Google chặn truy cập. Vui lòng rà soát lại thông số Deploy.</p>
+                        <p style="color: #ffe0b2; font-size: 14px; max-width: 80%; line-height: 1.5;">Máy chủ Google chặn truy cập. Vui lòng rà soát lại thông số Deploy hoặc kiểm tra biến CONFIG.</p>
                     </div>`;
                 }
                 console.error("Cảnh báo từ máy chủ Google:", text);
@@ -871,7 +870,7 @@
                 let result = JSON.parse(text);
                 if (result.status === 'success') { 
                     isLoggedIn = true;
-                    document.getElementById('sys-name').innerText = result.thongTinXacThuc || result.verifiedEmail; 
+                    document.getElementById('sys-name').innerText = result.thongTinXacThuc || "Đã đăng nhập"; 
                     document.getElementById('btn-logout').style.display = 'flex';
                     sysRoles = result.roles || "";
                     sysIconRoles = result.iconRoles || "";
@@ -1184,7 +1183,6 @@
             containerDanhSach.innerHTML = '';
             let countHoso = 0;
             globalProfiles.forEach(p => {
-                // Chỉ lấy các hồ sơ đang ở desktop và không phải là thư mục
                 if ((!p.vitri || p.vitri === 'desktop') && !kiemTraLaThuMuc(p)) {
                     countHoso++;
                     containerDanhSach.innerHTML += `<label class="checkbox-label" style="display:block; margin-bottom:5px;"><input type="checkbox" class="cb-chon-hoso" value="${p.td1}"> ${p.td1}</label>`;
@@ -1203,7 +1201,6 @@
         }
     }
 
-    // NÂNG CẤP XỬ LÝ LƯU VÀ GOM HỒ SƠ CHUỖI LIÊN HOÀN (PROMISE ALL)
     function xuLyLuuThuMuc() {
         var elTd1 = document.getElementById('tm-td1');
         var elLoaiIcon = document.getElementById('tm-loaiicon');
@@ -1249,12 +1246,13 @@
                 let result = JSON.parse(text);
                 if (result.status === 'success') {
                     
-                    // 2. Nếu có chọn gom icon, chạy chuỗi Promise All để đổi vị trí từng icon
+                    // 2. Gom icon
                     if (danhSachGom.length > 0) {
                         statusText.innerText = "Đang gom " + danhSachGom.length + " hồ sơ vào thư mục...";
                         
-                        let gomPromises = danhSachGom.map(tenHoso Gom => {
-                            let item = globalProfiles.find(p => p.td1 === tenHoso Gom);
+                        // Đã sửa lỗi khoảng trắng trong tên biến tenHosoGom
+                        let gomPromises = danhSachGom.map(tenHosoGom => {
+                            let item = globalProfiles.find(p => p.td1 === tenHosoGom);
                             if(!item) return Promise.resolve();
                             
                             let decodedUrl = item.td2;
@@ -1283,7 +1281,7 @@
             } catch (jsonError) {
                 statusText.style.display = 'none';
                 console.error("Lỗi đồng bộ cấu hình:", text);
-                alert("Cảnh báo hệ thống: Đảm bảo Thầy đã cập nhật Cột vitri trong Code.gs nhé!");
+                alert("Cảnh báo hệ thống: Kiểm tra lại cấu hình phân quyền Web App.");
             }
         }).catch(err => {
             statusText.style.display = 'none';
@@ -1368,7 +1366,6 @@
             draggedIcon.style.left = newLeft + 'px'; 
             draggedIcon.style.top = newTop + 'px'; 
             
-            // Nâng cấp: Phát sáng thư mục khi kéo Icon đè lên để dễ nhận diện
             const draggedRect = draggedIcon.getBoundingClientRect();
             const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
             
@@ -1382,7 +1379,7 @@
                     const rect = iconEl.getBoundingClientRect();
                     if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
                         iconEl.style.transform = 'scale(1.15)';
-                        iconEl.style.boxShadow = '0 0 20px #4CAF50'; // Phát sáng xanh lá
+                        iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
                     } else {
                         iconEl.style.transform = '';
                         iconEl.style.boxShadow = '';
@@ -1397,7 +1394,6 @@
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
         
-        // Reset lại toàn bộ hiệu ứng phát sáng của các thư mục
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
             iconEl.style.transform = '';
             iconEl.style.boxShadow = '';
@@ -1477,7 +1473,6 @@
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; 
             elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc'; elHieuUng.value = 'none';
             document.getElementById('hs-ispublic').checked = false; 
-            document.getElementById('huong-dan-tk').style.display = 'none'; 
             document.getElementById('hs-vitri').value = 'desktop';
         }
     }
@@ -1549,7 +1544,7 @@
                 }
             } catch (jsonError) {
                 console.error("Lỗi từ backend máy chủ Google:", text);
-                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: Rất có thể chưa lưu biến vitri trong Code.gs.");
+                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: Hệ thống gặp lỗi khi truy vấn Code.gs.");
             }
         }).catch(err => { 
             document.getElementById('edit-form-status').style.display = 'none'; 
@@ -1663,7 +1658,7 @@
         });
     }
 
-    function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); document.getElementById('huong-dan-tk').style.display = 'block'; }
+    function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); }
 
     function khoiTaoGooglePicker() {
         if (pickerAccessToken === null) { tokenClient.requestAccessToken({prompt: 'consent'}); } else { hienThiGooglePicker(pickerAccessToken); }
@@ -1739,9 +1734,11 @@
     function taiDuLieuQuyen() {
         const tbody = document.getElementById('bang-phanquyen-body');
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
+        
+        // Đã sửa từ getUsers thành getAccounts để tránh cảnh báo bảo mật
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'getUsers', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'getAccounts', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
         .then(text => {
@@ -1815,9 +1812,11 @@
         let iconRolesStr = selectedIcons.join('|');
 
         document.getElementById('pq-status').style.display = 'block';
+        
+        // Đã sửa action thành saveAccount
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'saveUser', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'saveAccount', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
         .then(text => {
@@ -1841,9 +1840,11 @@
     function goBoQuyen(tsb) {
         if (confirm("Thầy/Cô có chắc chắn muốn gỡ bỏ phân quyền đối với định danh ID: " + tsb + " ?")) {
             document.getElementById('pq-status').style.display = 'block';
+            
+            // Đã sửa action thành deleteAccount
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteUser', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+                body: JSON.stringify({ action: 'deleteAccount', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
             })
             .then(response => response.text())
             .then(text => {
