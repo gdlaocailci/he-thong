@@ -793,8 +793,16 @@
     }
 
     // =========================================================================
-    // KHỐI QUẢN LÝ ĐỊNH DẠNG HÌNH ẢNH / ICON CHUNG (MÃ KHỐI NÂNG CẤP)
+    // KHỐI QUẢN LÝ ĐỊNH DẠNG HÌNH ẢNH / ICON CHUNG & NHẬN DIỆN THƯ MỤC
     // =========================================================================
+    
+    // HÀM MỚI: Nhận diện thư mục tuyệt đối thông qua mã khóa nội bộ
+    function kiemTraLaThuMuc(item) {
+        try {
+            return item.td2 && atob(item.td2) === '#INTERNAL_FOLDER_CONTAINER#';
+        } catch(e) { return false; }
+    }
+
     function layCauHinhIcon(type) {
         let iconContent = '<span class="material-icons">apps</span>'; 
         let bgClass = 'bg-default'; 
@@ -901,7 +909,7 @@
             
             div.onclick = function() { 
                 if (isDragging) { isDragging = false; return; }
-                if (type === 'hoso_thumuc') {
+                if (kiemTraLaThuMuc(item)) {
                     moCuaSoThuMuc(item.td1);
                     return;
                 }
@@ -933,7 +941,7 @@
     }
 
     // =========================================================================
-    // KHỐI QUẢN LÝ TƯƠNG TÁC THƯ MỤC CON VÀ DROPDOWN (MÃ KHỐI NÂNG CẤP)
+    // KHỐI QUẢN LÝ TƯƠNG TÁC THƯ MỤC CON & ĐIỀU CHUYỂN DỮ LIỆU
     // =========================================================================
     function dongCuaSoThuMuc() {
         document.getElementById('window-folder-view').style.display = 'none';
@@ -962,8 +970,14 @@
                 let bgClass = cfg.bgClass;
                 
                 let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+                
+                // Nút Đưa ra Desktop khi mở trong thư mục
+                let moveOutBtn = "";
+                if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso'))) {
+                    moveOutBtn = `<div onclick="event.stopPropagation(); xuLyDiChuyenHoSo('${item.td1}', 'desktop')" style="position: absolute; top: -5px; left: -5px; background: #d32f2f; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; cursor: pointer; transition: all 0.2s;" title="Chuyển Icon này ra Desktop"><span class="material-icons" style="font-size: 14px; color: white;">logout</span></div>`;
+                }
 
-                div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
+                div.innerHTML = `<div style="position:relative;">${moveOutBtn}${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
                 
                 div.onclick = function() { 
                     if (!isLoggedIn && !item.isPublic) {
@@ -985,8 +999,46 @@
         document.getElementById('window-folder-view').style.display = 'flex';
     }
 
+    // Hàm gọi API đồng bộ vị trí khi có lệnh di chuyển
+    function xuLyDiChuyenHoSo(tenHoSo, viTriMoi) {
+        const item = globalProfiles.find(p => p.td1 === tenHoSo);
+        if (!item) return;
+
+        let decodedUrl = item.td2;
+        try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
+        let safeEncodedTd2 = btoa(decodedUrl);
+
+        let loading = document.createElement('div');
+        loading.className = 'loading-screen';
+        loading.id = 'move-loading';
+        loading.innerHTML = '<span class="material-icons">sync</span><h3>Đang đồng bộ cấu hình vị trí...</h3>';
+        document.body.appendChild(loading);
+
+        fetch(KETNOI.WEB_APP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: viTriMoi, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+        })
+        .then(r => r.text())
+        .then(text => {
+            let loadingEl = document.getElementById('move-loading');
+            if(loadingEl) loadingEl.remove();
+            
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') {
+                    dongCuaSoThuMuc();
+                    taiBieuTuongCongKhai();
+                } else { alert("Lỗi đồng bộ: " + result.message); }
+            } catch(e) { alert("Lỗi xử lý máy chủ Google."); }
+        }).catch(err => {
+            let loadingEl = document.getElementById('move-loading');
+            if(loadingEl) loadingEl.remove();
+            alert("Mất kết nối đường truyền!");
+        });
+    }
+
     function capNhatDropdownThuMuc() {
-        let danhSachThuMuc = globalProfiles.filter(item => item.iconType === 'hoso_thumuc');
+        let danhSachThuMuc = globalProfiles.filter(item => kiemTraLaThuMuc(item));
         const selGan = document.getElementById('hs-vitri');
         const selSua = document.getElementById('edit-vitri');
         
@@ -1107,6 +1159,7 @@
         icon.addEventListener('mousedown', startDrag); 
         icon.addEventListener('touchstart', startDrag, {passive: false}); 
     }); }
+    
     function startDrag(e) { 
         dragThresholdPassed = false; 
         draggedIcon = this; 
@@ -1122,6 +1175,7 @@
         document.addEventListener('mouseup', stopDrag); 
         document.addEventListener('touchend', stopDrag); 
     }
+    
     function drag(e) { 
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
@@ -1141,13 +1195,46 @@
             draggedIcon.style.top = newTop + 'px'; 
         } 
     }
+    
+    // Lệnh nâng cấp bổ sung nhận diện Va chạm Kéo thả vào thư mục
     function stopDrag(e) { 
         if (!draggedIcon) return; 
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
+        
         if (dragThresholdPassed) { 
-            savePositions(); 
+            if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso'))) {
+                let droppedFolder = null;
+                const draggedRect = draggedIcon.getBoundingClientRect();
+                const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
+                
+                const draggedIndex = parseInt(draggedIcon.getAttribute('data-id')) - 1;
+                const draggedProfile = globalProfiles[draggedIndex];
+
+                if (!kiemTraLaThuMuc(draggedProfile)) {
+                    document.querySelectorAll('.desktop-icon').forEach(iconEl => {
+                        if (iconEl === draggedIcon) return;
+                        const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
+                        if (isNaN(idx)) return;
+                        const profile = globalProfiles[idx];
+                        
+                        if (kiemTraLaThuMuc(profile)) {
+                            const rect = iconEl.getBoundingClientRect();
+                            if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
+                                droppedFolder = profile;
+                            }
+                        }
+                    });
+                }
+
+                if (droppedFolder) {
+                    if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
+                        xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
+                    } else { savePositions(); }
+                } else { savePositions(); }
+            } else { savePositions(); }
         } 
+        
         document.removeEventListener('mousemove', drag); 
         document.removeEventListener('touchmove', drag); 
         document.removeEventListener('mouseup', stopDrag); 
@@ -1155,6 +1242,7 @@
         draggedIcon = null; 
         setTimeout(() => { isDragging = false; }, 100); 
     }
+    
     function savePositions() { 
         const positions = {}; 
         icons.forEach(icon => { 
@@ -1162,6 +1250,7 @@
         }); 
         localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
     }
+    
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
         const iconWidth = 100;
@@ -1254,7 +1343,7 @@
                 }
             } catch (jsonError) {
                 console.error("Lỗi từ backend máy chủ Google:", text);
-                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: File Code.gs ở dự án thứ 2 rất có thể đã gặp lỗi (crash) khi thực thi thao tác lưu. Đề nghị Thầy kiểm tra lại mục 'Lịch sử thực thi' (Executions) bên trong Apps Script để rà soát dòng code gây lỗi.");
+                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: File Code.gs ở dự án thứ 2 rất có thể đã gặp lỗi (crash) khi thực thi thao tác lưu.");
             }
         }).catch(err => { 
             document.getElementById('edit-form-status').style.display = 'none'; 
