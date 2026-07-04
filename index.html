@@ -1040,7 +1040,37 @@ function xacThucPhienDangNhap(sysSession) {
             default: return 'effect-none';
         }
     }
+function initializeLayout() { 
+        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        const iconWidth = 100;
+        const iconHeight = 120;
+        const startX = 20;
+        const startY = 20;
+        
+        // Tính toán an toàn khi load trang
+        let maxColHeight = window.innerHeight - 150; 
+        if (maxColHeight < 200) maxColHeight = 500; 
+        
+        let gridIndex = 0; // Bộ đếm cho các icon tự động dồn chỗ
 
+        icons.forEach((icon) => { 
+            const titleKey = icon.getAttribute('data-title'); 
+            
+            if (titleKey && savedPositions[titleKey]) { 
+                // Nạp tọa độ tuyệt đối cho Icon đã từng di chuyển
+                icon.style.left = savedPositions[titleKey].left; 
+                icon.style.top = savedPositions[titleKey].top; 
+            } else { 
+                // Tự động lấp khoảng trống cho Icon chưa tác động
+                let col = Math.floor(gridIndex * iconHeight / maxColHeight);
+                let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
+                icon.style.left = (startX + col * iconWidth) + 'px';
+                icon.style.top = (startY + row * iconHeight) + 'px';
+                gridIndex++;
+            } 
+            icon.style.margin = '0'; 
+        }); 
+    }
 function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
