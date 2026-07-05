@@ -10,7 +10,7 @@ const KETNOI = {
     
     // 2. Tài nguyên hình ảnh đại diện (Logo & Giao diện)
     LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
-    LINK_HINH_NEN: "https://i.pinimg.com/736x/90/e6/6d/90e66d073d54c582208b4bbcd2e197d8.jpg",
+    LINK_HINH_NEN: "https://www.wallpaperalchemy.com/storage/wallpapers/2258/windows-10-hero-glowing-logo-4k-wallpaper.jpg",
     LINK_AVATAR_NAM: "https://lh3.googleusercontent.com/d/13OnSd7t73KO7GP6NB7FjkdpsO6vfH-dp",
     LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU",
     
