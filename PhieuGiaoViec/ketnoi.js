@@ -13,7 +13,7 @@ var PGV_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.
 var PGV_MO_TA = "Hệ thống quản lý hiệu quả công việc nội bộ - " + PGV_TEN_TRUONG;
 
 // Bổ sung biến lưu trữ liên kết video hướng dẫn
-var DG_LINK_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
+var DG_LINK_YOUTUBE = "https://www.youtube.com/playlist?list=PLbwoEbiWlf1A";
 
 // ==================== BIẾN TOÀN CỤC HỆ THỐNG ====================
 var PGV_TOKEN = "";
