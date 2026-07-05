@@ -3,6 +3,7 @@
  * Vị trí lưu trữ: GitHub (Cùng cấp với tệp index.html)
  * Chức năng: Cấu hình tập trung thông tin định danh và địa chỉ máy chủ (API).
  */
+
 const KETNOI = {
     // 1. Thông tin định danh cơ quan/đơn vị
     TEN_DINH_DANH: "Hợp Thành OS",
