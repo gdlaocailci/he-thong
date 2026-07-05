@@ -1058,7 +1058,8 @@ function renderIconsFromData(data) {
             const div = document.createElement('div'); 
             div.className = `desktop-icon ${effectClass}`; 
             div.setAttribute('data-id', index + 1); 
-            // Bổ sung khóa định danh cố định theo tên phân hệ
+            
+            // BỔ SUNG KHÓA ĐỊNH DANH BẤT BIẾN THEO TÊN PHÂN HỆ
             div.setAttribute('data-title', item.td1.trim()); 
             div.setAttribute('data-desc', item.td1); 
 
@@ -1363,24 +1364,26 @@ function initializeLayout() {
     }
     
     // Hàm mới: Tính toán và lấp đầy khoảng trống cho các icon chưa ghim
-    function rearrangeGrid() {
+function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
-        const maxColHeight = window.innerHeight - 150; 
+        const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
         
-        let gridIndex = 0; // Đếm số thứ tự cho các icon tự động (chưa ghim)
+        let gridIndex = 0; 
 
         icons.forEach((icon) => { 
-            const id = icon.getAttribute('data-id'); 
-            if (savedPositions[id]) { 
-                // Đã di chuyển trước đó -> nạp vị trí thủ công
-                icon.style.left = savedPositions[id].left; 
-                icon.style.top = savedPositions[id].top; 
+            // ĐỌC DỮ LIỆU TỪ KHÓA TÊN, KHÔNG ĐỌC BẰNG DATA-ID
+            const titleKey = icon.getAttribute('data-title'); 
+            
+            if (titleKey && savedPositions[titleKey]) { 
+                icon.style.transition = 'none'; // Vô hiệu hóa animation tạm thời để ghim vị trí ngay lập tức
+                icon.style.left = savedPositions[titleKey].left; 
+                icon.style.top = savedPositions[titleKey].top; 
+                setTimeout(() => { icon.style.transition = ''; }, 100);
             } else { 
-                // Chưa di chuyển -> tự động xếp nối tiếp vào không gian trống
                 let col = Math.floor(gridIndex * iconHeight / maxColHeight);
                 let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1520,16 +1523,16 @@ function startDrag(e) {
 function savePositions() { 
         if (!draggedIcon) return;
         const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        
+        // GHI NHẬN TỌA ĐỘ THEO KHÓA TÊN BẤT BIẾN
         const titleKey = draggedIcon.getAttribute('data-title'); 
         
         if (titleKey) {
-            // Chỉ cập nhật tọa độ cho Icon vừa thao tác kéo thả
             positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
             localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
         }
         
-        // Gọi lại sắp xếp để tự động dồn các icon chưa ghim
-        initializeLayout(); 
+        rearrangeGrid(); 
     }
     
     function resetPositions() { 
