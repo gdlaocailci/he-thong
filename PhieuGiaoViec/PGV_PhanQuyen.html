@@ -231,7 +231,6 @@
             animation: spin 0.6s linear infinite;
         }
         
-        /* Cân đối lại giới hạn hiển thị Bảng Cán bộ (B5:F) */
         .bang-wrapper {
             max-height: 350px; 
             overflow-y: auto;
@@ -250,7 +249,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
         
-        /* Bổ sung khống chế cứng và ép thanh trượt cho Bảng Cấu hình (H5:J) */
         .bang-cauhinh-wrapper {
             max-height: 220px; 
             overflow-y: auto;
@@ -323,8 +321,12 @@
             <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
                 <span><i class="bi bi-shield-lock"></i> CẤP QUYỀN TRUY CẬP</span>
                 <div class="nhom-namhoc" style="background: #e8f5e9; border: 1px solid #c8e6c9;">
-                    <label><i class="bi bi-clock-history"></i> Ngày nộp BC hàng tháng:</label>
+                    <label><i class="bi bi-clock-history"></i> Ngày nộp BC:</label>
                     <input type="text" id="ngayNopInput" placeholder="VD: 28" style="width: 60px; text-align: center; font-weight: bold; color: #dc3545;">
+                </div>
+                <div class="nhom-namhoc" style="background: #e3f2fd; border: 1px solid #90caf9;">
+                    <label title="Thư mục Google Drive lưu các tệp đính kèm"><i class="bi bi-folder-fill" style="color: #ffc107;"></i> Nơi lưu BC:</label>
+                    <input type="text" id="idThuMucBcaoInput" placeholder="Nhập ID thư mục..." style="width: 170px; font-size: 13px;">
                 </div>
             </div>
             
@@ -476,7 +478,7 @@
         function layDanhSach() {
             return new Promise(function(resolve, reject) {
                 callApi('laydlkhai bao', {}, function(res) {
-                    var data = res.dliu || { canBo: [], cauHinh: [] };
+                    var data = res.dliu || { canBo: [], cauHinh: [], idThuMuc: '' };
                     
                     var listCanBo = (data.canBo || []).map(function(row) {
                         var cv = (row[4] !== undefined && row[4] !== null) ? String(row[4]).trim() : '';
@@ -491,28 +493,21 @@
                     });
                     
                     var listCauHinh = (data.cauHinh || []).map(function(row) {
-                        return {
-                            maThamSo: String(row[0] || '').trim(),
-                            tenThamSo: String(row[1] || '').trim(),
-                            giaTri: String(row[2] || '').trim()
-                        };
+                        return { maThamSo: String(row[0] || '').trim(), tenThamSo: String(row[1] || '').trim(), giaTri: String(row[2] || '').trim() };
                     });
                     
-                    resolve({ listCanBo: listCanBo, listCauHinh: listCauHinh });
+                    var idThuMuc = data.idThuMuc || '';
+                    resolve({ listCanBo: listCanBo, listCauHinh: listCauHinh, idThuMuc: idThuMuc });
                 }, reject);
             });
         }
         
-        function capNhatDanhSachHienTai(listCanBo, listCauHinh) {
+        function capNhatDanhSachHienTai(listCanBo, listCauHinh, idThuMuc) {
             return new Promise(function(resolve, reject) {
-                var dataCanBo = listCanBo.map(function(item) {
-                    return [item.idSheet, item.taiKhoan, item.tenHienThi, item.quyen, item.chucVu];
-                });
-                var dataCauHinh = listCauHinh.map(function(item) {
-                    return [item.maThamSo, item.tenThamSo, item.giaTri];
-                });
+                var dataCanBo = listCanBo.map(function(item) { return [item.idSheet, item.taiKhoan, item.tenHienThi, item.quyen, item.chucVu]; });
+                var dataCauHinh = listCauHinh.map(function(item) { return [item.maThamSo, item.tenThamSo, item.giaTri]; });
                 
-                var payload = { canBo: dataCanBo, cauHinh: dataCauHinh };
+                var payload = { canBo: dataCanBo, cauHinh: dataCauHinh, idThuMuc: idThuMuc };
                 callApi('capnhatkhai bao', { dliu: payload }, resolve, reject);
             });
         }
@@ -604,7 +599,11 @@
                 await xoaSheetCaNhan(idSheet);
                 currentList.splice(idx, 1);
                 renderTable();
-                await capNhatDanhSachHienTai(currentList, currentCauHinh);
+                
+                var idThuMucInput = $('#idThuMucBcaoInput');
+                var idThuMucHienTai = idThuMucInput ? idThuMucInput.value.trim() : '';
+                await capNhatDanhSachHienTai(currentList, currentCauHinh, idThuMucHienTai);
+                
                 showNotification('✅ Đã xóa cán bộ "' + idSheet + '" thành công!', 'success');
             } catch (err) {
                 showNotification('❌ Lỗi khi xóa: ' + (err.message || 'Lỗi không xác định'), 'error');
@@ -616,7 +615,7 @@
             }
         }
         
-function renderTable() {
+        function renderTable() {
             var tbody = $('#quyenTableBodyPQ');
             if (!tbody) return;
             tbody.innerHTML = '';
@@ -689,7 +688,6 @@ function renderTable() {
                 var selChucVu = document.createElement('select');
                 selChucVu.className = 'chucvu-select quyen-select'; 
                 selChucVu.setAttribute('data-idx', i);
-                /* [BỔ SUNG] Mã phân quyền dành cho Quản lý */
                 var cvOpts = ['gv', 'nv', 'ql'];
                 var cvLabels = ['Giáo viên', 'Nhân viên', 'Quản lý'];
                 for (var j = 0; j < cvOpts.length; j++) {
@@ -843,12 +841,10 @@ function renderTable() {
             }, 100);
         }
         
-        // --- CHỈNH SỬA TẠI KHỐI NÀY: Nâng cấp tính năng thêm dòng ---
         function themDongMoiCauHinh() {
             currentCauHinh.push({ maThamSo: '', tenThamSo: '', giaTri: '' });
             renderCauHinh();
             
-            // Bổ sung: Cuộn đến cuối bảng và kích hoạt con trỏ tại ô nhập liệu đầu tiên của dòng mới
             setTimeout(function() {
                 var wrapper = $('.bang-cauhinh-wrapper');
                 if (wrapper) {
@@ -864,7 +860,6 @@ function renderTable() {
                 }
             }, 100);
         }
-        // -----------------------------------------------------------
         
         function validateList() {
             var map = new Map();
@@ -894,11 +889,33 @@ function renderTable() {
             return true;
         }
         
+        async function taiLaiDuLieu() {
+            try {
+                var payload = await layDanhSach();
+                currentList = payload.listCanBo;
+                currentCauHinh = payload.listCauHinh;
+                
+                var inpIdThuMuc = document.getElementById('idThuMucBcaoInput');
+                if (inpIdThuMuc) inpIdThuMuc.value = payload.idThuMuc;
+                
+                renderTable();
+                renderCauHinh();
+                console.log('Đã tải thành công Dữ liệu Cán bộ & Cấu hình.');
+            } catch (err) {
+                showNotification('Lỗi tải dữ liệu: ' + (err.message || 'Lỗi không xác định'), 'error');
+                currentList = []; currentCauHinh = [];
+                renderTable(); renderCauHinh();
+            }
+        }
+        
         async function luuDuLieu() {
             var namInput = $('#namHocInput');
             var ngayNopInput = $('#ngayNopInput'); 
+            var idThuMucInput = $('#idThuMucBcaoInput');
+            
             var namMoi = namInput ? namInput.value.trim() : '';
             var ngayNopMoi = ngayNopInput ? ngayNopInput.value.trim() : ''; 
+            var idThuMucMoi = idThuMucInput ? idThuMucInput.value.trim() : '';
             
             if (ngayNopMoi !== "") {
                 var numNgay = parseInt(ngayNopMoi);
@@ -922,29 +939,15 @@ function renderTable() {
             
             try {
                 await capNhatNamHoc(namMoi, currentThang, ngayNopMoi); 
-                await capNhatDanhSachHienTai(currentList, currentCauHinh);
-                showNotification('✅ Thành công! Đã cập nhật 2 bảng dữ liệu.', 'success');
+                await capNhatDanhSachHienTai(currentList, currentCauHinh, idThuMucMoi);
+                
+                showNotification('✅ Thành công! Đã cập nhật dữ liệu.', 'success');
                 await taiLaiDuLieu();
             } catch (err) {
                 showNotification('❌ Lỗi lưu: ' + (err.message || 'Lỗi không xác định'), 'error');
             } finally {
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
-            }
-        }
-        
-        async function taiLaiDuLieu() {
-            try {
-                var payload = await layDanhSach();
-                currentList = payload.listCanBo;
-                currentCauHinh = payload.listCauHinh;
-                renderTable();
-                renderCauHinh();
-                console.log('Đã tải thành công Dữ liệu Cán bộ & Cấu hình.');
-            } catch (err) {
-                showNotification('Lỗi tải dữ liệu: ' + (err.message || 'Lỗi không xác định'), 'error');
-                currentList = []; currentCauHinh = [];
-                renderTable(); renderCauHinh();
             }
         }
         
