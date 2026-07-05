@@ -11,7 +11,7 @@ const KETNOI = {
     
     // 2. Tài nguyên hình ảnh đại diện (Logo & Giao diện)
     LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
-    LINK_HINH_NEN: "https://i.ibb.co/hJy3vH7y/hinh-nen-win-11-50-1.jpg",
+    LINK_HINH_NEN: "https://png.pngtree.com/thumb_back/fh260/background/20250305/pngtree-windows-11-abstract-wallpaper-blue-neon-glow-image_17071405.jpg",
     LINK_AVATAR_NAM: "https://lh3.googleusercontent.com/d/13OnSd7t73KO7GP6NB7FjkdpsO6vfH-dp",
     LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU",
     
