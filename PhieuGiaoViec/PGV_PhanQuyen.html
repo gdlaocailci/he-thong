@@ -578,8 +578,7 @@
                 if (msgDiv.parentNode) msgDiv.remove();
             }, 2500);
         }
-        
-        async function handleDelete(rowElement, idx, btnXoa) {
+  async function handleDelete(rowElement, idx, btnXoa) {
             if (isDeleting) { showNotification('Đang có thao tác xóa khác, vui lòng đợi...', 'error'); return; }
             var idSheet = currentList[idx].idSheet;
             if (!idSheet) { showNotification('Không thể xóa: ID trống', 'error'); return; }
