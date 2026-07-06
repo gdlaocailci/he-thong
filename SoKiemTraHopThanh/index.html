@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -798,141 +797,117 @@
     }
 
 function kiemtqvata() {
-  let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
-  taikht = String(taikht).toLowerCase().trim();
-  window.sktquyenht = "";
+        let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
+        taikht = String(taikht).toLowerCase().trim();
+        window.sktquyenht = "";
 
-  // Luồng 1: Lấy dữ liệu tổng hợp từ server (gopgio)
-  const luongnuoc = new Promise((xong, hong) => {
-    google.script.run.withSuccessHandler(xong).withFailureHandler(hong).skt_gopgio_thanhbao(taikht);
-  });
+        // Chạy song song 2 luồng: 1. Nạp API dữ liệu tổng hợp | 2. Tải HTML giao diện
+        const luongnuoc = new Promise((xong, hong) => {
+            google.script.run.withSuccessHandler(xong).withFailureHandler(hong).skt_gopgio_thanhbao(taikht);
+        });
 
-  // Luồng 2: Tải các file HTML giao diện
-  const damthu = Promise.all([
-    fetch('./SKT_NhapLieu.html?v=' + new Date().getTime()).then(r => r.text()),
-    fetch('./SKT_TimKiem.html?v=' + new Date().getTime()).then(r => r.text()),
-    fetch('./SKT_MinhChung.html?v=' + new Date().getTime()).then(r => r.text()),
-    fetch('./Menu_doc.html?v=' + new Date().getTime()).then(r => r.text()),
-    fetch('./SKT_phanquyen.html?v=' + new Date().getTime()).then(r => r.text())
-  ]);
+        const damthu = Promise.all([
+            fetch('./SKT_NhapLieu.html?v=' + new Date().getTime()).then(r => r.text()),
+            fetch('./SKT_TimKiem.html?v=' + new Date().getTime()).then(r => r.text()),
+            fetch('./SKT_MinhChung.html?v=' + new Date().getTime()).then(r => r.text()),
+            fetch('./Menu_doc.html?v=' + new Date().getTime()).then(r => r.text()),
+            fetch('./SKT_phanquyen.html?v=' + new Date().getTime()).then(r => r.text())
+        ]);
 
-  Promise.all([luongnuoc, damthu]).then(ketqua => {
-    const dlu = ketqua[0];
-    const manhGiay = ketqua[1];
+        Promise.all([luongnuoc, damthu]).then(ketqua => {
+            const dlu = ketqua[0];
+            const manhGiay = ketqua[1];
 
-    if (dlu.cquy === false) {
-      xoaluutrant("SKT_USER_TAIK");
-      window.skttktoanc = null;
-      document.getElementById('instant-loader').style.display = 'none';
-      document.getElementById('main-wrapper').style.display = 'flex';
-      setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
-      
-      document.getElementById('so_wrapper').style.display = 'none';
-      document.getElementById('MinhChungContainer').style.display = 'none';
-      document.getElementById('access_denied_msg').style.display = 'block';
-      document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
-      return;
+            if (dlu.cquy === false) {
+                xoaluutrant("SKT_USER_TAIK");
+                window.skttktoanc = null;
+                document.getElementById('instant-loader').style.display = 'none';
+                document.getElementById('main-wrapper').style.display = 'flex';
+                setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
+                
+                document.getElementById('so_wrapper').style.display = 'none';
+                document.getElementById('MinhChungContainer').style.display = 'none';
+                document.getElementById('access_denied_msg').style.display = 'block';
+                document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
+            } else {
+                let nduyq = false;
+                if(dlu.conmeo) {
+                    let userMatch = dlu.conmeo.find(m1 => String(m1.taik).toLowerCase() === taikht);
+                    if (userMatch) { nduyq = true; window.sktquyenht = userMatch.quyen; }
+                }
+                if(!nduyq && dlu.chocon && dlu.chocon.some(m1 => String(m1.taik).toLowerCase() === taikht)) {
+                    nduyq = true; window.sktquyenht = 'x'; 
+                }
+                if (!nduyq) { nduyq = true; window.sktquyenht = 'xx'; }
+                window.sktduocuyq = nduyq; 
+
+                // CHUYỂN DỮ LIỆU SANG BỘ NHỚ TRÌNH DUYỆT BẰNG BIẾN RÁC
+                window.khomam = dlu.kqt || [];
+                window.ruongbac = { dgv: dlu.dgv || [], dnk: dlu.dnk || [], dbp: dlu.dbp || [] };
+
+                document.getElementById('TabNhapLieu').innerHTML = manhGiay[0];
+                document.getElementById('TabTimKiem').innerHTML = manhGiay[1];
+                document.getElementById('MinhChungContainer').innerHTML = manhGiay[2];
+                document.getElementById('MenuContainer').innerHTML = manhGiay[3];
+                document.getElementById('TabPhanQuyen').innerHTML = manhGiay[4];
+
+                thuchkb(document.getElementById('TabNhapLieu'));
+                thuchkb(document.getElementById('TabTimKiem'));
+                thuchkb(document.getElementById('MinhChungContainer'));
+                thuchkb(document.getElementById('MenuContainer'));
+                thuchkb(document.getElementById('TabPhanQuyen'));
+
+                setTimeout(() => {
+                    const sidebarLogo = document.querySelector('.sidebar-logo');
+                    if (sidebarLogo) sidebarLogo.src = typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : '';
+                    
+                    const sidebarTitle = document.getElementById('menu_title');
+                    if (sidebarTitle) sidebarTitle.innerText = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
+                    
+                    const sidebarSubtitle = document.getElementById('menu_subtitle');
+                    if (sidebarSubtitle) sidebarSubtitle.innerText = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : '';
+                    
+                    const sidebarAuthor = document.getElementById('menu_author');
+                    if (sidebarAuthor) sidebarAuthor.innerText = typeof SKT_TAC_GIA_UP !== 'undefined' ? SKT_TAC_GIA_UP : '';
+                    
+                    document.querySelectorAll('.page-title, .header-card h1, .up-header h3').forEach(el => {
+                        let textHienTai = el.innerText.toUpperCase();
+                        let tenPm = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
+                        let tenTr = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : '';
+                        
+                        if(textHienTai.includes('GHI SỔ') || textHienTai.includes('NHẬP LIỆU')) {
+                            el.innerText = "GHI SỔ - " + tenPm;
+                        } else if(textHienTai.includes('THỐNG KÊ') || textHienTai.includes('TRA CỨU')) {
+                            el.innerText = "THỐNG KÊ & TRA CỨU - " + tenPm;
+                        } else if(textHienTai.includes('MINH CHỨNG')) {
+                            el.innerText = "QUẢN LÝ MINH CHỨNG - " + tenTr;
+                        } else if(!textHienTai.includes('QUYỀN TRUY CẬP')) {
+                            el.innerText = tenPm + " - " + tenTr;
+                        }
+                    });
+
+                    if (window.sktquyenht !== 'xx') {
+                        document.querySelectorAll('button[onclick*="TabPhanQuyen"]').forEach(btn => btn.style.display = 'none');
+                    }
+
+                    try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
+                    try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
+                    try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
+                    
+                    if (window.sktduocuyq === false) vohienhapkh();
+                }, 800);
+
+                setTimeout(function() { 
+                    document.getElementById('instant-loader').style.display = 'none'; 
+                    document.getElementById('main-wrapper').style.display = 'flex';
+                    setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
+                }, 500);
+            }
+        }).catch(loie => {
+            document.getElementById('instant-loader').style.display = 'none';
+            alert("LỖI KẾT NỐI TẢI NỀN TẢNG: " + loie.message);
+        });
     }
-
-    // ===== XÁC ĐỊNH QUYỀN CỦA USER =====
-    let userQuyen = '';
-    if (dlu.conmeo) {
-      const userMatch = dlu.conmeo.find(m1 => String(m1.taik).toLowerCase() === taikht);
-      if (userMatch) {
-        userQuyen = userMatch.quyen;
-      }
-    }
-    window.sktquyenht = userQuyen; // '', 'x', 'xx', 'xxx'
-    window.sktduocuyq = (userQuyen !== '');
-
-    // Lưu dữ liệu bộ nhớ đệm cho tab Thống kê
-    window.khomam = dlu.kqt || [];
-    window.ruongbac = { dgv: dlu.dgv || [], dnk: dlu.dnk || [], dbp: dlu.dbp || [] };
-
-    // Gán nội dung HTML
-    document.getElementById('TabNhapLieu').innerHTML = manhGiay[0];
-    document.getElementById('TabTimKiem').innerHTML = manhGiay[1];
-    document.getElementById('MinhChungContainer').innerHTML = manhGiay[2];
-    document.getElementById('MenuContainer').innerHTML = manhGiay[3];
-    document.getElementById('TabPhanQuyen').innerHTML = manhGiay[4];
-
-    // Kích hoạt script trong các fragment HTML
-    thuchkb(document.getElementById('TabNhapLieu'));
-    thuchkb(document.getElementById('TabTimKiem'));
-    thuchkb(document.getElementById('MinhChungContainer'));
-    thuchkb(document.getElementById('MenuContainer'));
-    thuchkb(document.getElementById('TabPhanQuyen'));
-
-    // Chờ một chút để DOM ổn định rồi áp dụng các tùy chỉnh
-    setTimeout(() => {
-      // ===== ẨN/HIỆN MENU DỰA TRÊN QUYỀN =====
-      const quyen = window.sktquyenht;
-      
-      // Tab Ghi sổ (TabNhapLieu): chỉ hiển thị với quyền x hoặc xxx
-      document.querySelectorAll('button[onclick*="TabNhapLieu"]').forEach(btn => {
-        btn.style.display = (quyen === 'x' || quyen === 'xxx') ? '' : 'none';
-      });
-      
-      // Tab Phân quyền (TabPhanQuyen): chỉ hiển thị với quyền xx hoặc xxx
-      document.querySelectorAll('button[onclick*="TabPhanQuyen"]').forEach(btn => {
-        btn.style.display = (quyen === 'xx' || quyen === 'xxx') ? '' : 'none';
-      });
-      
-      // Tab Thống kê (TabTimKiem) luôn hiển thị, không cần ẩn
-      // Các tiêu đề, logo, v.v.
-      const sidebarLogo = document.querySelector('.sidebar-logo');
-      if (sidebarLogo) sidebarLogo.src = typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : '';
-      
-      const sidebarTitle = document.getElementById('menu_title');
-      if (sidebarTitle) sidebarTitle.innerText = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
-      
-      const sidebarSubtitle = document.getElementById('menu_subtitle');
-      if (sidebarSubtitle) sidebarSubtitle.innerText = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : '';
-      
-      const sidebarAuthor = document.getElementById('menu_author');
-      if (sidebarAuthor) sidebarAuthor.innerText = typeof SKT_TAC_GIA_UP !== 'undefined' ? SKT_TAC_GIA_UP : '';
-      
-      // Đồng bộ tiêu đề các trang
-      document.querySelectorAll('.page-title, .header-card h1, .up-header h3').forEach(el => {
-        let textHienTai = el.innerText.toUpperCase();
-        let tenPm = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
-        let tenTr = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : '';
-        
-        if(textHienTai.includes('GHI SỔ') || textHienTai.includes('NHẬP LIỆU')) {
-          el.innerText = "GHI SỔ - " + tenPm;
-        } else if(textHienTai.includes('THỐNG KÊ') || textHienTai.includes('TRA CỨU')) {
-          el.innerText = "THỐNG KÊ & TRA CỨU - " + tenPm;
-        } else if(textHienTai.includes('MINH CHỨNG')) {
-          el.innerText = "QUẢN LÝ MINH CHỨNG - " + tenTr;
-        } else if(!textHienTai.includes('QUYỀN TRUY CẬP')) {
-          el.innerText = tenPm + " - " + tenTr;
-        }
-      });
-
-      // Nếu user không có quyền, vô hiệu hóa nhập liệu (khách)
-      if (window.sktquyenht === '') {
-        vohienhapkh();
-      }
-
-      // Gọi các hàm khởi tạo của từng module
-      try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
-      try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
-      try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
-      
-    }, 800);
-
-    // Ẩn loader và hiện wrapper
-    setTimeout(function() {
-      document.getElementById('instant-loader').style.display = 'none';
-      document.getElementById('main-wrapper').style.display = 'flex';
-      setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
-    }, 500);
-
-  }).catch(loie => {
-    document.getElementById('instant-loader').style.display = 'none';
-    alert("LỖI KẾT NỐI TẢI NỀN TẢNG: " + loie.message);
-  });
-}
 
     async function taimdunht() {
       try {
@@ -1046,44 +1021,18 @@ function kiemtqvata() {
         });
     }
 
-function chuyentth(idd, nut) {
-  // ===== KIỂM TRA QUYỀN TRUY CẬP TAB =====
-  const quyen = window.sktquyenht || '';
-  
-  // Tab Ghi sổ: chỉ x hoặc xxx
-  if (idd === 'TabNhapLieu') {
-    if (!(quyen === 'x' || quyen === 'xxx')) {
-      alert('Bạn không có quyền truy cập Ghi sổ kiểm tra.');
-      return;
+    function chuyentth(idd, nut) {
+      document.querySelectorAll('.tab-content').forEach(c1 => c1.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b1 => b1.classList.remove('active'));
+      document.querySelectorAll('.menu-btn:not(.menu-logout)').forEach(b1 => b1.classList.remove('active'));
+      
+      document.getElementById(idd).classList.add('active');
+      if(nut) nut.classList.add('active');
+      
+      if (idd === 'TabPhanQuyen') {
+          if (typeof loadPhanQuyen === 'function') loadPhanQuyen();
+      }
     }
-  }
-  
-  // Tab Phân quyền: chỉ xx hoặc xxx
-  if (idd === 'TabPhanQuyen') {
-    if (!(quyen === 'xx' || quyen === 'xxx')) {
-      alert('Bạn không có quyền truy cập Quản lý phân quyền.');
-      return;
-    }
-  }
-  
-  // Các tab khác (Thống kê, Hướng dẫn) cho phép mọi quyền, kể cả không có quyền (xem)
-  
-  // ===== CHUYỂN TAB (phần logic cũ) =====
-  // Ẩn tất cả tab-content
-  document.querySelectorAll('.tab-content').forEach(c1 => c1.classList.remove('active'));
-  // Bỏ active tất cả các nút tab (cả tab-button và menu-btn)
-  document.querySelectorAll('.tab-button').forEach(b1 => b1.classList.remove('active'));
-  document.querySelectorAll('.menu-btn:not(.menu-logout)').forEach(b1 => b1.classList.remove('active'));
-  
-  // Hiển thị tab được chọn
-  document.getElementById(idd).classList.add('active');
-  if (nut) nut.classList.add('active');
-  
-  // Nếu là tab Phân quyền, gọi hàm load nếu có
-  if (idd === 'TabPhanQuyen') {
-    if (typeof loadPhanQuyen === 'function') loadPhanQuyen();
-  }
-}
   </script>
 </body>
 </html>
