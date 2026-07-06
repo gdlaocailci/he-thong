@@ -252,7 +252,7 @@
   // Khai báo biến toàn cục lưu trữ dữ liệu bộ nhớ đệm
   let sktDuLieuBoNhoDem = [];
 
-  (function khoitti() {
+(function khoitti() {
     const ng = new Date();
     const th = String(ng.getMonth() + 1).padStart(2, '0');
     const na = ng.getFullYear();
@@ -271,34 +271,19 @@
         });
     });
 
-    const tbg = document.getElementById('searchBody');
-    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:blue; font-weight:bold;">⏳ Đang tạo bộ nhớ đệm dữ liệu. Vui lòng chờ...</td></tr>';
-
-    // Gọi API nạp cấu hình danh sách Combobox
-    google.script.run.withSuccessHandler(kq => {
-      if (kq.cquy === false) {
-          hienhtt(kq.tbao); 
-          document.getElementById('btn_search_main').disabled = true; 
-          document.querySelector('.print-btn').disabled = true; 
-          document.getElementById('searchBody').innerHTML = '<tr><td colspan="17" class="no-result" style="color:red; font-weight:bold;">' + kq.tbao + '</td></tr>';
-          return;
-      }
-      const gv = document.getElementById('s_gv');
-      const nkt = document.getElementById('s_nkt');
-      const bp = document.getElementById('s_bp');
-      kq.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
-      kq.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
-      kq.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
-      
-      // Sau khi lấy xong cấu hình, tiếp tục gọi hàm tải TOÀN BỘ dữ liệu vào Cache
-      google.script.run.withSuccessHandler(kqData => {
-         sktDuLieuBoNhoDem = kqData || [];
-         locDuLieuTucThoi(); // Gọi hàm lọc tức thời để hiển thị toàn bộ dữ liệu ban đầu
-      }).withFailureHandler(err => {
-         tbg.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red">❌ Lỗi nạp bộ nhớ đệm: ${err.message}</td></tr>`;
-      }).skt_timbg_kq({});
-      
-    }).skt_tk_laydl_loc();
+    const gv = document.getElementById('s_gv');
+    const nkt = document.getElementById('s_nkt');
+    const bp = document.getElementById('s_bp');
+    
+    // Đọc cấu hình từ bộ nhớ đệm thay vì gọi Server
+    const chaucay = window.ruongbac || { dgv: [], dnk: [], dbp: [] };
+    chaucay.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
+    chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
+    chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
+    
+    // Lấy dữ liệu bảng và kích hoạt hiển thị ngay lập tức
+    sktDuLieuBoNhoDem = window.khomam || [];
+    locDuLieuTucThoi(); 
   })();
 
   function xuatndkno(nd) {
