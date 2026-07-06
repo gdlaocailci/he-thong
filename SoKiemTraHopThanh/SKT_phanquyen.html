@@ -17,7 +17,10 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex align-items-center gap-2">
                 <label for="inp-phamvi" class="fw-bold mb-0" style="white-space: nowrap; color: #1e3a8a;">Phạm vi đối tượng:</label>
-                <input type="text" id="inp-phamvi" class="form-control form-control-sm" style="width: 250px; font-family: 'Times New Roman';" placeholder="Nhập phạm vi (Ví dụ: all)">
+                <input type="text" id="inp-phamvi" class="form-control form-control-sm" style="width: 120px; font-family: 'Times New Roman';" placeholder="Ví dụ: all">
+                
+                <label for="inp-idtmdoc" class="fw-bold mb-0 ms-3" style="white-space: nowrap; color: #b91c1c;">ID thư mục lưu hồ sơ:</label>
+                <input type="text" id="inp-idtmdoc" class="form-control form-control-sm" style="width: 250px; font-family: 'Times New Roman';" placeholder="Dán ID thư mục vào đây...">
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-sm btn-success fw-bold" onclick="addRowPQ()">
@@ -102,7 +105,7 @@
     // -----------------------------------------------------
     // KHỐI 1.1: QUẢN LÝ QUYỀN TRUY CẬP
     // -----------------------------------------------------
-    function loadPhanQuyen() {
+   function loadPhanQuyen() {
         document.getElementById('instant-loader').style.display = 'flex';
         google.script.run
             .withSuccessHandler(kq => {
@@ -113,6 +116,8 @@
                 }
                 
                 document.getElementById('inp-phamvi').value = kq.phamvi;
+                document.getElementById('inp-idtmdoc').value = kq.cai_tui_do || '';
+                
                 const tbody = document.getElementById('tb-phanquyen-body');
                 tbody.innerHTML = '';
                 
@@ -126,7 +131,6 @@
                 }
                 updateSTTPQ();
                 
-                // Nạp luôn dữ liệu bộ phận
                 loadBoPhan();
             })
             .withFailureHandler(err => {
@@ -184,8 +188,9 @@
         });
     }
     
-    function savePhanQuyen() {
+function savePhanQuyen() {
         const phamvi = document.getElementById('inp-phamvi').value.trim();
+        const cai_chau = document.getElementById('inp-idtmdoc').value.trim();
         const rows = document.getElementById('tb-phanquyen-body').querySelectorAll('tr');
         const mangdl = [];
         let tonTaiNguoiXX = false; 
@@ -226,7 +231,7 @@
                 document.getElementById('instant-loader').style.display = 'none';
                 alert("Lỗi kết nối máy chủ: " + err.message);
             })
-            .skt_luu_phanquyen(phamvi, mangdl);
+            .skt_luu_phanquyen(phamvi, cai_chau, mangdl);
     }
 
     // -----------------------------------------------------
