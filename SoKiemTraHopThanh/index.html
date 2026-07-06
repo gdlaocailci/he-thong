@@ -73,7 +73,7 @@
             skt_taitm_minhc: function(idcha, tentmu, dltep, ddcu, cdghi) { this._call('skt_taitm_minhc', { idcha: idcha, tentmu: tentmu, dltep: dltep, ddcu: ddcu, cdghi: cdghi }); },
             skt_tk_laydl_loc: function() { this._call('skt_tk_laydl_loc', {}); },
             skt_timbg_kq: function(tchi) { this._call('skt_timbg_kq', { tchi: tchi }); },
-            skt_taobc_vba: function(tchi) { this._call('skt_taobc_vba', { tchi: tchi, logo: (typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : "") }); },
+            skt_taobc_vba: function(tchi) { this._call('skt_taobc_vba', { tchi: tchi, logo: (typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : ""), tenTruong: (typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : "") }); },
             skt_pt_mc_ai: function(chuoilk, yeucau) { this._call('skt_pt_mc_ai', { chuoilk: chuoilk, yeucau: yeucau }); },
             skt_notebooklm_qa: function(question) { this._call('skt_notebooklm_qa', { question: question }); },
             skt_chatWithDocument: function(url, query) { this._call('skt_chatWithDocument', { url: url, query: query }); },
@@ -841,9 +841,10 @@ function kiemtqvata() {
                 if (!nduyq) { nduyq = true; window.sktquyenht = 'xx'; }
                 window.sktduocuyq = nduyq; 
 
-                // CHUYỂN DỮ LIỆU SANG BỘ NHỚ TRÌNH DUYỆT BẰNG BIẾN RÁC
-                window.khomam = dlu.kqt || [];
+                // Lưu dữ liệu nhẹ vào bộ nhớ, không chứa kqt
                 window.ruongbac = { dgv: dlu.dgv || [], dnk: dlu.dnk || [], dbp: dlu.dbp || [] };
+                window.dsmhs = dlu.dsmhs || [];
+                window.khomam = []; // sẽ được tải sau khi cần
 
                 document.getElementById('TabNhapLieu').innerHTML = manhGiay[0];
                 document.getElementById('TabTimKiem').innerHTML = manhGiay[1];
@@ -895,6 +896,13 @@ function kiemtqvata() {
                     try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
                     
                     if (window.sktduocuyq === false) vohienhapkh();
+                    
+                    // Tải dữ liệu thống kê ngầm sau 2 giây
+                    setTimeout(function() {
+                        if (typeof loadDuLieuThongKe === 'function') {
+                            loadDuLieuThongKe();
+                        }
+                    }, 2000);
                 }, 800);
 
                 setTimeout(function() { 
@@ -908,6 +916,24 @@ function kiemtqvata() {
             alert("LỖI KẾT NỐI TẢI NỀN TẢNG: " + loie.message);
         });
     }
+
+    window.loadDuLieuThongKe = function() {
+    if (window.khomam && window.khomam.length > 0) return;
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.khomam = data || [];
+            // Nếu tab thống kê đang mở, cập nhật bảng
+            if (document.getElementById('TabTimKiem').classList.contains('active')) {
+                if (typeof locDuLieuTucThoi === 'function') {
+                    locDuLieuTucThoi();
+                }
+            }
+        })
+        .withFailureHandler(function(err) {
+            console.error("Lỗi tải dữ liệu thống kê:", err);
+        })
+        .skt_tk_timbg({ gkiem: "", nkiem: "", bkiem: "", tkiem: "", dkiem: "" });
+};
 
     async function taimdunht() {
       try {
@@ -1031,6 +1057,12 @@ function kiemtqvata() {
       
       if (idd === 'TabPhanQuyen') {
           if (typeof loadPhanQuyen === 'function') loadPhanQuyen();
+      }
+      
+      if (idd === 'TabTimKiem') {
+          if (typeof loadDuLieuThongKe === 'function') {
+              loadDuLieuThongKe();
+          }
       }
     }
   </script>
