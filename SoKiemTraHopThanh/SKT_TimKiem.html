@@ -275,17 +275,30 @@
     const nkt = document.getElementById('s_nkt');
     const bp = document.getElementById('s_bp');
     
-    // Đọc cấu hình từ bộ nhớ đệm thay vì gọi Server
+    // Đọc cấu hình từ bộ nhớ đệm
     const chaucay = window.ruongbac || { dgv: [], dnk: [], dbp: [] };
     chaucay.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-    // Lấy dữ liệu bảng và kích hoạt hiển thị ngay lập tức
-    sktDuLieuBoNhoDem = window.khomam || [];
-    locDuLieuTucThoi(); 
-  })();
-
+    // Nếu chưa có dữ liệu bảng, tải ngầm
+    if (!window.khomam || window.khomam.length === 0) {
+        if (typeof loadDuLieuThongKe === 'function') {
+            loadDuLieuThongKe();
+        } else {
+            // Fallback gọi trực tiếp
+            google.script.run.withSuccessHandler(function(data) {
+                window.khomam = data || [];
+                locDuLieuTucThoi();
+            }).withFailureHandler(function(err) {
+                console.error("Lỗi tải dữ liệu thống kê:", err);
+            }).skt_tk_timbg({ gkiem: "", nkiem: "", bkiem: "", tkiem: "", dkiem: "" });
+        }
+    } else {
+        locDuLieuTucThoi();
+    }
+})();
+  //====================================
   function xuatndkno(nd) {
     if (!nd) return "";
     return `
