@@ -416,7 +416,7 @@ function taidli() {
   }
 
 /* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN                                              */
+/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (ĐÃ FIX LỖI CHỈ SỐ CỘT)                      */
 /* ========================================================================== */
 function apdquye() {
     const hpgv = document.getElementById('cbGiaoVien');
@@ -452,7 +452,7 @@ function apdquye() {
 
     if (btnSave) btnSave.disabled = !isInspector && !isInspectee && !quyenQuanTri;
     
-    // Nút Nộp báo cáo chỉ kích hoạt cho người kiểm tra (x) và khóa hoàn toàn đối với (xx)
+    // Nút Nộp báo cáo chỉ kích hoạt cho người kiểm tra (x) và khóa đối với (xx)
     if (btnSubmit) btnSubmit.disabled = !isInspector || quyenQuanTri;
     
     if (quyenQuanTri) {
@@ -468,17 +468,25 @@ function apdquye() {
         const rowLocked = isSigned && !quyenQuanTri;
 
         cacn.forEach((input, index) => {
+            // INDEX MAPPING:
+            // 0: Ngày | 1: Nội dung | 2: Ưu | 3: Tồn | 4: BP | 5: XL HS | 6: XL GD | 7: XL KS | 8: XL khác
+            // 9: Ý kiến (GV) | 10: Ký tên (GV) | 11: Link ẩn
+            
             if (rowLocked) {
                 if (!input.classList.contains('link-input')) {
                     input.disabled = true;
+                } else {
+                    input.disabled = false; 
                 }
             } else {
                 if (quyenQuanTri) {
                     input.disabled = false; 
                 } else if (isInspector) {
-                    input.disabled = (index >= 9); 
+                    // CỐ ĐỊNH CHỈ SỐ: Người kiểm tra KHÔNG ĐƯỢC sửa cột 9, 10
+                    input.disabled = (index === 9 || index === 10); 
                 } else if (isInspectee) {
-                    input.disabled = (index < 9);  
+                    // CỐ ĐỊNH CHỈ SỐ: Giáo viên CHỈ ĐƯỢC sửa cột 9, 10
+                    input.disabled = (index !== 9 && index !== 10);  
                 } else {
                     input.disabled = true;
                 }
@@ -494,7 +502,6 @@ function apdquye() {
             if (ntsu) ntsu.style.display = 'none';
             if (ntai) ntai.style.display = 'none';
             if (ntta) ntta.style.display = (isInspector) ? 'inline-block' : 'none';
-            // ĐIỀU CHỈNH: Cho phép người kiểm tra (x) hiển thị nút xóa dù dòng đã khóa/ký
             if (ntxo) ntxo.style.visibility = (isInspector) ? 'visible' : 'hidden';
         } else {
             if (ntsu) ntsu.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
@@ -504,7 +511,7 @@ function apdquye() {
         }
     });
 }
-
+//======================================================================================================
 function themdongmo(dld = null) {
     const datg = new Date().getTime().toString().slice(-5);
     const idng = Math.floor(Math.random() * 1000); 
