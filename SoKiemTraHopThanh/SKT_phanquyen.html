@@ -1,334 +1,364 @@
-<div class="header-card mb-3 p-3 bg-white rounded shadow-sm border-top border-primary border-3">
-    <h1 class="page-title m-0 text-primary" style="font-size: 18px; font-weight: bold; text-transform: uppercase;">QUẢN LÝ QUYỀN TRUY CẬP VÀ BỘ PHẬN</h1>
+<style>
+  .pq-header { background: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; border-left: 5px solid #b91c1c; }
+  .pq-title { font-size: 22px; font-weight: bold; color: #1e3a8a; margin: 0; }
+  .pq-sub { font-size: 14px; color: #475569; margin-top: 5px; }
+  .pq-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+  .pq-tab-btn { padding: 8px 20px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; background: #fff; font-weight: bold; transition: 0.2s; }
+  .pq-tab-btn.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+  .pq-tab-btn:hover:not(.active) { background: #f1f5f9; }
+  .pq-tab-pane { display: none; }
+  .pq-tab-pane.active { display: block; }
+  .pq-table-wrap { overflow: auto; max-height: 60vh; border: 1px solid #e2e8f0; border-radius: 6px; }
+  .pq-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .pq-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 2; padding: 8px; text-align: center; border: 1px solid #cbd5e1; }
+  .pq-table td { padding: 4px; border: 1px solid #cbd5e1; vertical-align: middle; }
+  .pq-table input, .pq-table select { width: 100%; border: none; padding: 6px 4px; box-sizing: border-box; font-size: 13px; background: transparent; }
+  .pq-table input:focus, .pq-table select:focus { outline: 2px solid #3b82f6; background: #fff; }
+  .pq-table .del-btn { background: #fee2e2; border: none; border-radius: 4px; padding: 2px 8px; cursor: pointer; color: #b91c1c; font-weight: bold; }
+  .pq-table .del-btn:hover { background: #fecaca; }
+  .pq-actions { margin-top: 15px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .pq-btn { padding: 8px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+  .pq-btn-primary { background: #1e3a8a; color: white; }
+  .pq-btn-primary:hover { background: #1e40af; }
+  .pq-btn-success { background: #059669; color: white; }
+  .pq-btn-success:hover { background: #047857; }
+  .pq-btn-danger { background: #dc2626; color: white; }
+  .pq-btn-danger:hover { background: #b91c1c; }
+  .pq-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pq-msg { padding: 10px 15px; border-radius: 4px; margin-top: 10px; display: none; }
+  .pq-msg.error { background: #fee2e2; color: #b91c1c; display: block; border: 1px solid #fecaca; }
+  .pq-msg.success { background: #d1fae5; color: #065f46; display: block; border: 1px solid #a7f3d0; }
+  .pq-msg.info { background: #dbeafe; color: #1e40af; display: block; border: 1px solid #bfdbfe; }
+  .pq-add-row { margin-top: 10px; }
+  .pq-small-label { font-size: 12px; color: #64748b; font-weight: normal; }
+</style>
+
+<div class="pq-header">
+  <div class="pq-title">QUẢN LÝ PHÂN QUYỀN TRUY CẬP</div>
+  <div class="pq-sub">Chỉ những người có quyền <b>xx</b> (quản lý) hoặc <b>xxx</b> (toàn quyền) mới được truy cập.</div>
 </div>
 
-<ul class="nav nav-tabs mb-2" style="font-family: 'Times New Roman', serif; font-size: 16px;">
-  <li class="nav-item">
-    <a class="nav-link active fw-bold text-primary" id="btn-tab-1-1" href="#" onclick="chuyenTabPQ('tab-1-1', this)" style="cursor:pointer;">1.1 Quyền truy cập</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link fw-bold text-secondary" id="btn-tab-1-2" href="#" onclick="chuyenTabPQ('tab-1-2', this)" style="cursor:pointer;">1.2 Khai báo bộ phận</a>
-  </li>
-</ul>
+<div class="pq-tabs">
+  <button class="pq-tab-btn active" data-tab="tabPhanQuyen" onclick="switchPQTab('tabPhanQuyen')">🔑 Phân quyền</button>
+  <button class="pq-tab-btn" data-tab="tabBoPhan" onclick="switchPQTab('tabBoPhan')">🏢 Bộ phận</button>
+</div>
 
-<div class="bg-white p-3 rounded shadow-sm border d-flex flex-column" style="height: calc(100vh - 160px);">
-    
-    <div id="tab-1-1" class="khung-tab-pq d-flex flex-column" style="height: 100%;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center gap-2">
-                <label for="inp-phamvi" class="fw-bold mb-0" style="white-space: nowrap; color: #1e3a8a;">Phạm vi đối tượng:</label>
-                <input type="text" id="inp-phamvi" class="form-control form-control-sm" style="width: 120px; font-family: 'Times New Roman';" placeholder="Ví dụ: all">
-                
-                <label for="inp-idtmdoc" class="fw-bold mb-0 ms-3" style="white-space: nowrap; color: #b91c1c;">ID thư mục lưu hồ sơ:</label>
-                <input type="text" id="inp-idtmdoc" class="form-control form-control-sm" style="width: 300px; font-family: 'Times New Roman';" placeholder="Dán ID thư mục vào đây lưu tài tài liệu kiểm tra...">
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-success fw-bold" onclick="addRowPQ()">
-                    <i class="bi bi-plus-circle"></i> Thêm mới
-                </button>
-                <button class="btn btn-sm btn-primary fw-bold" onclick="savePhanQuyen()">
-                    <i class="bi bi-save"></i> Cập nhật
-                </button>
-            </div>
-        </div>
-        
-        <div class="table-container flex-grow-1" style="overflow-y: auto; border: 1px solid #9ca3af;">
-            <table class="table table-bordered table-hover mb-0" id="tb-phanquyen">
-                <thead class="table-primary sticky-top" style="z-index: 5;">
-                    <tr>
-                        <th style="width: 50px;" class="text-center">Xóa</th>
-                        <th style="width: 60px;" class="text-center">STT</th>
-                        <th style="width: 35%;">Họ và tên</th>
-                        <th style="width: 35%;">Định danh (Tài khoản)</th>
-                        <th style="width: 15%;">Quyền</th>
-                    </tr>
-                </thead>
-                <tbody id="tb-phanquyen-body">
-                    </tbody>
-            </table>
-        </div>
+<!-- Tab Phân quyền -->
+<div id="tabPhanQuyen" class="pq-tab-pane active">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <div>
+      <span class="pq-small-label">Phạm vi bảo mật: </span>
+      <input type="text" id="pq_phamvi" placeholder="Nhập phạm vi (ví dụ: ALL)" style="border:1px solid #ccc; border-radius:4px; padding:4px 8px; width:200px;">
+      <span class="pq-small-label" style="margin-left:15px;">ID thư mục: </span>
+      <input type="text" id="pq_cai_tui" placeholder="ID thư mục tài nguyên" style="border:1px solid #ccc; border-radius:4px; padding:4px 8px; width:250px;">
     </div>
+  </div>
+  <div class="pq-table-wrap">
+    <table class="pq-table" id="pqTable">
+      <thead>
+        <tr>
+          <th style="width:30px;">#</th>
+          <th style="width:30px;"><button class="del-btn" onclick="xoaDongPQ(this)" title="Xóa dòng">🗑️</button></th>
+          <th style="min-width:120px;">Tên</th>
+          <th style="min-width:120px;">Tài khoản</th>
+          <th style="min-width:100px;">Quyền</th>
+        </tr>
+      </thead>
+      <tbody id="pqBody">
+        <!-- Dữ liệu sẽ được tải -->
+      </tbody>
+    </table>
+  </div>
+  <div class="pq-actions">
+    <button class="pq-btn pq-btn-primary" onclick="themDongPQ()">➕ Thêm dòng</button>
+    <button class="pq-btn pq-btn-success" onclick="luuPhanQuyen()">💾 Lưu phân quyền</button>
+    <span id="pqStatus" class="pq-msg"></span>
+  </div>
+</div>
 
-    <div id="tab-1-2" class="khung-tab-pq d-none flex-column" style="height: 100%;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="m-0 fw-bold" style="color: #1e3a8a; font-size: 16px; text-transform: uppercase;">KHAI BÁO BỘ PHẬN TỔ CHỨC</h4>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-success fw-bold" onclick="addRowBP()">
-                    <i class="bi bi-plus-circle"></i> Thêm mới
-                </button>
-                <button class="btn btn-sm btn-primary fw-bold" onclick="saveBoPhan()">
-                    <i class="bi bi-save"></i> Cập nhật
-                </button>
-            </div>
-        </div>
-        
-        <div class="table-container flex-grow-1" style="overflow-y: auto; border: 1px solid #9ca3af;">
-            <table class="table table-bordered table-hover mb-0" id="tb-bophan">
-                <thead class="table-success sticky-top" style="z-index: 5;">
-                    <tr>
-                        <th style="width: 50px;" class="text-center">Xóa</th>
-                        <th style="width: 60px;" class="text-center">STT</th>
-                        <th style="width: 60%;">Tên bộ phận</th>
-                        <th style="width: 40%;">Mã bộ phận</th>
-                    </tr>
-                </thead>
-                <tbody id="tb-bophan-body">
-                    </tbody>
-            </table>
-        </div>
-    </div>
-
+<!-- Tab Bộ phận -->
+<div id="tabBoPhan" class="pq-tab-pane">
+  <div style="margin-bottom:10px;">
+    <span class="pq-small-label">Danh sách bộ phận (mã bộ phận - tên bộ phận)</span>
+  </div>
+  <div class="pq-table-wrap">
+    <table class="pq-table" id="bpTable">
+      <thead>
+        <tr>
+          <th style="width:30px;">#</th>
+          <th style="width:30px;"><button class="del-btn" onclick="xoaDongBP(this)" title="Xóa dòng">🗑️</button></th>
+          <th style="min-width:150px;">Mã bộ phận</th>
+          <th style="min-width:200px;">Tên bộ phận</th>
+        </tr>
+      </thead>
+      <tbody id="bpBody">
+        <!-- Dữ liệu sẽ được tải -->
+      </tbody>
+    </table>
+  </div>
+  <div class="pq-actions">
+    <button class="pq-btn pq-btn-primary" onclick="themDongBP()">➕ Thêm dòng</button>
+    <button class="pq-btn pq-btn-success" onclick="luuBoPhan()">💾 Lưu bộ phận</button>
+    <span id="bpStatus" class="pq-msg"></span>
+  </div>
 </div>
 
 <script>
-    // -----------------------------------------------------
-    // LOGIC ĐIỀU HƯỚNG TAB
-    // -----------------------------------------------------
-    function chuyenTabPQ(tabId, btn) {
-        document.querySelectorAll('.khung-tab-pq').forEach(el => {
-            el.classList.remove('d-flex');
-            el.classList.add('d-none');
-        });
-        
-        document.getElementById(tabId).classList.remove('d-none');
-        document.getElementById(tabId).classList.add('d-flex');
-        
-        document.querySelectorAll('#btn-tab-1-1, #btn-tab-1-2').forEach(el => {
-            el.classList.remove('active', 'text-primary');
-            el.classList.add('text-secondary');
-        });
-        
-        btn.classList.add('active', 'text-primary');
-        btn.classList.remove('text-secondary');
+// --- KIỂM TRA QUYỀN TRUY CẬP TRANG ---
+(function kiemTraQuyenTruyCap() {
+    const quyen = window.sktquyenht || '';
+    if (!(quyen === 'xx' || quyen === 'xxx')) {
+        document.getElementById('tabPhanQuyen').innerHTML = `
+            <div style="padding:30px; text-align:center; color:#b91c1c; font-size:18px; font-weight:bold;">
+                ⛔ BẠN KHÔNG CÓ QUYỀN TRUY CẬP TRANG QUẢN LÝ PHÂN QUYỀN.<br>
+                <span style="font-size:14px; color:#475569;">Chỉ người dùng có quyền <b>xx</b> hoặc <b>xxx</b> mới được sử dụng.</span>
+            </div>
+        `;
+        document.getElementById('tabBoPhan').innerHTML = '';
+        document.querySelector('.pq-tabs').style.display = 'none';
+        return;
     }
+    // Nếu có quyền, tải dữ liệu
+    taiDuLieuPhanQuyen();
+    taiDuLieuBoPhan();
+})();
 
-    // -----------------------------------------------------
-    // KHỐI 1.1: QUẢN LÝ QUYỀN TRUY CẬP
-    // -----------------------------------------------------
-   function loadPhanQuyen() {
-        document.getElementById('instant-loader').style.display = 'flex';
-        google.script.run
-            .withSuccessHandler(kq => {
-                document.getElementById('instant-loader').style.display = 'none';
-                if (!kq.tcon) {
-                    alert("Lỗi tải dữ liệu quyền: " + kq.tbao);
-                    return;
-                }
-                
-                document.getElementById('inp-phamvi').value = kq.phamvi;
-                document.getElementById('inp-idtmdoc').value = kq.cai_tui_do || '';
-                
-                const tbody = document.getElementById('tb-phanquyen-body');
-                tbody.innerHTML = '';
-                
-                if (kq.dlieu && kq.dlieu.length > 0) {
-                    for (let i = kq.dlieu.length - 1; i >= 0; i--) {
-                        let row = kq.dlieu[i];
-                        if (String(row[1]).trim() !== '' || String(row[2]).trim() !== '') { 
-                            addRowPQ(row[1], row[2], row[3]);
-                        }
-                    }
-                }
-                updateSTTPQ();
-                
-                loadBoPhan();
-            })
-            .withFailureHandler(err => {
-                document.getElementById('instant-loader').style.display = 'none';
-                alert("Lỗi kết nối máy chủ khi tải quyền: " + err.message);
-            })
-            .skt_lay_phanquyen();
+// --- QUẢN LÝ PHÂN QUYỀN ---
+function taiDuLieuPhanQuyen() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            if (data.tcon) {
+                document.getElementById('pq_phamvi').value = data.phamvi || '';
+                document.getElementById('pq_cai_tui').value = data.cai_tui_do || '';
+                hienBangPQ(data.dlieu || []);
+            } else {
+                hienThongBao('pqStatus', data.tbao, 'error');
+            }
+        })
+        .withFailureHandler(function(err) {
+            hienThongBao('pqStatus', 'Lỗi tải dữ liệu: ' + err.message, 'error');
+        })
+        .skt_lay_phanquyen();
+}
+
+function hienBangPQ(ds) {
+    const tbody = document.getElementById('pqBody');
+    tbody.innerHTML = '';
+    if (!ds || ds.length === 0) {
+        // Thêm một dòng mặc định nếu trống
+        ds = [['', '', '']];
     }
-    
-    function addRowPQ(ten = '', taikhoan = '', quyen = '') {
-        const tbody = document.getElementById('tb-phanquyen-body');
-        const tr = document.createElement('tr');
-        
-        let valQuyen = String(quyen).toLowerCase().trim();
-        let selTrong = (valQuyen !== 'x' && valQuyen !== 'xx') ? 'selected' : '';
-        let selX = valQuyen === 'x' ? 'selected' : '';
-        let selXX = valQuyen === 'xx' ? 'selected' : '';
-        
+    ds.forEach(function(row, idx) {
+        var tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="text-center align-middle">
-                <button class="btn-icon-del" onclick="deleteRowPQ(this)" title="Xóa dòng"><i class="bi bi-trash"></i></button>
-            </td>
-            <td class="text-center align-middle fw-bold stt-col" style="color: #64748b;"></td>
-            <td><input type="text" class="cell-input ten-col" value="${ten}" placeholder="Nhập họ và tên..."></td>
-            <td><input type="text" class="cell-input tk-col" value="${taikhoan}" placeholder="Nhập tên định danh..."></td>
+            <td style="text-align:center;">${idx+1}</td>
+            <td style="text-align:center;"><button class="del-btn" onclick="xoaDongPQ(this)">🗑️</button></td>
+            <td><input type="text" class="pq-ten" value="${row[0]||''}" placeholder="Họ tên"></td>
+            <td><input type="text" class="pq-taik" value="${row[1]||''}" placeholder="Email"></td>
             <td>
-                <select class="cell-input quyen-col" style="cursor:pointer; text-align: center;">
-                    <option value="" ${selTrong}>Người được kiểm tra</option>
-                    <option value="x" ${selX}>Người kiểm tra</option>
-                    <option value="xx" ${selXX}>Quyền vip</option>
+                <select class="pq-quyen">
+                    <option value="">--</option>
+                    <option value="x" ${row[2]==='x'?'selected':''}>x (Kiểm tra)</option>
+                    <option value="xx" ${row[2]==='xx'?'selected':''}>xx (Quản lý phân quyền)</option>
+                    <option value="xxx" ${row[2]==='xxx'?'selected':''}>xxx (Toàn quyền)</option>
                 </select>
             </td>
         `;
-        
-        if (tbody.firstChild) {
-            tbody.insertBefore(tr, tbody.firstChild);
-        } else {
-            tbody.appendChild(tr);
+        tbody.appendChild(tr);
+    });
+}
+
+function themDongPQ() {
+    const tbody = document.getElementById('pqBody');
+    var tr = document.createElement('tr');
+    var stt = tbody.children.length + 1;
+    tr.innerHTML = `
+        <td style="text-align:center;">${stt}</td>
+        <td style="text-align:center;"><button class="del-btn" onclick="xoaDongPQ(this)">🗑️</button></td>
+        <td><input type="text" class="pq-ten" placeholder="Họ tên"></td>
+        <td><input type="text" class="pq-taik" placeholder="Email"></td>
+        <td>
+            <select class="pq-quyen">
+                <option value="">--</option>
+                <option value="x">x (Kiểm tra)</option>
+                <option value="xx">xx (Quản lý phân quyền)</option>
+                <option value="xxx">xxx (Toàn quyền)</option>
+            </select>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    capNhatSTT('pqBody');
+}
+
+function xoaDongPQ(btn) {
+    var tr = btn.closest('tr');
+    if (tr && tr.parentNode.children.length > 1) {
+        tr.remove();
+        capNhatSTT('pqBody');
+    } else {
+        alert('Phải giữ lại ít nhất một dòng.');
+    }
+}
+
+function capNhatSTT(tbodyId) {
+    var rows = document.getElementById(tbodyId).children;
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].cells[0].innerText = i + 1;
+    }
+}
+
+function luuPhanQuyen() {
+    var phamvi = document.getElementById('pq_phamvi').value.trim();
+    var cai_tui = document.getElementById('pq_cai_tui').value.trim();
+    var mang = [];
+    var rows = document.getElementById('pqBody').children;
+    var coXX = false;
+    for (var i = 0; i < rows.length; i++) {
+        var ten = rows[i].querySelector('.pq-ten').value.trim();
+        var taik = rows[i].querySelector('.pq-taik').value.trim();
+        var quyen = rows[i].querySelector('.pq-quyen').value;
+        if (taik !== '') {
+            mang.push([ten, taik, quyen]);
+            if (quyen === 'xx') coXX = true;
         }
-        
-        updateSTTPQ();
     }
-    
-    function deleteRowPQ(btn) {
-        if (confirm("Thầy/Cô có chắc chắn muốn xóa dòng quyền này?")) {
-            btn.closest('tr').remove();
-            updateSTTPQ();
-        }
+    if (mang.length === 0) {
+        hienThongBao('pqStatus', 'Danh sách trống, chưa thể lưu.', 'error');
+        return;
     }
-    
-    function updateSTTPQ() {
-        const rows = document.getElementById('tb-phanquyen-body').querySelectorAll('tr');
-        rows.forEach((row, idx) => {
-            row.querySelector('.stt-col').innerText = idx + 1;
-        });
+    if (!coXX) {
+        hienThongBao('pqStatus', 'Lỗi: Danh sách phải có ít nhất một tài khoản với quyền "xx" (Quản lý phân quyền)!', 'error');
+        return;
     }
-    
-function savePhanQuyen() {
-        const phamvi = document.getElementById('inp-phamvi').value.trim();
-        const cai_chau = document.getElementById('inp-idtmdoc').value.trim();
-        const rows = document.getElementById('tb-phanquyen-body').querySelectorAll('tr');
-        const mangdl = [];
-        let tonTaiNguoiXX = false; 
-        
-        rows.forEach((row, idx) => {
-            const ten = row.querySelector('.ten-col').value.trim();
-            const taikhoan = row.querySelector('.tk-col').value.trim();
-            const quyen = row.querySelector('.quyen-col').value.trim();
-            
-            if (quyen === 'xx') tonTaiNguoiXX = true;
-            
-            if (ten !== '' || taikhoan !== '') {
-                mangdl.push([idx + 1, ten, taikhoan, quyen]);
+    // Gửi lên server
+    document.getElementById('pqStatus').className = 'pq-msg info';
+    document.getElementById('pqStatus').innerText = '⏳ Đang lưu...';
+    google.script.run
+        .withSuccessHandler(function(kq) {
+            if (kq.tcon) {
+                hienThongBao('pqStatus', kq.tbao, 'success');
+                // Tải lại dữ liệu để cập nhật
+                taiDuLieuPhanQuyen();
+            } else {
+                hienThongBao('pqStatus', kq.tbao, 'error');
             }
-        });
-        
-        if (!tonTaiNguoiXX) {
-            alert("⛔ TỪ CHỐI CẬP NHẬT:\nHệ thống yêu cầu phải có tối thiểu 1 người dùng được cấp quyền 'xx' để đảm bảo duy trì quyền quản trị cấp cao!");
-            return;
-        }
-        
-        if (mangdl.length === 0 && !confirm("Danh sách hiện đang trống. Thầy/Cô có chắc chắn muốn xóa toàn bộ danh sách cấp quyền?")) {
-            return;
-        }
-        
-        document.getElementById('instant-loader').style.display = 'flex';
-        google.script.run
-            .withSuccessHandler(kq => {
-                document.getElementById('instant-loader').style.display = 'none';
-                if (kq.tcon) {
-                    alert("✅ " + kq.tbao);
-                    loadPhanQuyen(); 
-                } else {
-                    alert("⛔ Lỗi cập nhật: " + kq.tbao);
-                }
-            })
-            .withFailureHandler(err => {
-                document.getElementById('instant-loader').style.display = 'none';
-                alert("Lỗi kết nối máy chủ: " + err.message);
-            })
-            .skt_luu_phanquyen(phamvi, cai_chau, mangdl);
-    }
+        })
+        .withFailureHandler(function(err) {
+            hienThongBao('pqStatus', 'Lỗi: ' + err.message, 'error');
+        })
+        .skt_luu_phanquyen(phamvi, cai_tui, mang);
+}
 
-    // -----------------------------------------------------
-    // KHỐI 1.2: QUẢN LÝ BỘ PHẬN TỔ CHỨC
-    // -----------------------------------------------------
-    function loadBoPhan() {
-        google.script.run
-            .withSuccessHandler(kq => {
-                if (!kq.tcon) {
-                    console.error("Lỗi tải bộ phận:", kq.tbao);
-                    return;
-                }
-                
-                const tbody = document.getElementById('tb-bophan-body');
-                tbody.innerHTML = '';
-                
-                if (kq.dlieu && kq.dlieu.length > 0) {
-                    for (let i = kq.dlieu.length - 1; i >= 0; i--) {
-                        let row = kq.dlieu[i];
-                        if (String(row[0]).trim() !== '' || String(row[1]).trim() !== '') { 
-                            addRowBP(row[0], row[1]);
-                        }
-                    }
-                }
-                updateSTTBP();
-            })
-            .withFailureHandler(err => {
-                console.error("Lỗi kết nối tải bộ phận:", err.message);
-            })
-            .skt_lay_bophan();
-    }
+// --- QUẢN LÝ BỘ PHẬN ---
+function taiDuLieuBoPhan() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            if (data.tcon) {
+                hienBangBP(data.dlieu || []);
+            } else {
+                hienThongBao('bpStatus', data.tbao, 'error');
+            }
+        })
+        .withFailureHandler(function(err) {
+            hienThongBao('bpStatus', 'Lỗi tải bộ phận: ' + err.message, 'error');
+        })
+        .skt_lay_bophan();
+}
 
-    function addRowBP(tenbp = '', mabp = '') {
-        const tbody = document.getElementById('tb-bophan-body');
-        const tr = document.createElement('tr');
-        
+function hienBangBP(ds) {
+    const tbody = document.getElementById('bpBody');
+    tbody.innerHTML = '';
+    if (!ds || ds.length === 0) {
+        ds = [['', '']];
+    }
+    ds.forEach(function(row, idx) {
+        var tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="text-center align-middle">
-                <button class="btn-icon-del" onclick="deleteRowBP(this)" title="Xóa dòng"><i class="bi bi-trash"></i></button>
-            </td>
-            <td class="text-center align-middle fw-bold stt-col-bp" style="color: #64748b;"></td>
-            <td><input type="text" class="cell-input ten-bp-col" value="${tenbp}" placeholder="Nhập tên bộ phận..."></td>
-            <td><input type="text" class="cell-input ma-bp-col" value="${mabp}" placeholder="Nhập mã bộ phận..."></td>
+            <td style="text-align:center;">${idx+1}</td>
+            <td style="text-align:center;"><button class="del-btn" onclick="xoaDongBP(this)">🗑️</button></td>
+            <td><input type="text" class="bp-ma" value="${row[0]||''}" placeholder="Mã BP"></td>
+            <td><input type="text" class="bp-ten" value="${row[1]||''}" placeholder="Tên bộ phận"></td>
         `;
-        
-        // Luôn chèn dòng mới lên đầu tiên
-        if (tbody.firstChild) {
-            tbody.insertBefore(tr, tbody.firstChild);
-        } else {
-            tbody.appendChild(tr);
+        tbody.appendChild(tr);
+    });
+}
+
+function themDongBP() {
+    const tbody = document.getElementById('bpBody');
+    var tr = document.createElement('tr');
+    var stt = tbody.children.length + 1;
+    tr.innerHTML = `
+        <td style="text-align:center;">${stt}</td>
+        <td style="text-align:center;"><button class="del-btn" onclick="xoaDongBP(this)">🗑️</button></td>
+        <td><input type="text" class="bp-ma" placeholder="Mã BP"></td>
+        <td><input type="text" class="bp-ten" placeholder="Tên bộ phận"></td>
+    `;
+    tbody.appendChild(tr);
+    capNhatSTT('bpBody');
+}
+
+function xoaDongBP(btn) {
+    var tr = btn.closest('tr');
+    if (tr && tr.parentNode.children.length > 1) {
+        tr.remove();
+        capNhatSTT('bpBody');
+    } else {
+        alert('Phải giữ lại ít nhất một dòng.');
+    }
+}
+
+function luuBoPhan() {
+    var mang = [];
+    var rows = document.getElementById('bpBody').children;
+    for (var i = 0; i < rows.length; i++) {
+        var ma = rows[i].querySelector('.bp-ma').value.trim();
+        var ten = rows[i].querySelector('.bp-ten').value.trim();
+        if (ma !== '' && ten !== '') {
+            mang.push([ma, ten]);
         }
-        
-        updateSTTBP();
     }
-
-    function deleteRowBP(btn) {
-        if (confirm("Thầy/Cô có chắc chắn muốn xóa bộ phận này?")) {
-            btn.closest('tr').remove();
-            updateSTTBP();
-        }
+    if (mang.length === 0) {
+        hienThongBao('bpStatus', 'Danh sách bộ phận trống!', 'error');
+        return;
     }
-
-    function updateSTTBP() {
-        const rows = document.getElementById('tb-bophan-body').querySelectorAll('tr');
-        rows.forEach((row, idx) => {
-            row.querySelector('.stt-col-bp').innerText = idx + 1;
-        });
-    }
-
-    function saveBoPhan() {
-        const rows = document.getElementById('tb-bophan-body').querySelectorAll('tr');
-        const mangdl = [];
-        
-        rows.forEach((row) => {
-            const tenbp = row.querySelector('.ten-bp-col').value.trim();
-            const mabp = row.querySelector('.ma-bp-col').value.trim();
-            
-            if (tenbp !== '' || mabp !== '') {
-                mangdl.push([tenbp, mabp]);
+    document.getElementById('bpStatus').className = 'pq-msg info';
+    document.getElementById('bpStatus').innerText = '⏳ Đang lưu...';
+    google.script.run
+        .withSuccessHandler(function(kq) {
+            if (kq.tcon) {
+                hienThongBao('bpStatus', kq.tbao, 'success');
+                taiDuLieuBoPhan();
+            } else {
+                hienThongBao('bpStatus', kq.tbao, 'error');
             }
-        });
-        
-        document.getElementById('instant-loader').style.display = 'flex';
-        google.script.run
-            .withSuccessHandler(kq => {
-                document.getElementById('instant-loader').style.display = 'none';
-                if (kq.tcon) {
-                    alert("✅ " + kq.tbao);
-                    loadBoPhan(); 
-                } else {
-                    alert("⛔ Lỗi cập nhật bộ phận: " + kq.tbao);
-                }
-            })
-            .withFailureHandler(err => {
-                document.getElementById('instant-loader').style.display = 'none';
-                alert("Lỗi kết nối máy chủ khi lưu bộ phận: " + err.message);
-            })
-            .skt_luu_bophan(mangdl);
+        })
+        .withFailureHandler(function(err) {
+            hienThongBao('bpStatus', 'Lỗi: ' + err.message, 'error');
+        })
+        .skt_luu_bophan(mang);
+}
+
+// --- HÀM TIỆN ÍCH ---
+function hienThongBao(id, msg, type) {
+    var el = document.getElementById(id);
+    el.className = 'pq-msg ' + (type || 'info');
+    el.innerText = msg;
+    if (type) {
+        el.style.display = 'block';
+        setTimeout(function() {
+            el.style.display = 'none';
+        }, 5000);
     }
+}
+
+function switchPQTab(tabId) {
+    document.querySelectorAll('.pq-tab-pane').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.getElementById(tabId).classList.add('active');
+    document.querySelectorAll('.pq-tab-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.pq-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+}
 </script>
