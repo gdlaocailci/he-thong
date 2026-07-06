@@ -18,7 +18,7 @@
 
 <div id="upload_modal">
   <div class="up-container">
-    <div class="up-header"><h2 style="margin:0; color:#b91c1c;">📁 MINH CHỨNG KÈM Theo</h2></div>
+    <div class="up-header"><h2 style="margin:0; color:#b91c1c;">📁 MINH CHỨNG KÈM THEO</h2></div>
     
     <div class="up-box">
       <label><b>1. Chọn thư mục lưu trữ (Tiêu chuẩn tải File):</b></label>
@@ -71,13 +71,12 @@
 <script>
   let tepht = [];
   let lkcx = ""; 
-  const idgo = '1_Z4ipFI-LQCJ33FSyb4zzURg6KINvWgG';
 
   // Tải danh sách thư mục con vào ComboBox
   function taithu() {
     const hop = document.getElementById('folderSelect');
     google.script.run.withSuccessHandler(tm => {
-      hop.innerHTML = `<option value="${idgo}">-- Thư mục gốc --</option>`;
+      hop.innerHTML = `<option value="">-- Thư mục gốc --</option>`;
       if(tm) tm.forEach(t1 => hop.add(new Option("📂 " + t1.tenn, t1.idt)));
     }).skt_laytm_con();
   }
@@ -250,7 +249,7 @@
 
     // MẠCH 2: XỬ LÝ TẢI FILE HOẶC THƯ MỤC TRUYỀN THỐNG
     if (!tepht || tepht.length === 0) return;
-    const idt = document.getElementById('folderSelect').value || idgo;
+    const idt = document.getElementById('folderSelect').value;
     
     let mhs = "";
     if (typeof donghtta !== 'undefined' && donghtta) {
