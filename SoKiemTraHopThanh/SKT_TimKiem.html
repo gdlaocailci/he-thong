@@ -132,32 +132,7 @@
     color: #0c4a6e;
   }
 
-  /* ========================================================================== */
-  /* GIAO DIỆN MOBILE: BỘ LỌC VÀ BẢNG TRA CỨU */
-  /* ========================================================================== */
-  @media screen and (max-width: 768px) {
-      .filter-section-search { 
-          grid-template-columns: 1fr 1fr !important; /* Xếp thành 2 cột cho gọn */
-      }
-      .filter-section-search .f-item:nth-child(1),
-      .filter-section-search .f-item:nth-child(2),
-      .filter-section-search .f-item:nth-child(3) {
-          grid-column: span 2; /* 3 ô chọn đầu tiên chiếm cả 2 cột */
-      }
-      .filter-section-search .f-item:last-child {
-          grid-column: span 2; justify-content: center; margin-top: 5px;
-      }
-      
-      .stats-container { flex-direction: column; align-items: stretch; }
-      .stat-group { max-width: 100%; margin-bottom: 5px; }
-      
-      .table-container-search { 
-          overflow-x: auto !important; 
-          -webkit-overflow-scrolling: touch !important; 
-      }
-      .result-table { width: 1400px !important; } /* Khóa độ rộng */
-      .page-title { font-size: 17px !important; }
-  }
+  
 </style>
 
 <div class="header-card">
