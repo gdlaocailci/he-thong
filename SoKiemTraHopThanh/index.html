@@ -797,19 +797,23 @@
     }
 
 /* ========================================================================== */
-/* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ TỐI ƯU TỐC ĐỘ X5)   */
+/* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ KHẮC PHỤC LỖI KẾT NỐI) */
 /* ========================================================================== */
 function kiemtqvata() {
     let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
     taikht = String(taikht).toLowerCase().trim();
     window.sktquyenht = "";
 
-    // Luồng 1: Kết nối máy chủ Google lấy dữ liệu
-    const luongnuoc = new Promise((xong, hong) => {
-        google.script.run.withSuccessHandler(xong).withFailureHandler(hong).skt_gopgio_thanhbao(taikht);
+    // Gia cố luồng nạp dữ liệu: Tự động hóa giải Reject để bảo vệ luồng Promise.all
+    const luongnuoc = new Promise((xong) => {
+        google.script.run
+        .withSuccessHandler(xong)
+        .withFailureHandler(function(loi_mang) {
+            xong({ cquy: false, tbao: "LỖI ĐƯỜNG TRUYỀN GOOGLE: " + loi_mang.message });
+        })
+        .skt_gopgio_thanhbao(taikht);
     });
 
-    // Luồng 2: Tải giao diện ĐỒNG THỜI (Khắc phục triệt để lỗi đợi 30 giây)
     const tai_nhanh_dong_thoi = async () => {
         const v_ban = new Date().getTime();
         const cac_tep = [
@@ -820,7 +824,6 @@ function kiemtqvata() {
             './SKT_phanquyen.html'
         ];
         
-        // Quăng 5 luồng tải cùng 1 lúc, tệp nào lỗi thì tự bỏ qua, không đợi nhau
         const mang_tai = cac_tep.map(tep => 
             fetch(tep + '?v=' + v_ban)
             .then(res => res.ok ? res.text() : "")
@@ -830,7 +833,6 @@ function kiemtqvata() {
         return Promise.all(mang_tai);
     };
 
-    // Chạy song song cả Dữ liệu và Giao diện
     Promise.all([luongnuoc, tai_nhanh_dong_thoi()]).then(ketqua => {
         const dlu = ketqua[0];
         const manhGiay = ketqua[1];
@@ -936,8 +938,7 @@ function kiemtqvata() {
         }
     }).catch(loie => {
         document.getElementById('instant-loader').style.display = 'none';
-        alert("LỖI KẾT NỐI: Hệ thống mạng đang chập chờn. Vui lòng thử lại.");
-        console.error(loie);
+        alert("LỖI KHỞI ĐỘNG: Không thể đồng bộ tài nguyên nền tảng.");
     });
 }
 
