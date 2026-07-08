@@ -415,99 +415,64 @@ function taidli() {
     } else apdquye();
   }
 
-/* ========================================================================== */
-/* CẬP NHẬT PHÂN QUYỀN GIAO DIỆN (ĐÃ FIX LỖI CHỈ SỐ CỘT)                      */
-/* ========================================================================== */
+/* THAY THẾ HÀM NÀY VÀO SKT_NhapLieu.html */
 function apdquye() {
-    const hpgv = document.getElementById('cbGiaoVien');
-    const hpnkt = document.getElementById('cbNguoiKiemTra');
-    const hpbp = document.getElementById('cbBoPhan');
-    const hpmhs = document.getElementById('cbMaHoSo');
+    const q_h_t = String(window.sktquyenht).trim().toLowerCase();
     
-    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-    const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
-    const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
-    
-    const isHistoryView = (hpmhs && hpmhs.value.trim() !== "");
-
-    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
-    const isGeneralInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan);
-    
-    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
-    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
-
-    if (!isGeneralInspector || isHistoryView) {
-        if (hpgv) hpgv.disabled = true;
-        if (hpnkt) hpnkt.disabled = true;
-        if (hpbp) hpbp.disabled = true;
-    } else {
-        if (hpgv) hpgv.disabled = false;
-        if (hpnkt) hpnkt.disabled = false;
-        if (hpbp) hpbp.disabled = false;
-    }
-
+    // Tắt bật nút Gửi/Lưu
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
-
-    if (btnSave) btnSave.disabled = !isInspector && !isInspectee && !quyenQuanTri;
     
-    // Nút Nộp báo cáo chỉ kích hoạt cho người kiểm tra (x) và khóa đối với (xx)
-    if (btnSubmit) btnSubmit.disabled = !isInspector || quyenQuanTri;
-    
-    if (quyenQuanTri) {
-        if (btnSave) btnSave.disabled = false; 
+    if (q_h_t === 'xxx') {
+        if (btnSave) btnSave.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = false;
+        if (addRowBtn) addRowBtn.style.display = 'block';
+    } else if (q_h_t === 'x') {
+        if (btnSave) btnSave.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = false;
+        if (addRowBtn) addRowBtn.style.display = 'block';
+    } else {
+        // Các quyền khác (khach_tv, xx)
+        if (btnSave) btnSave.disabled = false; // Người được KT vẫn được bấm lưu Ý kiến
+        if (btnSubmit) btnSubmit.disabled = true;
+        if (addRowBtn) addRowBtn.style.display = 'none';
     }
 
-    if (addRowBtn) addRowBtn.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
-
+    // Quét từng dòng để khóa/mở ô nhập liệu
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        const isSigned = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
-
-        const rowLocked = isSigned && !quyenQuanTri;
+        
+        // KIỂM TRA CHỐT: Nếu Cột 9 (Ý kiến) và 10 (Ký tên) có dữ liệu => Đã khóa
+        const d_a_k = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
 
         cacn.forEach((input, index) => {
-            // INDEX MAPPING:
-            // 0: Ngày | 1: Nội dung | 2: Ưu | 3: Tồn | 4: BP | 5: XL HS | 6: XL GD | 7: XL KS | 8: XL khác
-            // 9: Ý kiến (GV) | 10: Ký tên (GV) | 11: Link ẩn
+            // Nếu dòng bị khóa cứng VÀ người này KHÔNG phải là xxx => Khóa tất
+            if (d_a_k && q_h_t !== 'xxx') {
+                if (!input.classList.contains('link-input')) input.disabled = true;
+                return;
+            }
             
-            if (rowLocked) {
-                if (!input.classList.contains('link-input')) {
-                    input.disabled = true;
-                } else {
-                    input.disabled = false; 
-                }
+            // Xử lý các cấp quyền
+            if (q_h_t === 'xxx') {
+                input.disabled = false; // Vô biên
+            } else if (q_h_t === 'x') {
+                // Người KT: Sửa hết, CẤM sửa Ý kiến(9) và Ký(10)
+                input.disabled = (index === 9 || index === 10);
             } else {
-                if (quyenQuanTri) {
-                    input.disabled = false; 
-                } else if (isInspector) {
-                    // CỐ ĐỊNH CHỈ SỐ: Người kiểm tra KHÔNG ĐƯỢC sửa cột 9, 10
-                    input.disabled = (index === 9 || index === 10); 
-                } else if (isInspectee) {
-                    // CỐ ĐỊNH CHỈ SỐ: Giáo viên CHỈ ĐƯỢC sửa cột 9, 10
-                    input.disabled = (index !== 9 && index !== 10);  
-                } else {
-                    input.disabled = true;
-                }
+                // Người được KT (khach_tv): CẤM sửa hết, CHỈ ĐƯỢC sửa Ý kiến(9) và Ký(10)
+                input.disabled = (index !== 9 && index !== 10);
             }
         });
 
-        const ntsu = dg.querySelector('.link-edit-corner');
-        const ntai = dg.querySelector('.btn-ai-nhanxet');
-        const ntta = dg.querySelector('.btn-upload-icon');
+        // Ẩn hiện các nút phụ trợ AI, Thùng rác
         const ntxo = dg.querySelector('.btn-icon-del');
-
-        if (rowLocked) {
-            if (ntsu) ntsu.style.display = 'none';
-            if (ntai) ntai.style.display = 'none';
-            if (ntta) ntta.style.display = (isInspector) ? 'inline-block' : 'none';
-            if (ntxo) ntxo.style.visibility = (isInspector) ? 'visible' : 'hidden';
-        } else {
-            if (ntsu) ntsu.style.display = (isInspector || quyenQuanTri) ? 'block' : 'none';
-            if (ntai) ntai.style.display = (isInspector || quyenQuanTri) ? 'inline-block' : 'none';
-            if (ntta) ntta.style.display = (isInspector || quyenQuanTri) ? 'inline-block' : 'none';
-            if (ntxo) ntxo.style.visibility = (isInspector || quyenQuanTri) ? 'visible' : 'hidden';
+        if (ntxo) {
+            if (d_a_k && q_h_t !== 'xxx') {
+                ntxo.style.visibility = 'hidden';
+            } else {
+                ntxo.style.visibility = (q_h_t === 'xxx' || q_h_t === 'x') ? 'visible' : 'hidden';
+            }
         }
     });
 }
