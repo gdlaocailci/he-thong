@@ -419,7 +419,6 @@ function taidli() {
 function apdquye() {
     const q_h_t = String(window.sktquyenht).trim().toLowerCase();
     
-    // Tắt bật nút Gửi/Lưu
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
@@ -433,39 +432,35 @@ function apdquye() {
         if (btnSubmit) btnSubmit.disabled = false;
         if (addRowBtn) addRowBtn.style.display = 'block';
     } else {
-        // Các quyền khác (khach_tv, xx)
-        if (btnSave) btnSave.disabled = false; // Người được KT vẫn được bấm lưu Ý kiến
+        // Quyền xx sẽ bị khóa hoàn toàn. Quyền khach_tv (người được KT) vẫn được bấm nút lưu ý kiến
+        if (btnSave) btnSave.disabled = (q_h_t === 'xx'); 
         if (btnSubmit) btnSubmit.disabled = true;
         if (addRowBtn) addRowBtn.style.display = 'none';
     }
 
-    // Quét từng dòng để khóa/mở ô nhập liệu
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        
-        // KIỂM TRA CHỐT: Nếu Cột 9 (Ý kiến) và 10 (Ký tên) có dữ liệu => Đã khóa
         const d_a_k = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
 
         cacn.forEach((input, index) => {
-            // Nếu dòng bị khóa cứng VÀ người này KHÔNG phải là xxx => Khóa tất
+            // Chốt chặn 1: Dòng đã ký
             if (d_a_k && q_h_t !== 'xxx') {
                 if (!input.classList.contains('link-input')) input.disabled = true;
                 return;
             }
             
-            // Xử lý các cấp quyền
+            // Chốt chặn 2: Theo cấp độ
             if (q_h_t === 'xxx') {
-                input.disabled = false; // Vô biên
+                input.disabled = false;
             } else if (q_h_t === 'x') {
-                // Người KT: Sửa hết, CẤM sửa Ý kiến(9) và Ký(10)
                 input.disabled = (index === 9 || index === 10);
+            } else if (q_h_t === 'xx') {
+                input.disabled = true; // Khóa cứng toàn bộ ô nhập liệu
             } else {
-                // Người được KT (khach_tv): CẤM sửa hết, CHỈ ĐƯỢC sửa Ý kiến(9) và Ký(10)
                 input.disabled = (index !== 9 && index !== 10);
             }
         });
 
-        // Ẩn hiện các nút phụ trợ AI, Thùng rác
         const ntxo = dg.querySelector('.btn-icon-del');
         if (ntxo) {
             if (d_a_k && q_h_t !== 'xxx') {
