@@ -37,29 +37,46 @@
       if (hdTacGia) hdTacGia.innerText = "Phát triển bởi: " + SKT_TAC_GIA;
     });
 
-    // INTERNAL API BRIDGE
+// INTERNAL API BRIDGE (ĐÃ BỔ SUNG CHỐT AN TOÀN NGẮT LOADER)
     function createRunner(onSuccess, onFailure) {
         return {
             withSuccessHandler: function(cb) { return createRunner(cb, onFailure); },
             withFailureHandler: function(cb) { return createRunner(onSuccess, cb); },
             _call: function(hdong, tso) {
                 const sysId = window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || ""; 
-                fetch(SKT_GAS_URL, {
+                const endpoint = typeof SKT_GAS_URL !== 'undefined' ? SKT_GAS_URL : "";
+                
+                if (!endpoint) {
+                    const lder = document.getElementById('instant-loader');
+                    if (lder) lder.style.display = 'none';
+                    return;
+                }
+
+                fetch(endpoint, {
                     method: 'POST',
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ hdong: hdong, tso: tso, taik: sysId })
                 })
                 .then(res => res.json())
                 .then(res => {
-                    if (res.trth === "tcon") { if (onSuccess) onSuccess(res.dliu); } 
-                    else {
+                    if (res.trth === "tcon") { 
+                        if (onSuccess) onSuccess(res.dliu); 
+                    } else {
+                        // CHỐT AN TOÀN 1: Có lỗi từ máy chủ -> Ép tắt Loader
+                        const lder = document.getElementById('instant-loader');
+                        if (lder) lder.style.display = 'none';
+                        
                         if (onFailure) onFailure(new Error(res.tbao));
-                        else console.error("Lỗi từ máy chủ Google:", res.tbao);
+                        else alert("Lỗi từ máy chủ: " + res.tbao);
                     }
                 })
                 .catch(err => {
+                    // CHỐT AN TOÀN 2: Lỗi mạng/Treos API -> Ép tắt Loader
+                    const lder = document.getElementById('instant-loader');
+                    if (lder) lder.style.display = 'none';
+                    
                     if (onFailure) onFailure(err);
-                    else console.error("Lỗi mất kết nối:", err);
+                    else alert("Lỗi kết nối máy chủ: " + err.message);
                 });
             },
             skt_laydl_bda: function(taik, cnh) { this._call('skt_laydl_bda', { cnh: cnh }); },
@@ -80,7 +97,6 @@
             skt_ktra_trangthai_qr: function(chuoi_dinhdanh) { this._call('skt_ktra_trangthai_qr', { chuoi_dinhdanh: chuoi_dinhdanh }); },
             skt_xacthuc_qr: function(chuoi_dinhdanh, khoa_nhap, kieu_xthuc, khoa_moi) { this._call('skt_xacthuc_qr', { chuoi_dinhdanh: chuoi_dinhdanh, khoa_nhap: khoa_nhap, kieu_xthuc: kieu_xthuc, khoa_moi: khoa_moi }); },
             skt_gopgio_thanhbao: function(cucgach) { this._call('skt_gopgio_thanhbao', { cucgach: cucgach }); },
-            // CÁC HÀM API CHO QUẢN TRỊ VIÊN XX
             skt_lay_phanquyen: function() { this._call('skt_lay_phanquyen', {}); },
             skt_luu_phanquyen: function(phamvi, cai_chau, mangdl) { this._call('skt_luu_phanquyen', { phamvi: phamvi, cai_chau: cai_chau, mangdl: mangdl }); },
             skt_lay_bophan: function() { this._call('skt_lay_bophan', {}); },
@@ -869,7 +885,7 @@ function kiemtqvata(tk_chuyen_den = null) {
                 thuchkb(document.getElementById('MenuContainer'));
                 if (boxPhanQuyen) thuchkb(boxPhanQuyen);
 
-                setTimeout(() => {
+setTimeout(() => {
                     try {
                         document.querySelectorAll('.sidebar-logo, .sys-logo, .login-logo').forEach(img => {
                             img.src = typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : ''; 
@@ -879,9 +895,6 @@ function kiemtqvata(tk_chuyen_den = null) {
                     try {
                         const sidebarTitle = document.getElementById('menu_title');
                         if (sidebarTitle) sidebarTitle.innerText = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
-                    } catch(e) {}
-                    
-                    try {
                         const sidebarSubtitle = document.getElementById('menu_subtitle');
                         if (sidebarSubtitle) sidebarSubtitle.innerText = typeof SKT_TEN_TRUONG !== 'undefined' ? SKT_TEN_TRUONG : ''; 
                     } catch(e) {}
@@ -907,29 +920,34 @@ function kiemtqvata(tk_chuyen_den = null) {
                     const q_c_t = String(window.sktquyenht).trim().toLowerCase();
                     const btnPhanQuyen = document.querySelector('button[onclick*="TabPhanQuyen"]');
                     
+                    // PHÂN LUỒNG TRIỆT ĐỂ CHỐNG XUNG ĐỘT TẢI API
                     if (q_c_t === 'xx') {
                         document.querySelectorAll('.menu-btn:not([onclick*="TabPhanQuyen"]):not(.menu-logout)').forEach(b => b.style.display = 'none');
                         if (btnPhanQuyen) {
                             btnPhanQuyen.style.display = 'flex';
-                            setTimeout(() => chuyentth('TabPhanQuyen', btnPhanQuyen), 100);
+                            chuyentth('TabPhanQuyen', btnPhanQuyen);
                         }
-                    } else if (q_c_t === 'xxx') {
-                        if (btnPhanQuyen) btnPhanQuyen.style.display = 'flex';
+                        // LƯU Ý: Tuyệt đối không gọi taidli() ở đây để tiết kiệm bộ nhớ và tránh kẹt Loader
                     } else {
-                        if (btnPhanQuyen) btnPhanQuyen.style.display = 'none';
+                        if (q_c_t === 'xxx') {
+                            if (btnPhanQuyen) btnPhanQuyen.style.display = 'flex';
+                        } else {
+                            if (btnPhanQuyen) btnPhanQuyen.style.display = 'none';
+                        }
+                        // Các quyền khác mới cần tải giao diện Ghi Sổ
+                        try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
+                        try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
+                        try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
                     }
-
-                    try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
-                    try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
-                    try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
                     
                 }, 800);
 
                 setTimeout(function() { 
-                    document.getElementById('instant-loader').style.display = 'none'; 
+                    const lder = document.getElementById('instant-loader');
+                    if (lder) lder.style.display = 'none'; 
                     document.getElementById('main-wrapper').style.display = 'flex';
                     setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
-                }, 500);
+                }, 900); // Tăng độ trễ hiển thị DOM lên 900ms để đảm bảo TabPhanQuyen được render ổn định
 
             } catch (loi_ui) {
                 console.error("Lỗi giao diện:", loi_ui);
@@ -970,7 +988,7 @@ function kiemtqvata(tk_chuyen_den = null) {
         thuchkb(document.getElementById('MenuContainer'));
         thuchkb(document.getElementById('TabPhanQuyen'));
 
-        setTimeout(() => {
+setTimeout(() => {
             const sidebarLogo = document.querySelector('.sidebar-logo');
             if (sidebarLogo) sidebarLogo.src = SKT_LOGO_URL;
             
@@ -992,19 +1010,27 @@ function kiemtqvata(tk_chuyen_den = null) {
                 } else if(textHienTai.includes('MINH CHỨNG')) {
                     el.innerText = "QUẢN LÝ MINH CHỨNG - " + SKT_TEN_TRUONG_UP;
                 } else if(textHienTai.includes('QUYỀN TRUY CẬP')) {
-                    // Giữ nguyên tiêu đề quản lý quyền
+                    // Giữ nguyên tiêu đề
                 } else {
                     el.innerText = SKT_TEN_PM_UP + " - " + SKT_TEN_TRUONG_UP;
                 }
             });
 
-            if (window.sktquyenht !== 'xx') {
-                document.querySelectorAll('button[onclick*="TabPhanQuyen"]').forEach(btn => btn.style.display = 'none');
+            if (window.sktquyenht === 'xx') {
+                document.querySelectorAll('.menu-btn:not([onclick*="TabPhanQuyen"]):not(.menu-logout)').forEach(b => b.style.display = 'none');
+                const btnPhanQuyen = document.querySelector('button[onclick*="TabPhanQuyen"]');
+                if (btnPhanQuyen) {
+                    btnPhanQuyen.style.display = 'flex';
+                    chuyentth('TabPhanQuyen', btnPhanQuyen);
+                }
+            } else {
+                if (window.sktquyenht !== 'xxx') {
+                    document.querySelectorAll('button[onclick*="TabPhanQuyen"]').forEach(btn => btn.style.display = 'none');
+                }
+                try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
+                try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
+                try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
             }
-
-            try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
-            try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
-            try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
             
             if (window.sktduocuyq === false) {
                vohienhapkh();
