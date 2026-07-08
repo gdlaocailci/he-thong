@@ -255,11 +255,31 @@
         .filter-section-search .f-item:nth-child(1), .filter-section-search .f-item:nth-child(2), .filter-section-search .f-item:nth-child(3) { grid-column: span 2; }
         .filter-section-search .f-item:last-child { grid-column: span 2; justify-content: center !important; }
         
-        /* 4. MỞ KHÓA BẢNG DỮ LIỆU - CHỐNG BÓP CỘT, TẠO VUỐT NGANG */
-        .table-container, .table-container-search { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; border: 1px solid #cbd5e1 !important; margin-bottom: 10px !important; display: block !important; }
-        #mainTable { width: 1300px !important; max-width: none !important; }
-        .result-table { width: 1500px !important; max-width: none !important; }
-        th { position: sticky; top: 0; z-index: 10; }
+        /* 4. Xếp chồng các bộ lọc Nhập liệu & Tìm kiếm thành 1 cột dọc */
+        .filter-section, .filter-section-search {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+            height: auto !important;
+        }
+        .f-item { width: 100% !important; text-align: left !important; display: block !important; }
+        .f-item .f-input { width: 100% !important; font-size: 14px !important; padding: 10px !important; margin: 0 !important; box-sizing: border-box !important; }
+        
+        /* KHÔI PHỤC Ô CHỌN LỊCH SỬ BỊ KHUẤT TẦM NHÌN */
+        .filter-section .f-item:nth-child(5) { 
+            justify-self: auto !important; 
+            text-align: left !important; 
+        }
+        .filter-section .f-item:nth-child(5) .f-input { 
+            margin-left: 0 !important; 
+        }
+        
+        .filter-section-search .f-item:last-child { 
+            display: flex !important; 
+            flex-direction: row !important; 
+            justify-content: space-between !important; 
+            margin-top: 5px !important; 
+        }
 
         /* 5. CÁC THÀNH PHẦN PHỤ TRỢ KHÁC */
         .status-stepper { flex-wrap: wrap !important; justify-content: center !important; gap: 5px !important; }
