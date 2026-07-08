@@ -131,6 +131,37 @@
     background: #bae6fd;
     color: #0c4a6e;
   }
+
+  /* ========================================================================== */
+  /* CẬP NHẬT GIAO DIỆN MOBILE CHO BẢNG DỮ LIỆU (BỔ SUNG) */
+  /* ========================================================================== */
+  @media screen and (max-width: 768px) {
+      .table-container, .table-wrapper {
+          width: 100%;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch; /* Vuốt mượt trên iOS */
+          margin-bottom: 70px; /* Chừa khoảng trống cho thanh Menu đáy */
+      }
+      
+      table {
+          width: 1200px !important; /* Ép độ rộng bảng cố định để không bị bóp cột */
+          max-width: none !important;
+      }
+      
+      /* Chống trình duyệt tự động zoom màn hình khi chạm vào ô nhập liệu (Đặc trị iOS) */
+      .cell-input {
+          font-size: 16px !important; 
+      }
+      
+      .page-title, .header-card h1, .up-header h3 {
+          font-size: 16px !important; /* Thu nhỏ tiêu đề */
+      }
+      
+      /* Điều chỉnh lại khối bộ lọc tìm kiếm cho gọn gọn */
+      .filter-section-search {
+          grid-template-columns: 1fr 1fr;
+      }
+  }
 </style>
 
 <div class="header-card">
