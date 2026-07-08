@@ -368,10 +368,16 @@ function taidli() {
         let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
         let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
         let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
+        const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx' || String(window.sktquyenht).trim().toLowerCase() === 'xxx');
         
-        if (tgvc && !isInspector) {
+        if (tgvc && !isInspector && !quyenQuanTri) {
             dathopc('cbGiaoVien', tgvc);
             khindthd('GV'); 
+            
+            // KHÓA MÀN BẢO VỆ CHO NGƯỜI ĐƯỢC KIỂM TRA (GIỮ Ô LỊCH SỬ)
+            document.getElementById('cbGiaoVien').disabled = true;
+            document.getElementById('cbNguoiKiemTra').disabled = true;
+            document.getElementById('cbBoPhan').disabled = true;
         } else if (tgvc) {
             dathopc('cbGiaoVien', tgvc);
         }
@@ -645,11 +651,16 @@ function thuchms(ha, nt, ch) {
     let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
     let tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
+    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx' || String(window.sktquyenht).trim().toLowerCase() === 'xxx');
+    
     const hpgv = document.getElementById('cbGiaoVien');
 
-    if (tgvc && !tnktc) {
+    if (tgvc && !tnktc && !quyenQuanTri) {
         dathopc('cbGiaoVien', tgvc);
+        // THIẾT LẬP LẠI VÒNG KHÓA
         hpgv.disabled = true;
+        document.getElementById('cbNguoiKiemTra').disabled = true;
+        document.getElementById('cbBoPhan').disabled = true;
     } else {
         hpgv.value = "";
         hpgv.disabled = false;
@@ -659,7 +670,6 @@ function thuchms(ha, nt, ch) {
     document.getElementById('tableContent').innerHTML = ""; 
     themdongmo(); dattr(1);
   }
-
   function capnhopm() {
     const hp = document.getElementById('cbMaHoSo'); const ht = hp.value;
     hp.innerHTML = '<option value="">-- Chọn --</option>';
