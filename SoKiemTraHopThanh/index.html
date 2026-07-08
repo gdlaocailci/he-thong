@@ -714,8 +714,13 @@
         .skt_xacthuc_qr(tk_giai_ma, khoa_nhap, kieu_xthuc, khoa_moi);
   }
 
-  function thucHienDangNhapGoogle(chuoiDinhDanh) {
+/* Tìm hàm này và cập nhật như sau: */
+function thucHienDangNhapGoogle(chuoiDinhDanh) {
       let tk = String(chuoiDinhDanh).toLowerCase().trim();
+      
+      // BỔ SUNG: Dọn dẹp giao diện và bộ nhớ đệm trước khi load tài khoản mới
+      document.getElementById('access_denied_msg').style.display = 'none';
+      xoaluutrant("SKT_USER_TAIK"); 
       
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('instant-loader').style.display = 'flex';
@@ -723,7 +728,7 @@
       luutrant("SKT_USER_TAIK", tk);
       window.skttktoanc = tk; 
       kiemtqvata();
-  }
+}
 
   function dangNhapKhach() {
       document.getElementById('login-overlay').style.display = 'none';
