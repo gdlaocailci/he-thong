@@ -676,7 +676,7 @@
         .skt_ktra_trangthai_qr(tk_giai_ma);
   }
 
-  function tiepTucXacThucQR(tk_giai_ma, khoa_nhap, kieu_xthuc, khoa_moi) {
+function tiepTucXacThucQR(tk_giai_ma, khoa_nhap, kieu_xthuc, khoa_moi) {
       document.getElementById('instant-loader').style.display = 'flex';
 
       google.script.run
@@ -691,10 +691,9 @@
             if (kq_xacthuc.tbao) {
                 alert("✅ HOÀN TẤT: " + kq_xacthuc.tbao);
             }
-
-            luutrant("SKT_USER_TAIK", tk_giai_ma);
-            window.skttktoanc = tk_giai_ma; 
-            kiemtqvata();
+            
+            // XÁC THỰC MÃ KHÓA THÀNH CÔNG -> Chuyển qua luồng kiểm tra quyền
+            kiemtqvata(tk_giai_ma);
         })
         .withFailureHandler(loi => {
             alert("Mất kết nối với máy chủ khi xác thực: " + loi.message);
@@ -710,9 +709,8 @@
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('instant-loader').style.display = 'flex';
       
-      luutrant("SKT_USER_TAIK", tk);
-      window.skttktoanc = tk; 
-      kiemtqvata();
+      // KHÔNG LƯU VỘI VÀO SESSION - Chỉ truyền qua hàm kiểm tra
+      kiemtqvata(tk);
   }
 
   function dangNhapKhach() {
@@ -795,12 +793,12 @@
 /* ========================================================================== */
 /* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ KHẮC PHỤC LỖI KẾT NỐI) */
 /* ========================================================================== */
-function kiemtqvata() {
-    let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
+function kiemtqvata(tk_chuyen_den = null) {
+    // Ưu tiên tài khoản vừa đăng nhập truyền vào, nếu không có mới lấy từ Cache
+    let taikht = tk_chuyen_den || window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
     taikht = String(taikht).toLowerCase().trim();
     window.sktquyenht = "";
 
-    // Gia cố luồng nạp dữ liệu: Tự động hóa giải Reject để bảo vệ luồng Promise.all
     const luongnuoc = new Promise((xong) => {
         google.script.run
         .withSuccessHandler(xong)
@@ -834,6 +832,7 @@ function kiemtqvata() {
         const manhGiay = ketqua[1];
 
         if (dlu.cquy === false) {
+            // NẾU SAI QUYỀN: Xóa sạch dấu vết, không cấp Cache
             xoaluutrant("SKT_USER_TAIK");
             window.skttktoanc = null;
             document.getElementById('instant-loader').style.display = 'none';
@@ -846,6 +845,10 @@ function kiemtqvata() {
             document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
         } else {
             try {
+                // ĐÃ VÀO THÀNH CÔNG: Chốt ghi nhớ Session để F5 không bị văng
+                luutrant("SKT_USER_TAIK", taikht);
+                window.skttktoanc = taikht;
+                
                 window.sktquyenht = dlu.q_h_t || ""; 
                 window.sktduocuyq = true; 
 
@@ -937,7 +940,6 @@ function kiemtqvata() {
         alert("LỖI KHỞI ĐỘNG: Không thể đồng bộ tài nguyên nền tảng.");
     });
 }
-
     async function taimdunht() {
       try {
         const cgnh = "?v=" + new Date().getTime(); 
