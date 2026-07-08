@@ -797,18 +797,20 @@
     }
 
 /* ========================================================================== */
-/* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ PHỤC HỒI LOGO/MENU) */
+/* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ TỐI ƯU TỐC ĐỘ X5)   */
 /* ========================================================================== */
 function kiemtqvata() {
     let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
     taikht = String(taikht).toLowerCase().trim();
     window.sktquyenht = "";
 
+    // Luồng 1: Kết nối máy chủ Google lấy dữ liệu
     const luongnuoc = new Promise((xong, hong) => {
         google.script.run.withSuccessHandler(xong).withFailureHandler(hong).skt_gopgio_thanhbao(taikht);
     });
 
-    const tai_tuan_tu = async () => {
+    // Luồng 2: Tải giao diện ĐỒNG THỜI (Khắc phục triệt để lỗi đợi 30 giây)
+    const tai_nhanh_dong_thoi = async () => {
         const v_ban = new Date().getTime();
         const cac_tep = [
             './SKT_NhapLieu.html',
@@ -818,23 +820,18 @@ function kiemtqvata() {
             './SKT_phanquyen.html'
         ];
         
-        let m_giay = [];
-        for (let i = 0; i < cac_tep.length; i++) {
-            try {
-                let p_hoi = await fetch(cac_tep[i] + '?v=' + v_ban);
-                if (!p_hoi.ok) {
-                    m_giay.push(""); 
-                } else {
-                    m_giay.push(await p_hoi.text());
-                }
-            } catch (loi_fetch) {
-                m_giay.push("");
-            }
-        }
-        return m_giay;
+        // Quăng 5 luồng tải cùng 1 lúc, tệp nào lỗi thì tự bỏ qua, không đợi nhau
+        const mang_tai = cac_tep.map(tep => 
+            fetch(tep + '?v=' + v_ban)
+            .then(res => res.ok ? res.text() : "")
+            .catch(() => "")
+        );
+        
+        return Promise.all(mang_tai);
     };
 
-    Promise.all([luongnuoc, tai_tuan_tu()]).then(ketqua => {
+    // Chạy song song cả Dữ liệu và Giao diện
+    Promise.all([luongnuoc, tai_nhanh_dong_thoi()]).then(ketqua => {
         const dlu = ketqua[0];
         const manhGiay = ketqua[1];
 
@@ -872,41 +869,40 @@ function kiemtqvata() {
                 if (boxPhanQuyen) thuchkb(boxPhanQuyen);
 
                 setTimeout(() => {
-                    // 1. PHỤC HỒI LOGO VÀ TEXT MENU (Ép nạp dữ liệu cấu hình từ ketnoi.js)
                     try {
                         document.querySelectorAll('.sidebar-logo, .sys-logo, .login-logo').forEach(img => {
-                            img.src = SKT_LOGO_URL; 
+                            img.src = typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : ''; 
                         });
                     } catch(e) {}
                     
                     try {
                         const sidebarTitle = document.getElementById('menu_title');
-                        if (sidebarTitle) sidebarTitle.innerText = SKT_TEN_PM_UP;
+                        if (sidebarTitle) sidebarTitle.innerText = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
                     } catch(e) {}
                     
                     try {
                         const sidebarSubtitle = document.getElementById('menu_subtitle');
-                        // Đã sửa lại đúng biến SKT_TEN_TRUONG
-                        if (sidebarSubtitle) sidebarSubtitle.innerText = SKT_TEN_TRUONG; 
+                        if (sidebarSubtitle) sidebarSubtitle.innerText = typeof SKT_TEN_TRUONG !== 'undefined' ? SKT_TEN_TRUONG : ''; 
                     } catch(e) {}
 
                     try {
                         document.querySelectorAll('.page-title, .header-card h1, .up-header h3').forEach(el => {
                             let textHienTai = el.innerText.toUpperCase();
+                            let tenPm = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
+                            let tenTr = typeof SKT_TEN_TRUONG !== 'undefined' ? SKT_TEN_TRUONG : '';
                             
                             if(textHienTai.includes('GHI SỔ') || textHienTai.includes('NHẬP LIỆU')) {
-                                el.innerText = "GHI SỔ - " + SKT_TEN_PM_UP;
+                                el.innerText = "GHI SỔ - " + tenPm;
                             } else if(textHienTai.includes('THỐNG KÊ') || textHienTai.includes('TRA CỨU')) {
-                                el.innerText = "THỐNG KÊ & TRA CỨU - " + SKT_TEN_PM_UP;
+                                el.innerText = "THỐNG KÊ & TRA CỨU - " + tenPm;
                             } else if(textHienTai.includes('MINH CHỨNG')) {
-                                el.innerText = "QUẢN LÝ MINH CHỨNG - " + SKT_TEN_TRUONG;
+                                el.innerText = "QUẢN LÝ MINH CHỨNG - " + tenTr;
                             } else if(!textHienTai.includes('QUYỀN TRUY CẬP')) {
-                                el.innerText = SKT_TEN_PM_UP + " - " + SKT_TEN_TRUONG;
+                                el.innerText = tenPm + " - " + tenTr;
                             }
                         });
                     } catch(e) {}
 
-                    // 2. PHÂN QUYỀN GIAO DIỆN (Giữ nguyên logic 4 cấp)
                     const q_c_t = String(window.sktquyenht).trim().toLowerCase();
                     const btnPhanQuyen = document.querySelector('button[onclick*="TabPhanQuyen"]');
                     
@@ -922,7 +918,6 @@ function kiemtqvata() {
                         if (btnPhanQuyen) btnPhanQuyen.style.display = 'none';
                     }
 
-                    // 3. KHỞI CHẠY CÁC HÀM PHỤ TRỢ MỞ RỘNG
                     try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
                     try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
                     try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
@@ -936,12 +931,12 @@ function kiemtqvata() {
                 }, 500);
 
             } catch (loi_ui) {
-                console.error("Giao diện đang xử lý:", loi_ui);
+                console.error("Lỗi giao diện:", loi_ui);
             }
         }
     }).catch(loie => {
         document.getElementById('instant-loader').style.display = 'none';
-        alert("LỖI KẾT NỐI TẢI NỀN TẢNG: Hệ thống mạng đang chập chờn hoặc dữ liệu tải bị nghẽn.");
+        alert("LỖI KẾT NỐI: Hệ thống mạng đang chập chờn. Vui lòng thử lại.");
         console.error(loie);
     });
 }
