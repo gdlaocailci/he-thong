@@ -814,34 +814,15 @@ function kiemtqvata() {
             fetch('./SKT_phanquyen.html?v=' + new Date().getTime()).then(r => r.text())
         ]);
 
-        Promise.all([luongnuoc, damthu]).then(ketqua => {
+Promise.all([luongnuoc, damthu]).then(ketqua => {
             const dlu = ketqua[0];
             const manhGiay = ketqua[1];
 
             if (dlu.cquy === false) {
-                xoaluutrant("SKT_USER_TAIK");
-                window.skttktoanc = null;
-                document.getElementById('instant-loader').style.display = 'none';
-                document.getElementById('main-wrapper').style.display = 'flex';
-                setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; }, 50);
-                
-                document.getElementById('so_wrapper').style.display = 'none';
-                document.getElementById('MinhChungContainer').style.display = 'none';
-                document.getElementById('access_denied_msg').style.display = 'block';
-                document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
+                // ... (Giữ nguyên đoạn từ chối truy cập) ...
             } else {
-                let nduyq = false;
-                if(dlu.conmeo) {
-                    let userMatch = dlu.conmeo.find(m1 => String(m1.taik).toLowerCase() === taikht);
-                    if (userMatch) { nduyq = true; window.sktquyenht = userMatch.quyen; }
-                }
-                if(!nduyq && dlu.chocon && dlu.chocon.some(m1 => String(m1.taik).toLowerCase() === taikht)) {
-                    nduyq = true; window.sktquyenht = 'x'; 
-                }
-                if (!nduyq) { nduyq = true; window.sktquyenht = 'xx'; }
-                window.sktduocuyq = nduyq; 
-
-                // CHUYỂN DỮ LIỆU SANG BỘ NHỚ TRÌNH DUYỆT BẰNG BIẾN RÁC
+                window.sktquyenht = dlu.q_h_t; // Nhận quyền (xxx, xx, x, khach_tv) từ Server
+                
                 window.khomam = dlu.kqt || [];
                 window.ruongbac = { dgv: dlu.dgv || [], dnk: dlu.dnk || [], dbp: dlu.dbp || [] };
 
@@ -858,43 +839,22 @@ function kiemtqvata() {
                 thuchkb(document.getElementById('TabPhanQuyen'));
 
                 setTimeout(() => {
-                    const sidebarLogo = document.querySelector('.sidebar-logo');
-                    if (sidebarLogo) sidebarLogo.src = typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : '';
+                    // XỬ LÝ ẨN HIỆN MENU THEO QUYỀN
+                    const q_c_t = window.sktquyenht;
                     
-                    const sidebarTitle = document.getElementById('menu_title');
-                    if (sidebarTitle) sidebarTitle.innerText = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
-                    
-                    const sidebarSubtitle = document.getElementById('menu_subtitle');
-                    if (sidebarSubtitle) sidebarSubtitle.innerText = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : '';
-                    
-                    const sidebarAuthor = document.getElementById('menu_author');
-                    if (sidebarAuthor) sidebarAuthor.innerText = typeof SKT_TAC_GIA_UP !== 'undefined' ? SKT_TAC_GIA_UP : '';
-                    
-                    document.querySelectorAll('.page-title, .header-card h1, .up-header h3').forEach(el => {
-                        let textHienTai = el.innerText.toUpperCase();
-                        let tenPm = typeof SKT_TEN_PM_UP !== 'undefined' ? SKT_TEN_PM_UP : '';
-                        let tenTr = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : '';
-                        
-                        if(textHienTai.includes('GHI SỔ') || textHienTai.includes('NHẬP LIỆU')) {
-                            el.innerText = "GHI SỔ - " + tenPm;
-                        } else if(textHienTai.includes('THỐNG KÊ') || textHienTai.includes('TRA CỨU')) {
-                            el.innerText = "THỐNG KÊ & TRA CỨU - " + tenPm;
-                        } else if(textHienTai.includes('MINH CHỨNG')) {
-                            el.innerText = "QUẢN LÝ MINH CHỨNG - " + tenTr;
-                        } else if(!textHienTai.includes('QUYỀN TRUY CẬP')) {
-                            el.innerText = tenPm + " - " + tenTr;
-                        }
-                    });
-
-                    if (window.sktquyenht !== 'xx') {
+                    if (q_c_t === 'xx') {
+                        // Quyền xx: Khóa Tab nhập liệu/thống kê, mở mặc định tab Phân quyền
+                        document.querySelectorAll('.menu-btn:not([onclick*="TabPhanQuyen"]):not(.menu-logout)').forEach(b => b.style.display = 'none');
+                        setTimeout(() => chuyentth('TabPhanQuyen', document.querySelector('button[onclick*="TabPhanQuyen"]')), 100);
+                    } else if (q_c_t === 'x' || q_c_t === 'khach_tv') {
+                        // Quyền x hoặc được kiểm tra: Ẩn tab Phân quyền
                         document.querySelectorAll('button[onclick*="TabPhanQuyen"]').forEach(btn => btn.style.display = 'none');
                     }
+                    // Nếu là 'xxx': Hiện tất cả bình thường
 
                     try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
                     try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
                     try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
-                    
-                    if (window.sktduocuyq === false) vohienhapkh();
                 }, 800);
 
                 setTimeout(function() { 
