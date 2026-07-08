@@ -226,15 +226,52 @@
     .btn-float-guide:hover .circle::before { opacity: 1; transform: scale(1.1); }
     .btn-float-guide:hover .text { color: #2563eb; }
 
-    /* ========================================================================== */
-    /* KHỐI MÃ HỢP NHẤT TỔNG LỰC CSS MOBILE (APP MODE)                            */
+   /* ========================================================================== */
+    /* KHỐI MÃ HỢP NHẤT TỔNG LỰC CSS MOBILE (GIẢI QUYẾT TRIỆT ĐỂ BỊ KHUẤT TRANG) */
     /* ========================================================================== */
     @media screen and (max-width: 768px) {
-        /* 1. MỞ KHÓA KHUNG XƯƠNG CHÍNH - CHO PHÉP CUỘN TOÀN TRANG */
-        body, html { height: auto !important; min-height: 100vh; overflow: auto !important; overflow-x: hidden !important; }
-        #main-wrapper { display: flex !important; flex-direction: column !important; height: auto !important; min-height: 100vh; overflow: visible !important; padding-bottom: 70px !important; }
-        #ContentContainer { width: 100% !important; height: auto !important; overflow: visible !important; padding: 5px !important; }
-        #so_wrapper { padding: 8px !important; width: 100% !important; overflow: visible !important; }
+        /* 1. MỞ KHÓA TOÀN BỘ KHUNG XƯƠNG - CHỐNG BỊ ĐẨY TRÀN LÊN TRÊN */
+        body, html { height: auto !important; min-height: 100vh; overflow: auto !important; overflow-x: hidden !important; display: block !important; }
+        
+        #main-wrapper { 
+            display: block !important; /* Gỡ bỏ flex */
+            height: auto !important; 
+            min-height: 100vh; 
+            overflow: visible !important; 
+            padding-bottom: 75px !important; 
+        }
+        
+        #ContentContainer { 
+            display: block !important; /* Gỡ bỏ flex */
+            width: 100% !important; 
+            height: auto !important; 
+            overflow: visible !important; 
+            padding: 5px !important; 
+        }
+        
+        #so_wrapper, .header-card { 
+            display: block !important; /* Gỡ bỏ flex */
+            padding: 8px !important; 
+            width: 100% !important; 
+            height: auto !important;
+            overflow: visible !important; 
+        }
+
+        .tab-content.active {
+            display: block !important; /* Ép nội dung rải đều từ trên xuống dưới */
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        /* KHÔI PHỤC TIÊU ĐỀ TRANG */
+        .page-title, #title_nhaplieu { 
+            font-size: 18px !important; 
+            margin-bottom: 15px !important; 
+            display: block !important; 
+            text-align: center !important; 
+            visibility: visible !important; 
+            opacity: 1 !important;
+        }
 
         /* 2. CHUYỂN MENU DỌC THÀNH THANH ĐIỀU HƯỚNG DƯỚI ĐÁY */
         #MenuContainer { width: 100% !important; height: 60px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; z-index: 99999 !important; box-shadow: 0 -2px 10px rgba(0,0,0,0.3) !important; background: #1e3a8a !important; overflow: visible !important; }
@@ -247,46 +284,41 @@
         .menu-logout { color: #fca5a5 !important; }
         .menu-btn.active { border-bottom: 3px solid #ffeb3b !important; background: rgba(255,255,255,0.1) !important; }
 
-        /* 3. BỘ LỌC NHẬP LIỆU & TÌM KIẾM - GẤP GỌN XẾP DỌC */
-        .filter-section { display: flex !important; flex-direction: column !important; gap: 10px !important; }
-        .filter-section .f-item { width: 100% !important; text-align: left !important; }
-        .filter-section .f-item .f-input { width: 100% !important; }
-        .filter-section-search { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-        .filter-section-search .f-item:nth-child(1), .filter-section-search .f-item:nth-child(2), .filter-section-search .f-item:nth-child(3) { grid-column: span 2; }
-        .filter-section-search .f-item:last-child { grid-column: span 2; justify-content: center !important; }
-        
-        /* 4. Xếp chồng các bộ lọc Nhập liệu & Tìm kiếm thành 1 cột dọc */
-        .filter-section, .filter-section-search {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 12px !important;
-            height: auto !important;
+        /* 3. BỘ LỌC NHẬP LIỆU & TÌM KIẾM - GẤP GỌN XẾP DỌC CHẮC CHẮN */
+        .filter-section, .filter-section-search { 
+            display: block !important; /* Không dùng grid để tránh lỗi ẩn dòng */
+            height: auto !important; 
+            margin-bottom: 10px !important;
         }
-        .f-item { width: 100% !important; text-align: left !important; display: block !important; }
-        .f-item .f-input { width: 100% !important; font-size: 14px !important; padding: 10px !important; margin: 0 !important; box-sizing: border-box !important; }
-        
-        /* KHÔI PHỤC Ô CHỌN LỊCH SỬ BỊ KHUẤT TẦM NHÌN */
-        .filter-section .f-item:nth-child(5) { 
-            justify-self: auto !important; 
+        .filter-section .f-item, .filter-section-search .f-item { 
+            display: block !important; 
+            width: 100% !important; 
             text-align: left !important; 
+            margin-bottom: 12px !important; 
         }
-        .filter-section .f-item:nth-child(5) .f-input { 
-            margin-left: 0 !important; 
+        .filter-section .f-input, .filter-section-search .f-input { 
+            width: 100% !important; 
+            box-sizing: border-box !important; 
+            margin: 0 !important;
         }
         
-        .filter-section-search .f-item:last-child { 
-            display: flex !important; 
-            flex-direction: row !important; 
-            justify-content: space-between !important; 
-            margin-top: 5px !important; 
-        }
+        /* KHÔI PHỤC Ô CHỌN MÃ HỒ SƠ LỊCH SỬ */
+        .filter-section .f-item:nth-child(5) { justify-self: auto !important; text-align: left !important; display: block !important; visibility: visible !important; opacity: 1 !important; }
+        .filter-section .f-item:nth-child(5) .f-input { margin-left: 0 !important; width: 100% !important; }
+        
+        .filter-section-search .f-item:last-child { display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 5px !important; }
+        
+        /* 4. MỞ KHÓA BẢNG DỮ LIỆU - CHỐNG BÓP CỘT, TẠO VUỐT NGANG */
+        .table-container, .table-container-search { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; border: 1px solid #cbd5e1 !important; margin-bottom: 10px !important; display: block !important; }
+        #mainTable { width: 1300px !important; max-width: none !important; }
+        .result-table { width: 1500px !important; max-width: none !important; }
+        th { position: sticky; top: 0; z-index: 10; }
 
         /* 5. CÁC THÀNH PHẦN PHỤ TRỢ KHÁC */
-        .status-stepper { flex-wrap: wrap !important; justify-content: center !important; gap: 5px !important; }
-        .btn-save { width: 100% !important; float: none !important; margin-top: 15px !important; padding: 12px !important; text-align: center !important; }
+        .status-stepper { flex-wrap: wrap !important; justify-content: center !important; gap: 5px !important; display: flex !important;}
+        .btn-save { width: 100% !important; float: none !important; margin-top: 15px !important; padding: 12px !important; text-align: center !important; display: block !important;}
         .login-box { width: 95% !important; padding: 25px 15px !important; }
         .btn-float-guide { bottom: 80px !important; right: 10px !important; transform: scale(0.85); transform-origin: bottom right; }
-        .page-title, #title_nhaplieu { font-size: 18px !important; margin-bottom: 10px !important; }
     }
   </style>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
