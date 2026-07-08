@@ -811,6 +811,9 @@ function thucHienDangNhapGoogle(chuoiDinhDanh) {
 /* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ KHẮC PHỤC LỖI KẾT NỐI) */
 /* ========================================================================== */
 function kiemtqvata() {
+  document.getElementById('access_denied_msg').style.display = 'none';
+    
+    let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
     let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
     taikht = String(taikht).toLowerCase().trim();
     window.sktquyenht = "";
