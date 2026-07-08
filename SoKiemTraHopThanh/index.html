@@ -343,24 +343,80 @@
     }
 
     /* ========================================================================== */
-    /* GIAO DIỆN MOBILE: KHUNG XƯƠNG CHÍNH VÀ ĐĂNG NHẬP */
+    /* NÂNG CẤP HIỂN THỊ TOÀN DIỆN CHO ĐIỆN THOẠI (APP MOBILE MODE)               */
     /* ========================================================================== */
     @media screen and (max-width: 768px) {
-        #main-wrapper { flex-direction: column !important; }
-        #MenuContainer { 
-            width: 100% !important; height: 60px !important; 
-            position: fixed !important; bottom: 0 !important; left: 0 !important; 
-            z-index: 9999 !important; overflow: hidden !important; 
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        /* 1. Mở khóa khung xương trang web để cho phép cuộn tự do */
+        body { height: auto !important; overflow: auto !important; min-height: 100vh; }
+        #main-wrapper {
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding-bottom: 75px !important; /* Chừa không gian cho Menu đáy */
         }
-        #ContentContainer { 
-            width: 100% !important; 
-            height: calc(100vh - 60px) !important; /* Chừa chỗ cho Menu đáy */
-            padding: 10px !important; overflow-y: auto !important; 
+
+        /* 2. Ép Menu dọc thành Thanh điều hướng nằm ngang dưới đáy màn hình */
+        #MenuContainer {
+            position: fixed !important;
+            bottom: 0 !important; left: 0 !important;
+            width: 100% !important; height: auto !important;
+            z-index: 99999 !important;
+            background: #1e3a8a !important;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3) !important;
         }
-        #so_wrapper { padding: 10px !important; }
+        .sidebar-menu { width: 100% !important; height: auto !important; position: static !important; }
+        .sidebar-header, .menu-bottom-section { display: none !important; } /* Ẩn logo để tối ưu diện tích */
+        .menu-list {
+            flex-direction: row !important;
+            width: 100% !important;
+            padding: 5px 0 !important; margin: 0 !important; gap: 0 !important;
+        }
+        .menu-btn {
+            flex-direction: column !important;
+            padding: 8px 2px !important;
+            font-size: 10px !important;
+            flex: 1 !important;
+            background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+            justify-content: center !important; text-align: center !important; gap: 4px !important;
+        }
+        .menu-btn i { font-size: 20px !important; margin: 0 !important; }
+        .menu-btn span { display: block !important; font-size: 9px !important; white-space: normal !important; line-height: 1.2; }
+        .menu-btn.active { color: #ffeb3b !important; border-bottom: 3px solid #ffeb3b !important; background: rgba(255, 255, 255, 0.1) !important; }
+        .menu-logout { color: #fca5a5 !important; }
+
+        /* 3. Mở rộng vùng không gian Nhập liệu & Tìm kiếm */
+        #ContentContainer {
+            width: 100% !important; height: auto !important;
+            overflow: visible !important; padding: 10px !important;
+        }
+        #so_wrapper { padding: 10px !important; border-radius: 8px !important; overflow: visible !important; }
+        .header-card { padding: 15px 10px !important; margin-bottom: 10px !important; }
+
+        /* 4. Xếp chồng các bộ lọc Nhập liệu & Tìm kiếm thành 1 cột dọc */
+        .filter-section, .filter-section-search {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+        }
+        .f-item { width: 100% !important; text-align: left !important; }
+        .f-item .f-input { width: 100% !important; font-size: 14px !important; padding: 10px !important; }
+        .filter-section-search .f-item:last-child { flex-direction: row !important; justify-content: space-between !important; margin-top: 5px; }
+
+        /* 5. Cứu vãn Bảng dữ liệu: Khóa kích thước thực tế, tạo thanh cuộn ngang */
+        .table-container, .table-container-search {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important; /* Vuốt mượt trên iOS */
+            border: 1px solid #cbd5e1 !important;
+        }
+        #mainTable { width: 1300px !important; }
+        .result-table { width: 1500px !important; }
+
+        /* 6. Chỉnh sửa phụ trợ */
+        .status-stepper { flex-wrap: wrap !important; justify-content: center !important; }
+        .btn-save { width: 100% !important; float: none !important; margin-top: 15px !important; padding: 15px !important; font-size: 16px !important; }
+        .btn-float-guide { bottom: 80px !important; right: 15px !important; transform: scale(0.85); }
         .login-box { padding: 25px 15px !important; width: 95% !important; }
-        .btn-float-guide { bottom: 75px !important; right: 15px !important; } /* Đẩy nút Trợ giúp lên tránh bị đè */
+        h1, .page-title { font-size: 18px !important; }
     }
   </style>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
