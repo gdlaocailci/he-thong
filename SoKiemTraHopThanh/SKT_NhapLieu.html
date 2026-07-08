@@ -342,6 +342,9 @@ function kiemtlqsu(dg) {
     }
 }
 
+/* ========================================================================== */
+/* KHỐI ĐỒNG BỘ DỮ LIỆU ĐỆM VÀ XỬ LÝ LỌC HỒ SƠ TỨC THÌ TRÊN CLIENT */
+/* ========================================================================== */
 function taidli() {
     chuyentxo('initial', true);
     google.script.run.withSuccessHandler(kq => {
@@ -359,6 +362,9 @@ function taidli() {
         dlbpha = kq.dlbp; 
         dlmhso = kq.dlmh;
         
+        // GHIM DỮ LIỆU NHẬT KÝ VÀO BỘ NHỚ ĐỆM CỦA TRÌNH DUYỆT
+        window.skt_kho_nhatky = kq.dlnhatky_san || [];
+        
         document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
         dienho('cbGiaoVien', dlgvi); 
         dienho('cbNguoiKiemTra', dlnktra); 
@@ -374,7 +380,6 @@ function taidli() {
             dathopc('cbGiaoVien', tgvc);
             khindthd('GV'); 
             
-            // KHÓA MÀN BẢO VỆ CHO NGƯỜI ĐƯỢC KIỂM TRA (GIỮ Ô LỊCH SỬ)
             document.getElementById('cbGiaoVien').disabled = true;
             document.getElementById('cbNguoiKiemTra').disabled = true;
             document.getElementById('cbBoPhan').disabled = true;
@@ -388,18 +393,22 @@ function taidli() {
         apdquye();
     }).skt_laydl_bda();
 }
-
-  function khindthd(lo) {
+function khindthd(lo) {
     if ((lo === 'GV' || lo === 'NKT') && kiemttrem(lo)) return;
     if (lo === 'GV') capnticd();
     const hp = document.getElementById('cbMaHoSo');
+    
     if (lo === 'MAHS' && hp.value) {
-      chuyentxo('full', true); dattr(2);
-      google.script.run.withSuccessHandler(kq => {
-        chuyentxo('full', false);
+        dattr(2);
+        
+        // THUẬT TOÁN MỚI: QUÉT TRỰC TIẾP TRÊN RAM TRÌNH DUYỆT (TỐC ĐỘ ĐẠT 0-1MS - TỨC THÌ)
+        const ma_tim = hp.value.trim().toLowerCase();
+        const kq = (window.skt_kho_nhatky || []).filter(hang => 
+            hang[16] && hang[16].toString().trim().toLowerCase() === ma_tim
+        );
+        
         if (kq && kq.length > 0) { 
-            const ndg = Array.isArray(kq[0]); 
-            const bg = ndg ? kq : [kq];
+            const bg = kq;
 
             let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
             let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
@@ -417,10 +426,13 @@ function taidli() {
             dattr(3); 
             ['cbGiaoVien','cbNguoiKiemTra','cbBoPhan'].forEach(idd=>document.getElementById(idd).disabled=true);
             setTimeout(() => { apdquye(); dattr(4); }, 300);
-        } else dattr(1);
-      }).skt_laybg_mahs(hp.value);
-    } else apdquye();
-  }
+        } else {
+            dattr(1);
+        }
+    } else {
+        apdquye();
+    }
+}
 
 /* THAY THẾ HÀM NÀY VÀO SKT_NhapLieu.html */
 function apdquye() {
@@ -680,15 +692,23 @@ function thuchms(ha, nt, ch) {
       document.getElementById('btnRefreshMaHoSo').title = `Danh sách (${sx.length})`;
     }
   }
-  function lammdsm() {
-    const nt = document.getElementById('btnRefreshMaHoSo'); const t1 = nt.innerHTML;
-    nt.disabled = true; nt.innerHTML = "⏳";
-    google.script.run.withSuccessHandler(kq => {
-      nt.disabled = false; nt.innerHTML = t1;
-      if(kq.tcon) { dlmhso = kq.dlmh; capnhopm(); hienhth(`✅ Đã cập nhật ${kq.dlmh.length} hồ sơ`); }
-      else hienhth("❌ Lỗi: " + kq.tbao);
-    }).skt_layds_mhs_cn();
-  }
+function lammdsm() {
+  const nt = document.getElementById('btnRefreshMaHoSo'); const t1 = nt.innerHTML;
+  nt.disabled = true; nt.innerHTML = "⏳";
+  google.script.run.withSuccessHandler(kq => {
+    nt.disabled = false; nt.innerHTML = t1;
+    if(kq.tcon) { 
+        dlmhso = kq.dlmh; 
+        
+        // Cập nhật làm mới lại cả Kho đệm cục bộ khi thực hiện đồng bộ lại
+        window.skt_kho_nhatky = kq.dlnhatky_san || []; 
+        
+        capnhopm(); 
+        hienhth(`✅ Đã cập nhật ${kq.dlmh.length} hồ sơ`); 
+    }
+    else hienhth("❌ Lỗi: " + kq.tbao);
+  }).skt_layds_mhs_cn();
+}
 
   function hopllu() {
     if (!document.getElementById('cbGiaoVien').value || !document.getElementById('cbNguoiKiemTra').value || !document.getElementById('cbBoPhan').value) { hienhth("⚠️ Chưa có đủ thông tin chung!"); return false; }
