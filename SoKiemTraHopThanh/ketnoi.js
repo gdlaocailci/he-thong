@@ -6,7 +6,7 @@
 const SKT_GAS_URL = "https://script.google.com/macros/s/AKfycbxeQAXxsFNGjJlnnaimCshsK8wLVea9wnVePCR-ioB9Xr3Q4mVVUsDXIUIEYQ1vIZHb/exec";
 const SKT_LOGO_URL = "https://i.ibb.co/S46wLjDt/logo-tr-ng-TH-THCS-Hop-Thanh3-removebg-preview.png";
 
-const SKT_TEN_TRUONG = "Trường TH&THCS Hợp Thành";
+const SKT_TEN_TRUONG = "TRƯỜNG TH&THCS HỢP THÀNH";
 const SKT_TEN_TRUONG_UP = "TRƯỜNG TH&THCS HỢP THÀNH";
 const SKT_TEN_PM = "Sổ Kiểm Tra Nội Bộ";
 const SKT_TEN_PM_UP = "SỔ KIỂM TRA NỘI BỘ";
