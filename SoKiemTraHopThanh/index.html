@@ -797,7 +797,7 @@
     }
 
 /* ========================================================================== */
-/* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (BẢO VỆ CHỐNG LỖI '<')  */
+/* KHỐI XỬ LÝ KHỞI ĐỘNG VÀ PHÂN LUỒNG QUYỀN TRUY CẬP (ĐÃ PHỤC HỒI LOGO/MENU) */
 /* ========================================================================== */
 function kiemtqvata() {
     let taikht = window.skttktoanc || layluutrant("SKT_USER_TAIK") || "";
@@ -823,7 +823,7 @@ function kiemtqvata() {
             try {
                 let p_hoi = await fetch(cac_tep[i] + '?v=' + v_ban);
                 if (!p_hoi.ok) {
-                    m_giay.push(""); // Không ném lỗi làm sập Promise
+                    m_giay.push(""); 
                 } else {
                     m_giay.push(await p_hoi.text());
                 }
@@ -850,7 +850,6 @@ function kiemtqvata() {
             document.getElementById('access_denied_msg').style.display = 'block';
             document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền truy cập.";
         } else {
-            // Bao bọc try/catch để lỗi giao diện không bị văng nhầm sang luồng mạng
             try {
                 window.sktquyenht = dlu.q_h_t || ""; 
                 window.sktduocuyq = true; 
@@ -873,6 +872,41 @@ function kiemtqvata() {
                 if (boxPhanQuyen) thuchkb(boxPhanQuyen);
 
                 setTimeout(() => {
+                    // 1. PHỤC HỒI LOGO VÀ TEXT MENU (Ép nạp dữ liệu cấu hình từ ketnoi.js)
+                    try {
+                        document.querySelectorAll('.sidebar-logo, .sys-logo, .login-logo').forEach(img => {
+                            img.src = SKT_LOGO_URL; 
+                        });
+                    } catch(e) {}
+                    
+                    try {
+                        const sidebarTitle = document.getElementById('menu_title');
+                        if (sidebarTitle) sidebarTitle.innerText = SKT_TEN_PM_UP;
+                    } catch(e) {}
+                    
+                    try {
+                        const sidebarSubtitle = document.getElementById('menu_subtitle');
+                        // Đã sửa lại đúng biến SKT_TEN_TRUONG
+                        if (sidebarSubtitle) sidebarSubtitle.innerText = SKT_TEN_TRUONG; 
+                    } catch(e) {}
+
+                    try {
+                        document.querySelectorAll('.page-title, .header-card h1, .up-header h3').forEach(el => {
+                            let textHienTai = el.innerText.toUpperCase();
+                            
+                            if(textHienTai.includes('GHI SỔ') || textHienTai.includes('NHẬP LIỆU')) {
+                                el.innerText = "GHI SỔ - " + SKT_TEN_PM_UP;
+                            } else if(textHienTai.includes('THỐNG KÊ') || textHienTai.includes('TRA CỨU')) {
+                                el.innerText = "THỐNG KÊ & TRA CỨU - " + SKT_TEN_PM_UP;
+                            } else if(textHienTai.includes('MINH CHỨNG')) {
+                                el.innerText = "QUẢN LÝ MINH CHỨNG - " + SKT_TEN_TRUONG;
+                            } else if(!textHienTai.includes('QUYỀN TRUY CẬP')) {
+                                el.innerText = SKT_TEN_PM_UP + " - " + SKT_TEN_TRUONG;
+                            }
+                        });
+                    } catch(e) {}
+
+                    // 2. PHÂN QUYỀN GIAO DIỆN (Giữ nguyên logic 4 cấp)
                     const q_c_t = String(window.sktquyenht).trim().toLowerCase();
                     const btnPhanQuyen = document.querySelector('button[onclick*="TabPhanQuyen"]');
                     
@@ -885,10 +919,10 @@ function kiemtqvata() {
                     } else if (q_c_t === 'xxx') {
                         if (btnPhanQuyen) btnPhanQuyen.style.display = 'flex';
                     } else {
-                        // Quyền x hoặc khách
                         if (btnPhanQuyen) btnPhanQuyen.style.display = 'none';
                     }
 
+                    // 3. KHỞI CHẠY CÁC HÀM PHỤ TRỢ MỞ RỘNG
                     try { if (typeof taidli === 'function') taidli(); } catch(loie) {}
                     try { if (typeof taithu === 'function') taithu(); } catch(loie) {}
                     try { if (typeof themdongmo === 'function' && document.getElementById('tableContent').rows.length === 0) themdongmo(); } catch(loie) {}
@@ -902,7 +936,7 @@ function kiemtqvata() {
                 }, 500);
 
             } catch (loi_ui) {
-                console.error("Giao diện đang ổn định:", loi_ui);
+                console.error("Giao diện đang xử lý:", loi_ui);
             }
         }
     }).catch(loie => {
