@@ -30,27 +30,7 @@
       0% { left: -150%; }
       100% { left: 200%; }
   }
-  /* ========================================================================== */
-  /* GIAO DIỆN MOBILE: BỘ LỌC VÀ BẢNG NHẬP LIỆU */
-  /* ========================================================================== */
-  @media screen and (max-width: 768px) {
-      .filter-section { 
-          grid-template-columns: 1fr !important; /* Xếp thành 1 cột dọc */
-          gap: 10px !important; 
-      }
-      .f-item:nth-child(5) { justify-self: start !important; text-align: left !important; width: 100% !important; }
-      .f-item:nth-child(5) .f-input { width: 100% !important; }
-      
-      .status-stepper { flex-wrap: wrap !important; justify-content: center !important; }
-      .table-container { 
-          overflow-x: auto !important; 
-          -webkit-overflow-scrolling: touch !important; /* Hỗ trợ vuốt mượt trên iPhone */
-      }
-      #mainTable { width: 1300px !important; } /* Khóa độ rộng để không bóp cột */
-      #title_nhaplieu { font-size: 17px !important; }
-      
-      .btn-save { width: 100%; margin-top: 15px; float: none; text-align: center; }
-  }
+ 
 </style>
 
 <div id="main_content">
