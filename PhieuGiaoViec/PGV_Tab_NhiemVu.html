@@ -515,7 +515,7 @@ function apDungKhoaGiaoDien() {
             $('#nhapYkien, #nhapBcao, #oNoiDungYkienLanhDao').prop('disabled', true);
         }
     } else {
-        // [CẬP NHẬT TẠI ĐÂY] Xử lý khi chính chủ đang xem hồ sơ của mình
+        // Xử lý khi chính chủ đang xem hồ sơ của mình
         let giaTriLanhDao = $('#oNoiDungYkienLanhDao').val().trim();
         if (giaTriLanhDao === "") {
             // Rỗng thì ẩn cho gọn
@@ -527,9 +527,10 @@ function apDungKhoaGiaoDien() {
     }
     
     // Khoá nút Xóa file đính kèm với trường hợp xem của người khác (BGH, GS chỉ xem/thêm)
+    // Đã sửa lại lỗi typo tại đây
     $('#vungDinhkBcao .bi-x').css({
         'pointer-events': (isLocked || (daChonGvKhac && (isBGH || isGS))) ? 'none' : 'auto',
-        'opacity': (is过程Locked || (daChonGvKhac && (isBGH || isGS))) ? '0.5' : '1'
+        'opacity': (isLocked || (daChonGvKhac && (isBGH || isGS))) ? '0.5' : '1'
     });
 }
   
