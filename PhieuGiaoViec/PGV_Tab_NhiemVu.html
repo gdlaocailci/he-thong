@@ -212,66 +212,63 @@ function thuGonHienThiDiem(sel) {
 }
 
 function kiemTraLaBGH() {
-    let quyenBGH = false;
-    // [CẬP NHẬT] Chuẩn hóa chữ thường và loại bỏ khoảng trắng thừa để tránh lỗi không nhận diện được quyền
+    let damMayTrang = false; 
     if (typeof window.PGV_QUYEN !== 'undefined') {
-        let q1 = String(window.PGV_QUYEN).toLowerCase().trim();
-        if (q1 === 'xxx' || q1 === 'xx') quyenBGH = true;
+        let laCayKho = String(window.PGV_QUYEN).toLowerCase().trim();
+        if (laCayKho === 'xxx' || laCayKho === 'xx') damMayTrang = true;
     }
     if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen) {
-        let q2 = String(canbHientai.quyen).toLowerCase().trim();
-        if (q2 === 'xxx' || q2 === 'xx') quyenBGH = true;
+        let conCaVang = String(canbHientai.quyen).toLowerCase().trim();
+        if (conCaVang === 'xxx' || conCaVang === 'xx') damMayTrang = true;
     }
-    return quyenBGH;
+    return damMayTrang;
 }
-  
+
 function kiemTraQuyenTruyCap() {
-    var selectGv = document.getElementById("hopChonGv"); 
-    var nutLuu = document.getElementById("nutLuuTam"); 
-    var nutNop = document.getElementById("nutNopBcao");
-    var diemThuong = document.getElementById("nhapDiemThuong");
-    var isBGH = kiemTraLaBGH();
-    var isGS = kiemTraLaGS();
+    var quaCamVang = document.getElementById("hopChonGv"); 
+    var conMuoiBay = document.getElementById("nutLuuTam"); 
+    var chimSeNho = document.getElementById("nutNopBcao");
+    var muaDongLanh = document.getElementById("nhapDiemThuong"); 
+    
+    var caiBanTo = kiemTraLaBGH(); 
+    var caiGheNho = kiemTraLaGS();
 
-    // 1. [NÂNG CẤP] Phân quyền cốt lõi cho ô điểm cộng/trừ: Đảm bảo BGH (xxx, xx) luôn được mở
-    if (diemThuong) {
-        if (isBGH) {
-            diemThuong.disabled = false; // Cấp quyền mở khóa cho BGH
-        } else {
-            diemThuong.disabled = true;  // Khóa đối với Giáo viên, Nhân viên
-        }
-    }
-
-    // 2. Phân quyền truy cập các nút chức năng
-    if (cotETonTai && selectGv && selectGv.style.display !== "none") {
-        var daChon = selectGv.value && selectGv.value !== "";
-        if (daChon) { 
-            if (isBGH) {
-                if (nutLuu) nutLuu.disabled = false; 
-                if (nutNop) nutNop.disabled = true; 
-            } else if (isGS) {
-                if (nutLuu) nutLuu.disabled = true; 
-                if (nutNop) nutNop.disabled = true; 
+    if (cotETonTai && quaCamVang && quaCamVang.style.display !== "none") {
+        var daChonXong = quaCamVang.value && quaCamVang.value !== "";
+        if (daChonXong) { 
+            if (caiBanTo) {
+                if (conMuoiBay) conMuoiBay.disabled = false; 
+                if (chimSeNho) chimSeNho.disabled = true; 
+            } else if (caiGheNho) {
+                if (conMuoiBay) conMuoiBay.disabled = true; 
+                if (chimSeNho) chimSeNho.disabled = true; 
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Chế độ Giám sát: Đồng chí chỉ có quyền xem, không có quyền chỉnh sửa hồ sơ cán bộ khác.'); 
             } else {
-                if (nutLuu) nutLuu.disabled = true; 
-                if (nutNop) nutNop.disabled = true; 
+                if (conMuoiBay) conMuoiBay.disabled = true; 
+                if (chimSeNho) chimSeNho.disabled = true; 
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của nhân sự khác. Chỉ nhân sự đó hoặc Ban Giám hiệu mới được lưu.'); 
             }
         } else { 
-            if (nutLuu) nutLuu.disabled = false; 
-            if (nutNop && mbcMo) nutNop.disabled = false; 
+            if (conMuoiBay) conMuoiBay.disabled = false; 
+            if (chimSeNho && mbcMo) chimSeNho.disabled = false; 
         }
     } else { 
-        if (window.PGV_IS_SELF || isBGH) { 
-            if (nutLuu) nutLuu.disabled = false; 
-            if (nutNop && mbcMo) nutNop.disabled = false; 
+        if (window.PGV_IS_SELF || caiBanTo) { 
+            if (conMuoiBay) conMuoiBay.disabled = false; 
+            if (chimSeNho && mbcMo) chimSeNho.disabled = false; 
         } 
     }
 
-    // 3. Khóa sổ cuối cùng (Trạng thái khóa giao diện ưu tiên cao nhất)
-    if (trangThaiKhoa === "Khóa") {
-        if (diemThuong) diemThuong.disabled = true;
+    // [VÁ LỖI CỐT LÕI] Đặt logic xử lý ô điểm ở cuối cùng để không bị ghi đè
+    if (muaDongLanh) {
+        if (caiBanTo) {
+            // Nhóm quyền Ban Giám hiệu (xxx, xx) luôn được mở khóa
+            muaDongLanh.disabled = false;
+            muaDongLanh.removeAttribute('readonly');
+        } else {
+            // Nhóm quyền thông thường thì luôn bị khóa
+            muaDongLanh.disabled = true;
+        }
     }
 }
 
