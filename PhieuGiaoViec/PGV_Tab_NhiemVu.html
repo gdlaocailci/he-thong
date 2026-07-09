@@ -1185,143 +1185,152 @@ function xoaDongNv(nt) {
         tinhtTdong(); 
     } 
 }
-
-function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
-    if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
-    let str = chuoiDieuKien.trim();
-    let constraints = [];
-    if (str.includes(',')) constraints = str.split(',').map(s=>s.trim()).filter(s=>s);
-    else if (str.includes(' ')) constraints = str.split(/\s+/).filter(s=>s);
-    else constraints = [str];
-    if (constraints.length === 0) return false;
-    let numVal = parseFloat(String(giaTriThuc).replace(/[^\d.-]/g, ''));
-    if (isNaN(numVal)) return false;
-    for (let cond of constraints) {
-        if (cond.startsWith(">=")) {
-            let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
-            if (isNaN(threshold)) return false;
-            if (!(numVal >= threshold)) return false;
-        } else if (cond.startsWith("<=")) {
-            let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
-            if (isNaN(threshold)) return false;
-            if (!(numVal <= threshold)) return false;
-        } else if (cond.startsWith(">") && !cond.startsWith(">=")) {
-            let threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
-            if (isNaN(threshold)) return false;
-            if (!(numVal > threshold)) return false;
-        } else if (cond.startsWith("<") && !cond.startsWith("<=")) {
-            let threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
-            if (isNaN(threshold)) return false;
-            if (!(numVal < threshold)) return false;
+function kiemTraTatCaRangBuoc(quaMit, caySua) {
+    if (!caySua || caySua.trim() === "") return false;
+    let soiDay = caySua.trim();
+    let mangLuoi = [];
+    if (soiDay.includes(',')) mangLuoi = soiDay.split(',').map(s=>s.trim()).filter(s=>s);
+    else if (soiDay.includes(' ')) mangLuoi = soiDay.split(/\s+/).filter(s=>s);
+    else mangLuoi = [soiDay];
+    if (mangLuoi.length === 0) return false;
+    
+    let conSoNho = parseFloat(String(quaMit).replace(/[^\d.-]/g, ''));
+    if (isNaN(conSoNho)) return false;
+    
+    for (let dieuKienBao of mangLuoi) {
+        if (dieuKienBao.startsWith(">=")) {
+            let mucTran = parseFloat(dieuKienBao.substring(2).replace(/[^\d.-]/g, ''));
+            if (isNaN(mucTran)) return false;
+            if (!(conSoNho >= mucTran)) return false;
+        } else if (dieuKienBao.startsWith("<=")) {
+            let mucTran = parseFloat(dieuKienBao.substring(2).replace(/[^\d.-]/g, ''));
+            if (isNaN(mucTran)) return false;
+            if (!(conSoNho <= mucTran)) return false;
+        } else if (dieuKienBao.startsWith(">") && !dieuKienBao.startsWith(">=")) {
+            let mucTran = parseFloat(dieuKienBao.substring(1).replace(/[^\d.-]/g, ''));
+            if (isNaN(mucTran)) return false;
+            if (!(conSoNho > mucTran)) return false;
+        } else if (dieuKienBao.startsWith("<") && !dieuKienBao.startsWith("<=")) {
+            let mucTran = parseFloat(dieuKienBao.substring(1).replace(/[^\d.-]/g, ''));
+            if (isNaN(mucTran)) return false;
+            if (!(conSoNho < mucTran)) return false;
         } else {
-            let exact = parseFloat(cond.replace(/[^\d.-]/g, ''));
-            if (isNaN(exact)) return false;
-            if (Math.abs(numVal - exact) > 1e-9) return false;
+            let diemChuan = parseFloat(dieuKienBao.replace(/[^\d.-]/g, ''));
+            if (isNaN(diemChuan)) return false;
+            if (Math.abs(conSoNho - diemChuan) > 1e-9) return false;
         }
     }
     return true;
 }
 
 function tinhtTdong() {
-    const dtc = document.getElementById('nhapDiemThuong'); 
-    let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
-    if(dtc) { 
-        dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); 
-        if (dc > 0) dtc.classList.add('diemCong'); 
-        else if (dc < 0) dtc.classList.add('diemTru'); 
-        else dtc.classList.add('diemKhong'); 
+    const oThoiTiet = document.getElementById('nhapDiemThuong'); 
+    let gioMua = oThoiTiet ? (parseFloat(oThoiTiet.value) || 0) : 0;
+    if(oThoiTiet) { 
+        oThoiTiet.classList.remove('diemCong', 'diemTru', 'diemKhong'); 
+        if (gioMua > 0) oThoiTiet.classList.add('diemCong'); 
+        else if (gioMua < 0) oThoiTiet.classList.add('diemTru'); 
+        else oThoiTiet.classList.add('diemKhong'); 
     }
     
-    let tongDiem = 0;
-    let tongMax = 0;
-    let soNhiemVu = 0;
-    let soDaDanhGia = 0;
-    let minRank = 5;
-    let hasJMLogic = false;
+    let caiRoTo = 0;
+    let caiThungLon = 0;
+    let demBong = 0;
+    let demDaNhat = 0;
+    let conDeNho = 5;
+    let coPhepThuat = false;
 
-    document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
-        const cg = dg.querySelector('.chonKq');
-        if (cg && cg.style.display !== 'none') {
-            soNhiemVu++;
-            const maxInp = dg.querySelector('.nhapDiemMax');
-            if(maxInp && maxInp.value) {
-                let mVal = parseFloat(maxInp.value);
-                if(!isNaN(mVal)) tongMax += mVal;
+    document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dongChay) => {
+        const oKq = dongChay.querySelector('.chonKq');
+        if (oKq && oKq.style.display !== 'none') {
+            demBong++;
+            const oMax = dongChay.querySelector('.nhapDiemMax');
+            if(oMax && oMax.value) {
+                let gtMax = parseFloat(oMax.value);
+                if(!isNaN(gtMax)) caiThungLon += gtMax;
             }
-            if (cg.value !== "") {
-                soDaDanhGia++;
-                let valThuc = cg.value.trim();
-                let txtHienThi = valThuc;
-                if (cg.tagName === "SELECT") {
-                    let selOpt = cg.options[cg.selectedIndex];
-                    if (selOpt) txtHienThi = selOpt.text;
+            if (oKq.value !== "") {
+                demDaNhat++;
+                let gtThuc = oKq.value.trim();
+                let chuHienThi = gtThuc;
+                if (oKq.tagName === "SELECT") {
+                    let theChon = oKq.options[oKq.selectedIndex];
+                    if (theChon) chuHienThi = theChon.text;
                 }
-                let diem = parseFloat(valThuc);
-                if (!isNaN(diem)) tongDiem += diem;
+                let diemSo = parseFloat(gtThuc);
+                if (!isNaN(diemSo)) caiRoTo += diemSo;
                 
-                let j = dg.querySelector('.oColJ')?.value.trim() || "";
-                let k = dg.querySelector('.oColK')?.value.trim() || "";
-                let l = dg.querySelector('.oColL')?.value.trim() || "";
-                let m = dg.querySelector('.oColM')?.value.trim() || "";
+                let cotN1 = dongChay.querySelector('.oColJ')?.value.trim() || "";
+                let cotN2 = dongChay.querySelector('.oColK')?.value.trim() || "";
+                let cotN3 = dongChay.querySelector('.oColL')?.value.trim() || "";
+                let cotN4 = dongChay.querySelector('.oColM')?.value.trim() || "";
                 
-                if (j !== "" || k !== "" || l !== "" || m !== "") {
-                    hasJMLogic = true;
-                    let rank = 0;
-                    if (kiemTraTatCaRangBuoc(valThuc, j)) rank = 4;
-                    else if (kiemTraTatCaRangBuoc(valThuc, k)) rank = 3;
-                    else if (kiemTraTatCaRangBuoc(valThuc, l)) rank = 2;
-                    else if (kiemTraTatCaRangBuoc(valThuc, m)) rank = 1;
-                    if (rank > 0) minRank = Math.min(minRank, rank);
-                    else minRank = Math.min(minRank, 1);
+                if (cotN1 !== "" || cotN2 !== "" || cotN3 !== "" || cotN4 !== "") {
+                    coPhepThuat = true;
+                    let thuHangBan = 0;
+                    if (kiemTraTatCaRangBuoc(gtThuc, cotN1)) thuHangBan = 4;
+                    else if (kiemTraTatCaRangBuoc(gtThuc, cotN2)) thuHangBan = 3;
+                    else if (kiemTraTatCaRangBuoc(gtThuc, cotN3)) thuHangBan = 2;
+                    else if (kiemTraTatCaRangBuoc(gtThuc, cotN4)) thuHangBan = 1;
+                    if (thuHangBan > 0) conDeNho = Math.min(conDeNho, thuHangBan);
+                    else conDeNho = Math.min(conDeNho, 1);
                 }
             }
         }
     });
     
-    let diemCuoiCung = tongDiem + dc;
-    let xpl = "Chưa hoàn thành";
+    let tongCongXong = caiRoTo + gioMua;
+    let chuXepLoai = "Chưa hoàn thành";
     
-    if (soNhiemVu === 0) {
-        xpl = "Chưa giao việc";
-    } else if (soDaDanhGia < soNhiemVu) {
-        xpl = "Chưa đánh giá";
+    if (demBong === 0) {
+        chuXepLoai = "Chưa giao việc";
+    } else if (demDaNhat < demBong) {
+        chuXepLoai = "Chưa đánh giá";
     } else {
-        if (hasJMLogic) {
-            if (minRank === 4) xpl = "Xuất sắc";
-            else if (minRank === 3) xpl = "Hoàn thành tốt";
-            else if (minRank === 2) xpl = "Hoàn thành";
-            else if (minRank === 1) xpl = "Chưa hoàn thành";
-            else xpl = "Chưa xác định";
+        if (coPhepThuat) {
+            if (conDeNho === 4) chuXepLoai = "Xuất sắc";
+            else if (conDeNho === 3) chuXepLoai = "Hoàn thành tốt";
+            else if (conDeNho === 2) chuXepLoai = "Hoàn thành";
+            else if (conDeNho === 1) chuXepLoai = "Chưa hoàn thành";
+            else chuXepLoai = "Chưa xác định";
         } else {
-            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
-            if (tyLe >= 90) xpl = "Xuất sắc";
-            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
-            else if (tyLe >= 50) xpl = "Hoàn thành";
-            else xpl = "Chưa hoàn thành";
+            let phanTramTo = caiThungLon > 0 ? (tongCongXong / caiThungLon) * 100 : tongCongXong;
+            if (phanTramTo >= 90) chuXepLoai = "Xuất sắc";
+            else if (phanTramTo >= 70) chuXepLoai = "Hoàn thành tốt";
+            else if (phanTramTo >= 50) chuXepLoai = "Hoàn thành";
+            else chuXepLoai = "Chưa hoàn thành";
         }
     }
     
-    let txtKq = xpl;
-    if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
-        txtKq = `${xpl}: ${diemCuoiCung} điểm`;
+    let chuoiKetQua = chuXepLoai;
+    if (demBong > 0 && demDaNhat === demBong && chuXepLoai !== "Chưa giao việc" && chuXepLoai !== "Chưa đánh giá") {
+        chuoiKetQua = `${chuXepLoai}: ${tongCongXong} điểm`;
     }
     
-    const qht = document.getElementById('chuKqHthi');
-    if (qht) { 
-        qht.innerText = txtKq; 
-        qht.className = "fw-bold epMotDong"; 
-        if (xpl === "Xuất sắc") qht.classList.add("text-success"); 
-        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); 
-        else qht.classList.add("text-danger"); 
+    const theHienThiKq = document.getElementById('chuKqHthi');
+    if (theHienThiKq) { 
+        theHienThiKq.innerText = chuoiKetQua; 
+        theHienThiKq.className = "fw-bold epMotDong"; 
+        if (chuXepLoai === "Xuất sắc") {
+            theHienThiKq.classList.add("text-success"); 
+        } else if (chuXepLoai.includes("Hoàn thành")) {
+            theHienThiKq.classList.add("text-primary"); 
+        } else {
+            theHienThiKq.classList.add("text-danger"); 
+        }
     }
     
-    const theMenuDoc = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
-    theMenuDoc.forEach(el => {
-        el.innerText = txtKq;
-        el.className = "epMotDong"; 
-        if (xpl === "Xuất sắc") el.classList.add("text-success", "fw-bold"); 
-        else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary", "fw-bold"); 
-        else el.classList.add("text-danger", "fw-bold"); 
+    const dsMenuKq = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
+    dsMenuKq.forEach(theCon => {
+        theCon.innerText = chuoiKetQua;
+        theCon.className = "epMotDong"; 
+        if (chuXepLoai === "Xuất sắc") {
+            theCon.classList.add("text-success", "fw-bold"); 
+        } else if (chuXepLoai.includes("Hoàn thành")) {
+            theCon.classList.add("text-primary", "fw-bold"); 
+        } else {
+            theCon.classList.add("text-danger", "fw-bold"); 
+        }
     });
 }
 
