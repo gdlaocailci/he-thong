@@ -481,29 +481,30 @@
     document.getElementById('print_link_container').innerHTML = ""; 
   }
 
-  function inba() {
-    const tbg = document.getElementById('searchBody');
-    if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
-      hienhtt("⚠️ Vui lòng tìm kiếm và đảm bảo có dữ liệu trước khi in!"); 
-      return;
-    }
-    const nt = document.querySelector('.print-btn');
-    const chg = nt.innerHTML;
-    const vl = document.getElementById('print_link_container');
-    
-    nt.disabled = true;
-    nt.innerHTML = "⏳";
-    vl.innerHTML = "<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo...</span>";
+function inba() {
+  const tbg = document.getElementById('searchBody');
+  if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
+    hienhtt("⚠️ Vui lòng tìm kiếm và đảm bảo có dữ liệu trước khi in!"); 
+    return;
+  }
+  const nt = document.querySelector('.print-btn');
+  const chg = nt.innerHTML;
+  const vl = document.getElementById('print_link_container');
+  
+  nt.disabled = true;
+  nt.innerHTML = "⏳";
+  vl.innerHTML = "<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo...</span>";
 
-    const dki = {
-      gkiem: document.getElementById('s_gv').value,
-      nkiem: document.getElementById('s_nkt').value,
-      bkiem: document.getElementById('s_bp').value,
-      tkiem: document.getElementById('s_from').value,
-      dkiem: document.getElementById('s_to').value
-    };
+  const dki = {
+    gkiem: document.getElementById('s_gv').value,
+    nkiem: document.getElementById('s_nkt').value,
+    bkiem: document.getElementById('s_bp').value,
+    tkiem: document.getElementById('s_from').value,
+    dkiem: document.getElementById('s_to').value
+  };
 
-    google.script.run.withSuccessHandler(kq => {
+  google.script.run
+    .withSuccessHandler(kq => {
       nt.disabled = false;
       nt.innerHTML = chg;
       if (kq.tcon) {
@@ -512,8 +513,15 @@
         hienhtt("❌ Lỗi: " + kq.tbao); 
         vl.innerHTML = "<span style='color:red;'>Lỗi!</span>";
       }
-    }).skt_taobc_vba(dki);
-  }
+    })
+    .withFailureHandler(loi => {
+      nt.disabled = false;
+      nt.innerHTML = chg;
+      hienhtt("❌ Mất kết nối khi in hoặc phiên làm việc hết hạn: " + loi.message); 
+      vl.innerHTML = "<span style='color:red;'>Lỗi kết nối!</span>";
+    })
+    .skt_taobc_vba(dki);
+}
 
   function hienhtt(tb) {
     document.getElementById('tk_modal_message').innerText = tb;
