@@ -329,7 +329,8 @@ function cdang(ptu) {
 }
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
-function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
+// [CẬP NHẬT] Lưu thêm thông tin tài khoản người tải vào chuỗi (tham số thứ 3)
+function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { let chiecLaKho = t.taik ? t.taik : ""; q += ` [FILE:${t.tentep}|${t.duongd}|${chiecLaKho}]`; }); } return q; }
 
 function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     let ttKhoa = String(trangThai || "Mở").trim();
@@ -1355,6 +1356,7 @@ function khoiTaoTheoQuyen() {
 
 window.tepdinhkBcao = window.tepdinhkBcao || [];
 
+// [CẬP NHẬT] Nâng cấp biểu thức chính quy (Regex) bóc tách cấu trúc FILE 3 tham số
 (function() {
     const oBcao = document.getElementById('nhapBcao');
     if (oBcao) {
@@ -1367,10 +1369,14 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let chuGoc = String(val || "");
                     window.tepdinhkBcao = [];
                     let chuSach = chuGoc;
-                    let regex = /\[FILE:(.*?)\|(.*?)\]/g;
+                    let regex = /\[FILE:(.*?)\|(.*?)(?:\|(.*?))?\]/g;
                     let match;
                     while ((match = regex.exec(chuGoc)) !== null) {
-                        window.tepdinhkBcao.push({ tentep: match[1].trim(), duongd: match[2].trim() });
+                        window.tepdinhkBcao.push({ 
+                            tentep: match[1].trim(), 
+                            duongd: match[2].trim(),
+                            taik: match[3] ? match[3].trim() : ""
+                        });
                         chuSach = chuSach.replace(match[0], "");
                     }
                     setGoc.call(this, chuSach.trim());
@@ -1391,10 +1397,14 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let chuGoc = String(value || "");
                     window.tepdinhkBcao = [];
                     let chuSach = chuGoc;
-                    let regex = /\[FILE:(.*?)\|(.*?)\]/g;
+                    let regex = /\[FILE:(.*?)\|(.*?)(?:\|(.*?))?\]/g;
                     let match;
                     while ((match = regex.exec(chuGoc)) !== null) {
-                        window.tepdinhkBcao.push({ tentep: match[1].trim(), duongd: match[2].trim() });
+                        window.tepdinhkBcao.push({ 
+                            tentep: match[1].trim(), 
+                            duongd: match[2].trim(),
+                            taik: match[3] ? match[3].trim() : ""
+                        });
                         chuSach = chuSach.replace(match[0], "");
                     }
                     elem.value = chuSach.trim();
@@ -1485,6 +1495,12 @@ function guiTepLenMayChu(mngTep) {
         if (laThanhCong) {
             let duLieuTep = kq.dliu ? kq.dliu : (Array.isArray(kq) ? kq : []);
             
+            // [CẬP NHẬT] Đóng dấu tài khoản hiện tại vào tệp vừa tải lên
+            let conChimNho = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "";
+            duLieuTep.forEach(t => {
+                if(!t.taik) t.taik = conChimNho;
+            });
+            
             window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
             veDinhKemBcao();
             if (typeof mokBcao === 'function') mokBcao();
@@ -1527,11 +1543,35 @@ function veDinhKemBcao() {
 
 function xoaDinhKemBcao(chs) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
-    if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
     
     let tepXoa = window.tepdinhkBcao[chs];
+    let quaCamVang = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : ""; 
+    
+    // [CẬP NHẬT QUY TẮC TỐI CAO] Chặn tuyệt đối nếu không phải người trực tiếp tải lên
+    let ngonCoUa = tepXoa.taik ? String(tepXoa.taik).toLowerCase().trim() : "";
+    let hatMuaBay = quaCamVang ? String(quaCamVang).toLowerCase().trim() : "";
+    if (ngonCoUa !== "" && ngonCoUa !== hatMuaBay) {
+        if (typeof hienThongb === 'function') {
+            hienThongb('loi', "⚠️ Chặn thao tác: Đồng chí không phải là người trực tiếp tải lên tệp này. Hệ thống tuyệt đối không cho phép xóa (Kể cả tài khoản Ban Giám hiệu).");
+        } else {
+            alert("⚠️ Chặn thao tác: Đồng chí không phải là người trực tiếp tải lên tệp này. Hệ thống tuyệt đối không cho phép xóa (Kể cả tài khoản Ban Giám hiệu).");
+        }
+        return;
+    }
+
+    if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
+    
     hienTaiDl("🗑️ Đang xóa tệp...");
     
+    // [ĐÃ VÁ LỖI TRUY CẬP TRÁI PHÉP] Truyền định danh xuống Server
+    let dongSongXanh = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
+    if (cotETonTai) {
+        var hopChon = document.getElementById("hopChonGv");
+        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+            dongSongXanh = hopChon.value;
+        }
+    }
+
     const xuLyXoaXong = function(kqTho) {
         anTaiDl();
         let kq = epKieuKq(kqTho); 
@@ -1540,6 +1580,7 @@ function xoaDinhKemBcao(chs) {
             veDinhKemBcao();
             if (typeof mokBcao === 'function') mokBcao();
             
+            // Tự động cõng lệnh Lưu nhật ký
             xulyLuuTam(true);
             if (typeof hienThongb === 'function') hienThongb('tcong', "Đã xoá tệp và cập nhật nhật ký!");
         } else {
@@ -1553,10 +1594,16 @@ function xoaDinhKemBcao(chs) {
         if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối Server: " + (loi.message || loi));
     };
 
+    let chiecHopBimBim = { 
+        duongd: tepXoa.duongd, 
+        taik: quaCamVang, 
+        ttrg: dongSongXanh 
+    };
+
     if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(xuLyXoaXong).withFailureHandler(xuLyLoiXoa).pgv_xoa_tepbcao({ duongd: tepXoa.duongd });
+        google.script.run.withSuccessHandler(xuLyXoaXong).withFailureHandler(xuLyLoiXoa).pgv_xoa_tepbcao(chiecHopBimBim);
     } else if (typeof khachApi !== 'undefined' && khachApi.xoaTepBcao) {
-        khachApi.xoaTepBcao({ duongd: tepXoa.duongd }, xuLyXoaXong, xuLyLoiXoa);
+        khachApi.xoaTepBcao(chiecHopBimBim, xuLyXoaXong, xuLyLoiXoa);
     } else {
         anTaiDl();
         alert("Lỗi hệ thống: API xóa tệp chưa được liên kết.");
