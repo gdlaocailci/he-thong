@@ -222,41 +222,42 @@ function kiemTraQuyenTruyCap() {
     var nutLuu = document.getElementById("nutLuuTam"); 
     var nutNop = document.getElementById("nutNopBcao");
     var diemThuong = document.getElementById("nhapDiemThuong");
-    var isBGH = kiemTraLaBGH();
+    var isBGH = kiemTraLaBGH(); // isBGH đã bao hàm cả quyền xxx và quyền xx
     var isGS = kiemTraLaGS();
+
+    // [NÂNG CẤP] Tách riêng và khóa chặt ô Điểm cộng/trừ: Chỉ BGH (quyền xxx, xx) mới được thao tác
+    if (diemThuong) {
+        diemThuong.disabled = !isBGH;
+    }
 
     if (cotETonTai && selectGv && selectGv.style.display !== "none") {
         var daChon = selectGv.value && selectGv.value !== "";
         if (daChon) { 
             if (isBGH) {
                 if (nutLuu) nutLuu.disabled = false; 
-                if (diemThuong) diemThuong.disabled = false;
                 if (nutNop) nutNop.disabled = true; 
             } else if (isGS) {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
-                if (diemThuong) diemThuong.disabled = true;
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Chế độ Giám sát: Đồng chí chỉ có quyền xem, không có quyền chỉnh sửa hồ sơ cán bộ khác.'); 
             } else {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
-                if (diemThuong) diemThuong.disabled = true;
                 /* [ĐÃ FIX] Thay đổi từ vựng bao quát */
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của nhân sự khác. Chỉ nhân sự đó hoặc Ban Giám hiệu mới được lưu.'); 
             }
         } else { 
             if (nutLuu) nutLuu.disabled = false; 
             if (nutNop && mbcMo) nutNop.disabled = false; 
-            if (diemThuong) diemThuong.disabled = false;
         }
     } else { 
         if (window.PGV_IS_SELF || isBGH) { 
             if (nutLuu) nutLuu.disabled = false; 
             if (nutNop && mbcMo) nutNop.disabled = false; 
-            if (diemThuong) diemThuong.disabled = false;
         } 
     }
 
+    // Đảm bảo nguyên tắc khi đã khóa sổ thì BGH cũng không được sửa ô điểm (trừ khi ấn Mở khóa)
     if (trangThaiKhoa === "Khóa" && diemThuong) {
         diemThuong.disabled = true;
     }
