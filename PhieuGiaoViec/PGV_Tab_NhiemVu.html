@@ -492,6 +492,11 @@ function apDungKhoaGiaoDien() {
     $('.bi-paperclip').closest('button').prop('disabled', isLocked);
     $('#bangNviec tbody tr').find('input:not(.chonKq), textarea, button').prop('disabled', isLocked);
     
+    if (daChonGvKhac || (typeof window.PGV_IS_SELF !== 'undefined' && window.PGV_IS_SELF === false)) {
+        $('#bangNviec tbody tr').find('input.chonKq').prop('readonly', true);
+    } else {
+        $('#bangNviec tbody tr').find('input.chonKq').prop('readonly', false);
+    }
     // Luôn mở Select/Input chọn điểm để cho phép mở được Khung danh sách (chặn chọn thuộc hàm chonGiaTriDiem)
     if (daChonGvKhac && (isBGH || isGS)) {
         $('#bangNviec tbody tr').find('.chonKq').prop('disabled', false); 
@@ -1027,9 +1032,18 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
             chiecThuyenNan = true; 
         }
     }
-    if (chiecThuyenNan && (kiemTraLaBGH() || kiemTraLaGS())) {
-        if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Chế độ quản lý/giám sát: Không được phép thay đổi kết quả đánh giá của nhân sự khác.");
-        return;
+    
+    // [CẬP NHẬT] Đảm bảo BẤT CỨ AI (BGH, GS, hay nhân sự khác) khi xem hồ sơ không phải của mình 
+    // đều bị chặn chọn điểm, họ chỉ được phép mở xem danh sách.
+    let xetNguoiKhac = chiecThuyenNan || (typeof window.PGV_IS_SELF !== 'undefined' && window.PGV_IS_SELF === false);
+    
+    if (xetNguoiKhac) {
+        if (typeof hienThongb === 'function') {
+            hienThongb('loi', "⚠️ Chặn thao tác: Chỉ chính giáo viên chủ quản mới có quyền thay đổi điểm đánh giá.");
+        } else {
+            alert("⚠️ Chặn thao tác: Chỉ chính giáo viên chủ quản mới có quyền thay đổi điểm đánh giá.");
+        }
+        return; // Ngắt lệnh ngay lập tức, không cập nhật điểm
     }
 
     let vungChon = ptu.closest('.vung-chon-diem');
