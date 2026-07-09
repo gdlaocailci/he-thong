@@ -1,4 +1,3 @@
-
 <style>
         * {
             box-sizing: border-box;
@@ -93,21 +92,27 @@
         }
         
         .bang-phanquyen th {
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
-            padding: 8px 4px;
-            text-align: center;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .bang-phanquyen td {
-            border: 1px solid #dee2e6;
-            padding: 6px 4px;
-            vertical-align: middle;
-        }
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6; /* Chỉ giữ viền dưới */
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    padding: 8px 4px;
+    text-align: center;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.bang-phanquyen td {
+    border-bottom: 1px solid #dee2e6; /* Chỉ giữ viền dưới */
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    padding: 6px 4px;
+    vertical-align: middle;
+}
         
         .id-sheet-input, .taikhoan-input, .name-input, .sub-input {
             width: 95%;
