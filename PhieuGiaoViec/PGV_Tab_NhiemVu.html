@@ -1547,10 +1547,28 @@ function xoaDinhKemBcao(chs) {
     let tepXoa = window.tepdinhkBcao[chs];
     let quaCamVang = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : ""; 
     
-    // [CẬP NHẬT QUY TẮC TỐI CAO] Chặn tuyệt đối nếu không phải người trực tiếp tải lên
+    // [CẬP NHẬT LOGIC TỐI CAO] Bịt lỗ hổng đối với cả tệp mới lẫn tệp cũ không có ID người tải
     let ngonCoUa = tepXoa.taik ? String(tepXoa.taik).toLowerCase().trim() : "";
     let hatMuaBay = quaCamVang ? String(quaCamVang).toLowerCase().trim() : "";
-    if (ngonCoUa !== "" && ngonCoUa !== hatMuaBay) {
+    
+    let chiecThuyenNan = false;
+    if (typeof cotETonTai !== 'undefined' && cotETonTai) {
+        var hopChon = document.getElementById("hopChonGv");
+        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+            chiecThuyenNan = true; // Cờ xác nhận BGH đang chọn xem hồ sơ của nhân sự khác
+        }
+    }
+
+    let biChanDung = false;
+    if (ngonCoUa !== "") {
+        // Lớp 1: Tệp mới có ID -> Bắt buộc ID người tải phải khớp tuyệt đối với người đang ấn nút
+        if (ngonCoUa !== hatMuaBay) biChanDung = true;
+    } else {
+        // Lớp 2: Tệp cũ không có ID -> Chỉ chủ hồ sơ tự đăng nhập mới được xóa. Nếu BGH chọn xem người khác thì cấm.
+        if (chiecThuyenNan) biChanDung = true;
+    }
+
+    if (biChanDung) {
         if (typeof hienThongb === 'function') {
             hienThongb('loi', "⚠️ Chặn thao tác: Đồng chí không phải là người trực tiếp tải lên tệp này. Hệ thống tuyệt đối không cho phép xóa (Kể cả tài khoản Ban Giám hiệu).");
         } else {
@@ -1563,13 +1581,9 @@ function xoaDinhKemBcao(chs) {
     
     hienTaiDl("🗑️ Đang xóa tệp...");
     
-    // [ĐÃ VÁ LỖI TRUY CẬP TRÁI PHÉP] Truyền định danh xuống Server
     let dongSongXanh = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
-    if (cotETonTai) {
-        var hopChon = document.getElementById("hopChonGv");
-        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
-            dongSongXanh = hopChon.value;
-        }
+    if (chiecThuyenNan) {
+        dongSongXanh = document.getElementById("hopChonGv").value;
     }
 
     const xuLyXoaXong = function(kqTho) {
@@ -1580,7 +1594,7 @@ function xoaDinhKemBcao(chs) {
             veDinhKemBcao();
             if (typeof mokBcao === 'function') mokBcao();
             
-            // Tự động cõng lệnh Lưu nhật ký
+            // Đảm bảo nguyên tắc lệnh xóa cõng lệnh lưu nhật ký
             xulyLuuTam(true);
             if (typeof hienThongb === 'function') hienThongb('tcong', "Đã xoá tệp và cập nhật nhật ký!");
         } else {
