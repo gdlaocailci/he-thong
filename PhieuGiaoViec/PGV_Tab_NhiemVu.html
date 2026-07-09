@@ -163,7 +163,7 @@
     </table>
   </div>
   
-  <div class="p-2 text-start bg-light border-top mt-auto" style="display: none;">
+  <div class="p-2 text-start bg-light border-top mt-auto">
     <button class="btn btn-sm btn-outline-primary fw-bold btn-reactbits-shiny" onclick="addNv()">
       <i class="bi bi-plus-circle"></i> Thêm nhiệm vụ
     </button>
@@ -1126,7 +1126,14 @@ function addNv() {
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
         
+        // [CẬP NHẬT] Gỡ bỏ khóa readonly cho ô Nội dung để người dùng có thể nhập chữ
+        $newRow.find('.nhapNdung').removeAttr('readonly');
+        
         $newRow.find('.nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
+        
+        // [CẬP NHẬT] Gỡ bỏ khóa readonly cho ô Thời gian giao và Tiến độ
+        $newRow.find('.nhapTgGiao, .nhapTdo').removeAttr('readonly');
+        
         $newRow.find('.nhapDiemMax').val(lastRow.find('.nhapDiemMax').val());
         
         var $chonKq = $newRow.find('.chonKq');
