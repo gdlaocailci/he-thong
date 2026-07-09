@@ -212,9 +212,17 @@ function thuGonHienThiDiem(sel) {
 }
 
 function kiemTraLaBGH() {
-    if (typeof window.PGV_QUYEN !== 'undefined' && (window.PGV_QUYEN === 'xxx' || window.PGV_QUYEN === 'xx')) return true;
-    if (typeof canbHientai !== 'undefined' && (canbHientai.quyen === 'xxx' || canbHientai.quyen === 'xx')) return true;
-    return false;
+    let quyenBGH = false;
+    // [CẬP NHẬT] Chuẩn hóa chữ thường và loại bỏ khoảng trắng thừa để tránh lỗi không nhận diện được quyền
+    if (typeof window.PGV_QUYEN !== 'undefined') {
+        let q1 = String(window.PGV_QUYEN).toLowerCase().trim();
+        if (q1 === 'xxx' || q1 === 'xx') quyenBGH = true;
+    }
+    if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen) {
+        let q2 = String(canbHientai.quyen).toLowerCase().trim();
+        if (q2 === 'xxx' || q2 === 'xx') quyenBGH = true;
+    }
+    return quyenBGH;
 }
   
 function kiemTraQuyenTruyCap() {
@@ -222,14 +230,19 @@ function kiemTraQuyenTruyCap() {
     var nutLuu = document.getElementById("nutLuuTam"); 
     var nutNop = document.getElementById("nutNopBcao");
     var diemThuong = document.getElementById("nhapDiemThuong");
-    var isBGH = kiemTraLaBGH(); // isBGH đã bao hàm cả quyền xxx và quyền xx
+    var isBGH = kiemTraLaBGH();
     var isGS = kiemTraLaGS();
 
-    // [NÂNG CẤP] Tách riêng và khóa chặt ô Điểm cộng/trừ: Chỉ BGH (quyền xxx, xx) mới được thao tác
+    // 1. [NÂNG CẤP] Phân quyền cốt lõi cho ô điểm cộng/trừ: Đảm bảo BGH (xxx, xx) luôn được mở
     if (diemThuong) {
-        diemThuong.disabled = !isBGH;
+        if (isBGH) {
+            diemThuong.disabled = false; // Cấp quyền mở khóa cho BGH
+        } else {
+            diemThuong.disabled = true;  // Khóa đối với Giáo viên, Nhân viên
+        }
     }
 
+    // 2. Phân quyền truy cập các nút chức năng
     if (cotETonTai && selectGv && selectGv.style.display !== "none") {
         var daChon = selectGv.value && selectGv.value !== "";
         if (daChon) { 
@@ -243,7 +256,6 @@ function kiemTraQuyenTruyCap() {
             } else {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
-                /* [ĐÃ FIX] Thay đổi từ vựng bao quát */
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của nhân sự khác. Chỉ nhân sự đó hoặc Ban Giám hiệu mới được lưu.'); 
             }
         } else { 
@@ -257,9 +269,9 @@ function kiemTraQuyenTruyCap() {
         } 
     }
 
-    // Đảm bảo nguyên tắc khi đã khóa sổ thì BGH cũng không được sửa ô điểm (trừ khi ấn Mở khóa)
-    if (trangThaiKhoa === "Khóa" && diemThuong) {
-        diemThuong.disabled = true;
+    // 3. Khóa sổ cuối cùng (Trạng thái khóa giao diện ưu tiên cao nhất)
+    if (trangThaiKhoa === "Khóa") {
+        if (diemThuong) diemThuong.disabled = true;
     }
 }
 
