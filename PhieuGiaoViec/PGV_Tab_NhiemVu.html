@@ -259,14 +259,12 @@ function kiemTraQuyenTruyCap() {
         } 
     }
 
-    // [VÁ LỖI CỐT LÕI] Đặt logic xử lý ô điểm ở cuối cùng để không bị ghi đè
+    // [CẬP NHẬT LOGIC CỐT LÕI] Ràng buộc chặt chẽ 2 lớp: Phải là BGH (xx, xxx) VÀ Sổ không bị Khóa
     if (muaDongLanh) {
-        if (caiBanTo) {
-            // Nhóm quyền Ban Giám hiệu (xxx, xx) luôn được mở khóa
+        if (caiBanTo && trangThaiKhoa !== "Khóa") {
             muaDongLanh.disabled = false;
             muaDongLanh.removeAttribute('readonly');
         } else {
-            // Nhóm quyền thông thường thì luôn bị khóa
             muaDongLanh.disabled = true;
         }
     }
