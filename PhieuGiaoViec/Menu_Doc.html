@@ -100,25 +100,6 @@
         border-left: 4px solid #9eff33; 
     }
 
-    .thong-tin-dev {
-        margin-top: auto;
-        padding: 12px 20px;
-        border-top: 1px solid rgba(255,255,255,0.2);
-        font-size: 12px;
-        text-align: center;
-        color: rgba(255,255,255,0.8);
-        background-color: rgba(0,0,0,0.1);
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .thong-tin-dev i {
-        font-size: 14px;
-        margin-right: 4px;
-    }
-    .ten-tac-gia {
-        font-weight: bold;
-        color: #ffeb3b;
-    }
 </style>
 
 <div class="khung-trai">
@@ -205,19 +186,10 @@
             <span style="font-size: 15px; letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Đăng xuất</span>
         </button>
     </div>
-
-    <div class="thong-tin-dev">
-        <i class="bi bi-code-slash"></i> 
-        <span class="ten-tac-gia" id="dev_author_name_menu">ĐANG TẢI...</span>
-        <br><small>Phát triển bởi</small>
-    </div>
 </div>
 
 <script {isSafeContext="true"}>
     (function() {
-        if (typeof PGV_TAC_GIA !== 'undefined' && document.getElementById('dev_author_name_menu')) {
-            document.getElementById('dev_author_name_menu').innerText = PGV_TAC_GIA;
-        }
         
         window.kiemTraHienThiTabCapQuyen = function() {
             var tabCapQuyen = document.getElementById('tabCapQuyen');
