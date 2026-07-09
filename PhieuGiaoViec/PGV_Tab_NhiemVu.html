@@ -1409,36 +1409,17 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     if (typeof veDinhKemBcao === 'function') veDinhKemBcao();
                     return true; 
                 }
-                if (elem.id === 'nhapYkien') {
-                    let chuGoc = String(value || "");
-                    let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
-                    let regex = /\{([^}]+)\}$/;
-                    let match = chuGoc.match(regex);
-                    if (match) {
-                        if (oLanhDao) oLanhDao.value = match[1];
-                        chuGoc = chuGoc.replace(regex, "").trim();
-                    } else {
-                        if (oLanhDao) oLanhDao.value = "";
-                    }
-                    elem.value = chuGoc.trim();
-                    if (oLanhDao) gdang(oLanhDao);
-                    return true;
-                }
+                
+                // [ĐÃ SỬA] Đã loại bỏ logic bẫy đúp elem.id === 'nhapYkien' tại đây để tránh lưu đúp dữ liệu
+                
                 if (originalValHook && originalValHook.set) {
                     return originalValHook.set(elem, value);
                 }
                 return undefined;
             },
             get: function(elem) {
-                if (elem.id === 'nhapYkien') {
-                    let valThamMuu = elem.value || "";
-                    let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
-                    let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
-                    if (valLanhDao !== "") {
-                        return valThamMuu.trim() + " {" + valLanhDao + "}";
-                    }
-                    return valThamMuu.trim();
-                }
+                // [ĐÃ SỬA] Đã loại bỏ logic bẫy đúp elem.id === 'nhapYkien' tại đây
+                
                 if (originalValHook && originalValHook.get) {
                     return originalValHook.get(elem);
                 }
