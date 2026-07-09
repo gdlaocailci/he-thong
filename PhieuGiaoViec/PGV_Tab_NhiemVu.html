@@ -492,38 +492,44 @@ function apDungKhoaGiaoDien() {
     $('.bi-paperclip').closest('button').prop('disabled', isLocked);
     $('#bangNviec tbody tr').find('input:not(.chonKq), textarea, button').prop('disabled', isLocked);
     
+    // Đảm bảo ô input thường bị chặn gõ tay khi xem người khác
     if (daChonGvKhac || (typeof window.PGV_IS_SELF !== 'undefined' && window.PGV_IS_SELF === false)) {
         $('#bangNviec tbody tr').find('input.chonKq').prop('readonly', true);
     } else {
         $('#bangNviec tbody tr').find('input.chonKq').prop('readonly', false);
     }
-    // Luôn mở Select/Input chọn điểm để cho phép mở được Khung danh sách (chặn chọn thuộc hàm chonGiaTriDiem)
+
+    // Luôn mở Select/Input chọn điểm để cho phép mở được Khung danh sách
     if (daChonGvKhac && (isBGH || isGS)) {
         $('#bangNviec tbody tr').find('.chonKq').prop('disabled', false); 
     }
 
     if (daChonGvKhac) {
-        // [CẬP NHẬT] Hiển thị ô Lãnh đạo khi chọn xem hồ sơ giáo viên khác
         $('#oNoiDungYkienLanhDao').show();
-        
         if (isBGH || isGS) {
             $('#nhapYkien, #nhapBcao').prop('disabled', true);
             $('#oNoiDungYkienLanhDao').prop('disabled', false).prop('readonly', false);
             $('#nhapSngayNghi, #nhapLdoNghi').prop('disabled', true);
-            // Mở nút kẹp giấy (thêm tệp) cho BGH/GS
             $('.bi-paperclip').closest('button').prop('disabled', false); 
         } else {
             $('#nhapYkien, #nhapBcao, #oNoiDungYkienLanhDao').prop('disabled', true);
         }
     } else {
-        // [CẬP NHẬT] Ẩn hoàn toàn ô Lãnh đạo khi người dùng xem hồ sơ chính mình
-        $('#oNoiDungYkienLanhDao').hide();
+        // [CẬP NHẬT TẠI ĐÂY] Xử lý khi chính chủ đang xem hồ sơ của mình
+        let giaTriLanhDao = $('#oNoiDungYkienLanhDao').val().trim();
+        if (giaTriLanhDao === "") {
+            // Rỗng thì ẩn cho gọn
+            $('#oNoiDungYkienLanhDao').hide();
+        } else {
+            // Có dữ liệu thì hiện nhưng khóa cứng không cho sửa
+            $('#oNoiDungYkienLanhDao').show().prop('disabled', true);
+        }
     }
     
     // Khoá nút Xóa file đính kèm với trường hợp xem của người khác (BGH, GS chỉ xem/thêm)
     $('#vungDinhkBcao .bi-x').css({
         'pointer-events': (isLocked || (daChonGvKhac && (isBGH || isGS))) ? 'none' : 'auto',
-        'opacity': (isLocked || (daChonGvKhac && (isBGH || isGS))) ? '0.5' : '1'
+        'opacity': (is过程Locked || (daChonGvKhac && (isBGH || isGS))) ? '0.5' : '1'
     });
 }
   
@@ -1356,7 +1362,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
         }
     }
 
-    // 2. Gắn móc dữ liệu Ý kiến Lãnh đạo tự động gom tách vào `{}`
+// 2. Gắn móc dữ liệu Ý kiến Lãnh đạo tự động gom tách vào `{}`
     const oYkien = document.getElementById('nhapYkien');
     if (oYkien) {
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -1377,6 +1383,9 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     }
                     setGocY.call(this, chuGoc.trim());
                     if (oLanhDao) gdang(oLanhDao);
+                    
+                    // [CẬP NHẬT TẠI ĐÂY] Tự động cập nhật ẩn/hiện giao diện sau khi tách chuỗi xong
+                    if (typeof apDungKhoaGiaoDien === 'function') apDungKhoaGiaoDien();
                 },
                 get: function() {
                     let valThamMuu = getGocY.call(this) || "";
