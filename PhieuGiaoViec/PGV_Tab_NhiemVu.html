@@ -131,7 +131,7 @@
   <div class="row g-1 mb-1">
     <div class="col-md-6 d-flex flex-column gap-1">
       <textarea id="nhapYkien" class="form-control border-danger" placeholder="* Ý kiến tham mưu, đề xuất..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
-      <textarea id="oNoiDungYkienLanhDao" class="form-control border-success" placeholder="* Ý kiến lãnh đạo hoặc người giám sát..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #198754; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
+     <textarea id="oNoiDungYkienLanhDao" class="form-control border-success" placeholder="* Ý kiến lãnh đạo hoặc người giám sát..." style="display: none; height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #198754; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
     </div>
     <div class="col-md-6">
       <div style="position: relative;">
@@ -498,6 +498,9 @@ function apDungKhoaGiaoDien() {
     }
 
     if (daChonGvKhac) {
+        // [CẬP NHẬT] Hiển thị ô Lãnh đạo khi chọn xem hồ sơ giáo viên khác
+        $('#oNoiDungYkienLanhDao').show();
+        
         if (isBGH || isGS) {
             $('#nhapYkien, #nhapBcao').prop('disabled', true);
             $('#oNoiDungYkienLanhDao').prop('disabled', false).prop('readonly', false);
@@ -507,6 +510,9 @@ function apDungKhoaGiaoDien() {
         } else {
             $('#nhapYkien, #nhapBcao, #oNoiDungYkienLanhDao').prop('disabled', true);
         }
+    } else {
+        // [CẬP NHẬT] Ẩn hoàn toàn ô Lãnh đạo khi người dùng xem hồ sơ chính mình
+        $('#oNoiDungYkienLanhDao').hide();
     }
     
     // Khoá nút Xóa file đính kèm với trường hợp xem của người khác (BGH, GS chỉ xem/thêm)
