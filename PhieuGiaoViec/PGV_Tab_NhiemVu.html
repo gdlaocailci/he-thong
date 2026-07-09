@@ -1039,9 +1039,9 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
     
     if (xetNguoiKhac) {
         if (typeof hienThongb === 'function') {
-            hienThongb('loi', "⚠️ Chặn thao tác: Chỉ chính giáo viên chủ quản mới có quyền thay đổi điểm đánh giá.");
+            hienThongb('loi', "⚠️ Cảnh báo: Chỉ chính giáo viên hoặc nhân viên chủ quản mới có quyền thay đổi điểm đánh giá.");
         } else {
-            alert("⚠️ Chặn thao tác: Chỉ chính giáo viên chủ quản mới có quyền thay đổi điểm đánh giá.");
+            alert("⚠️ Chặn thao tác: Chỉ chính giáo viên, nhân viên chủ quản mới có quyền thay đổi điểm đánh giá.");
         }
         return; // Ngắt lệnh ngay lập tức, không cập nhật điểm
     }
