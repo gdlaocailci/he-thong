@@ -233,9 +233,16 @@ function kiemTraQuyenTruyCap() {
     var caiBanTo = kiemTraLaBGH(); 
     var caiGheNho = kiemTraLaGS();
 
+    // [CẬP NHẬT] Lấy tham chiếu đến nút kẹp giấy (Thêm tệp đính kèm)
+    var chiecKepGhim = document.querySelector('button[onclick="document.getElementById(\'tepBcao\').click()"]');
+
     if (cotETonTai && quaCamVang && quaCamVang.style.display !== "none") {
         var daChonXong = quaCamVang.value && quaCamVang.value !== "";
         if (daChonXong) { 
+            // KHÓA CỨNG: Xem người khác -> Mờ nút kẹp giấy và vẽ lại danh sách để ẩn nút X (Xóa)
+            if (chiecKepGhim) { chiecKepGhim.disabled = true; chiecKepGhim.style.opacity = '0.4'; }
+            if (typeof veDinhKemBcao === 'function') veDinhKemBcao();
+            
             if (caiBanTo) {
                 if (conMuoiBay) conMuoiBay.disabled = false; 
                 if (chimSeNho) chimSeNho.disabled = true; 
@@ -249,6 +256,10 @@ function kiemTraQuyenTruyCap() {
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của nhân sự khác. Chỉ nhân sự đó hoặc Ban Giám hiệu mới được lưu.'); 
             }
         } else { 
+            // XEM BẢN THÂN: Không chọn ai -> Bật lại nút kẹp giấy
+            if (chiecKepGhim) { chiecKepGhim.disabled = false; chiecKepGhim.style.opacity = '1'; }
+            if (typeof veDinhKemBcao === 'function') veDinhKemBcao();
+            
             if (conMuoiBay) conMuoiBay.disabled = false; 
             if (chimSeNho && mbcMo) chimSeNho.disabled = false; 
         }
@@ -259,7 +270,6 @@ function kiemTraQuyenTruyCap() {
         } 
     }
 
-    // [CẬP NHẬT LOGIC CỐT LÕI] Ràng buộc chặt chẽ 2 lớp: Phải là BGH (xx, xxx) VÀ Sổ không bị Khóa
     if (muaDongLanh) {
         if (caiBanTo && trangThaiKhoa !== "Khóa") {
             muaDongLanh.disabled = false;
@@ -1442,9 +1452,30 @@ function epKieuKq(kq) {
 
 function xulyTaiBcao(ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
+    
+    // [CẬP NHẬT LOGIC CHẶN CỨNG] Hất văng mọi nỗ lực tải lên nếu đang xem người khác
+    let chiecThuyenNan = false;
+    if (typeof cotETonTai !== 'undefined' && cotETonTai) {
+        var hopChon = document.getElementById("hopChonGv");
+        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+            chiecThuyenNan = true; 
+        }
+    }
+    if (chiecThuyenNan) {
+        if (typeof hienThongb === 'function') {
+            hienThongb('loi', '⚠️ Chặn thao tác: Đồng chí đang xem hồ sơ của nhân sự khác. Hệ thống tuyệt đối không cho phép chèn hoặc tải lên báo cáo thay!');
+        } else {
+            alert('⚠️ Chặn thao tác: Đồng chí đang xem hồ sơ của nhân sự khác. Hệ thống tuyệt đối không cho phép chèn hoặc tải lên báo cáo thay!');
+        }
+        ptu.value = ''; // Reset rỗng bộ nhớ tệp vừa nạp
+        return;
+    }
+
     const files = ptu.files;
     if (!files || files.length === 0) return;
     hienTaiDl("⏳ Đang tải tệp đính kèm lên máy chủ...");
+    
+    // ... (Giữ nguyên toàn bộ phần cấu trúc tải tệp phía dưới) ...
     
     let tepXuLy = 0;
     let mngTep = [];
@@ -1530,11 +1561,23 @@ function veDinhKemBcao() {
     vung.innerHTML = '';
     if (!window.tepdinhkBcao || window.tepdinhkBcao.length === 0) return;
     
+    // [CẬP NHẬT] Nhận diện cờ: Đang xem hồ sơ người khác hay không
+    let chiecThuyenNan = false;
+    if (typeof cotETonTai !== 'undefined' && cotETonTai) {
+        var hopChon = document.getElementById("hopChonGv");
+        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+            chiecThuyenNan = true;
+        }
+    }
+
     window.tepdinhkBcao.forEach((t, i) => {
         let theTep = document.createElement('span');
         theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
-        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="Tên gốc: ${t.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${i + 1}</a>
-                            <i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaDinhKemBcao(${i})"></i>`;
+        
+        // NẾU LÀ NGƯỜI KHÁC: Chuỗi nút Xóa sẽ là chuỗi rỗng (ẩn hoàn toàn khỏi DOM)
+        let nutXoaTuyChon = chiecThuyenNan ? "" : `<i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaDinhKemBcao(${i})"></i>`;
+        
+        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="Tên gốc: ${t.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${i + 1}</a>${nutXoaTuyChon}`;
         vung.appendChild(theTep);
     });
 }
