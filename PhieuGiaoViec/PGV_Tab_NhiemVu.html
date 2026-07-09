@@ -323,6 +323,7 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     trangThaiKhoa = ttKhoa;
     
     let isBGH = kiemTraLaBGH();
+    let isGS = kiemTraLaGS(); // [CẬP NHẬT] Thêm biến kiểm tra GS
     let btnAll = document.getElementById("nutKhoaTatCa");
     let btn = document.getElementById("nutMoKhoa");
     let spanNgay = document.getElementById("hienThiNgayKhoa"); 
@@ -345,7 +346,8 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     }
 
     if (btn) {
-        if (isBGH) {
+        // [CẬP NHẬT] BGH hoặc GS đều thấy nút Khóa cá nhân
+        if (isBGH || isGS) {
             btn.style.setProperty('display', 'inline-flex', 'important');
         } else {
             btn.style.setProperty('display', 'none', 'important');
@@ -372,7 +374,8 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
 }
 
 function doiTrangThaiKhoa() {
-    if (!kiemTraLaBGH()) {
+    // [CẬP NHẬT] Chặn nếu KHÔNG PHẢI là BGH và CŨNG KHÔNG PHẢI là GS
+    if (!kiemTraLaBGH() && !kiemTraLaGS()) {
         if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Đồng chí không có thẩm quyền thao tác nút chức năng này.");
         return;
     }
@@ -1316,7 +1319,8 @@ function tinhtTdong() {
 }
 
 function capnhTdong() { tinhtTdong(); }
-function khoiTaoTheoQuyen() {
+
+  function khoiTaoTheoQuyen() {
     if (typeof canbHientai !== 'undefined' && canbHientai && (canbHientai.quyen === 'xx' || canbHientai.quyen === 'xxx' || canbHientai.quyen === 'gs')) {
         if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { 
             khachApi.gvLaydsCanb(function(dl) { xuLyCotE(canbHientai.quyen, dl); }, function(err) { xuLyCotE(canbHientai.quyen, []); }); 
@@ -1330,7 +1334,8 @@ function khoiTaoTheoQuyen() {
     
     let btn = document.getElementById("nutMoKhoa");
     if(btn) {
-        if(kiemTraLaBGH()) {
+        // [CẬP NHẬT] Cho phép BGH và GS thấy nút Khóa/Mở cá nhân
+        if(kiemTraLaBGH() || kiemTraLaGS()) {
             btn.style.setProperty('display', 'inline-flex', 'important');
         } else {
             btn.style.setProperty('display', 'none', 'important');
@@ -1339,6 +1344,7 @@ function khoiTaoTheoQuyen() {
     
     let btnAll = document.getElementById("nutKhoaTatCa");
     if(btnAll) {
+        // Vẫn giữ nguyên Khóa tất cả chỉ dành cho BGH
         if(kiemTraLaBGH()) {
             btnAll.style.setProperty('display', 'inline-block', 'important');
         } else {
