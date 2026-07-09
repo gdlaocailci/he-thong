@@ -126,13 +126,15 @@
             border-color: #007bff;
             box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
         }
- .quyen-select {
-    width: 120px;
-    padding: 3px;
-    border-radius: 4px;
-    border: 1px solid transparent; /* Làm trong suốt viền ô chọn */
-    background: transparent;
-    font-size: 13px;
+        .quyen-select {
+           width: 100%; /* Ép ô chọn giãn lấp đầy khoảng trắng thừa trong cột */
+           min-width: 150px; /* Đảm bảo đủ rộng để chữ "Người thực hiện" không bao giờ bị đè */
+           padding: 6px;
+           border-radius: 4px;
+           border: 1px solid transparent; /* Giữ nguyên nền trong suốt thầy đã thiết lập */
+           background: transparent;
+           font-size: 13px;
+           cursor: pointer; /* Thêm hiệu ứng ngón tay khi trỏ chuột để dễ nhận biết ô có thể bấm */
 }
         
         .input-error {
