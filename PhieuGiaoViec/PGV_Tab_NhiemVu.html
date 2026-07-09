@@ -1462,21 +1462,22 @@ function epKieuKq(kq) {
 function xulyTaiBcao(ptu) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     
-    // [CẬP NHẬT LOGIC CHẶN CỨNG] Hất văng mọi nỗ lực tải lên nếu đang xem người khác
     let chiecThuyenNan = false;
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
         var hopChon = document.getElementById("hopChonGv");
         if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
-            chiecThuyenNan = true; 
+            chiecThuyenNan = true; // Đang xem hồ sơ người khác
         }
     }
-    if (chiecThuyenNan) {
+
+    // [CẬP NHẬT] Chỉ chặn nếu là người dùng thường xem hồ sơ người khác. BGH vẫn được tải lên.
+    if (chiecThuyenNan && !kiemTraLaBGH()) {
         if (typeof hienThongb === 'function') {
-            hienThongb('loi', '⚠️ Chặn thao tác: Đồng chí đang xem hồ sơ của nhân sự khác. Hệ thống tuyệt đối không cho phép chèn hoặc tải lên báo cáo thay!');
+            hienThongb('loi', '⚠️ Chặn thao tác: Bạn không có quyền tải lên tệp cho nhân sự khác.');
         } else {
-            alert('⚠️ Chặn thao tác: Đồng chí đang xem hồ sơ của nhân sự khác. Hệ thống tuyệt đối không cho phép chèn hoặc tải lên báo cáo thay!');
+            alert('⚠️ Chặn thao tác: Bạn không có quyền tải lên tệp cho nhân sự khác.');
         }
-        ptu.value = ''; // Reset rỗng bộ nhớ tệp vừa nạp
+        ptu.value = ''; 
         return;
     }
 
@@ -1484,18 +1485,15 @@ function xulyTaiBcao(ptu) {
     if (!files || files.length === 0) return;
     hienTaiDl("⏳ Đang tải tệp đính kèm lên máy chủ...");
     
-    // ... (Giữ nguyên toàn bộ phần cấu trúc tải tệp phía dưới) ...
-    
     let tepXuLy = 0;
     let mngTep = [];
     let hasError = false;
     
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
-        
         if (f.size > 5 * 1024 * 1024) {
             anTaiDl();
-            alert("Tệp '" + f.name + "' quá lớn (vượt 5MB). Vui lòng chọn tệp nhỏ hơn.");
+            alert("Tệp '" + f.name + "' quá lớn (vượt 5MB).");
             ptu.value = '';
             return;
         }
@@ -1507,7 +1505,6 @@ function xulyTaiBcao(ptu) {
                 let dlBase64 = e.target.result.split(',')[1];
                 mngTep.push({ tentep: f.name, kieu: f.type, dliu: dlBase64 });
                 tepXuLy++;
-                
                 if (tepXuLy === files.length) {
                     guiTepLenMayChu(mngTep);
                     ptu.value = ''; 
