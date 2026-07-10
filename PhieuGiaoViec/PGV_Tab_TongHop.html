@@ -96,7 +96,6 @@
 <script>
 /* ==========================================================================
    BỔ SUNG API CỤC BỘ: KẾT NỐI MÁY CHỦ TỪ GITHUB
-   (Tự động khai báo thêm hàm layDlCauHinh vào hệ thống)
    ========================================================================== */
 if (typeof window.khachApi === 'undefined') { window.khachApi = {}; }
 
@@ -161,7 +160,6 @@ function runAIAssistant() {
     try {
         if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.layDlCauHinh === 'function') {
             window.khachApi.layDlCauHinh(function(kqra) {
-                // Đã nâng cấp bộ lọc an toàn để nhận mọi tham số HOA/thường
                 if(kqra && kqra.ttai === 'tcong' && kqra.dliu) {
                     window.cauHinhThiDua = kqra.dliu;
                     thucHienTinhToan(window.cauHinhThiDua); 
@@ -247,15 +245,20 @@ function runAIAssistant() {
                     for (let j = cotBatDau; j <= cotKetThuc; j++) {
                         if (!tds[j]) continue; 
                         let cellText = tds[j].innerText.trim();
+                        let textLower = cellText.toLowerCase();
                         
-                        if (cellText === "" || cellText === "-" || cellText.includes("...")) continue;
-
                         let diem = 0;
                         let matchDiem = cellText.match(/(\d+)/);
                         if (matchDiem) diem = parseFloat(matchDiem[1]);
 
-                        let textLower = cellText.toLowerCase();
-                        if (textLower.includes("xuất sắc")) {
+                        // [NÂNG CẤP KỶ LUẬT]: Không có kết quả hoặc có dấu -, ... -> Đánh rớt thành Chưa hoàn thành
+                        if (cellText === "" || cellText === "-" || cellText.includes("...") || textLower.includes("chưa có")) {
+                            tongDiemXepLoai += 0;
+                            tongDiemSo += 0;
+                            countCHT++; 
+                            validMonths++;
+                        } 
+                        else if (textLower.includes("xuất sắc")) {
                             tongDiemXepLoai += diemBase_XS;
                             tongDiemSo += diem;
                             countHTXS++; validMonths++;
@@ -271,6 +274,11 @@ function runAIAssistant() {
                             tongDiemXepLoai += diemBase_HT;
                             tongDiemSo += diem;
                             countHT++; validMonths++;
+                        } else {
+                            // Các trường hợp ghi linh tinh không đúng chuẩn cũng bị quy thành Chưa hoàn thành
+                            tongDiemXepLoai += 0;
+                            tongDiemSo += diem;
+                            countCHT++; validMonths++;
                         }
                     }
 
@@ -293,19 +301,14 @@ function runAIAssistant() {
                     // ==========================================================================
                     // BIẾN KHỐNG CHẾ (Sử dụng cụm từ tiếng Việt an toàn)
                     // ==========================================================================
-                    // caiBanBonChan: Khống chế tháng HT/CHT cho mức Xuất sắc
                     let caiBanBonChan = (countHT <= caiKeoCo && countCHT <= vienBiTron); 
-                    
-                    // chiecTiviPhang: Khống chế tháng CHT cho mức Tốt
                     let chiecTiviPhang = (countCHT <= quaCamNgot);                       
-                    
-                    // bucTuongVang: Khống chế tháng bị điểm liệt (CHT) cho mức Hoàn thành
                     let bucTuongVang = (countCHT <= conGiunDat); 
 
                     // ==========================================================================
                     // TIẾN HÀNH XÉT DUYỆT TỪ CAO XUỐNG THẤP
                     // ==========================================================================
-                   if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
+                    if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
                         xepLoai = "Hoàn thành xuất sắc";
                         
                     } else if (tyLeTot_thucTe >= nguong_Tot && chiecTiviPhang) {
@@ -328,7 +331,7 @@ function runAIAssistant() {
                     }
                 }
 
-                // [CẬP NHẬT MỚI] GỌI HÀM SẮP XẾP BẢNG TỰ ĐỘNG
+                // GỌI HÀM SẮP XẾP BẢNG TỰ ĐỘNG
                 xeDapNhaiBongDung();
 
                 if (updatedCount > 0) {
@@ -370,16 +373,13 @@ function xeDapNhaiBongDung() {
         let chuoiHoaHong = cotAoThun[2].innerText.toLowerCase();
         let chuoiHoaCuc = cotQuanDui[2].innerText.toLowerCase();
 
-        // 1. Phân quyền ưu tiên thứ hạng (4: XS, 3: Tốt, 2: HT, 1: CHT, 0: Rỗng)
         let mucDoTrai = chuoiHoaHong.includes("xuất sắc") ? 4 : (chuoiHoaHong.includes("tốt") ? 3 : (chuoiHoaHong.includes("chưa hoàn thành") ? 1 : (chuoiHoaHong.includes("hoàn thành") ? 2 : 0)));
         let mucDoPhai = chuoiHoaCuc.includes("xuất sắc") ? 4 : (chuoiHoaCuc.includes("tốt") ? 3 : (chuoiHoaCuc.includes("chưa hoàn thành") ? 1 : (chuoiHoaCuc.includes("hoàn thành") ? 2 : 0)));
 
-        // Nếu khác thứ hạng thì xếp ưu tiên hạng cao lên trước
         if (mucDoTrai !== mucDoPhai) {
             return mucDoPhai - mucDoTrai; 
         }
 
-        // 2. Nếu cùng thứ hạng thì phân định bằng điểm số
         let diemTrai = 0, diemPhai = 0;
         let timDiemTrai = chuoiHoaHong.match(/([\d\.]+)\s*điểm/);
         let timDiemPhai = chuoiHoaCuc.match(/([\d\.]+)\s*điểm/);
@@ -390,10 +390,8 @@ function xeDapNhaiBongDung() {
         return diemPhai - diemTrai; 
     });
 
-    // Cập nhật lại khung dữ liệu
     conGaiDiBoAo.innerHTML = "";
     for (let i = 0; i < damMayUongNuoc.length; i++) {
-        // Đánh lại Số thứ tự (STT) tại cột đầu tiên
         let cotTamThoi = damMayUongNuoc[i].getElementsByTagName("td");
         if (cotTamThoi.length > 0) {
             cotTamThoi[0].innerText = i + 1;
