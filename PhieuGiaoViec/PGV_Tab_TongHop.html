@@ -133,7 +133,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI - KHẮC PHỤC SAI SỐ THẬP PHÂN
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI - KHẮC PHỤC TRIỆT ĐỂ LỖI QUY ĐỔI 0.7 VÀ 0.5
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -193,38 +193,62 @@ function runAIAssistant() {
                 let rows = tbody.getElementsByTagName("tr");
                 let updatedCount = 0;
 
+                // ==========================================================================
+                // BỘ QUY ĐỔI ĐỘNG (Xử lý dứt điểm 0.7 thành 70%, 0.5 thành 50%)
+                // ==========================================================================
+                
+                // Hàm 1: Đọc các giá trị cứng (như điểm số, số tháng giới hạn tuyệt đối)
                 function docSo(giaTri) {
                     if (giaTri === undefined || giaTri === null || giaTri === "") return 0;
-                    let str = giaTri.toString().replace('%', '').replace(',', '.').trim();
+                    let str = giaTri.toString().replace(',', '.').trim();
                     let num = parseFloat(str);
                     return isNaN(num) ? 0 : num;
                 }
 
-                function layCauHinh(mangTuKhoa, giaTriMacDinh) {
+                // Hàm 2: Hàm đặc nhiệm chuyên đọc các ngưỡng tỷ lệ %
+                function docTyLe(giaTri) {
+                    if (giaTri === undefined || giaTri === null || giaTri === "") return 0;
+                    let str = giaTri.toString().replace(',', '.').trim();
+                    let isPercentStr = str.includes('%');
+                    let num = parseFloat(str.replace('%', ''));
+                    if (isNaN(num)) return 0;
+                    
+                    // NẾU API truyền về giá trị ngầm dạng 0.7 hoặc 0.5 (không có dấu %) -> Đổi lại ra hệ 100
+                    if (!isPercentStr && num > 0 && num <= 1) {
+                        num = num * 100;
+                    }
+                    return num;
+                }
+
+                function layCauHinh(mangTuKhoa, giaTriMacDinh, laTyLe = false) {
                     let tuDienSach = {};
                     for (let key in cfg) { tuDienSach[key.trim().toUpperCase()] = cfg[key]; }
                     for (let i = 0; i < mangTuKhoa.length; i++) {
                         let k = mangTuKhoa[i].toUpperCase().trim();
                         if (tuDienSach[k] !== undefined && tuDienSach[k] !== null && tuDienSach[k] !== "") {
-                            return docSo(tuDienSach[k]);
+                            return laTyLe ? docTyLe(tuDienSach[k]) : docSo(tuDienSach[k]);
                         }
                     }
                     return giaTriMacDinh;
                 }
 
-                // Đọc thông số ngưỡng
-                let nguong_XS = layCauHinh(['TYLE_XS', 'tyle_xs'], 0);
-                let nguong_Tot = layCauHinh(['TYLE_TOT', 'tyle_tot'], 0);
-                let nguong_HT = layCauHinh(['TYLE_HT', 'tyle_ht'], 0);
-
-                let caiKeoCo = layCauHinh(['MAX_HT_XS', 'max_ht_xs'], 0);   
-                let vienBiTron = layCauHinh(['MAX_CHT_XS', 'max_cht_xs'], 0); 
-                let quaCamNgot = layCauHinh(['MAX_CHT_TOT', 'max_cht_tot'], 0); 
-                let conGiunDat = layCauHinh(['TYLE_CHT_MAX', 'tyle_cht_max', 'SO_CHT_MAX', 'so_cht_max'], 100);   
+                // Cấp 1: Đọc ngưỡng tỷ lệ % (Sử dụng hàm đặc nhiệm docTyLe)
+                let nguong_XS = layCauHinh(['TYLE_XS', 'tyle_xs'], 0, true);
+                let nguong_Tot = layCauHinh(['TYLE_TOT', 'tyle_tot'], 0, true);
+                let nguong_HT = layCauHinh(['TYLE_HT', 'tyle_ht'], 0, true);
                 
-                let diemBase_XS = layCauHinh(['DIEM_XS', 'diem_xs'], 100);
-                let diemBase_Tot = layCauHinh(['DIEM_TOT', 'diem_tot'], 80);
-                let diemBase_HT = layCauHinh(['DIEM_HT', 'diem_ht'], 60);
+                // Mặc định CHT 100% (cũng dùng docTyLe để bắt chính xác số 0.5 thành 50%)
+                let conGiunDat = layCauHinh(['TYLE_CHT_MAX', 'tyle_cht_max', 'SO_CHT_MAX', 'so_cht_max'], 100, true);   
+
+                // Cấp 2: Đọc các giới hạn khống chế tĩnh (Dùng docSo bình thường)
+                let caiKeoCo = layCauHinh(['MAX_HT_XS', 'max_ht_xs'], 0, false);   
+                let vienBiTron = layCauHinh(['MAX_CHT_XS', 'max_cht_xs'], 0, false); 
+                let quaCamNgot = layCauHinh(['MAX_CHT_TOT', 'max_cht_tot'], 0, false); 
+                
+                // Cấp 3: Đọc hệ số điểm
+                let diemBase_XS = layCauHinh(['DIEM_XS', 'diem_xs'], 100, false);
+                let diemBase_Tot = layCauHinh(['DIEM_TOT', 'diem_tot'], 80, false);
+                let diemBase_HT = layCauHinh(['DIEM_HT', 'diem_ht'], 60, false);
 
                 for (let i = 0; i < rows.length; i++) {
                     let row = rows[i];
@@ -242,7 +266,6 @@ function runAIAssistant() {
                         let matchDiem = cellText.match(/(\d+)/);
                         if (matchDiem) diem = parseFloat(matchDiem[1]);
 
-                        // KỶ LUẬT THI ĐUA VÀ GHI CHÚ TRỰC QUAN
                         if (cellText === "" || cellText === "-" || cellText.includes("...") || textLower.includes("chưa có")) {
                             tongDiemXepLoai += 0;
                             tongDiemSo += 0; 
@@ -270,13 +293,13 @@ function runAIAssistant() {
                     let diemTBSo = tongDiemSo / D;
                     let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
-                    // LÀM TRÒN TUYỆT ĐỐI TOÁN HỌC: Tránh lỗi 79.9999% bị đánh trượt khi xét 80%
                     let tyLeXS_thucTe = Math.round((countHTXS / D) * 100);
                     let tyLeTot_thucTe = Math.round(((countHTXS + countHTT) / D) * 100);
                     let tyLeHT_thucTe = Math.round(((countHTXS + countHTT + countHT) / D) * 100);
                     let tyLeCHT_thucTe = Math.round((countCHT / D) * 100); 
 
                     let xepLoai = "Chưa hoàn thành";
+                    // Tooltip minh bạch rõ ràng không còn số thập phân
                     let thongDiepKiemDuyet = `Thực tế: HT(${tyLeHT_thucTe}%), CHT(${tyLeCHT_thucTe}%)\nYêu cầu: HT(>=${nguong_HT}%), CHT(<=${conGiunDat}%)`;
 
                     let caiBanBonChan = (countHT <= caiKeoCo && countCHT <= vienBiTron); 
