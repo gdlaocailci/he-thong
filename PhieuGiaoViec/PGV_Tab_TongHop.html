@@ -13,7 +13,7 @@
   <div id="aiToastMessage" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px 25px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: white; font-family: 'Times New Roman', serif; font-size: 16px; transition: opacity 0.3s ease-in-out; opacity: 0;"></div>
   
   <style>
-  /* Hiệu ứng Shiny mô phỏng từ nền tảng reactbits.dev (Chuyển đổi sang thuần CSS) */
+  /* Hiệu ứng Shiny mô phỏng từ nền tảng reactbits.dev */
   .btn-reactbits-shiny {
     position: relative;
     overflow: hidden;
@@ -113,14 +113,8 @@ window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
     .catch(error => thatBai(error));
 };
 
-/* ==========================================================================
-   BIẾN CẤU HÌNH THI ĐUA ĐỘNG
-   ========================================================================== */
 window.cauHinhThiDua = null;
 
-/* ==========================================================================
-   HÀM ĐIỀU KHIỂN GIAO DIỆN THÔNG BÁO NỔI (TOAST)
-   ========================================================================== */
 function showAIToast(message, type) {
     let toast = document.getElementById("aiToastMessage");
     toast.innerHTML = message;
@@ -138,7 +132,6 @@ function showAIToast(message, type) {
     
     toast.style.display = "block";
     setTimeout(() => { toast.style.opacity = "1"; }, 10);
-    
     setTimeout(() => {
         toast.style.opacity = "0";
         setTimeout(() => { toast.style.display = "none"; }, 300);
@@ -146,7 +139,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (BẢN NÂNG CẤP TOÀN DIỆN CÓ SẮP XẾP)
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (BẢN NÂNG CẤP XỬ LÝ PERCENTAGE CHUẨN XÁC)
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -211,28 +204,42 @@ function runAIAssistant() {
                 let updatedCount = 0;
 
                 // ==========================================================================
-                // HÀM XỬ LÝ DỮ LIỆU ĐỘNG (Bóc tách dấu % và bắt cả chữ HOA/thường)
+                // BỘ LỌC DỮ LIỆU ĐỘNG: QUYÉT SẠCH LỖI 0% VÀ TỰ NHẬN DIỆN TỪ KHÓA
                 // ==========================================================================
                 function docSo(giaTri) {
                     if (giaTri === undefined || giaTri === null || giaTri === "") return 0;
-                    return parseFloat(giaTri.toString().replace('%', '').trim());
+                    let str = giaTri.toString().replace('%', '').replace(',', '.').trim();
+                    let num = parseFloat(str);
+                    return isNaN(num) ? 0 : num;
                 }
 
-                // Đọc ngưỡng tỷ lệ (Cột J)
-                let nguong_XS = docSo(cfg.TYLE_XS || cfg.tyle_xs);
-                let nguong_Tot = docSo(cfg.TYLE_TOT || cfg.tyle_tot);
-                let nguong_HT = docSo(cfg.TYLE_HT || cfg.tyle_ht);
+                function layCauHinh(mangTuKhoa, giaTriMacDinh) {
+                    for (let i = 0; i < mangTuKhoa.length; i++) {
+                        let k = mangTuKhoa[i];
+                        if (cfg[k] !== undefined && cfg[k] !== null && cfg[k] !== "") {
+                            return docSo(cfg[k]);
+                        }
+                    }
+                    return giaTriMacDinh;
+                }
 
-                // Đọc các điều kiện khống chế 
-                let caiKeoCo = docSo(cfg.MAX_HT_XS || cfg.max_ht_xs || 0);   
-                let vienBiTron = docSo(cfg.MAX_CHT_XS || cfg.max_cht_xs || 0); 
-                let quaCamNgot = docSo(cfg.MAX_CHT_TOT || cfg.max_cht_tot || 0); 
-                let conGiunDat = docSo(cfg.SO_CHT_MAX || cfg.so_cht_max || 0);   
+                // Cấp 1: Đọc các ngưỡng tỷ lệ yêu cầu
+                let nguong_XS = layCauHinh(['TYLE_XS', 'tyle_xs'], 0);
+                let nguong_Tot = layCauHinh(['TYLE_TOT', 'tyle_tot'], 0);
+                let nguong_HT = layCauHinh(['TYLE_HT', 'tyle_ht'], 0);
+
+                // Cấp 2: Đọc các giới hạn khống chế 
+                let caiKeoCo = layCauHinh(['MAX_HT_XS', 'max_ht_xs'], 0);   
+                let vienBiTron = layCauHinh(['MAX_CHT_XS', 'max_cht_xs'], 0); 
+                let quaCamNgot = layCauHinh(['MAX_CHT_TOT', 'max_cht_tot'], 0); 
                 
-                // Đọc điểm quy đổi
-                let diemBase_XS = docSo(cfg.DIEM_XS || cfg.diem_xs);
-                let diemBase_Tot = docSo(cfg.DIEM_TOT || cfg.diem_tot);
-                let diemBase_HT = docSo(cfg.DIEM_HT || cfg.diem_ht);
+                // Mức tỷ lệ CHT cho phép: Mặc định 100% để bảo vệ kết quả, không khóa nhầm nếu trường không gài cấu hình phụ
+                let conGiunDat = layCauHinh(['TYLE_CHT_MAX', 'tyle_cht_max', 'SO_CHT_MAX', 'so_cht_max'], 100);   
+                
+                // Cấp 3: Đọc hệ số điểm
+                let diemBase_XS = layCauHinh(['DIEM_XS', 'diem_xs'], 100);
+                let diemBase_Tot = layCauHinh(['DIEM_TOT', 'diem_tot'], 80);
+                let diemBase_HT = layCauHinh(['DIEM_HT', 'diem_ht'], 60);
 
                 for (let i = 0; i < rows.length; i++) {
                     let row = rows[i];
@@ -251,10 +258,10 @@ function runAIAssistant() {
                         let matchDiem = cellText.match(/(\d+)/);
                         if (matchDiem) diem = parseFloat(matchDiem[1]);
 
-                        // [NÂNG CẤP KỶ LUẬT]: Không có kết quả hoặc có dấu -, ... -> Đánh rớt thành Chưa hoàn thành
+                        // KỶ LUẬT THI ĐUA: Không nộp / bỏ trống / sai định dạng -> Tính CHT và nhận 0 điểm
                         if (cellText === "" || cellText === "-" || cellText.includes("...") || textLower.includes("chưa có")) {
                             tongDiemXepLoai += 0;
-                            tongDiemSo += 0;
+                            tongDiemSo += 0; // Điểm kèm theo là 0
                             countCHT++; 
                             validMonths++;
                         } 
@@ -275,7 +282,7 @@ function runAIAssistant() {
                             tongDiemSo += diem;
                             countHT++; validMonths++;
                         } else {
-                            // Các trường hợp ghi linh tinh không đúng chuẩn cũng bị quy thành Chưa hoàn thành
+                            // Ghi sai quy chế cũng rơi vào CHT
                             tongDiemXepLoai += 0;
                             tongDiemSo += diem;
                             countCHT++; validMonths++;
@@ -289,25 +296,22 @@ function runAIAssistant() {
                     let diemTBSo = tongDiemSo / D;
                     let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
-                    // ==========================================================================
-                    // TÍNH TOÁN TỶ LỆ THỰC TẾ (Quy ra hệ 100 để khớp với số thầy nhập ở cột J)
-                    // ==========================================================================
+                    // TÍNH TOÁN QUY ĐỔI %
                     let tyLeXS_thucTe = (countHTXS / D) * 100;
                     let tyLeTot_thucTe = ((countHTXS + countHTT) / D) * 100;
                     let tyLeHT_thucTe = ((countHTXS + countHTT + countHT) / D) * 100;
+                    let tyLeCHT_thucTe = (countCHT / D) * 100; // Tính chính xác ra % CHT (Ví dụ: 20%)
 
                     let xepLoai = "Chưa hoàn thành";
 
-                    // ==========================================================================
-                    // BIẾN KHỐNG CHẾ (Sử dụng cụm từ tiếng Việt an toàn)
-                    // ==========================================================================
+                    // LIÊN KẾT BIẾN KHỐNG CHẾ
                     let caiBanBonChan = (countHT <= caiKeoCo && countCHT <= vienBiTron); 
                     let chiecTiviPhang = (countCHT <= quaCamNgot);                       
-                    let bucTuongVang = (countCHT <= conGiunDat); 
+                    
+                    // So sánh đồng hệ: Tỷ lệ CHT thực tế (VD: 20%) với Ngưỡng CHT quy định (VD: 30%)
+                    let bucTuongVang = (tyLeCHT_thucTe <= conGiunDat); 
 
-                    // ==========================================================================
-                    // TIẾN HÀNH XÉT DUYỆT TỪ CAO XUỐNG THẤP
-                    // ==========================================================================
+                    // TIẾN HÀNH XÉT DUYỆT ƯU TIÊN
                     if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
                         xepLoai = "Hoàn thành xuất sắc";
                         
@@ -331,7 +335,6 @@ function runAIAssistant() {
                     }
                 }
 
-                // GỌI HÀM SẮP XẾP BẢNG TỰ ĐỘNG
                 xeDapNhaiBongDung();
 
                 if (updatedCount > 0) {
@@ -353,9 +356,6 @@ function runAIAssistant() {
     }
 }
 
-/* ==========================================================================
-   HÀM BỔ SUNG: TỰ ĐỘNG SẮP XẾP THEO MỨC ĐỘ VÀ ĐIỂM SỐ
-   ========================================================================== */
 function xeDapNhaiBongDung() {
     let caiAoKhoacMuaHe = document.getElementById("bangThop");
     if (!caiAoKhoacMuaHe) return;
