@@ -139,7 +139,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI LINH HOẠT THEO GIAO DIỆN CHỌN
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI - CẬP NHẬT TRỰC QUAN & CHẠY THEO CÔNG THỨC
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -187,7 +187,7 @@ function runAIAssistant() {
                 let cotBatDau = 3;  
                 let cotKetThuc = 14; 
 
-                // Ghi đè ranh giới nếu có lựa chọn từ giao diện
+                // Ghi đè ranh giới đúng theo số tháng giáo viên thao tác thủ công
                 if (tuThangVal !== "" && denThangVal !== "") {
                     let idxTu = anhXaThang[parseInt(tuThangVal)];
                     let idxDen = anhXaThang[parseInt(denThangVal)];
@@ -197,7 +197,9 @@ function runAIAssistant() {
                     }
                 }
 
-                let tongSoThangYeuCau = cotKetThuc - cotBatDau + 1;
+                // D là mẫu số linh hoạt dựa trên khoảng thời gian người dùng vừa chọn (VD: 10 tháng)
+                let tongSoThangYeuCau = cotKetThuc - cotBatDau + 1; 
+                
                 let table = document.getElementById("bangThop");
                 if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
                 
@@ -232,15 +234,18 @@ function runAIAssistant() {
                     return giaTriMacDinh;
                 }
 
+                // Cấp 1: Đọc ngưỡng tỷ lệ (Cột J)
                 let nguong_XS = layCauHinh(['TYLE_XS', 'tyle_xs'], 0);
                 let nguong_Tot = layCauHinh(['TYLE_TOT', 'tyle_tot'], 0);
                 let nguong_HT = layCauHinh(['TYLE_HT', 'tyle_ht'], 0);
 
+                // Cấp 2: Đọc các giới hạn khống chế 
                 let caiKeoCo = layCauHinh(['MAX_HT_XS', 'max_ht_xs'], 0);   
                 let vienBiTron = layCauHinh(['MAX_CHT_XS', 'max_cht_xs'], 0); 
                 let quaCamNgot = layCauHinh(['MAX_CHT_TOT', 'max_cht_tot'], 0); 
                 let conGiunDat = layCauHinh(['TYLE_CHT_MAX', 'tyle_cht_max', 'SO_CHT_MAX', 'so_cht_max'], 100);   
                 
+                // Cấp 3: Đọc hệ số điểm quy đổi
                 let diemBase_XS = layCauHinh(['DIEM_XS', 'diem_xs'], 100);
                 let diemBase_Tot = layCauHinh(['DIEM_TOT', 'diem_tot'], 80);
                 let diemBase_HT = layCauHinh(['DIEM_HT', 'diem_ht'], 60);
@@ -262,11 +267,16 @@ function runAIAssistant() {
                         let matchDiem = cellText.match(/(\d+)/);
                         if (matchDiem) diem = parseFloat(matchDiem[1]);
 
+                        // [THỰC HIỆN YÊU CẦU]: Những tháng bỏ trống hoặc lỗi sẽ bị gán thành Chưa hoàn thành và 0 điểm 
+                        // Đồng thời, IN TRỰC TIẾP LÊN BẢNG để giáo viên thấy tháng đó bị điểm 0.
                         if (cellText === "" || cellText === "-" || cellText.includes("...") || textLower.includes("chưa có")) {
                             tongDiemXepLoai += 0;
                             tongDiemSo += 0; 
                             countCHT++; 
                             validMonths++;
+                            
+                            // Ghi đè vào ô trống nội dung hiển thị trực quan (VD: Chưa hoàn thành: 0 điểm)
+                            tds[j].innerHTML = `<span style="color: #dc3545; font-weight: bold;">Chưa hoàn thành</span><br><span style="font-size: 13px;">0 điểm</span>`;
                         } 
                         else if (textLower.includes("xuất sắc")) {
                             tongDiemXepLoai += diemBase_XS;
@@ -274,7 +284,7 @@ function runAIAssistant() {
                             countHTXS++; validMonths++;
                         } else if (textLower.includes("chưa hoàn thành")) {
                             tongDiemXepLoai += 0;
-                            tongDiemSo += diem;
+                            tongDiemSo += diem; // Nếu ô có sẵn chữ "Chưa hoàn thành 0 điểm" thì diem bóc ra cũng là 0.
                             countCHT++; validMonths++;
                         } else if (textLower.includes("tốt")) {
                             tongDiemXepLoai += diemBase_Tot;
@@ -298,27 +308,34 @@ function runAIAssistant() {
                     let diemTBSo = tongDiemSo / D;
                     let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
-                    let tyLeXS_thucTe = (countHTXS / D) * 100;
-                    let tyLeTot_thucTe = ((countHTXS + countHTT) / D) * 100;
-                    let tyLeHT_thucTe = ((countHTXS + countHTT + countHT) / D) * 100;
-                    let tyLeCHT_thucTe = (countCHT / D) * 100; 
+                    // TÍNH TOÁN QUY ĐỔI % (Sử dụng Math.round để tránh sai số thập phân siêu nhỏ gây rớt thi đua oan)
+                    let tyLeXS_thucTe = Math.round((countHTXS / D) * 1000) / 10;
+                    let tyLeTot_thucTe = Math.round(((countHTXS + countHTT) / D) * 1000) / 10;
+                    let tyLeHT_thucTe = Math.round(((countHTXS + countHTT + countHT) / D) * 1000) / 10;
+                    let tyLeCHT_thucTe = Math.round((countCHT / D) * 1000) / 10; 
 
                     let xepLoai = "Chưa hoàn thành";
 
+                    // LIÊN KẾT BIẾN KHỐNG CHẾ
                     let caiBanBonChan = (countHT <= caiKeoCo && countCHT <= vienBiTron); 
                     let chiecTiviPhang = (countCHT <= quaCamNgot);                       
                     let bucTuongVang = (tyLeCHT_thucTe <= conGiunDat); 
 
+                    // TIẾN HÀNH XÉT DUYỆT ƯU TIÊN VÀ ÁP ĐÚNG THEO CÔNG THỨC 
                     if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
                         xepLoai = "Hoàn thành xuất sắc";
+                        
                     } else if (tyLeTot_thucTe >= nguong_Tot && chiecTiviPhang) {
                         xepLoai = "Hoàn thành tốt";
+                        
                     } else if (tyLeHT_thucTe >= nguong_HT && bucTuongVang) {
                         xepLoai = "Hoàn thành";
+                        
                     } else {
                         xepLoai = "Chưa hoàn thành";
                     }
 
+                    // GHI KẾT QUẢ TỔNG THỂ
                     if (tds[2]) {
                         tds[2].innerHTML = `<div style="text-align: center; line-height: 1.5;">
                                               <span style="color: #b91c1c; font-weight: bold;">${xepLoai}</span><br>
