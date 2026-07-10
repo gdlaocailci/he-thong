@@ -305,16 +305,13 @@ function runAIAssistant() {
                     // ==========================================================================
                     // TIẾN HÀNH XÉT DUYỆT TỪ CAO XUỐNG THẤP
                     // ==========================================================================
-                    if (tyLeXS_thucTe >= nguong_XS && nguong_XS > 0 && caiBanBonChan) {
+                   if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
                         xepLoai = "Hoàn thành xuất sắc";
                         
-                    } else if (tyLeTot_thucTe >= nguong_Tot && nguong_Tot > 0 && chiecTiviPhang) {
+                    } else if (tyLeTot_thucTe >= nguong_Tot && chiecTiviPhang) {
                         xepLoai = "Hoàn thành tốt";
                         
-                    } else if (nguong_HT > 0 && tyLeHT_thucTe >= nguong_HT && bucTuongVang) {
-                        xepLoai = "Hoàn thành";
-                        
-                    } else if (nguong_HT === 0 && bucTuongVang) {
+                    } else if (tyLeHT_thucTe >= nguong_HT && bucTuongVang) {
                         xepLoai = "Hoàn thành";
                         
                     } else {
