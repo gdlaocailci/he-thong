@@ -95,7 +95,7 @@
 
 <script>
 /* ==========================================================================
-   BỔ SUNG API CỤC BỘ: KẾT NỐI MÁY CHỦ TỪ GITHUB
+   BỔ SUNG API CỤC BỘ
    ========================================================================== */
 if (typeof window.khachApi === 'undefined') { window.khachApi = {}; }
 
@@ -104,10 +104,7 @@ window.khachApi.layDlCauHinh = function(thanhCong, thatBai) {
         thatBai(new Error("Chưa cấu hình đường dẫn máy chủ ddungApi."));
         return;
     }
-    fetch(ddungApi + "?hdong=laydlcauhinh", {
-        method: "GET",
-        redirect: "follow"
-    })
+    fetch(ddungApi + "?hdong=laydlcauhinh", { method: "GET", redirect: "follow" })
     .then(response => response.json())
     .then(data => thanhCong(data))
     .catch(error => thatBai(error));
@@ -132,23 +129,16 @@ function showAIToast(message, type) {
     
     toast.style.display = "block";
     setTimeout(() => { toast.style.opacity = "1"; }, 10);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => { toast.style.display = "none"; }, 300);
-    }, 4000);
+    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => { toast.style.display = "none"; }, 300); }, 4000);
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI - CẬP NHẬT TRỰC QUAN & CHẠY THEO CÔNG THỨC
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI - KHẮC PHỤC SAI SỐ THẬP PHÂN
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
     let originalText = btn ? btn.innerHTML : "";
-    if (btn) {
-        btn.innerHTML = "⏳ Đang tính toán theo quy chế...";
-        btn.disabled = true; 
-        btn.style.opacity = "0.7";
-    }
+    if (btn) { btn.innerHTML = "⏳ Đang tính toán theo quy chế..."; btn.disabled = true; btn.style.opacity = "0.7"; }
 
     try {
         if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.layDlCauHinh === 'function') {
@@ -177,17 +167,13 @@ function runAIAssistant() {
         if (btn) btn.innerHTML = "⏳ Đang tính toán...";
         setTimeout(() => {
             try {
-                // Đọc chính xác giá trị do quản trị viên tự chọn trên giao diện
                 let tuThangVal = document.getElementById("tuThang").value;
                 let denThangVal = document.getElementById("denThang").value;
                 
                 const anhXaThang = { 7: 3, 8: 4, 9: 5, 10: 6, 11: 7, 12: 8, 1: 9, 2: 10, 3: 11, 4: 12, 5: 13, 6: 14 };
-                
-                // Mặc định nòng cốt là 12 tháng (Từ Tháng 7 đến Tháng 6) nếu không chọn gì
                 let cotBatDau = 3;  
                 let cotKetThuc = 14; 
 
-                // Ghi đè ranh giới đúng theo số tháng giáo viên thao tác thủ công
                 if (tuThangVal !== "" && denThangVal !== "") {
                     let idxTu = anhXaThang[parseInt(tuThangVal)];
                     let idxDen = anhXaThang[parseInt(denThangVal)];
@@ -197,9 +183,7 @@ function runAIAssistant() {
                     }
                 }
 
-                // D là mẫu số linh hoạt dựa trên khoảng thời gian người dùng vừa chọn (VD: 10 tháng)
                 let tongSoThangYeuCau = cotKetThuc - cotBatDau + 1; 
-                
                 let table = document.getElementById("bangThop");
                 if (!table) throw new Error("Không tìm thấy bảng dữ liệu.");
                 
@@ -209,9 +193,6 @@ function runAIAssistant() {
                 let rows = tbody.getElementsByTagName("tr");
                 let updatedCount = 0;
 
-                // ==========================================================================
-                // BỘ TỪ ĐIỂN CHUẨN HÓA: QUÉT SẠCH KHOẢNG TRẮNG, CHỐNG LỖI ĐÁNH MÁY
-                // ==========================================================================
                 function docSo(giaTri) {
                     if (giaTri === undefined || giaTri === null || giaTri === "") return 0;
                     let str = giaTri.toString().replace('%', '').replace(',', '.').trim();
@@ -221,10 +202,7 @@ function runAIAssistant() {
 
                 function layCauHinh(mangTuKhoa, giaTriMacDinh) {
                     let tuDienSach = {};
-                    for (let key in cfg) {
-                        tuDienSach[key.trim().toUpperCase()] = cfg[key];
-                    }
-                    
+                    for (let key in cfg) { tuDienSach[key.trim().toUpperCase()] = cfg[key]; }
                     for (let i = 0; i < mangTuKhoa.length; i++) {
                         let k = mangTuKhoa[i].toUpperCase().trim();
                         if (tuDienSach[k] !== undefined && tuDienSach[k] !== null && tuDienSach[k] !== "") {
@@ -234,18 +212,16 @@ function runAIAssistant() {
                     return giaTriMacDinh;
                 }
 
-                // Cấp 1: Đọc ngưỡng tỷ lệ (Cột J)
+                // Đọc thông số ngưỡng
                 let nguong_XS = layCauHinh(['TYLE_XS', 'tyle_xs'], 0);
                 let nguong_Tot = layCauHinh(['TYLE_TOT', 'tyle_tot'], 0);
                 let nguong_HT = layCauHinh(['TYLE_HT', 'tyle_ht'], 0);
 
-                // Cấp 2: Đọc các giới hạn khống chế 
                 let caiKeoCo = layCauHinh(['MAX_HT_XS', 'max_ht_xs'], 0);   
                 let vienBiTron = layCauHinh(['MAX_CHT_XS', 'max_cht_xs'], 0); 
                 let quaCamNgot = layCauHinh(['MAX_CHT_TOT', 'max_cht_tot'], 0); 
                 let conGiunDat = layCauHinh(['TYLE_CHT_MAX', 'tyle_cht_max', 'SO_CHT_MAX', 'so_cht_max'], 100);   
                 
-                // Cấp 3: Đọc hệ số điểm quy đổi
                 let diemBase_XS = layCauHinh(['DIEM_XS', 'diem_xs'], 100);
                 let diemBase_Tot = layCauHinh(['DIEM_TOT', 'diem_tot'], 80);
                 let diemBase_HT = layCauHinh(['DIEM_HT', 'diem_ht'], 60);
@@ -262,42 +238,28 @@ function runAIAssistant() {
                         if (!tds[j]) continue; 
                         let cellText = tds[j].innerText.trim();
                         let textLower = cellText.toLowerCase();
-                        
                         let diem = 0;
                         let matchDiem = cellText.match(/(\d+)/);
                         if (matchDiem) diem = parseFloat(matchDiem[1]);
 
-                        // [THỰC HIỆN YÊU CẦU]: Những tháng bỏ trống hoặc lỗi sẽ bị gán thành Chưa hoàn thành và 0 điểm 
-                        // Đồng thời, IN TRỰC TIẾP LÊN BẢNG để giáo viên thấy tháng đó bị điểm 0.
+                        // KỶ LUẬT THI ĐUA VÀ GHI CHÚ TRỰC QUAN
                         if (cellText === "" || cellText === "-" || cellText.includes("...") || textLower.includes("chưa có")) {
                             tongDiemXepLoai += 0;
                             tongDiemSo += 0; 
                             countCHT++; 
                             validMonths++;
-                            
-                            // Ghi đè vào ô trống nội dung hiển thị trực quan (VD: Chưa hoàn thành: 0 điểm)
                             tds[j].innerHTML = `<span style="color: #dc3545; font-weight: bold;">Chưa hoàn thành</span><br><span style="font-size: 13px;">0 điểm</span>`;
                         } 
                         else if (textLower.includes("xuất sắc")) {
-                            tongDiemXepLoai += diemBase_XS;
-                            tongDiemSo += diem;
-                            countHTXS++; validMonths++;
+                            tongDiemXepLoai += diemBase_XS; tongDiemSo += diem; countHTXS++; validMonths++;
                         } else if (textLower.includes("chưa hoàn thành")) {
-                            tongDiemXepLoai += 0;
-                            tongDiemSo += diem; // Nếu ô có sẵn chữ "Chưa hoàn thành 0 điểm" thì diem bóc ra cũng là 0.
-                            countCHT++; validMonths++;
+                            tongDiemXepLoai += 0; tongDiemSo += diem; countCHT++; validMonths++;
                         } else if (textLower.includes("tốt")) {
-                            tongDiemXepLoai += diemBase_Tot;
-                            tongDiemSo += diem;
-                            countHTT++; validMonths++;
+                            tongDiemXepLoai += diemBase_Tot; tongDiemSo += diem; countHTT++; validMonths++;
                         } else if (textLower.includes("hoàn thành")) {
-                            tongDiemXepLoai += diemBase_HT;
-                            tongDiemSo += diem;
-                            countHT++; validMonths++;
+                            tongDiemXepLoai += diemBase_HT; tongDiemSo += diem; countHT++; validMonths++;
                         } else {
-                            tongDiemXepLoai += 0;
-                            tongDiemSo += diem;
-                            countCHT++; validMonths++;
+                            tongDiemXepLoai += 0; tongDiemSo += diem; countCHT++; validMonths++;
                         }
                     }
 
@@ -308,36 +270,31 @@ function runAIAssistant() {
                     let diemTBSo = tongDiemSo / D;
                     let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
-                    // TÍNH TOÁN QUY ĐỔI % (Sử dụng Math.round để tránh sai số thập phân siêu nhỏ gây rớt thi đua oan)
-                    let tyLeXS_thucTe = Math.round((countHTXS / D) * 1000) / 10;
-                    let tyLeTot_thucTe = Math.round(((countHTXS + countHTT) / D) * 1000) / 10;
-                    let tyLeHT_thucTe = Math.round(((countHTXS + countHTT + countHT) / D) * 1000) / 10;
-                    let tyLeCHT_thucTe = Math.round((countCHT / D) * 1000) / 10; 
+                    // LÀM TRÒN TUYỆT ĐỐI TOÁN HỌC: Tránh lỗi 79.9999% bị đánh trượt khi xét 80%
+                    let tyLeXS_thucTe = Math.round((countHTXS / D) * 100);
+                    let tyLeTot_thucTe = Math.round(((countHTXS + countHTT) / D) * 100);
+                    let tyLeHT_thucTe = Math.round(((countHTXS + countHTT + countHT) / D) * 100);
+                    let tyLeCHT_thucTe = Math.round((countCHT / D) * 100); 
 
                     let xepLoai = "Chưa hoàn thành";
+                    let thongDiepKiemDuyet = `Thực tế: HT(${tyLeHT_thucTe}%), CHT(${tyLeCHT_thucTe}%)\nYêu cầu: HT(>=${nguong_HT}%), CHT(<=${conGiunDat}%)`;
 
-                    // LIÊN KẾT BIẾN KHỐNG CHẾ
                     let caiBanBonChan = (countHT <= caiKeoCo && countCHT <= vienBiTron); 
                     let chiecTiviPhang = (countCHT <= quaCamNgot);                       
                     let bucTuongVang = (tyLeCHT_thucTe <= conGiunDat); 
 
-                    // TIẾN HÀNH XÉT DUYỆT ƯU TIÊN VÀ ÁP ĐÚNG THEO CÔNG THỨC 
                     if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
                         xepLoai = "Hoàn thành xuất sắc";
-                        
                     } else if (tyLeTot_thucTe >= nguong_Tot && chiecTiviPhang) {
                         xepLoai = "Hoàn thành tốt";
-                        
                     } else if (tyLeHT_thucTe >= nguong_HT && bucTuongVang) {
                         xepLoai = "Hoàn thành";
-                        
                     } else {
                         xepLoai = "Chưa hoàn thành";
                     }
 
-                    // GHI KẾT QUẢ TỔNG THỂ
                     if (tds[2]) {
-                        tds[2].innerHTML = `<div style="text-align: center; line-height: 1.5;">
+                        tds[2].innerHTML = `<div style="text-align: center; line-height: 1.5;" title="${thongDiepKiemDuyet}">
                                               <span style="color: #b91c1c; font-weight: bold;">${xepLoai}</span><br>
                                               <span style="font-weight: bold; color: #1e3a8a;">${avgScore} điểm</span>
                                             </div>`;
@@ -357,11 +314,7 @@ function runAIAssistant() {
             } catch (error) {
                 showAIToast("❌ <b>Hệ thống gặp sự cố:</b><br>" + error.message, "error");
             } finally {
-                if (btn) {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    btn.style.opacity = "1";
-                }
+                if (btn) { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = "1"; }
             }
         }, 100);
     }
@@ -378,7 +331,6 @@ function xeDapNhaiBongDung() {
     damMayUongNuoc.sort((conBocNhaiDa, quaCamNguNgay) => {
         let cotAoThun = conBocNhaiDa.getElementsByTagName("td");
         let cotQuanDui = quaCamNguNgay.getElementsByTagName("td");
-
         if (cotAoThun.length < 15 || cotQuanDui.length < 15) return 0;
 
         let chuoiHoaHong = cotAoThun[2].innerText.toLowerCase();
@@ -387,26 +339,20 @@ function xeDapNhaiBongDung() {
         let mucDoTrai = chuoiHoaHong.includes("xuất sắc") ? 4 : (chuoiHoaHong.includes("tốt") ? 3 : (chuoiHoaHong.includes("chưa hoàn thành") ? 1 : (chuoiHoaHong.includes("hoàn thành") ? 2 : 0)));
         let mucDoPhai = chuoiHoaCuc.includes("xuất sắc") ? 4 : (chuoiHoaCuc.includes("tốt") ? 3 : (chuoiHoaCuc.includes("chưa hoàn thành") ? 1 : (chuoiHoaCuc.includes("hoàn thành") ? 2 : 0)));
 
-        if (mucDoTrai !== mucDoPhai) {
-            return mucDoPhai - mucDoTrai; 
-        }
-
+        if (mucDoTrai !== mucDoPhai) return mucDoPhai - mucDoTrai; 
+        
         let diemTrai = 0, diemPhai = 0;
         let timDiemTrai = chuoiHoaHong.match(/([\d\.]+)\s*điểm/);
         let timDiemPhai = chuoiHoaCuc.match(/([\d\.]+)\s*điểm/);
-        
         if (timDiemTrai) diemTrai = parseFloat(timDiemTrai[1]);
         if (timDiemPhai) diemPhai = parseFloat(timDiemPhai[1]);
-
         return diemPhai - diemTrai; 
     });
 
     conGaiDiBoAo.innerHTML = "";
     for (let i = 0; i < damMayUongNuoc.length; i++) {
         let cotTamThoi = damMayUongNuoc[i].getElementsByTagName("td");
-        if (cotTamThoi.length > 0) {
-            cotTamThoi[0].innerText = i + 1;
-        }
+        if (cotTamThoi.length > 0) { cotTamThoi[0].innerText = i + 1; }
         conGaiDiBoAo.appendChild(damMayUongNuoc[i]);
     }
 }
