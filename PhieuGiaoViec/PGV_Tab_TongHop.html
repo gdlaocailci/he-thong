@@ -139,7 +139,7 @@ function showAIToast(message, type) {
 }
 
 /* ==========================================================================
-   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI (BẢN NÂNG CẤP XỬ LÝ PERCENTAGE CHUẨN XÁC)
+   HÀM TRỢ LÝ AI: TÍNH TOÁN XẾP LOẠI LINH HOẠT THEO GIAO DIỆN CHỌN
    ========================================================================== */
 function runAIAssistant() {
     let btn = document.querySelector("button[onclick='runAIAssistant()']");
@@ -177,13 +177,17 @@ function runAIAssistant() {
         if (btn) btn.innerHTML = "⏳ Đang tính toán...";
         setTimeout(() => {
             try {
+                // Đọc chính xác giá trị do quản trị viên tự chọn trên giao diện
                 let tuThangVal = document.getElementById("tuThang").value;
                 let denThangVal = document.getElementById("denThang").value;
                 
                 const anhXaThang = { 7: 3, 8: 4, 9: 5, 10: 6, 11: 7, 12: 8, 1: 9, 2: 10, 3: 11, 4: 12, 5: 13, 6: 14 };
+                
+                // Mặc định nòng cốt là 12 tháng (Từ Tháng 7 đến Tháng 6) nếu không chọn gì
                 let cotBatDau = 3;  
                 let cotKetThuc = 14; 
 
+                // Ghi đè ranh giới nếu có lựa chọn từ giao diện
                 if (tuThangVal !== "" && denThangVal !== "") {
                     let idxTu = anhXaThang[parseInt(tuThangVal)];
                     let idxDen = anhXaThang[parseInt(denThangVal)];
@@ -204,7 +208,7 @@ function runAIAssistant() {
                 let updatedCount = 0;
 
                 // ==========================================================================
-                // BỘ LỌC DỮ LIỆU ĐỘNG: QUYÉT SẠCH LỖI 0% VÀ TỰ NHẬN DIỆN TỪ KHÓA
+                // BỘ TỪ ĐIỂN CHUẨN HÓA: QUÉT SẠCH KHOẢNG TRẮNG, CHỐNG LỖI ĐÁNH MÁY
                 // ==========================================================================
                 function docSo(giaTri) {
                     if (giaTri === undefined || giaTri === null || giaTri === "") return 0;
@@ -214,29 +218,29 @@ function runAIAssistant() {
                 }
 
                 function layCauHinh(mangTuKhoa, giaTriMacDinh) {
+                    let tuDienSach = {};
+                    for (let key in cfg) {
+                        tuDienSach[key.trim().toUpperCase()] = cfg[key];
+                    }
+                    
                     for (let i = 0; i < mangTuKhoa.length; i++) {
-                        let k = mangTuKhoa[i];
-                        if (cfg[k] !== undefined && cfg[k] !== null && cfg[k] !== "") {
-                            return docSo(cfg[k]);
+                        let k = mangTuKhoa[i].toUpperCase().trim();
+                        if (tuDienSach[k] !== undefined && tuDienSach[k] !== null && tuDienSach[k] !== "") {
+                            return docSo(tuDienSach[k]);
                         }
                     }
                     return giaTriMacDinh;
                 }
 
-                // Cấp 1: Đọc các ngưỡng tỷ lệ yêu cầu
                 let nguong_XS = layCauHinh(['TYLE_XS', 'tyle_xs'], 0);
                 let nguong_Tot = layCauHinh(['TYLE_TOT', 'tyle_tot'], 0);
                 let nguong_HT = layCauHinh(['TYLE_HT', 'tyle_ht'], 0);
 
-                // Cấp 2: Đọc các giới hạn khống chế 
                 let caiKeoCo = layCauHinh(['MAX_HT_XS', 'max_ht_xs'], 0);   
                 let vienBiTron = layCauHinh(['MAX_CHT_XS', 'max_cht_xs'], 0); 
                 let quaCamNgot = layCauHinh(['MAX_CHT_TOT', 'max_cht_tot'], 0); 
-                
-                // Mức tỷ lệ CHT cho phép: Mặc định 100% để bảo vệ kết quả, không khóa nhầm nếu trường không gài cấu hình phụ
                 let conGiunDat = layCauHinh(['TYLE_CHT_MAX', 'tyle_cht_max', 'SO_CHT_MAX', 'so_cht_max'], 100);   
                 
-                // Cấp 3: Đọc hệ số điểm
                 let diemBase_XS = layCauHinh(['DIEM_XS', 'diem_xs'], 100);
                 let diemBase_Tot = layCauHinh(['DIEM_TOT', 'diem_tot'], 80);
                 let diemBase_HT = layCauHinh(['DIEM_HT', 'diem_ht'], 60);
@@ -258,10 +262,9 @@ function runAIAssistant() {
                         let matchDiem = cellText.match(/(\d+)/);
                         if (matchDiem) diem = parseFloat(matchDiem[1]);
 
-                        // KỶ LUẬT THI ĐUA: Không nộp / bỏ trống / sai định dạng -> Tính CHT và nhận 0 điểm
                         if (cellText === "" || cellText === "-" || cellText.includes("...") || textLower.includes("chưa có")) {
                             tongDiemXepLoai += 0;
-                            tongDiemSo += 0; // Điểm kèm theo là 0
+                            tongDiemSo += 0; 
                             countCHT++; 
                             validMonths++;
                         } 
@@ -282,7 +285,6 @@ function runAIAssistant() {
                             tongDiemSo += diem;
                             countHT++; validMonths++;
                         } else {
-                            // Ghi sai quy chế cũng rơi vào CHT
                             tongDiemXepLoai += 0;
                             tongDiemSo += diem;
                             countCHT++; validMonths++;
@@ -296,31 +298,23 @@ function runAIAssistant() {
                     let diemTBSo = tongDiemSo / D;
                     let avgScore = (diemTBXepLoai + diemTBSo).toFixed(1);
 
-                    // TÍNH TOÁN QUY ĐỔI %
                     let tyLeXS_thucTe = (countHTXS / D) * 100;
                     let tyLeTot_thucTe = ((countHTXS + countHTT) / D) * 100;
                     let tyLeHT_thucTe = ((countHTXS + countHTT + countHT) / D) * 100;
-                    let tyLeCHT_thucTe = (countCHT / D) * 100; // Tính chính xác ra % CHT (Ví dụ: 20%)
+                    let tyLeCHT_thucTe = (countCHT / D) * 100; 
 
                     let xepLoai = "Chưa hoàn thành";
 
-                    // LIÊN KẾT BIẾN KHỐNG CHẾ
                     let caiBanBonChan = (countHT <= caiKeoCo && countCHT <= vienBiTron); 
                     let chiecTiviPhang = (countCHT <= quaCamNgot);                       
-                    
-                    // So sánh đồng hệ: Tỷ lệ CHT thực tế (VD: 20%) với Ngưỡng CHT quy định (VD: 30%)
                     let bucTuongVang = (tyLeCHT_thucTe <= conGiunDat); 
 
-                    // TIẾN HÀNH XÉT DUYỆT ƯU TIÊN
                     if (tyLeXS_thucTe >= nguong_XS && caiBanBonChan) {
                         xepLoai = "Hoàn thành xuất sắc";
-                        
                     } else if (tyLeTot_thucTe >= nguong_Tot && chiecTiviPhang) {
                         xepLoai = "Hoàn thành tốt";
-                        
                     } else if (tyLeHT_thucTe >= nguong_HT && bucTuongVang) {
                         xepLoai = "Hoàn thành";
-                        
                     } else {
                         xepLoai = "Chưa hoàn thành";
                     }
@@ -340,7 +334,7 @@ function runAIAssistant() {
                 if (updatedCount > 0) {
                     showAIToast("✅ <b>Hoàn tất!</b><br>Đã điền kết quả cho " + updatedCount + " cán bộ và sắp xếp ưu tiên thành công.", "success");
                 } else {
-                    showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các dòng dữ liệu trong giới hạn tháng này đang trống.", "warning");
+                    showAIToast("⚠️ <b>Không có dữ liệu!</b><br>Các khoảng tháng đã chọn đang trống.", "warning");
                 }
 
             } catch (error) {
