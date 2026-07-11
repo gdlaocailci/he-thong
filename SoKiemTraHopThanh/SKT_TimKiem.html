@@ -505,7 +505,7 @@
   (function khoitti() {
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
-        // Đã xóa bỏ sự kiện input để tránh load giật lag theo đúng yêu cầu
+        // Nguyên tắc mới: Không kích hoạt tìm kiếm thời gian thực để chống nghẽn
         nv.addEventListener("keydown", function(sk) {
             if (sk.key === "Enter") { sk.preventDefault(); locDuLieuTucThoi(); }
         });
@@ -562,7 +562,7 @@
       return null;
   }
 
-  // --- THUẬT TOÁN LAI (HYBRID FILTER) CẬP NHẬT: CHỈ TÌM KHI RA LỆNH ---
+  // --- THUẬT TOÁN LAI (HYBRID FILTER) CẬP NHẬT: CHỈ TÌM KHI BẤM NÚT HOẶC ENTER ---
   function locDuLieuTucThoi(la_khoi_tao = false) {
     const gv = document.getElementById('s_gv').value.trim();
     const nkt = document.getElementById('s_nkt').value.trim();
@@ -623,6 +623,7 @@
 
         const cai_tui_loc = { gkiem: gv, nkiem: nkt, bkiem: bp, tkiem: tuNgay, dkiem: denNgay };
 
+        // Đã gỡ lỗi treo cứng ngầm do máy chủ trước đây trả về object Date không hợp lệ
         google.script.run
           .withSuccessHandler(ro_hoa_qua => {
              document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#059669;'>(Dữ liệu máy chủ)</span>";
@@ -634,8 +635,9 @@
              }
           })
           .withFailureHandler(loi_mang => {
+             console.error("Lỗi Google Script Run:", loi_mang);
              document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
-             man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Đường truyền gián đoạn: ${loi_mang.message}</td></tr>`;
+             man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Có lỗi xảy ra trong quá trình truy xuất: ${loi_mang.message}</td></tr>`;
           })
           .skt_tk_timbg(cai_tui_loc);
     }
