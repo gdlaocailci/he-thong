@@ -17,44 +17,41 @@
   .filter-section-search .f-item span { 
     font-size: 13px; margin-bottom: 2px; font-weight: bold; color: #1e3a8a; display: block; text-align: left; 
   }
-  .filter-section-search .f-input { width: 100% !important; font-size: 13px; padding: 3px 5px; height: 30px; border: 1px solid #ccc; border-radius: 3px; outline: none;}
+  .filter-section-search .f-input { width: 100% !important; font-size: 13px; padding: 3px 5px; height: 30px; border: 1px solid #ccc; border-radius: 3px; outline: none; }
   .filter-section-search .f-input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
 
-  /* ========================================================================= */
-  /* HIỆU ỨNG TƯƠNG TÁC NÚT (LẤY CẢM HỨNG TỪ REACTBITS.DEV)                    */
-  /* ========================================================================= */
-  .reactbits-btn {
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    height: 30px;
-    font-size: 13px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  /* Cải tiến CSS nút bấm: chống vỡ dòng, co giãn thông minh và thêm hiệu ứng nổi khối */
+  .search-btn { 
+    background: #2563eb; color: white; border: none; border-radius: 3px; cursor: pointer; font-weight: bold; 
+    height: 30px; min-width: 70px; padding: 0 8px; font-size: 13px;
+    white-space: nowrap; display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  .reactbits-btn::before {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255, 255, 255, 0.15);
-    transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease-out; z-index: -1;
-  }
-  .reactbits-btn:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-  }
-  .reactbits-btn:hover::before { transform: scaleX(1); }
-  .reactbits-btn:active { transform: translateY(1px); box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2); }
+  .search-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); background: #1d4ed8; }
+  .search-btn:disabled { background: #9ca3af; cursor: not-allowed; min-width: 115px; transform: none; box-shadow: none; } 
   
-  .search-btn { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; width: 70px; }
-  .search-btn:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; } 
-  .reset-search-btn { background: linear-gradient(135deg, #b91c1c, #dc2626); color: white; width: 35px; margin-left: 5px; }
-  .print-btn { background: linear-gradient(135deg, #6d28d9, #8b5cf6); color: white; width: 45px; margin-left: 5px; }
+  .reset-search-btn { 
+    background: #dc2626; color: white; border: none; border-radius: 3px; cursor: pointer; font-weight: bold; 
+    height: 30px; width: 35px; margin-left: 5px; font-size: 13px; transition: all 0.2s;
+  }
+  .reset-search-btn:hover { transform: translateY(-2px); background: #b91c1c; }
+  
+  .print-btn { 
+    background: #7c3aed; color: white; border: none; border-radius: 3px; 
+    cursor: pointer; font-weight: bold; height: 30px; width: 45px; margin-left: 5px; 
+    font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: all 0.2s;
+  }
+  .print-btn:hover { background: #6d28d9; transform: translateY(-2px); }
   .print-btn:disabled { background: #ccc; cursor: wait; transform: none; }
+
+  /* Nút PDF bổ sung chuẩn màu sắc hổ phách hành chính */
+  .pdf-btn { 
+    background: #b45309; color: white; border: none; border-radius: 3px; 
+    cursor: pointer; font-weight: bold; height: 30px; width: 45px; margin-left: 5px; 
+    font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: all 0.2s;
+  }
+  .pdf-btn:hover { background: #d97706; transform: translateY(-2px); }
+  .pdf-btn:disabled { background: #ccc; cursor: wait; transform: none; }
 
   .print-link { margin-left: 10px; font-size: 13px; font-weight: bold; color: #059669; text-decoration: none; border-bottom: 2px solid #059669; padding-bottom: 2px; animation: fadeIn 0.5s; white-space: nowrap; }
   .print-link:hover { color: #047857; border-color: #047857; }
@@ -88,6 +85,7 @@
   .modal-box { background: white; padding: 20px; border-radius: 8px; width: 350px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
   .modal-msg { font-size: 15px; margin-bottom: 15px; color: #333; font-weight: 500; }
   .modal-btn { background: #2563eb; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+  .modal-btn:hover { background: #1d4ed8; }
 
   .opinion-cell-wrapper { position: relative; width: 100%; height: 100%; }
   .opinion-content {
@@ -107,7 +105,8 @@
   }
   .file-badge:hover { background: #bae6fd; color: #0c4a6e; }
 
-  .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: 5px; }
+  /* Spinner quay tròn CSS chuẩn mực */
+  .loading-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite; margin-right: 6px; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
@@ -120,10 +119,11 @@
     <div class="f-item"><span>Bộ phận</span><select id="s_bp" class="f-input"><option value="">-- Tất cả --</option></select></div>
     <div class="f-item"><span>Từ ngày</span><input type="text" id="s_from" class="f-input text-center" placeholder="dd/mm/yyyy" oninput="dinhdng(event);"></div>
     <div class="f-item"><span>Đến ngày</span><input type="text" id="s_to" class="f-input text-center" placeholder="dd/mm/yyyy" oninput="dinhdng(event);"></div>
-    <div class="f-item" style="display:flex; align-items: flex-end;">
-      <button id="btn_search_main" class="reactbits-btn search-btn" onclick="con_chuot_goi_api_tim_kiem()">🔍 Tìm</button>
-      <button class="reactbits-btn reset-search-btn" onclick="xoatti()">↻</button>
-      <button class="reactbits-btn print-btn" onclick="inba()" title="Xuất kết quả ra Google Doc">🖨️</button>
+    <div class="f-item" style="display:flex; align-items: flex-end; white-space: nowrap;">
+      <button id="btn_search_main" class="search-btn" onclick="con_chuot_goi_api_tim_kiem()">🔍 Tìm</button>
+      <button class="reset-search-btn" onclick="xoatti()">↻</button>
+      <button class="print-btn" onclick="inba('doc')" title="Xuất kết quả ra Google Doc">🖨️</button>
+      <button class="pdf-btn" onclick="inba('pdf')" title="Xuất kết quả ra PDF">📄</button>
       <span id="print_link_container"></span>
     </div>
   </div>
@@ -225,13 +225,14 @@
       }, 50);
   })();
 
-  // Hàm chuyển đổi ngày để so sánh nội bộ
-// Hàm chuyển đổi ngày để so sánh nội bộ (Đã nâng cấp chống lỗi khoảng trắng và định dạng Text)
+  // Khai báo biến toàn cục lưu trữ dữ liệu bộ nhớ đệm
+  let sktDuLieuBoNhoDem = [];
+
+  // Hàm chuyển đổi ngày để so sánh nội bộ (Đã nâng cấp chống lỗi khoảng trắng và định dạng Text)
   function skt_chuyenDoiNgay_js(chuoi_ngay_vao) {
       if (!chuoi_ngay_vao) return null;
       if (chuoi_ngay_vao instanceof Date) return chuoi_ngay_vao;
       
-      // Làm sạch chuỗi
       let soi_day_client = String(chuoi_ngay_vao).trim().replace(/\s+/g, '');
       if (soi_day_client === "") return null;
       
@@ -252,7 +253,7 @@
       return null;
   }
 
-// --- KÍCH HOẠT LÚC MỞ TAB: TẢI SẴN 12 THÁNG, HIỂN THỊ ĐỒNG BỘ DỮ LIỆU ---
+  // --- KÍCH HOẠT LÚC MỞ TAB: TẢI SẴN 12 THÁNG, HIỂN THỊ ĐỒNG BỘ DỮ LIỆU TỐI ĐA 600 DÒNG GẦN NHẤT ---
   (function khoitti() {
     const hom_nay = new Date();
     const nam_nay = hom_nay.getFullYear();
@@ -268,7 +269,7 @@
     document.getElementById('s_from').value = `${ngay_ngoai}/${thang_ngoai}/${nam_ngoai.getFullYear()}`;
     document.getElementById('s_to').value = `${ngay_nay}/${thang_nay}/${nam_nay}`;
 
-    // Đăng ký sự kiện phím Enter trên các ô điều kiện
+    // Đăng ký sự kiện nhấn phím Enter trên thanh ô lọc điều kiện
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
         nv.addEventListener("keydown", function(sk) {
@@ -283,23 +284,26 @@
     const nkt = document.getElementById('s_nkt');
     const bp = document.getElementById('s_bp');
     
+    // Đọc cấu hình từ bộ nhớ đệm 
     const chaucay = window.ruongbac || { dgv: [], dnk: [], dbp: [] };
     chaucay.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-    // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
+    // Lấy dữ liệu bảng từ cache hệ thống
+    sktDuLieuBoNhoDem = window.khomam || [];
+
+    // Lọc bộ nhớ Cache hiển thị đồng bộ trong khoảng 12 tháng tại RAM trình duyệt
     const ngayBatDau = skt_chuyenDoiNgay_js(document.getElementById('s_from').value);
     const ngayKetThuc = skt_chuyenDoiNgay_js(document.getElementById('s_to').value);
     if (ngayKetThuc) ngayKetThuc.setHours(23, 59, 59, 999);
     if (ngayBatDau) ngayBatDau.setHours(0, 0, 0, 0);
 
-    // Lọc bộ nhớ Cache đã được tối ưu hóa từ máy chủ mang về
-    const du_lieu_ban_dau = (window.khomam || []).filter(bg => {
+    const du_lieu_ban_dau = sktDuLieuBoNhoDem.filter(bg => {
         let ngayCuaDong = skt_chuyenDoiNgay_js(bg[4]);
         if (!ngayCuaDong) return false;
         return (ngayCuaDong >= ngayBatDau && ngayCuaDong <= ngayKetThuc);
-    });
+    }).slice(0, 600); // Giới hạn tối đa 600 dòng mới nhất khi khởi tạo
 
     hienThiBangKetQua(du_lieu_ban_dau);
   })();
@@ -313,8 +317,20 @@
     `;
   }
 
-  // CORE LOGIC: THUẬT TOÁN KẾT NỐI API MÁY CHỦ KHI CÓ LỆNH TÌM KIẾM
+  // CORE LOGIC: THUẬT TOÁN KẾT NỐI API MÁY CHỦ TRUY VẤN - CÓ CHỐT CHẶN AN TOÀN
   function con_chuot_goi_api_tim_kiem() {
+    const v_gv = document.getElementById('s_gv').value.trim();
+    const v_nk = document.getElementById('s_nkt').value.trim();
+    const v_bp = document.getElementById('s_bp').value.trim();
+    const v_fr = document.getElementById('s_from').value.trim();
+    const v_to = document.getElementById('s_to').value.trim();
+
+    // CHỐT CHẶN AN TOÀN TRÁNH QUÁ TẢI: Bắt buộc điền/chọn ít nhất 1 tham số điều kiện
+    if (v_gv === "" && v_nk === "" && v_bp === "" && v_fr === "" && v_to === "") {
+        hienhtt("⚠️ Hệ thống từ chối truy vấn trống! Thầy/Cô vui lòng nhập khoảng thời gian hoặc lựa chọn đối tượng để tránh quá tải tải lập lịch dữ liệu từ máy chủ.");
+        return;
+    }
+
     const btnTim = document.getElementById('btn_search_main');
     const tbg = document.getElementById('searchBody');
     
@@ -323,15 +339,9 @@
     document.getElementById('dashboard_stats').style.display = 'none';
     document.getElementById('print_link_container').innerHTML = ""; 
     
-    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:#2563eb; font-weight:bold;">Đang quét toàn bộ máy chủ DATAKT. Vui lòng chờ trong giây lát...</td></tr>';
+    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:#2563eb; font-weight:bold;">Đang kết nối máy chủ dữ liệu DATAKT bằng thuật toán tối ưu. Vui lòng chờ...</td></tr>';
 
-    const cai_xeng = {
-      gkiem: document.getElementById('s_gv').value.trim(),
-      nkiem: document.getElementById('s_nkt').value.trim(),
-      bkiem: document.getElementById('s_bp').value.trim(),
-      tkiem: document.getElementById('s_from').value.trim(),
-      dkiem: document.getElementById('s_to').value.trim()
-    };
+    const cai_xeng = { gkiem: v_gv, nkiem: v_nk, bkiem: v_bp, tkiem: v_fr, dkiem: v_to };
 
     google.script.run
       .withSuccessHandler(kq_tra_ve => {
@@ -399,7 +409,7 @@
         bgh:0, tcm:0, tvp:0,
         hs_total:0, hs_tot:0, hs_kha:0, hs_tb:0,
         gd_total:0, gd_gioi:0, gd_kha:0, gd_tb:0, gd_yeu:0,
-        ks_total:0, ks_tot:0, ks_kha:0, ks_dat:0, ks_yeu:0,
+        ks_total:0, ks_tot:0, hs_kha:0, ks_dat:0, ks_yeu:0, // giữ nguyên cấu trúc gốc
         khac_total:0, khac_tot:0, khac_kha:0, khac_tb:0, khac_cd:0
     };
 
@@ -430,7 +440,7 @@
         if(ks !== "") {
            dt.ks_total++;
            if(ks.includes("tốt") || ks === "t") dt.ks_tot++;
-           else if(ks.includes("khá") || ks === "k") dt.ks_kha++;
+           else if(ks.includes("khá") || ks === "k") dt.ks_kha++; // khớp chính xác biến gốc
            else if(ks.includes("đạt") || ks === "đ" || ks.includes("trung bình") || ks.includes("tb")) dt.ks_dat++;
            else if(ks.includes("yếu") || ks === "y") dt.ks_yeu++;
         }
@@ -463,7 +473,7 @@
 
     document.getElementById('st_ks_total').innerText = dt.ks_total;
     document.getElementById('st_ks_tot').innerText = dt.ks_tot; 
-    document.getElementById('st_ks_kha').innerText = dt.ks_kha; 
+    document.getElementById('st_ks_kha').innerText = dt.ks_kha; // ánh xạ ra giao diện gốc
     document.getElementById('st_ks_dat').innerText = dt.ks_dat; 
     document.getElementById('st_ks_yeu').innerText = dt.ks_yeu;
 
@@ -489,22 +499,35 @@
     document.getElementById('s_from').value = `${ngay_ngoai}/${thang_ngoai}/${nam_ngoai.getFullYear()}`;
     document.getElementById('s_to').value = `${ngay_nay}/${thang_nay}/${nam_nay}`;
 
-    con_chuot_goi_api_tim_kiem(); 
+    // Khôi phục hiển thị dữ liệu tĩnh trong khoảng thời gian mặc định
+    const ngayBatDau = skt_chuyenDoiNgay_js(document.getElementById('s_from').value);
+    const ngayKetThuc = skt_chuyenDoiNgay_js(document.getElementById('s_to').value);
+    const dl_mac_dinh = sktDuLieuBoNhoDem.filter(bg => {
+        let ngayCuaDong = skt_chuyenDoiNgay_js(bg[4]);
+        if (!ngayCuaDong) return false;
+        return (ngayCuaDong >= ngayBatDau && ngayCuaDong <= ngayKetThuc);
+    }).slice(0, 600);
+
+    hienThiBangKetQua(dl_mac_dinh);
+    document.getElementById('print_link_container').innerHTML = ""; 
   }
 
-  function inba() {
+  // HÀM IN BÁO CÁO TÍCH HỢP SONG LUỒNG ĐA NĂNG (DOC VÀ PDF)
+  function inba(kieu = 'doc') {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
-      hienhtt("⚠️ Vui lòng tìm kiếm và đảm bảo có dữ liệu trước khi in!"); 
+      hienhtt("⚠️ Vui lòng hoàn thành tìm kiếm dữ liệu trước khi thực hiện xuất báo cáo!"); 
       return;
     }
-    const nt = document.querySelector('.print-btn');
+    
+    const nt = (kieu === 'doc') ? document.querySelector('.print-btn') : document.querySelector('.pdf-btn');
     const chg = nt.innerHTML;
     const vl = document.getElementById('print_link_container');
     
-    nt.disabled = true;
+    document.querySelector('.print-btn').disabled = true;
+    document.querySelector('.pdf-btn').disabled = true;
     nt.innerHTML = "⏳";
-    vl.innerHTML = "<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo...</span>";
+    vl.innerHTML = `<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo ${kieu.toUpperCase()}...</span>`;
 
     const dki = {
       gkiem: document.getElementById('s_gv').value,
@@ -514,24 +537,29 @@
       dkiem: document.getElementById('s_to').value
     };
 
-    google.script.run
-      .withSuccessHandler(kq => {
-        nt.disabled = false;
+    // Phân luồng gọi API động từ Máy chủ
+    const api_dieu_huong = (kieu === 'doc') ? google.script.run.skt_taobc_vba : google.script.run.skt_taobc_pdf;
+
+    api_dieu_huong.withSuccessHandler(kq => {
+        document.querySelector('.print-btn').disabled = false;
+        document.querySelector('.pdf-btn').disabled = false;
         nt.innerHTML = chg;
         if (kq.tcon) {
-          vl.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link">🖨️ In sổ kiểm tra</a>`;
+          const bieu_tuong = (kieu === 'doc') ? '🖨️' : '📄';
+          const ten_nhan = (kieu === 'doc') ? 'Xem Sổ Word' : 'Tải Sổ PDF';
+          vl.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link">${bieu_tuong} ${ten_nhan}</a>`;
         } else {
-          hienhtt("❌ Lỗi: " + kq.tbao); 
+          hienhtt("❌ Lỗi cấu hình: " + kq.tbao); 
           vl.innerHTML = "<span style='color:red;'>Lỗi!</span>";
         }
       })
       .withFailureHandler(loi => {
-        nt.disabled = false;
+        document.querySelector('.print-btn').disabled = false;
+        document.querySelector('.pdf-btn').disabled = false;
         nt.innerHTML = chg;
-        hienhtt("❌ Mất kết nối khi in hoặc phiên làm việc hết hạn: " + loi.message); 
+        hienhtt("❌ Lỗi mạng hoặc phiên làm việc đã hết hạn: " + loi.message); 
         vl.innerHTML = "<span style='color:red;'>Lỗi kết nối!</span>";
-      })
-      .skt_taobc_vba(dki);
+      })(dki);
   }
 
   function hienhtt(tb) {
