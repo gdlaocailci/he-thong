@@ -434,61 +434,68 @@ function khindthd(lo) {
     }
 }
 
-/* THAY THẾ HÀM NÀY VÀO SKT_NhapLieu.html */
+/* ========================================================================== */
+/* KHỐI ĐIỀU KHIỂN QUYỀN TRUY CẬP (QUY CHẾ MỚI)                               */
+/* ========================================================================== */
 function apdquye() {
-    const q_h_t = String(window.sktquyenht).trim().toLowerCase();
+    const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
+    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     
-    const btnSave = document.getElementById('btnSave');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const addRowBtn = document.querySelector('.add-row-container');
-    
-    if (q_h_t === 'xxx') {
-        if (btnSave) btnSave.disabled = false;
-        if (btnSubmit) btnSubmit.disabled = false;
-        if (addRowBtn) addRowBtn.style.display = 'block';
-    } else if (q_h_t === 'x') {
-        if (btnSave) btnSave.disabled = false;
-        if (btnSubmit) btnSubmit.disabled = false;
-        if (addRowBtn) addRowBtn.style.display = 'block';
-    } else {
-        // Quyền xx sẽ bị khóa hoàn toàn. Quyền khach_tv (người được KT) vẫn được bấm nút lưu ý kiến
-        if (btnSave) btnSave.disabled = (q_h_t === 'xx'); 
-        if (btnSubmit) btnSubmit.disabled = true;
-        if (addRowBtn) addRowBtn.style.display = 'none';
-    }
+    // Nhận diện vai trò
+    const isInspector = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx');
+    const selectedGV = document.getElementById('cbGiaoVien').value;
+    const userTen = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
+    const isOwner = (chuanhchu(userTen) === chuanhchu(selectedGV) && selectedGV !== "");
 
+    // 1. Điều khiển các ô lọc (Chỉ Inspector mới được đổi bộ lọc)
+    document.querySelectorAll('.f-input').forEach(input => {
+        if (input.id !== 'cbMaHoSo') {
+            input.disabled = !isInspector;
+        }
+    });
+
+    // 2. Điều khiển bảng nhập liệu
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
-        const d_a_k = (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
-
+        
         cacn.forEach((input, index) => {
-            // Chốt chặn 1: Dòng đã ký
-            if (d_a_k && q_h_t !== 'xxx') {
-                if (!input.classList.contains('link-input')) input.disabled = true;
-                return;
-            }
-            
-            // Chốt chặn 2: Theo cấp độ
-            if (q_h_t === 'xxx') {
+            if (isInspector) {
+                // Inspector toàn quyền
                 input.disabled = false;
-            } else if (q_h_t === 'x') {
-                input.disabled = (index === 9 || index === 10);
-            } else if (q_h_t === 'xx') {
-                input.disabled = true; // Khóa cứng toàn bộ ô nhập liệu
-            } else {
+            } else if (isOwner) {
+                // Người được kiểm tra chỉ mở đúng 2 cột: Ý kiến (9) và Ký tên (10)
+                // Lưu ý: index 9 và 10 dựa trên cấu trúc table trong themdongmo
                 input.disabled = (index !== 9 && index !== 10);
+            } else {
+                // Người lạ hoặc chưa chọn hồ sơ -> khóa trắng
+                input.disabled = true;
             }
         });
 
+        // Ẩn/hiện nút xóa theo quyền
         const ntxo = dg.querySelector('.btn-icon-del');
-        if (ntxo) {
-            if (d_a_k && q_h_t !== 'xxx') {
-                ntxo.style.visibility = 'hidden';
-            } else {
-                ntxo.style.visibility = (q_h_t === 'xxx' || q_h_t === 'x') ? 'visible' : 'hidden';
-            }
-        }
+        if (ntxo) ntxo.style.visibility = (isInspector) ? 'visible' : 'hidden';
     });
+    
+    // 3. Điều khiển các nút hành động (Lưu/Nộp)
+    const btnSave = document.getElementById('btnSave');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const addRowBtn = document.querySelector('.add-row-container');
+
+    if (isInspector) {
+        if (btnSave) btnSave.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = false;
+        if (addRowBtn) addRowBtn.style.display = 'block';
+    } else if (isOwner) {
+        // Chủ sở hữu chỉ được lưu (nếu cần), không được nộp
+        if (btnSave) btnSave.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = true;
+        if (addRowBtn) addRowBtn.style.display = 'none';
+    } else {
+        if (btnSave) btnSave.disabled = true;
+        if (btnSubmit) btnSubmit.disabled = true;
+        if (addRowBtn) addRowBtn.style.display = 'none';
+    }
 }
 //======================================================================================================
 function themdongmo(dld = null) {
