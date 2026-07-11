@@ -342,9 +342,6 @@ function kiemtlqsu(dg) {
     }
 }
 
-/* ========================================================================== */
-/* KHỐI ĐỒNG BỘ DỮ LIỆU ĐỆM VÀ XỬ LÝ LỌC HỒ SƠ TỨC THÌ TRÊN CLIENT */
-/* ========================================================================== */
 function taidli() {
     chuyentxo('initial', true);
     google.script.run.withSuccessHandler(kq => {
@@ -374,16 +371,19 @@ function taidli() {
         let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
         let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
         let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
-        const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx' || String(window.sktquyenht).trim().toLowerCase() === 'xxx');
+        const q_h_t = String(window.sktquyenht).trim().toLowerCase();
+        // Cập nhật: Quyền Quản trị bao gồm cả quyền x, xx, xxx
+        const quyenQuanTri = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx'); 
         
         if (tgvc && !isInspector && !quyenQuanTri) {
-            dathopc('cbGiaoVien', tgvc);
-            khindthd('GV'); 
-            
+            // ĐỐI VỚI NGƯỜI ĐƯỢC KIỂM TRA: Bỏ trống tên, khóa mọi thứ để ép chọn Lịch sử
+            document.getElementById('cbGiaoVien').value = ""; 
             document.getElementById('cbGiaoVien').disabled = true;
             document.getElementById('cbNguoiKiemTra').disabled = true;
             document.getElementById('cbBoPhan').disabled = true;
+            document.getElementById('txtMaBoPhan').disabled = true;
         } else if (tgvc) {
+            // ĐỐI VỚI NGƯỜI KIỂM TRA / QUẢN TRỊ
             dathopc('cbGiaoVien', tgvc);
         }
 
@@ -434,73 +434,88 @@ function khindthd(lo) {
     }
 }
 
-/* ========================================================================== */
-/* KHỐI ĐIỀU KHIỂN QUYỀN (THUẬT TOÁN FAIL-SECURE - KHÓA CHẶT TUYỆT ĐỐI)      */
-/* ========================================================================== */
 function apdquye() {
     const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     
-    // 1. Xác định vai trò
-    const isInspector = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx');
+    // 1. Phân loại đối tượng và vai trò
+    const isSuperAdmin = (q_h_t === 'xx' || q_h_t === 'xxx');
+    const isQuyenX = (q_h_t === 'x');
+    
     const selectedGV = document.getElementById('cbGiaoVien').value;
-    const userTen = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
-    // Kiểm tra xem user có phải chủ nhân hồ sơ này không
-    const isOwner = (chuanhchu(userTen) === chuanhchu(selectedGV) && selectedGV !== "");
+    const selectedNKT = document.getElementById('cbNguoiKiemTra').value;
+    
+    const userTenGV = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
+    const userTenNKT = dlnktra.find(x => chuanhchu(x.taik) === emcan)?.tenn;
+    
+    // Xác định xem tài khoản hiện tại có khớp với các lựa chọn trên giao diện không
+    const isOwner = (chuanhchu(userTenGV) === chuanhchu(selectedGV) && selectedGV !== "");
+    const isSelectedInspector = (chuanhchu(userTenNKT) === chuanhchu(selectedNKT) && selectedNKT !== "");
+    
+    // Xác định quyền sử dụng bộ lọc (Quản trị hoặc nằm trong danh sách NKT)
+    const isInspectorRole = (isSuperAdmin || isQuyenX || dlnktra.some(x1 => chuanhchu(x1.taik) === emcan));
 
-    // 2. Khóa/Mở Bộ lọc (Inspector mới có quyền điều hướng)
+    // 2. Khóa/Mở Bộ lọc
     const filters = document.querySelectorAll('.f-input');
     filters.forEach(input => {
-        // Luôn mở ô chọn Lịch sử (MaHoSo) cho tất cả, còn lại chỉ Inspector mới được dùng
-        if (input.id !== 'cbMaHoSo') {
-            input.disabled = !isInspector;
+        if (input.id === 'cbMaHoSo') {
+            input.disabled = false; // Ô Lịch sử LUÔN MỞ
         } else {
-            input.disabled = false; // Luôn mở
+            input.disabled = !isInspectorRole; 
         }
     });
 
-    // 3. Khóa/Mở bảng nhập liệu (Nguyên tắc: Khóa mặc định)
+    // 3. Khóa/Mở bảng nhập liệu (Nguyên tắc: Khóa mặc định toàn bộ)
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         
         cacn.forEach((input, index) => {
-            // MẶC ĐỊNH KHÓA TẤT CẢ
-            input.disabled = true;
+            input.disabled = true; // Khóa chặt làm nền tảng
 
-            // NẾU LÀ INSPECTOR
-            if (isInspector) {
-                input.disabled = false;
+            if (isSuperAdmin) {
+                // Quản trị cấp cao (xx, xxx) được mở tất cả
+                input.disabled = false; 
             } 
-            // NẾU LÀ GIÁO VIÊN CHỦ SỞ HỮU (Chỉ mở đúng 2 cột Ý kiến và Ký tên)
+            else if (isQuyenX && isSelectedInspector) {
+                // Người có quyền x VÀ chọn đúng tên mình ở ô Người kiểm tra:
+                // Mở tất cả TRỪ Ý kiến (index 9) và Ký tên (index 10)
+                if (index !== 9 && index !== 10) {
+                    input.disabled = false;
+                }
+            }
             else if (isOwner) {
-                // Giả định: index 9 là Ý kiến, index 10 là Ký tên
+                // Người được kiểm tra: CHỈ mở Ý kiến (index 9) và Ký tên (index 10)
                 if (index === 9 || index === 10) {
                     input.disabled = false;
                 }
             }
         });
 
-        // Ẩn nút xóa nếu không phải Inspector
+        // Xử lý nút xóa dòng (Thùng rác)
         const ntxo = dg.querySelector('.btn-icon-del');
-        if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
+        if (ntxo) {
+            // Nút xóa chỉ hiện khi là quản trị, hoặc người kiểm tra đang chọn đúng tên mình
+            ntxo.style.visibility = (isSuperAdmin || (isQuyenX && isSelectedInspector)) ? 'visible' : 'hidden';
+        }
     });
     
-    // 4. Điều khiển các nút hành động (Lưu/Nộp)
+    // 4. Điều khiển các nút hành động (Lưu/Nộp/Thêm dòng)
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
-    if (isInspector) {
+    if (isSuperAdmin || (isQuyenX && isSelectedInspector)) {
+        // Có toàn quyền thao tác khi là quản trị hoặc người kiểm tra đang chọn đúng tên mình
         if (btnSave) btnSave.disabled = false;
         if (btnSubmit) btnSubmit.disabled = false;
         if (addRowBtn) addRowBtn.style.display = 'block';
     } else if (isOwner) {
-        // Chủ sở hữu chỉ được lưu (nếu cần), không được Nộp, không được thêm dòng
+        // Chủ hồ sơ (người được kiểm tra) chỉ có quyền LƯU
         if (btnSave) btnSave.disabled = false;
         if (btnSubmit) btnSubmit.disabled = true;
         if (addRowBtn) addRowBtn.style.display = 'none';
     } else {
-        // Người lạ hoặc chưa chọn hồ sơ -> Khóa toàn bộ
+        // Khóa sạch các nút hành động đối với người lạ hoặc khi chưa chọn đúng tên
         if (btnSave) btnSave.disabled = true;
         if (btnSubmit) btnSubmit.disabled = true;
         if (addRowBtn) addRowBtn.style.display = 'none';
@@ -710,7 +725,7 @@ function thuchms(ha, nt, ch) {
   function chuyentxo(lo, ht) { document.querySelectorAll('.f-input, .cell-input').forEach(ptu=>ptu.classList[ht?'add':'remove']('loading-spin')); }
   function dattr(tt) { for(let iso=1;iso<=4;iso++){ let p1=document.getElementById('step'+iso); if(p1){ p1.className='step'; if(iso<tt)p1.classList.add('completed'); if(iso===tt)p1.classList.add('active'); }}}
   
-  function datlbie() {
+function datlbie() {
     ['cbNguoiKiemTra', 'cbBoPhan', 'cbMaHoSo'].forEach(idd => {
       const p1 = document.getElementById(idd); if(p1) { p1.value = ""; p1.disabled = false; }
     });
@@ -718,16 +733,18 @@ function thuchms(ha, nt, ch) {
     let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
     let tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx' || String(window.sktquyenht).trim().toLowerCase() === 'xxx');
+    const q_h_t = String(window.sktquyenht).trim().toLowerCase();
+    const quyenQuanTri = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx');
     
     const hpgv = document.getElementById('cbGiaoVien');
 
     if (tgvc && !tnktc && !quyenQuanTri) {
-        dathopc('cbGiaoVien', tgvc);
-        // THIẾT LẬP LẠI VÒNG KHÓA
+        // ĐỐI VỚI NGƯỜI ĐƯỢC KIỂM TRA: Đưa về trạng thái rỗng và khóa lại
+        hpgv.value = "";
         hpgv.disabled = true;
         document.getElementById('cbNguoiKiemTra').disabled = true;
         document.getElementById('cbBoPhan').disabled = true;
+        document.getElementById('txtMaBoPhan').disabled = true;
     } else {
         hpgv.value = "";
         hpgv.disabled = false;
@@ -735,8 +752,12 @@ function thuchms(ha, nt, ch) {
 
     document.getElementById('txtMaBoPhan').value = "";
     document.getElementById('tableContent').innerHTML = ""; 
-    themdongmo(); dattr(1);
-  }
+    themdongmo(); 
+    dattr(1);
+    
+    apdquye(); // Cập nhật lại vòng kiểm soát quyền
+}
+  
   function capnhopm() {
     const hp = document.getElementById('cbMaHoSo'); const ht = hp.value;
     hp.innerHTML = '<option value="">-- Chọn --</option>';
