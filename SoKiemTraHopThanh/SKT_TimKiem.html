@@ -233,14 +233,14 @@
       return null;
   }
 
- // --- KÍCH HOẠT LÚC MỞ TAB: TẢI SẴN 12 THÁNG, TỐI ĐA 600 DÒNG TỪ BỘ NHỚ ---
+// --- KÍCH HOẠT LÚC MỞ TAB: TẢI SẴN 12 THÁNG, HIỂN THỊ ĐỒNG BỘ DỮ LIỆU ---
   (function khoitti() {
     const hom_nay = new Date();
     const nam_nay = hom_nay.getFullYear();
     const thang_nay = String(hom_nay.getMonth() + 1).padStart(2, '0');
     const ngay_nay = String(hom_nay.getDate()).padStart(2, '0');
     
-    // Tính chính xác khoảng thời gian 12 tháng trước
+    // Tính khoảng thời gian lùi chính xác 12 tháng trước
     const nam_ngoai = new Date();
     nam_ngoai.setFullYear(nam_nay - 1);
     const thang_ngoai = String(nam_ngoai.getMonth() + 1).padStart(2, '0');
@@ -249,7 +249,7 @@
     document.getElementById('s_from').value = `${ngay_ngoai}/${thang_ngoai}/${nam_ngoai.getFullYear()}`;
     document.getElementById('s_to').value = `${ngay_nay}/${thang_nay}/${nam_nay}`;
 
-    // Đăng ký sự kiện nhấn phím Enter trên các ô nhập liệu nhằm loại bỏ hoàn toàn độ trễ onchange
+    // Đăng ký sự kiện phím Enter trên các ô điều kiện
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
         nv.addEventListener("keydown", function(sk) {
@@ -269,14 +269,18 @@
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-    // Thực hiện trích xuất dữ liệu trong phạm vi 12 tháng từ bộ nhớ cache và khống chế tối đa 600 dòng
+    // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
     const ngayBatDau = skt_chuyenDoiNgay_js(document.getElementById('s_from').value);
     const ngayKetThuc = skt_chuyenDoiNgay_js(document.getElementById('s_to').value);
+    if (ngayKetThuc) ngayKetThuc.setHours(23, 59, 59, 999);
+    if (ngayBatDau) ngayBatDau.setHours(0, 0, 0, 0);
+
+    // Lọc bộ nhớ Cache đã được tối ưu hóa từ máy chủ mang về
     const du_lieu_ban_dau = (window.khomam || []).filter(bg => {
         let ngayCuaDong = skt_chuyenDoiNgay_js(bg[4]);
         if (!ngayCuaDong) return false;
         return (ngayCuaDong >= ngayBatDau && ngayCuaDong <= ngayKetThuc);
-    }).slice(0, 600); // Thiết lập hạn mức mới hiển thị tối đa 600 dòng
+    });
 
     hienThiBangKetQua(du_lieu_ban_dau);
   })();
