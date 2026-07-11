@@ -55,6 +55,8 @@
   .reset-search-btn { background: linear-gradient(135deg, #b91c1c, #dc2626); color: white; width: 35px; margin-left: 5px; }
   .print-btn { background: linear-gradient(135deg, #6d28d9, #8b5cf6); color: white; width: 45px; margin-left: 5px; }
   .print-btn:disabled { background: #ccc; cursor: wait; transform: none; }
+  .print-pdf-btn { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; width: 45px; margin-left: 5px; }
+  .print-pdf-btn:disabled { background: #ccc; cursor: wait; transform: none; }
 
   .print-link { margin-left: 10px; font-size: 13px; font-weight: bold; color: #059669; text-decoration: none; border-bottom: 2px solid #059669; padding-bottom: 2px; animation: fadeIn 0.5s; white-space: nowrap; }
   .print-link:hover { color: #047857; border-color: #047857; }
@@ -124,6 +126,7 @@
       <button id="btn_search_main" class="reactbits-btn search-btn" onclick="con_chuot_goi_api_tim_kiem()">🔍 Tìm</button>
       <button class="reactbits-btn reset-search-btn" onclick="xoatti()">↻</button>
       <button class="reactbits-btn print-btn" onclick="inba()" title="Xuất kết quả ra Google Doc">🖨️</button>
+      <button class="reactbits-btn print-pdf-btn" onclick="qua_tao_xuat_pdf()" title="Xuất kết quả ra file PDF">📄</button>
       <span id="print_link_container"></span>
     </div>
   </div>
@@ -313,18 +316,8 @@
     `;
   }
 
-  // CORE LOGIC: THUẬT TOÁN KẾT NỐI API MÁY CHỦ KHI CÓ LỆNH TÌM KIẾM
+// CORE LOGIC: THUẬT TOÁN KẾT NỐI API MÁY CHỦ KHI CÓ LỆNH TÌM KIẾM
   function con_chuot_goi_api_tim_kiem() {
-    const btnTim = document.getElementById('btn_search_main');
-    const tbg = document.getElementById('searchBody');
-    
-    btnTim.disabled = true;
-    btnTim.innerHTML = `<span class="loading-spinner"></span> Đang tải...`;
-    document.getElementById('dashboard_stats').style.display = 'none';
-    document.getElementById('print_link_container').innerHTML = ""; 
-    
-    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:#2563eb; font-weight:bold;">Đang quét toàn bộ máy chủ DATAKT. Vui lòng chờ trong giây lát...</td></tr>';
-
     const cai_xeng = {
       gkiem: document.getElementById('s_gv').value.trim(),
       nkiem: document.getElementById('s_nkt').value.trim(),
@@ -333,14 +326,42 @@
       dkiem: document.getElementById('s_to').value.trim()
     };
 
+    // --- BẮT ĐẦU NÂNG CẤP 1: Bắt buộc chọn ít nhất 1 điều kiện ---
+    if (cai_xeng.gkiem === "" && cai_xeng.nkiem === "" && cai_xeng.bkiem === "" && cai_xeng.tkiem === "" && cai_xeng.dkiem === "") {
+       hienhtt("⚠️ Vui lòng nhập hoặc chọn ít nhất 1 điều kiện để lọc dữ liệu!");
+       return;
+    }
+    // --- KẾT THÚC NÂNG CẤP 1 ---
+
+    const btnTim = document.getElementById('btn_search_main');
+    const tbg = document.getElementById('searchBody');
+    
+    btnTim.disabled = true;
+    // --- BẮT ĐẦU NÂNG CẤP 4: Giãn ngang nút tìm kiếm ---
+    btnTim.style.width = 'auto';
+    btnTim.style.padding = '0 15px';
+    // --- KẾT THÚC NÂNG CẤP 4 ---
+    
+    btnTim.innerHTML = `<span class="loading-spinner"></span> Đang tải...`;
+    document.getElementById('dashboard_stats').style.display = 'none';
+    document.getElementById('print_link_container').innerHTML = ""; 
+    
+    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:#2563eb; font-weight:bold;">Đang quét toàn bộ máy chủ DATAKT. Vui lòng chờ trong giây lát...</td></tr>';
+
     google.script.run
       .withSuccessHandler(kq_tra_ve => {
           btnTim.disabled = false;
+          // --- Phục hồi kích thước nút ---
+          btnTim.style.width = '70px';
+          btnTim.style.padding = '';
           btnTim.innerHTML = `🔍 Tìm`;
           hienThiBangKetQua(kq_tra_ve);
       })
       .withFailureHandler(loi => {
           btnTim.disabled = false;
+          // --- Phục hồi kích thước nút ---
+          btnTim.style.width = '70px';
+          btnTim.style.padding = '';
           btnTim.innerHTML = `🔍 Tìm`;
           tbg.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">Lỗi kết nối máy chủ: ${loi.message}</td></tr>`;
       })
@@ -541,4 +562,48 @@
   function donghtt() {
     document.getElementById('tk_modal_overlay').style.display = 'none';
   }
+
+  // --- BẮT ĐẦU NÂNG CẤP 2: Hàm xử lý lệnh xuất trực tiếp ra PDF ---
+  function qua_tao_xuat_pdf() {
+    const tbg = document.getElementById('searchBody');
+    if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
+      hienhtt("⚠️ Vui lòng tìm kiếm và đảm bảo có dữ liệu trước khi xuất sổ PDF!"); 
+      return;
+    }
+    const nut_pdf = document.querySelector('.print-pdf-btn');
+    const chu_goc = nut_pdf.innerHTML;
+    const vung_link = document.getElementById('print_link_container');
+    
+    nut_pdf.disabled = true;
+    nut_pdf.innerHTML = "⏳";
+    vung_link.innerHTML = "<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo PDF...</span>";
+
+    const dki = {
+      gkiem: document.getElementById('s_gv').value,
+      nkiem: document.getElementById('s_nkt').value,
+      bkiem: document.getElementById('s_bp').value,
+      tkiem: document.getElementById('s_from').value,
+      dkiem: document.getElementById('s_to').value
+    };
+
+    google.script.run
+      .withSuccessHandler(kq => {
+        nut_pdf.disabled = false;
+        nut_pdf.innerHTML = chu_goc;
+        if (kq.tcon) {
+          vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
+        } else {
+          hienhtt("❌ Lỗi: " + kq.tbao); 
+          vung_link.innerHTML = "<span style='color:red;'>Lỗi máy chủ!</span>";
+        }
+      })
+      .withFailureHandler(loi => {
+        nut_pdf.disabled = false;
+        nut_pdf.innerHTML = chu_goc;
+        hienhtt("❌ Mất kết nối khi tạo PDF hoặc phiên làm việc hết hạn: " + loi.message); 
+        vung_link.innerHTML = "<span style='color:red;'>Lỗi mạng!</span>";
+      })
+      .skt_tk_taobc_pdf(dki); // Kế thừa thẳng API sẵn có của hệ thống
+  }
+
 </script>
