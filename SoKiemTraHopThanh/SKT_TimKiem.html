@@ -563,7 +563,7 @@
     document.getElementById('tk_modal_overlay').style.display = 'none';
   }
 
-  // --- BẮT ĐẦU NÂNG CẤP 2: Hàm xử lý lệnh xuất trực tiếp ra PDF ---
+// --- HÀM XỬ LÝ LỆNH XUẤT TRỰC TIẾP RA PDF (ĐÃ SỬA LỖI TREO TIẾN TRÌNH) ---
   function qua_tao_xuat_pdf() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
@@ -574,9 +574,12 @@
     const chu_goc = nut_pdf.innerHTML;
     const vung_link = document.getElementById('print_link_container');
     
+    // Bật hiệu ứng chờ đợi và tự động giãn ngang nút PDF tăng trải nghiệm UX
     nut_pdf.disabled = true;
-    nut_pdf.innerHTML = "⏳";
-    vung_link.innerHTML = "<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo PDF...</span>";
+    nut_pdf.style.width = 'auto';
+    nut_pdf.style.padding = '0 15px';
+    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang tạo PDF...`;
+    vung_link.innerHTML = "";
 
     const dki = {
       gkiem: document.getElementById('s_gv').value,
@@ -588,22 +591,30 @@
 
     google.script.run
       .withSuccessHandler(kq => {
+        // Phục hồi nguyên trạng kích thước nút ban đầu
         nut_pdf.disabled = false;
+        nut_pdf.style.width = '45px';
+        nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
+        
         if (kq.tcon) {
           vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
         } else {
-          hienhtt("❌ Lỗi: " + kq.tbao); 
+          hienhtt("❌ Lỗi hệ thống: " + kq.tbao); 
           vung_link.innerHTML = "<span style='color:red;'>Lỗi máy chủ!</span>";
         }
       })
       .withFailureHandler(loi => {
+        // Phục hồi nguyên trạng kích thước nút ban đầu
         nut_pdf.disabled = false;
+        nut_pdf.style.width = '45px';
+        nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
+        
         hienhtt("❌ Mất kết nối khi tạo PDF hoặc phiên làm việc hết hạn: " + loi.message); 
         vung_link.innerHTML = "<span style='color:red;'>Lỗi mạng!</span>";
       })
-      .skt_tk_taobc_pdf(dki); // Kế thừa thẳng API sẵn có của hệ thống
+      .skt_tk_taobc_pdf(dki); 
   }
 
 </script>
