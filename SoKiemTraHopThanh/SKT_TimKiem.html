@@ -307,35 +307,50 @@
       return null;
   }
 
+  // Thêm biến đếm nhịp để chống nghẽn máy chủ (Thuật toán Debounce)
+  let cai_dong_ho_cat = null;
+
   function locDuLieuTucThoi() {
-    const gv = document.getElementById('s_gv').value.trim();
-    const nkt = document.getElementById('s_nkt').value.trim();
-    const bp = document.getElementById('s_bp').value.trim();
-    const tuNgay = document.getElementById('s_from').value;
-    const denNgay = document.getElementById('s_to').value;
+    // Hủy bỏ lệnh cũ nếu người dùng gõ/chọn liên tục chưa xong
+    if (cai_dong_ho_cat) clearTimeout(cai_dong_ho_cat);
 
-    const ngayBatDau = skt_chuyenDoiNgay_js(tuNgay);
-    const ngayKetThuc = skt_chuyenDoiNgay_js(denNgay);
+    // Bắt đầu đếm ngược 0.5 giây sau thao tác cuối cùng mới nổ máy chủ
+    cai_dong_ho_cat = setTimeout(() => {
+      const gio_gv = document.getElementById('s_gv').value.trim();
+      const gio_nkt = document.getElementById('s_nkt').value.trim();
+      const gio_bp = document.getElementById('s_bp').value.trim();
+      const gio_tu = document.getElementById('s_from').value;
+      const gio_den = document.getElementById('s_to').value;
 
-    const duLieuDaLoc = sktDuLieuBoNhoDem.filter(bg => {
-        let thoaMan = true;
-        if (gv && String(bg[0]).trim() !== gv) thoaMan = false;
-        if (thoaMan && nkt && String(bg[1]).trim() !== nkt) thoaMan = false;
-        if (thoaMan && bp && String(bg[2]).trim() !== bp) thoaMan = false;
+      // Đóng gói hành trang gửi lên máy chủ
+      const cai_tui_loc = {
+        gkiem: gio_gv,
+        nkiem: gio_nkt,
+        bkiem: gio_bp,
+        tkiem: gio_tu,
+        dkiem: gio_den
+      };
 
-        if (thoaMan && (ngayBatDau || ngayKetThuc)) {
-            let ngayCuaDong = skt_chuyenDoiNgay_js(bg[4]);
-            if (!ngayCuaDong) {
-                thoaMan = false;
-            } else {
-                if (ngayBatDau && ngayCuaDong < ngayBatDau) thoaMan = false;
-                if (ngayKetThuc && ngayCuaDong > ngayKetThuc) thoaMan = false;
-            }
-        }
-        return thoaMan;
-    });
+      // Bật thông báo chờ trên giao diện
+      const man_hinh = document.getElementById('searchBody');
+      man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">⏳ Đang truy xuất trực tiếp kho dữ liệu DATAKT, vui lòng đợi...</td></tr>';
+      document.getElementById('dashboard_stats').style.display = 'none';
 
-    hienThiBangKetQua(duLieuDaLoc);
+      // Điều quân gọi thẳng hàm quét dữ liệu skt_tk_timbg (đã tối ưu ranh giới giờ ở bước trước)
+      google.script.run
+        .withSuccessHandler(ro_hoa_qua => {
+           if (ro_hoa_qua && ro_hoa_qua.length > 0) {
+               hienThiBangKetQua(ro_hoa_qua); 
+           } else {
+               man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">❌ Không tìm thấy hồ sơ nào trong DATAKT khớp với điều kiện tra cứu.</td></tr>';
+               document.getElementById('dashboard_stats').style.display = 'none';
+           }
+        })
+        .withFailureHandler(loi_mang => {
+           man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Đường truyền gián đoạn: ${loi_mang.message}</td></tr>`;
+        })
+        .skt_tk_timbg(cai_tui_loc);
+    }, 500); 
   }
 
   function hienThiBangKetQua(kqt) {
