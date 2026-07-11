@@ -500,13 +500,12 @@
 
 <script>
   let sktDuLieuBoNhoDem = []; 
-  let cai_dong_ho_cat = null; 
   let moc_thoi_gian_ram = null; // Ranh giới lịch sử thời gian
 
   (function khoitti() {
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
-        nv.addEventListener("input", function() { locDuLieuTucThoi(); });
+        // Đã xóa bỏ sự kiện input để tránh load giật lag theo đúng yêu cầu
         nv.addEventListener("keydown", function(sk) {
             if (sk.key === "Enter") { sk.preventDefault(); locDuLieuTucThoi(); }
         });
@@ -532,14 +531,14 @@
     // Nạp dữ liệu mới nhất (200 dòng) vào RAM
     sktDuLieuBoNhoDem = window.khomam || [];
     
-    // Đo mốc thời gian cũ nhất trong RAM hiện có (Dữ liệu đã được Server xếp mới nhất lên đầu)
+    // Đo mốc thời gian cũ nhất trong RAM hiện có (Dữ liệu đã được Server xếp mới nhất lên đầu, dòng cuối cùng là cũ nhất)
     if(sktDuLieuBoNhoDem.length > 0) {
         let qua_chuoi_tay = sktDuLieuBoNhoDem[sktDuLieuBoNhoDem.length - 1][4];
         moc_thoi_gian_ram = skt_chuyenDoiNgay_js(qua_chuoi_tay);
         if(moc_thoi_gian_ram) moc_thoi_gian_ram.setHours(0,0,0,0);
     }
 
-    locDuLieuTucThoi(); 
+    locDuLieuTucThoi(true); // Gắn cờ khởi tạo ban đầu để không hiển thị "Đang tìm kiếm"
     
     document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
         
@@ -563,8 +562,8 @@
       return null;
   }
 
-  // --- THUẬT TOÁN LAI (HYBRID FILTER) ---
-  function locDuLieuTucThoi() {
+  // --- THUẬT TOÁN LAI (HYBRID FILTER) CẬP NHẬT: CHỈ TÌM KHI RA LỆNH ---
+  function locDuLieuTucThoi(la_khoi_tao = false) {
     const gv = document.getElementById('s_gv').value.trim();
     const nkt = document.getElementById('s_nkt').value.trim();
     const bp = document.getElementById('s_bp').value.trim();
@@ -580,7 +579,7 @@
     // Kích hoạt chốt chặn ranh giới Server
     let can_goi_may_chu = false;
     
-    // Nếu tổng dữ liệu thực tế lớn (đã đạt giới hạn 200 dòng cắt)
+    // Nếu tổng dữ liệu RAM đang full 200 dòng, có nguy cơ dữ liệu cũ hơn nằm trên Server
     if (sktDuLieuBoNhoDem.length === 200) {
         if (!ngayBatDau) {
             can_goi_may_chu = true; // Quét rỗng ngày tức là gọi từ thuở sơ khai
@@ -614,30 +613,31 @@
         hienThiBangKetQua(duLieuDaLoc);
         
     } else {
-        // --- 2. DEBOUNCE - TÌM GỌI MÁY CHỦ SÂU ---
-        if (cai_dong_ho_cat) clearTimeout(cai_dong_ho_cat);
-        cai_dong_ho_cat = setTimeout(() => {
-            const man_hinh = document.getElementById('searchBody');
-            man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">⏳ Dữ liệu nằm ngoài bộ nhớ đệm nhanh. Đang truy xuất tự động từ máy chủ...</td></tr>';
-            document.getElementById('dashboard_stats').style.display = 'none';
-            document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#d97706;'>(Máy chủ)</span>";
+        // --- 2. TÌM KIẾM TRỰC TIẾP TRÊN MÁY CHỦ KHI VƯỢT BIÊN GIỚI RAM ---
+        const man_hinh = document.getElementById('searchBody');
+        if (!la_khoi_tao) {
+            man_hinh.innerHTML = '<tr><td colspan="17" class="no-result" style="font-weight:bold; color:#d97706;">⏳ Đang tìm kiếm... Dữ liệu nằm ngoài bộ nhớ đệm nhanh. Vui lòng đợi...</td></tr>';
+        }
+        document.getElementById('dashboard_stats').style.display = 'none';
+        document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#d97706;'>(Đang truy xuất máy chủ...)</span>";
 
-            const cai_tui_loc = { gkiem: gv, nkiem: nkt, bkiem: bp, tkiem: tuNgay, dkiem: denNgay };
+        const cai_tui_loc = { gkiem: gv, nkiem: nkt, bkiem: bp, tkiem: tuNgay, dkiem: denNgay };
 
-            google.script.run
-              .withSuccessHandler(ro_hoa_qua => {
-                 if (ro_hoa_qua && ro_hoa_qua.length > 0) {
-                     hienThiBangKetQua(ro_hoa_qua); 
-                 } else {
-                     man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">❌ Không tìm thấy hồ sơ nào trong DATAKT khớp với điều kiện tra cứu.</td></tr>';
-                     document.getElementById('dashboard_stats').style.display = 'none';
-                 }
-              })
-              .withFailureHandler(loi_mang => {
-                 man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Đường truyền gián đoạn: ${loi_mang.message}</td></tr>`;
-              })
-              .skt_tk_timbg(cai_tui_loc);
-        }, 500); 
+        google.script.run
+          .withSuccessHandler(ro_hoa_qua => {
+             document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#059669;'>(Dữ liệu máy chủ)</span>";
+             if (ro_hoa_qua && ro_hoa_qua.length > 0) {
+                 hienThiBangKetQua(ro_hoa_qua); 
+             } else {
+                 man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">❌ Không tìm thấy hồ sơ nào trong DATAKT khớp với điều kiện tra cứu.</td></tr>';
+                 document.getElementById('dashboard_stats').style.display = 'none';
+             }
+          })
+          .withFailureHandler(loi_mang => {
+             document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
+             man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Đường truyền gián đoạn: ${loi_mang.message}</td></tr>`;
+          })
+          .skt_tk_timbg(cai_tui_loc);
     }
   }
 
