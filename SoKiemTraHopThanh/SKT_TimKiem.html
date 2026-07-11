@@ -1,4 +1,3 @@
-
 <style>
   .header-card {
     background: white; 
@@ -103,7 +102,6 @@
     cursor: wait; 
   }
 
-  /* NÚT XUẤT PDF MỚI */
   .pdf-btn { 
     background: #e11d48; 
     color: white; 
@@ -502,9 +500,10 @@
 
 <script>
   let sktDuLieuBoNhoDem = []; 
-  
+  let cai_dong_ho_cat = null; 
+  let moc_thoi_gian_ram = null; // Ranh giới lịch sử thời gian
+
   (function khoitti() {
-    // 1. Tự động gắn sự kiện Lọc Realtime cho mọi ô nhập liệu (On Input = Filter RAM)
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
         nv.addEventListener("input", function() { locDuLieuTucThoi(); });
@@ -530,26 +529,19 @@
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-    // 2. Chớp nhoáng in ra hồ sơ bộ đệm gốc có sẵn để người dùng nhìn thấy ngay
+    // Nạp dữ liệu mới nhất (200 dòng) vào RAM
     sktDuLieuBoNhoDem = window.khomam || [];
+    
+    // Đo mốc thời gian cũ nhất trong RAM hiện có (Dữ liệu đã được Server xếp mới nhất lên đầu)
+    if(sktDuLieuBoNhoDem.length > 0) {
+        let qua_chuoi_tay = sktDuLieuBoNhoDem[sktDuLieuBoNhoDem.length - 1][4];
+        moc_thoi_gian_ram = skt_chuyenDoiNgay_js(qua_chuoi_tay);
+        if(moc_thoi_gian_ram) moc_thoi_gian_ram.setHours(0,0,0,0);
+    }
+
     locDuLieuTucThoi(); 
     
-    document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#d97706;'>(⏳ Đang đồng bộ chìm...)</span>";
-
-    // 3. KHỞI ĐỘNG ĐỘNG CƠ HÚT NGẦM DỮ LIỆU TỪ MÁY CHỦ XUỐNG RAM
-    google.script.run
-        .withSuccessHandler(toan_bo_data => {
-            if(toan_bo_data && toan_bo_data.length > 0) {
-                sktDuLieuBoNhoDem = toan_bo_data; // Nạp hàng ngàn hồ sơ vào thanh RAM
-            }
-            document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#059669;'>(⚡ TỐC ĐỘ RAM)</span>";
-            locDuLieuTucThoi(); // Quét lại để kết quả tuyệt đối chính xác
-        })
-        .withFailureHandler(loi => {
-            console.log("Lỗi đồng bộ ngầm: " + loi);
-            document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
-        })
-        .skt_lay_full_data_ram();
+    document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
         
     setTimeout(function() {
         const tkFooter = document.getElementById('footer_timkiem');
@@ -571,7 +563,7 @@
       return null;
   }
 
-  // --- THUẬT TOÁN LỌC TRÊN RAM (IN-MEMORY FILTER) TỐC ĐỘ 0.001 GIÂY ---
+  // --- THUẬT TOÁN LAI (HYBRID FILTER) ---
   function locDuLieuTucThoi() {
     const gv = document.getElementById('s_gv').value.trim();
     const nkt = document.getElementById('s_nkt').value.trim();
@@ -585,25 +577,68 @@
     const ngayKetThuc = skt_chuyenDoiNgay_js(denNgay);
     if (ngayKetThuc) ngayKetThuc.setHours(23, 59, 59, 999);
 
-    const duLieuDaLoc = sktDuLieuBoNhoDem.filter(bg => {
-        let thoaMan = true;
-        if (gv && String(bg[0]).trim() !== gv) thoaMan = false;
-        if (thoaMan && nkt && String(bg[1]).trim() !== nkt) thoaMan = false;
-        if (thoaMan && bp && String(bg[2]).trim() !== bp) thoaMan = false;
-
-        if (thoaMan && (ngayBatDau || ngayKetThuc)) {
-            let ngayCuaDong = skt_chuyenDoiNgay_js(bg[4]);
-            if (!ngayCuaDong) {
-                thoaMan = false;
-            } else {
-                if (ngayBatDau && ngayCuaDong < ngayBatDau) thoaMan = false;
-                if (ngayKetThuc && ngayCuaDong > ngayKetThuc) thoaMan = false;
-            }
+    // Kích hoạt chốt chặn ranh giới Server
+    let can_goi_may_chu = false;
+    
+    // Nếu tổng dữ liệu thực tế lớn (đã đạt giới hạn 200 dòng cắt)
+    if (sktDuLieuBoNhoDem.length === 200) {
+        if (!ngayBatDau) {
+            can_goi_may_chu = true; // Quét rỗng ngày tức là gọi từ thuở sơ khai
+        } else if (moc_thoi_gian_ram && ngayBatDau.getTime() < moc_thoi_gian_ram.getTime()) {
+            can_goi_may_chu = true; // Ngày cần tìm nằm ngoài biên giới thời gian RAM
         }
-        return thoaMan;
-    });
+    }
 
-    hienThiBangKetQua(duLieuDaLoc);
+    if (!can_goi_may_chu) {
+        // --- 1. LỌC SIÊU TỐC TRÊN RAM ---
+        document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
+        
+        const duLieuDaLoc = sktDuLieuBoNhoDem.filter(bg => {
+            let thoaMan = true;
+            if (gv && String(bg[0]).trim() !== gv) thoaMan = false;
+            if (thoaMan && nkt && String(bg[1]).trim() !== nkt) thoaMan = false;
+            if (thoaMan && bp && String(bg[2]).trim() !== bp) thoaMan = false;
+
+            if (thoaMan && (ngayBatDau || ngayKetThuc)) {
+                let ngayCuaDong = skt_chuyenDoiNgay_js(bg[4]);
+                if (!ngayCuaDong) {
+                    thoaMan = false;
+                } else {
+                    if (ngayBatDau && ngayCuaDong < ngayBatDau) thoaMan = false;
+                    if (ngayKetThuc && ngayCuaDong > ngayKetThuc) thoaMan = false;
+                }
+            }
+            return thoaMan;
+        });
+
+        hienThiBangKetQua(duLieuDaLoc);
+        
+    } else {
+        // --- 2. DEBOUNCE - TÌM GỌI MÁY CHỦ SÂU ---
+        if (cai_dong_ho_cat) clearTimeout(cai_dong_ho_cat);
+        cai_dong_ho_cat = setTimeout(() => {
+            const man_hinh = document.getElementById('searchBody');
+            man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">⏳ Dữ liệu nằm ngoài bộ nhớ đệm nhanh. Đang truy xuất tự động từ máy chủ...</td></tr>';
+            document.getElementById('dashboard_stats').style.display = 'none';
+            document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#d97706;'>(Máy chủ)</span>";
+
+            const cai_tui_loc = { gkiem: gv, nkiem: nkt, bkiem: bp, tkiem: tuNgay, dkiem: denNgay };
+
+            google.script.run
+              .withSuccessHandler(ro_hoa_qua => {
+                 if (ro_hoa_qua && ro_hoa_qua.length > 0) {
+                     hienThiBangKetQua(ro_hoa_qua); 
+                 } else {
+                     man_hinh.innerHTML = '<tr><td colspan="17" class="no-result">❌ Không tìm thấy hồ sơ nào trong DATAKT khớp với điều kiện tra cứu.</td></tr>';
+                     document.getElementById('dashboard_stats').style.display = 'none';
+                 }
+              })
+              .withFailureHandler(loi_mang => {
+                 man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Đường truyền gián đoạn: ${loi_mang.message}</td></tr>`;
+              })
+              .skt_tk_timbg(cai_tui_loc);
+        }, 500); 
+    }
   }
 
   function hienThiBangKetQua(kqt) {
@@ -653,7 +688,6 @@
     });
   }
 
-  // --- VIẾT THEO KHỐI: HÀM TÍNH TOÁN THỐNG KÊ (ĐÃ MỞ RỘNG MÃ) ---
   function tinhtth(dl) {
     let dt = { 
         bgh: 0, tcm: 0, tvp: 0, 
@@ -664,7 +698,6 @@
     };
 
     dl.forEach(dg => {
-        // Khối Bộ phận
         let bph = String(dg[2] || "").toLowerCase().trim();
         if (bph.includes("ban giám hiệu")) {
             dt.bgh++; 
@@ -674,7 +707,6 @@
             dt.tvp++;
         }
 
-        // Khối Hồ sơ
         let hs = String(dg[9] || "").toLowerCase().trim();
         if (hs !== "") { 
             dt.hs_total++; 
@@ -687,7 +719,6 @@
             }
         }
 
-        // Khối Giờ dạy
         let gd = String(dg[10] || "").toLowerCase().trim();
         if (gd !== "") { 
             dt.gd_total++; 
@@ -702,7 +733,6 @@
             }
         }
 
-        // Khối Khảo sát
         let ks = String(dg[11] || "").toLowerCase().trim();
         if (ks !== "") { 
             dt.ks_total++; 
@@ -717,7 +747,6 @@
             }
         }
 
-        // Khối Khác
         let khc = String(dg[12] || "").toLowerCase().trim();
         if (khc !== "") { 
             dt.khac_total++; 
@@ -733,7 +762,6 @@
         }
     });
 
-    // Cập nhật DOM
     document.getElementById('st_total').innerText = dl.length; 
     document.getElementById('st_bgh').innerText = dt.bgh; 
     document.getElementById('st_tcm').innerText = dt.tcm; 
@@ -776,7 +804,6 @@
     document.getElementById('print_link_container').innerHTML = ""; 
   }
 
-  // --- VIẾT THEO KHỐI: HÀM IN DOC ---
   function inba() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) { 
@@ -820,7 +847,6 @@
       .skt_taobc_vba(dki);
   }
 
-  // --- VIẾT THEO KHỐI: HÀM XUẤT PDF ---
   function xuat_qua_pdf() {
     const cai_bang_d = document.getElementById('searchBody');
     if (cai_bang_d.innerText.includes("Vui lòng chọn") || cai_bang_d.innerText.includes("Không tìm thấy") || cai_bang_d.rows.length === 0) { 
