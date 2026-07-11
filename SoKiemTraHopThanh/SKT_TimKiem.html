@@ -571,7 +571,7 @@
     document.getElementById('tk_modal_overlay').style.display = 'none';
   }
 
-// --- HÀM XỬ LÝ LỆNH XUẤT PDF (ĐÃ SỬA LỖI UNDEFINED VÀ DỊCH LỖI TIMEOUT) ---
+// --- HÀM XUẤT PDF: DÙNG URL HACK CỦA GOOGLE DOCS (CHỐNG TREO FILE LỚN) ---
   function qua_tao_xuat_pdf() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
@@ -582,12 +582,14 @@
     const chu_goc = nut_pdf.innerHTML;
     const vung_link = document.getElementById('print_link_container');
     
+    // 1. Khóa nút, báo trạng thái đang tạo
     nut_pdf.disabled = true;
     nut_pdf.style.width = 'auto';
     nut_pdf.style.padding = '0 15px';
-    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang tạo PDF...`;
+    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang xử lý...`;
     vung_link.innerHTML = "";
 
+    // 2. Thu thập điều kiện lọc
     const dki = {
       gkiem: document.getElementById('s_gv').value,
       nkiem: document.getElementById('s_nkt').value,
@@ -597,16 +599,29 @@
     };
 
     google.script.run
-      .withSuccessHandler(kq => {
+      .withSuccessHandler(kq_ve => {
+        // Mở khóa nút
         nut_pdf.disabled = false;
         nut_pdf.style.width = '45px';
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
         
-        if (kq.tcon) {
-          vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
+        if (kq_ve.tcon) {
+          let r_id_lk = ""; 
+          let khop_ma = kq_ve.lkpt.match(/[-\w]{25,}/); // Bóc tách ID Doc
+          
+          if (khop_ma) r_id_lk = khop_ma[0];
+          
+          if(r_id_lk) {
+             // Ép link tải thẳng định dạng PDF
+             let lk_p_d_f = "https://docs.google.com/document/d/" + r_id_lk + "/export?format=pdf";
+             vung_link.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
+          } else {
+             // Nếu không bóc được ID thì trả về link Doc gốc
+             vung_link.innerHTML = `<a href="${kq_ve.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Mở file nguồn</a>`;
+          }
         } else {
-          hienhtt("❌ Lỗi hệ thống: " + kq.tbao); 
+          hienhtt("❌ Lỗi hệ thống: " + kq_ve.tbao); 
           vung_link.innerHTML = "<span style='color:red;'>Lỗi máy chủ!</span>";
         }
       })
@@ -616,17 +631,14 @@
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
         
-        // Bẫy lỗi an toàn: Kiểm tra biến tồn tại trước khi đọc message
         let thong_diep_loi = (loi_mang && loi_mang.message) ? loi_mang.message : String(loi_mang);
-        
-        // Dịch các lỗi timeout/mạng sang tiếng Việt thân thiện
         if (thong_diep_loi.includes("Failed to fetch") || thong_diep_loi.includes("NetworkError") || thong_diep_loi.includes("undefined")) {
-            thong_diep_loi = "Kết nối bị ngắt do thời gian tạo bảng quá lâu hoặc mạng yếu. Vui lòng chia nhỏ dữ liệu để xuất!";
+            thong_diep_loi = "Kết nối bị ngắt do dữ liệu lớn hoặc mạng yếu. Vui lòng thử lại!";
         }
         
         hienhtt("❌ Lỗi: " + thong_diep_loi); 
         vung_link.innerHTML = "<span style='color:red;'>Lỗi Timeout!</span>";
       })
-      .skt_tk_taobc_pdf(dki); 
+      .skt_tk_taobc_vb(dki); // <-- ĐIỂM QUAN TRỌNG: Gọi đúng hàm tạo Doc của hệ thống
   }
 </script>
