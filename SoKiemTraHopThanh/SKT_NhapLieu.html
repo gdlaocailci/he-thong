@@ -552,7 +552,7 @@ function themdongmo(dld = null) {
   }
 
 /* ========================================================================== */
-/* HÀM THỰC THI LƯU/NỘP ĐÃ TỐI ƯU PHÂN QUYỀN VÀ THÔNG BÁO LỖI CHÍNH XÁC       */
+/* HÀM THỰC THI LƯU/NỘP ĐÃ ĐỒNG BỘ MÃ LỆNH (SỬA LỖI THÔNG BÁO)                 */
 /* ========================================================================== */
 function thuchms(ha, nt, ch) {
     const con_trau_nuoc = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
@@ -568,8 +568,8 @@ function thuchms(ha, nt, ch) {
     const nguoi_cam_can = dlnktra.some(chau_chau => chuanhchu(chau_chau.taik) === con_trau_nuoc && chuanhchu(chau_chau.tenn) === chuanhchu(qua_dua_hau));
     const nguoi_len_thot = dlgvi.some(cao_cao => chuanhchu(cao_cao.taik) === con_trau_nuoc && chuanhchu(cao_cao.tenn) === chuanhchu(qua_chuoi_chin));
 
-    // LOGIC PHÂN QUYỀN TÁCH BẠCH
-    const isSubmit = (ha === "kep_luu_va_nop");
+    // ĐỒNG BỘ: Kiểm tra lệnh Nộp là "skt_nopbg_cuo"
+    const isSubmit = (ha === "skt_nopbg_cuo");
     
     if (isSubmit) {
         // Kiểm tra quyền nộp (Chỉ người kiểm tra hoặc quản trị cao nhất)
@@ -579,7 +579,7 @@ function thuchms(ha, nt, ch) {
             return;
         }
     } else {
-        // Kiểm tra quyền chỉnh sửa/lưu (Giáo viên hoặc người kiểm tra)
+        // Kiểm tra quyền chỉnh sửa/lưu
         const canSave = (nguoi_cam_can || nguoi_len_thot || quyen_toi_cao);
         if (!canSave) {
             hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa hồ sơ này!");
@@ -626,7 +626,7 @@ function thuchms(ha, nt, ch) {
     nt.innerText = "⏳ XỬ LÝ..."; 
     nt.classList.add('loading-spin');
     
-    // Áp dụng giải pháp "Lệnh 2 cõng lệnh 1" (Lưu nền trước khi nộp)
+    // Nếu là lệnh nộp, chạy logic "Lưu nền (Lệnh 1) cõng Nộp (Lệnh 2)"
     if (isSubmit) {
         google.script.run
         .withSuccessHandler(kq_luu => {
@@ -654,7 +654,7 @@ function thuchms(ha, nt, ch) {
             hienhth("❌ Lỗi lưu nền hệ thống: " + lo_luu.message);
         }).skt_luubg_nha(thung_chua_do);
     } else {
-        // Xử lý lưu tạm thông thường
+        // Lưu thường
         google.script.run
         .withSuccessHandler(kq => {
           nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin'); 
