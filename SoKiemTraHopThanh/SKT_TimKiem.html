@@ -346,7 +346,7 @@
     document.getElementById('dashboard_stats').style.display = 'none';
     document.getElementById('print_link_container').innerHTML = ""; 
     
-    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:#2563eb; font-weight:bold;">Đang quét toàn bộ máy chủ DATAKT. Vui lòng chờ trong giây lát...</td></tr>';
+    tbg.innerHTML = '<tr><td colspan="17" class="no-result" style="color:#2563eb; font-weight:bold;">Đang quét toàn bộ máy chủ. Vui lòng chờ trong giây lát...</td></tr>';
 
     google.script.run
       .withSuccessHandler(kq_tra_ve => {
