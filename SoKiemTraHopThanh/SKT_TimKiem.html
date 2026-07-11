@@ -563,7 +563,7 @@
     document.getElementById('tk_modal_overlay').style.display = 'none';
   }
 
-// --- HÀM XỬ LÝ LỆNH XUẤT TRỰC TIẾP RA PDF (ĐÃ SỬA LỖI TREO TIẾN TRÌNH) ---
+// --- HÀM XỬ LÝ LỆNH XUẤT TRỰC TIẾP RA PDF (BẺ LÁI BẰNG ENDPOINT GOOGLE) ---
   function qua_tao_xuat_pdf() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
@@ -574,11 +574,10 @@
     const chu_goc = nut_pdf.innerHTML;
     const vung_link = document.getElementById('print_link_container');
     
-    // Bật hiệu ứng chờ đợi và tự động giãn ngang nút PDF tăng trải nghiệm UX
     nut_pdf.disabled = true;
     nut_pdf.style.width = 'auto';
     nut_pdf.style.padding = '0 15px';
-    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang tạo PDF...`;
+    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang tải...`;
     vung_link.innerHTML = "";
 
     const dki = {
@@ -589,32 +588,42 @@
       dkiem: document.getElementById('s_to').value
     };
 
+    // Gọi trực tiếp hàm tạo file Doc gốc (skt_taobc_vba) để giảm tải server
     google.script.run
       .withSuccessHandler(kq => {
-        // Phục hồi nguyên trạng kích thước nút ban đầu
         nut_pdf.disabled = false;
         nut_pdf.style.width = '45px';
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
         
         if (kq.tcon) {
-          vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
+          let id_cay_chuoi = ""; 
+          let boc_vo = kq.lkpt.match(/[-\w]{25,}/); // Bóc tách ID Doc từ link gốc
+          
+          if (boc_vo) id_cay_chuoi = boc_vo[0];
+          
+          if(id_cay_chuoi) {
+             // Thuật toán ép xuất PDF ngay lập tức từ ID của file Doc
+             let lk_ep_chin = "https://docs.google.com/document/d/" + id_cay_chuoi + "/export?format=pdf";
+             vung_link.innerHTML = `<a href="${lk_ep_chin}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
+          } else {
+             // Dự phòng nếu lỗi RegEx, trả về link Doc mặc định
+             vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Mở file (Lỗi bóc ID)</a>`;
+          }
         } else {
           hienhtt("❌ Lỗi hệ thống: " + kq.tbao); 
           vung_link.innerHTML = "<span style='color:red;'>Lỗi máy chủ!</span>";
         }
       })
       .withFailureHandler(loi => {
-        // Phục hồi nguyên trạng kích thước nút ban đầu
         nut_pdf.disabled = false;
         nut_pdf.style.width = '45px';
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
         
-        hienhtt("❌ Mất kết nối khi tạo PDF hoặc phiên làm việc hết hạn: " + loi.message); 
+        hienhtt("❌ Mất kết nối khi tạo PDF: " + loi.message); 
         vung_link.innerHTML = "<span style='color:red;'>Lỗi mạng!</span>";
       })
-      .skt_tk_taobc_pdf(dki); 
+      .skt_taobc_vba(dki); // Kế thừa thẳng API sẵn có của hệ thống
   }
-
 </script>
