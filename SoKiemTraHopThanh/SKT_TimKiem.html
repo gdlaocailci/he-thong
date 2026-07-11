@@ -505,7 +505,6 @@
   (function khoitti() {
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
-        // Nguyên tắc mới: Không kích hoạt tìm kiếm thời gian thực để chống nghẽn
         nv.addEventListener("keydown", function(sk) {
             if (sk.key === "Enter") { sk.preventDefault(); locDuLieuTucThoi(); }
         });
@@ -531,14 +530,14 @@
     // Nạp dữ liệu mới nhất (200 dòng) vào RAM
     sktDuLieuBoNhoDem = window.khomam || [];
     
-    // Đo mốc thời gian cũ nhất trong RAM hiện có (Dữ liệu đã được Server xếp mới nhất lên đầu, dòng cuối cùng là cũ nhất)
+    // Đo mốc thời gian cũ nhất trong RAM hiện có
     if(sktDuLieuBoNhoDem.length > 0) {
         let qua_chuoi_tay = sktDuLieuBoNhoDem[sktDuLieuBoNhoDem.length - 1][4];
         moc_thoi_gian_ram = skt_chuyenDoiNgay_js(qua_chuoi_tay);
         if(moc_thoi_gian_ram) moc_thoi_gian_ram.setHours(0,0,0,0);
     }
 
-    locDuLieuTucThoi(true); // Gắn cờ khởi tạo ban đầu để không hiển thị "Đang tìm kiếm"
+    locDuLieuTucThoi(true); 
     
     document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
         
@@ -562,7 +561,7 @@
       return null;
   }
 
-  // --- THUẬT TOÁN LAI (HYBRID FILTER) CẬP NHẬT: CHỈ TÌM KHI BẤM NÚT HOẶC ENTER ---
+  // --- THUẬT TOÁN LAI (HYBRID FILTER) CẬP NHẬT: GỬI KÈM ĐỊNH DANH tkngd_client VÀ XỬ LÝ LỖI CHUẨN ---
   function locDuLieuTucThoi(la_khoi_tao = false) {
     const gv = document.getElementById('s_gv').value.trim();
     const nkt = document.getElementById('s_nkt').value.trim();
@@ -576,15 +575,13 @@
     const ngayKetThuc = skt_chuyenDoiNgay_js(denNgay);
     if (ngayKetThuc) ngayKetThuc.setHours(23, 59, 59, 999);
 
-    // Kích hoạt chốt chặn ranh giới Server
     let can_goi_may_chu = false;
     
-    // Nếu tổng dữ liệu RAM đang full 200 dòng, có nguy cơ dữ liệu cũ hơn nằm trên Server
     if (sktDuLieuBoNhoDem.length === 200) {
         if (!ngayBatDau) {
-            can_goi_may_chu = true; // Quét rỗng ngày tức là gọi từ thuở sơ khai
+            can_goi_may_chu = true; 
         } else if (moc_thoi_gian_ram && ngayBatDau.getTime() < moc_thoi_gian_ram.getTime()) {
-            can_goi_may_chu = true; // Ngày cần tìm nằm ngoài biên giới thời gian RAM
+            can_goi_may_chu = true; 
         }
     }
 
@@ -613,7 +610,7 @@
         hienThiBangKetQua(duLieuDaLoc);
         
     } else {
-        // --- 2. TÌM KIẾM TRỰC TIẾP TRÊN MÁY CHỦ KHI VƯỢT BIÊN GIỚI RAM ---
+        // --- 2. TÌM KIẾM TRỰC TIẾP TRÊN MÁY CHỦ ---
         const man_hinh = document.getElementById('searchBody');
         if (!la_khoi_tao) {
             man_hinh.innerHTML = '<tr><td colspan="17" class="no-result" style="font-weight:bold; color:#d97706;">⏳ Đang tìm kiếm... Dữ liệu nằm ngoài bộ nhớ đệm nhanh. Vui lòng đợi...</td></tr>';
@@ -621,9 +618,10 @@
         document.getElementById('dashboard_stats').style.display = 'none';
         document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#d97706;'>(Đang truy xuất máy chủ...)</span>";
 
-        const cai_tui_loc = { gkiem: gv, nkiem: nkt, bkiem: bp, tkiem: tuNgay, dkiem: denNgay };
+        // Cập nhật: Lấy định danh người dùng từ bộ nạp ban đầu (ruongbac.dldanh)
+        const qua_xoai_client = (window.ruongbac && window.ruongbac.dldanh) ? window.ruongbac.dldanh : "";
+        const cai_tui_loc = { gkiem: gv, nkiem: nkt, bkiem: bp, tkiem: tuNgay, dkiem: denNgay, tkngd_client: qua_xoai_client };
 
-        // Đã gỡ lỗi treo cứng ngầm do máy chủ trước đây trả về object Date không hợp lệ
         google.script.run
           .withSuccessHandler(ro_hoa_qua => {
              document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU") + " <span style='font-size:14px; color:#059669;'>(Dữ liệu máy chủ)</span>";
@@ -635,9 +633,8 @@
              }
           })
           .withFailureHandler(loi_mang => {
-             console.error("Lỗi Google Script Run:", loi_mang);
              document.getElementById('title_timkiem').innerHTML = (typeof SKT_TEN_PM_UP !== 'undefined' ? "TRA CỨU & THỐNG KÊ - " + SKT_TEN_PM_UP : "TRA CỨU");
-             man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red;">❌ Có lỗi xảy ra trong quá trình truy xuất: ${loi_mang.message}</td></tr>`;
+             man_hinh.innerHTML = `<tr><td colspan="17" class="no-result" style="color:red; font-weight:bold;">⛔ TRUY CẬP BỊ TỪ CHỐI<br>LỖI ĐƯỜNG TRUYỀN GOOGLE: Failed to fetch<br>ĐĂNG NHẬP LẠI</td></tr>`;
           })
           .skt_tk_timbg(cai_tui_loc);
     }
@@ -821,12 +818,14 @@
     nt.innerHTML = "⏳"; 
     vl.innerHTML = "<span style='color:blue; font-size:12px; margin-left:5px;'>Đang tạo Doc...</span>";
     
+    const qua_xoai_client = (window.ruongbac && window.ruongbac.dldanh) ? window.ruongbac.dldanh : "";
     const dki = { 
         gkiem: document.getElementById('s_gv').value, 
         nkiem: document.getElementById('s_nkt').value, 
         bkiem: document.getElementById('s_bp').value, 
         tkiem: document.getElementById('s_from').value, 
-        dkiem: document.getElementById('s_to').value 
+        dkiem: document.getElementById('s_to').value,
+        tkngd_client: qua_xoai_client
     };
     
     google.script.run
@@ -843,8 +842,8 @@
       .withFailureHandler(loi => {
         nt.disabled = false; 
         nt.innerHTML = chg; 
-        hienhtt("❌ Mất kết nối khi in: " + loi.message); 
-        vl.innerHTML = "<span style='color:red;'>Lỗi!</span>";
+        hienhtt("⛔ TRUY CẬP BỊ TỪ CHỐI\nLỖI ĐƯỜNG TRUYỀN GOOGLE: Failed to fetch\nĐĂNG NHẬP LẠI"); 
+        vl.innerHTML = "<span style='color:red; font-weight:bold;'>Lỗi!</span>";
       })
       .skt_taobc_vba(dki);
   }
@@ -864,12 +863,14 @@
     cai_n_tao.innerHTML = "⏳"; 
     gio_hung.innerHTML = "<span style='color:#e11d48; font-size:12px; margin-left:5px;'>Đang tạo PDF...</span>";
     
+    const qua_xoai_client = (window.ruongbac && window.ruongbac.dldanh) ? window.ruongbac.dldanh : "";
     const dk_loc_cua = { 
         gkiem: document.getElementById('s_gv').value, 
         nkiem: document.getElementById('s_nkt').value, 
         bkiem: document.getElementById('s_bp').value, 
         tkiem: document.getElementById('s_from').value, 
-        dkiem: document.getElementById('s_to').value 
+        dkiem: document.getElementById('s_to').value,
+        tkngd_client: qua_xoai_client
     };
     
     google.script.run
@@ -898,8 +899,8 @@
       .withFailureHandler(loi_x => {
         cai_n_tao.disabled = false; 
         cai_n_tao.innerHTML = ao_giap; 
-        hienhtt("❌ Mất kết nối: " + loi_x.message); 
-        gio_hung.innerHTML = "<span style='color:red;'>Lỗi!</span>";
+        hienhtt("⛔ TRUY CẬP BỊ TỪ CHỐI\nLỖI ĐƯỜNG TRUYỀN GOOGLE: Failed to fetch\nĐĂNG NHẬP LẠI"); 
+        gio_hung.innerHTML = "<span style='color:red; font-weight:bold;'>Lỗi!</span>";
       })
       .skt_taobc_vba(dk_loc_cua);
   }
