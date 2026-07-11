@@ -435,49 +435,57 @@ function khindthd(lo) {
 }
 
 /* ========================================================================== */
-/* KHỐI ĐIỀU KHIỂN QUYỀN TRUY CẬP (QUY CHẾ MỚI)                               */
+/* KHỐI ĐIỀU KHIỂN QUYỀN (THUẬT TOÁN FAIL-SECURE - KHÓA CHẶT TUYỆT ĐỐI)      */
 /* ========================================================================== */
 function apdquye() {
     const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     
-    // Nhận diện vai trò
+    // 1. Xác định vai trò
     const isInspector = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx');
     const selectedGV = document.getElementById('cbGiaoVien').value;
     const userTen = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
+    // Kiểm tra xem user có phải chủ nhân hồ sơ này không
     const isOwner = (chuanhchu(userTen) === chuanhchu(selectedGV) && selectedGV !== "");
 
-    // 1. Điều khiển các ô lọc (Chỉ Inspector mới được đổi bộ lọc)
-    document.querySelectorAll('.f-input').forEach(input => {
+    // 2. Khóa/Mở Bộ lọc (Inspector mới có quyền điều hướng)
+    const filters = document.querySelectorAll('.f-input');
+    filters.forEach(input => {
+        // Luôn mở ô chọn Lịch sử (MaHoSo) cho tất cả, còn lại chỉ Inspector mới được dùng
         if (input.id !== 'cbMaHoSo') {
             input.disabled = !isInspector;
+        } else {
+            input.disabled = false; // Luôn mở
         }
     });
 
-    // 2. Điều khiển bảng nhập liệu
+    // 3. Khóa/Mở bảng nhập liệu (Nguyên tắc: Khóa mặc định)
     document.querySelectorAll('#tableContent tr').forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         
         cacn.forEach((input, index) => {
+            // MẶC ĐỊNH KHÓA TẤT CẢ
+            input.disabled = true;
+
+            // NẾU LÀ INSPECTOR
             if (isInspector) {
-                // Inspector toàn quyền
                 input.disabled = false;
-            } else if (isOwner) {
-                // Người được kiểm tra chỉ mở đúng 2 cột: Ý kiến (9) và Ký tên (10)
-                // Lưu ý: index 9 và 10 dựa trên cấu trúc table trong themdongmo
-                input.disabled = (index !== 9 && index !== 10);
-            } else {
-                // Người lạ hoặc chưa chọn hồ sơ -> khóa trắng
-                input.disabled = true;
+            } 
+            // NẾU LÀ GIÁO VIÊN CHỦ SỞ HỮU (Chỉ mở đúng 2 cột Ý kiến và Ký tên)
+            else if (isOwner) {
+                // Giả định: index 9 là Ý kiến, index 10 là Ký tên
+                if (index === 9 || index === 10) {
+                    input.disabled = false;
+                }
             }
         });
 
-        // Ẩn/hiện nút xóa theo quyền
+        // Ẩn nút xóa nếu không phải Inspector
         const ntxo = dg.querySelector('.btn-icon-del');
-        if (ntxo) ntxo.style.visibility = (isInspector) ? 'visible' : 'hidden';
+        if (ntxo) ntxo.style.visibility = isInspector ? 'visible' : 'hidden';
     });
     
-    // 3. Điều khiển các nút hành động (Lưu/Nộp)
+    // 4. Điều khiển các nút hành động (Lưu/Nộp)
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
@@ -487,11 +495,12 @@ function apdquye() {
         if (btnSubmit) btnSubmit.disabled = false;
         if (addRowBtn) addRowBtn.style.display = 'block';
     } else if (isOwner) {
-        // Chủ sở hữu chỉ được lưu (nếu cần), không được nộp
+        // Chủ sở hữu chỉ được lưu (nếu cần), không được Nộp, không được thêm dòng
         if (btnSave) btnSave.disabled = false;
         if (btnSubmit) btnSubmit.disabled = true;
         if (addRowBtn) addRowBtn.style.display = 'none';
     } else {
+        // Người lạ hoặc chưa chọn hồ sơ -> Khóa toàn bộ
         if (btnSave) btnSave.disabled = true;
         if (btnSubmit) btnSubmit.disabled = true;
         if (addRowBtn) addRowBtn.style.display = 'none';
