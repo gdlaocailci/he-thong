@@ -438,7 +438,7 @@ function apdquye() {
     const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     
-    // Kiểm tra trạng thái ký nhận trên toàn bộ lưới dữ liệu (Khóa niêm phong tối cao)
+    // Thuật toán kiểm tra trạng thái ký nhận trên toàn bộ lưới dữ liệu
     let isRecordSigned = false;
     const danhSachDong = document.querySelectorAll('#tableContent tr');
     danhSachDong.forEach(dg => {
@@ -452,7 +452,7 @@ function apdquye() {
         }
     });
 
-    // 1. Xác định chính xác danh tính và vai trò tương tác
+    // 1. Phân loại đối tượng và cấu hình vai trò ban đầu
     const isSuperAdmin = (q_h_t === 'xx' || q_h_t === 'xxx');
     const isQuyenX = (q_h_t === 'x');
     
@@ -462,45 +462,40 @@ function apdquye() {
     const userTenGV = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
     const userTenNKT = dlnktra.find(x => chuanhchu(x.taik) === emcan)?.tenn;
     
-    // Điều kiện khớp danh tính giữa tài khoản đăng nhập và dữ liệu chọn trên form
     const isOwner = (chuanhchu(userTenGV) === chuanhchu(selectedGV) && selectedGV !== "");
     const isSelectedInspector = (chuanhchu(userTenNKT) === chuanhchu(selectedNKT) && selectedNKT !== "");
     
     const isInspectorRole = (isSuperAdmin || isQuyenX || dlnktra.some(x1 => chuanhchu(x1.taik) === emcan));
 
-    // 2. Điều phối trạng thái danh mục Bộ lọc hành chính
+    // 2. Điều khiển trạng thái Bộ lọc khóa/mở
     const filters = document.querySelectorAll('.f-input');
     filters.forEach(input => {
         if (input.id === 'cbMaHoSo') {
-            input.disabled = false; // Ô danh sách Lịch sử luôn mở để phục vụ tra cứu
+            input.disabled = false; 
         } else {
-            // Khóa bộ lọc nếu hồ sơ đã ký; nếu chưa ký thì chỉ mở cho vai trò kiểm tra/admin
             input.disabled = isRecordSigned ? true : !isInspectorRole; 
         }
     });
 
-    // 3. Khóa/Mở các cột dữ liệu trên lưới theo tiến trình nghiệp vụ
+    // 3. Khóa/Mở lưới dữ liệu nhập liệu
     danhSachDong.forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         
         cacn.forEach((input, index) => {
             if (isRecordSigned) {
-                input.disabled = true; // Khi đã ký nhận, tất cả các quyền đều bị khóa chặt
+                input.disabled = true; // Dữ liệu đã ký thì khóa tuyệt đối
             } else {
-                input.disabled = true; // Mặc định khóa toàn bộ các cột khi khởi động/chưa chọn đúng tên
+                input.disabled = true; 
                 
                 if (isSuperAdmin) {
-                    input.disabled = false; // Admin cấp cao giữ quyền cấu hình toàn diện
+                    input.disabled = false; 
                 } 
                 else if (isQuyenX && isSelectedInspector) {
-                    // Người kiểm tra chọn đúng tên tài khoản của mình:
-                    // Mở các cột chuyên môn kiểm tra, khóa cột Ý kiến (index 9) và Ký tên (index 10)
                     if (index !== 9 && index !== 10) {
                         input.disabled = false;
                     }
                 }
                 else if (isOwner) {
-                    // Giáo viên được kiểm tra: Chỉ mở duy nhất cột Ý kiến và Ký tên để hoàn tất biên bản
                     if (index === 9 || index === 10) {
                         input.disabled = false;
                     }
@@ -508,39 +503,41 @@ function apdquye() {
             }
         });
 
-        // Kiểm soát tính năng bổ trợ: Nút xóa dòng (Thùng rác)
         const ntxo = dg.querySelector('.btn-icon-del');
         if (ntxo) {
             if (isRecordSigned) {
-                ntxo.style.visibility = 'hidden';
+                ntxo.style.visibility = 'hidden'; 
             } else {
-                // Chỉ hiển thị nút xóa khi chọn đúng tên người kiểm tra hoặc tài khoản admin
                 ntxo.style.visibility = (isSuperAdmin || (isQuyenX && isSelectedInspector)) ? 'visible' : 'hidden';
             }
         }
 
-        // Kiểm soát tính năng bổ trợ: Nút gọi Trợ lý AI phân tích
         const ntai = dg.querySelector('.btn-ai-nhanxet');
         if (ntai) {
             if (isRecordSigned) {
                 ntai.style.display = 'none';
             } else {
-                // Trợ lý AI chỉ phục vụ người kiểm tra khi đã xác thực đúng danh tính
                 ntai.style.display = (isSuperAdmin || (isQuyenX && isSelectedInspector)) ? 'inline-block' : 'none';
             }
         }
     });
     
-    // 4. Quản lý trạng thái các nút bấm thực thi tác vụ (Lưu kết quả / Nộp báo cáo / Thêm dòng)
+    // 4. Quản lý trạng thái các nút lệnh thực thi tác vụ
     const btnSave = document.getElementById('btnSave');
     const btnSubmit = document.getElementById('btnSubmit');
     const addRowBtn = document.querySelector('.add-row-container');
 
     if (isRecordSigned) {
+        // 👉 ĐÃ FIX LỖI Ở ĐÂY: Vẫn khóa Lưu và Thêm dòng, nhưng MỞ khóa nút Nộp cho người kiểm tra
         if (btnSave) btnSave.disabled = true;
-        if (btnSubmit) btnSubmit.disabled = true;
         if (addRowBtn) addRowBtn.style.display = 'none';
+        
+        if (btnSubmit) {
+            // Chỉ người kiểm tra (hoặc Quản trị) mới được sáng nút nộp
+            btnSubmit.disabled = !(isSuperAdmin || (isQuyenX && isSelectedInspector));
+        }
     } else {
+        // Giữ nguyên logic khi chưa ký
         if (isSuperAdmin || (isQuyenX && isSelectedInspector)) {
             if (btnSave) btnSave.disabled = false;
             if (btnSubmit) btnSubmit.disabled = false;
