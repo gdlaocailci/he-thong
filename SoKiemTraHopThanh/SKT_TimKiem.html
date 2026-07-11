@@ -608,16 +608,18 @@
         
         if (kq_ve.tcon) {
           let r_id_lk = ""; 
-          let khop_ma = kq_ve.lkpt.match(/[-\w]{25,}/); // Bóc tách ID Doc
-          
+          let khop_ma = kq_ve.lkpt.match(/[-\w]{25,}/); 
           if (khop_ma) r_id_lk = khop_ma[0];
           
           if(r_id_lk) {
-             // Ép link tải thẳng định dạng PDF
              let lk_p_d_f = "https://docs.google.com/document/d/" + r_id_lk + "/export?format=pdf";
-             vung_link.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
+             // Giữ lại link phòng trường hợp trình duyệt bị chặn Popup
+             vung_link.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Đã xuất PDF (Bấm tải lại)</a>`;
+             
+             // --- BẮT ĐẦU NÂNG CẤP: Tự động kích hoạt tải file xuống ngay lập tức ---
+             window.open(lk_p_d_f, "_blank");
+             // --- KẾT THÚC NÂNG CẤP ---
           } else {
-             // Nếu không bóc được ID thì trả về link Doc gốc
              vung_link.innerHTML = `<a href="${kq_ve.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Mở file nguồn</a>`;
           }
         } else {
@@ -639,6 +641,6 @@
         hienhtt("❌ Lỗi: " + thong_diep_loi); 
         vung_link.innerHTML = "<span style='color:red;'>Lỗi Timeout!</span>";
       })
-      .skt_tk_taobc_vb(dki); // <-- ĐIỂM QUAN TRỌNG: Gọi đúng hàm tạo Doc của hệ thống
+      .skt_taobc_vba(dki); // Đồng bộ với luồng tạo Doc gốc
   }
 </script>
