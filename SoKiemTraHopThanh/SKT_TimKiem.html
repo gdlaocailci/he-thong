@@ -226,10 +226,29 @@
   })();
 
   // Hàm chuyển đổi ngày để so sánh nội bộ
-  function skt_chuyenDoiNgay_js(ngayStr) {
-      if (!ngayStr) return null;
-      const p1 = String(ngayStr).split('/');
-      if (p1.length === 3) return new Date(p1[2], p1[1] - 1, p1[0]);
+// Hàm chuyển đổi ngày để so sánh nội bộ (Đã nâng cấp chống lỗi khoảng trắng và định dạng Text)
+  function skt_chuyenDoiNgay_js(chuoi_ngay_vao) {
+      if (!chuoi_ngay_vao) return null;
+      if (chuoi_ngay_vao instanceof Date) return chuoi_ngay_vao;
+      
+      // Làm sạch chuỗi
+      let soi_day_client = String(chuoi_ngay_vao).trim().replace(/\s+/g, '');
+      if (soi_day_client === "") return null;
+      
+      let mang_chia = soi_day_client.split('/');
+      if (mang_chia.length === 3) {
+          let nam_c = parseInt(mang_chia[2], 10);
+          let thang_c = parseInt(mang_chia[1], 10) - 1;
+          let ngay_c = parseInt(mang_chia[0], 10);
+          
+          if (!isNaN(nam_c) && !isNaN(thang_c) && !isNaN(ngay_c)) {
+              return new Date(nam_c, thang_c, ngay_c);
+          }
+      }
+      
+      let du_phong_client = new Date(soi_day_client);
+      if (!isNaN(du_phong_client.getTime())) return du_phong_client;
+      
       return null;
   }
 
