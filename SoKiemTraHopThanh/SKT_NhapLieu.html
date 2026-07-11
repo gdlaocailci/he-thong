@@ -552,59 +552,73 @@ function themdongmo(dld = null) {
   }
 
 /* ========================================================================== */
-/* HÀM THỰC THI LƯU/NỘP DỮ LIỆU ĐÃ ĐƯỢC CHUẨN HÓA TRÁNH LỖI FETCH             */
+/* HÀM THỰC THI LƯU/NỘP ĐÃ TỐI ƯU PHÂN QUYỀN VÀ THÔNG BÁO LỖI CHÍNH XÁC       */
 /* ========================================================================== */
 function thuchms(ha, nt, ch) {
-    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-    const hpgv = document.getElementById('cbGiaoVien');
-    const hpnkt = document.getElementById('cbNguoiKiemTra');
-    const selectedGVName = String(hpgv.options[hpgv.selectedIndex]?.text || hpgv.value || "").trim();
-    const selectedNKTName = String(hpnkt.options[hpnkt.selectedIndex]?.text || hpnkt.value || "").trim();
+    const con_trau_nuoc = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
+    const hop_dien_thoai = document.getElementById('cbGiaoVien');
+    const hop_may_tinh = document.getElementById('cbNguoiKiemTra');
     
-    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
-    const isInspector = dlnktra.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedNKTName));
-    const isInspectee = dlgvi.some(x => chuanhchu(x.taik) === emcan && chuanhchu(x.tenn) === chuanhchu(selectedGVName));
+    const qua_chuoi_chin = String(hop_dien_thoai.options[hop_dien_thoai.selectedIndex]?.text || hop_dien_thoai.value || "").trim();
+    const qua_dua_hau = String(hop_may_tinh.options[hop_may_tinh.selectedIndex]?.text || hop_may_tinh.value || "").trim();
+    
+    const cai_ban_go = String(window.sktquyenht || "").trim().toLowerCase();
+    const quyen_toi_cao = (cai_ban_go === 'xxx'); 
+    
+    const nguoi_cam_can = dlnktra.some(chau_chau => chuanhchu(chau_chau.taik) === con_trau_nuoc && chuanhchu(chau_chau.tenn) === chuanhchu(qua_dua_hau));
+    const nguoi_len_thot = dlgvi.some(cao_cao => chuanhchu(cao_cao.taik) === con_trau_nuoc && chuanhchu(cao_cao.tenn) === chuanhchu(qua_chuoi_chin));
 
-    if (!isInspector && !isInspectee && !quyenQuanTri) {
-        hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa hồ sơ này!");
-        return; 
+    // LOGIC PHÂN QUYỀN TÁCH BẠCH
+    const isSubmit = (ha === "kep_luu_va_nop");
+    
+    if (isSubmit) {
+        // Kiểm tra quyền nộp (Chỉ người kiểm tra hoặc quản trị cao nhất)
+        const canSubmit = (nguoi_cam_can && (cai_ban_go === 'x' || cai_ban_go === 'xx' || cai_ban_go === 'xxx')) || quyen_toi_cao;
+        if (!canSubmit) {
+            hienhth("⛔ Bạn không có quyền nộp báo báo. Quyền nộp này là của người kiểm tra");
+            return;
+        }
+    } else {
+        // Kiểm tra quyền chỉnh sửa/lưu (Giáo viên hoặc người kiểm tra)
+        const canSave = (nguoi_cam_can || nguoi_len_thot || quyen_toi_cao);
+        if (!canSave) {
+            hienhth("⛔ LỖI PHÂN QUYỀN: Thầy/Cô không có quyền chỉnh sửa hồ sơ này!");
+            return; 
+        }
     }
 
-    const gv = hpgv.value;
-    const nkt = selectedNKTName;
-    const bp = document.getElementById('cbBoPhan').value;
-    const mbp = document.getElementById('txtMaBoPhan').value;
-    const dlg = [];
+    const gia_vi_1 = hop_dien_thoai.value;
+    const gia_vi_2 = qua_dua_hau;
+    const gia_vi_3 = document.getElementById('cbBoPhan').value;
+    const gia_vi_4 = document.getElementById('txtMaBoPhan').value;
+    const thung_chua_do = [];
     
-    document.querySelectorAll('#tableContent tr').forEach(dg => {
-        const cacn = dg.querySelectorAll('.cell-input');
-        const maHoSoCell = dg.querySelector('.ma-ho-so-cell');
+    document.querySelectorAll('#tableContent tr').forEach(dong_chay => {
+        const cac_hat_tieu = dong_chay.querySelectorAll('.cell-input');
+        const ma_the_bai = dong_chay.querySelector('.ma-ho-so-cell');
         
-        if (cacn && cacn.length >= 12) {
-            dlg.push([
-                gv, 
-                nkt, 
-                bp, 
-                mbp, 
-                cacn[0] ? cacn[0].value : "", 
-                cacn[1] ? cacn[1].value : "", 
-                cacn[2] ? cacn[2].value : "", 
-                cacn[3] ? cacn[3].value : "", 
-                cacn[4] ? cacn[4].value : "", 
-                cacn[5] ? cacn[5].value : "", 
-                cacn[6] ? cacn[6].value : "", 
-                cacn[7] ? cacn[7].value : "", 
-                cacn[8] ? cacn[8].value : "", 
-                cacn[9] ? cacn[9].value : "", 
-                cacn[10] ? cacn[10].value : "", 
-                cacn[11] ? cacn[11].value : "", 
-                maHoSoCell ? maHoSoCell.innerText.trim() : ""
+        if (cac_hat_tieu && cac_hat_tieu.length >= 12) {
+            thung_chua_do.push([
+                gia_vi_1, gia_vi_2, gia_vi_3, gia_vi_4, 
+                cac_hat_tieu[0] ? cac_hat_tieu[0].value : "", 
+                cac_hat_tieu[1] ? cac_hat_tieu[1].value : "", 
+                cac_hat_tieu[2] ? cac_hat_tieu[2].value : "", 
+                cac_hat_tieu[3] ? cac_hat_tieu[3].value : "", 
+                cac_hat_tieu[4] ? cac_hat_tieu[4].value : "", 
+                cac_hat_tieu[5] ? cac_hat_tieu[5].value : "", 
+                cac_hat_tieu[6] ? cac_hat_tieu[6].value : "", 
+                cac_hat_tieu[7] ? cac_hat_tieu[7].value : "", 
+                cac_hat_tieu[8] ? cac_hat_tieu[8].value : "", 
+                cac_hat_tieu[9] ? cac_hat_tieu[9].value : "", 
+                cac_hat_tieu[10] ? cac_hat_tieu[10].value : "", 
+                cac_hat_tieu[11] ? cac_hat_tieu[11].value : "", 
+                ma_the_bai ? ma_the_bai.innerText.trim() : ""
             ]);
         }
     });
 
-    if (dlg.length === 0) {
-        hienhth("⚠️ Không có dữ liệu hợp lệ trên lưới để lưu trữ!");
+    if (thung_chua_do.length === 0) {
+        hienhth("⚠️ Không có dữ liệu hợp lệ trên lưới để xử lý!");
         return;
     }
     
@@ -612,24 +626,49 @@ function thuchms(ha, nt, ch) {
     nt.innerText = "⏳ XỬ LÝ..."; 
     nt.classList.add('loading-spin');
     
-    google.script.run
-    .withSuccessHandler(kq => {
-      nt.disabled = false; 
-      nt.innerText = ch; 
-      nt.classList.remove('loading-spin'); 
-      hienhth(kq);
-      
-      if(typeof kq === 'string' && !kq.includes("⚠️") && !kq.includes("❌")) { 
-          setTimeout(lammdsm, 500); 
-          datlbie(); 
-      }
-    })
-    .withFailureHandler(lo => {
-        nt.disabled = false;
-        nt.innerText = ch;
-        nt.classList.remove('loading-spin');
-        hienhth("❌ Lỗi hệ thống hoặc đường truyền mạng: " + lo.message);
-    })[ha](dlg);
+    // Áp dụng giải pháp "Lệnh 2 cõng lệnh 1" (Lưu nền trước khi nộp)
+    if (isSubmit) {
+        google.script.run
+        .withSuccessHandler(kq_luu => {
+            if(typeof kq_luu === 'string' && (kq_luu.includes("⚠️") || kq_luu.includes("❌"))) { 
+                 nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin');
+                 hienhth(kq_luu);
+                 return;
+            }
+            google.script.run
+            .withSuccessHandler(kq_nop => {
+                nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin');
+                hienhth(kq_nop);
+                if(typeof kq_nop === 'string' && !kq_nop.includes("⚠️") && !kq_nop.includes("❌")) { 
+                    setTimeout(lammdsm, 500); 
+                    datlbie(); 
+                }
+            })
+            .withFailureHandler(lo_nop => {
+                nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin');
+                hienhth("❌ Lỗi nộp báo cáo: " + lo_nop.message);
+            }).skt_nopbg_cuo(thung_chua_do);
+        })
+        .withFailureHandler(lo_luu => {
+            nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin');
+            hienhth("❌ Lỗi lưu nền hệ thống: " + lo_luu.message);
+        }).skt_luubg_nha(thung_chua_do);
+    } else {
+        // Xử lý lưu tạm thông thường
+        google.script.run
+        .withSuccessHandler(kq => {
+          nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin'); 
+          hienhth(kq);
+          if(typeof kq === 'string' && !kq.includes("⚠️") && !kq.includes("❌")) { 
+              setTimeout(lammdsm, 500); 
+              datlbie(); 
+          }
+        })
+        .withFailureHandler(lo => {
+            nt.disabled = false; nt.innerText = ch; nt.classList.remove('loading-spin');
+            hienhth("❌ Lỗi đường truyền mạng: " + lo.message);
+        })[ha](thung_chua_do);
+    }
 }
   function kiemttrem(lo) {
     const gv = document.getElementById('cbGiaoVien').value;
