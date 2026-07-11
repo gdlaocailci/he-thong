@@ -571,7 +571,7 @@
     document.getElementById('tk_modal_overlay').style.display = 'none';
   }
 
-// --- HÀM XỬ LÝ LỆNH XUẤT TRỰC TIẾP RA PDF (BẺ LÁI BẰNG ENDPOINT GOOGLE) ---
+// --- HÀM XỬ LÝ LỆNH XUẤT PDF (ĐÃ SỬA LỖI UNDEFINED VÀ DỊCH LỖI TIMEOUT) ---
   function qua_tao_xuat_pdf() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
@@ -585,7 +585,7 @@
     nut_pdf.disabled = true;
     nut_pdf.style.width = 'auto';
     nut_pdf.style.padding = '0 15px';
-    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang tải...`;
+    nut_pdf.innerHTML = `<span class="loading-spinner"></span> Đang tạo PDF...`;
     vung_link.innerHTML = "";
 
     const dki = {
@@ -596,49 +596,37 @@
       dkiem: document.getElementById('s_to').value
     };
 
-    // Gọi trực tiếp hàm tạo file Doc gốc (skt_taobc_vba) để giảm tải server
     google.script.run
       .withSuccessHandler(kq => {
         nut_pdf.disabled = false;
         nut_pdf.style.width = '45px';
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
-        // --- BẮT ĐẦU NÂNG CẤP: Dịch lỗi thân thiện ---
-        let thong_diep_loi = loi.message;
-        if (thong_diep_loi.includes("Failed to fetch") || thong_diep_loi.includes("NetworkError")) {
-            thong_diep_loi = "Kết nối bị ngắt do thời gian tạo bảng quá lâu hoặc mạng yếu. Vui lòng chia nhỏ dữ liệu để xuất!";
-        }
-        hienhtt("❌ Lỗi: " + thong_diep_loi); 
-        vung_link.innerHTML = "<span style='color:red;'>Lỗi Timeout!</span>";
-        // --- KẾT THÚC NÂNG CẤP ---
+        
         if (kq.tcon) {
-          let id_cay_chuoi = ""; 
-          let boc_vo = kq.lkpt.match(/[-\w]{25,}/); // Bóc tách ID Doc từ link gốc
-          
-          if (boc_vo) id_cay_chuoi = boc_vo[0];
-          
-          if(id_cay_chuoi) {
-             // Thuật toán ép xuất PDF ngay lập tức từ ID của file Doc
-             let lk_ep_chin = "https://docs.google.com/document/d/" + id_cay_chuoi + "/export?format=pdf";
-             vung_link.innerHTML = `<a href="${lk_ep_chin}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
-          } else {
-             // Dự phòng nếu lỗi RegEx, trả về link Doc mặc định
-             vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Mở file (Lỗi bóc ID)</a>`;
-          }
+          vung_link.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Tải xuống PDF</a>`;
         } else {
           hienhtt("❌ Lỗi hệ thống: " + kq.tbao); 
           vung_link.innerHTML = "<span style='color:red;'>Lỗi máy chủ!</span>";
         }
       })
-      .withFailureHandler(loi => {
+      .withFailureHandler(loi_mang => {
         nut_pdf.disabled = false;
         nut_pdf.style.width = '45px';
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
         
-        hienhtt("❌ Mất kết nối khi tạo PDF: " + loi.message); 
-        vung_link.innerHTML = "<span style='color:red;'>Lỗi mạng!</span>";
+        // Bẫy lỗi an toàn: Kiểm tra biến tồn tại trước khi đọc message
+        let thong_diep_loi = (loi_mang && loi_mang.message) ? loi_mang.message : String(loi_mang);
+        
+        // Dịch các lỗi timeout/mạng sang tiếng Việt thân thiện
+        if (thong_diep_loi.includes("Failed to fetch") || thong_diep_loi.includes("NetworkError") || thong_diep_loi.includes("undefined")) {
+            thong_diep_loi = "Kết nối bị ngắt do thời gian tạo bảng quá lâu hoặc mạng yếu. Vui lòng chia nhỏ dữ liệu để xuất!";
+        }
+        
+        hienhtt("❌ Lỗi: " + thong_diep_loi); 
+        vung_link.innerHTML = "<span style='color:red;'>Lỗi Timeout!</span>";
       })
-      .skt_taobc_vba(dki); // Kế thừa thẳng API sẵn có của hệ thống
+      .skt_tk_taobc_pdf(dki); 
   }
 </script>
