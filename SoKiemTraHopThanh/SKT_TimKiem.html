@@ -614,7 +614,7 @@
           if(r_id_lk) {
              let lk_p_d_f = "https://docs.google.com/document/d/" + r_id_lk + "/export?format=pdf";
              // Giữ lại link phòng trường hợp trình duyệt bị chặn Popup
-             vung_link.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Đã xuất PDF (Bấm tải lại)</a>`;
+             vung_link.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Đã xuất PDF (Bấm để lưu)</a>`;
              
              // --- BẮT ĐẦU NÂNG CẤP: Tự động kích hoạt tải file xuống ngay lập tức ---
              window.open(lk_p_d_f, "_blank");
