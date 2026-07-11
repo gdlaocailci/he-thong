@@ -30,6 +30,16 @@
   }
   .print-btn:hover { background: #6d28d9; }
   .print-btn:disabled { background: #ccc; cursor: wait; }
+
+  /* MÃ MỚI: CSS CHO NÚT XUẤT PDF */
+  .pdf-btn { 
+    background: #e11d48; color: white; border: none; border-radius: 3px; 
+    cursor: pointer; font-weight: bold; height: 30px; width: 45px; margin-left: 5px; 
+    font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .pdf-btn:hover { background: #be123c; }
+  .pdf-btn:disabled { background: #ccc; cursor: wait; }
+
   .print-link { margin-left: 10px; font-size: 13px; font-weight: bold; color: #059669; text-decoration: none; border-bottom: 2px solid #059669; padding-bottom: 2px; animation: fadeIn 0.5s; white-space: nowrap; }
   .print-link:hover { color: #047857; border-color: #047857; }
 
@@ -55,8 +65,8 @@
   .result-table th { color: #0c4a6e; font-weight: bold; text-align: center; padding: 6px 4px; border-right: 1px solid #cbd5e1; font-size: 13px; border: 1px solid #cbd5e1; }
   
   .result-table td { 
-    color: #333;              /* Màu chữ nội dung (hiện là xám đen) */
-    font-size: 13px;          /* Cỡ chữ (Thầy/Cô có thể tăng lên cho dễ nhìn) */
+    color: #333;              
+    font-size: 13px;          
     border: 1px solid #cbd5e1; 
     padding: 4px; 
     vertical-align: top; 
@@ -131,8 +141,6 @@
     background: #bae6fd;
     color: #0c4a6e;
   }
-
-  
 </style>
 
 <div class="header-card">
@@ -148,6 +156,7 @@
       <button id="btn_search_main" class="search-btn" onclick="locDuLieuTucThoi()">🔍 Tìm</button>
       <button class="reset-search-btn" onclick="xoatti()">↻</button>
       <button class="print-btn" onclick="inba()" title="Xuất kết quả ra Google Doc">🖨️</button>
+      <button class="pdf-btn" onclick="xuat_qua_pdf()" title="Xuất kết quả ra file PDF">📄</button>
       <span id="print_link_container"></span>
     </div>
   </div>
@@ -233,7 +242,6 @@
 </div>
 
 <script>
-  // --- ĐỒNG BỘ ĐỊNH DANH GIAO DIỆN ---
   (function dongBoNhanDien() {
       setTimeout(function() {
           try {
@@ -249,12 +257,9 @@
       }, 50);
   })();
 
-  // --- LOGIC HOẠT ĐỘNG (LỌC CLIENT-SIDE) ---
-  
-  // Khai báo biến toàn cục lưu trữ dữ liệu bộ nhớ đệm
   let sktDuLieuBoNhoDem = [];
 
-(function khoitti() {
+  (function khoitti() {
     const ng = new Date();
     const th = String(ng.getMonth() + 1).padStart(2, '0');
     const na = ng.getFullYear();
@@ -277,13 +282,11 @@
     const nkt = document.getElementById('s_nkt');
     const bp = document.getElementById('s_bp');
     
-    // Đọc cấu hình từ bộ nhớ đệm thay vì gọi Server
     const chaucay = window.ruongbac || { dgv: [], dnk: [], dbp: [] };
     chaucay.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-    // Lấy dữ liệu bảng và kích hoạt hiển thị ngay lập tức
     sktDuLieuBoNhoDem = window.khomam || [];
     locDuLieuTucThoi(); 
   })();
@@ -297,7 +300,6 @@
     `;
   }
 
-  // Hàm phụ trợ chuyển đổi định dạng ngày JS
   function skt_chuyenDoiNgay_js(ngayStr) {
       if (!ngayStr) return null;
       const p1 = String(ngayStr).split('/');
@@ -305,7 +307,6 @@
       return null;
   }
 
-  // CORE LOGIC: THUẬT TOÁN LỌC TỨC THỜI PHÍA TRÌNH DUYỆT (THAY THẾ CHỨC NĂNG THUCHTI CŨ)
   function locDuLieuTucThoi() {
     const gv = document.getElementById('s_gv').value.trim();
     const nkt = document.getElementById('s_nkt').value.trim();
@@ -316,7 +317,6 @@
     const ngayBatDau = skt_chuyenDoiNgay_js(tuNgay);
     const ngayKetThuc = skt_chuyenDoiNgay_js(denNgay);
 
-    // Chạy vòng lặp nội bộ (RAM) duyệt qua sktDuLieuBoNhoDem cực nhanh
     const duLieuDaLoc = sktDuLieuBoNhoDem.filter(bg => {
         let thoaMan = true;
         if (gv && String(bg[0]).trim() !== gv) thoaMan = false;
@@ -338,7 +338,6 @@
     hienThiBangKetQua(duLieuDaLoc);
   }
 
-  // Hàm đổ mảng dữ liệu nội bộ ra giao diện bảng
   function hienThiBangKetQua(kqt) {
     document.getElementById('dashboard_stats').style.display = 'none';
     document.getElementById('print_link_container').innerHTML = ""; 
@@ -521,6 +520,58 @@ function inba() {
       vl.innerHTML = "<span style='color:red;'>Lỗi kết nối!</span>";
     })
     .skt_taobc_vba(dki);
+}
+
+/* MÃ MỚI: HÀM XUẤT TRỰC TIẾP RA PDF VỚI TÊN BIẾN VÔ NGHĨA THEO CHUẨN CỦA THẦY */
+function xuat_qua_pdf() {
+  const cai_bang_d = document.getElementById('searchBody');
+  if (cai_bang_d.innerText.includes("Vui lòng chọn") || cai_bang_d.innerText.includes("Không tìm thấy") || cai_bang_d.rows.length === 0) {
+    hienhtt("⚠️ Vui lòng tìm kiếm và đảm bảo có dữ liệu trước khi xuất PDF!"); 
+    return;
+  }
+  const cai_n_tao = document.querySelector('.pdf-btn');
+  const ao_giap = cai_n_tao.innerHTML;
+  const gio_hung = document.getElementById('print_link_container');
+  
+  cai_n_tao.disabled = true;
+  cai_n_tao.innerHTML = "⏳";
+  gio_hung.innerHTML = "<span style='color:#e11d48; font-size:12px; margin-left:5px;'>Đang tạo PDF...</span>";
+
+  const dk_loc_cua = {
+    gkiem: document.getElementById('s_gv').value,
+    nkiem: document.getElementById('s_nkt').value,
+    bkiem: document.getElementById('s_bp').value,
+    tkiem: document.getElementById('s_from').value,
+    dkiem: document.getElementById('s_to').value
+  };
+
+  google.script.run
+    .withSuccessHandler(kq_ve => {
+      cai_n_tao.disabled = false;
+      cai_n_tao.innerHTML = ao_giap;
+      if (kq_ve.tcon) {
+        let r_id_lk = "";
+        let khop_ma = kq_ve.lkpt.match(/[-\w]{25,}/);
+        if (khop_ma) r_id_lk = khop_ma[0];
+        
+        if(r_id_lk) {
+           let lk_p_d_f = "https://docs.google.com/document/d/" + r_id_lk + "/export?format=pdf";
+           gio_hung.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#e11d48; border-color:#e11d48;">📄 Tải PDF sổ kiểm tra</a>`;
+        } else {
+           gio_hung.innerHTML = `<a href="${kq_ve.lkpt}" target="_blank" class="print-link">🖨️ Link Google Doc</a>`;
+        }
+      } else {
+        hienhtt("❌ Lỗi: " + kq_ve.tbao); 
+        gio_hung.innerHTML = "<span style='color:red;'>Lỗi!</span>";
+      }
+    })
+    .withFailureHandler(loi_x => {
+      cai_n_tao.disabled = false;
+      cai_n_tao.innerHTML = ao_giap;
+      hienhtt("❌ Mất kết nối hoặc phiên làm việc hết hạn: " + loi_x.message); 
+      gio_hung.innerHTML = "<span style='color:red;'>Lỗi kết nối!</span>";
+    })
+    .skt_taobc_vba(dk_loc_cua);
 }
 
   function hienhtt(tb) {
