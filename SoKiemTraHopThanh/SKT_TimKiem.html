@@ -546,15 +546,23 @@
           vl.innerHTML = "<span style='color:red;'>Lỗi!</span>";
         }
       })
-      .withFailureHandler(loi => {
+     .withFailureHandler(loi => {
         nt.disabled = false;
         nt.innerHTML = chg;
-        hienhtt("❌ Mất kết nối khi in hoặc phiên làm việc hết hạn: " + loi.message); 
-        vl.innerHTML = "<span style='color:red;'>Lỗi kết nối!</span>";
+        
+        // Dịch lỗi thân thiện
+        let thong_diep_loi = loi.message;
+        if (thong_diep_loi.includes("Failed to fetch") || thong_diep_loi.includes("NetworkError")) {
+            thong_diep_loi = "Kết nối bị ngắt do thời gian tạo bảng quá lâu hoặc mạng yếu. Vui lòng chia nhỏ dữ liệu để xuất!";
+        }
+        
+        // Gọi hiển thị 1 lần duy nhất và dùng đúng biến vl
+        hienhtt("❌ Lỗi: " + thong_diep_loi); 
+        vl.innerHTML = "<span style='color:red;'>Lỗi Timeout!</span>";
       })
       .skt_taobc_vba(dki);
   }
-
+  
   function hienhtt(tb) {
     document.getElementById('tk_modal_message').innerText = tb;
     document.getElementById('tk_modal_overlay').style.display = 'flex';
@@ -595,7 +603,14 @@
         nut_pdf.style.width = '45px';
         nut_pdf.style.padding = '';
         nut_pdf.innerHTML = chu_goc;
-        
+        // --- BẮT ĐẦU NÂNG CẤP: Dịch lỗi thân thiện ---
+        let thong_diep_loi = loi.message;
+        if (thong_diep_loi.includes("Failed to fetch") || thong_diep_loi.includes("NetworkError")) {
+            thong_diep_loi = "Kết nối bị ngắt do thời gian tạo bảng quá lâu hoặc mạng yếu. Vui lòng chia nhỏ dữ liệu để xuất!";
+        }
+        hienhtt("❌ Lỗi: " + thong_diep_loi); 
+        vung_link.innerHTML = "<span style='color:red;'>Lỗi Timeout!</span>";
+        // --- KẾT THÚC NÂNG CẤP ---
         if (kq.tcon) {
           let id_cay_chuoi = ""; 
           let boc_vo = kq.lkpt.match(/[-\w]{25,}/); // Bóc tách ID Doc từ link gốc
