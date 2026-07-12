@@ -291,11 +291,17 @@
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-    // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
+   // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
     const ngayBatDau = skt_chuyenDoiNgay_js(document.getElementById('s_from').value);
     const ngayKetThuc = skt_chuyenDoiNgay_js(document.getElementById('s_to').value);
     if (ngayKetThuc) ngayKetThuc.setHours(23, 59, 59, 999);
     if (ngayBatDau) ngayBatDau.setHours(0, 0, 0, 0);
+
+    // 👉 THÊM VÀO ĐÂY: Đảm bảo khi khởi động lên, tất cả các ô lọc của trang tìm kiếm LUÔN MỞ, không khóa bất kỳ ai
+    ['s_gv', 's_nkt', 's_bp', 's_from', 's_to'].forEach(id_o => {
+        const o_loc = document.getElementById(id_o);
+        if (o_loc) o_loc.disabled = false;
+    });
 
     // Lọc bộ nhớ Cache đã được tối ưu hóa từ máy chủ mang về
     const du_lieu_ban_dau = (window.khomam || []).filter(bg => {
