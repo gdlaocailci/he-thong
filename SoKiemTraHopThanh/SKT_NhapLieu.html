@@ -395,6 +395,14 @@ function taidli() {
 }
 function khindthd(lo) {
     if ((lo === 'GV' || lo === 'NKT') && kiemttrem(lo)) return;
+    
+    // 👉 NÂNG CẤP: Xóa sạch bảng, reset mã hồ sơ và tạo dòng mới khi đổi Giáo viên hoặc Người kiểm tra
+    if (lo === 'GV' || lo === 'NKT') {
+        document.getElementById('tableContent').innerHTML = "";
+        document.getElementById('cbMaHoSo').value = "";
+        themdongmo();
+    }
+
     if (lo === 'GV') capnticd();
     const hp = document.getElementById('cbMaHoSo');
 
@@ -796,6 +804,12 @@ function thuchms(ha, nt, ch) {
   function dienhopd(idd, ds) { const pht = document.getElementById(idd); pht.innerHTML='<option value="">-- Chọn --</option>'; if(ds) ds.forEach(v1=>v1&&pht.add(new Option(v1,v1))); }
   function capnmab() { 
     document.getElementById('txtMaBoPhan').value = dlbpha[document.getElementById('cbBoPhan').value]||""; 
+    
+    // 👉 NÂNG CẤP: Xóa sạch bảng, reset mã hồ sơ và tạo dòng mới khi đổi Bộ phận
+    document.getElementById('tableContent').innerHTML = "";
+    document.getElementById('cbMaHoSo').value = "";
+    themdongmo();
+    
     apdquye(); // 👉 NÂNG CẤP: Gọi hàm kiểm tra quyền ngay khi chọn xong Bộ phận
 }
   function hienhth(tb) { document.getElementById('modal_message_nhap').innerText=tb; document.getElementById('modal_overlay_nhap').style.display='flex'; }
@@ -1016,40 +1030,8 @@ function xulyxo() {
       if(nt) { nt.innerHTML = nt.getAttribute('data-original') || '🗑️'; nt.disabled = false; } 
       dongcxoa = null; 
   }
-
-  // ==========================================================================
-  // LOGIC: LÀM SẠCH BẢNG VÀ TẠO DÒNG MỚI KHI THAY ĐỔI 3 Ô CHỌN ĐỐI TƯỢNG
-  // ==========================================================================
+  //===================================
   document.addEventListener('DOMContentLoaded', function() {
-      const cacOChon = ['cbGiaoVien', 'cbNguoiKiemTra', 'cbBoPhan'];
-      
-      cacOChon.forEach(id => {
-          const oChon = document.getElementById(id);
-          if (oChon) {
-              oChon.addEventListener('change', function() {
-                  // 1. Xóa sạch toàn bộ các dòng hiện có trong bảng
-                  const tbody = document.getElementById('tableContent');
-                  if (tbody) {
-                      tbody.innerHTML = ''; 
-                  }
-
-                  // 2. Trả ô Mã hồ sơ (Lịch sử) về trạng thái trống vì đây là hồ sơ mới
-                  const cbMaHoSo = document.getElementById('cbMaHoSo');
-                  if (cbMaHoSo) {
-                      cbMaHoSo.value = "";
-                  }
-
-                  // 3. Khởi tạo lại 1 dòng trắng tinh để bắt đầu nhập liệu
-                  if (typeof themdongmo === 'function') {
-                      themdongmo();
-                  }
-
-                  // 4. Quét lại hệ thống phân quyền cho đối tượng vừa chọn
-                  if (typeof apdquye === 'function') {
-                      apdquye();
-                  }
-              });
-          }
-      });
+   
   });
 </script>
