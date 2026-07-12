@@ -468,7 +468,8 @@ function apdquye() {
     const isInspectorRole = (isSuperAdmin || isQuyenX || dlnktra.some(x1 => chuanhchu(x1.taik) === emcan));
 
     // 2. Điều khiển trạng thái Bộ lọc khóa/mở
-    const filters = document.querySelectorAll('.f-input');
+    // 👉 ĐÃ SỬA: Bổ sung "#main_content" để khoanh vùng, tuyệt đối không khóa nhầm sang trang Tìm Kiếm
+    const filters = document.querySelectorAll('#main_content .f-input');
     filters.forEach(input => {
         if (input.id === 'cbMaHoSo') {
             input.disabled = false; 
@@ -477,7 +478,7 @@ function apdquye() {
         }
     });
 
-    // 👉 ĐÃ SỬA: Biến tổng hợp quyền cập nhật File và Lưu khi hồ sơ đã khóa
+    // Biến tổng hợp quyền cập nhật File và Lưu khi hồ sơ đã khóa
     const duocPhepCapNhatFile = (isSuperAdmin || (isQuyenX && isSelectedInspector) || isOwner);
 
     // 3. Khóa/Mở lưới dữ liệu nhập liệu
@@ -524,7 +525,6 @@ function apdquye() {
             }
         }
 
-        // 👉 ĐÃ SỬA: Mở khóa nút đính kèm File cho các quyền đã cấp
         const ntUp = dg.querySelector('.btn-upload-icon');
         if (ntUp) {
             if (isRecordSigned) {
@@ -541,16 +541,13 @@ function apdquye() {
     const addRowBtn = document.querySelector('.add-row-container');
 
     if (isRecordSigned) {
-        // Chỉ cấp quyền sáng nút Lưu cho Admin hoặc Người kiểm tra và đúng người được kiểm tra để cập nhật file và NHATKY.
         if (btnSave) btnSave.disabled = !duocPhepCapNhatFile;
         if (addRowBtn) addRowBtn.style.display = 'none';
         
-        // Nút nộp giữ nguyên chỉ dành cho Admin và NKT (vì Server vốn dĩ không cho GV tự nộp kết quả)
         if (btnSubmit) {
             btnSubmit.disabled = !(isSuperAdmin || (isQuyenX && isSelectedInspector));
         }
     } else {
-        // Giữ nguyên logic khi chưa ký
         if (isSuperAdmin || (isQuyenX && isSelectedInspector)) {
             if (btnSave) btnSave.disabled = false;
             if (btnSubmit) btnSubmit.disabled = false;
