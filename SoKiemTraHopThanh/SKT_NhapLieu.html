@@ -625,7 +625,7 @@ function themdongmo(dld = null) {
   function xulyno() { 
       const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
       if (quyenQuanTri) {
-          hienhth("⛔ Hệ thống đã khóa chức năng Nộp báo cáo đối với tài khoản Quản trị (xx).");
+          hienhth("⛔ Bạn không có quyền nộp hồ sơ.");
           return;
       }
       if(hoplno()) thuchms("skt_nopbg_cuo", document.getElementById('btnSubmit'), "NỘP KẾT QUẢ"); 
@@ -655,7 +655,8 @@ function thuchms(ha, nt, ch) {
         // Kiểm tra quyền nộp (Chỉ người kiểm tra hoặc quản trị cao nhất)
         const canSubmit = (nguoi_cam_can && (cai_ban_go === 'x' || cai_ban_go === 'xx' || cai_ban_go === 'xxx')) || quyen_toi_cao;
         if (!canSubmit) {
-            hienhth("⛔ Bạn không có quyền nộp báo báo. Quyền nộp này là của người kiểm tra");
+            // 👉 ĐÃ SỬA: Đổi nội dung cảnh báo chính xác theo yêu cầu
+            hienhth("⛔ Bạn không có quyền nộp hồ sơ");
             return;
         }
     } else {
