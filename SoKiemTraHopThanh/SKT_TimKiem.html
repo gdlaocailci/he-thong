@@ -1,4 +1,3 @@
-
 <style>
   .header-card {
     background: white; padding: 5px 10px; border-radius: 6px;
@@ -257,7 +256,8 @@
   }
 
 // --- KÍCH HOẠT LÚC MỞ TAB: TẢI SẴN 12 THÁNG, HIỂN THỊ ĐỒNG BỘ DỮ LIỆU ---
-  (function khoitti() {
+  function khoitti() { 
+    // NÂNG CẤP 1: Bỏ cấu trúc (function...)() bọc ngoài để index.html có thể gọi lại hàm này khi có dữ liệu
     const hom_nay = new Date();
     const nam_nay = hom_nay.getFullYear();
     const thang_nay = String(hom_nay.getMonth() + 1).padStart(2, '0');
@@ -272,10 +272,12 @@
     document.getElementById('s_from').value = `${ngay_ngoai}/${thang_ngoai}/${nam_ngoai.getFullYear()}`;
     document.getElementById('s_to').value = `${ngay_nay}/${thang_nay}/${nam_nay}`;
 
-    // Đăng ký sự kiện phím Enter trên các ô điều kiện
+    // Đăng ký sự kiện phím Enter trên các ô điều kiện (Đã chống nhân bản sự kiện)
     const caclo = document.querySelectorAll('.filter-section-search .f-input');
     caclo.forEach(nv => {
-        nv.addEventListener("keydown", function(sk) {
+        const clone = nv.cloneNode(true);
+        nv.parentNode.replaceChild(clone, nv);
+        clone.addEventListener("keydown", function(sk) {
             if (sk.key === "Enter") {
                 sk.preventDefault(); 
                 con_chuot_goi_api_tim_kiem(); 
@@ -287,18 +289,23 @@
     const nkt = document.getElementById('s_nkt');
     const bp = document.getElementById('s_bp');
     
+    // NÂNG CẤP 2: Làm sạch các tùy chọn (giữ lại dòng "Tất cả") trước khi nạp dữ liệu mới
+    if (gv) gv.innerHTML = '<option value="">-- Tất cả --</option>';
+    if (nkt) nkt.innerHTML = '<option value="">-- Tất cả --</option>';
+    if (bp) bp.innerHTML = '<option value="">-- Tất cả --</option>';
+
     const chaucay = window.ruongbac || { dgv: [], dnk: [], dbp: [] };
     chaucay.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
     chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
     chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
     
-   // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
+    // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
     const ngayBatDau = skt_chuyenDoiNgay_js(document.getElementById('s_from').value);
     const ngayKetThuc = skt_chuyenDoiNgay_js(document.getElementById('s_to').value);
     if (ngayKetThuc) ngayKetThuc.setHours(23, 59, 59, 999);
     if (ngayBatDau) ngayBatDau.setHours(0, 0, 0, 0);
 
-    // 👉 THÊM VÀO ĐÂY: Đảm bảo khi khởi động lên, tất cả các ô lọc của trang tìm kiếm LUÔN MỞ, không khóa bất kỳ ai
+    // Mở khóa các ô điều kiện 
     ['s_gv', 's_nkt', 's_bp', 's_from', 's_to'].forEach(id_o => {
         const o_loc = document.getElementById(id_o);
         if (o_loc) o_loc.disabled = false;
@@ -312,7 +319,7 @@
     });
 
     hienThiBangKetQua(du_lieu_ban_dau);
-  })();
+  }
 
   function xuatndkno(nd) {
     if (!nd) return "";
