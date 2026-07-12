@@ -1,4 +1,3 @@
-
 <style>
   .cell-input::placeholder { color: #94a3b8 !important; opacity: 0.5; font-style: italic; font-size: 13px; }
   #mainTable .cell-input::placeholder { opacity: 0.45; }
@@ -398,33 +397,41 @@ function khindthd(lo) {
     if ((lo === 'GV' || lo === 'NKT') && kiemttrem(lo)) return;
     if (lo === 'GV') capnticd();
     const hp = document.getElementById('cbMaHoSo');
-    
+
     if (lo === 'MAHS' && hp.value) {
         dattr(2);
-        
-        // THUẬT TOÁN MỚI: QUÉT TRỰC TIẾP TRÊN RAM TRÌNH DUYỆT (TỐC ĐỘ ĐẠT 0-1MS - TỨC THÌ)
+
+        // THUẬT TOÁN MỚI: QUÉT TRỰC TIẾP TRÊN RAM TRÌNH DUYỆT
         const ma_tim = hp.value.trim().toLowerCase();
-        const kq = (window.skt_kho_nhatky || []).filter(hang => 
+        const kq = (window.skt_kho_nhatky || []).filter(hang =>
             hang[16] && hang[16].toString().trim().toLowerCase() === ma_tim
         );
-        
-        if (kq && kq.length > 0) { 
+
+        if (kq && kq.length > 0) {
             const bg = kq;
 
             let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
             let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
             let tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
+            
             const bggv = String(bg[0][0] || ""); 
-            const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
+            const bgnkt = String(bg[0][1] || ""); 
+            
+            const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
+            const quyenQuanTri = (q_h_t === 'xx' || q_h_t === 'xxx');
 
-            if (tgvc && !tnktc && chuanhchu(bggv) !== chuanhchu(tgvc) && !quyenQuanTri) {
-                hienhth("⛔ BẠN CHỈ ĐƯỢC XEM VÀ KÝ NHẬN HỒ SƠ CỦA CHÍNH MÌNH!");
-                datlbie(); 
+            // 👉 NÂNG CẤP: Chặn load nếu không phải Admin, không phải NKT của hồ sơ này, và không phải GV của hồ sơ này
+            const laGVcuaHoSo = (tgvc && chuanhchu(bggv) === chuanhchu(tgvc));
+            const laNKTcuaHoSo = (tnktc && chuanhchu(bgnkt) === chuanhchu(tnktc));
+
+            if (!quyenQuanTri && !laGVcuaHoSo && !laNKTcuaHoSo) {
+                hienhth("⛔ BẠN KHÔNG CÓ QUYỀN TẢI HỒ SƠ NÀY VÌ KHÔNG PHẢI LÀ NGƯỜI KIỂM TRA HOẶC NGƯỜI ĐƯỢC KIỂM TRA TRONG BIÊN BẢN!");
+                datlbie();
                 return;
             }
 
-            dienbgw(bg); 
-            dattr(3); 
+            dienbgw(bg);
+            dattr(3);
             ['cbGiaoVien','cbNguoiKiemTra','cbBoPhan'].forEach(idd=>document.getElementById(idd).disabled=true);
             setTimeout(() => { apdquye(); dattr(4); }, 300);
         } else {
