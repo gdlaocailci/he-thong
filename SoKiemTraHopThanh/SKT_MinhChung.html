@@ -1,4 +1,3 @@
-
 <style>
   /* Cấu trúc Modal chuẩn an toàn, không chiếm quyền điều khiển trình duyệt */
   #upload_modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10005; justify-content: center; align-items: center; }
@@ -73,16 +72,27 @@
   let tepht = [];
   let lkcx = ""; 
 
-  // Tải danh sách thư mục con vào ComboBox
+// Tải danh sách thư mục con vào ComboBox (Đã bổ sung xử lý lỗi và trạng thái chờ)
   function taithu() {
     const hop = document.getElementById('folderSelect');
-    google.script.run.withSuccessHandler(tm => {
-      hop.innerHTML = `<option value="">-- Thư mục gốc --</option>`;
-      if(tm) tm.forEach(t1 => hop.add(new Option("📂 " + t1.tenn, t1.idt)));
-    }).skt_laytm_con();
+    
+    // Hiển thị trạng thái chờ mượt mà trên giao diện
+    if (hop.options.length <= 1) {
+        hop.innerHTML = `<option value="">⏳ Đang tải danh sách thư mục...</option>`;
+    }
+    
+    google.script.run
+      .withSuccessHandler(tm => {
+        hop.innerHTML = `<option value="">-- Thư mục gốc --</option>`;
+        if(tm) tm.forEach(t1 => hop.add(new Option("📂 " + t1.tenn, t1.idt)));
+      })
+      .withFailureHandler(err => {
+        hop.innerHTML = `<option value="">❌ Lỗi kết nối lấy thư mục</option>`;
+      })
+      .skt_laytm_con();
   }
 
-  // Khởi động Modal đính kèm
+  // Khởi động Modal đính kèm (Đã bổ sung luồng gọi thư mục)
   function mohopthta(lkht) {
     const hpnkt = document.getElementById('cbNguoiKiemTra');
     if (hpnkt) {
@@ -103,6 +113,10 @@
     chuyencd_upload();
 
     capnhtcb();
+    
+    // 👉 KHẮC PHỤC: Kích hoạt tải danh sách thư mục NGAY KHI mở hộp thoại
+    taithu();
+
     document.getElementById('upload_modal').style.display = 'flex';
   }
 
