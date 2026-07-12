@@ -1016,5 +1016,23 @@ function xulyxo() {
       if(nt) { nt.innerHTML = nt.getAttribute('data-original') || '🗑️'; nt.disabled = false; } 
       dongcxoa = null; 
   }
-</script>
 
+  // ==========================================================================
+  // LOGIC: LÀM SẠCH BẢNG KHI THAY ĐỔI 3 Ô CHỌN ĐỐI TƯỢNG (GV, NKT, BỘ PHẬN)
+  // ==========================================================================
+  document.addEventListener('DOMContentLoaded', function() {
+      const cacOChon = ['cbGiaoVien', 'cbNguoiKiemTra', 'cbBoPhan'];
+      
+      cacOChon.forEach(id => {
+          const oChon = document.getElementById(id);
+          if (oChon) {
+              oChon.addEventListener('change', function() {
+                  const tbody = document.getElementById('tableContent');
+                  if (tbody) {
+                      tbody.innerHTML = ''; // Chỉ thực hiện đúng lệnh xóa sạch dữ liệu, tuyệt đối không chèn thêm dòng
+                  }
+              });
+          }
+      });
+  });
+</script>
