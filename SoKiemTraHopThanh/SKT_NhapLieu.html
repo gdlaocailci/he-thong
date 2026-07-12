@@ -448,16 +448,16 @@ function apdquye() {
     
     // Thuật toán kiểm tra trạng thái
     let isRecordSigned = false;
-    let hasNoiDung = false; // 👉 NÂNG CẤP: Nhận diện cột nội dung có dữ liệu hay không
+    let hasNoiDung = false; 
 
     const danhSachDong = document.querySelectorAll('#tableContent tr');
     danhSachDong.forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
         
-        // 👉 NÂNG CẤP: Bắt sự kiện gõ phím trực tiếp vào ô "Nội dung" (index 1)
         if (cacn && cacn.length > 1) {
             if (!cacn[1].hasAttribute('data-bind-apd')) {
-                cacn[1].addEventListener('input', apdquye);
+                // 👉 ĐÃ NÂNG CẤP: Thay đổi từ 'input' (gõ phím) sang 'blur' (khi gõ xong và thoát chuột khỏi ô)
+                cacn[1].addEventListener('blur', apdquye);
                 cacn[1].setAttribute('data-bind-apd', 'true');
             }
             if (cacn[1].value.trim() !== "") {
@@ -482,7 +482,6 @@ function apdquye() {
     const selectedNKT = document.getElementById('cbNguoiKiemTra').value;
     const selectedBP = document.getElementById('cbBoPhan').value;
     
-    // 👉 NÂNG CẤP: Kiểm tra xem 3 ô trên đầu đã được chọn đầy đủ chưa
     const duThongTin = (selectedGV !== "" && selectedNKT !== "" && selectedBP !== "");
 
     const userTenGV = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
@@ -503,7 +502,6 @@ function apdquye() {
             if (isHistoryLoaded) {
                 input.disabled = true; 
             } else if (isRecordSigned || hasNoiDung) {
-                // 👉 NÂNG CẤP: Nếu đã ký HOẶC đã nhập Nội dung -> Khóa chặt các ô chọn đối tượng trên đầu
                 input.disabled = true; 
             } else {
                 input.disabled = !isInspectorRole; 
@@ -525,14 +523,14 @@ function apdquye() {
                 
                 if (isSuperAdmin) {
                     if (index !== 9 && index !== 10) {
-                        input.disabled = !duThongTin; // 👉 NÂNG CẤP: Quản trị cũng phải chọn đủ thông tin mới cho gõ
+                        input.disabled = !duThongTin; 
                     } else {
                         input.disabled = false; 
                     }
                 } 
                 else if (isQuyenX && isSelectedInspector) {
                     if (index !== 9 && index !== 10) {
-                        input.disabled = !duThongTin; // 👉 NÂNG CẤP: Yêu cầu đủ 3 ô thông tin mới mở lưới nhập
+                        input.disabled = !duThongTin; 
                     }
                 }
                 else if (isOwner) {
