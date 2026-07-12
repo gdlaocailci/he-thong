@@ -40,12 +40,17 @@
       font-size: 12px;
       opacity: 0.9;
   }
+  
+  /* NÂNG CẤP BẢO MẬT: Ẩn và khóa toàn bộ menu lúc khởi động */
   .menu-list {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      gap: 12px; /* Mở rộng khoảng cách để hiệu ứng nổi không bị chồng lấn */
+      gap: 12px; 
       padding: 0 15px;
+      opacity: 0; 
+      pointer-events: none; 
+      transition: opacity 0.4s ease;
   }
   
   /* --- KHỐI HIỆU ỨNG NÚT BẤM (Trích xuất từ ReactBits.dev) --- */
@@ -64,12 +69,10 @@
       gap: 12px;
       position: relative;
       overflow: hidden;
-      /* Cấu hình transition mô phỏng gia tốc chuyển động mượt mà */
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   
-  /* Hiệu ứng vệt sáng lướt qua (Shine/Glare effect) */
   .menu-btn::before {
       content: '';
       position: absolute;
@@ -82,7 +85,6 @@
       z-index: 0;
   }
   
-  /* Trạng thái Hover: Hiệu ứng nổi (Floating) */
   .menu-btn:hover {
       background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
@@ -101,12 +103,10 @@
       transition: transform 0.3s ease;
   }
 
-  /* Tạo hoạt ảnh nghiêng và phóng to nhẹ cho Icon khi Hover */
   .menu-btn:hover i {
       transform: scale(1.1) rotate(-5deg);
   }
   
-  /* Trạng thái Menu đang kích hoạt */
   .menu-btn.active {
       background: #3b82f6;
       color: #ffffff;
@@ -122,25 +122,21 @@
       margin-top: auto; 
       margin-bottom: 20px;
       justify-content: center;
-      /* Hiệu ứng hình khối 3D với viền bóng cứng */
       box-shadow: 0 4px 0 #991b1b, 0 8px 15px rgba(239, 68, 68, 0.4) !important;
       transition: all 0.2s ease !important;
   }
   
-  /* Hover: Đẩy khối 3D nổi bật hơn */
   .menu-logout:hover {
       background: linear-gradient(145deg, #f87171, #ef4444) !important;
       transform: translateY(-5px) scale(1.03) !important;
       box-shadow: 0 6px 0 #991b1b, 0 15px 25px rgba(239, 68, 68, 0.5) !important;
   }
 
-  /* Active: Cảm giác lún xuống khi Click */
   .menu-logout:active {
       transform: translateY(2px) scale(0.98) !important;
       box-shadow: 0 2px 0 #991b1b, 0 4px 10px rgba(239, 68, 68, 0.4) !important;
   }
   
-  /* Icon 3D với lớp drop-shadow đa chiều */
   .menu-logout i {
       font-size: 1.2rem;
       filter: drop-shadow(1px 1px 0 #7f1d1d) drop-shadow(2px 2px 0 #7f1d1d) drop-shadow(3px 3px 0 #450a0a);
@@ -159,14 +155,15 @@
     <div class="sidebar-subtitle" id="menu_subtitle"></div>
   </div>
   
-  <div class="menu-list">
+  <div class="menu-list" id="sidebar_menu_list">
       <button class="menu-btn active" onclick="chuyentth('TabNhapLieu', this)">
           <i class="bi bi-pencil-square"></i> <span>GHI SỔ KIỂM TRA</span>
       </button>
       <button class="menu-btn" onclick="chuyentth('TabTimKiem', this)">
           <i class="bi bi-search"></i> <span>THỐNG KÊ - TRA CỨU</span>
       </button>
-      <button class="menu-btn" onclick="chuyentth('TabPhanQuyen', this)">
+      
+      <button class="menu-btn" style="display: none;" onclick="chuyentth('TabPhanQuyen', this)">
           <i class="bi bi-shield-lock"></i> <span>CẤP QUYỀN TRUY CẬP</span>
       </button>
 
@@ -175,3 +172,23 @@
       </button>
   </div>
 </div>
+
+<script>
+/* ========================================================================= */
+/* KỊCH BẢN ĐỒNG BỘ HIỂN THỊ MENU VỚI PHÂN QUYỀN MÁY CHỦ                     */
+/* ========================================================================= */
+(function() {
+    let ktraQuyenHeThong = setInterval(function() {
+        // Biến window.ruongbac được thiết lập ở index.html NGAY SAU KHI máy chủ trả về kết quả
+        if (typeof window.ruongbac !== 'undefined') {
+            clearInterval(ktraQuyenHeThong);
+            let khungMenu = document.getElementById('sidebar_menu_list');
+            if(khungMenu) {
+                // Mở khóa cho menu hiển thị và cho phép click sau khi index.html đã cắt gọt xong các Tab thừa
+                khungMenu.style.opacity = '1';
+                khungMenu.style.pointerEvents = 'auto';
+            }
+        }
+    }, 50);
+})();
+</script>
