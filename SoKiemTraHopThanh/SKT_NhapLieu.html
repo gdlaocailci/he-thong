@@ -1018,7 +1018,7 @@ function xulyxo() {
   }
 
   // ==========================================================================
-  // LOGIC: LÀM SẠCH BẢNG KHI THAY ĐỔI 3 Ô CHỌN ĐỐI TƯỢNG (GV, NKT, BỘ PHẬN)
+  // LOGIC: LÀM SẠCH BẢNG VÀ TẠO DÒNG MỚI KHI THAY ĐỔI 3 Ô CHỌN ĐỐI TƯỢNG
   // ==========================================================================
   document.addEventListener('DOMContentLoaded', function() {
       const cacOChon = ['cbGiaoVien', 'cbNguoiKiemTra', 'cbBoPhan'];
@@ -1027,9 +1027,26 @@ function xulyxo() {
           const oChon = document.getElementById(id);
           if (oChon) {
               oChon.addEventListener('change', function() {
+                  // 1. Xóa sạch toàn bộ các dòng hiện có trong bảng
                   const tbody = document.getElementById('tableContent');
                   if (tbody) {
-                      tbody.innerHTML = ''; // Chỉ thực hiện đúng lệnh xóa sạch dữ liệu, tuyệt đối không chèn thêm dòng
+                      tbody.innerHTML = ''; 
+                  }
+
+                  // 2. Trả ô Mã hồ sơ (Lịch sử) về trạng thái trống vì đây là hồ sơ mới
+                  const cbMaHoSo = document.getElementById('cbMaHoSo');
+                  if (cbMaHoSo) {
+                      cbMaHoSo.value = "";
+                  }
+
+                  // 3. Khởi tạo lại 1 dòng trắng tinh để bắt đầu nhập liệu
+                  if (typeof themdongmo === 'function') {
+                      themdongmo();
+                  }
+
+                  // 4. Quét lại hệ thống phân quyền cho đối tượng vừa chọn
+                  if (typeof apdquye === 'function') {
+                      apdquye();
                   }
               });
           }
