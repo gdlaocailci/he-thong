@@ -529,7 +529,7 @@ function apdquye() {
 
     if (isRecordSigned) {
         // 👉 ĐÃ FIX LỖI Ở ĐÂY: Vẫn khóa Lưu và Thêm dòng, nhưng MỞ khóa nút Nộp cho người kiểm tra
-        if (btnSave) btnSave.disabled = true;
+        if (btnSave) btnSave.disabled = !(isSuperAdmin || (isQuyenX && isSelectedInspector));
         if (addRowBtn) addRowBtn.style.display = 'none';
         
         if (btnSubmit) {
