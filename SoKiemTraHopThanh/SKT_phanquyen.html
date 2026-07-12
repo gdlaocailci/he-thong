@@ -105,7 +105,7 @@
     // -----------------------------------------------------
     // KHỐI 1.1: QUẢN LÝ QUYỀN TRUY CẬP
     // -----------------------------------------------------
-   function loadPhanQuyen() {
+function loadPhanQuyen() {
         document.getElementById('instant-loader').style.display = 'flex';
         google.script.run
             .withSuccessHandler(kq => {
@@ -122,7 +122,8 @@
                 tbody.innerHTML = '';
                 
                 if (kq.dlieu && kq.dlieu.length > 0) {
-                    for (let i = kq.dlieu.length - 1; i >= 0; i--) {
+                    // Đổi vòng lặp chạy xuôi để đồng bộ với logic chèn xuống cuối bảng
+                    for (let i = 0; i < kq.dlieu.length; i++) {
                         let row = kq.dlieu[i];
                         if (String(row[1]).trim() !== '' || String(row[2]).trim() !== '') { 
                             addRowPQ(row[1], row[2], row[3]);
@@ -165,13 +166,18 @@
             </td>
         `;
         
-        if (tbody.firstChild) {
-            tbody.insertBefore(tr, tbody.firstChild);
-        } else {
-            tbody.appendChild(tr);
-        }
+        // Luôn chèn dòng mới xuống cuối cùng
+        tbody.appendChild(tr);
         
         updateSTTPQ();
+
+        // Tự động cuộn xuống cuối và đặt trỏ chuột nếu là thao tác "Thêm mới"
+        if (ten === '' && taikhoan === '') {
+            setTimeout(() => {
+                tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                tr.querySelector('.ten-col').focus();
+            }, 50);
+        }
     }
     
     function deleteRowPQ(btn) {
@@ -237,7 +243,7 @@ function savePhanQuyen() {
     // -----------------------------------------------------
     // KHỐI 1.2: QUẢN LÝ BỘ PHẬN TỔ CHỨC
     // -----------------------------------------------------
-    function loadBoPhan() {
+function loadBoPhan() {
         google.script.run
             .withSuccessHandler(kq => {
                 if (!kq.tcon) {
@@ -249,7 +255,8 @@ function savePhanQuyen() {
                 tbody.innerHTML = '';
                 
                 if (kq.dlieu && kq.dlieu.length > 0) {
-                    for (let i = kq.dlieu.length - 1; i >= 0; i--) {
+                    // Đổi vòng lặp chạy xuôi để đồng bộ với logic chèn xuống cuối bảng
+                    for (let i = 0; i < kq.dlieu.length; i++) {
                         let row = kq.dlieu[i];
                         if (String(row[0]).trim() !== '' || String(row[1]).trim() !== '') { 
                             addRowBP(row[0], row[1]);
@@ -277,14 +284,18 @@ function savePhanQuyen() {
             <td><input type="text" class="cell-input ma-bp-col" value="${mabp}" placeholder="Nhập mã bộ phận..."></td>
         `;
         
-        // Luôn chèn dòng mới lên đầu tiên
-        if (tbody.firstChild) {
-            tbody.insertBefore(tr, tbody.firstChild);
-        } else {
-            tbody.appendChild(tr);
-        }
+        // Luôn chèn dòng mới xuống cuối cùng
+        tbody.appendChild(tr);
         
         updateSTTBP();
+
+        // Tự động cuộn xuống cuối và đặt trỏ chuột nếu là thao tác "Thêm mới"
+        if (tenbp === '' && mabp === '') {
+            setTimeout(() => {
+                tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                tr.querySelector('.ten-bp-col').focus();
+            }, 50);
+        }
     }
 
     function deleteRowBP(btn) {
