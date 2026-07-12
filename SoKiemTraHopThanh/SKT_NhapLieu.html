@@ -1,4 +1,3 @@
-
 <style>
   .cell-input::placeholder { color: #94a3b8 !important; opacity: 0.5; font-style: italic; font-size: 13px; }
   #mainTable .cell-input::placeholder { opacity: 0.45; }
@@ -447,11 +446,25 @@ function apdquye() {
     const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
     const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     
-    // Thuật toán kiểm tra trạng thái ký nhận trên toàn bộ lưới dữ liệu
+    // Thuật toán kiểm tra trạng thái
     let isRecordSigned = false;
+    let hasNoiDung = false; // 👉 NÂNG CẤP: Nhận diện cột nội dung có dữ liệu hay không
+
     const danhSachDong = document.querySelectorAll('#tableContent tr');
     danhSachDong.forEach(dg => {
         const cacn = dg.querySelectorAll('.cell-input');
+        
+        // 👉 NÂNG CẤP: Bắt sự kiện gõ phím trực tiếp vào ô "Nội dung" (index 1)
+        if (cacn && cacn.length > 1) {
+            if (!cacn[1].hasAttribute('data-bind-apd')) {
+                cacn[1].addEventListener('input', apdquye);
+                cacn[1].setAttribute('data-bind-apd', 'true');
+            }
+            if (cacn[1].value.trim() !== "") {
+                hasNoiDung = true;
+            }
+        }
+
         if (cacn && cacn.length > 10) {
             const yKien = cacn[9] ? cacn[9].value.trim() : "";
             const kyTen = cacn[10] ? cacn[10].value.trim() : "";
@@ -467,7 +480,11 @@ function apdquye() {
     
     const selectedGV = document.getElementById('cbGiaoVien').value;
     const selectedNKT = document.getElementById('cbNguoiKiemTra').value;
+    const selectedBP = document.getElementById('cbBoPhan').value;
     
+    // 👉 NÂNG CẤP: Kiểm tra xem 3 ô trên đầu đã được chọn đầy đủ chưa
+    const duThongTin = (selectedGV !== "" && selectedNKT !== "" && selectedBP !== "");
+
     const userTenGV = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
     const userTenNKT = dlnktra.find(x => chuanhchu(x.taik) === emcan)?.tenn;
     
@@ -475,26 +492,25 @@ function apdquye() {
     const isSelectedInspector = (chuanhchu(userTenNKT) === chuanhchu(selectedNKT) && selectedNKT !== "");
     
     const isInspectorRole = (isSuperAdmin || isQuyenX || dlnktra.some(x1 => chuanhchu(x1.taik) === emcan));
-
-    // 👉 ĐÃ SỬA: Kiểm tra xem người dùng có đang load dữ liệu từ ô Lịch sử hay không
     const isHistoryLoaded = (document.getElementById('cbMaHoSo').value !== "");
 
     // 2. Điều khiển trạng thái Bộ lọc khóa/mở
     const filters = document.querySelectorAll('#main_content .f-input');
     filters.forEach(input => {
         if (input.id === 'cbMaHoSo') {
-            input.disabled = false; // Ô Lịch sử luôn mở
+            input.disabled = false; 
         } else {
-            // Khóa cứng toàn bộ các ô thông tin khi tải hồ sơ cũ, bất kể quyền gì và đã ký hay chưa
             if (isHistoryLoaded) {
                 input.disabled = true; 
+            } else if (isRecordSigned || hasNoiDung) {
+                // 👉 NÂNG CẤP: Nếu đã ký HOẶC đã nhập Nội dung -> Khóa chặt các ô chọn đối tượng trên đầu
+                input.disabled = true; 
             } else {
-                input.disabled = isRecordSigned ? true : !isInspectorRole; 
+                input.disabled = !isInspectorRole; 
             }
         }
     });
 
-    // Biến tổng hợp quyền cập nhật File và Lưu khi hồ sơ đã khóa
     const duocPhepCapNhatFile = (isSuperAdmin || (isQuyenX && isSelectedInspector) || isOwner);
 
     // 3. Khóa/Mở lưới dữ liệu nhập liệu
@@ -503,16 +519,20 @@ function apdquye() {
         
         cacn.forEach((input, index) => {
             if (isRecordSigned) {
-                input.disabled = true; // Dữ liệu đã ký thì khóa tuyệt đối
-            } else {
                 input.disabled = true; 
+            } else {
+                input.disabled = true; // Khóa mặc định chờ đủ điều kiện
                 
                 if (isSuperAdmin) {
-                    input.disabled = false; 
+                    if (index !== 9 && index !== 10) {
+                        input.disabled = !duThongTin; // 👉 NÂNG CẤP: Quản trị cũng phải chọn đủ thông tin mới cho gõ
+                    } else {
+                        input.disabled = false; 
+                    }
                 } 
                 else if (isQuyenX && isSelectedInspector) {
                     if (index !== 9 && index !== 10) {
-                        input.disabled = false;
+                        input.disabled = !duThongTin; // 👉 NÂNG CẤP: Yêu cầu đủ 3 ô thông tin mới mở lưới nhập
                     }
                 }
                 else if (isOwner) {
@@ -776,7 +796,10 @@ function thuchms(ha, nt, ch) {
   function capnst() { document.querySelectorAll('#tableContent tr').forEach((dg, iso) => dg.querySelector('.stt-cell').innerText = iso + 1); }
   function dienho(idd, dl) { const pht = document.getElementById(idd); pht.innerHTML='<option value="">-- Chọn --</option>'; dl.forEach(ptu=>pht.add(new Option(ptu.tenn,ptu.tenn))); }
   function dienhopd(idd, ds) { const pht = document.getElementById(idd); pht.innerHTML='<option value="">-- Chọn --</option>'; if(ds) ds.forEach(v1=>v1&&pht.add(new Option(v1,v1))); }
-  function capnmab() { document.getElementById('txtMaBoPhan').value = dlbpha[document.getElementById('cbBoPhan').value]||""; }
+  function capnmab() { 
+    document.getElementById('txtMaBoPhan').value = dlbpha[document.getElementById('cbBoPhan').value]||""; 
+    apdquye(); // 👉 NÂNG CẤP: Gọi hàm kiểm tra quyền ngay khi chọn xong Bộ phận
+}
   function hienhth(tb) { document.getElementById('modal_message_nhap').innerText=tb; document.getElementById('modal_overlay_nhap').style.display='flex'; }
   function donghth() { document.getElementById('modal_overlay_nhap').style.display='none'; }
   function tudochk(ph) { ph.style.height='auto'; ph.style.height=ph.scrollHeight+'px'; }
