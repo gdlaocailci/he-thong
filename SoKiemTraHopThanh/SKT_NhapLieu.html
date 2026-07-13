@@ -352,12 +352,17 @@ function taidli() {
     dlnktra = window.ruongbac.chocon || []; 
     dlbpha = window.ruongbac.caitui || {}; 
     
+    // --- ĐÃ SỬA LỖI TẠI ĐÂY ---
+    // Cập nhật lại biến tknd từ định danh toàn cục đã được xác thực
+    tknd = window.skttktoanc || sessionStorage.getItem("SKT_DINHDANH_TAIK") || "";
     document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
+    // --------------------------
+
     dienho('cbGiaoVien', dlgvi); 
     dienho('cbNguoiKiemTra', dlnktra); 
     dienhopd('cbBoPhan', Object.keys(dlbpha)); 
 
-    let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
+    let emcan = chuanhchu(tknd);
     let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
     let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
     const q_h_t = String(window.sktquyenht).trim().toLowerCase();
