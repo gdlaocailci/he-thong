@@ -1,26 +1,51 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-<link rel="icon" sizes="192x192" href= KETNOI.LINK_LOGO>
-<link rel="apple-touch-icon" href= KETNOI.LINK_LOGO>
-
-<title>QUẢN LÝ TRƯỜNG HỌC</title>
-  
-  <script src="ketnoi.js"></script>
-  <link id="sys-favicon" rel="icon" href="">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <link id="sys-favicon" rel="icon" sizes="192x192" href="https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png">
+  <link rel="apple-touch-icon" href="https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png">
+
   <meta name="author" content="Phát triển Hoàng Ngọc Lâm">
   <title id="sys-title">QUẢN LÝ</title>
+  
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <script src="ketnoi.js"></script>
+  
   <script>
+  let PREFIX_MEM = "ht_sys_";
+
+  document.addEventListener("DOMContentLoaded", function() {
+      // Đảm bảo biến KETNOI đã được nạp thành công từ ketnoi.js
+      if (typeof KETNOI !== 'undefined') {
+          let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
+          PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
+  
+          document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
+          
+          const sysLogo = document.getElementById('sys-logo');
+          if (sysLogo) sysLogo.src = KETNOI.LINK_LOGO;
+          
+          if (KETNOI.LINK_YOUTUBE) {
+              const btnHuongDan = document.getElementById('btn-huong-dan');
+              if (btnHuongDan) btnHuongDan.href = KETNOI.LINK_YOUTUBE;
+          }
+          
+          var savedBgUrl = localStorage.getItem(PREFIX_MEM + "bg");
+          if (savedBgUrl && savedBgUrl.trim() !== "") {
+              document.documentElement.style.setProperty('--default-bg', "url('" + savedBgUrl + "')");
+          } else {
+              document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')");
+          }
+      }
+  });
+  </script>
   let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
           const PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
   
