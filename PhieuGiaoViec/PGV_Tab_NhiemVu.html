@@ -687,14 +687,28 @@ function ktraAnHienTieuDe(ptu) {
     let tr = ptu.closest('tr');
     let tdNoiDung = ptu.closest('td');
     
+    let isXXX = false;
+    if (typeof window.PGV_QUYEN !== 'undefined') isXXX = (window.PGV_QUYEN === 'xxx');
+    else if (typeof canbHientai !== 'undefined' && canbHientai) isXXX = (canbHientai.quyen === 'xxx');
+
     if(isTitle) {
         ptu.classList.add('fw-bold', 'text-primary', 'text-uppercase');
-        tdNoiDung.colSpan = 7;
+        tdNoiDung.colSpan = isXXX ? 7 : 6; // Đã sửa lỗi chênh lệch cột
         tr.querySelectorAll('td:nth-child(n+3)').forEach(td => td.style.display = 'none');
     } else {
         ptu.classList.remove('fw-bold', 'text-primary', 'text-uppercase');
         tdNoiDung.colSpan = 1;
-        tr.querySelectorAll('td:nth-child(n+3)').forEach(td => td.style.display = '');
+        
+        let tatCaTd = tr.querySelectorAll('td');
+        tatCaTd.forEach((td, index) => {
+            if (index >= 2) { 
+                if (index === tatCaTd.length - 1 && !isXXX) {
+                    td.style.display = 'none'; // Đảm bảo cột Xóa luôn ẩn nếu không có quyền
+                } else {
+                    td.style.display = '';
+                }
+            }
+        });
     }
     tinhtTdong();
 }
@@ -722,20 +736,20 @@ function tuDongDinhDangNgay(ptu) {
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
     
-    // Kiểm tra phân quyền nghiêm ngặt: Chỉ tài khoản có quyền 'xxx' mới được bật cột xóa
-    let layQuyenHT = (typeof window.PGV_QUYEN !== 'undefined') ? window.PGV_QUYEN : (typeof canbHientai !== 'undefined' ? canbHientai.quyen : '');
-    const showDeleteBtn = (layQuyenHT === 'xxx');
-    
-    // Điều khiển ẩn/hiện tiêu đề thXoa trên thead tương ứng
-    if (showDeleteBtn) {
-        $('#thXoa').show();
+    let isXXX = false;
+    if (typeof window.PGV_QUYEN !== 'undefined') isXXX = (window.PGV_QUYEN === 'xxx');
+    else if (typeof canbHientai !== 'undefined' && canbHientai) isXXX = (canbHientai.quyen === 'xxx');
+
+    const thXoa = $('#bangNviec thead th:last-child');
+    if (isXXX) {
+        thXoa.show();
     } else {
-        $('#thXoa').hide();
+        thXoa.hide();
     }
 
     if (!db || db.length === 0) { 
-        let soCotSp = showDeleteBtn ? 8 : 7; // Tự động co giãn colspan khi ẩn cột xóa
-        bg.append(`<tr><td colspan="${soCotSp}" class="text-center text-muted py-3 small">Chưa có nhiệm vụ.</td></tr>`); 
+        let colSpBlank = isXXX ? "8" : "7"; 
+        bg.append(`<tr><td colspan="${colSpBlank}" class="text-center text-muted py-3 small">Chưa có nhiệm vụ.</td></tr>`); 
         tinhtTdong(); 
         return; 
     }
@@ -763,7 +777,8 @@ function veBangNviec(db) {
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
-        let colSp = isTitle ? (showDeleteBtn ? 'colspan="7"' : 'colspan="6"') : '';
+        
+        let colSp = isTitle ? (isXXX ? 'colspan="7"' : 'colspan="6"') : '';
 
         let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
         let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
@@ -835,11 +850,8 @@ function veBangNviec(db) {
             </div>`;
         }
 
-        // Nếu có quyền xxx thì tạo nút xóa, ngược lại để chuỗi rỗng
-        let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
-        
-        // Ô td chứa nút xóa sẽ chỉ hiển thị (display: table-cell) nếu showDeleteBtn = true
-        let hiển_thị_td_xóa = showDeleteBtn ? `text-center align-middle` : `d-none`;
+        let nutx = isXXX ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
+        let dspXoa = isXXX ? dsp : 'display: none;';
 
         let dg = `<tr class="dongNv">
           <td class="text-center align-middle oStt fw-bold">${sn}</td>
@@ -857,7 +869,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}" oninput="tuDongDinhDangNgay(this)"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
-          <td class="${hiển_thị_td_xóa}" style="${dsp}">${nutx}</td>
+          <td class="text-center align-middle" style="${dspXoa}">${nutx}</td>
          </tr>`;
         bg.append(dg);
     });
@@ -1122,14 +1134,21 @@ function addNv() {
         }
     }
 
+    let isXXX = false;
+    if (typeof window.PGV_QUYEN !== 'undefined') isXXX = (window.PGV_QUYEN === 'xxx');
+    else if (typeof canbHientai !== 'undefined' && canbHientai) isXXX = (canbHientai.quyen === 'xxx');
+
     const tbody = $('#bangNviec tbody');
-    if (tbody.find('tr td').length === 1 && tbody.find('td[colspan="8"]').length) {
+    if (tbody.find('tr td').length === 1 && (tbody.find('td[colspan="8"]').length > 0 || tbody.find('td[colspan="7"]').length > 0)) {
         tbody.empty();
     }
 
     const lastRow = tbody.find('tr.dongNv:last');
     
     if (lastRow.length === 0) {
+        let nutx = isXXX ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
+        let dspXoa = isXXX ? '' : 'display: none;';
+
         let defaultRow = `<tr class="dongNv">
             <td class="text-center align-middle oStt fw-bold"></td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
@@ -1142,7 +1161,7 @@ function addNv() {
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" oninput="tuDongDinhDangNgay(this)"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
-            <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
+            <td class="text-center align-middle" style="${dspXoa}">${nutx}</td>
         </tr>`;
         tbody.append(defaultRow);
     } else {
@@ -1150,14 +1169,9 @@ function addNv() {
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
         
-        // [CẬP NHẬT] Gỡ bỏ khóa readonly cho ô Nội dung để người dùng có thể nhập chữ
         $newRow.find('.nhapNdung').removeAttr('readonly');
-        
         $newRow.find('.nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
-        
-        // [CẬP NHẬT] Gỡ bỏ khóa readonly cho ô Thời gian giao và Tiến độ
         $newRow.find('.nhapTgGiao, .nhapTdo').removeAttr('readonly');
-        
         $newRow.find('.nhapDiemMax').val(lastRow.find('.nhapDiemMax').val());
         
         var $chonKq = $newRow.find('.chonKq');
@@ -1182,6 +1196,7 @@ function addNv() {
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
             $newRow.find('td:not(:first-child)').show();
+            if (!isXXX) $newRow.find('td:last-child').hide(); 
         }
         
         tbody.append($newRow);
