@@ -355,19 +355,32 @@ function xulyPhienDn(phanho) {
     /* =================================================================================
        QUY TRÌNH KHỞI ĐỘNG MỚI (LAZY LOADING & PROGRESSIVE ENHANCEMENT)
        ================================================================================= */
-    async function chbiHt() {
+ async function chbiHt() {
       try {
-        datTaiDl(true, "✨ ĐANG THIẾT LẬP KHÔNG GIAN LÀM VIỆC...");
-        
-        // 1. Tải Giao diện Ưu tiên (Menu & Nhiệm vụ của tôi)
-        await taiGiaoDienUuTien();
-        
-        // Cấu hình Event Delegation cho các tab tải ngầm sau
-        thietLapSuKienTienNhiem();
+        datTaiDl(true, "✨ ĐANG ĐỒNG BỘ DỮ LIỆU...");
 
-        // 2. Gọi API lấy dữ liệu cá nhân (Ngay sau khi nhận, tắt Loading)
-        taiDlBdau();
-      } catch(loiHthong) { khiLoiMayChu(loiHthong); }
+        // TỐI ƯU 1: Chạy song song (Parallel Execution)
+        // Vừa tải giao diện HTML, vừa phát lệnh gọi API dữ liệu cùng một lúc
+        const pGiaoDien = taiGiaoDienUuTien();
+        const pDuLieu = new Promise((resolve, reject) => {
+            window.khachApi.layDlCanb(null, window.PGV_ID_TC, resolve, reject);
+        });
+
+        // Chờ cả 2 luồng hoàn tất để triệt tiêu thời gian chờ chéo
+        const [_, kqDl] = await Promise.all([pGiaoDien, pDuLieu]);
+
+        thietLapSuKienTienNhiem();
+        
+        // Tắt màn hình chờ và hiển thị dữ liệu ngay lập tức
+        khiTaiDlXong(kqDl);
+      } catch(loiHthong) { 
+        khiLoiMayChu(loiHthong); 
+      }
+    }
+
+    function taiDlBdau() { 
+        // Luồng tải đã được tích hợp vào Promise.all bên trên
+        // Giữ lại tên hàm rỗng để không gây lỗi logic ở các module khác nếu có gọi nhầm
     }
 
     async function taiGiaoDienUuTien() {
