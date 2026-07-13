@@ -265,26 +265,32 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     if (ds && !Array.isArray(ds) && ds.dliu) {
         ds = ds.dliu;
     }
-  if (ds && ds.length > 0) { 
+    
+    if (ds && ds.length > 0) { 
         var nhomQL = document.createElement("optgroup"); nhomQL.label = "Ban Quản lý";
         var nhomGV = document.createElement("optgroup"); nhomGV.label = "Giáo viên";
         var nhomNV = document.createElement("optgroup"); nhomNV.label = "Nhân viên";
         var nhomKhac = document.createElement("optgroup"); nhomKhac.label = "Khác";
 
         ds.forEach(function(cb) { 
-            var option = document.createElement("option"); 
-            option.value = cb.id || cb.ma || cb.ttrg; 
-            option.textContent = cb.ten || cb.hoTen || cb.tenn; 
+            var qy = String(cb.quyen || "").trim().toLowerCase();
             
-            var cv = String(cb.chucvu || "").toLowerCase().trim();
-            if (cv === "ql" || cv.includes("quản lý") || cv.includes("quan ly") || cv.includes("hiệu trưởng") || cv.includes("ht")) {
-                nhomQL.appendChild(option);
-            } else if (cv === "nv" || cv.includes("nhân viên") || cv.includes("nhan vien")) {
-                nhomNV.appendChild(option);
-            } else if (cv === "gv" || cv.includes("giáo viên") || cv.includes("giao vien")) {
-                nhomGV.appendChild(option);
-            } else {
-                nhomKhac.appendChild(option);
+            // BỘ LỌC 2: Chỉ lấy những người có quyền rỗng, x, hoặc xx vào hộp chọn
+            if (qy === "" || qy === "x" || qy === "xx") {
+                var option = document.createElement("option"); 
+                option.value = cb.id || cb.ma || cb.ttrg; 
+                option.textContent = cb.ten || cb.hoTen || cb.tenn; 
+                
+                var cv = String(cb.chucvu || "").toLowerCase().trim();
+                if (cv === "ql" || cv.includes("quản lý") || cv.includes("quan ly") || cv.includes("hiệu trưởng") || cv.includes("ht")) {
+                    nhomQL.appendChild(option);
+                } else if (cv === "nv" || cv.includes("nhân viên") || cv.includes("nhan vien")) {
+                    nhomNV.appendChild(option);
+                } else if (cv === "gv" || cv.includes("giáo viên") || cv.includes("giao vien")) {
+                    nhomGV.appendChild(option);
+                } else {
+                    nhomKhac.appendChild(option);
+                }
             }
         }); 
 
