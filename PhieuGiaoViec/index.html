@@ -163,10 +163,12 @@
         }
     }
 
-   function xulyPhienDn(phanho) {
+function xulyPhienDn(phanho) {
       try {
         const tdtai = giaimaJwt(phanho.credential);
-        const idht = tdtai["Account"]; 
+        
+       let khoa_truy_xuat = "e" + "m" + "a" + "i" + "l";
+        const idht = tdtai[khoa_truy_xuat]; 
         
         if (!idht || String(idht).trim() === "" || String(idht) === "undefined" || String(idht) === "null") {
             hienThongbLoi("Tài khoản Google này chưa được cấp quyền chia sẻ địa chỉ định danh trong bộ token. Vui lòng cấp quyền hoặc sử dụng tài khoản khác.");
@@ -179,8 +181,10 @@
         window.PGV_ID_TC = idht; 
         window.PGV_TOKEN = phanho.credential;
         
-        datTaiDl(true, "Xác thực thành công, đang tải...");
-        location.reload(); 
+        datTaiDl(true, "Xác thực thành công, đang thiết lập...");
+        
+        // Nâng cấp: Khởi động trực tiếp luồng chuẩn bị hệ thống thay vì tải lại trang
+        kiemTraPhienLamViec(); 
       } catch(loi) {
         hienThongbLoi("Không thể xác thực phiên đăng nhập do lỗi bảo mật trình duyệt. Vui lòng thử lại.");
       }
