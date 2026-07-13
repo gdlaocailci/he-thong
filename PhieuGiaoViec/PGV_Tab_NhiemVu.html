@@ -156,7 +156,7 @@
           <th style="width: 10%;">Tiến độ</th>
           <th style="width: 12%;">TG Hoàn thành</th>
           <th style="width: 17%;">Điểm đánh giá</th>
-          <th style="width: 4%;">Xoá</th>
+          <th style="width: 4%; id="thXoa" style="display: none;">Xoá</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -721,9 +721,25 @@ function tuDongDinhDangNgay(ptu) {
 
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
-    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
     
-    const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
+    // Kiểm tra phân quyền nghiêm ngặt: Chỉ tài khoản có quyền 'xxx' mới được bật cột xóa
+    let layQuyenHT = (typeof window.PGV_QUYEN !== 'undefined') ? window.PGV_QUYEN : (typeof canbHientai !== 'undefined' ? canbHientai.quyen : '');
+    const showDeleteBtn = (layQuyenHT === 'xxx');
+    
+    // Điều khiển ẩn/hiện tiêu đề thXoa trên thead tương ứng
+    if (showDeleteBtn) {
+        $('#thXoa').show();
+    } else {
+        $('#thXoa').hide();
+    }
+
+    if (!db || db.length === 0) { 
+        let soCotSp = showDeleteBtn ? 8 : 7; // Tự động co giãn colspan khi ẩn cột xóa
+        bg.append(`<tr><td colspan="${soCotSp}" class="text-center text-muted py-3 small">Chưa có nhiệm vụ.</td></tr>`); 
+        tinhtTdong(); 
+        return; 
+    }
+    
     db.forEach((dong, chs) => {
         let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; 
@@ -747,7 +763,7 @@ function veBangNviec(db) {
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
-        let colSp = isTitle ? 'colspan="7"' : '';
+        let colSp = isTitle ? (showDeleteBtn ? 'colspan="7"' : 'colspan="6"') : '';
 
         let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
         let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
@@ -819,7 +835,12 @@ function veBangNviec(db) {
             </div>`;
         }
 
+        // Nếu có quyền xxx thì tạo nút xóa, ngược lại để chuỗi rỗng
         let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
+        
+        // Ô td chứa nút xóa sẽ chỉ hiển thị (display: table-cell) nếu showDeleteBtn = true
+        let hiển_thị_td_xóa = showDeleteBtn ? `text-center align-middle` : `d-none`;
+
         let dg = `<tr class="dongNv">
           <td class="text-center align-middle oStt fw-bold">${sn}</td>
           <td ${colSp}>
@@ -836,7 +857,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}" oninput="tuDongDinhDangNgay(this)"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
-          <td class="text-center align-middle" style="${dsp}">${nutx}</td>
+          <td class="${hiển_thị_td_xóa}" style="${dsp}">${nutx}</td>
          </tr>`;
         bg.append(dg);
     });
