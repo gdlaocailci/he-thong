@@ -686,16 +686,21 @@ function kiemtqvata(tk_chuyen_den = null) {
             } catch(e) {}
 
             // BƯỚC 2: Tải ngầm Ưu tiên 1 (Xác thực Quyền & Nạp Dropdown Ghi Sổ)
-            google.script.run
-            .withSuccessHandler(dlu => {
-                if (dlu.cquy === false) {
-                    xoaluutrant("SKT_DINHDANH_TAIK");
-                    window.skttktoanc = null;
-                    document.getElementById('main-wrapper').style.display = 'none';
-                    document.getElementById('access_denied_msg').style.display = 'block';
-                    document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền.";
-                    return;
-                }
+               google.script.run
+                .withSuccessHandler(dlu => {
+                    if (dlu.cquy === false) {
+                        xoaluutrant("SKT_DINHDANH_TAIK");
+                        window.skttktoanc = null;
+                        
+                        // SỬA LỖI MÀN HÌNH TRẮNG: Giữ nguyên vỏ main-wrapper, chỉ ẩn các khu vực làm việc
+                        document.getElementById('MenuContainer').style.display = 'none';
+                        document.getElementById('so_wrapper').style.display = 'none';
+                        document.getElementById('MinhChungContainer').style.display = 'none';
+                        
+                        document.getElementById('access_denied_msg').style.display = 'block';
+                        document.getElementById('denied_reason').innerText = dlu.tbao || "Tài khoản không được cấp quyền.";
+                        return;
+                    }
 
                 luutrant("SKT_DINHDANH_TAIK", taikht);
                 window.skttktoanc = taikht;
