@@ -344,55 +344,43 @@ function kiemtlqsu(dg) {
 
 function taidli() {
     chuyentxo('initial', true);
-    google.script.run.withSuccessHandler(kq => {
-        if (kq.cquy === false) {
-            document.getElementById('main_content').style.display = 'none';
-            document.getElementById('access_denied_msg').style.display = 'block';
-            document.getElementById('denied_reason').innerText = kq.tbao;
-            chuyentxo('initial', false);
-            return; 
-        }
-        
-        if(kq.tkngd) tknd = kq.tkngd; 
-        dlgvi = kq.dlgv; 
-        dlnktra = kq.dlnk; 
-        dlbpha = kq.dlbp; 
-        dlmhso = kq.dlmh;
-        
-        // GHIM DỮ LIỆU NHẬT KÝ VÀO BỘ NHỚ ĐỆM CỦA TRÌNH DUYỆT
-        window.skt_kho_nhatky = kq.dlnhatky_san || [];
-        
-        document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
-        dienho('cbGiaoVien', dlgvi); 
-        dienho('cbNguoiKiemTra', dlnktra); 
-        dienhopd('cbBoPhan', Object.keys(dlbpha)); 
-        capnhopm(); 
 
-        let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-        let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-        let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
-        const q_h_t = String(window.sktquyenht).trim().toLowerCase();
-        // Cập nhật: Quyền Quản trị bao gồm cả quyền x, xx, xxx
-        const quyenQuanTri = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx'); 
-        
-        if (tgvc && !isInspector && !quyenQuanTri) {
-            // ĐỐI VỚI NGƯỜI ĐƯỢC KIỂM TRA: Bỏ trống tên, khóa mọi thứ để ép chọn Lịch sử
-            document.getElementById('cbGiaoVien').value = ""; 
-            document.getElementById('cbGiaoVien').disabled = true;
-            document.getElementById('cbNguoiKiemTra').disabled = true;
-            document.getElementById('cbBoPhan').disabled = true;
-            document.getElementById('txtMaBoPhan').disabled = true;
-        } else if (tgvc) {
-            // ĐỐI VỚI NGƯỜI KIỂM TRA / QUẢN TRỊ
-            dathopc('cbGiaoVien', tgvc);
-        }
+    // Dùng ngay dữ liệu đã nạp mỏng từ luồng Ưu tiên 1 trong index.html
+    if (!window.ruongbac) return;
 
-        chuyentxo('initial', false); 
-        dattr(1);
-        
-        apdquye();
-    }).skt_laydl_bda();
+    dlgvi = window.ruongbac.conmeo || []; 
+    dlnktra = window.ruongbac.chocon || []; 
+    dlbpha = window.ruongbac.caitui || {}; 
+    
+    document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
+    dienho('cbGiaoVien', dlgvi); 
+    dienho('cbNguoiKiemTra', dlnktra); 
+    dienhopd('cbBoPhan', Object.keys(dlbpha)); 
+
+    let emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
+    let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
+    let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
+    const q_h_t = String(window.sktquyenht).trim().toLowerCase();
+    const quyenQuanTri = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx'); 
+    
+    if (tgvc && !isInspector && !quyenQuanTri) {
+        // ĐỐI VỚI NGƯỜI ĐƯỢC KIỂM TRA
+        document.getElementById('cbGiaoVien').value = ""; 
+        document.getElementById('cbGiaoVien').disabled = true;
+        document.getElementById('cbNguoiKiemTra').disabled = true;
+        document.getElementById('cbBoPhan').disabled = true;
+        document.getElementById('txtMaBoPhan').disabled = true;
+    } else if (tgvc) {
+        // ĐỐI VỚI NGƯỜI KIỂM TRA / QUẢN TRỊ
+        dathopc('cbGiaoVien', tgvc);
+    }
+
+    chuyentxo('initial', false); 
+    dattr(1);
+    
+    apdquye();
 }
+  
 function khindthd(lo) {
     if ((lo === 'GV' || lo === 'NKT') && kiemttrem(lo)) return;
     
