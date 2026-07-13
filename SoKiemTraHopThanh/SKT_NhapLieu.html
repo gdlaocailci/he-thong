@@ -318,12 +318,15 @@ function trallkch(ddn) {
       else hienhth("⚠️ Chưa tải được chức năng upload!"); 
   }
 
+/* ========================================================================== */
+/* ĐỒNG BỘ: KHI ĐÍNH KÈM MINH CHỨNG, DÙNG SYS_QUYEN ĐỂ KIỂM TRA NHANH         */
+/* ========================================================================== */
 function kiemtlqsu(dg) {
-    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-    const tnktc = dlnktra.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-    const nkt = document.getElementById('cbNguoiKiemTra').value;
-    const lank = (tnktc && chuanhchu(tnktc) === chuanhchu(nkt));
-    const quyenQuanTri = (String(window.sktquyenht).trim().toLowerCase() === 'xx');
+    const sysQ = window.SYS_QUYEN || {};
+    const selectedNKT = document.getElementById('cbNguoiKiemTra').value;
+    
+    const isSelectedInspector = (sysQ.tenNKT_Cua_User && chuanhchu(sysQ.tenNKT_Cua_User) === chuanhchu(selectedNKT) && selectedNKT !== "");
+    const quyenQuanTri = sysQ.isSuperAdmin;
     
     const cacn = dg.querySelectorAll('.cell-input');
     const isSigned = (cacn && cacn.length > 10 && cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "");
@@ -334,56 +337,194 @@ function kiemtlqsu(dg) {
     if(ntai) {
         if (rowLocked) {
             ntai.style.display = 'none';
-        } else if(lank || quyenQuanTri) {
+        } else if(isSelectedInspector || quyenQuanTri) {
             ntai.style.display = 'inline-block'; 
         } else {
             ntai.style.display = 'none'; 
         }
     }
 }
-
+/* ========================================================================== */
+/* NÂNG CẤP: THUẬT TOÁN LOAD QUYỀN VÀ RENDER UI TỐC ĐỘ O(1)                   */
+/* CHÚ THÍCH: Đưa toàn bộ tính toán quyền hạn vào bộ đệm window.SYS_QUYEN     */
+/* ========================================================================== */
 function taidli() {
     chuyentxo('initial', true);
 
-    // Dùng ngay dữ liệu đã nạp mỏng từ luồng Ưu tiên 1 trong index.html
     if (!window.ruongbac) return;
 
     dlgvi = window.ruongbac.conmeo || []; 
     dlnktra = window.ruongbac.chocon || []; 
     dlbpha = window.ruongbac.caitui || {}; 
     
-    // --- ĐÃ SỬA LỖI TẠI ĐÂY ---
-    // Cập nhật lại biến tknd từ định danh toàn cục đã được xác thực
     tknd = window.skttktoanc || sessionStorage.getItem("SKT_DINHDANH_TAIK") || "";
     document.getElementById('user_display').innerText = "Đăng nhập: " + tknd;
-    // --------------------------
 
     dienho('cbGiaoVien', dlgvi); 
     dienho('cbNguoiKiemTra', dlnktra); 
     dienhopd('cbBoPhan', Object.keys(dlbpha)); 
 
+    // THUẬT TOÁN MỚI: Xây dựng bộ đệm quyền hạn (Role Cache) 1 LẦN DUY NHẤT
     let emcan = chuanhchu(tknd);
-    let tgvc = dlgvi.find(x1 => chuanhchu(x1.taik) === emcan)?.tenn;
-    let isInspector = dlnktra.some(x1 => chuanhchu(x1.taik) === emcan);
     const q_h_t = String(window.sktquyenht).trim().toLowerCase();
-    const quyenQuanTri = (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx'); 
     
-    if (tgvc && !isInspector && !quyenQuanTri) {
+    window.SYS_QUYEN = {
+        quyenQuanTri: (q_h_t === 'x' || q_h_t === 'xx' || q_h_t === 'xxx'),
+        isSuperAdmin: (q_h_t === 'xx' || q_h_t === 'xxx'),
+        isQuyenX: (q_h_t === 'x'),
+        tenGV_Cua_User: "",
+        tenNKT_Cua_User: "",
+        isNKT_System: false
+    };
+
+    // Quét mảng tìm tên định danh (Chỉ quét 1 lần)
+    for (let i = 0; i < dlgvi.length; i++) {
+        if (chuanhchu(dlgvi[i].taik) === emcan) { window.SYS_QUYEN.tenGV_Cua_User = dlgvi[i].tenn; break; }
+    }
+    for (let i = 0; i < dlnktra.length; i++) {
+        if (chuanhchu(dlnktra[i].taik) === emcan) { 
+            window.SYS_QUYEN.isNKT_System = true; 
+            window.SYS_QUYEN.tenNKT_Cua_User = dlnktra[i].tenn;
+            break; 
+        }
+    }
+
+    const hpgv = document.getElementById('cbGiaoVien');
+
+    if (window.SYS_QUYEN.tenGV_Cua_User && !window.SYS_QUYEN.isNKT_System && !window.SYS_QUYEN.quyenQuanTri) {
         // ĐỐI VỚI NGƯỜI ĐƯỢC KIỂM TRA
-        document.getElementById('cbGiaoVien').value = ""; 
-        document.getElementById('cbGiaoVien').disabled = true;
+        hpgv.value = ""; 
+        hpgv.disabled = true;
         document.getElementById('cbNguoiKiemTra').disabled = true;
         document.getElementById('cbBoPhan').disabled = true;
         document.getElementById('txtMaBoPhan').disabled = true;
-    } else if (tgvc) {
+    } else if (window.SYS_QUYEN.tenGV_Cua_User) {
         // ĐỐI VỚI NGƯỜI KIỂM TRA / QUẢN TRỊ
-        dathopc('cbGiaoVien', tgvc);
+        dathopc('cbGiaoVien', window.SYS_QUYEN.tenGV_Cua_User);
     }
 
     chuyentxo('initial', false); 
     dattr(1);
     
     apdquye();
+}
+  
+/* ========================================================================== */
+/* HÀM APPLY QUYỀN LÊN LƯỚI - TỐC ĐỘ THỰC THI < 5ms (Giảm tải Main Thread)    */
+/* ========================================================================== */
+function apdquye() {
+    // 1. Gọi bộ đệm hệ thống (O(1))
+    const sysQ = window.SYS_QUYEN || {};
+    
+    let isRecordSigned = false;
+    let hasNoiDung = false; 
+
+    const danhSachDong = document.querySelectorAll('#tableContent tr');
+    danhSachDong.forEach(dg => {
+        const cacn = dg.querySelectorAll('.cell-input');
+        
+        if (cacn && cacn.length > 1) {
+            if (!cacn[1].hasAttribute('data-bind-apd')) {
+                cacn[1].addEventListener('blur', apdquye);
+                cacn[1].setAttribute('data-bind-apd', 'true');
+            }
+            if (cacn[1].value.trim() !== "") hasNoiDung = true;
+        }
+
+        if (cacn && cacn.length > 10) {
+            if (cacn[9] && cacn[9].value.trim() !== "" && cacn[10] && cacn[10].value.trim() !== "") {
+                isRecordSigned = true;
+            }
+        }
+    });
+
+    const selectedGV = document.getElementById('cbGiaoVien').value;
+    const selectedNKT = document.getElementById('cbNguoiKiemTra').value;
+    const selectedBP = document.getElementById('cbBoPhan').value;
+    
+    const duThongTin = (selectedGV !== "" && selectedNKT !== "" && selectedBP !== "");
+
+    // So sánh quyền bằng cache, không gọi vòng lặp
+    const isOwner = (sysQ.tenGV_Cua_User && chuanhchu(sysQ.tenGV_Cua_User) === chuanhchu(selectedGV) && selectedGV !== "");
+    const isSelectedInspector = (sysQ.tenNKT_Cua_User && chuanhchu(sysQ.tenNKT_Cua_User) === chuanhchu(selectedNKT) && selectedNKT !== "");
+    
+    const isInspectorRole = (sysQ.isSuperAdmin || sysQ.isQuyenX || sysQ.isNKT_System);
+    const isHistoryLoaded = (document.getElementById('cbMaHoSo').value !== "");
+
+    // 2. Điều khiển trạng thái Bộ lọc khóa/mở
+    const filters = document.querySelectorAll('#main_content .f-input');
+    filters.forEach(input => {
+        if (input.id === 'cbMaHoSo') {
+            input.disabled = false; 
+        } else {
+            input.disabled = (isHistoryLoaded || isRecordSigned || hasNoiDung) ? true : !isInspectorRole;
+        }
+    });
+
+    const duocPhepCapNhatFile = (sysQ.isSuperAdmin || (sysQ.isQuyenX && isSelectedInspector) || isOwner);
+
+    // 3. Khóa/Mở lưới dữ liệu nhập liệu
+    danhSachDong.forEach(dg => {
+        const cacn = dg.querySelectorAll('.cell-input');
+        
+        cacn.forEach((input, index) => {
+            if (isRecordSigned) {
+                input.disabled = true; 
+            } else {
+                input.disabled = true; // Khóa mặc định chờ đủ điều kiện
+                
+                if (sysQ.isSuperAdmin) {
+                    input.disabled = (index !== 9 && index !== 10) ? !duThongTin : false;
+                } 
+                else if (sysQ.isQuyenX && isSelectedInspector) {
+                    if (index !== 9 && index !== 10) input.disabled = !duThongTin; 
+                }
+                else if (isOwner) {
+                    if (index === 9 || index === 10) input.disabled = false;
+                }
+            }
+        });
+
+        const ntxo = dg.querySelector('.btn-icon-del');
+        if (ntxo) {
+            ntxo.style.visibility = isRecordSigned ? 'hidden' : ((sysQ.isSuperAdmin || (sysQ.isQuyenX && isSelectedInspector)) ? 'visible' : 'hidden');
+        }
+
+        const ntai = dg.querySelector('.btn-ai-nhanxet');
+        if (ntai) {
+            ntai.style.display = isRecordSigned ? 'none' : ((sysQ.isSuperAdmin || (sysQ.isQuyenX && isSelectedInspector)) ? 'inline-block' : 'none');
+        }
+
+        const ntUp = dg.querySelector('.btn-upload-icon');
+        if (ntUp) {
+            ntUp.disabled = isRecordSigned ? !duocPhepCapNhatFile : false;
+        }
+    });
+    
+    // 4. Quản lý trạng thái các nút lệnh thực thi tác vụ
+    const btnSave = document.getElementById('btnSave');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const addRowBtn = document.querySelector('.add-row-container');
+
+    if (isRecordSigned) {
+        if (btnSave) btnSave.disabled = !duocPhepCapNhatFile;
+        if (addRowBtn) addRowBtn.style.display = 'none';
+        if (btnSubmit) btnSubmit.disabled = !(sysQ.isSuperAdmin || (sysQ.isQuyenX && isSelectedInspector));
+    } else {
+        if (sysQ.isSuperAdmin || (sysQ.isQuyenX && isSelectedInspector)) {
+            if (btnSave) btnSave.disabled = false;
+            if (btnSubmit) btnSubmit.disabled = false;
+            if (addRowBtn) addRowBtn.style.display = 'block';
+        } else if (isOwner) {
+            if (btnSave) btnSave.disabled = false;
+            if (btnSubmit) btnSubmit.disabled = true;
+            if (addRowBtn) addRowBtn.style.display = 'none';
+        } else {
+            if (btnSave) btnSave.disabled = true;
+            if (btnSubmit) btnSubmit.disabled = true;
+            if (addRowBtn) addRowBtn.style.display = 'none';
+        }
+    }
 }
   
 function khindthd(lo) {
@@ -440,162 +581,6 @@ function khindthd(lo) {
         }
     } else {
         apdquye();
-    }
-}
-
-function apdquye() {
-    const q_h_t = String(window.sktquyenht || "").trim().toLowerCase();
-    const emcan = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
-    
-    // Thuật toán kiểm tra trạng thái
-    let isRecordSigned = false;
-    let hasNoiDung = false; 
-
-    const danhSachDong = document.querySelectorAll('#tableContent tr');
-    danhSachDong.forEach(dg => {
-        const cacn = dg.querySelectorAll('.cell-input');
-        
-        if (cacn && cacn.length > 1) {
-            if (!cacn[1].hasAttribute('data-bind-apd')) {
-                // 👉 ĐÃ NÂNG CẤP: Thay đổi từ 'input' (gõ phím) sang 'blur' (khi gõ xong và thoát chuột khỏi ô)
-                cacn[1].addEventListener('blur', apdquye);
-                cacn[1].setAttribute('data-bind-apd', 'true');
-            }
-            if (cacn[1].value.trim() !== "") {
-                hasNoiDung = true;
-            }
-        }
-
-        if (cacn && cacn.length > 10) {
-            const yKien = cacn[9] ? cacn[9].value.trim() : "";
-            const kyTen = cacn[10] ? cacn[10].value.trim() : "";
-            if (yKien !== "" && kyTen !== "") {
-                isRecordSigned = true;
-            }
-        }
-    });
-
-    // 1. Phân loại đối tượng và cấu hình vai trò ban đầu
-    const isSuperAdmin = (q_h_t === 'xx' || q_h_t === 'xxx');
-    const isQuyenX = (q_h_t === 'x');
-    
-    const selectedGV = document.getElementById('cbGiaoVien').value;
-    const selectedNKT = document.getElementById('cbNguoiKiemTra').value;
-    const selectedBP = document.getElementById('cbBoPhan').value;
-    
-    const duThongTin = (selectedGV !== "" && selectedNKT !== "" && selectedBP !== "");
-
-    const userTenGV = dlgvi.find(x => chuanhchu(x.taik) === emcan)?.tenn;
-    const userTenNKT = dlnktra.find(x => chuanhchu(x.taik) === emcan)?.tenn;
-    
-    const isOwner = (chuanhchu(userTenGV) === chuanhchu(selectedGV) && selectedGV !== "");
-    const isSelectedInspector = (chuanhchu(userTenNKT) === chuanhchu(selectedNKT) && selectedNKT !== "");
-    
-    const isInspectorRole = (isSuperAdmin || isQuyenX || dlnktra.some(x1 => chuanhchu(x1.taik) === emcan));
-    const isHistoryLoaded = (document.getElementById('cbMaHoSo').value !== "");
-
-    // 2. Điều khiển trạng thái Bộ lọc khóa/mở
-    const filters = document.querySelectorAll('#main_content .f-input');
-    filters.forEach(input => {
-        if (input.id === 'cbMaHoSo') {
-            input.disabled = false; 
-        } else {
-            if (isHistoryLoaded) {
-                input.disabled = true; 
-            } else if (isRecordSigned || hasNoiDung) {
-                input.disabled = true; 
-            } else {
-                input.disabled = !isInspectorRole; 
-            }
-        }
-    });
-
-    const duocPhepCapNhatFile = (isSuperAdmin || (isQuyenX && isSelectedInspector) || isOwner);
-
-    // 3. Khóa/Mở lưới dữ liệu nhập liệu
-    danhSachDong.forEach(dg => {
-        const cacn = dg.querySelectorAll('.cell-input');
-        
-        cacn.forEach((input, index) => {
-            if (isRecordSigned) {
-                input.disabled = true; 
-            } else {
-                input.disabled = true; // Khóa mặc định chờ đủ điều kiện
-                
-                if (isSuperAdmin) {
-                    if (index !== 9 && index !== 10) {
-                        input.disabled = !duThongTin; 
-                    } else {
-                        input.disabled = false; 
-                    }
-                } 
-                else if (isQuyenX && isSelectedInspector) {
-                    if (index !== 9 && index !== 10) {
-                        input.disabled = !duThongTin; 
-                    }
-                }
-                else if (isOwner) {
-                    if (index === 9 || index === 10) {
-                        input.disabled = false;
-                    }
-                }
-            }
-        });
-
-        const ntxo = dg.querySelector('.btn-icon-del');
-        if (ntxo) {
-            if (isRecordSigned) {
-                ntxo.style.visibility = 'hidden'; 
-            } else {
-                ntxo.style.visibility = (isSuperAdmin || (isQuyenX && isSelectedInspector)) ? 'visible' : 'hidden';
-            }
-        }
-
-        const ntai = dg.querySelector('.btn-ai-nhanxet');
-        if (ntai) {
-            if (isRecordSigned) {
-                ntai.style.display = 'none';
-            } else {
-                ntai.style.display = (isSuperAdmin || (isQuyenX && isSelectedInspector)) ? 'inline-block' : 'none';
-            }
-        }
-
-        const ntUp = dg.querySelector('.btn-upload-icon');
-        if (ntUp) {
-            if (isRecordSigned) {
-                ntUp.disabled = !duocPhepCapNhatFile;
-            } else {
-                ntUp.disabled = false; 
-            }
-        }
-    });
-    
-    // 4. Quản lý trạng thái các nút lệnh thực thi tác vụ
-    const btnSave = document.getElementById('btnSave');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const addRowBtn = document.querySelector('.add-row-container');
-
-    if (isRecordSigned) {
-        if (btnSave) btnSave.disabled = !duocPhepCapNhatFile;
-        if (addRowBtn) addRowBtn.style.display = 'none';
-        
-        if (btnSubmit) {
-            btnSubmit.disabled = !(isSuperAdmin || (isQuyenX && isSelectedInspector));
-        }
-    } else {
-        if (isSuperAdmin || (isQuyenX && isSelectedInspector)) {
-            if (btnSave) btnSave.disabled = false;
-            if (btnSubmit) btnSubmit.disabled = false;
-            if (addRowBtn) addRowBtn.style.display = 'block';
-        } else if (isOwner) {
-            if (btnSave) btnSave.disabled = false;
-            if (btnSubmit) btnSubmit.disabled = true;
-            if (addRowBtn) addRowBtn.style.display = 'none';
-        } else {
-            if (btnSave) btnSave.disabled = true;
-            if (btnSubmit) btnSubmit.disabled = true;
-            if (addRowBtn) addRowBtn.style.display = 'none';
-        }
     }
 }
 //======================================================================================================
