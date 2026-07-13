@@ -697,30 +697,44 @@
         let thangMoi = thangHienTai + 1;
         if (thangMoi > 12) thangMoi = 1;
         
+        // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (Optimistic UI - Không độ trễ)
         selectThang.value = "Tháng " + thangMoi;
-        const nm = document.getElementById('gvLocNam') ? document.getElementById('gvLocNam').value : "";
-        const th_htai = selectThang.value;
         
+        // Xóa sạch bảng giao việc trên màn hình ngay lập tức (không bắt người dùng chờ máy chủ)
+        const tb = document.getElementById('gvThanBang');
+        if (tb) tb.innerHTML = ''; 
+        
+        // Tự động sinh ra 1 dòng trống ngay lập tức để BGH bắt đầu nhập liệu luôn cho tháng mới
+        gvVeDong();
+        document.querySelector('#gvThanBang tr:last-child .oSttGv').value = "1";
+        setTimeout(() => gvAutoResizeAllTextareas(), 100);
+
+        // Hiển thị thông báo thành công (Không khóa màn hình)
+        if (typeof gvTbaoNhanh === 'function') {
+             gvTbaoNhanh('tc', "Đã nhảy sang " + selectThang.value + "!\nHệ thống đang dọn dẹp nền máy chủ, đồng chí có thể bắt đầu giao việc ngay.");
+        }
+
+        const nm = document.getElementById('gvLocNam') ? document.getElementById('gvLocNam').value : "";
+        const th_htai = selectThang.value; // Dùng tháng mới
+        
+        // Lệnh đặc biệt gửi xuống Server để xóa dữ liệu tháng cũ
         const newTask = { ngnhan: "DELETE" };
         
-        gvDatTai(true, "🧹 Đang dọn dẹp và thiết lập tháng mới...");
-        if (typeof khachApi === 'undefined' || !khachApi.gvXulyNviec) {
-            gvTbaoNhanh('loi', "Lỗi: API không khả dụng.");
-            gvDatTai(false);
-            return;
+        // 2. CHẠY NGẦM GỌI API (Đã loại bỏ lệnh gvDatTai(true) gây khóa màn hình)
+        if (typeof khachApi !== 'undefined' && khachApi.gvXulyNviec) {
+            khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: newTask }, function(kq) {
+                if (kq && kq.ttai === 'tcong') {
+                    // Tiến trình chạy nền thành công, không cần làm phiền người dùng
+                    console.log("Đã dọn dẹp máy chủ tháng mới hoàn tất.");
+                } else {
+                    gvTbaoNhanh('loi', "Cảnh báo: Lỗi khi dọn dẹp máy chủ: " + (kq ? kq.tbao : "Không xác định"));
+                }
+            }, function(loi) {
+                console.warn("Lỗi tiến trình ngầm khi chuyển tháng: ", loi);
+                gvTbaoNhanh('loi', "Lỗi kết nối khi đồng bộ máy chủ ngầm.");
+            });
+        } else {
+            gvTbaoNhanh('loi', "Lỗi: Cổng kết nối API không khả dụng.");
         }
-        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: newTask }, function(kq) {
-            gvDatTai(false);
-            if (kq && kq.ttai === 'tcong') {
-                gvTbaoNhanh('tc', "✓ Đã chuyển tháng thành công!", function() {
-                    setTimeout(gvLaydlGoc, 500);
-                });
-            } else {
-                gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown"));
-            }
-        }, function(l) {
-            gvDatTai(false);
-            gvTbaoNhanh('loi', "Lỗi kết nối: " + (l ? l.message : "Không xác định"));
-        });
     }
 </script>
