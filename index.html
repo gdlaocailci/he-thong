@@ -941,7 +941,18 @@
   }
   </style>
 </head>
-
+<script>
+    // Khởi động Service Worker cho điện thoại Android
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').then(function(registration) {
+          console.log('Hệ thống App đã đăng ký thành công!');
+        }, function(err) {
+          console.log('Lỗi đăng ký App: ', err);
+        });
+      });
+    }
+  </script>
 <body>
   <div id="desktop-area">
   </div>
