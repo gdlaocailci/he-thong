@@ -390,77 +390,82 @@
         gvAutoResizeAllTextareas();
     }
 
-  function gvVeDong(dong = null) {
-        const tb = document.getElementById('gvThanBang');
-        if (!tb) return;
-        const tr = document.createElement('tr');
-        
-        let ngnth = (dong && dong[6]) ? dong[6] : "";
-        let ngnthH = ngnth.toUpperCase();
-        
-        let dcb = "";
-        let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
-        
-        let lchon = `<option value="">--Chọn--</option>`;
-        let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : "";
-        lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`;
-        
-        if (dsCanbgv && Array.isArray(dsCanbgv)) {
-            dsCanbgv.forEach(s => {
-                if (!s) return;
+function gvVeDong(dong = null) {
+    const tb = document.getElementById('gvThanBang');
+    if (!tb) return;
+    const tr = document.createElement('tr');
+    
+    let ngnth = (dong && dong[6]) ? dong[6] : "";
+    let ngnthH = ngnth.toUpperCase();
+    
+    let dcb = "";
+    let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
+    
+    let lchon = `<option value="">--Chọn--</option>`;
+    let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : "";
+    lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`;
+    
+    if (dsCanbgv && Array.isArray(dsCanbgv)) {
+        dsCanbgv.forEach(s => {
+            if (!s) return;
+            
+            let qy = String(s.quyen || "").trim().toLowerCase();
+            
+            // BỘ LỌC 3: Loại bỏ "xxx", "gs", chỉ giữ lại những quyền hợp lệ để hiện trong danh sách giao việc
+            if (qy === "" || qy === "x" || qy === "xx") {
                 let chon = (ngnth === s.ttrg || ngnth === s.tenn) ? "selected" : "";
                 lchon += `<option value="${s.ttrg || ''}" data-name="${s.tenn || ''}" ${chon}>${s.tenn || ''}</option>`;
-            });
-        }
-        
-        let bstt = (dong && dong[0]) ? dong[0] : "";
-        const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
-        
-        let vTgGiao = (dong && dong[3]) ? dong[3] : "";
-        let vTgHt = (dong && dong[5]) ? dong[5] : "";
-        if (vTgGiao && vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
-        if (vTgHt && vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
-        
-        let vDiemDg = (dong && dong[7]) ? dong[7] : "";
-        let vColJ = (dong && dong[9]) ? dong[9] : "";
-        let vColK = (dong && dong[10]) ? dong[10] : "";
-        let vColL = (dong && dong[11]) ? dong[11] : "";
-        let vColM = (dong && dong[12]) ? dong[12] : "";
-        
-        if (!dong) {
-            const cacDong = document.querySelectorAll('#gvThanBang tr');
-            if (cacDong && cacDong.length > 0) {
-                const dongCuoi = cacDong[cacDong.length - 1];
-                if (dongCuoi && dongCuoi.querySelector('.oDiemDgGv')) vDiemDg = dongCuoi.querySelector('.oDiemDgGv').value;
-                if (dongCuoi && dongCuoi.querySelector('.oColJ')) vColJ = dongCuoi.querySelector('.oColJ').value;
-                if (dongCuoi && dongCuoi.querySelector('.oColK')) vColK = dongCuoi.querySelector('.oColK').value;
-                if (dongCuoi && dongCuoi.querySelector('.oColL')) vColL = dongCuoi.querySelector('.oColL').value;
-                if (dongCuoi && dongCuoi.querySelector('.oColM')) vColM = dongCuoi.querySelector('.oColM').value;
             }
-        }
-        
-        // Đã khóa thẻ input Cột Điểm Max (readonly)
-        tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
-        <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
-        <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong && dong[1] ? dong[1] : ""}</textarea></td>
-        <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong && dong[2] ? dong[2] : ""}" readonly></td>
-        <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
-        <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
-        <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
-        <td>
-            <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong && dong[8] ? dong[8] : ""}</textarea>
-            <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
-            <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
-            <input type="hidden" class="oColJ" value="${vColJ}">
-            <input type="hidden" class="oColK" value="${vColK}">
-            <input type="hidden" class="oColL" value="${vColL}">
-            <input type="hidden" class="oColM" value="${vColM}">
-        </td>`;
-        
-        tb.appendChild(tr);
-        const textareaNd = tr.querySelector('.oNdGv');
-        if (textareaNd) gvKiemTraTieuDe(textareaNd);
+        });
     }
+    
+    let bstt = (dong && dong[0]) ? dong[0] : "";
+    const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
+    
+    let vTgGiao = (dong && dong[3]) ? dong[3] : "";
+    let vTgHt = (dong && dong[5]) ? dong[5] : "";
+    if (vTgGiao && vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
+    if (vTgHt && vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
+    
+    let vDiemDg = (dong && dong[7]) ? dong[7] : "";
+    let vColJ = (dong && dong[9]) ? dong[9] : "";
+    let vColK = (dong && dong[10]) ? dong[10] : "";
+    let vColL = (dong && dong[11]) ? dong[11] : "";
+    let vColM = (dong && dong[12]) ? dong[12] : "";
+    
+    if (!dong) {
+        const cacDong = document.querySelectorAll('#gvThanBang tr');
+        if (cacDong && cacDong.length > 0) {
+            const dongCuoi = cacDong[cacDong.length - 1];
+            if (dongCuoi && dongCuoi.querySelector('.oDiemDgGv')) vDiemDg = dongCuoi.querySelector('.oDiemDgGv').value;
+            if (dongCuoi && dongCuoi.querySelector('.oColJ')) vColJ = dongCuoi.querySelector('.oColJ').value;
+            if (dongCuoi && dongCuoi.querySelector('.oColK')) vColK = dongCuoi.querySelector('.oColK').value;
+            if (dongCuoi && dongCuoi.querySelector('.oColL')) vColL = dongCuoi.querySelector('.oColL').value;
+            if (dongCuoi && dongCuoi.querySelector('.oColM')) vColM = dongCuoi.querySelector('.oColM').value;
+        }
+    }
+    
+    tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
+    <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
+    <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong && dong[1] ? dong[1] : ""}</textarea></td>
+    <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong && dong[2] ? dong[2] : ""}" readonly></td>
+    <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
+    <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
+    <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
+    <td>
+        <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong && dong[8] ? dong[8] : ""}</textarea>
+        <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
+        <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+        <input type="hidden" class="oColJ" value="${vColJ}">
+        <input type="hidden" class="oColK" value="${vColK}">
+        <input type="hidden" class="oColL" value="${vColL}">
+        <input type="hidden" class="oColM" value="${vColM}">
+    </td>`;
+    
+    tb.appendChild(tr);
+    const textareaNd = tr.querySelector('.oNdGv');
+    if (textareaNd) gvKiemTraTieuDe(textareaNd);
+}
     
     function gvCoDan(ptu) { 
         if (!ptu) return;
