@@ -80,6 +80,28 @@
     .denied-icon { font-size: 4rem; color: #dc3545; margin-bottom: 20px; }
     .denied-title { font-size: 1.6rem; font-weight: bold; color: #333; margin-bottom: 10px; text-transform: uppercase; }
     .denied-text-info { font-size: 1.1rem; color: #0d6efd; font-weight: bold; background: #e7f1ff; padding: 5px 15px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+
+    /* ================== KHỐI HIỆU ỨNG NỔI 3D & CO GIÃN ================== */
+    .btn-3d-effect {
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: -4px -4px 8px rgba(255, 255, 255, 0.8), 4px 4px 8px rgba(0, 0, 0, 0.15);
+      transform: translateY(0);
+      border: none !important;
+    }
+    .btn-3d-effect:hover {
+      box-shadow: -2px -2px 5px rgba(255, 255, 255, 0.8), 2px 2px 5px rgba(0, 0, 0, 0.15);
+      transform: translateY(1px);
+    }
+    .btn-3d-effect:active {
+      box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2), inset -3px -3px 6px rgba(255, 255, 255, 0.8) !important;
+      transform: translateY(3px) !important;
+    }
+    .input-flexible {
+      flex: 1 1 auto; 
+      min-width: 110px; 
+      width: 100%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -97,7 +119,7 @@
         Thời gian phân quyền của phiên làm việc đã kết thúc.<br>Vui lòng tải lại hệ thống.
       </p>
       <div class="d-flex justify-content-center">
-        <button type="button" id="btnTrialOk" class="btn btn-danger fw-bold" style="padding: 8px 30px; font-size: 15px; border-radius: 6px; text-align: center;" data-bs-dismiss="modal">Thoát hệ thống</button>
+        <button type="button" id="btnTrialOk" class="btn btn-danger btn-3d-effect fw-bold" style="padding: 8px 30px; font-size: 15px; border-radius: 6px; text-align: center;" data-bs-dismiss="modal">Thoát hệ thống</button>
       </div>
     </div>
   </div>
@@ -127,7 +149,7 @@
        <p style="color:#666; font-size: 1rem; line-height: 1.5;">Định danh kết nối chưa được phân quyền trên hệ thống.<br>Vui lòng liên hệ Quản trị viên để được hỗ trợ.</p>
        <div class="denied-text-info" id="deniedTextInfo"></div>
        <div class="d-flex justify-content-center gap-3 mt-4">
-          <button class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="ngatKetNoiHethong()">🔄 Đổi định danh kết nối</button>
+          <button class="btn btn-outline-danger btn-3d-effect rounded-pill px-4 fw-bold" onclick="ngatKetNoiHethong()">🔄 Đổi định danh kết nối</button>
        </div>
    </div>
 </div>
@@ -141,7 +163,7 @@
    <div class="msg-box">
       <span id="notify_icon" class="msg-icon">⚠️</span><h2 id="notify_title" class="msg-title">Thông báo</h2>
       <div id="notify_desc" class="msg-desc">Nội dung...</div>
-      <button class="btn btn-primary" onclick="closeNotify()" style="width:100px; justify-content: center; margin: 0 auto; display: flex;">Đóng</button>
+      <button class="btn btn-primary btn-3d-effect" onclick="closeNotify()" style="width:100px; justify-content: center; margin: 0 auto; display: flex;">Đóng</button>
    </div>
 </div>
 
@@ -169,10 +191,10 @@
         <option value="LUONG">Lương</option>
         <option value="THAMNIEN">Thâm niên</option>
       </select>
-      <input type="text" id="s_hoten" class="form-input" placeholder="Tên cán bộ..." autocomplete="off" spellcheck="false" style="width: 160px;" />
-      <input type="text" id="s_thang" class="form-input" placeholder="Tháng (1-12)" autocomplete="off" spellcheck="false" style="width: 80px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 12) this.value = 12;" maxlength="2" />
-      <input type="text" id="s_nam" class="form-input" placeholder="Năm (VD: 2024)" autocomplete="off" spellcheck="false" style="width: 100px;" oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="4" />
-      <button class="btn btn-primary" onclick="doSearch()">🔍 Tra cứu</button>
+      <input type="text" id="s_hoten" class="form-input input-flexible" placeholder="Tên cán bộ..." autocomplete="off" spellcheck="false" />
+      <input type="text" id="s_thang" class="form-input input-flexible" placeholder="Tháng (1-12)" autocomplete="off" spellcheck="false" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 12) this.value = 12;" maxlength="2" />
+      <input type="text" id="s_nam" class="form-input input-flexible" placeholder="Năm (VD: 2024)" autocomplete="off" spellcheck="false" oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="4" />
+      <button class="btn btn-primary btn-3d-effect" onclick="doSearch()">🔍 Tra cứu</button>
     </div>
     <div class="table-responsive"><table><thead id="s_thead"></thead><tbody id="s_tbody"></tbody></table></div>
   </div>
@@ -186,8 +208,8 @@
         </select>
       </div>
       <div>
-        <button id="btn_addRow" class="btn btn-success" onclick="addRow()">+ Thêm dòng</button>
-        <button class="btn btn-primary" onclick="saveAll()">💾 Lưu tất cả</button>
+        <button id="btn_addRow" class="btn btn-success btn-3d-effect" onclick="addRow()">+ Thêm dòng</button>
+        <button class="btn btn-primary btn-3d-effect" onclick="saveAll()">💾 Lưu tất cả</button>
         <span id="updateStatus" class="status-msg"></span>
       </div>
     </div>
@@ -359,7 +381,8 @@
     const type = document.getElementById('u_comboLoai').value; const cols = CONFIG[type]; const tbody = document.getElementById('u_tbody');
     const tr = document.createElement('tr'); tr.className = 'data-row'; let html = '<td class="stt-cell"></td>';
     cols.forEach(c => {
-      if (c.type === 'del') { html += `<td><button class="btn btn-danger" onclick="removeRow(this)" style="padding:2px 8px;">×</button></td>`; } 
+      /* Nút xóa dòng được tích hợp btn-3d-effect */
+      if (c.type === 'del') { html += `<td><button class="btn btn-danger btn-3d-effect" onclick="removeRow(this)" style="padding:2px 8px;">×</button></td>`; } 
       else if (c.type === 'qd') {
         html += `<td>
             <div style="display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center;">
@@ -451,7 +474,8 @@ function doSearch() {
             } else { linkDisplay = str; }
         }
 
-        let htmlSua = ""; if (window.CD_CAN_EDIT) { const rowDataEncoded = encodeURIComponent(JSON.stringify(r)); htmlSua = `<td><button onclick="transferToEdit('${rowDataEncoded}', '${loai}')" style="border:1px solid #94a3b8; background:#fff; cursor:pointer; padding:3px 8px; border-radius:4px; color:#1e3a8a; font-weight:bold;" title="Sửa dòng này">📝</button></td>`; }
+        /* Tích hợp btn-3d-effect vào nút Sửa động */
+        let htmlSua = ""; if (window.CD_CAN_EDIT) { const rowDataEncoded = encodeURIComponent(JSON.stringify(r)); htmlSua = `<td><button onclick="transferToEdit('${rowDataEncoded}', '${loai}')" class="btn-3d-effect" style="background:#fff; cursor:pointer; padding:3px 8px; border-radius:4px; color:#1e3a8a; font-weight:bold;" title="Sửa dòng này">📝</button></td>`; }
         h += `<tr>${htmlSua}<td>${i+1}</td>`;
         if (loai === 'LUONG') {
           h += `<td class="text-left"><b>${r[1]}</b></td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${formatD(r[5],r[6],r[7])}</td>
