@@ -213,7 +213,10 @@
     CD_XoaBanGhi: function(loai, viTri, link) { this._goiMayChu('CD_XoaBanGhi', [loai, viTri, link]); },
     CD_TraCuuLuong: function(boLoc) { this._goiMayChu('CD_TraCuuLUONG', [boLoc]); },
     CD_TraCuuThamNien: function(boLoc) { this._goiMayChu('CD_TraCuuTHAMNIEN', [boLoc]); },
-    CD_LayQuyenNguoiDung: function() { this._goiMayChu('CD_LayQuyenNguoiDung', []); },
+    
+    /* BỔ SUNG THAM SỐ account ĐỂ TRUYỀN ĐỊNH DANH LÊN MÁY CHỦ */
+    CD_LayQuyenNguoiDung: function(account) { this._goiMayChu('CD_LayQuyenNguoiDung', [account]); },
+    
     CD_KiemTraQuyenDrive: function() { this._goiMayChu('CD_KiemTraQuyenDrive', []); },
     CD_GanLink: function(link, id, oldUrl, mode) { this._goiMayChu('CD_GanLink', [link, id, oldUrl, mode]); },
     CD_XoaTepTheoLink: function(url) { this._goiMayChu('CD_XoaTepTheoLink', [url]); },
