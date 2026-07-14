@@ -97,7 +97,7 @@
           let thtml = '';
           if (xl.tepdinhk && xl.tepdinhk.length > 0) {
               thtml = '<div class="mt-2 d-flex flex-wrap gap-1">';
-              xl.tepdinhk.forEach((tc, idt) => { thtml += `<a href="${tc.duongd}" target="_blank" class="badge bg-info text-dark text-decoration-none shadow-sm" style="font-size: 11px; border: 1px solid #90caf9;" title="Xem đính kèm: ${tc.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${idt + 1}</a>`; });
+              xl.tepdinhk.forEach((tc, idt) => { thtml += `<a href="javascript:void(0)" onclick="moKhungXemTep('${tc.duongd}')" class="badge bg-info text-dark text-decoration-none shadow-sm" style="font-size: 11px; border: 1px solid #90caf9;" title="Xem đính kèm: ${tc.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${idt + 1}</a>`; });
               thtml += '</div>';
           }
           chuh = `<div class="voBocYk"><div class="ndYk">${nhtml}${thtml}</div></div>`;
