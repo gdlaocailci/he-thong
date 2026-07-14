@@ -1,4 +1,5 @@
 <style>
+  /* Cấu trúc Modal chuẩn an toàn */
   #upload_modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 105055; justify-content: center; align-items: center; }
   .up-container { background: #fff; padding: 20px; border-radius: 8px; width: 500px; max-width: 95%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Times New Roman', serif; }
   .up-header { border-bottom: 2px solid #b91c1c; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
@@ -26,7 +27,7 @@
       <label><b>1. Chọn thư mục lưu trữ (Tiêu chuẩn tải File):</b></label>
       <div style="display:flex; margin-top:5px; align-items: stretch; gap: 5px;">
         <select id="folderSelect" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
-          <option>⏳ Đang kết nối...</option>
+          <option>⏳ Đang kết nối máy chủ...</option>
         </select>
         <button class="btn-center-folder" onclick="chonThuMucTrungTam()" title="Đẩy thẳng vào Thư mục Trung tâm">🎯 Trung tâm</button>
       </div>
@@ -57,7 +58,7 @@
 
       <div id="linkInputArea">
           <input type="text" id="txtDirectLink" placeholder="Dán đường link (Google Drive hoặc link web trực tiếp) vào đây..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-family: Arial, sans-serif; box-sizing: border-box;" oninput="kiemtralink()" autocomplete="off" spellcheck="false">
-          <div style="font-size:12px; color:#666; margin-top:5px; font-style: italic;">AI chỉ đọc được nếu file không bị khóa bảo vệ.</div>
+          <div style="font-size:12px; color:#666; margin-top:5px; font-style: italic;">Hệ thống chỉ đọc được nếu file không bị khóa bảo vệ.</div>
       </div>
     </div>
 
@@ -92,10 +93,10 @@ window.SCV_OpenUploadModal = function(btnElement, currentLink, rootId, onlyLink 
 function taithu() {
     const hop = document.getElementById('folderSelect');
     if (hop.options.length <= 1) {
-        hop.innerHTML = `<option value="${GOC_THUMUC}">⏳ Đang tải danh sách thư mục...</option>`;
+        hop.innerHTML = `<option value="${GOC_THUMUC}">⏳ Đang tải danh sách thư mục từ máy chủ...</option>`;
     }
     
-    // KHẮC PHỤC: Sử dụng API gọi qua fetch thay vì google.script
+    // Đã chuyển đổi hoàn toàn sang API Fetch của GitHub
     goiMyChuHien('layThuMucCon', { rootFolderId: GOC_THUMUC })
     .then(res => {
         hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC</option>`;
@@ -261,7 +262,7 @@ function thuchta() {
     const idt = document.getElementById('folderSelect').value || GOC_THUMUC;
     
     nt.classList.remove('active');
-    tt.style.color = "blue"; tt.innerText = "⏳ Đang chuẩn bị luồng dữ liệu...";
+    tt.style.color = "blue"; tt.innerText = "⏳ Đang chuẩn bị dữ liệu...";
 
     if (cd === 'file') {
       let dlte = []; let dem = 0;
@@ -273,7 +274,7 @@ function thuchta() {
           dlte.push({ fileName: te.name, mimeType: te.type, data: err.target.result.split(',')[1] });
           dem++;
           if (dem === tepht.length) {
-            tt.innerText = `⏳ Đang đẩy ${tepht.length} file qua luồng API máy chủ...`;
+            tt.innerText = `⏳ Đang tải ${tepht.length} file qua API máy chủ...`;
             
             goiMyChuHien('taiTepLen', { filesData: dlte, mhs: "", folderId: idt, linkXoa: lkcx, mode: cdg })
             .then(kq => { xulykqta(kq, tt, nt); })
@@ -293,7 +294,7 @@ function thuchta() {
           dlte.push({ fileName: te.name, mimeType: te.type, data: err.target.result.split(',')[1] });
           dem++;
           if (dem === tepht.length) {
-            tt.innerText = "⏳ Đang đóng gói và gửi thư mục qua luồng API...";
+            tt.innerText = "⏳ Đang gửi thư mục qua API máy chủ...";
             
             goiMyChuHien('taiThuMucLen', { folderId: idt, folderName: tent, filesData: dlte, linkXoa: lkcx, mode: cdg })
             .then(kq => { xulykqta(kq, tt, nt); })
