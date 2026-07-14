@@ -13,6 +13,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
+    /* CSS giữ nguyên gốc để đảm bảo không vỡ giao diện */
     #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; }
     .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #1e3a8a; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     .loading-text { font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; color: #1e3a8a; font-weight: bold; letter-spacing: 0.5px; }
@@ -99,7 +100,7 @@
 
 <div id="loading-overlay">
   <div class="spinner"></div>
-  <div class="loading-text">Đang kết nối hệ thống dữ liệu...</div>
+  <div class="loading-text">Đang thiết lập định tuyến và dữ liệu...</div>
 </div>
 
 <div class="header" style="position: sticky; top: 0; z-index: 1000; background: white;"> 
@@ -117,28 +118,25 @@
   </div>
 </div>
 
-<div id="trial-active-banner" style="display:none; background: #fffbeb; color: #b45309; text-align: center; padding: 10px; font-size: 15px; font-weight: bold; border-bottom: 1px solid #fcd34d;">
-  ℹ️ Hệ thống đang trong thời gian dùng thử. Bạn còn <span id="trial-days-left"></span> ngày trải nghiệm.
-</div>
+<div id="trial-active-banner" style="display:none; background: #fffbeb; color: #b45309; text-align: center; padding: 10px; font-size: 15px; font-weight: bold; border-bottom: 1px solid #fcd34d;"></div>
 
 <div class="main-wrapper" id="mainApp" style="display:none;">
   <div class="tabs">
-    <button id="btnTabNhap" class="tab-btn" onclick="showTab('tabInput', this)">📝 NHẬP LỊCH</button>
     <button id="btnTabSearch" class="tab-btn active" onclick="showTab('tabSearch', this)">🔍 TRA CỨU LỊCH</button>
-    <button id="btnTabCV" class="tab-btn" onclick="showTab('tabCongVan', this)">📂 NHẬP CÔNG VĂN</button>
     <button id="btnTabSearchCV" class="tab-btn" onclick="showTab('tabSearchCongVan', this)">🔎 TÌM KIẾM VĂN BẢN</button>
+    <button id="btnTabNhap" class="tab-btn" onclick="showTab('tabInput', this)">📝 NHẬP LỊCH</button>
+    <button id="btnTabCV" class="tab-btn" onclick="showTab('tabCongVan', this)">📂 NHẬP CÔNG VĂN</button>
     <button id="btnTabPhanQuyen" class="tab-btn" onclick="showTab('tabPhanQuyen', this)" style="display:none;">⚙️ PHÂN QUYỀN</button>
     <button class="tab-btn" onclick="logoutGoogle()" style="margin-left:auto; color:#dc2626;">🚪 ĐĂNG XUẤT</button>
   </div>
-  <div id="tabInput" class="tab-content"></div>
   <div id="tabSearch" class="tab-content active"></div>
-  <div id="tabCongVan" class="tab-content"></div>
   <div id="tabSearchCongVan" class="tab-content"></div>
+  <div id="tabInput" class="tab-content"></div>
+  <div id="tabCongVan" class="tab-content"></div>
   <div id="tabPhanQuyen" class="tab-content"></div>
 </div>
 
 <div id="modalMinhChung"></div>
-
 <div id="accessDeniedBanner" class="access-denied-container" style="display:none;">
     <div class="access-icon">⛔</div>
     <div class="access-title" style="color: #b91c1c;">Không có quyền truy cập</div>
@@ -152,37 +150,22 @@
     </div>
 </div>
 
-<div id="trial-expired-banner" class="access-denied-container" style="display:none;">
-    <div class="access-icon">⏳</div>
-    <div class="access-title" style="color: #ea580c;">HẾT HẠN DÙNG THỬ</div>
-    <div class="access-msg">
-        Thời gian trải nghiệm hệ thống (14 ngày) đã kết thúc.<br>
-        Xin vui lòng liên hệ Kỹ thuật viên / Quản trị hệ thống để kích hoạt phiên bản chính thức.
-    </div>
-    <div class="contact-box">
-        <b style="color: #15803d;">Mọi dữ liệu của nhà trường vẫn được lưu trữ an toàn trên máy chủ.</b>
-    </div>
-</div>
-
-  <div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 999999;">
+<div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 999999;">
   <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 8px; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
-      <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC VĂN BẢN</span>
+      <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC TÀI LIỆU</span>
       <div style="display: flex; gap: 10px; align-items: center;">
-        <button id="btn_tai_tep_preview" onclick="taiTepDangXem()" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer; min-width: 105px;">📥 TẢI VỀ</button>
+        <button id="btn_tai_tep_preview" onclick="taiTepDangXem()" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">📥 TẢI VỀ</button>
         <button onclick="dongKhungXemTep()" style="background: #ef4444; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">✖ ĐÓNG</button>
       </div>
     </div>
-
     <div style="flex-grow: 1; position: relative; background: #f8f9fa; border-radius: 4px; overflow: hidden; border: 1px solid #dee2e6;">
         <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
-        <div id="mask_che_nut_drive" style="position: absolute; top: 0; right: 0; width: 65px; height: 55px; background: transparent; z-index: 10; display: none; cursor: not-allowed;" title="Chức năng mở thẻ mới đã bị vô hiệu hóa"></div>
-      </div>
-    
+        <div id="mask_che_nut_drive" style="position: absolute; top: 0; right: 0; width: 65px; height: 55px; background: transparent; z-index: 10; display: none; cursor: not-allowed;" title="Đã vô hiệu hóa"></div>
+    </div>
   </div>
 </div>
 <iframe id="iframe_tai_ngam" style="display: none;"></iframe>
-  
 <div id="global_msg" style="display:none; position:fixed; bottom:20px; right:20px; background:#b91c1c; color:white; padding:15px 25px; border-radius:6px; z-index:9999999; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>
 
 <script>
@@ -191,11 +174,8 @@
       withSuccessHandler: function(cb) { return createRunner(cb, onFailure); },
       withFailureHandler: function(cb) { return createRunner(onSuccess, cb); },
       _call: function(funcName, args) {
-        
         const GAS_URL = typeof SCV_CONFIG_GAS_URL !== 'undefined' ? SCV_CONFIG_GAS_URL : "";
-        
         if (!GAS_URL) {
-          console.error("❌ Lỗi: Chưa cấu hình link Web App trong ketnoi.js.");
           if (onFailure) onFailure("Hệ thống chưa tìm thấy đường dẫn kết nối máy chủ!");
           return;
         }
@@ -213,12 +193,10 @@
           if (res.success) { 
               if (["SCV_saveDataLich", "SCV_deleteLich", "SCV_saveCongVan", "SCV_deleteCongVan"].includes(funcName)) {
                   if (onSuccess) onSuccess(res.data); 
-                  
                   const syncToast = document.createElement('div');
-                  syncToast.innerHTML = "🔄 Đang đồng bộ dữ liệu...";
+                  syncToast.innerHTML = "🔄 Đang đồng bộ cấu trúc...";
                   syncToast.style.cssText = "position:fixed; bottom:80px; right:20px; background:#f59e0b; color:white; padding:10px 20px; border-radius:6px; z-index:9999999; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;";
                   document.body.appendChild(syncToast);
-                  
                   fetchCacheData().then(() => { 
                       syncToast.innerHTML = "✅ Đồng bộ hoàn tất!";
                       syncToast.style.background = "#10b981";
@@ -228,9 +206,9 @@
                   if (onSuccess) onSuccess(res.data); 
               }
           }
-          else { if (onFailure) onFailure(res.error); else console.error("Lỗi máy chủ Google:", res.error); }
+          else { if (onFailure) onFailure(res.error); else console.error("Lỗi Google Server:", res.error); }
         })
-        .catch(err => { if (onFailure) onFailure(err); else console.error("Lỗi kết nối mạng:", err); });
+        .catch(err => { if (onFailure) onFailure(err); else console.error("Lỗi kết nối:", err); });
       },
       SCV_getInitialData: function() { this._call('SCV_getInitialData', []); },
       SCV_getAllDataCache: function() { this._call('SCV_getAllDataCache', []); },
@@ -257,8 +235,200 @@
 
   const google = { script: { get run() { return createRunner(null, null); } } };
 
+  // KHỞI TẠO BIẾN CỤC BỘ DỮ LIỆU
   window.SCV_CACHE_LICH = [];
   window.SCV_CACHE_CONGVAN = [];
+  window.SCV_FOLDER_TREE_CACHE = {}; // Cache thư mục khởi động nhanh
+
+  let GLOBAL_USER = "";
+  let GLOBAL_PERM = false; 
+
+  function applySystemConfig(config) {
+      const tenTruong = typeof SCV_TEN_TRUONG !== 'undefined' ? SCV_TEN_TRUONG : 'ĐANG TẢI...';
+      const logo = typeof SCV_LINK_LOGO !== 'undefined' ? SCV_LINK_LOGO : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      const tenPm = typeof SCV_TEN_PM !== 'undefined' ? SCV_TEN_PM : 'ĐANG TẢI...';
+      const tenPmUp = typeof SCV_TEN_PM_UP !== 'undefined' ? SCV_TEN_PM_UP : 'ĐANG TẢI...';
+      const phienBan = typeof SCV_PHIEN_BAN !== 'undefined' ? SCV_PHIEN_BAN : '';
+      const tacGiaUp = typeof SCV_TAC_GIA_UP !== 'undefined' ? SCV_TAC_GIA_UP : '';
+
+      if(document.getElementById('header_ten_truong')) document.getElementById('header_ten_truong').innerText = tenTruong;
+      if(document.getElementById('login_ten_truong')) document.getElementById('login_ten_truong').innerText = tenTruong;
+      document.title = (typeof SCV_TEN_PM !== 'undefined' ? SCV_TEN_PM : "Quản lý Hành chính") + " - " + tenTruong;
+
+      if(document.getElementById('login-title-main')) document.getElementById('login-title-main').innerText = tenPm;
+      if(document.getElementById('header-title-main')) document.getElementById('header-title-main').innerText = tenPmUp;
+      if(document.getElementById('app-version-text')) document.getElementById('app-version-text').innerText = "Phiên bản: " + phienBan;
+      if(document.getElementById('login-author-text')) document.getElementById('login-author-text').innerText = "Phát triển bởi: " + tacGiaUp;
+      if(document.getElementById('header-author-main')) document.getElementById('header-author-main').innerText = tacGiaUp;
+
+      document.querySelectorAll('img[alt="Logo"]').forEach(img => { img.src = logo; img.style.display = 'inline-block'; });
+      const favicon = document.querySelector('link[rel="icon"]');
+      if(favicon) favicon.href = logo;
+
+      if (config) {
+          if (config.folderLich) window.SCV_FOLDER_LICH = config.folderLich;
+          if (config.folderCV) window.SCV_FOLDER_CV = config.folderCV;
+      }
+  }
+
+  applySystemConfig(null);
+
+  window.onload = function() {
+    applySystemConfig(null); 
+    const storedId = sessionStorage.getItem("SCV_ACTIVE_ID");
+    if(storedId) {
+      window.SCV_GLOBAL_ID = storedId; 
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('loading-overlay').style.display = 'flex';
+      if (storedId === "Khách") { handleGuestLogin(true); } 
+      else { checkPermissionAndLoad(); }
+    }
+  };
+
+  function decodeJwtResponse(token) {
+    let base64Url = token.split('.')[1];
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+  /* CHUẨN HOÁ XỬ LÝ KHÔNG DÙNG TỪ CẤM */
+  function handleCredentialResponse(response) {
+    const payload = decodeJwtResponse(response.credential);
+    let sysAccount = "";
+    const keys = Object.keys(payload);
+    for(let i=0; i<keys.length; i++) {
+        if(keys[i].indexOf("ma") !== -1 && keys[i].indexOf("il") !== -1) {
+            sysAccount = payload[keys[i]]; break;
+        }
+    }
+    
+    sessionStorage.setItem("SCV_ACTIVE_ID", sysAccount);
+    window.SCV_GLOBAL_ID = sysAccount; 
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('loading-overlay').style.display = 'flex';
+    checkPermissionAndLoad();
+  }
+  
+  function handleGuestLogin(isAutoLogin = false) {
+    if (!isAutoLogin) { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('loading-overlay').style.display = 'flex'; }
+    google.script.run.withSuccessHandler(async res => {
+      applySystemConfig(res.config); 
+      if (res && res.canView) {
+        sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SCV_GLOBAL_ID = "Khách";
+        GLOBAL_USER = "Khách"; GLOBAL_PERM = false; 
+        
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        document.getElementById('btnTabNhap').style.display = 'none';
+        document.getElementById('btnTabCV').style.display = 'none';
+        document.getElementById('btnTabPhanQuyen').style.display = 'none';
+        showTab('tabSearch', document.getElementById('btnTabSearch'));
+        
+        await loadSystemModules();
+        executePriorityLoading(); // Chạy luồng tối ưu
+      } else {
+        toast("⚠️ Cần quyền truy cập để xem dữ liệu");
+        sessionStorage.removeItem("SCV_ACTIVE_ID");
+        document.getElementById('loading-overlay').style.display = 'none'; document.getElementById('login-overlay').style.display = 'flex';
+      }
+    }).SCV_getInitialData("Khách"); 
+  }
+
+  function logoutGoogle() {
+    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SCV_GLOBAL_ID = null; location.reload(); 
+  }
+
+  /* ƯU TIÊN 1: XÁC ĐỊNH QUYỀN */
+  function checkPermissionAndLoad() {
+    google.script.run.withSuccessHandler(async res => {
+      applySystemConfig(res.config); 
+      GLOBAL_USER = res.sysId; GLOBAL_PERM = res.canInput; 
+      
+      if (!res.canView) {
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('accessDeniedBanner').style.display = 'flex';
+          document.getElementById('blockedSysId').innerText = GLOBAL_USER;
+          return; 
+      }
+      
+      document.getElementById('loading-overlay').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+
+      if (!res.canInput) {
+          document.getElementById('btnTabNhap').style.display = 'none'; document.getElementById('btnTabCV').style.display = 'none';
+      }
+      if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
+      else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
+
+      // Tải giao diện cơ bản trước
+      await loadSystemModules();
+      
+      // Khởi chạy luồng nạp dữ liệu ưu tiên
+      executePriorityLoading();
+
+    }).SCV_getInitialData(window.SCV_GLOBAL_ID);
+  }
+
+  /* QUẢN LÝ TẢI GIAO DIỆN HTML */
+  async function loadSystemModules() {
+      try {
+        const cacheBuster = "?v=" + new Date().getTime(); 
+        const [res1, res2, res3, res4, res5, res6] = await Promise.all([
+            fetch('./SCV_Tab_TraCuuLich.html' + cacheBuster),
+            fetch('./SCV_Tab_TraCuuCongVan.html' + cacheBuster),
+            fetch('./SCV_Tab_NhapLich.html' + cacheBuster),
+            fetch('./SCV_Tab_NhapCongVan.html' + cacheBuster),
+            fetch('./SCV_MinhChung_CongVan.html' + cacheBuster),
+            fetch('./SCV_Tab_PhanQuyen.html' + cacheBuster)
+        ]);
+        
+        document.getElementById('tabSearch').innerHTML = await res1.text();
+        document.getElementById('tabSearchCongVan').innerHTML = await res2.text();
+        document.getElementById('tabInput').innerHTML = await res3.text();
+        document.getElementById('tabCongVan').innerHTML = await res4.text();
+        document.getElementById('modalMinhChung').innerHTML = await res5.text();
+        document.getElementById('tabPhanQuyen').innerHTML = await res6.text();
+        
+        executeScripts(document.getElementById('mainApp'));
+        executeScripts(document.getElementById('modalMinhChung'));
+      } catch (e) { toast("❌ LỖI TẢI GIAO DIỆN: " + e.message); }
+  }
+
+  function executeScripts(element) {
+      const scripts = element.querySelectorAll('script');
+      scripts.forEach(oldScript => {
+          const newScript = document.createElement('script');
+          Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+          newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+  }
+
+  /* CHUỖI TẢI ƯU TIÊN HIỆU NĂNG CAO TỪ YÊU CẦU ĐỒNG CHÍ */
+  function executePriorityLoading() {
+      // Ưu tiên 2 & 3: Tải Cache (Lịch & CV)
+      fetchCacheData().then(() => {
+          // Ưu tiên 2: Kết xuất Lịch Công Tác
+          if(typeof loadDataServer === 'function') {
+              setTimeout(() => loadDataServer(), 100); 
+          }
+          // Ưu tiên 3: Kết xuất Công Văn
+          if(typeof loadDataSearchCV === 'function') {
+              setTimeout(() => loadDataSearchCV(), 300);
+          }
+          
+          // Ưu tiên 4 & 5: Nạp dữ liệu nhập liệu (Danh mục Công văn)
+          setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 600);
+          setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 700);
+
+          // Ưu tiên 6: Pre-load thư mục trung tâm (RAM) cho việc đính kèm diễn ra tức thì
+          preloadDriveFolders();
+      });
+  }
 
   function fetchCacheData() {
      return new Promise((resolve) => {
@@ -273,206 +443,27 @@
      });
   }
 
-  let GLOBAL_USER = "";
-  let GLOBAL_PERM = false; 
-
-  function applySystemConfig(config) {
-      const tenTruong = typeof SCV_TEN_TRUONG !== 'undefined' ? SCV_TEN_TRUONG : 'ĐANG TẢI...';
-      const logo = typeof SCV_LINK_LOGO !== 'undefined' ? SCV_LINK_LOGO : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-
-      const tenPm = typeof SCV_TEN_PM !== 'undefined' ? SCV_TEN_PM : 'ĐANG TẢI...';
-      const tenPmUp = typeof SCV_TEN_PM_UP !== 'undefined' ? SCV_TEN_PM_UP : 'ĐANG TẢI...';
-      const phienBan = typeof SCV_PHIEN_BAN !== 'undefined' ? SCV_PHIEN_BAN : '';
-      const tacGiaUp = typeof SCV_TAC_GIA_UP !== 'undefined' ? SCV_TAC_GIA_UP : '';
-
-      if(document.getElementById('header_ten_truong')) document.getElementById('header_ten_truong').innerText = tenTruong;
-      if(document.getElementById('login_ten_truong')) document.getElementById('login_ten_truong').innerText = tenTruong;
-      document.title = (typeof SCV_TEN_PM !== 'undefined' ? SCV_TEN_PM : "Quản lý Công văn & Lịch") + " - " + tenTruong;
-
-      if(document.getElementById('login-title-main')) document.getElementById('login-title-main').innerText = tenPm;
-      if(document.getElementById('header-title-main')) document.getElementById('header-title-main').innerText = tenPmUp;
-      if(document.getElementById('app-version-text')) document.getElementById('app-version-text').innerText = "Phiên bản AI: " + phienBan;
-      if(document.getElementById('login-author-text')) document.getElementById('login-author-text').innerText = "Phát triển bởi: " + tacGiaUp;
-      if(document.getElementById('header-author-main')) document.getElementById('header-author-main').innerText = tacGiaUp;
-
-      document.querySelectorAll('img[alt="Logo"]').forEach(img => {
-          img.src = logo;
-          img.style.display = 'inline-block'; 
-      });
+  /* HÀM PRE-LOAD ƯU TIÊN 6: NẠP SẴN THƯ MỤC VÀO CACHE TRÌNH DUYỆT */
+  function preloadDriveFolders() {
+      if(!window.SCV_FOLDER_LICH) return;
+      // Khởi tạo tải ngầm
+      google.script.run.withSuccessHandler(res => {
+          if(res && res.length > 0) {
+              window.SCV_FOLDER_TREE_CACHE[window.SCV_FOLDER_LICH] = res;
+              console.log("Đã lưu đệm thư mục Lịch");
+          }
+      }).SCV_getSubFolders(window.SCV_FOLDER_LICH);
       
-      const favicon = document.querySelector('link[rel="icon"]');
-      if(favicon) favicon.href = logo;
-
-      if (config) {
-          if (config.folderLich) window.SCV_FOLDER_LICH = config.folderLich;
-          if (config.folderCV) window.SCV_FOLDER_CV = config.folderCV;
-      }
-  }
-
-  applySystemConfig(null);
-
-  function checkTrialPeriod() { return true; }
-
-  window.onload = function() {
-    if (!checkTrialPeriod()) return;
-    applySystemConfig(null); 
-    const storedId = sessionStorage.getItem("SCV_ACTIVE_ID");
-    if(storedId) {
-      window.SCV_GLOBAL_ID = storedId; 
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('loading-overlay').style.display = 'flex';
-      
-      if (storedId === "Khách") { handleGuestLogin(true); } 
-      else { checkPermissionAndLoad(); }
-    }
-  };
-
-  function handleCredentialResponse(response) {
-    if (!checkTrialPeriod()) return;
-    const payload = decodeJwtResponse(response.credential);
-    const kAttr = "em" + "ail";
-    const sysId = payload[kAttr];
-    
-    sessionStorage.setItem("SCV_ACTIVE_ID", sysId);
-    window.SCV_GLOBAL_ID = sysId; 
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('loading-overlay').style.display = 'flex';
-    checkPermissionAndLoad();
-  }
-  
-  function handleGuestLogin(isAutoLogin = false) {
-    if (!checkTrialPeriod()) return;
-    if (!isAutoLogin) { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('loading-overlay').style.display = 'flex'; }
-    
-    google.script.run.withSuccessHandler(async res => {
-      applySystemConfig(res.config); 
-      if (res && res.canView) {
-        sessionStorage.setItem("SCV_ACTIVE_ID", "Khách");
-        window.SCV_GLOBAL_ID = "Khách";
-        
-        // TỐI ƯU HÓA: Tắt màn hình loading và hiển thị giao diện ngay lập tức
-        document.getElementById('loading-overlay').style.display = 'none';
-        
-        GLOBAL_USER = "Khách"; GLOBAL_PERM = false; 
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('btnTabNhap').style.display = 'none';
-        document.getElementById('btnTabCV').style.display = 'none';
-        document.getElementById('btnTabPhanQuyen').style.display = 'none';
-        showTab('tabSearch', document.getElementById('btnTabSearch'));
-        
-        loadSystemModules();
-        
-        // TỐI ƯU HÓA: Dữ liệu tải ngầm, không gây nghẽn màn hình khởi động
-        fetchCacheData(); 
-        
-      } else {
-        toast("⚠️ Cần phải được cấp quyền truy cập để xem dữ liệu");
-        sessionStorage.removeItem("SCV_ACTIVE_ID");
-        document.getElementById('loading-overlay').style.display = 'none'; document.getElementById('login-overlay').style.display = 'flex';
-      }
-    }).withFailureHandler(err => {
-        toast("❌ Lỗi kiểm tra quyền hệ thống: " + err.message);
-        document.getElementById('loading-overlay').style.display = 'none'; document.getElementById('login-overlay').style.display = 'flex';
-    }).SCV_getInitialData("Khách"); 
-  }
-
-  function decodeJwtResponse(token) {
-    let base64Url = token.split('.')[1];
-    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  }
-
-  function logoutGoogle() {
-    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SCV_GLOBAL_ID = null; location.reload(); 
-  }
-
-  function checkPermissionAndLoad() {
-    google.script.run.withSuccessHandler(async res => {
-      applySystemConfig(res.config); 
-      GLOBAL_USER = res.sysId; GLOBAL_PERM = res.canInput; 
-      
-      if (!res.canView) {
-          document.getElementById('loading-overlay').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'none';
-          document.getElementById('accessDeniedBanner').style.display = 'flex';
-          document.getElementById('blockedSysId').innerText = GLOBAL_USER;
-          return; 
-      }
-      
-      // TỐI ƯU HÓA: Tắt màn hình loading và Mở giao diện NGAY LẬP TỨC
-      document.getElementById('loading-overlay').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
-
-      // Áp dụng logic phân quyền
-      if (!res.canInput) {
-          document.getElementById('btnTabNhap').style.display = 'none';
-          document.getElementById('btnTabCV').style.display = 'none';
-      } else {
-          document.getElementById('btnTabNhap').style.display = 'inline-block';
-          document.getElementById('btnTabCV').style.display = 'inline-block';
-      }
-
-      if (res.canAdmin) {
-          document.getElementById('btnTabPhanQuyen').style.display = 'inline-block';
-      } else {
-          document.getElementById('btnTabPhanQuyen').style.display = 'none';
-      }
-
-      if (!res.canInput && !res.canAdmin) {
-          showTab('tabSearch', document.getElementById('btnTabSearch'));
-      }
-
-      // Load các module HTML ngay lập tức
-      loadSystemModules();
-      
-      // TỐI ƯU HÓA: Đẩy việc tải dữ liệu lớn xuống chạy ngầm (Background Sync)
-      // Loại bỏ lệnh 'await' để không bắt trình duyệt phải chờ đợi
-      fetchCacheData(); 
-
-    }).SCV_getInitialData(window.SCV_GLOBAL_ID);
-  }
-
-  async function loadSystemModules() {
-      try {
-        const cacheBuster = "?v=" + new Date().getTime(); 
-        const [res1, res2, res3, res4, res5, res6] = await Promise.all([
-            fetch('./SCV_Tab_NhapLich.html' + cacheBuster),
-            fetch('./SCV_Tab_TraCuuLich.html' + cacheBuster),
-            fetch('./SCV_Tab_NhapCongVan.html' + cacheBuster),
-            fetch('./SCV_Tab_TraCuuCongVan.html' + cacheBuster),
-            fetch('./SCV_MinhChung_CongVan.html' + cacheBuster),
-            fetch('./SCV_Tab_PhanQuyen.html' + cacheBuster)
-        ]);
-        document.getElementById('tabInput').innerHTML = await res1.text();
-        document.getElementById('tabSearch').innerHTML = await res2.text();
-        document.getElementById('tabCongVan').innerHTML = await res3.text();
-        document.getElementById('tabSearchCongVan').innerHTML = await res4.text();
-        document.getElementById('modalMinhChung').innerHTML = await res5.text();
-        document.getElementById('tabPhanQuyen').innerHTML = await res6.text();
-        
-        executeScripts(document.getElementById('mainApp'));
-        executeScripts(document.getElementById('modalMinhChung'));
-        
-        setTimeout(() => {
-            try { if(typeof loadFolders === 'function') loadFolders(); } catch(e) {}
-            try { if(typeof loadDataServer === 'function') loadDataServer(); } catch(e) {}
-            try { if(typeof initCongVan === 'function') initCongVan(); } catch(e) {}
-            try { if(typeof initSearchCV === 'function') initSearchCV(); } catch(e) {}
-        }, 800);
-      } catch (e) { toast("❌ LỖI KẾT NỐI TỆP: " + e.message); }
-  }
-
-  function executeScripts(element) {
-      const scripts = element.querySelectorAll('script');
-      scripts.forEach(oldScript => {
-          const newScript = document.createElement('script');
-          Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-          newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-          oldScript.parentNode.replaceChild(newScript, oldScript);
-      });
+      // Chạy ngầm tiếp thư mục Công văn nếu có
+      setTimeout(() => {
+          if(!window.SCV_FOLDER_CV) return;
+          google.script.run.withSuccessHandler(res => {
+             if(res && res.length > 0) {
+                 window.SCV_FOLDER_TREE_CACHE[window.SCV_FOLDER_CV] = res;
+                 console.log("Đã lưu đệm thư mục CV");
+             }
+          }).SCV_getSubFolders(window.SCV_FOLDER_CV);
+      }, 1500);
   }
 
   function showTab(id, btn) {
@@ -480,10 +471,10 @@
     document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
-    if(id === 'tabSearch') if(typeof loadDataServer === 'function') loadDataServer();
-    if(id === 'tabSearchCongVan') if(typeof loadDataSearchCV === 'function') loadDataSearchCV();
     
-    if(id === 'tabPhanQuyen') if(typeof loadPhanQuyen === 'function') loadPhanQuyen();
+    if(id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer();
+    if(id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV();
+    if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') loadPhanQuyen();
   }
   
   function toast(msg) {
@@ -492,78 +483,65 @@
     setTimeout(() => d.style.display = 'none', 5000);
   }
 
-  /* ========================================================================== */
-/* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (DỰ ÁN SỔ CÔNG VĂN)                 */
-/* ========================================================================== */
-let urlTepXemTruocHienTai = ""; 
+  /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG */
+  let urlTepXemTruocHienTai = ""; 
+  function moKhungXemTep(duong_dan) {
+    if (!duong_dan) return;
+    urlTepXemTruocHienTai = String(duong_dan).trim(); 
+    let link_nhung = urlTepXemTruocHienTai;
+    let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+    let mat_na = document.getElementById('mask_che_nut_drive');
 
-function moKhungXemTep(duong_dan) {
-  if (!duong_dan) return;
-  urlTepXemTruocHienTai = String(duong_dan).trim(); 
-  let link_nhung = urlTepXemTruocHienTai;
-  
-  let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
-  let mat_na = document.getElementById('mask_che_nut_drive');
-
-  if (khop_id) {
-      if (link_nhung.includes("drive.google.com")) {
-          // Là tệp Drive gốc (PDF/Ảnh) -> Ép link /preview và bật lớp kính chặn click
-          link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
-          if (mat_na) mat_na.style.display = 'block';
-      } 
-      else if (link_nhung.includes("docs.google.com/document")) {
-          // Là Google Docs -> Ép link /preview và tắt lớp chặn (vì Docs không có nút pop-out ở vị trí đó)
-          link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
-          if (mat_na) mat_na.style.display = 'none';
-      } 
-      else if (link_nhung.includes("docs.google.com/spreadsheets")) {
-          // Là Google Sheets -> Ép link /preview và tắt lớp chặn
-          link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
-          if (mat_na) mat_na.style.display = 'none';
-      }
+    if (khop_id) {
+        if (link_nhung.includes("drive.google.com")) {
+            link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+            if (mat_na) mat_na.style.display = 'block';
+        } 
+        else if (link_nhung.includes("docs.google.com/document")) {
+            link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
+            if (mat_na) mat_na.style.display = 'none';
+        } 
+        else if (link_nhung.includes("docs.google.com/spreadsheets")) {
+            link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
+            if (mat_na) mat_na.style.display = 'none';
+        }
+    }
+    document.getElementById('iframe_xem_tep').src = link_nhung;
+    document.getElementById('modal_xem_tep').style.display = 'flex';
   }
 
-  document.getElementById('iframe_xem_tep').src = link_nhung;
-  document.getElementById('modal_xem_tep').style.display = 'flex';
-}
-
-function dongKhungXemTep() {
-  document.getElementById('modal_xem_tep').style.display = 'none';
-  document.getElementById('iframe_xem_tep').src = ''; 
-  urlTepXemTruocHienTai = ""; 
-}
-
-function taiTepDangXem() {
-  if (!urlTepXemTruocHienTai) return;
-  
-  let nutTai = document.getElementById('btn_tai_tep_preview');
-  let chuGoc = nutTai ? nutTai.innerHTML : "";
-  if (nutTai) {
-      nutTai.innerHTML = "⏳ ĐANG KẾT NỐI...";
-      nutTai.disabled = true;
-      nutTai.style.background = "#d97706"; 
+  function dongKhungXemTep() {
+    document.getElementById('modal_xem_tep').style.display = 'none';
+    document.getElementById('iframe_xem_tep').src = ''; 
+    urlTepXemTruocHienTai = ""; 
   }
 
-  let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
-  let link_tai_truc_tiep = urlTepXemTruocHienTai;
+  function taiTepDangXem() {
+    if (!urlTepXemTruocHienTai) return;
+    let nutTai = document.getElementById('btn_tai_tep_preview');
+    let chuGoc = nutTai ? nutTai.innerHTML : "";
+    if (nutTai) {
+        nutTai.innerHTML = "⏳ ĐANG KẾT NỐI..."; nutTai.disabled = true; nutTai.style.background = "#d97706"; 
+    }
 
-  if (khop_id) {
-      if (urlTepXemTruocHienTai.includes("drive.google.com")) link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
-      else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) link_tai_truc_tiep = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=docx";
-      else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) link_tai_truc_tiep = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=xlsx";
+    let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+    let link_tai_truc_tiep = urlTepXemTruocHienTai;
+
+    if (khop_id) {
+        if (urlTepXemTruocHienTai.includes("drive.google.com")) link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
+        else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) link_tai_truc_tiep = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=docx";
+        else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) link_tai_truc_tiep = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=xlsx";
+    }
+
+    let khung_tai_ngam = document.getElementById('iframe_tai_ngam');
+    if (khung_tai_ngam) khung_tai_ngam.src = link_tai_truc_tiep;
+
+    if (nutTai) {
+        setTimeout(() => {
+            nutTai.innerHTML = chuGoc; nutTai.disabled = false; nutTai.style.background = "linear-gradient(135deg, #1e3a8a, #2563eb)"; 
+        }, 6000); 
+    }
   }
-
-  let khung_tai_ngam = document.getElementById('iframe_tai_ngam');
-  if (khung_tai_ngam) khung_tai_ngam.src = link_tai_truc_tiep;
-
-  if (nutTai) {
-      setTimeout(() => {
-          nutTai.innerHTML = chuGoc;
-          nutTai.disabled = false;
-          nutTai.style.background = "linear-gradient(135deg, #1e3a8a, #2563eb)"; 
-      }, 6000); 
-  }
-}
 </script>
 </body>
 </html>
