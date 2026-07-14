@@ -218,11 +218,12 @@
        $("#hopThoaiDg").modal('show');
     }
 
-    function goMinhChungDg(btn) {
+function goMinhChungDg(btn) {
         try {
             let lHtai = $("#mcLinkDg").val();
             if (typeof window.SCV_OpenUploadModal === 'function') {
-                window.SCV_OpenUploadModal(btn, lHtai, ROOT_FOLDER_ID, false); 
+                // Truyền chuỗi rỗng để kích hoạt tính năng tự động nhận diện từ Server
+                window.SCV_OpenUploadModal(btn, lHtai, "", false); 
             } else {
                 hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công! Vui lòng F5 lại trang.", "loi");
             }
