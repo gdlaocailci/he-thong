@@ -291,7 +291,7 @@ function fillFormLich(rowData) {
     if(finalUrl && finalUrl.trim() !== "") {
         const links = finalUrl.split(',').map(l => l.trim()).filter(l => l !== "");
         displayArea.innerHTML = links.map((l, idx) => 
-            `<a href="${l}" target="_blank" class="btn-icon btn-view-icon" title="Xem tài liệu ${idx + 1}">📎 ${idx + 1}</a>`
+            `<a href="javascript:void(0)" onclick="moKhungXemTep('${l}')" class="btn-icon btn-view-icon" title="Xem tài liệu ${idx + 1}">📎 ${idx + 1}</a>`
         ).join('');
         btnUpload.innerHTML = '📝 Sửa/Thêm'; 
         btnUpload.title = "Cập nhật hoặc thêm file";
