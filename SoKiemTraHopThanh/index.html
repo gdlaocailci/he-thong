@@ -434,36 +434,50 @@ function dongKhungXemTep() {
 function taiTepDangXem() {
   if (!urlTepXemTruocHienTai) return;
   
+  // 1. KÍCH HOẠT HIỆU ỨNG PHẢN HỒI GIAO DIỆN TỨC THÌ
+  let nutTai = document.getElementById('btn_tai_tep_preview');
+  let chuGoc = "";
+  if (nutTai) {
+      chuGoc = nutTai.innerHTML;
+      // Đổi ngay lập tức trạng thái nút để báo hiệu hệ thống đã nhận lệnh
+      nutTai.innerHTML = "⏳ ĐANG KẾT NỐI...";
+      nutTai.disabled = true;
+      nutTai.style.background = "#d97706"; // Đổi sang màu cam chờ xử lý
+  }
+
   let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
   let link_tai_truc_tiep = urlTepXemTruocHienTai;
 
   if (khop_id) {
       if (urlTepXemTruocHienTai.includes("drive.google.com")) {
-          // Ép tải trực tiếp file gốc
           link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
       } else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) {
-          // Ép xuất Docx
           link_tai_truc_tiep = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=docx";
       } else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) {
-          // Ép xuất Xlsx
           link_tai_truc_tiep = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=xlsx";
       }
   }
 
-  // THUẬT TOÁN TẢI NGẦM (SILENT DOWNLOAD) BẰNG IFRAME ẢO
+  // 2. THUẬT TOÁN TẢI NGẦM (SILENT DOWNLOAD) BẰNG IFRAME ẢO
   let khung_tai_ngam = document.getElementById('iframe_tai_ngam');
-  
-  // Nếu chưa có khung ảo thì tạo mới và giấu đi
   if (!khung_tai_ngam) {
       khung_tai_ngam = document.createElement('iframe');
       khung_tai_ngam.id = 'iframe_tai_ngam';
       khung_tai_ngam.style.display = 'none';
       document.body.appendChild(khung_tai_ngam);
   }
-  
-  // Gán đường dẫn vào khung ảo. Trình duyệt sẽ tự động nhận diện gói tin trả về 
-  // là tệp đính kèm và kích hoạt luồng tải xuống máy tính mà không mở tab mới.
   khung_tai_ngam.src = link_tai_truc_tiep;
+
+  // 3. PHỤC HỒI TRẠNG THÁI NÚT BẤM
+  // Ước lượng sau 2.5 giây (thời gian trung bình Google Drive nhả file hiển thị hộp thoại lưu), 
+  // trả nút về trạng thái ban đầu để luồng thao tác được liền mạch.
+  if (nutTai) {
+      setTimeout(() => {
+          nutTai.innerHTML = chuGoc;
+          nutTai.disabled = false;
+          nutTai.style.background = ""; // Trả về định dạng CSS chuẩn HtmlService ban đầu
+      }, 2500); 
+  }
 }
     window.alert = function(msg) {
         let type = 'error';
