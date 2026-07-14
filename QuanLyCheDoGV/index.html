@@ -213,25 +213,26 @@
 <script>
   window.CD_CAN_EDIT = false; 
 
-  Object.assign(window.google.script.run, {
-    CD_LayThuMucCon: function() { this._goiMayChu('CD_LayThuMucCon', []); },
-    CD_TaiNhieuTep: function(dl, id, link, chedo) { this._goiMayChu('CD_TaiNhieuTep', [dl, id, link, chedo]); },
-    CD_TaiThuMuc: function(id, ten, dl, link, chedo) { this._goiMayChu('CD_TaiThuMuc', [id, ten, dl, link, chedo]); },
-    CD_XoaMinhChung: function(link) { this._goiMayChu('CD_XoaMinhChung', [link]); },
-    CD_CapNhatHangLoat: function(ds) { this._goiMayChu('CD_CapNhatHangLoat', [ds]); },
-    CD_CapNhatMotDong: function(loai, viTri, dl) { this._goiMayChu('CD_CapNhatMotDong', [loai, viTri, dl]); },
-    CD_XoaBanGhi: function(loai, viTri, link) { this._goiMayChu('CD_XoaBanGhi', [loai, viTri, link]); },
+ Object.assign(window.google.script.run, {
+    // ==== Cập nhật đồng bộ truyền biến 'account' cho tất cả hàm ====
+    CD_LayThuMucCon: function(account) { this._goiMayChu('CD_LayThuMucCon', [account]); },
+    CD_TaiNhieuTep: function(dl, id, link, chedo, account) { this._goiMayChu('CD_TaiNhieuTep', [dl, id, link, chedo, account]); },
+    CD_TaiThuMuc: function(id, ten, dl, link, chedo, account) { this._goiMayChu('CD_TaiThuMuc', [id, ten, dl, link, chedo, account]); },
+    CD_XoaMinhChung: function(link, account) { this._goiMayChu('CD_XoaMinhChung', [link, account]); },
+    CD_CapNhatHangLoat: function(ds, account) { this._goiMayChu('CD_CapNhatHangLoat', [ds, account]); },
+    CD_CapNhatMotDong: function(loai, viTri, dl, account) { this._goiMayChu('CD_CapNhatMotDong', [loai, viTri, dl, account]); },
+    CD_XoaBanGhi: function(loai, viTri, link, account) { this._goiMayChu('CD_XoaBanGhi', [loai, viTri, link, account]); },
     CD_TraCuuLuong: function(boLoc) { this._goiMayChu('CD_TraCuuLUONG', [boLoc]); },
     CD_TraCuuThamNien: function(boLoc) { this._goiMayChu('CD_TraCuuTHAMNIEN', [boLoc]); },
     
     CD_LayQuyenNguoiDung: function(account) { this._goiMayChu('CD_LayQuyenNguoiDung', [account]); },
     
     CD_KiemTraQuyenDrive: function() { this._goiMayChu('CD_KiemTraQuyenDrive', []); },
-    CD_GanLink: function(link, id, oldUrl, mode) { this._goiMayChu('CD_GanLink', [link, id, oldUrl, mode]); },
-    CD_XoaTepTheoLink: function(url) { this._goiMayChu('CD_XoaTepTheoLink', [url]); },
-    CD_DocQuyetDinhAI: function(link) { this._goiMayChu('CD_DocQuyetDinhAI', [link]); }
+    CD_GanLink: function(link, id, oldUrl, mode, account) { this._goiMayChu('CD_GanLink', [link, id, oldUrl, mode, account]); },
+    CD_XoaTepTheoLink: function(url, account) { this._goiMayChu('CD_XoaTepTheoLink', [url, account]); },
+    CD_DocQuyetDinhAI: function(link, account) { this._goiMayChu('CD_DocQuyetDinhAI', [link, account]); }
   });
-
+  
   async function loadComponents() {
       try {
           const [resSearch, resUpdate, resMinhChung] = await Promise.all([
@@ -521,9 +522,10 @@ function doSearch() {
       showNotify("Dữ liệu đã được chuyển sang. Sửa xong hãy bấm [Lưu tất cả]", "success");
   }
 
-  function saveAll() {
+function saveAll() {
     const rows = document.querySelectorAll('.data-row'); const type = document.getElementById('u_comboLoai').value;
     const status = document.getElementById('updateStatus'); const dataList = []; let errorFound = false; const editRowIndex = document.getElementById('EDIT_ROW_INDEX').value;
+    const currentAccount = sessionStorage.getItem("HT_PHAN_QUYEN") || sessionStorage.getItem("HT_DINH_DANH");
 
     for (let i = 0; i < rows.length; i++) {
         const tr = rows[i]; const inputs = tr.querySelectorAll('input'); const rowData = { loai: type }; let hasData = false; let hotenInput = null;
@@ -547,11 +549,11 @@ function doSearch() {
          window.google.script.run.withSuccessHandler(res => {
             status.className = 'status-msg text-success'; status.innerText = "✅ " + res; showNotify("✅ " + res, "success"); 
             document.getElementById('EDIT_ROW_INDEX').value = ""; document.getElementById('btn_addRow').style.display = 'inline-flex'; renderInputTableStructure(); 
-         }).withFailureHandler(e => { status.className = 'status-msg text-error'; status.innerText = "❌ " + e.message; showNotify("❌ Lỗi: " + e.message, "error"); }).CD_CapNhatMotDong(type, editRowIndex, dataList[0]); 
+         }).withFailureHandler(e => { status.className = 'status-msg text-error'; status.innerText = "❌ " + e.message; showNotify("❌ Lỗi: " + e.message, "error"); }).CD_CapNhatMotDong(type, editRowIndex, dataList[0], currentAccount); 
     } else {
          window.google.script.run.withSuccessHandler(res => {
             status.className = 'status-msg text-success'; status.innerText = "✅ " + res; showNotify("✅ " + res, "success"); renderInputTableStructure();
-         }).withFailureHandler(e => { status.className = 'status-msg text-error'; status.innerText = "❌ " + e.message; showNotify("❌ Lỗi: " + e.message, "error"); }).CD_CapNhatHangLoat(dataList);
+         }).withFailureHandler(e => { status.className = 'status-msg text-error'; status.innerText = "❌ " + e.message; showNotify("❌ Lỗi: " + e.message, "error"); }).CD_CapNhatHangLoat(dataList, currentAccount);
     }
   }
 
@@ -577,8 +579,10 @@ function doSearch() {
     } else { alert("Chưa kết nối được với file Upload Minh Chứng!"); }
   }
   
-  function triggerAIScan(btn) {
+function triggerAIScan(btn) {
       const rowCell = btn.closest('td'); const rowTr = btn.closest('tr'); const linkInput = rowCell.querySelector('input[data-key="soqdLink"]'); const url = linkInput ? linkInput.value : "";
+      const currentAccount = sessionStorage.getItem("HT_PHAN_QUYEN") || sessionStorage.getItem("HT_DINH_DANH");
+      
       if (!url) { showNotify("Chưa có file đính kèm Quyết định để AI quét!", "warning"); return; }
       
       const originalText = btn.innerText; btn.innerText = "⏳ Đang quét..."; btn.style.pointerEvents = "none"; btn.style.opacity = "0.7";
@@ -628,16 +632,17 @@ function doSearch() {
           btn.style.pointerEvents = "auto";
           btn.style.opacity = "1";
           showNotify("❌ Lỗi kết nối AI: " + err.message, "error");
-      }).CD_DocQuyetDinhAI(url);
+      }).CD_DocQuyetDinhAI(url, currentAccount);
   }
 
-  function deleteFileInRow(btn) {
+function deleteFileInRow(btn) {
       if(!confirm("CẢNH BÁO MẤT DỮ LIỆU: Thao tác này sẽ xóa vĩnh viễn File trên Drive VÀ TOÀN BỘ HỒ SƠ của Cán bộ này trong bảng tính. Bạn có chắc chắn muốn xóa?")) return;
       const rowCell = btn.closest('td'); const rowTr = btn.closest('tr');
       const linkInput = rowCell.querySelector('input[data-key="soqdLink"]'); const url = linkInput ? linkInput.value : "";
       
       const editRowIndex = document.getElementById('EDIT_ROW_INDEX').value;
       const loai = document.getElementById('u_comboLoai').value;
+      const currentAccount = sessionStorage.getItem("HT_PHAN_QUYEN") || sessionStorage.getItem("HT_DINH_DANH");
 
       btn.innerText = "⏳";
       if (editRowIndex) {
@@ -652,7 +657,7 @@ function doSearch() {
               }
           }).withFailureHandler(err => {
               btn.innerText = "❌"; showNotify("Lỗi máy chủ: " + err.message, "error");
-          }).CD_XoaBanGhi(loai, editRowIndex, url);
+          }).CD_XoaBanGhi(loai, editRowIndex, url, currentAccount);
       } else {
           if(!url) { 
               if (document.getElementById('u_tbody').rows.length > 1) { rowTr.remove(); updateSTT(); } else resetRowFileUI(rowCell); 
@@ -664,7 +669,7 @@ function doSearch() {
                   if (document.getElementById('u_tbody').rows.length > 1) { rowTr.remove(); updateSTT(); } else resetRowFileUI(rowCell);
               } 
               else { btn.innerText = "❌"; showNotify("Lỗi: " + res.thongBao, "error"); } 
-          }).CD_XoaMinhChung(url);
+          }).CD_XoaMinhChung(url, currentAccount);
       }
   }
 
