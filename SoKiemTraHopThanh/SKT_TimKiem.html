@@ -402,7 +402,7 @@
       if(bg[15] && bg[15].includes('http')) {
           const clk = bg[15].toString().split(',').map(l1 => l1.trim()).filter(l1 => l1 !== "");
           hml = clk.map((dd, c1) => 
-              `<a href="${dd}" target="_blank" class="file-badge" title="Xem tài liệu ${c1 + 1}">📎 ${c1 + 1}</a>`
+              `<a href="javascript:void(0)" onclick="moKhungXemTep('${dd}')" class="file-badge" title="Xem tài liệu ${c1 + 1}">📎 ${c1 + 1}</a>`
           ).join('');
       }
       
