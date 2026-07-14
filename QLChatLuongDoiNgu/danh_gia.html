@@ -222,7 +222,7 @@
         try {
             let lHtai = $("#mcLinkDg").val();
             if (typeof window.SCV_OpenUploadModal === 'function') {
-                window.SCV_OpenUploadModal(btn, lHtai, "ROOT_FOLDER_ID", true); 
+                window.SCV_OpenUploadModal(btn, lHtai, "ROOT_FOLDER_ID", false); 
             } else {
                 hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công! Vui lòng F5 lại trang.", "loi");
             }
