@@ -174,7 +174,7 @@
        if (urlShow && urlShow.trim() !== "") { 
            const links = urlShow.split(',').map(l => l.trim()).filter(l => l !== "");
            linkHtml = `<div style="display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">` + 
-                      links.map((url, idx) => `<a href="${url}" target="_blank" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:2px 5px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem tài liệu ${idx+1}">📎 ${idx+1}</a>`).join('') +
+                      links.map((url, idx) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:2px 5px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem tài liệu ${idx+1}">📎 ${idx+1}</a>`).join('') +
                       `</div>`;
        }
        
