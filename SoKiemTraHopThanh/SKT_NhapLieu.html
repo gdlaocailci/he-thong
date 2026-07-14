@@ -280,9 +280,9 @@ function trallkch(ddn) {
         
         if(nt) nt.style.display = 'none'; 
         
-        const clk = ddn.split(',').filter(l => l.trim() !== "");
+       const clk = ddn.split(',').filter(l => l.trim() !== "");
         let htlk = clk.map((l1, c1) => 
-            `<a href="${l1}" target="_blank" style="display:block; color:#0369a1; text-decoration:none; font-size:11px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📎 File ${c1 + 1}</a>`
+            `<a href="javascript:void(0)" onclick="moKhungXemTep('${l1}')" style="display:block; color:#0369a1; text-decoration:none; font-size:11px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📎 File ${c1 + 1}</a>`
         ).join('');
 
         vg.innerHTML = `
