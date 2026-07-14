@@ -1590,7 +1590,7 @@ function veDinhKemBcao() {
     window.tepdinhkBcao.forEach((t, i) => {
         let theTep = document.createElement('span');
         theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
-        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="Tên gốc: ${t.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${i + 1}</a>
+        theTep.innerHTML = `<a href="javascript:void(0)" onclick="moKhungXemTep('${t.duongd}')" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="Tên gốc: ${t.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${i + 1}</a>
                             <i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaDinhKemBcao(${i})"></i>`;
         vung.appendChild(theTep);
     });
