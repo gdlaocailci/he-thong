@@ -345,7 +345,22 @@
       </div>
     </div>
   </div>
-  
+  <!-- BẮT ĐẦU: KHUNG MODAL XEM TRƯỚC TÀI LIỆU CÓ NÚT TẢI VỀ -->
+<div id="modal_xem_tep" class="modal-overlay" style="display: none; z-index: 1090;">
+  <div class="modal-box" style="width: 95%; height: 90vh; max-width: 1200px; display: flex; flex-direction: column; padding: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
+      <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC MINH CHỨNG</span>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="btn_tai_tep_preview" class="btn-submit reactbits-btn" onclick="taiTepDangXem()" style="padding: 5px 15px; margin: 0; font-size: 13px; height: 32px; display: inline-flex; align-items: center; gap: 5px;">📥 TẢI VỀ</button>
+        <button class="btn-cancel" onclick="dongKhungXemTep()" style="padding: 5px 15px; margin: 0; font-size: 13px; height: 32px;">✖ ĐÓNG</button>
+      </div>
+    </div>
+    <div style="flex-grow: 1; position: relative; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
+      <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+<!-- KẾT THÚC: KHUNG MODAL XEM TRƯỚC TÀI LIỆU CÓ NÚT TẢI VỀ -->
   <a href="javascript:void(0)" onclick="window.open(typeof SKT_LINK_YOUTUBE !== 'undefined' ? SKT_LINK_YOUTUBE : 'https://youtube.com', '_blank')" class="btn-float-guide">
      <div class="circle">?</div>
      <div class="text">Hướng dẫn</div>
@@ -379,7 +394,50 @@
     function dongCustomAlert() {
       document.getElementById('custom-alert-overlay').style.display = 'none';
     }
+/* ========================================================================== */
+/* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG TRỰC TIẾP TỪ IFRAME                 */
+/* ========================================================================== */
+let urlTepXemTruocHienTai = ""; 
 
+function moKhungXemTep(duong_dan) {
+  if (!duong_dan) return;
+  
+  urlTepXemTruocHienTai = String(duong_dan).trim(); 
+  let link_nhung = urlTepXemTruocHienTai;
+  
+  if (link_nhung.includes('/view')) {
+      link_nhung = link_nhung.replace('/view', '/preview');
+  } else if (link_nhung.includes('/edit')) {
+      link_nhung = link_nhung.replace('/edit', '/preview');
+  } else if (!link_nhung.includes('/preview')) {
+      let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+      if (khop_id) {
+          link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+      }
+  }
+
+  document.getElementById('iframe_xem_tep').src = link_nhung;
+  document.getElementById('modal_xem_tep').style.display = 'flex';
+}
+
+function dongKhungXemTep() {
+  document.getElementById('modal_xem_tep').style.display = 'none';
+  document.getElementById('iframe_xem_tep').src = ''; 
+  urlTepXemTruocHienTai = ""; 
+}
+
+function taiTepDangXem() {
+  if (!urlTepXemTruocHienTai) return;
+  
+  let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+  
+  if (khop_id && !urlTepXemTruocHienTai.includes("docs.google.com")) {
+      let link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
+      window.open(link_tai_truc_tiep, "_blank");
+  } else {
+      window.open(urlTepXemTruocHienTai, "_blank");
+  }
+}
     window.alert = function(msg) {
         let type = 'error';
         let title = 'Lỗi hệ thống';
