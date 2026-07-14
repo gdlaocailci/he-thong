@@ -852,14 +852,29 @@ let urlTepXemTruocHienTai = "";
 
 function moKhungXemTep(duong_dan) {
   if (!duong_dan) return;
+  
   urlTepXemTruocHienTai = String(duong_dan).trim(); 
   let link_nhung = urlTepXemTruocHienTai;
   
   let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+  let mat_na = document.getElementById('mask_che_nut_drive');
+
   if (khop_id) {
-      if (link_nhung.includes("drive.google.com")) link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
-      else if (link_nhung.includes("docs.google.com/document")) link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
-      else if (link_nhung.includes("docs.google.com/spreadsheets")) link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
+      if (link_nhung.includes("drive.google.com")) {
+          // Giao diện Drive có thanh công cụ màu đen -> Bật tấm che
+          link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+          if (mat_na) mat_na.style.display = 'block'; 
+      } 
+      else if (link_nhung.includes("docs.google.com/document")) {
+          // Giao diện Docs nền trắng nguyên bản -> Tắt tấm che
+          link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
+          if (mat_na) mat_na.style.display = 'none'; 
+      } 
+      else if (link_nhung.includes("docs.google.com/spreadsheets")) {
+          // Giao diện Sheets nền trắng nguyên bản -> Tắt tấm che
+          link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
+          if (mat_na) mat_na.style.display = 'none'; 
+      }
   }
 
   document.getElementById('iframe_xem_tep').src = link_nhung;
