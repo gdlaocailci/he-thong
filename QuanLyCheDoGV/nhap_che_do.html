@@ -22,3 +22,49 @@
     </table>
   </div>
 </div>
+<script>
+function renderDynamicLinks(rowCell) {
+      const linkInput = rowCell.querySelector('input[data-key="soqdLink"]'); 
+      const textInput = rowCell.querySelector('input[data-key="soqd"]'); 
+      const container = rowCell.querySelector('.dynamic-links');
+      
+      if(!container || !linkInput) return; 
+      container.innerHTML = '';
+      
+      const urls = linkInput.value.split(',').map(u => u.trim()).filter(u => u); 
+      let displayText = (textInput && textInput.value.trim()) ? textInput.value.trim() : "";
+      
+      if(urls.length > 0) { 
+          container.innerHTML = urls.map((u, idx) => {
+              let nhanHienThi = displayText;
+              // Nếu người dùng không nhập Số QĐ, mặc định hiển thị "Quyết định" (hoặc QĐ1, QĐ2 nếu có nhiều file)
+              if (!nhanHienThi) {
+                  nhanHienThi = urls.length === 1 ? 'Quyết định' : 'QĐ ' + (idx + 1);
+              }
+              return `<a href="${u}" target="_blank" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:2px 5px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem ${nhanHienThi}">${nhanHienThi}</a>`;
+          }).join(''); 
+      }
+  }
+
+  function triggerUpload(btn) {
+    const rowCell = btn.closest('td'); 
+    const linkInput = rowCell.querySelector('input[data-key="soqdLink"]'); 
+    const textInput = rowCell.querySelector('input[data-key="soqd"]'); 
+    const oldUrl = linkInput ? linkInput.value : "";
+    
+    if(typeof openUploadModal === 'function') {
+        openUploadModal(oldUrl, function(fileUrl, fileName, wMode) {
+            // Tuyệt đối không ghi đè tên file vào ô Số Quyết định, giữ nguyên nội dung gốc
+            if (wMode === 'append' && linkInput.value.trim() !== "") { 
+                linkInput.value += "," + fileUrl; 
+            } else { 
+                linkInput.value = fileUrl; 
+            }
+            setRowFileUI(rowCell, true); 
+            renderDynamicLinks(rowCell); 
+        });
+    } else { 
+        alert("Chưa kết nối được với file Upload Minh Chứng!"); 
+    }
+  }
+  <script>
