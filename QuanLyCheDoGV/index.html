@@ -398,9 +398,17 @@
     thead.innerHTML = h; document.getElementById('s_tbody').innerHTML = '<tr><td colspan="15" style="color:#666; padding:15px;">...</td></tr>';
   }
 
-  function doSearch() {
-    const loai = document.getElementById('s_comboLoai').value; const rawHoTen = document.getElementById('s_hoten').value.trim(); const rawThang = document.getElementById('s_thang').value.trim(); const rawNam = document.getElementById('s_nam').value.trim();
-    const boLoc = { text8: rawHoTen, text2: "", text3: "" }; const tbody = document.getElementById('s_tbody'); tbody.innerHTML = '<tr><td colspan="15">⏳ Đang tải...</td></tr>';
+function doSearch() {
+    const loai = document.getElementById('s_comboLoai').value; 
+    const rawHoTen = document.getElementById('s_hoten').value.trim(); 
+    const rawThang = document.getElementById('s_thang').value.trim(); 
+    const rawNam = document.getElementById('s_nam').value.trim();
+    
+    /* BỔ SUNG ĐỊNH DANH ACCOUNT VÀO BỘ LỌC ĐỂ MÁY CHỦ XÁC THỰC QUYỀN */
+    const currentAccount = sessionStorage.getItem("HT_PHAN_QUYEN") || sessionStorage.getItem("HT_DINH_DANH");
+    const boLoc = { text8: rawHoTen, text2: "", text3: "", Account: currentAccount }; 
+    
+    const tbody = document.getElementById('s_tbody'); tbody.innerHTML = '<tr><td colspan="15">⏳ Đang tải...</td></tr>';
     
     window.google.script.run.withSuccessHandler(rows => {
       if(!rows || rows.length === 0) { tbody.innerHTML = '<tr><td colspan="15">Không có dữ liệu phù hợp.</td></tr>'; return; }
