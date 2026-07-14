@@ -1,10 +1,4 @@
-// DỰ ÁN QUẢN LÝ NHÂN SỰ
-// File: NS_MinhChung.js
-// Phiên bản: Giao diện SKT_MinhChung tích hợp lõi Quản lý Nhân sự & ROOT_FOLDER_ID
-
-const uiMinhChung = `
 <style>
-  /* Cấu trúc Modal chuẩn an toàn, không chiếm quyền điều khiển trình duyệt */
   #upload_modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 105055; justify-content: center; align-items: center; }
   .up-container { background: #fff; padding: 20px; border-radius: 8px; width: 500px; max-width: 95%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Times New Roman', serif; }
   .up-header { border-bottom: 2px solid #b91c1c; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
@@ -17,7 +11,6 @@ const uiMinhChung = `
   .close-up { width: 100%; padding: 10px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
   .close-up:hover { background: #475569; }
   
-  /* Nút Thư mục Trung tâm */
   .btn-center-folder { border: 1px solid #0284c7; background: #e0f2fe; color: #0369a1; padding: 0 10px; cursor: pointer; border-radius: 4px; font-weight: bold; height: 38px; display: flex; align-items: center; justify-content: center; transition: 0.2s; white-space: nowrap; font-family: 'Times New Roman', serif;}
   .btn-center-folder:hover { background: #bae6fd; }
 
@@ -79,62 +72,55 @@ const uiMinhChung = `
     </div>
   </div>
 </div>
-`;
 
-document.addEventListener("DOMContentLoaded", function() {
-    if (!document.getElementById("upload_modal")) {
-        document.body.insertAdjacentHTML('beforeend', uiMinhChung);
-    }
-});
-
-// -- BIẾN TOÀN CỤC & TÍCH HỢP QUẢN LÝ NHÂN SỰ --
+<script>
 var tepht = [];
 var lkcx = ""; 
 var GLOBAL_BTN_TRIGGER = null; 
-var ROOT_FOLDER_ID = typeof idThuMucQuyetDinh !== 'undefined' ? idThuMucQuyetDinh : "ROOT_FOLDER_ID"; // Gán biến ID trung tâm
+var GOC_THUMUC = typeof ROOT_FOLDER_ID !== 'undefined' ? ROOT_FOLDER_ID : "ROOT_FOLDER_ID"; 
 
-// Cầu nối API cho file danh_gia.html của dự án nhân sự gọi
 window.SCV_OpenUploadModal = function(btnElement, currentLink, rootId, onlyLink = false) {
     if (typeof GLOBAL_PERM !== 'undefined' && !GLOBAL_PERM) { 
         if (typeof hienTbao === 'function') hienTbao("⚠️ Không có quyền thao tác!", "loi");
         return; 
     }
     GLOBAL_BTN_TRIGGER = btnElement;
-    if (rootId && rootId !== "ROOT_FOLDER_ID") ROOT_FOLDER_ID = rootId; 
+    if (rootId && rootId !== "ROOT_FOLDER_ID") GOC_THUMUC = rootId; 
     mohopthta(currentLink, onlyLink);
 };
-
-// -- CÁC HÀM XỬ LÝ LÕI THEO CHUẨN SKT_MINHCHUNG --
 
 function taithu() {
     const hop = document.getElementById('folderSelect');
     if (hop.options.length <= 1) {
-        hop.innerHTML = `<option value="${ROOT_FOLDER_ID}">⏳ Đang tải danh sách thư mục...</option>`;
+        hop.innerHTML = `<option value="${GOC_THUMUC}">⏳ Đang tải danh sách thư mục...</option>`;
     }
     
-    if (typeof google !== 'undefined') {
+    if (typeof google !== 'undefined' && typeof google.script !== 'undefined') {
         google.script.run
         .withSuccessHandler(tm => {
-            hop.innerHTML = `<option value="${ROOT_FOLDER_ID}">📂 THƯ MỤC GỐC</option>`;
-            hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", ROOT_FOLDER_ID));
+            hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC</option>`;
+            hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
             if(tm && tm.length > 0) { 
                 tm.forEach(t1 => hop.add(new Option("📂 " + (t1.name || t1.tenn), t1.id || t1.idt))); 
             }
         })
         .withFailureHandler(err => {
-            hop.innerHTML = `<option value="${ROOT_FOLDER_ID}">📂 THƯ MỤC GỐC (Lỗi quét mục con)</option>`;
-            hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", ROOT_FOLDER_ID));
+            hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC (Lỗi quét mục con)</option>`;
+            hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
         })
-        .SCV_getSubFolders(ROOT_FOLDER_ID); // Dùng hàm backend của Nhân sự
+        .SCV_getSubFolders(GOC_THUMUC);
+    } else {
+        hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC (Chế độ ngắt kết nối)</option>`;
+        hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
     }
 }
 
 function chonThuMucTrungTam() {
     const s = document.getElementById('folderSelect');
     if (s) {
-        let exists = Array.from(s.options).some(opt => opt.value === ROOT_FOLDER_ID);
-        if (!exists) { s.add(new Option("🎯 THƯ MỤC TRUNG TÂM", ROOT_FOLDER_ID), 0); }
-        s.value = ROOT_FOLDER_ID;
+        let exists = Array.from(s.options).some(opt => opt.value === GOC_THUMUC);
+        if (!exists) { s.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC), 0); }
+        s.value = GOC_THUMUC;
         if (typeof hienTbao === 'function') hienTbao("Đã chuyển định tuyến lưu trữ về Thư mục Trung tâm!", "tc");
     }
 }
@@ -148,7 +134,6 @@ function mohopthta(lkht, onlyLink) {
     document.getElementById('upStatus').innerText = "";
     tepht = [];
     
-    // Xử lý chế độ Tải File vs Chỉ nhập Link (Của chức năng Đánh giá)
     if (onlyLink) {
         document.getElementById('tdeModal').innerText = "🔗 MINH CHỨNG LINK";
         document.getElementById('vungChonThuMuc').style.display = 'none';
@@ -281,7 +266,7 @@ function thuchta() {
         } 
         else if (cdg === 'replace' && lkcx && lkcx.trim() !== "") {
             tt.innerText = "⏳ Đang dọn dẹp và ghi đè liên kết...";
-            if(typeof google.script.run.SCV_deleteFileByUrl === 'function') {
+            if(typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run.SCV_deleteFileByUrl === 'function') {
                 google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).SCV_deleteFileByUrl(lkcx);
             }
             setTimeout(() => { xulykqta({ success: true, fileUrl: finalLinkStr, message: "Đã thay thế và gán link mới thành công!" }, tt, nt); }, 300);
@@ -294,10 +279,17 @@ function thuchta() {
     }
 
     if (!tepht || tepht.length === 0) return;
-    const idt = document.getElementById('folderSelect').value || ROOT_FOLDER_ID;
+    const idt = document.getElementById('folderSelect').value || GOC_THUMUC;
     
     nt.classList.remove('active');
     tt.style.color = "blue"; tt.innerText = "⏳ Đang chuẩn bị luồng dữ liệu...";
+
+    if (typeof google === 'undefined' || typeof google.script === 'undefined') {
+        tt.style.color = "red";
+        tt.innerText = "❌ Lỗi: Hệ thống mất kết nối tới Máy chủ. Vui lòng chạy trên Web App.";
+        nt.classList.add('active');
+        return;
+    }
 
     if (cd === 'file') {
       let dlte = []; let dem = 0;
@@ -348,7 +340,6 @@ function xulykqta(kq, tt, nt) {
         
         let returnedUrl = kq.fileUrl || kq.lkpt;
 
-        // Trả dữ liệu ngược lại về UI danh_gia.html của lõi Nhân sự
         if (GLOBAL_BTN_TRIGGER) {
             const modalDg = document.getElementById('hopThoaiDg');
             if (modalDg) {
@@ -359,7 +350,6 @@ function xulykqta(kq, tt, nt) {
                 veGhimModal(returnedUrl);
             }
         }
-
         setTimeout(donghopthta, 1000); 
     } else {
         tt.style.color = "red"; 
@@ -367,3 +357,4 @@ function xulykqta(kq, tt, nt) {
         if(nt) nt.classList.add('active');
     }
 }
+</script>
