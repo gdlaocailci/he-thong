@@ -379,7 +379,7 @@ YÊU CẦU BẮT BUỘC:
          
          if(finalUrl && finalUrl.trim() !== "") {
             const links = finalUrl.split(',').map(l => l.trim()).filter(l => l !== "");
-            displayArea.innerHTML = links.map((l, idx) => `<a href="${l}" target="_blank" class="btn-icon btn-view-icon" title="Xem tài liệu ${idx + 1}">📎 ${idx + 1}</a>`).join('');
+            displayArea.innerHTML = links.map((l, idx) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${l}')" class="btn-icon btn-view-icon" title="Xem tài liệu ${idx + 1}">📎 ${idx + 1}</a>`).join('');
             btnUpload.innerHTML = '📝 Sửa/Thêm'; btnUpload.title = 'Cập nhật thêm tài liệu'; btnUpload.style.borderColor = "#f59e0b";
          } else {
             displayArea.innerHTML = ''; btnUpload.innerHTML = '📎 Đính kèm'; btnUpload.title = 'Đính kèm file'; btnUpload.style.borderColor = "#ccc";
