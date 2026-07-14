@@ -44,13 +44,11 @@
         </label>
       </div>
       
-      <!-- Vùng thả file (file lẻ hoặc thư mục) -->
       <div class="up-dropzone" id="dropzoneArea" onclick="document.getElementById('tepDauVao').click()">
         <span id="nhanHienThiTep">Nhấn vào đây để chọn hồ sơ</span>
         <input type="file" id="tepDauVao" style="display:none" onchange="CD_XyLyChonTep(this)" multiple>
       </div>
 
-      <!-- Vùng nhập link (ẩn mặc định) -->
       <div id="linkInputArea">
         <input type="text" id="txtDirectLink" placeholder="Dán đường link (Google Drive hoặc link web trực tiếp) vào đây..." oninput="CD_KiemTraLink()" autocomplete="off" spellcheck="false">
         <div style="font-size:12px; color:#666; margin-top:5px; font-style: italic;">Hệ thống chỉ đọc được nếu file không bị khóa mật khẩu.</div>
@@ -73,16 +71,16 @@
   let LIEN_KET_CAN_XOA = ""; 
   let HAM_GOI_LAI_KHI_XONG = null; 
 
-  // Hàm lấy danh sách thư mục con (backend)
   function taiDanhSachThuMuc() {
     const s = document.getElementById('hopThuMuc');
+    const currentAccount = sessionStorage.getItem("HT_PHAN_QUYEN") || sessionStorage.getItem("HT_DINH_DANH");
+    
     window.google.script.run.withSuccessHandler(danhSach => {
       s.innerHTML = `<option value="">-- Thư mục gốc --</option>`;
       if(danhSach) danhSach.forEach(tm => s.add(new Option("📂 " + tm.name, tm.id)));
-    }).CD_LayThuMucCon();
+    }).CD_LayThuMucCon(currentAccount);
   }
 
-  // Mở modal (giữ nguyên giao diện)
   function openUploadModal(linkHienTai, khiThanhCong) {
     LIEN_KET_CAN_XOA = linkHienTai || "";
     HAM_GOI_LAI_KHI_XONG = khiThanhCong;
@@ -91,14 +89,12 @@
     document.getElementById('hopThuMuc').innerHTML = '<option>⏳ Đang quét...</option>';
     taiDanhSachThuMuc();
     
-    // Reset giao diện về chế độ file
     document.querySelector('input[name="cheDoTai"][value="file"]').checked = true;
     CD_ChuyenSangFileLe();
     document.getElementById('txtDirectLink').value = "";
     document.getElementById('khung_tai_tl').style.display = 'flex';
   }
 
-  // Cập nhật cảnh báo xóa cũ
   function CD_HienThiCanhBao() {
     const kieuGhi = document.querySelector('input[name="cheDoGhi"]:checked').value;
     const vungCanhBao = document.getElementById('canhBaoXoa');
@@ -109,7 +105,6 @@
     }
   }
 
-  // Đóng modal
   function dongKhungTai() {
     document.getElementById('khung_tai_tl').style.display = 'none';
     document.getElementById('trangThaiTai').innerText = "";
@@ -125,7 +120,6 @@
     document.getElementById('btnTaiLen').classList.remove('active');
   }
 
-  // Chuyển sang chế độ File lẻ
   function CD_ChuyenSangFileLe() {
     const tepVao = document.getElementById('tepDauVao');
     tepVao.removeAttribute('webkitdirectory');
@@ -138,7 +132,6 @@
     document.getElementById('btnTaiLen').style.background = "#059669";
   }
 
-  // Chuyển sang chế độ Cả thư mục
   function CD_ChuyenSangThuMuc() {
     const tepVao = document.getElementById('tepDauVao');
     tepVao.setAttribute('webkitdirectory', '');
@@ -151,9 +144,8 @@
     document.getElementById('btnTaiLen').style.background = "#059669";
   }
 
-  // Chuyển sang chế độ Gán link
   function CD_ChuyenSangLink() {
-    lamMoiOChonTep();            // xóa file đã chọn
+    lamMoiOChonTep();
     document.getElementById('dropzoneArea').style.display = 'none';
     document.getElementById('linkInputArea').style.display = 'block';
     document.getElementById('btnTaiLen').innerText = "LƯU LINK NÀY NGAY";
@@ -161,7 +153,6 @@
     CD_KiemTraLink();
   }
 
-  // Reset vùng chọn file
   function lamMoiOChonTep() {
     document.getElementById('tepDauVao').value = "";
     document.getElementById('nhanHienThiTep').innerText = "Nhấn vào đây để chọn hồ sơ";
@@ -170,7 +161,6 @@
     document.getElementById('trangThaiTai').innerText = "";
   }
 
-  // Xử lý khi chọn file / thư mục
   function CD_XyLyChonTep(tepVao) {
     if (tepVao.files.length > 0) {
       DANH_SACH_TEP = tepVao.files;
@@ -190,7 +180,6 @@
     }
   }
 
-  // Kiểm tra link (bật nút khi có nội dung)
   function CD_KiemTraLink() {
     const linkVal = document.getElementById('txtDirectLink').value.trim();
     const btn = document.getElementById('btnTaiLen');
@@ -201,14 +190,13 @@
     }
   }
 
-  // Xử lý chính: tùy theo chế độ mà gọi backend khác nhau
   function thucHienTaiLen() {
     const cheDoTai = document.querySelector('input[name="cheDoTai"]:checked').value;
     const kieuGhi = document.querySelector('input[name="cheDoGhi"]:checked').value;
     const nutTai = document.getElementById('btnTaiLen');
     const st = document.getElementById('trangThaiTai');
+    const currentAccount = sessionStorage.getItem("HT_PHAN_QUYEN") || sessionStorage.getItem("HT_DINH_DANH");
 
-    // ---------- TRƯỜNG HỢP 3: GÁN LINK ----------
     if (cheDoTai === 'link') {
       const linkMoi = document.getElementById('txtDirectLink').value.trim();
       if (!linkMoi) return;
@@ -217,21 +205,18 @@
       st.style.color = "blue";
       st.innerText = "⏳ Đang xử lý liên kết...";
 
-      // Xử lý chuỗi link cuối cùng (append hoặc replace)
       let finalLink = linkMoi;
       if (kieuGhi === 'append' && LIEN_KET_CAN_XOA && LIEN_KET_CAN_XOA.trim() !== "") {
         finalLink = LIEN_KET_CAN_XOA + "," + linkMoi;
         st.innerText = "⏳ Đang chèn thêm liên kết...";
       } else if (kieuGhi === 'replace' && LIEN_KET_CAN_XOA && LIEN_KET_CAN_XOA.trim() !== "") {
         st.innerText = "⏳ Đang dọn dẹp liên kết cũ...";
-        // Gọi xóa file cũ trên Drive (nếu có) - fire and forget
         if (typeof window.google.script.run.CD_XoaTepTheoLink === 'function') {
           window.google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){})
-            .CD_XoaTepTheoLink(LIEN_KET_CAN_XOA);
+            .CD_XoaTepTheoLink(LIEN_KET_CAN_XOA, currentAccount);
         }
       }
       
-      // Gọi backend lưu link (cần hàm CD_GanLink bên server)
       setTimeout(() => {
         window.google.script.run
           .withSuccessHandler(kq => xyLyKetQuaTai(kq, st, nutTai))
@@ -240,12 +225,11 @@
             st.innerText = "❌ Lỗi server: " + err.message;
             nutTai.classList.add('active');
           })
-          .CD_GanLink(finalLink, document.getElementById('hopThuMuc').value, LIEN_KET_CAN_XOA, kieuGhi);
+          .CD_GanLink(finalLink, document.getElementById('hopThuMuc').value, LIEN_KET_CAN_XOA, kieuGhi, currentAccount);
       }, 100);
       return;
     }
 
-    // ---------- TRƯỜNG HỢP 1 & 2: TẢI FILE / THƯ MỤC ----------
     if (!DANH_SACH_TEP || DANH_SACH_TEP.length === 0) return;
     const fId = document.getElementById('hopThuMuc').value;
 
@@ -265,7 +249,7 @@
             st.innerText = `⏳ Đang chuyển ${DANH_SACH_TEP.length} tài liệu lên máy chủ...`;
             window.google.script.run
               .withSuccessHandler(kq => xyLyKetQuaTai(kq, st, nutTai))
-              .CD_TaiNhieuTep(mangDuLieuTep, fId, LIEN_KET_CAN_XOA, kieuGhi);
+              .CD_TaiNhieuTep(mangDuLieuTep, fId, LIEN_KET_CAN_XOA, kieuGhi, currentAccount);
           }
         };
         trinhDoc.readAsDataURL(tepItem);
@@ -284,7 +268,7 @@
             st.innerText = "⏳ Đang chuyển gói dữ liệu lên máy chủ...";
             window.google.script.run
               .withSuccessHandler(kq => xyLyKetQuaTai(kq, st, nutTai))
-              .CD_TaiThuMuc(fId, tenFolderMoi, mangDuLieuTep, LIEN_KET_CAN_XOA, kieuGhi);
+              .CD_TaiThuMuc(fId, tenFolderMoi, mangDuLieuTep, LIEN_KET_CAN_XOA, kieuGhi, currentAccount);
           }
         };
         trinhDoc.readAsDataURL(tepItem);
@@ -292,7 +276,6 @@
     }
   }
 
-  // Xử lý kết quả trả về từ backend
   function xyLyKetQuaTai(kq, st, nutTai) {
     if (kq.thanhCong) {
       st.style.color = "green";
