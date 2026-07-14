@@ -80,7 +80,7 @@ var lkcx = "";
 var GLOBAL_BTN_TRIGGER = null; 
 var GOC_THUMUC = ""; 
 
-window.SCV_OpenUploadModal = function(btnElement, currentLink, rootId, onlyLink = false) {
+window.NS_OpenUploadModal = function(btnElement, currentLink, rootId, onlyLink = false) {
     if (typeof GLOBAL_PERM !== 'undefined' && !GLOBAL_PERM) { 
         if (typeof hienTbao === 'function') hienTbao("⚠️ Không có quyền thao tác!", "loi");
         return; 
