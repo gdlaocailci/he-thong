@@ -439,28 +439,31 @@ function taiTepDangXem() {
 
   if (khop_id) {
       if (urlTepXemTruocHienTai.includes("drive.google.com")) {
-          // Ép tải trực tiếp file gốc (bảo toàn định dạng .docx, .xlsx...)
+          // Ép tải trực tiếp file gốc
           link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
       } else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) {
-          // THUẬT TOÁN ĐẶC BIỆT: Ép Google Docs xuất ngược thành file Word (.docx) và tải về
+          // Ép xuất Docx
           link_tai_truc_tiep = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=docx";
       } else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) {
-          // Ép Google Sheets xuất ngược thành file Excel (.xlsx) và tải về
+          // Ép xuất Xlsx
           link_tai_truc_tiep = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=xlsx";
       }
   }
 
-  // Tạo thẻ <a> ẩn để tải ngầm mà không bung mở giao diện Google Tài liệu
-  let the_tai_ve = document.createElement('a');
-  the_tai_ve.href = link_tai_truc_tiep;
-  // Bổ sung target = _blank đề phòng trình duyệt chặn luồng tải tự động
-  the_tai_ve.setAttribute('target', '_blank'); 
-  the_tai_ve.setAttribute('download', ''); 
-  the_tai_ve.style.display = 'none';
+  // THUẬT TOÁN TẢI NGẦM (SILENT DOWNLOAD) BẰNG IFRAME ẢO
+  let khung_tai_ngam = document.getElementById('iframe_tai_ngam');
   
-  document.body.appendChild(the_tai_ve);
-  the_tai_ve.click();
-  document.body.removeChild(the_tai_ve);
+  // Nếu chưa có khung ảo thì tạo mới và giấu đi
+  if (!khung_tai_ngam) {
+      khung_tai_ngam = document.createElement('iframe');
+      khung_tai_ngam.id = 'iframe_tai_ngam';
+      khung_tai_ngam.style.display = 'none';
+      document.body.appendChild(khung_tai_ngam);
+  }
+  
+  // Gán đường dẫn vào khung ảo. Trình duyệt sẽ tự động nhận diện gói tin trả về 
+  // là tệp đính kèm và kích hoạt luồng tải xuống máy tính mà không mở tab mới.
+  khung_tai_ngam.src = link_tai_truc_tiep;
 }
     window.alert = function(msg) {
         let type = 'error';
