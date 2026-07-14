@@ -1,5 +1,6 @@
 // DỰ ÁN QUẢN LÝ CHẤT LƯỢNG ĐỘI NGŨ
 // File: NS_MinhChung.js (Module Minh Chứng Độc Lập)
+// Bản cập nhật: Kế thừa biến toàn cục idThuMucQuyetDinh từ tệp cấu hình QLNS_CauHinh
 
 const uiMinhChung = `
 <style>
@@ -15,6 +16,10 @@ const uiMinhChung = `
   .close-up:hover { background: #475569; }
   .btn-create-folder { border: 1px solid #ccc; background: #f0fdf4; color: #16a34a; width: 40px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 18px; margin-left: 5px; }
   
+  /* Hiệu ứng và kiểu dáng cho nút Thư mục Trung tâm */
+  .btn-center-folder { border: 1px solid #0284c7; background: #e0f2fe; color: #0369a1; padding: 0 10px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-left: 5px; height: 36px; display: flex; align-items: center; justify-content: center; transition: 0.2s;}
+  .btn-center-folder:hover { background: #bae6fd; }
+
   #warnDeleteCV { display:none; color:#d97706; font-size:13px; text-align:center; margin-bottom:10px; font-weight:bold; background: #fffbeb; padding: 8px; border-radius: 4px; border: 1px dashed #d97706; }
 </style>
 
@@ -24,9 +29,10 @@ const uiMinhChung = `
     
     <div class="up-box" id="vungChonThuMucCV">
        <label><b>1. Thư mục lưu trữ (Chỉ dùng khi Tải File):</b></label>
-       <div style="display:flex; gap:5px; margin-top:5px;">
+       <div style="display:flex; margin-top:5px; align-items: stretch;">
            <select id="folderSelectCV" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;"><option>⏳ Đang kết nối...</option></select>
            <button class="btn-create-folder" onclick="toggleNewFolderUI()" title="Tạo thư mục con mới">➕</button>
+           <button class="btn-center-folder" onclick="chonThuMucTrungTamCV()" title="Đẩy thẳng vào Thư mục Trung tâm (Quyết định)">🎯 Trung tâm</button>
        </div>
        <div id="newFolderArea" style="display:none; margin-top:8px; background:#f9fafb; padding:10px; border:1px solid #e5e7eb; border-radius:4px;">
            <label style="font-size:13px; font-weight:bold; color:#065f46;">Tên thư mục mới:</label>
@@ -88,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// Chuyển let thành var, gắn vào window để hàm toàn cục nhận diện
+// Thiết lập biến môi trường
 var GLOBAL_BTN_TRIGGER = null; 
 var FILES_CV = [];
 var LINK_CAN_XOA_CV = ""; 
@@ -104,7 +110,10 @@ window.SCV_OpenUploadModal = function(btnElement, currentLink, rootId, onlyLink 
     LINK_CAN_XOA_CV = currentLink || "";
     CURRENT_ROOT_ID = rootId || ""; 
     
-    if(!CURRENT_ROOT_ID && !onlyLink) { alert("Lỗi hệ thống: Không xác định được thư mục gốc!"); return; }
+    // Đón lấy cấu hình từ biến toàn cục idThuMucQuyetDinh
+    if(!CURRENT_ROOT_ID && !onlyLink) { 
+        CURRENT_ROOT_ID = idThuMucQuyetDinh; 
+    }
 
     document.getElementById('upStatusCV').innerText = "";
     document.getElementById('fileInCV').value = "";
@@ -148,6 +157,21 @@ window.SCV_OpenUploadModal = function(btnElement, currentLink, rootId, onlyLink 
     if(!onlyLink) window.loadFoldersCV();
 };
 
+window.chonThuMucTrungTamCV = function() {
+    const s = document.getElementById('folderSelectCV');
+    if (s) {
+        // Kiểm tra xem lựa chọn trung tâm đã tồn tại trong thẻ Select chưa, chưa có thì tự động chèn
+        let exists = Array.from(s.options).some(opt => opt.value === idThuMucQuyetDinh);
+        if (!exists) {
+            s.add(new Option("🎯 THƯ MỤC TRUNG TÂM (Quyết định)", idThuMucQuyetDinh), 0);
+        }
+        s.value = idThuMucQuyetDinh;
+        if (typeof hienTbao === 'function') {
+            hienTbao("Đã chuyển định tuyến lưu trữ về Thư mục Trung tâm!", "tc");
+        }
+    }
+};
+
 window.updateWarnDisplayCV = function() {
     const wMode = document.querySelector('input[name="writeMode"]:checked').value;
     const warnDiv = document.getElementById('warnDeleteCV');
@@ -163,14 +187,26 @@ window.loadFoldersCV = function() {
    if(!s) return;
    s.innerHTML = `<option value="${CURRENT_ROOT_ID}">⏳ Đang tải cấu trúc thư mục...</option>`; 
    s.disabled = true;
+   
    if (typeof google !== 'undefined' && typeof google.script !== 'undefined') {
        google.script.run.withSuccessHandler(fs => {
           s.disabled = false; 
           s.innerHTML = `<option value="${CURRENT_ROOT_ID}">📂 THƯ MỤC GỐC</option>`;
-          if(fs && fs.length > 0) { fs.forEach(f => { s.add(new Option(f.name, f.id)); }); }
+          
+          // Nạp cấu trúc Thư mục Trung tâm vào danh sách lựa chọn
+          if (CURRENT_ROOT_ID !== idThuMucQuyetDinh) {
+              s.add(new Option("🎯 THƯ MỤC TRUNG TÂM", idThuMucQuyetDinh));
+          }
+          
+          if(fs && fs.length > 0) { 
+              fs.forEach(f => { s.add(new Option("📂 " + f.name, f.id)); }); 
+          }
        }).SCV_getSubFolders(CURRENT_ROOT_ID);
    } else {
        s.innerHTML = `<option value="${CURRENT_ROOT_ID}">📂 THƯ MỤC GỐC</option>`;
+       if (CURRENT_ROOT_ID !== idThuMucQuyetDinh) {
+           s.add(new Option("🎯 THƯ MỤC TRUNG TÂM", idThuMucQuyetDinh));
+       }
        s.disabled = false;
    }
 };
@@ -305,6 +341,8 @@ window.doUploadCV = function() {
    }
 
    if (!FILES_CV || FILES_CV.length === 0) return;
+   
+   // Đọc giá trị ID từ dropdown, nếu lỗi lấy mặc định theo CURRENT_ROOT_ID
    const fId = document.getElementById('folderSelectCV').value || CURRENT_ROOT_ID;
    
    btn.style.opacity = 0.5;
