@@ -395,7 +395,7 @@
       document.getElementById('custom-alert-overlay').style.display = 'none';
     }
 /* ========================================================================== */
-/* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG TRỰC TIẾP TỪ IFRAME                 */
+/* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ ÉP TẢI XUỐNG ĐỊNH DẠNG GỐC TRỰC TIẾP            */
 /* ========================================================================== */
 // Biến đệm lưu trữ đường dẫn tệp đang hoạt động trên khung xem trước
 let urlTepXemTruocHienTai = ""; 
@@ -406,15 +406,21 @@ function moKhungXemTep(duong_dan) {
   urlTepXemTruocHienTai = String(duong_dan).trim(); 
   let link_nhung = urlTepXemTruocHienTai;
   
-  // THUẬT TOÁN ÉP BUỘC CHẾ ĐỘ XEM TRƯỚC BẢO MẬT
-  // Xóa bỏ hoàn toàn khả năng Google tự động mở sang trình soạn thảo Google Docs/Sheets
   let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
-  if (khop_id && link_nhung.includes("drive.google.com")) {
-      // Cấu trúc lại URL: Khóa cứng ở giao diện /preview thuần túy
-      // Giao diện này chỉ hiển thị ảnh chụp nội dung, không có công cụ chỉnh sửa
-      link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+  if (khop_id) {
+      if (link_nhung.includes("drive.google.com")) {
+          // File gốc (Word, Excel, PDF...) lưu trữ trên Drive
+          link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+      } else if (link_nhung.includes("docs.google.com/document")) {
+          // Tài liệu bị tự động chuyển sang Google Docs
+          link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
+      } else if (link_nhung.includes("docs.google.com/spreadsheets")) {
+          // Tài liệu bị tự động chuyển sang Google Sheets
+          link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
+      }
   }
 
+  // Gắn liên kết vào Iframe, giao diện /preview đảm bảo chế độ Chỉ xem (như PDF)
   document.getElementById('iframe_xem_tep').src = link_nhung;
   document.getElementById('modal_xem_tep').style.display = 'flex';
 }
@@ -429,29 +435,32 @@ function taiTepDangXem() {
   if (!urlTepXemTruocHienTai) return;
   
   let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
-  
-  if (khop_id && urlTepXemTruocHienTai.includes("drive.google.com")) {
-      // Đầu nối tải trực tiếp (Direct Download Endpoint) của Google
-      let link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
-      
-      // THUẬT TOÁN ÉP TẢI XUỐNG TRỰC TIẾP (SILENT DOWNLOAD)
-      // Tạo một thẻ <a> ảo, không hiển thị trên giao diện
-      let the_tai_ve = document.createElement('a');
-      the_tai_ve.href = link_tai_truc_tiep;
-      
-      // Thuộc tính HTML5 ép trình duyệt ưu tiên tải file thay vì mở tab mới
-      the_tai_ve.setAttribute('download', ''); 
-      the_tai_ve.style.display = 'none';
-      
-      // Gắn vào DOM, tự động click để tải, sau đó dọn dẹp ngay lập tức
-      document.body.appendChild(the_tai_ve);
-      the_tai_ve.click();
-      document.body.removeChild(the_tai_ve);
-      
-  } else {
-      // Dự phòng cho các link dạng tài liệu Google Docs gốc hoặc Web ngoài
-      window.open(urlTepXemTruocHienTai, "_blank");
+  let link_tai_truc_tiep = urlTepXemTruocHienTai;
+
+  if (khop_id) {
+      if (urlTepXemTruocHienTai.includes("drive.google.com")) {
+          // Ép tải trực tiếp file gốc (bảo toàn định dạng .docx, .xlsx...)
+          link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
+      } else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) {
+          // THUẬT TOÁN ĐẶC BIỆT: Ép Google Docs xuất ngược thành file Word (.docx) và tải về
+          link_tai_truc_tiep = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=docx";
+      } else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) {
+          // Ép Google Sheets xuất ngược thành file Excel (.xlsx) và tải về
+          link_tai_truc_tiep = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=xlsx";
+      }
   }
+
+  // Tạo thẻ <a> ẩn để tải ngầm mà không bung mở giao diện Google Tài liệu
+  let the_tai_ve = document.createElement('a');
+  the_tai_ve.href = link_tai_truc_tiep;
+  // Bổ sung target = _blank đề phòng trình duyệt chặn luồng tải tự động
+  the_tai_ve.setAttribute('target', '_blank'); 
+  the_tai_ve.setAttribute('download', ''); 
+  the_tai_ve.style.display = 'none';
+  
+  document.body.appendChild(the_tai_ve);
+  the_tai_ve.click();
+  document.body.removeChild(the_tai_ve);
 }
     window.alert = function(msg) {
         let type = 'error';
