@@ -397,6 +397,7 @@
 /* ========================================================================== */
 /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG TRỰC TIẾP TỪ IFRAME                 */
 /* ========================================================================== */
+// Biến đệm lưu trữ đường dẫn tệp đang hoạt động trên khung xem trước
 let urlTepXemTruocHienTai = ""; 
 
 function moKhungXemTep(duong_dan) {
@@ -405,15 +406,13 @@ function moKhungXemTep(duong_dan) {
   urlTepXemTruocHienTai = String(duong_dan).trim(); 
   let link_nhung = urlTepXemTruocHienTai;
   
-  if (link_nhung.includes('/view')) {
-      link_nhung = link_nhung.replace('/view', '/preview');
-  } else if (link_nhung.includes('/edit')) {
-      link_nhung = link_nhung.replace('/edit', '/preview');
-  } else if (!link_nhung.includes('/preview')) {
-      let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
-      if (khop_id) {
-          link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
-      }
+  // THUẬT TOÁN ÉP BUỘC CHẾ ĐỘ XEM TRƯỚC BẢO MẬT
+  // Xóa bỏ hoàn toàn khả năng Google tự động mở sang trình soạn thảo Google Docs/Sheets
+  let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+  if (khop_id && link_nhung.includes("drive.google.com")) {
+      // Cấu trúc lại URL: Khóa cứng ở giao diện /preview thuần túy
+      // Giao diện này chỉ hiển thị ảnh chụp nội dung, không có công cụ chỉnh sửa
+      link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
   }
 
   document.getElementById('iframe_xem_tep').src = link_nhung;
@@ -431,10 +430,26 @@ function taiTepDangXem() {
   
   let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
   
-  if (khop_id && !urlTepXemTruocHienTai.includes("docs.google.com")) {
+  if (khop_id && urlTepXemTruocHienTai.includes("drive.google.com")) {
+      // Đầu nối tải trực tiếp (Direct Download Endpoint) của Google
       let link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
-      window.open(link_tai_truc_tiep, "_blank");
+      
+      // THUẬT TOÁN ÉP TẢI XUỐNG TRỰC TIẾP (SILENT DOWNLOAD)
+      // Tạo một thẻ <a> ảo, không hiển thị trên giao diện
+      let the_tai_ve = document.createElement('a');
+      the_tai_ve.href = link_tai_truc_tiep;
+      
+      // Thuộc tính HTML5 ép trình duyệt ưu tiên tải file thay vì mở tab mới
+      the_tai_ve.setAttribute('download', ''); 
+      the_tai_ve.style.display = 'none';
+      
+      // Gắn vào DOM, tự động click để tải, sau đó dọn dẹp ngay lập tức
+      document.body.appendChild(the_tai_ve);
+      the_tai_ve.click();
+      document.body.removeChild(the_tai_ve);
+      
   } else {
+      // Dự phòng cho các link dạng tài liệu Google Docs gốc hoặc Web ngoài
       window.open(urlTepXemTruocHienTai, "_blank");
   }
 }
