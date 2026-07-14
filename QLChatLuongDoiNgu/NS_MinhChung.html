@@ -21,7 +21,7 @@
 
 <div id="upload_modal">
   <div class="up-container">
-    <div class="up-header"><h2 style="margin:0; color:#b91c1c;" id="tdeModal">📁 MINH CHỨNG KÈM THEO</h2></div>
+    <div class="up-header"><h2 style="margin:0; color:#b91c1c;" id="tdeModal">📁 QUYẾT ĐỊNH KÈM THEO</h2></div>
     
     <div class="up-box" id="vungChonThuMuc">
       <label><b>1. Chọn thư mục lưu trữ (Tiêu chuẩn tải File):</b></label>
@@ -131,13 +131,13 @@ function mohopthta(lkht, onlyLink) {
     tepht = [];
     
     if (onlyLink) {
-        document.getElementById('tdeModal').innerText = "🔗 MINH CHỨNG LINK";
+        document.getElementById('tdeModal').innerText = "🔗 LINK QUYẾT ĐỊNH";
         document.getElementById('vungChonThuMuc').style.display = 'none';
         document.querySelector('.lbl-mode-file').style.display = 'none';
         document.querySelector('.lbl-mode-folder').style.display = 'none';
         document.querySelector('input[name="upMode"][value="link"]').checked = true;
     } else {
-        document.getElementById('tdeModal').innerText = "📁 MINH CHỨNG KÈM THEO";
+        document.getElementById('tdeModal').innerText = "📁 QUYẾT ĐỊNH KÈM THEO";
         document.getElementById('vungChonThuMuc').style.display = 'block';
         document.querySelector('.lbl-mode-file').style.display = 'inline-block';
         document.querySelector('.lbl-mode-folder').style.display = 'inline-block';
@@ -167,7 +167,7 @@ function donghopthta() {
     document.getElementById('upStatus').innerText = "";
     document.getElementById('fileIn').value = "";
     document.getElementById('txtDirectLink').value = "";
-    document.getElementById('fileLabel').innerText = "Nhấn để chọn file minh chứng";
+    document.getElementById('fileLabel').innerText = "Nhấn để chọn file Quyết định";
     document.getElementById('warnDelete').style.display = 'none';
     tepht = []; lkcx = ""; GLOBAL_BTN_TRIGGER = null;
     document.getElementById('uploadBtn').classList.remove('active');
@@ -190,7 +190,7 @@ function chuyencd_upload() {
         dz.style.display = 'block';
         la.style.display = 'none';
         btn.innerText = "TẢI LÊN NGAY"; btn.style.background = "#0891b2";
-        dh.value = ""; document.getElementById('fileLabel').innerText = "Nhấn vào đây để chọn file minh chứng";
+        dh.value = ""; document.getElementById('fileLabel').innerText = "Nhấn vào đây để chọn file Quyết định";
         btn.classList.remove('active');
          
         if (cd === 'folder') {
