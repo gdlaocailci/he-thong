@@ -95,24 +95,19 @@ function taithu() {
         hop.innerHTML = `<option value="${GOC_THUMUC}">⏳ Đang tải danh sách thư mục...</option>`;
     }
     
-    if (typeof google !== 'undefined' && typeof google.script !== 'undefined') {
-        google.script.run
-        .withSuccessHandler(tm => {
-            hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC</option>`;
-            hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
-            if(tm && tm.length > 0) { 
-                tm.forEach(t1 => hop.add(new Option("📂 " + (t1.name || t1.tenn), t1.id || t1.idt))); 
-            }
-        })
-        .withFailureHandler(err => {
-            hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC (Lỗi quét mục con)</option>`;
-            hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
-        })
-        .SCV_getSubFolders(GOC_THUMUC);
-    } else {
-        hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC (Chế độ ngắt kết nối)</option>`;
+    // KHẮC PHỤC: Sử dụng API gọi qua fetch thay vì google.script
+    goiMyChuHien('layThuMucCon', { rootFolderId: GOC_THUMUC })
+    .then(res => {
+        hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC</option>`;
         hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
-    }
+        if(res.tCong && res.dLieu && res.dLieu.length > 0) {
+            res.dLieu.forEach(t1 => hop.add(new Option("📂 " + (t1.name || t1.tenn), t1.id || t1.idt)));
+        }
+    })
+    .catch(err => {
+        hop.innerHTML = `<option value="${GOC_THUMUC}">📂 THƯ MỤC GỐC (Lỗi kết nối)</option>`;
+        hop.add(new Option("🎯 THƯ MỤC TRUNG TÂM", GOC_THUMUC));
+    });
 }
 
 function chonThuMucTrungTam() {
@@ -150,14 +145,10 @@ function mohopthta(lkht, onlyLink) {
 
     chuyencd_upload();
     capnhtcb();
-    
     if (!onlyLink) taithu();
-
     document.getElementById('upload_modal').style.display = 'flex';
     
-    if(onlyLink) {
-        setTimeout(function() { document.getElementById('txtDirectLink').focus(); }, 200);
-    }
+    if(onlyLink) { setTimeout(function() { document.getElementById('txtDirectLink').focus(); }, 200); }
 }
 
 function capnhtcb() {
@@ -177,9 +168,7 @@ function donghopthta() {
     document.getElementById('txtDirectLink').value = "";
     document.getElementById('fileLabel').innerText = "Nhấn để chọn file minh chứng";
     document.getElementById('warnDelete').style.display = 'none';
-    tepht = []; 
-    lkcx = "";
-    GLOBAL_BTN_TRIGGER = null;
+    tepht = []; lkcx = ""; GLOBAL_BTN_TRIGGER = null;
     document.getElementById('uploadBtn').classList.remove('active');
 }
 
@@ -193,29 +182,21 @@ function chuyencd_upload() {
     if (cd === 'link') {
         dz.style.display = 'none';
         la.style.display = 'block';
-        btn.innerText = "LƯU LINK NÀY NGAY";
-        btn.style.background = "#047857";
+        btn.innerText = "LƯU LINK NÀY NGAY"; btn.style.background = "#047857";
         document.getElementById('txtDirectLink').value = "";
-        capnhtcb();
-        kiemtralink();
+        capnhtcb(); kiemtralink();
     } else {
         dz.style.display = 'block';
         la.style.display = 'none';
-        btn.innerText = "TẢI LÊN NGAY";
-        btn.style.background = "#0891b2";
-        dh.value = "";
-        document.getElementById('fileLabel').innerText = "Nhấn vào đây để chọn file minh chứng";
+        btn.innerText = "TẢI LÊN NGAY"; btn.style.background = "#0891b2";
+        dh.value = ""; document.getElementById('fileLabel').innerText = "Nhấn vào đây để chọn file minh chứng";
         btn.classList.remove('active');
          
         if (cd === 'folder') {
-            dh.setAttribute('webkitdirectory', ''); 
-            dh.setAttribute('directory', ''); 
-            dh.setAttribute('multiple', 'multiple');
+            dh.setAttribute('webkitdirectory', ''); dh.setAttribute('directory', ''); dh.setAttribute('multiple', 'multiple');
             document.getElementById('warnDelete').style.display = 'none';
         } else {
-            dh.removeAttribute('webkitdirectory'); 
-            dh.removeAttribute('directory'); 
-            dh.setAttribute('multiple', 'multiple');
+            dh.removeAttribute('webkitdirectory'); dh.removeAttribute('directory'); dh.setAttribute('multiple', 'multiple');
             capnhtcb();
         }
     }
@@ -225,8 +206,7 @@ function chuyencd_upload() {
 function kiemtralink() {
     const val = document.getElementById('txtDirectLink').value.trim();
     const btn = document.getElementById('uploadBtn');
-    if (val !== "") { btn.classList.add('active'); } 
-    else { btn.classList.remove('active'); }
+    if (val !== "") { btn.classList.add('active'); } else { btn.classList.remove('active'); }
 }
 
 function chonte(dauv) {
@@ -255,8 +235,7 @@ function thuchta() {
         const linkVal = document.getElementById('txtDirectLink').value.trim();
         if (!linkVal) return;
         
-        nt.classList.remove('active');
-        tt.style.color = "blue";
+        nt.classList.remove('active'); tt.style.color = "blue";
         let finalLinkStr = linkVal;
 
         if (cdg === 'append' && lkcx && lkcx.trim() !== "") {
@@ -266,9 +245,9 @@ function thuchta() {
         } 
         else if (cdg === 'replace' && lkcx && lkcx.trim() !== "") {
             tt.innerText = "⏳ Đang dọn dẹp và ghi đè liên kết...";
-            if(typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run.SCV_deleteFileByUrl === 'function') {
-                google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).SCV_deleteFileByUrl(lkcx);
-            }
+            
+            // Dọn dẹp ngầm qua API
+            goiMyChuHien('xoaTepLink', { url: lkcx }).catch(e=>{});
             setTimeout(() => { xulykqta({ success: true, fileUrl: finalLinkStr, message: "Đã thay thế và gán link mới thành công!" }, tt, nt); }, 300);
         } 
         else {
@@ -284,13 +263,6 @@ function thuchta() {
     nt.classList.remove('active');
     tt.style.color = "blue"; tt.innerText = "⏳ Đang chuẩn bị luồng dữ liệu...";
 
-    if (typeof google === 'undefined' || typeof google.script === 'undefined') {
-        tt.style.color = "red";
-        tt.innerText = "❌ Lỗi: Hệ thống mất kết nối tới Máy chủ. Vui lòng chạy trên Web App.";
-        nt.classList.add('active');
-        return;
-    }
-
     if (cd === 'file') {
       let dlte = []; let dem = 0;
       tt.innerText = `⏳ Đang đọc chuẩn hóa ${tepht.length} file...`;
@@ -301,11 +273,11 @@ function thuchta() {
           dlte.push({ fileName: te.name, mimeType: te.type, data: err.target.result.split(',')[1] });
           dem++;
           if (dem === tepht.length) {
-            tt.innerText = `⏳ Đang đồng bộ ${tepht.length} file lên Hệ thống...`;
-            google.script.run
-            .withSuccessHandler(kq => { xulykqta(kq, tt, nt); })
-            .withFailureHandler(lo => { tt.style.color="red"; tt.innerText="❌ Lỗi: "+lo.message; nt.classList.add('active'); })
-            .SCV_uploadMultipleFilesToDrive(dlte, "", idt, lkcx, cdg); 
+            tt.innerText = `⏳ Đang đẩy ${tepht.length} file qua luồng API máy chủ...`;
+            
+            goiMyChuHien('taiTepLen', { filesData: dlte, mhs: "", folderId: idt, linkXoa: lkcx, mode: cdg })
+            .then(kq => { xulykqta(kq, tt, nt); })
+            .catch(lo => { tt.style.color="red"; tt.innerText="❌ Lỗi mạng: "+lo.message; nt.classList.add('active'); });
           }
         };
         do1.readAsDataURL(te);
@@ -321,11 +293,11 @@ function thuchta() {
           dlte.push({ fileName: te.name, mimeType: te.type, data: err.target.result.split(',')[1] });
           dem++;
           if (dem === tepht.length) {
-            tt.innerText = "⏳ Đang đóng gói và gửi lên Drive...";
-            google.script.run
-            .withSuccessHandler(kq => { xulykqta(kq, tt, nt); })
-            .withFailureHandler(lo => { tt.style.color="red"; tt.innerText="❌ Lỗi: "+lo.message; nt.classList.add('active'); })
-            .SCV_uploadFolderEvidence(idt, tent, dlte, lkcx, cdg); 
+            tt.innerText = "⏳ Đang đóng gói và gửi thư mục qua luồng API...";
+            
+            goiMyChuHien('taiThuMucLen', { folderId: idt, folderName: tent, filesData: dlte, linkXoa: lkcx, mode: cdg })
+            .then(kq => { xulykqta(kq, tt, nt); })
+            .catch(lo => { tt.style.color="red"; tt.innerText="❌ Lỗi mạng: "+lo.message; nt.classList.add('active'); });
           }
         };
         do1.readAsDataURL(te);
@@ -334,9 +306,9 @@ function thuchta() {
 }
 
 function xulykqta(kq, tt, nt) {
-    if (kq.success || kq.tcon) {
+    if (kq.success || kq.tcon || kq.tCong) {
         tt.style.color = "green"; 
-        tt.innerText = "✅ " + (kq.message || kq.tbao);
+        tt.innerText = "✅ " + (kq.message || kq.tbao || kq.tBao || "Thành công!");
         
         let returnedUrl = kq.fileUrl || kq.lkpt;
 
@@ -353,7 +325,7 @@ function xulykqta(kq, tt, nt) {
         setTimeout(donghopthta, 1000); 
     } else {
         tt.style.color = "red"; 
-        tt.innerText = "❌ " + (kq.message || kq.tbao);
+        tt.innerText = "❌ " + (kq.message || kq.tbao || kq.tBao);
         if(nt) nt.classList.add('active');
     }
 }
