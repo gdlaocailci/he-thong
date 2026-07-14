@@ -1,0 +1,23 @@
+<div id="tab-update" class="tab-content hidden">
+  <div class="control-box" style="justify-content:space-between;">
+    <div style="display:flex; gap:10px; align-items:center;">
+      <label><b>Chế độ:</b></label>
+      <select id="u_comboLoai" class="form-input" onchange="renderInputTableStructure()">
+        <option value="LUONG">Lương</option>
+        <option value="THAMNIEN">Thâm niên</option>
+      </select>
+    </div>
+    <div>
+      <button id="btn_addRow" class="btn btn-success btn-3d-effect" onclick="addRow()">+ Thêm dòng</button>
+      <button class="btn btn-primary btn-3d-effect" onclick="saveAll()">💾 Lưu tất cả</button>
+      <span id="updateStatus" class="status-msg"></span>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <input type="hidden" id="EDIT_ROW_INDEX">
+    <table id="inputTable">
+      <thead id="u_thead"></thead>
+      <tbody id="u_tbody"></tbody>
+    </table>
+  </div>
+</div>
