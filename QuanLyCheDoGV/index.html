@@ -97,7 +97,6 @@
       transform: translateY(3px) !important;
     }
     
-    /* Cập nhật lớp giãn dòng: Đã xóa thuộc tính width: 100% gây nhảy dòng */
     .input-flexible {
       flex: 1 1 auto; 
       min-width: 110px; 
@@ -186,40 +185,11 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/></svg> Ngắt kết nối
     </button>
   </div>
-  <div id="tab-search" class="tab-content">
-    <div class="control-box">
-      <select id="s_comboLoai" class="form-input" onchange="initSearchTable()" style="width: auto;">
-        <option value="LUONG">Lương</option>
-        <option value="THAMNIEN">Thâm niên</option>
-      </select>
-      <!-- Bổ sung max-width để các ô nhập cân đối trên cùng một hàng -->
-      <input type="text" id="s_hoten" class="form-input input-flexible" placeholder="Tên cán bộ..." autocomplete="off" spellcheck="false" style="max-width: 250px;" />
-      <input type="text" id="s_thang" class="form-input input-flexible" placeholder="Tháng (1-12)" autocomplete="off" spellcheck="false" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 12) this.value = 12;" maxlength="2" style="max-width: 120px;" />
-      <input type="text" id="s_nam" class="form-input input-flexible" placeholder="Năm (VD: 2024)" autocomplete="off" spellcheck="false" oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="4" style="max-width: 140px;" />
-      <button class="btn btn-primary btn-3d-effect" onclick="doSearch()">🔍 Tra cứu</button>
-    </div>
-    <div class="table-responsive"><table><thead id="s_thead"></thead><tbody id="s_tbody"></tbody></table></div>
-  </div>
-  <div id="tab-update" class="tab-content hidden">
-    <div class="control-box" style="justify-content:space-between;">
-      <div style="display:flex; gap:10px; align-items:center;">
-        <label><b>Chế độ:</b></label>
-        <select id="u_comboLoai" class="form-input" onchange="renderInputTableStructure()">
-          <option value="LUONG">Lương</option>
-          <option value="THAMNIEN">Thâm niên</option>
-        </select>
-      </div>
-      <div>
-        <button id="btn_addRow" class="btn btn-success btn-3d-effect" onclick="addRow()">+ Thêm dòng</button>
-        <button class="btn btn-primary btn-3d-effect" onclick="saveAll()">💾 Lưu tất cả</button>
-        <span id="updateStatus" class="status-msg"></span>
-      </div>
-    </div>
-    <div class="table-responsive">
-      <input type="hidden" id="EDIT_ROW_INDEX">
-      <table id="inputTable"><thead id="u_thead"></thead><tbody id="u_tbody"></tbody></table>
-    </div>
-  </div>
+  
+  <div id="tab-search-container" style="display: contents;"></div>
+  
+  <div id="tab-update-container" style="display: contents;"></div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -246,6 +216,32 @@
     CD_DocQuyetDinhAI: function(link) { this._goiMayChu('CD_DocQuyetDinhAI', [link]); }
   });
 
+  async function loadComponents() {
+      try {
+          const [resSearch, resUpdate, resMinhChung] = await Promise.all([
+              fetch('tra_cuu.html'),
+              fetch('nhap_che_do.html'),
+              fetch('cd_minhchung.html')
+          ]);
+          
+          if (resSearch.ok) document.getElementById('tab-search-container').innerHTML = await resSearch.text();
+          if (resUpdate.ok) document.getElementById('tab-update-container').innerHTML = await resUpdate.text();
+          
+          if (resMinhChung.ok) {
+              const html = await resMinhChung.text();
+              const container = document.getElementById('minhchung-container'); container.innerHTML = html;
+              const scripts = container.getElementsByTagName("script");
+              for (let i = 0; i < scripts.length; i++) { 
+                  const newScript = document.createElement("script"); newScript.text = scripts[i].innerText; document.body.appendChild(newScript);
+              }
+          }
+      } catch (err) {
+          console.error("Lỗi tải thành phần giao diện:", err);
+      } finally {
+          startAppMain();
+      }
+  }
+
   document.addEventListener("DOMContentLoaded", function() {
     if (typeof HT_LOGO !== 'undefined') {
         let f = document.getElementById('appFavicon'); if(f) f.href = HT_LOGO;
@@ -261,16 +257,8 @@
     }
     document.getElementById('pageLoading').style.display = 'flex';
     
-    fetch('cd_minhchung.html')
-      .then(response => { if (!response.ok) throw new Error("Lỗi HTTP: " + response.status); return response.text(); })
-      .then(html => {
-        const container = document.getElementById('minhchung-container'); container.innerHTML = html;
-        const scripts = container.getElementsByTagName("script");
-        for (let i = 0; i < scripts.length; i++) { 
-            const newScript = document.createElement("script"); newScript.text = scripts[i].innerText; document.body.appendChild(newScript);
-        }
-        startAppMain();
-      }).catch(err => { console.error("Lỗi tải cd_minhchung.html:", err); startAppMain(); });
+    // Nạp toàn bộ các File UI con
+    loadComponents();
   });
 
   function khoiTaoKetNoiGoogle() {
