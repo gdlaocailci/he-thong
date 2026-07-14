@@ -331,10 +331,12 @@ function xulyPhienDn(phanho) {
           <button onclick="dongKhungXemTep()" class="btn btn-sm btn-danger fw-bold">✖ ĐÓNG</button>
         </div>
       </div>
-      <div style="flex-grow: 1; position: relative; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
-      <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
-      <div id="mask_che_nut_drive" style="position: absolute; top: 0; right: 0; width: 160px; height: 50px; background: rgba(18,18,18,1); z-index: 10; display: none;" title="Chức năng mở thẻ mới đã bị vô hiệu hóa"></div>
-    </div>
+      
+      <div style="flex-grow: 1; position: relative; background: #f8f9fa; border-radius: 4px; overflow: hidden; border: 1px solid #dee2e6;">
+        <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+        <div id="mask_che_nut_drive" style="position: absolute; top: 0; right: 0; width: 65px; height: 55px; background: transparent; z-index: 10; display: none; cursor: not-allowed;" title="Chức năng mở thẻ mới đã bị vô hiệu hóa"></div>
+      </div>
+      
     </div>
   </div>
   <iframe id="iframe_tai_ngam" style="display: none;"></iframe>
@@ -852,7 +854,6 @@ let urlTepXemTruocHienTai = "";
 
 function moKhungXemTep(duong_dan) {
   if (!duong_dan) return;
-  
   urlTepXemTruocHienTai = String(duong_dan).trim(); 
   let link_nhung = urlTepXemTruocHienTai;
   
@@ -861,19 +862,19 @@ function moKhungXemTep(duong_dan) {
 
   if (khop_id) {
       if (link_nhung.includes("drive.google.com")) {
-          // Giao diện Drive có thanh công cụ màu đen -> Bật tấm che
+          // Là tệp Drive gốc (PDF/Ảnh) -> Ép link /preview và bật lớp kính chặn click
           link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
-          if (mat_na) mat_na.style.display = 'block'; 
+          if (mat_na) mat_na.style.display = 'block';
       } 
       else if (link_nhung.includes("docs.google.com/document")) {
-          // Giao diện Docs nền trắng nguyên bản -> Tắt tấm che
+          // Là Google Docs -> Ép link /preview và tắt lớp chặn (vì Docs không có nút pop-out ở vị trí đó)
           link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
-          if (mat_na) mat_na.style.display = 'none'; 
+          if (mat_na) mat_na.style.display = 'none';
       } 
       else if (link_nhung.includes("docs.google.com/spreadsheets")) {
-          // Giao diện Sheets nền trắng nguyên bản -> Tắt tấm che
+          // Là Google Sheets -> Ép link /preview và tắt lớp chặn
           link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
-          if (mat_na) mat_na.style.display = 'none'; 
+          if (mat_na) mat_na.style.display = 'none';
       }
   }
 
