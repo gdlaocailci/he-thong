@@ -13,8 +13,7 @@
     document.write('<script src="ketnoi.js?v=' + new Date().getTime() + '"><\/script>');
   </script>
 
-  <script src="NS_MinhChung.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+ <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <script>
     async function goiMyChuHien(tenLenh, tLieu = {}) {
@@ -276,14 +275,16 @@
         return true;
     }
 
-    $(document).ready(() => { 
+$(document).ready(() => { 
         if (!kiemtKhoa()) return; 
         
         $("#vungTai").show();
         
+        // Gọi tải đồng loạt các tệp HTML giao diện
         let taiTt = $.get("thong_tin.html");
         let taiDg = $.get("danh_gia.html");
         let taiTh = $.get("tong_hop.html");
+        let taiMc = $.get("NS_MinhChung.html"); // Bổ sung lệnh tải Module Minh chứng
         
         let taiPq = $.Deferred();
         $.get("PhanQuyen.html").done(function(res) {
@@ -292,9 +293,17 @@
             taiPq.resolve([""]); 
         });
 
-        $.when(taiTt, taiDg, taiTh, taiPq).done(function(r1, r2, r3, r4) {
+        // Xử lý khi tất cả các tệp HTML tải xong
+        $.when(taiTt, taiDg, taiTh, taiPq, taiMc).done(function(r1, r2, r3, r4, r5) {
             let pQuyenHtml = r4[0] || "";
+            let minhChungHtml = r5[0] || ""; // Trích xuất nội dung module Minh chứng
+
+            // Chèn mã HTML Minh chứng vào cuối thẻ Body của trang web chính
+            $("body").append(minhChungHtml);
+            
+            // Chèn các phân hệ còn lại vào Vùng chứa nội dung
             $("#vungChuaNoiDung").html(r1[0] + r2[0] + r3[0] + pQuyenHtml);
+            
             kiemTraTrangThaiDangNhap();
         }).fail(function() {
             $("#vungTai").hide();
