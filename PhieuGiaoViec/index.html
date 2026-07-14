@@ -331,9 +331,10 @@ function xulyPhienDn(phanho) {
           <button onclick="dongKhungXemTep()" class="btn btn-sm btn-danger fw-bold">✖ ĐÓNG</button>
         </div>
       </div>
-      <div style="flex-grow: 1; position: relative; background: #f8f9fa; border-radius: 4px; overflow: hidden; border: 1px solid #dee2e6;">
-        <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
-      </div>
+      <div style="flex-grow: 1; position: relative; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
+      <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+      <div id="mask_che_nut_drive" style="position: absolute; top: 0; right: 0; width: 160px; height: 50px; background: rgba(18,18,18,1); z-index: 10; display: none;" title="Chức năng mở thẻ mới đã bị vô hiệu hóa"></div>
+    </div>
     </div>
   </div>
   <iframe id="iframe_tai_ngam" style="display: none;"></iframe>
