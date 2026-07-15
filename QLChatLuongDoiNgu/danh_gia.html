@@ -136,10 +136,11 @@
         };
     }
 
-    function veBangDg() {
+function veBangDg() {
        const nl = $("#nhapLocN2").val(); 
        const tk = window.xoaDauVN($("#nhapTimKiemDg").val()); 
-       const vb = $("#khuBangDg tbody"); vb.empty();
+       const vb = $("#khuBangDg tbody"); 
+       vb.empty();
        
        dlToanc.sort((a, b) => {
            if (a.cktdg && !b.cktdg) return -1;
@@ -156,6 +157,10 @@
        });
 
        let sttDg = 1; 
+       let htmlRenderDg = []; // Tối ưu DOM
+       
+       let mcbND = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
+       let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
 
        dlToanc.forEach((dg, idx) => {
           let nc = String(dg[0]).trim();
@@ -163,9 +168,7 @@
           if(tk && !window.xoaDauVN(dg.join(" ")).includes(tk)) return;
           if(dg[4] === "Đã chuyển") return; 
           
-          let mcbND = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
           let mcbHS = String(dg[26] || "").trim();
-          
           let cqS = false;
           if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
               cqS = true;
@@ -173,22 +176,20 @@
               cqS = true;
           }
           
-          let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
           if ((isKhoaHT && ndHtai.vTro !== 'qtriv') || ndHtai.vTro === 'xem') {
               cqS = false;
           }
 
           let ns = cqS ? `<button class="btn btn-sm btn-success py-0" onclick="moSuaDg(${idx})"><i class="fas fa-edit"></i></button>` : '';
-          
           let dlC = dg.cktdg ? "dongCkt" : ""; 
           let tcP = dg.cktdg ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
 
           let lk = dg[31] || "";
           let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
-          // Đã nâng cấp: Đổi thẻ href thành gọi hàm moKhungXemTep()
           let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${u}')" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
          
-          vb.append(`<tr class="${dlC}">
+          htmlRenderDg.push(`
+            <tr class="${dlC}">
               <td class="text-center">${ns}</td>
               <td class="text-center fw-bold text-muted">${sttDg++}</td>
               <td class="text-center fw-bold">${dg[0]}</td>
@@ -206,8 +207,11 @@
               <td>${dg[23]||''}</td>
               <td>${dg[24]||''}</td>
               <td>${dg[25]||''}</td>
-           </tr>`);
+           </tr>
+          `);
        });
+
+       vb.html(htmlRenderDg.join(''));
     }
 
     function latGhim(idx) {
