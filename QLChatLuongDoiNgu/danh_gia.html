@@ -185,10 +185,9 @@
 
           let lk = dg[31] || "";
           let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
-          
-          // NÂNG CẤP XEM TRƯỚC: Thay thế target="_blank" thành hàm hiển thị Modal
+          // Đã nâng cấp: Đổi thẻ href thành gọi hàm moKhungXemTep()
           let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${u}')" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
-          
+         
           vb.append(`<tr class="${dlC}">
               <td class="text-center">${ns}</td>
               <td class="text-center fw-bold text-muted">${sttDg++}</td>
