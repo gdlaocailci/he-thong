@@ -142,6 +142,24 @@ function veBangDg() {
        const vb = $("#khuBangDg tbody"); 
        vb.empty();
        
+       if (!dlToanc || dlToanc.length === 0) return;
+       
+       // --- NÂNG CẤP: Thuật toán xác định ẩn toàn bộ cột Sửa ---
+       let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+       let anCotSua = false;
+       if (ndHtai) {
+           if (ndHtai.vTro === 'xem') anCotSua = true;
+           if (isKhoaHT && ndHtai.vTro !== 'qtriv') anCotSua = true;
+       }
+
+       // Can thiệp DOM để ẩn/hiện thẻ <th> của cột Sửa
+       if (anCotSua) {
+           $("#khuBangDg thead th:first-child").hide();
+       } else {
+           $("#khuBangDg thead th:first-child").show();
+       }
+       // ---------------------------------------------------------
+
        dlToanc.sort((a, b) => {
            if (a.cktdg && !b.cktdg) return -1;
            if (!a.cktdg && b.cktdg) return 1;
@@ -157,10 +175,9 @@ function veBangDg() {
        });
 
        let sttDg = 1; 
-       let htmlRenderDg = []; // Tối ưu DOM
+       let htmlRenderDg = []; 
        
        let mcbND = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
-       let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
 
        dlToanc.forEach((dg, idx) => {
           let nc = String(dg[0]).trim();
@@ -188,9 +205,13 @@ function veBangDg() {
           let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
           let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${u}')" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
          
+          // --- NÂNG CẤP: Lược bỏ thẻ <td> nếu cờ ẩn được bật ---
+          let theTdSua = anCotSua ? '' : `<td class="text-center">${ns}</td>`;
+          // -----------------------------------------------------
+
           htmlRenderDg.push(`
             <tr class="${dlC}">
-              <td class="text-center">${ns}</td>
+              ${theTdSua}
               <td class="text-center fw-bold text-muted">${sttDg++}</td>
               <td class="text-center fw-bold">${dg[0]}</td>
               <td class="text-start">
