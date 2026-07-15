@@ -150,6 +150,23 @@ function veBangNs() {
        
        if (!dlToanc || dlToanc.length === 0) return; 
 
+       // --- NÂNG CẤP: Thuật toán xác định ẩn toàn bộ cột Sửa ---
+       let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+       let anCotSua = false;
+       if (ndHtai) {
+           // Ẩn nếu là tài khoản Chỉ xem, hoặc hệ thống khóa mà không phải Quản trị viên
+           if (ndHtai.vTro === 'xem') anCotSua = true;
+           if (isKhoaHT && ndHtai.vTro !== 'qtriv') anCotSua = true;
+       }
+
+       // Can thiệp DOM để ẩn/hiện thẻ <th> của cột Sửa
+       if (anCotSua) {
+           $("#khuBangNs thead th:first-child").hide();
+       } else {
+           $("#khuBangNs thead th:first-child").show();
+       }
+       // ---------------------------------------------------------
+
        dlToanc.sort((a, b) => {
            if (a.ckt && !b.ckt) return -1;
            if (!a.ckt && b.ckt) return 1;
@@ -168,17 +185,14 @@ function veBangNs() {
        });
 
        let stt = 1; 
-       let htmlRender = []; // Tối ưu: Dùng mảng chứa HTML thay vì append liên tục
+       let htmlRender = []; 
 
-       // Tối ưu: Cache mã bảo mật để không phải tính toán lại trong vòng lặp
        let mcbND = "KHONG_XAC_DINH";
        if (ndHtai && ndHtai.mcb) {
            mcbND = String(ndHtai.mcb).trim();
        } else if (ndHtai && ndHtai.cccd) { 
            mcbND = String(ndHtai.cccd).trim();
        }
-
-       let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
 
        dlToanc.forEach((dg, v) => {
           let nc = String(dg[0] || "").trim();
@@ -202,9 +216,13 @@ function veBangNs() {
           let cdG = dg.ckt ? "dongCkt" : ""; 
           let cpT = dg.ckt ? " <i class='fas fa-pen text-danger' title='Chưa lưu'></i>" : "";
           
+          // --- NÂNG CẤP: Lược bỏ thẻ <td> nếu cờ ẩn được bật ---
+          let theTdSua = anCotSua ? '' : `<td class="text-center">${ntS}</td>`;
+          // -----------------------------------------------------
+
           htmlRender.push(`
             <tr class="${cdG}">
-               <td class="text-center">${ntS}</td>
+               ${theTdSua}
                <td class="text-center fw-bold text-muted">${stt++}</td>
                <td class="text-center fw-bold text-primary">${dg[0] || ''}</td>
                <td style="text-align: left;" class="fw-bold">${dg[1] || ''} ${cpT}</td>
@@ -224,7 +242,6 @@ function veBangNs() {
           `);
        });
 
-       // Render DOM 1 lần duy nhất
        tv.html(htmlRender.join(''));
     }
 
