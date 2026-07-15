@@ -112,6 +112,22 @@
   </div>
 </div>
 
+<div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100000;">
+  <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 8px; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
+      <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;"><i class="fas fa-file-alt"></i> XEM TRƯỚC TÀI LIỆU</span>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="btn_tai_tep_preview" onclick="taiTepDangXem()" class="btn btn-primary fw-bold" style="min-width: 105px; padding: 5px 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📥 TẢI VỀ</button>
+        <button onclick="dongKhungXemTep()" class="btn btn-danger fw-bold" style="padding: 5px 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">✖ ĐÓNG</button>
+      </div>
+    </div>
+    <div style="flex-grow: 1; position: relative; background: #f8f9fa; border-radius: 4px; overflow: hidden; border: 1px solid #dee2e6;">
+      <iframe id="iframe_xem_tep" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+      <div id="mask_che_nut_drive" style="position: absolute; top: 0; right: 0; width: 65px; height: 55px; background: transparent; z-index: 10; display: none; cursor: not-allowed;" title="Chức năng mở thẻ mới đã bị vô hiệu hóa"></div>
+    </div>
+  </div>
+</div>
+<iframe id="iframe_tai_ngam" style="display: none;"></iframe>
 <script>
     if (typeof window.xoaDauVN !== 'function') {
         window.xoaDauVN = function(str) {
@@ -169,7 +185,9 @@
 
           let lk = dg[31] || "";
           let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
-          let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="${u}" target="_blank" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
+          
+          // NÂNG CẤP XEM TRƯỚC: Thay thế target="_blank" thành hàm hiển thị Modal
+          let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${u}')" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
           
           vb.append(`<tr class="${dlC}">
               <td class="text-center">${ns}</td>
@@ -218,7 +236,7 @@
        $("#hopThoaiDg").modal('show');
     }
 
-function goMinhChungDg(btn) {
+    function goMinhChungDg(btn) {
         try {
             let lHtai = $("#mcLinkDg").val();
             if (typeof window.NS_OpenUploadModal === 'function') {
@@ -234,6 +252,7 @@ function goMinhChungDg(btn) {
 
     function veGhimModal(lk) {
         let d = lk.split(',').map(l => l.trim()).filter(l => l !== "");
+        // KHÔNG ÁP DỤNG XEM TRƯỚC: Cửa sổ nhập liệu vẫn giữ thuộc tính target="_blank" để mở tab mới
         let h = d.map((u, i) => `<a href="${u}" target="_blank" class="text-danger ms-1" title="Link ${i+1}"><i class="fas fa-paperclip"></i></a>`).join('');
         $("#hthiGhimModal").html(h);
     }
@@ -264,5 +283,73 @@ function goMinhChungDg(btn) {
        goiMyChuHien('luuNhieuDgia', {mangDl: dc, vTro: ndHtai.vTro, mcb: ndHtai.mcb})
          .then(g => { hienTbao(g.tBao, g.tCong ? 'tc' : 'loi'); if(g.tCong) taiDlBdau(); else $("#vungTai").hide(); })
          .catch(le => { hienTbao(le, 'loi'); $("#vungTai").hide(); });
+    }
+
+    /* ========================================================================== */
+    /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG DÀNH RIÊNG CHO BẢNG ĐÁNH GIÁ        */
+    /* ========================================================================== */
+    let urlTepXemTruocHienTai = ""; 
+
+    function moKhungXemTep(duong_dan) {
+      if (!duong_dan) return;
+      urlTepXemTruocHienTai = String(duong_dan).trim(); 
+      let link_nhung = urlTepXemTruocHienTai;
+      
+      let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+      let mat_na = document.getElementById('mask_che_nut_drive');
+
+      if (khop_id) {
+          if (link_nhung.includes("drive.google.com")) {
+              link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+              if (mat_na) mat_na.style.display = 'block';
+          } else if (link_nhung.includes("docs.google.com/document")) {
+              link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
+              if (mat_na) mat_na.style.display = 'none';
+          } else if (link_nhung.includes("docs.google.com/spreadsheets")) {
+              link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
+              if (mat_na) mat_na.style.display = 'none';
+          }
+      }
+
+      document.getElementById('iframe_xem_tep').src = link_nhung;
+      document.getElementById('modal_xem_tep').style.display = 'flex';
+    }
+
+    function dongKhungXemTep() {
+      document.getElementById('modal_xem_tep').style.display = 'none';
+      document.getElementById('iframe_xem_tep').src = ''; 
+      urlTepXemTruocHienTai = ""; 
+    }
+
+    function taiTepDangXem() {
+      if (!urlTepXemTruocHienTai) return;
+      
+      let nutTai = document.getElementById('btn_tai_tep_preview');
+      let chuGoc = nutTai ? nutTai.innerHTML : "";
+      if (nutTai) {
+          nutTai.innerHTML = "⏳ ĐANG KẾT NỐI...";
+          nutTai.disabled = true;
+          nutTai.classList.replace('btn-primary', 'btn-warning'); 
+      }
+
+      let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+      let link_tai_truc_tiep = urlTepXemTruocHienTai;
+
+      if (khop_id) {
+          if (urlTepXemTruocHienTai.includes("drive.google.com")) link_tai_truc_tiep = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
+          else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) link_tai_truc_tiep = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=docx";
+          else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) link_tai_truc_tiep = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=xlsx";
+      }
+
+      let khung_tai_ngam = document.getElementById('iframe_tai_ngam');
+      if (khung_tai_ngam) khung_tai_ngam.src = link_tai_truc_tiep;
+
+      if (nutTai) {
+          setTimeout(() => {
+              nutTai.innerHTML = chuGoc;
+              nutTai.disabled = false;
+              nutTai.classList.replace('btn-warning', 'btn-primary'); 
+          }, 2500); 
+      }
     }
 </script>
