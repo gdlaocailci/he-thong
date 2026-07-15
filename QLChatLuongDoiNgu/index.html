@@ -451,32 +451,53 @@ $(document).ready(() => {
         }).catch(lc => { hienTbao(lc, 'loi'); $("#vungTai").hide(); });
     }
     
-    function veUd(tdl) {
-      if (!tdl) { hienTbao("Không có dữ liệu!", 'loi'); $("#vungTai").hide(); return; }
-      
-      if (tdl.dangKhoa !== undefined) {
-         window.dangKhoaHeThong = (tdl.dangKhoa === true || String(tdl.dangKhoa).toLowerCase() === "true");
-      }
+// --- BẮT ĐẦU ĐOẠN THAY THẾ: HÀM veUd CẬP NHẬT ĐỒNG BỘ QUYỀN NÚT CHUYỂN NĂM HỌC ---
+function veUd(tdl) {
+  if (!tdl) { 
+    hienTbao("Không có dữ liệu!", 'loi'); 
+    $("#vungTai").hide(); 
+    return; 
+  }
+  
+  if (tdl.dangKhoa !== undefined) {
+     window.dangKhoaHeThong = (tdl.dangKhoa === true || String(tdl.dangKhoa).toLowerCase() === "true");
+  }
 
-      if (ndHtai.vTro === 'xem') {
+  // logic phân quyền kiểm soát hiển thị các nút thao tác nghiệp vụ
+  if (ndHtai.vTro === 'xem') {
+      $("#nutMoThemNs").hide();
+      $("#nutChuyenNam").hide(); // Ẩn nút Chuyển năm học với quyền Chỉ xem
+      $("#nutCnNhieuNs").hide();
+      $("#nutCnNhieuDg").hide();
+  } else {
+      if (window.dangKhoaHeThong && ndHtai.vTro !== 'qtriv') {
           $("#nutMoThemNs").hide();
+          $("#nutChuyenNam").hide(); // Ẩn nút Chuyển năm học khi hệ thống khóa (ngoại trừ Quản trị cao cấp)
           $("#nutCnNhieuNs").hide();
           $("#nutCnNhieuDg").hide();
       } else {
-          if (window.dangKhoaHeThong && ndHtai.vTro !== 'qtriv') {
-              $("#nutMoThemNs").hide();
-              $("#nutCnNhieuNs").hide();
-              $("#nutCnNhieuDg").hide();
+          // Chỉ hiển thị nút Thêm mới và Chuyển năm học cho quyền Quản trị (qtriv) hoặc Cập nhật chung (admin_xx)
+          if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
+              $("#nutMoThemNs").show();
+              $("#nutChuyenNam").show(); 
           } else {
-              (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') ? $("#nutMoThemNs").show() : $("#nutMoThemNs").hide();
-              $("#nutCnNhieuNs").show();
-              $("#nutCnNhieuDg").show();
+              $("#nutMoThemNs").hide();
+              $("#nutChuyenNam").hide();
           }
+          $("#nutCnNhieuNs").show();
+          $("#nutCnNhieuDg").show();
       }
+  }
 
-      chinhToanc = tdl.chinh || []; dlToanc = tdl.nsu || [];
-      cldChon(); veBangNs(); veBangDg(); veTke(); $("#vungTai").hide();
-    }
+  chinhToanc = tdl.chinh || []; 
+  dlToanc = tdl.nsu || [];
+  cldChon(); 
+  veBangNs(); 
+  veBangDg(); 
+  veTke(); 
+  $("#vungTai").hide();
+}
+// --- KẾT THÚC ĐOẠN THAY THẾ ---
 
     function cldChon() {
        const m1 = {'.g-namhoc':0, '.g-gioitinh':1, '.g-trangthai':2, '.g-vitri':3, '.g-hang':4, '.g-trdo':5, '.g-llct':6};
