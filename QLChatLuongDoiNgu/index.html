@@ -57,7 +57,28 @@
     .bangTchinh { width: max-content; min-width: 100%; }
     
     .bangTchinh th { white-space: nowrap; vertical-align: middle; font-size: 0.85rem; padding: 4px 6px; background-color: var(--mauChinh); color: white; text-align: center; }
-    
+    /* --- BẮT ĐẦU ĐOẠN THÊM MỚI: HIỆU ỨNG REACT BITS --- */
+    .btn-shiny {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: linear-gradient(110deg, #6f42c1 30%, #8555db 50%, #6f42c1 70%);
+      background-size: 200% 100%;
+      color: white;
+      border: none;
+      font-weight: bold;
+      animation: shinyEffect 3s infinite linear;
+    }
+    .btn-shiny:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
+      color: white;
+    }
+    @keyframes shinyEffect {
+      0% { background-position: -100% 0; }
+      100% { background-position: 100% 0; }
+    }
+/* --- KẾT THÚC ĐOẠN THÊM MỚI --- */
     .bangTchinh td { 
        white-space: normal; 
        word-wrap: break-word; 
