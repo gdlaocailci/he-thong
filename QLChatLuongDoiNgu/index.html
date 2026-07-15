@@ -173,15 +173,15 @@
 
   <div id="udChinh" style="display:none;">
     <ul class="nav nav-tabs px-3 mt-1" id="bangChonGoc" role="tablist">
-      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#muc1" onclick="datTde('THÔNG TIN NHÂN SỰ')">Thông tin nhân sự</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc2" onclick="datTde('KẾT QUẢ ĐÁNH GIÁ')">Kết quả đánh giá</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc3" onclick="datTde('THỐNG KÊ - TỔNG HỢP')">Tổng hợp</button></li>
-      <li class="nav-item" id="tabPhanQuyen" style="display:none;"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc4" onclick="datTde('PHÂN QUYỀN'); taiDsPhanQuyen();">Phân quyền</button></li>
-      
-      <li class="nav-item ms-auto d-flex align-items-center mb-1">
-         <button onclick="dxuat()" class="btn btn-outline-danger fw-bold shadow-sm" style="font-size: 0.85rem; padding: 4px 15px;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
-      </li>
-    </ul>
+  <li class="nav-item" id="tabThongTin"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#muc1" onclick="datTde('THÔNG TIN NHÂN SỰ')">Thông tin nhân sự</button></li>
+  <li class="nav-item" id="tabDanhGia"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc2" onclick="datTde('KẾT QUẢ ĐÁNH GIÁ')">Kết quả đánh giá</button></li>
+  <li class="nav-item" id="tabTongHop"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc3" onclick="datTde('THỐNG KÊ - TỔNG HỢP')">Tổng hợp</button></li>
+  <li class="nav-item" id="tabPhanQuyen" style="display:none;"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc4" onclick="datTde('PHÂN QUYỀN'); taiDsPhanQuyen();">Phân quyền</button></li>
+  
+  <li class="nav-item ms-auto d-flex align-items-center mb-1">
+     <button onclick="dxuat()" class="btn btn-outline-danger fw-bold shadow-sm" style="font-size: 0.85rem; padding: 4px 15px;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+  </li>
+</ul>
     
     <div class="thongTinDau d-flex justify-content-between align-items-center">
       <div class="tenTruong" id="header_ten_truong">ĐANG TẢI...</div>
@@ -332,32 +332,32 @@ $(document).ready(() => {
         });
     });
 
-    function kiemTraTrangThaiDangNhap() {
-        $("#vungTai").hide(); 
-        let luuPt = sessionStorage.getItem("ngdungNs");
-        if(luuPt) {
-            ndHtai = JSON.parse(luuPt);
-            $("#manhDn").hide(); $("#udChinh").show();
-            $("#hthiNd").text(ndHtai.tenn); 
-            
-            // XÉT NHÃN QUYỀN
-            let tenVt = 'Chỉ xem';
-            if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
-            else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
-            else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
-            
-            $("#nhanVt").text(tenVt);
-            
-            // Tab Phân quyền CHỈ cho qtriv (xxx)
-            ndHtai.vTro === 'qtriv' ? $("#tabPhanQuyen").show() : $("#tabPhanQuyen").hide();
-            
-            $("#bangChonGoc button[data-bs-target='#muc1']").click();
+// --- BẮT ĐẦU ĐOẠN THAY THẾ: HÀM kiemTraTrangThaiDangNhap ---
+function kiemTraTrangThaiDangNhap() {
+    $("#vungTai").hide(); 
+    let luuPt = sessionStorage.getItem("ngdungNs");
+    if(luuPt) {
+        ndHtai = JSON.parse(luuPt);
+        $("#manhDn").hide(); $("#udChinh").show();
+        $("#hthiNd").text(ndHtai.tenn); 
+        
+        // XÉT NHÃN QUYỀN
+        let tenVt = 'Chỉ xem';
+        if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
+        else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
+        else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
+        
+        $("#nhanVt").text(tenVt);
+        
+        // Áp dụng cấu hình phân quyền hiển thị tabs mới
+        apDungPhanQuyenTabs();
 
-            taiDlBdau();
-        } else {
-            $("#manhDn").css("display", "flex"); 
-        }
+        taiDlBdau();
+    } else {
+        $("#manhDn").css("display", "flex"); 
     }
+}
+// --- KẾT THÚC ĐOẠN THAY THẾ ---
 
     function hienTbao(chu, kieu = 'tc') {
        const ht = document.getElementById('tbNhanh');
@@ -395,35 +395,37 @@ $(document).ready(() => {
         .catch(khiDnLoi);
     }
     
-    function khiDnTc(pq) {
-      if(!pq.tCong) { 
-          $("#vungTai").hide(); 
-          $("#loiDn").text(pq.tBao); 
-          hienTbao(pq.tBao, 'loi'); 
-          return; 
-      }
-      
-      ndHtai = pq.dLieu;
-      sessionStorage.setItem("ngdungNs", JSON.stringify(ndHtai));
-      $("#hthiNd").text(ndHtai.tenn); 
-      
-      let tenVt = 'Chỉ xem';
-      if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
-      else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
-      else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
-      
-      $("#nhanVt").text(tenVt);
-      
-      ndHtai.vTro === 'qtriv' ? $("#tabPhanQuyen").show() : $("#tabPhanQuyen").hide();
-      
-      $("#bangChonGoc button[data-bs-target='#muc1']").click();
+// --- BẮT ĐẦU ĐOẠN THAY THẾ: HÀM khiDnTc ---
+function khiDnTc(pq) {
+  if(!pq.tCong) { 
+      $("#vungTai").hide(); 
+      $("#loiDn").text(pq.tBao); 
+      hienTbao(pq.tBao, 'loi'); 
+      return; 
+  }
+  
+  ndHtai = pq.dLieu;
+  sessionStorage.setItem("ngdungNs", JSON.stringify(ndHtai));
+  $("#hthiNd").text(ndHtai.tenn); 
+  
+  let tenVt = 'Chỉ xem';
+  if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
+  else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
+  else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
+  
+  $("#nhanVt").text(tenVt);
+  
+  // Áp dụng cấu hình phân quyền hiển thị tabs mới
+  apDungPhanQuyenTabs();
 
-      $("#manhDn").hide(); $("#udChinh").show(); taiDlBdau();
-    }
+  $("#manhDn").hide(); $("#udChinh").show(); taiDlBdau();
+}
+// --- KẾT THÚC ĐOẠN THAY THẾ ---
     
     function khiDnLoi(loi) { hienTbao("Lỗi: " + loi, 'loi'); $("#vungTai").hide(); }
     
-   function dxuat() {
+// --- BẮT ĐẦU ĐOẠN THAY THẾ: HÀM dxuat ---
+function dxuat() {
     sessionStorage.removeItem("ngdungNs");
     ndHtai = null;
     dlToanc = [];
@@ -434,12 +436,19 @@ $(document).ready(() => {
     
     $("#khuBangNs tbody").empty();
     $("#khuBangDg tbody").empty();
+    
+    // Khôi phục hiển thị trạng thái mặc định của các tabs khi đăng xuất
+    $("#tabThongTin").show();
+    $("#tabDanhGia").show();
+    $("#tabTongHop").show();
     $("#tabPhanQuyen").hide();
+    
     $("#bangChonGoc button[data-bs-target='#muc1']").click();
     $("#loiDn").text("");
     $("#udChinh").hide();
     $("#manhDn").css("display", "flex").fadeIn();
 }
+// --- KẾT THÚC ĐOẠN THAY THẾ ---
     
     function datTde(t) { $("#tdeTrang").text(t); }
 
@@ -496,6 +505,30 @@ function veUd(tdl) {
   veBangDg(); 
   veTke(); 
   $("#vungTai").hide();
+}
+    // --- BẮT ĐẦU KHỐI: HÀM HỖ TRỢ PHÂN QUYỀN HIỂN THỊ TABS ---
+function apDungPhanQuyenTabs() {
+  if (!ndHtai) return;
+  
+  if (ndHtai.vTro === 'qtriv') {
+      // Đối với tài khoản Quản trị cao cấp (xxx), ẩn toàn diện các tab khác, chỉ hiển thị duy nhất tab Phân quyền
+      $("#tabThongTin").hide();
+      $("#tabDanhGia").hide();
+      $("#tabTongHop").hide();
+      $("#tabPhanQuyen").show();
+      
+      // Tự động kích hoạt tab Phân quyền và tải danh sách tài khoản liên quan
+      $("#bangChonGoc button[data-bs-target='#muc4']").click();
+  } else {
+      // Đối với các tài khoản còn lại, hiển thị đầy đủ các phân hệ nghiệp vụ, ẩn tab Phân quyền
+      $("#tabThongTin").show();
+      $("#tabDanhGia").show();
+      $("#tabTongHop").show();
+      $("#tabPhanQuyen").hide();
+      
+      // Tự động kích hoạt tab Thông tin nhân sự làm mặc định
+      $("#bangChonGoc button[data-bs-target='#muc1']").click();
+  }
 }
 // --- KẾT THÚC ĐOẠN THAY THẾ ---
 
