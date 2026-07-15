@@ -9,6 +9,7 @@
     </div>
     <div class="col-md-6 text-end">
         <button id="nutMoThemNs" class="btn btn-success me-1" onclick="moThem()"><i class="fas fa-plus"></i> Thêm mới</button>
+        <button id="nutChuyenNam" class="btn btn-shiny me-1" onclick="moChuyenNamDongLoat()"><i class="fas fa-random"></i> Chuyển năm học</button>
         <button id="nutCnNhieuNs" class="btn btn-primary" onclick="cnNhieuNs()"><i class="fas fa-save"></i> Cập nhật</button>
     </div>
   </div>
@@ -436,4 +437,148 @@ function veBangNs() {
          .then(h => { hienTbao(h.tBao, h.tCong ? 'tc' : 'loi'); if(h.tCong) taiDlBdau(); else $("#vungTai").hide(); })
          .catch(lo => { hienTbao("Lỗi: " + lo, 'loi'); $("#vungTai").hide(); });
     }
+
+  // BẮT ĐẦU ĐOẠN THÊM MỚI: LOGIC CHUYỂN NĂM HỌC ĐỒNG LOẠT
+let dsNsuChuyenNam = [];
+
+function moChuyenNamDongLoat() {
+    if (ndHtai.vTro !== 'qtriv' && ndHtai.vTro !== 'admin_xx') {
+        return hienTbao("Chỉ Quản trị viên mới có quyền sử dụng chức năng này!", 'loi');
+    }
+    
+    // Nạp danh sách năm học nguồn
+    let cacNamHoc = layTuyc(0);
+    let htmlNam = '<option value="">-- Chọn năm học nguồn --</option>' + cacNamHoc.map(n => `<option value="${n}">${n}</option>`).join('');
+    $("#selNamNguon").html(htmlNam);
+    
+    $("#inpNamDich").val("");
+    $("#thanBangChuyenNam").empty();
+    $("#chkChonTatCa").prop('checked', false);
+    
+    $("#hopThoaiChuyenNamDL").modal('show');
+}
+
+function taiDanhSachChuyenNam() {
+    let namChon = $("#selNamNguon").val();
+    let tv = $("#thanBangChuyenNam");
+    tv.empty();
+    $("#chkChonTatCa").prop('checked', false);
+    
+    if(!namChon) return;
+    
+    // Lọc danh sách nhân sự của năm được chọn
+    dsNsuChuyenNam = dlToanc.filter(r => String(r[0]).trim() === String(namChon).trim());
+    
+    let htmlRow = dsNsuChuyenNam.map((dg, i) => `
+        <tr>
+            <td><input type="checkbox" class="chk-chuyen-nam" data-index="${i}"></td>
+            <td>${i + 1}</td>
+            <td class="text-start fw-bold text-primary">${dg[1] || ''}</td>
+            <td>${dg[2] || ''}</td>
+            <td>${dg[11] || ''}</td>
+        </tr>
+    `).join('');
+    
+    tv.html(htmlRow);
+}
+
+function chonTatCaChuyenNam(el) {
+    let isChecked = $(el).prop('checked');
+    $(".chk-chuyen-nam").prop('checked', isChecked);
+}
+
+function thucThiChuyenNamDongLoat() {
+    let namDich = String($("#inpNamDich").val()).trim();
+    if (namDich === "") {
+        $("#inpNamDich").focus();
+        return hienTbao("Vui lòng nhập định dạng năm học mới!", 'loi');
+    }
+    
+    let mcbNguoiDung = ndHtai.mcb ? ndHtai.mcb : (ndHtai.cccd ? ndHtai.cccd : "");
+    let mangDuLieuMoi = [];
+    
+    // Thu thập các dòng được tick chọn
+    $(".chk-chuyen-nam:checked").each(function() {
+        let i = $(this).data("index");
+        let dongCu = [...dsNsuChuyenNam[i]]; // Clone dòng hiện tại
+        
+        // 1. Cập nhật năm học mới
+        dongCu[0] = namDich; 
+        // 2. Các thông tin cơ bản giữ nguyên (từ 1 đến 16)
+        // 3. Xóa trắng dữ liệu đánh giá/minh chứng (từ cột 17 đến 33)
+        for (let j = 17; j <= 33; j++) {
+            dongCu[j] = "";
+        }
+        // Đặt cờ để nhận diện lưu mới (do khác năm học, backend sẽ không tìm thấy -> thêm dòng mới)
+        dongCu[34] = namDich; // Tránh báo lỗi sai định danh tìm kiếm ở backend
+        
+        mangDuLieuMoi.push(dongCu);
+    });
+    
+    if (mangDuLieuMoi.length === 0) {
+        return hienTbao("Chưa chọn nhân sự nào để chuyển!", 'loi');
+    }
+    
+    $("#vungTai").show();
+    $("#hopThoaiChuyenNamDL").modal('hide');
+    
+    goiMyChuHien('luuNhieuNsu', {mangDl: mangDuLieuMoi, vTro: ndHtai.vTro, mcb: mcbNguoiDung})
+         .then(h => { 
+             hienTbao(h.tBao, h.tCong ? 'tc' : 'loi'); 
+             if(h.tCong) {
+                 hienTbao(`Đã luân chuyển thành công ${mangDuLieuMoi.length} nhân sự sang năm ${namDich}!`, 'tc');
+                 taiDlBdau(); 
+             } else {
+                 $("#vungTai").hide(); 
+             }
+         })
+         .catch(lo => { hienTbao("Lỗi mạng: " + lo, 'loi'); $("#vungTai").hide(); });
+}
+// KẾT THÚC ĐOẠN THÊM MỚI
 </script>
+
+<div class="modal fade" id="hopThoaiChuyenNamDL" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h5 class="modal-title fw-bold" style="font-size: 1rem;"><i class="fas fa-users"></i> ĐIỀU CHUYỂN NHÂN SỰ ĐỒNG LOẠT</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="fw-bold">Năm học hiện tại (Nguồn):</label>
+            <select id="selNamNguon" class="form-select" onchange="taiDanhSachChuyenNam()"></select>
+          </div>
+          <div class="col-md-6">
+            <label class="fw-bold text-danger">Năm học mới (Đích):</label>
+            <input type="text" id="inpNamDich" class="form-control border-danger" placeholder="Ví dụ: 2026-2027">
+          </div>
+        </div>
+        
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-bordered table-hover table-sm text-center" id="bangChuyenNam">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th style="width: 50px;"><input type="checkbox" id="chkChonTatCa" onclick="chonTatCaChuyenNam(this)"></th>
+                <th style="width: 50px;">STT</th>
+                <th>Họ và tên</th>
+                <th>Ngày sinh</th>
+                <th>Vị trí VL</th>
+              </tr>
+            </thead>
+            <tbody id="thanBangChuyenNam">
+              </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer py-2 d-flex justify-content-between">
+        <span class="text-muted small" style="font-style: italic;">*Hệ thống sẽ tự động làm sạch kết quả đánh giá ở năm học mới.</span>
+        <div>
+           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+           <button type="button" class="btn btn-primary fw-bold" onclick="thucThiChuyenNamDongLoat()"><i class="fas fa-check-double"></i> Thực thi chuyển đổi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
