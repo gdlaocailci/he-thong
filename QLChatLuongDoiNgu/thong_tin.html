@@ -487,6 +487,7 @@ function chonTatCaChuyenNam(el) {
     $(".chk-chuyen-nam").prop('checked', isChecked);
 }
 
+// --- BẮT ĐẦU KHỐI: NÂNG CẤP HÀM CHUYỂN NĂM HỌC ĐỒNG LOẠT (BẢO TOÀN MÃ CÁ BIỆT) ---
 function thucThiChuyenNamDongLoat() {
     let namDich = String($("#inpNamDich").val()).trim();
     if (namDich === "") {
@@ -497,44 +498,51 @@ function thucThiChuyenNamDongLoat() {
     let mcbNguoiDung = ndHtai.mcb ? ndHtai.mcb : (ndHtai.cccd ? ndHtai.cccd : "");
     let mangDuLieuMoi = [];
     
-    // Thu thập các dòng được tick chọn
+    // Thu thập các dòng được tick chọn từ danh sách nguồn
     $(".chk-chuyen-nam:checked").each(function() {
         let i = $(this).data("index");
-        let dongCu = [...dsNsuChuyenNam[i]]; // Clone dòng hiện tại
+        let dongCu = [...dsNsuChuyenNam[i]]; // Sao chép sâu dòng hiện tại
         
-        // 1. Cập nhật năm học mới
+        // 1. Cập nhật định danh năm học mới
         dongCu[0] = namDich; 
-        // 2. Các thông tin cơ bản giữ nguyên (từ 1 đến 16)
-        // 3. Xóa trắng dữ liệu đánh giá/minh chứng (từ cột 17 đến 33)
-        for (let j = 17; j <= 33; j++) {
+        
+        // 2. Bảo toàn thông tin cơ bản (chỉ số từ 1 đến 16) và Mã bảo mật cá nhân (chỉ số 26)
+        // Chỉ tiến hành xóa trắng dữ liệu đánh giá (chỉ số từ 17 đến 25) và liên kết minh chứng (chỉ số 31)
+        for (let j = 17; j <= 25; j++) {
             dongCu[j] = "";
         }
-        // Đặt cờ để nhận diện lưu mới (do khác năm học, backend sẽ không tìm thấy -> thêm dòng mới)
-        dongCu[34] = namDich; // Tránh báo lỗi sai định danh tìm kiếm ở backend
+        dongCu[31] = ""; // Làm sạch liên kết minh chứng cũ
+        
+        // 3. Đồng bộ lại cấu trúc định danh tìm kiếm ở Backend nhằm tránh xung đột dữ liệu
+        dongCu[34] = namDich; 
         
         mangDuLieuMoi.push(dongCu);
     });
     
     if (mangDuLieuMoi.length === 0) {
-        return hienTbao("Chưa chọn nhân sự nào để chuyển!", 'loi');
+        return hienTbao("Chưa chọn nhân sự nào để thực hiện luân chuyển!", 'loi');
     }
     
     $("#vungTai").show();
     $("#hopThoaiChuyenNamDL").modal('hide');
     
+    // Đẩy dữ liệu chuẩn hóa lên máy chủ xử lý
     goiMyChuHien('luuNhieuNsu', {mangDl: mangDuLieuMoi, vTro: ndHtai.vTro, mcb: mcbNguoiDung})
          .then(h => { 
              hienTbao(h.tBao, h.tCong ? 'tc' : 'loi'); 
              if(h.tCong) {
-                 hienTbao(`Đã luân chuyển thành công ${mangDuLieuMoi.length} nhân sự sang năm ${namDich}!`, 'tc');
-                 taiDlBdau(); 
+                 hienTbao(`Đã luân chuyển thành công ${mangDuLieuMoi.length} nhân sự sang năm học ${namDich}!`, 'tc');
+                 taiDlBdau(); // Tải lại toàn bộ dữ liệu hệ thống
              } else {
                  $("#vungTai").hide(); 
              }
          })
-         .catch(lo => { hienTbao("Lỗi mạng: " + lo, 'loi'); $("#vungTai").hide(); });
+         .catch(lo => { 
+             hienTbao("Lỗi kết nối máy chủ: " + lo, 'loi'); 
+             $("#vungTai").hide(); 
+         });
 }
-// KẾT THÚC ĐOẠN THÊM MỚI
+// --- KẾT THÚC KHỐI NÂNG CẤP ---
 </script>
 
 <div class="modal fade" id="hopThoaiChuyenNamDL" data-bs-backdrop="static" tabindex="-1">
