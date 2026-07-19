@@ -954,86 +954,87 @@ function xacThucPhienDangNhap(sysSession) {
         } catch(e) { return false; }
     }
 
-    function layCauHinhIcon(type) {
-        let iconContent = '<span class="material-icons">apps</span>'; 
-        let bgClass = 'bg-default'; 
+function layCauHinhIcon(type) {
+    let iconContent = '<span class="material-icons">apps</span>'; 
+    let bgClass = 'bg-default'; 
 
-        switch(type) {
-            case 'cong_ly': iconContent = '<span class="material-icons">balance</span>'; bgClass = 'bg-6'; break;
-            case 'thanh_tra': iconContent = '<span class="material-icons">manage_search</span>'; bgClass = 'bg-9'; break;
-            case 'cong_bang': iconContent = '<span class="material-icons">verified_user</span>'; bgClass = 'bg-4'; break;
-            case 'hocsinh': iconContent = '<span class="material-icons">school</span>'; bgClass = 'bg-4'; break;
-            case 'nhansu': iconContent = '<span class="material-icons">groups</span>'; bgClass = 'bg-5'; break;
-            case 'vanban': iconContent = '<span class="material-icons">description</span>'; bgClass = 'bg-2'; break;
-            case 'hoso': iconContent = '<span class="material-icons">folder_shared</span>'; bgClass = 'bg-2'; break;
-            case 'kiemtra': iconContent = '<span class="material-icons">fact_check</span>'; bgClass = 'bg-3'; break;
-            case 'danhgia': iconContent = '<span class="material-icons">assignment</span>'; bgClass = 'bg-3'; break;
-            case 'baocao': iconContent = '<span class="material-icons">bar_chart</span>'; bgClass = 'bg-10'; break;
-            case 'thi': iconContent = '<span class="material-icons">quiz</span>'; bgClass = 'bg-10'; break;
-            case 'khenthuong': iconContent = '<span class="material-icons">emoji_events</span>'; bgClass = 'bg-8'; break;
-            case 'kyluat': iconContent = '<span class="material-icons">gavel</span>'; bgClass = 'bg-6'; break;
-            case 'thoigian': iconContent = '<span class="material-icons">calendar_month</span>'; bgClass = 'bg-1'; break;
-            case 'taichinh': iconContent = '<span class="material-icons">account_balance_wallet</span>'; bgClass = 'bg-8'; break;
-            case 'csvc': iconContent = '<span class="material-icons">inventory</span>'; bgClass = 'bg-6'; break;
-            case 'thuvien': iconContent = '<span class="material-icons">local_library</span>'; bgClass = 'bg-4'; break;
-            case 'doandoi': iconContent = '<span class="material-icons">flag</span>'; bgClass = 'bg-1'; break;
-            case 'ghi_chep': iconContent = '<span class="material-icons">menu_book</span>'; bgClass = 'bg-6'; break;
-            case 'caidat': iconContent = '<span class="material-icons">settings</span>'; bgClass = 'bg-9'; break;
-            case 'congnghe': iconContent = '<span class="material-icons">memory</span>'; bgClass = 'bg-9'; break;
-            case 'cntt': iconContent = '<span class="material-icons">computer</span>'; bgClass = 'bg-9'; break;
-            case 'vimach': iconContent = '<span class="material-icons">developer_board</span>'; bgClass = 'bg-9'; break;
-            case 'hieuung': iconContent = '<span class="material-icons">auto_fix_high</span>'; bgClass = 'bg-5'; break;
-            case 'trangchu': iconContent = '<span class="material-icons">home</span>'; bgClass = 'bg-1'; break;
-            case 'suaicon': iconContent = '<span class="material-icons">build</span>'; bgClass = 'bg-2'; break;
-            case 'sualink': iconContent = '<span class="material-icons">link</span>'; bgClass = 'bg-4'; break;
-            case 'mang': iconContent = '<span class="material-icons">wifi</span>'; bgClass = 'bg-1'; break;
-            case 'dienthoai': iconContent = '<span class="material-icons">smartphone</span>'; bgClass = 'bg-7'; break;
-            case 'trituemay': iconContent = '<span class="material-icons">smart_toy</span>'; bgClass = 'bg-9'; break;
-            case 'phantich': iconContent = '<span class="material-icons">query_stats</span>'; bgClass = 'bg-10'; break;
-            case 'yte': iconContent = '<span class="material-icons">health_and_safety</span>'; bgClass = 'bg-7'; break;
-            case 'thethao': iconContent = '<span class="material-icons">sports_soccer</span>'; bgClass = 'bg-2'; break;
-            case 'vanhoa': iconContent = '<span class="material-icons">theater_comedy</span>'; bgClass = 'bg-5'; break;
-            case 'amnhac': iconContent = '<span class="material-icons">music_note</span>'; bgClass = 'bg-5'; break;
-            case 'nhiepanh': iconContent = '<span class="material-icons">photo_camera</span>'; bgClass = 'bg-2'; break;
-            case 'truyenthong': iconContent = '<span class="material-icons">campaign</span>'; bgClass = 'bg-2'; break;
-            case 'baove': iconContent = '<span class="material-icons">security</span>'; bgClass = 'bg-9'; break;
-            case 'vesinh': iconContent = '<span class="material-icons">cleaning_services</span>'; bgClass = 'bg-3'; break;
-            case 'xeco': iconContent = '<span class="material-icons">directions_car</span>'; bgClass = 'bg-6'; break;
-            case 'doingoai': iconContent = '<span class="material-icons">public</span>'; bgClass = 'bg-1'; break;
-            case 'du_an': iconContent = '<span class="material-icons">rocket_launch</span>'; bgClass = 'bg-8'; break;
-            case 'khoa_hoc': iconContent = '<span class="material-icons">science</span>'; bgClass = 'bg-10'; break;
-            case 'nongnghiep': iconContent = '<span class="material-icons">agriculture</span>'; bgClass = 'bg-3'; break;
-            case 'congnghiep': iconContent = '<span class="material-icons">factory</span>'; bgClass = 'bg-9'; break;
-            case 'thuongmai': iconContent = '<span class="material-icons">store</span>'; bgClass = 'bg-2'; break;
-            case 'dulich': iconContent = '<span class="material-icons">flight_takeoff</span>'; bgClass = 'bg-1'; break;
-            case 'xaydung': iconContent = '<span class="material-icons">architecture</span>'; bgClass = 'bg-6'; break;
-            case 'kientruc': iconContent = '<span class="material-icons">home_work</span>'; bgClass = 'bg-6'; break;
-            case 'giaothong': iconContent = '<span class="material-icons">traffic</span>'; bgClass = 'bg-8'; break;
-            case 'logictics': iconContent = '<span class="material-icons">local_shipping</span>'; bgClass = 'bg-6'; break;
-            case 'baohiem': iconContent = '<span class="material-icons">shield</span>'; bgClass = 'bg-10'; break;
-            case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
-            case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
-            
-            case 'nam': 
-                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
-                bgClass = 'bg-avatar'; 
-                break;
-            case 'nu': 
-                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
-                bgClass = 'bg-avatar'; 
-                break;
+    switch(type) {
+        case 'cong_ly': iconContent = '<span class="material-icons">balance</span>'; bgClass = 'bg-6'; break;
+        case 'thanh_tra': iconContent = '<span class="material-icons">manage_search</span>'; bgClass = 'bg-9'; break;
+        case 'cong_bang': iconContent = '<span class="material-icons">verified_user</span>'; bgClass = 'bg-4'; break;
+        case 'hocsinh': iconContent = '<span class="material-icons">school</span>'; bgClass = 'bg-4'; break;
+        case 'nhansu': iconContent = '<span class="material-icons">groups</span>'; bgClass = 'bg-5'; break;
+        case 'vanban': iconContent = '<span class="material-icons">description</span>'; bgClass = 'bg-2'; break;
+        case 'hoso': iconContent = '<span class="material-icons">folder_shared</span>'; bgClass = 'bg-2'; break;
+        case 'kiemtra': iconContent = '<span class="material-icons">fact_check</span>'; bgClass = 'bg-3'; break;
+        case 'danhgia': iconContent = '<span class="material-icons">assignment</span>'; bgClass = 'bg-3'; break;
+        case 'baocao': iconContent = '<span class="material-icons">bar_chart</span>'; bgClass = 'bg-10'; break;
+        case 'thi': iconContent = '<span class="material-icons">quiz</span>'; bgClass = 'bg-10'; break;
+        case 'khenthuong': iconContent = '<span class="material-icons">emoji_events</span>'; bgClass = 'bg-8'; break;
+        case 'kyluat': iconContent = '<span class="material-icons">gavel</span>'; bgClass = 'bg-6'; break;
+        case 'thoigian': iconContent = '<span class="material-icons">calendar_month</span>'; bgClass = 'bg-1'; break;
+        case 'taichinh': iconContent = '<span class="material-icons">account_balance_wallet</span>'; bgClass = 'bg-8'; break;
+        case 'csvc': iconContent = '<span class="material-icons">inventory</span>'; bgClass = 'bg-6'; break;
+        case 'thuvien': iconContent = '<span class="material-icons">local_library</span>'; bgClass = 'bg-4'; break;
+        case 'doandoi': iconContent = '<span class="material-icons">flag</span>'; bgClass = 'bg-1'; break;
+        case 'ghi_chep': iconContent = '<span class="material-icons">menu_book</span>'; bgClass = 'bg-6'; break;
+        case 'caidat': iconContent = '<span class="material-icons">settings</span>'; bgClass = 'bg-9'; break;
+        case 'congnghe': iconContent = '<span class="material-icons">memory</span>'; bgClass = 'bg-9'; break;
+        case 'cntt': iconContent = '<span class="material-icons">computer</span>'; bgClass = 'bg-9'; break;
+        case 'vimach': iconContent = '<span class="material-icons">developer_board</span>'; bgClass = 'bg-9'; break;
+        case 'hieuung': iconContent = '<span class="material-icons">auto_fix_high</span>'; bgClass = 'bg-5'; break;
+        case 'trangchu': iconContent = '<span class="material-icons">home</span>'; bgClass = 'bg-1'; break;
+        case 'suaicon': iconContent = '<span class="material-icons">build</span>'; bgClass = 'bg-2'; break;
+        case 'sualink': iconContent = '<span class="material-icons">link</span>'; bgClass = 'bg-4'; break;
+        case 'mang': iconContent = '<span class="material-icons">wifi</span>'; bgClass = 'bg-1'; break;
+        case 'dienthoai': iconContent = '<span class="material-icons">smartphone</span>'; bgClass = 'bg-7'; break;
+        case 'trituemay': iconContent = '<span class="material-icons">smart_toy</span>'; bgClass = 'bg-9'; break;
+        case 'phantich': iconContent = '<span class="material-icons">query_stats</span>'; bgClass = 'bg-10'; break;
+        case 'yte': iconContent = '<span class="material-icons">health_and_safety</span>'; bgClass = 'bg-7'; break;
+        case 'thethao': iconContent = '<span class="material-icons">sports_soccer</span>'; bgClass = 'bg-2'; break;
+        case 'vanhoa': iconContent = '<span class="material-icons">theater_comedy</span>'; bgClass = 'bg-5'; break;
+        case 'amnhac': iconContent = '<span class="material-icons">music_note</span>'; bgClass = 'bg-5'; break;
+        case 'nhiepanh': iconContent = '<span class="material-icons">photo_camera</span>'; bgClass = 'bg-2'; break;
+        case 'truyenthong': iconContent = '<span class="material-icons">campaign</span>'; bgClass = 'bg-2'; break;
+        case 'baove': iconContent = '<span class="material-icons">security</span>'; bgClass = 'bg-9'; break;
+        case 'vesinh': iconContent = '<span class="material-icons">cleaning_services</span>'; bgClass = 'bg-3'; break;
+        case 'xeco': iconContent = '<span class="material-icons">directions_car</span>'; bgClass = 'bg-6'; break;
+        case 'doingoai': iconContent = '<span class="material-icons">public</span>'; bgClass = 'bg-1'; break;
+        case 'du_an': iconContent = '<span class="material-icons">rocket_launch</span>'; bgClass = 'bg-8'; break;
+        case 'khoa_hoc': iconContent = '<span class="material-icons">science</span>'; bgClass = 'bg-10'; break;
+        case 'nongnghiep': iconContent = '<span class="material-icons">agriculture</span>'; bgClass = 'bg-3'; break;
+        case 'congnghiep': iconContent = '<span class="material-icons">factory</span>'; bgClass = 'bg-9'; break;
+        case 'thuongmai': iconContent = '<span class="material-icons">store</span>'; bgClass = 'bg-2'; break;
+        case 'dulich': iconContent = '<span class="material-icons">flight_takeoff</span>'; bgClass = 'bg-1'; break;
+        case 'xaydung': iconContent = '<span class="material-icons">architecture</span>'; bgClass = 'bg-6'; break;
+        case 'kientruc': iconContent = '<span class="material-icons">home_work</span>'; bgClass = 'bg-6'; break;
+        case 'giaothong': iconContent = '<span class="material-icons">traffic</span>'; bgClass = 'bg-8'; break;
+        case 'logictics': iconContent = '<span class="material-icons">local_shipping</span>'; bgClass = 'bg-6'; break;
+        case 'baohiem': iconContent = '<span class="material-icons">shield</span>'; bgClass = 'bg-10'; break;
+        case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
+        case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
+        
+        /* Đã loại bỏ biến gọi hình ảnh, sử dụng Icon đồng bộ */
+        case 'nam': 
+            iconContent = '<span class="material-icons">man</span>'; 
+            bgClass = 'bg-1'; // Màu xanh dương nhạt
+            break;
+        case 'nu': 
+            iconContent = '<span class="material-icons">woman</span>'; 
+            bgClass = 'bg-5'; // Màu tím hồng
+            break;
 
-            case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
-            case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
-            case 'phucvu': iconContent = '<span class="material-icons">room_service</span>'; bgClass = 'bg-7'; break;
-            case 'bando': iconContent = '<span class="material-icons">map</span>'; bgClass = 'bg-1'; break;
-            case 'hotro': iconContent = '<span class="material-icons">support_agent</span>'; bgClass = 'bg-7'; break;
-            case 'hoso_thumuc': iconContent = '<span class="material-icons">folder</span>'; bgClass = 'bg-2'; break;
-            case 'khac': iconContent = '<span class="material-icons">apps</span>'; bgClass = 'bg-default'; break;
-            default: iconContent = '<span class="material-icons">folder</span>'; bgClass = 'bg-default'; break;
-        }
-        return { iconContent: iconContent, bgClass: bgClass };
+        case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
+        case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
+        case 'phucvu': iconContent = '<span class="material-icons">room_service</span>'; bgClass = 'bg-7'; break;
+        case 'bando': iconContent = '<span class="material-icons">map</span>'; bgClass = 'bg-1'; break;
+        case 'hotro': iconContent = '<span class="material-icons">support_agent</span>'; bgClass = 'bg-7'; break;
+        case 'hoso_thumuc': iconContent = '<span class="material-icons">folder</span>'; bgClass = 'bg-2'; break;
+        case 'khac': iconContent = '<span class="material-icons">apps</span>'; bgClass = 'bg-default'; break;
+        default: iconContent = '<span class="material-icons">folder</span>'; bgClass = 'bg-default'; break;
     }
+    return { iconContent: iconContent, bgClass: bgClass };
+}
 
     function layClassHieuUng(hieuUng) {
         switch(hieuUng) {
