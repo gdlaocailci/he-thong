@@ -12,8 +12,8 @@ const KETNOI = {
     // 2. Tài nguyên hình ảnh đại diện (Logo & Giao diện)
     LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
     LINK_HINH_NEN: "https://bigpicturesb.org/wp-content/uploads/2024/10/anh-nen-win-10-51-scaled.jpeg",
-    LINK_AVATAR_NAM: "https://lh3.googleusercontent.com/d/13OnSd7t73KO7GP6NB7FjkdpsO6vfH-dp",
-    LINK_AVATAR_NU: "https://lh3.googleusercontent.com/d/1zW6N_UQKGYl_uCOb9jMfvZCHkLVJKNVU",
+   LINK_AVATAR_NAM: "https://i.postimg.cc/N22XJ7Lz/Nam.png",
+    LINK_AVATAR_NU: "https://i.postimg.cc/9DC4Zjt2/NU.png",
     
     // Bổ sung liên kết YouTube Hướng dẫn
     LINK_YOUTUBE: "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q",
