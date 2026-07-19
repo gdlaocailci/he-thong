@@ -1014,14 +1014,14 @@ function layCauHinhIcon(type) {
         case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
         case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
         
-        /* Đã loại bỏ biến gọi hình ảnh, sử dụng Icon đồng bộ */
+       /* Chuyển lại về cơ chế gọi link hình ảnh qua biến KETNOI để chờ link trực tiếp */
         case 'nam': 
-            iconContent = '<span class="material-icons">man</span>'; 
-            bgClass = 'bg-1'; // Màu xanh dương nhạt
+            iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
+            bgClass = 'bg-avatar'; 
             break;
         case 'nu': 
-            iconContent = '<span class="material-icons">woman</span>'; 
-            bgClass = 'bg-5'; // Màu tím hồng
+            iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
+            bgClass = 'bg-avatar'; 
             break;
 
         case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
