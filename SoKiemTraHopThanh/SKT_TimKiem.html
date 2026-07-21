@@ -215,15 +215,14 @@
 
 <!-- BẮT ĐẦU NÂNG CẤP: KHUNG XEM TRƯỚC SỔ KIỂM TRA TÍCH HỢP NÚT TẢI VỀ -->
 <div id="preview_modal_overlay" class="modal-overlay">
-  <div style="width: 90%; height: 90%; background: white; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+  <!-- Đã bổ sung max-width: 1150px để khung tự động ôm vừa vặn khổ giấy A4 ngang -->
+  <div style="width: 95%; max-width: 1150px; height: 95%; background: white; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
     <div style="padding: 10px 15px; background: #e0f2fe; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #bae6fd;">
       <span style="font-weight: bold; color: #0c4a6e; font-size: 15px;">📄 XEM TRƯỚC SỔ KIỂM TRA</span>
       <div>
-        <!-- BẮT ĐẦU NÂNG CẤP: Bổ sung thêm nút tải PDF -->
         <button id="btn_download_pdf" class="reactbits-btn print-pdf-btn" style="width: auto; padding: 0 15px; margin-right: 10px; background: linear-gradient(135deg, #ef4444, #991b1b);">⬇️ Tải về (.pdf)</button>
         <button id="btn_download_docx" class="reactbits-btn print-btn" style="width: auto; padding: 0 15px; margin-right: 10px;">⬇️ Tải về (.docx)</button>
         <button class="reactbits-btn reset-search-btn" style="width: auto; padding: 0 15px;" onclick="dongKhungXemTruoc()">Đóng</button>
-        <!-- KẾT THÚC NÂNG CẤP -->
       </div>
     </div>
     <div style="flex: 1; position: relative;">
