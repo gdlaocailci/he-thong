@@ -4,7 +4,7 @@
    ========================================================================== */
 var DG_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbynhXlUEopWNlbpbRaD3e50Y0xwevEXIK53VpmOEWMZfhsSnfqxvFctSPeNMRc7709aHw/exec";
 
-var DG_LINK_LOGO = "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png"; 
+var DG_LINK_LOGO = "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"; 
 
 // Bổ sung biến lưu trữ liên kết video hướng dẫn
 var DG_LINK_YOUTUBE = "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q";
