@@ -691,8 +691,13 @@
              // Giữ lại link phòng trường hợp trình duyệt bị chặn Popup
              vung_link.innerHTML = `<a href="${lk_p_d_f}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Đã xuất PDF (Bấm để lưu)</a>`;
              
-             // --- BẮT ĐẦU NÂNG CẤP: Tự động kích hoạt tải file xuống ngay lập tức ---
-             window.open(lk_p_d_f, "_blank");
+            // --- BẮT ĐẦU NÂNG CẤP: Tự động kích hoạt tải file PDF chạy ngầm ---
+             const the_tai_pdf = document.createElement('a');
+             the_tai_pdf.href = lk_p_d_f;
+             the_tai_pdf.style.display = 'none';
+             document.body.appendChild(the_tai_pdf);
+             the_tai_pdf.click();
+             document.body.removeChild(the_tai_pdf);
              // --- KẾT THÚC NÂNG CẤP ---
           } else {
              vung_link.innerHTML = `<a href="${kq_ve.lkpt}" target="_blank" class="print-link" style="color:#dc2626; border-color:#dc2626;">📄 Mở file nguồn</a>`;
