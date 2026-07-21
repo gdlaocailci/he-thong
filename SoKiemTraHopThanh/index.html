@@ -351,7 +351,10 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
       <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TÀI LIỆU</span>
       <div style="display: flex; gap: 10px; align-items: center;">
-        <button id="btn_tai_tep_preview" class="btn-submit reactbits-btn" onclick="taiTepDangXem()" style="padding: 5px 15px; margin: 0; font-size: 13px; height: 32px; display: inline-flex; align-items: center; gap: 5px;">📥 TẢI VỀ</button>
+        <!-- BẮT ĐẦU NÂNG CẤP: Thêm nút tải PDF chạy ngầm -->
+        <button id="btn_tai_tep_pdf" class="btn-submit reactbits-btn" onclick="taiTepPdfDangXem()" style="background: linear-gradient(135deg, #ef4444, #991b1b); border: none; padding: 5px 15px; margin: 0; font-size: 13px; height: 32px; display: inline-flex; align-items: center; gap: 5px; color: white;">⬇️ TẢI VỀ (.pdf)</button>
+        <button id="btn_tai_tep_preview" class="btn-submit reactbits-btn" onclick="taiTepDangXem()" style="padding: 5px 15px; margin: 0; font-size: 13px; height: 32px; display: inline-flex; align-items: center; gap: 5px;">📥 TẢI GỐC</button>
+        <!-- KẾT THÚC NÂNG CẤP -->
         <button class="btn-cancel" onclick="dongKhungXemTep()" style="padding: 5px 15px; margin: 0; font-size: 13px; height: 32px;">✖ ĐÓNG</button>
       </div>
     </div>
@@ -908,6 +911,53 @@ function kiemtqvata(tk_chuyen_den = null) {
       
       if (idd === 'TabPhanQuyen') { if (typeof loadPhanQuyen === 'function') loadPhanQuyen(); }
     }
+
+   // BẮT ĐẦU NÂNG CẤP: Bổ sung hàm tải PDF ngầm cho khung xem minh chứng
+function taiTepPdfDangXem() {
+  if (!urlTepXemTruocHienTai) return;
+  
+  let nutTai = document.getElementById('btn_tai_tep_pdf');
+  let chuGoc = "";
+  if (nutTai) {
+      chuGoc = nutTai.innerHTML;
+      nutTai.innerHTML = "⏳ ĐANG KẾT NỐI...";
+      nutTai.disabled = true;
+      nutTai.style.background = "#d97706"; 
+  }
+
+  let khop_id = urlTepXemTruocHienTai.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
+  let link_tai_pdf = urlTepXemTruocHienTai;
+
+  if (khop_id) {
+      if (urlTepXemTruocHienTai.includes("drive.google.com")) {
+          // File Drive thường đã là dạng PDF/Ảnh, sử dụng cổng tải mặc định
+          link_tai_pdf = "https://drive.google.com/uc?export=download&id=" + khop_id[1];
+      } else if (urlTepXemTruocHienTai.includes("docs.google.com/document")) {
+          // Ép xuất PDF tự động cho tài liệu Google Docs
+          link_tai_pdf = "https://docs.google.com/document/d/" + khop_id[1] + "/export?format=pdf";
+      } else if (urlTepXemTruocHienTai.includes("docs.google.com/spreadsheets")) {
+          // Ép xuất PDF tự động cho tài liệu Google Sheets
+          link_tai_pdf = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/export?format=pdf";
+      }
+  }
+
+  // Dùng thuật toán tải ngầm bằng thẻ <a> để chống mở tab trắng
+  const the_tai_pdf = document.createElement('a');
+  the_tai_pdf.href = link_tai_pdf;
+  the_tai_pdf.style.display = 'none';
+  document.body.appendChild(the_tai_pdf);
+  the_tai_pdf.click();
+  document.body.removeChild(the_tai_pdf);
+
+  if (nutTai) {
+      setTimeout(() => {
+          nutTai.innerHTML = chuGoc;
+          nutTai.disabled = false;
+          nutTai.style.background = "linear-gradient(135deg, #ef4444, #991b1b)"; 
+      }, 5000); 
+  }
+}
+// KẾT THÚC NÂNG CẤP
   </script>
 </body>
 </html>
