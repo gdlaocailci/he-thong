@@ -124,9 +124,11 @@
     <div class="f-item"><span>Đến ngày</span><input type="text" id="s_to" class="f-input text-center" placeholder="dd/mm/yyyy" oninput="dinhdng(event);"></div>
     <div class="f-item" style="display:flex; align-items: flex-end;">
       <button id="btn_search_main" class="reactbits-btn search-btn" onclick="con_chuot_goi_api_tim_kiem()">🔍 Tìm</button>
-      <button class="reactbits-btn reset-search-btn" onclick="xoatti()">↻</button>
-      <button class="reactbits-btn print-btn" onclick="inba()" title="Xuất sổ ra file docx">🖨️</button>
-      <button class="reactbits-btn print-pdf-btn" onclick="qua_tao_xuat_pdf()" title="Xuất kết quả ra file PDF">📄</button>
+     <button class="reactbits-btn reset-search-btn" onclick="xoatti()">↻</button>
+      <button class="reactbits-btn print-btn" onclick="inba()" title="Xuất sổ kiểm tra">🖨️</button>
+      <!-- BẮT ĐẦU NÂNG CẤP: Ẩn nút PDF ngoài giao diện chính -->
+      <button class="reactbits-btn print-pdf-btn" onclick="qua_tao_xuat_pdf()" title="Xuất kết quả ra file PDF" style="display: none;">📄</button>
+      <!-- KẾT THÚC NÂNG CẤP -->
       <span id="print_link_container"></span>
     </div>
   </div>
@@ -217,8 +219,11 @@
     <div style="padding: 10px 15px; background: #e0f2fe; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #bae6fd;">
       <span style="font-weight: bold; color: #0c4a6e; font-size: 15px;">📄 XEM TRƯỚC SỔ KIỂM TRA</span>
       <div>
+        <!-- BẮT ĐẦU NÂNG CẤP: Bổ sung thêm nút tải PDF -->
+        <button id="btn_download_pdf" class="reactbits-btn print-pdf-btn" style="width: auto; padding: 0 15px; margin-right: 10px; background: linear-gradient(135deg, #ef4444, #991b1b);">⬇️ Tải về (.pdf)</button>
         <button id="btn_download_docx" class="reactbits-btn print-btn" style="width: auto; padding: 0 15px; margin-right: 10px;">⬇️ Tải về (.docx)</button>
         <button class="reactbits-btn reset-search-btn" style="width: auto; padding: 0 15px;" onclick="dongKhungXemTruoc()">Đóng</button>
+        <!-- KẾT THÚC NÂNG CẤP -->
       </div>
     </div>
     <div style="flex: 1; position: relative;">
@@ -545,7 +550,7 @@
     con_chuot_goi_api_tim_kiem(); 
   }
 
-// BẮT ĐẦU NÂNG CẤP: CÁC HÀM XỬ LÝ KHUNG XEM TRƯỚC VÀ XUẤT DOCX
+// BẮT ĐẦU NÂNG CẤP: CÁC HÀM XỬ LÝ KHUNG XEM TRƯỚC VÀ XUẤT DOCX/PDF
   function moKhungXemTruocSo(url) {
     let docId = "";
     // Trích xuất ID từ link tài liệu
@@ -559,21 +564,33 @@
     
     // Cấu hình URL xem trước (khóa các công cụ chỉnh sửa và nút mở tab mới)
     const previewUrl = "https://docs.google.com/document/d/" + docId + "/preview?rm=minimal";
-    // Cấu hình URL xuất trực tiếp ra định dạng .docx
-    const downloadUrl = "https://docs.google.com/document/d/" + docId + "/export?format=docx";
+    // Cấu hình URL xuất trực tiếp ra định dạng .docx và .pdf
+    const downloadDocxUrl = "https://docs.google.com/document/d/" + docId + "/export?format=docx";
+    const downloadPdfUrl = "https://docs.google.com/document/d/" + docId + "/export?format=pdf";
     
     // Đẩy link vào iframe
     document.getElementById('preview_iframe').src = previewUrl;
     
-    // Gán lệnh tải file cho nút Tải về (Thực hiện tải ngầm, không mở tab trắng)
-    const btnDownload = document.getElementById('btn_download_docx');
-    btnDownload.onclick = function() {
-      const the_tai = document.createElement('a');
-      the_tai.href = downloadUrl;
-      the_tai.style.display = 'none';
-      document.body.appendChild(the_tai);
-      the_tai.click();
-      document.body.removeChild(the_tai);
+    // Gán lệnh tải file DOCX chạy ngầm (không mở tab trắng)
+    const btnDownloadDocx = document.getElementById('btn_download_docx');
+    btnDownloadDocx.onclick = function() {
+      const the_tai_docx = document.createElement('a');
+      the_tai_docx.href = downloadDocxUrl;
+      the_tai_docx.style.display = 'none';
+      document.body.appendChild(the_tai_docx);
+      the_tai_docx.click();
+      document.body.removeChild(the_tai_docx);
+    };
+
+    // Gán lệnh tải file PDF chạy ngầm (không mở tab trắng)
+    const btnDownloadPdf = document.getElementById('btn_download_pdf');
+    btnDownloadPdf.onclick = function() {
+      const the_tai_pdf = document.createElement('a');
+      the_tai_pdf.href = downloadPdfUrl;
+      the_tai_pdf.style.display = 'none';
+      document.body.appendChild(the_tai_pdf);
+      the_tai_pdf.click();
+      document.body.removeChild(the_tai_pdf);
     };
     
     // Hiển thị khung xem trước
