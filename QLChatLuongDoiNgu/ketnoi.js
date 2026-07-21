@@ -2,7 +2,7 @@
 var QLNS_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbwLFjHvjGSLMFvdGLYaj6W4Cu-Da3KFsLHBOgezQKtPwSzBT65CIaJG9frfS-vM7PVsTg/exec"; 
 var QLNS_HAN_DUNG = "31/12/2026"; 
 
-var QLNS_LINK_LOGO = "https://i.ibb.co/d0JNW94Z/logo-l-a-ch-n6.png"; 
+var QLNS_LINK_LOGO = "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"; 
 var QLNS_TEN_TRUONG = "Trường TH&THCS Hợp Thành";
 var QLNS_TEN_TRUONG_UP = "TRƯỜNG TH&THCS HỢP THÀNH";
 var QLNS_TEN_PM = "Quản lý nhân sự";
