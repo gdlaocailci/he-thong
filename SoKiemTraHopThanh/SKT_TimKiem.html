@@ -211,6 +211,24 @@
   </div>
 </div>
 
+<!-- BẮT ĐẦU NÂNG CẤP: KHUNG XEM TRƯỚC SỔ KIỂM TRA TÍCH HỢP NÚT TẢI VỀ -->
+<div id="preview_modal_overlay" class="modal-overlay">
+  <div style="width: 90%; height: 90%; background: white; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+    <div style="padding: 10px 15px; background: #e0f2fe; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #bae6fd;">
+      <span style="font-weight: bold; color: #0c4a6e; font-size: 15px;">📄 XEM TRƯỚC SỔ KIỂM TRA</span>
+      <div>
+        <button id="btn_download_docx" class="reactbits-btn print-btn" style="width: auto; padding: 0 15px; margin-right: 10px;">⬇️ Tải về (.docx)</button>
+        <button class="reactbits-btn reset-search-btn" style="width: auto; padding: 0 15px;" onclick="dongKhungXemTruoc()">Đóng</button>
+      </div>
+    </div>
+    <div style="flex: 1; position: relative;">
+      <!-- Sử dụng endpoint /preview của Docs để khóa nút mở pop-out góc trên bên phải -->
+      <iframe id="preview_iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+  </div>
+</div>
+<!-- KẾT THÚC NÂNG CẤP -->
+
 <script>
   // --- ĐỒNG BỘ ĐỊNH DANH GIAO DIỆN ---
   (function dongBoNhanDien() {
@@ -527,6 +545,42 @@
     con_chuot_goi_api_tim_kiem(); 
   }
 
+  // BẮT ĐẦU NÂNG CẤP: CÁC HÀM XỬ LÝ KHUNG XEM TRƯỚC VÀ XUẤT DOCX
+  function moKhungXemTruocSo(url) {
+    let docId = "";
+    // Trích xuất ID từ link tài liệu
+    const match = url.match(/[-\w]{25,}/);
+    if (match) docId = match[0];
+    
+    if (!docId) {
+      hienhtt("❌ Lỗi: Không trích xuất được ID tài liệu để hiển thị xem trước.");
+      return;
+    }
+    
+    // Cấu hình URL xem trước (khóa các công cụ chỉnh sửa và nút mở tab mới)
+    const previewUrl = "https://docs.google.com/document/d/" + docId + "/preview?rm=minimal";
+    // Cấu hình URL xuất trực tiếp ra định dạng .docx
+    const downloadUrl = "https://docs.google.com/document/d/" + docId + "/export?format=docx";
+    
+    // Đẩy link vào iframe
+    document.getElementById('preview_iframe').src = previewUrl;
+    
+    // Gán lệnh tải file cho nút Tải về
+    const btnDownload = document.getElementById('btn_download_docx');
+    btnDownload.onclick = function() {
+      window.open(downloadUrl, "_blank");
+    };
+    
+    // Hiển thị khung xem trước
+    document.getElementById('preview_modal_overlay').style.display = 'flex';
+  }
+
+  function dongKhungXemTruoc() {
+    document.getElementById('preview_modal_overlay').style.display = 'none';
+    document.getElementById('preview_iframe').src = ""; // Xóa bộ nhớ đệm iframe khi đóng
+  }
+  // KẾT THÚC NÂNG CẤP
+
   function inba() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
@@ -553,9 +607,11 @@
       .withSuccessHandler(kq => {
         nt.disabled = false;
         nt.innerHTML = chg;
+        // BẮT ĐẦU NÂNG CẤP: GỌI HÀM XEM TRƯỚC THAY VÌ MỞ TAB MỚI
         if (kq.tcon) {
-          vl.innerHTML = `<a href="${kq.lkpt}" target="_blank" class="print-link">🖨️ In sổ kiểm tra</a>`;
+          vl.innerHTML = `<a href="javascript:void(0)" onclick="moKhungXemTruocSo('${kq.lkpt}')" class="print-link">🖨️ Xem sổ kiểm tra</a>`;
         } else {
+        // KẾT THÚC NÂNG CẤP
           hienhtt("❌ Lỗi: " + kq.tbao); 
           vl.innerHTML = "<span style='color:red;'>Lỗi!</span>";
         }
