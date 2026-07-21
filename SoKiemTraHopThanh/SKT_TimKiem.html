@@ -545,7 +545,7 @@
     con_chuot_goi_api_tim_kiem(); 
   }
 
-  // BẮT ĐẦU NÂNG CẤP: CÁC HÀM XỬ LÝ KHUNG XEM TRƯỚC VÀ XUẤT DOCX
+// BẮT ĐẦU NÂNG CẤP: CÁC HÀM XỬ LÝ KHUNG XEM TRƯỚC VÀ XUẤT DOCX
   function moKhungXemTruocSo(url) {
     let docId = "";
     // Trích xuất ID từ link tài liệu
@@ -565,10 +565,15 @@
     // Đẩy link vào iframe
     document.getElementById('preview_iframe').src = previewUrl;
     
-    // Gán lệnh tải file cho nút Tải về
+    // Gán lệnh tải file cho nút Tải về (Thực hiện tải ngầm, không mở tab trắng)
     const btnDownload = document.getElementById('btn_download_docx');
     btnDownload.onclick = function() {
-      window.open(downloadUrl, "_blank");
+      const the_tai = document.createElement('a');
+      the_tai.href = downloadUrl;
+      the_tai.style.display = 'none';
+      document.body.appendChild(the_tai);
+      the_tai.click();
+      document.body.removeChild(the_tai);
     };
     
     // Hiển thị khung xem trước
@@ -580,7 +585,7 @@
     document.getElementById('preview_iframe').src = ""; // Xóa bộ nhớ đệm iframe khi đóng
   }
   // KẾT THÚC NÂNG CẤP
-
+  
   function inba() {
     const tbg = document.getElementById('searchBody');
     if (tbg.innerText.includes("Vui lòng chọn") || tbg.innerText.includes("Không tìm thấy") || tbg.rows.length === 0) {
