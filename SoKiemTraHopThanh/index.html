@@ -278,16 +278,18 @@
     </div>
   </div>
 
-  <div id="login-overlay">
-    <div class="login-box">
+<div id="login-overlay">
+    <div class="login-box" style="padding-top: 35px; padding-bottom: 25px;">
       <img src="" class="login-logo" alt="Logo Trường">
-      <h2 id="login-title-main" style="color: #b91c1c; margin-top: 0; text-transform: uppercase;"></h2>
-      <h3 id="login-subtitle-main" style="color: #1e3a8a; margin-bottom: 25px;"></h3>
+      
+      <!-- Nâng cấp: Đặt ID và quản lý khoảng cách linh hoạt -->
+      <h2 id="login-title-main" style="color: #b91c1c; margin-top: 0; margin-bottom: 25px; text-transform: uppercase; font-size: 26px;"></h2>
+      <h3 id="login-subtitle-main" style="color: #1e3a8a; margin-bottom: 25px; display: none;"></h3>
 
-     <!-- BẮT ĐẦU: KHỐI LỰA CHỌN ĐƠN VỊ -->
-      <div style="margin-bottom: 25px; text-align: left; padding: 15px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
-          <label style="font-size: 13px; font-weight: bold; color: #b91c1c; display: block; margin-bottom: 8px;">📍 CHỌN ĐƠN VỊ </label>
-          <select id="sel_don_vi" class="reactbits-btn" style="width: 100%; padding: 10px; border-radius: 6px; border: 2px solid #94a3b8; font-family: 'Times New Roman', serif; font-size: 15px; outline: none; background: #ffffff; color: #1e3a8a; text-align: center; text-align-last: center;" onchange="thayDoiDonVi(this.value)">
+      <!-- BẮT ĐẦU: KHỐI LỰA CHỌN ĐƠN VỊ -->
+      <div style="margin-bottom: 25px; text-align: left; padding: 18px 15px; background: #fafaf9; border: 1px dashed #94a3b8; border-radius: 8px;">
+          <label style="font-size: 13px; font-weight: bold; color: #b91c1c; display: block; margin-bottom: 12px; font-family: 'Times New Roman', serif;">📍 CHỌN ĐƠN VỊ</label>
+          <select id="sel_don_vi" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #1e3a8a; font-family: 'Times New Roman', serif; font-size: 16px; font-weight: bold; outline: none; background: #ffffff; color: #1e3a8a; text-align: center; text-align-last: center; cursor: pointer;" onchange="thayDoiDonVi(this.value)">
            <option value="" selected>---CHỌN ĐƠN VỊ---</option>   
            <option value="TRUONG_1">Trường TH&THCS Hợp Thành</option>
            <option value="TRUONG_2">Trường Tiểu học Nguyễn Du</option>
@@ -295,16 +297,12 @@
       </div>
       <!-- KẾT THÚC: KHỐI LỰA CHỌN ĐƠN VỊ -->
      
-      <p id="app-version-text" style="font-size: 13px; color:#dc3545;font-weight: bold; margin-bottom: 20px;"></p>
+      <p id="app-version-text" style="font-size: 14px; color:#dc3545; font-weight: bold; margin-bottom: 20px;"></p>
       
-     <!-- BẮT ĐẦU BỌC VÀ ẨN KHU VỰC ĐĂNG NHẬP -->
+      <!-- BẮT ĐẦU BỌC VÀ ẨN KHU VỰC ĐĂNG NHẬP -->
       <div id="khu_vuc_dang_nhap_google" style="display: none;">
-          
-          <div id="g_id_onload"
-               data-callback="xulyphanhxt"
-               data-auto_prompt="false">
-          </div>
-          <script>document.getElementById('g_id_onload').setAttribute('data-client_id', SKT_GOOGLE_CLIENT_ID);</script>
+          <div id="g_id_onload" data-callback="xulyphanhxt" data-auto_prompt="false"></div>
+          <script>document.getElementById('g_id_onload').setAttribute('data-client_id', typeof SKT_GOOGLE_CLIENT_ID !== 'undefined' ? SKT_GOOGLE_CLIENT_ID : '');</script>
           
           <div class="d-flex justify-content-center w-100 mt-2">
              <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="continue_with" data-shape="rectangular" data-logo_alignment="left"></div>
@@ -320,11 +318,10 @@
                   <button class="btn-cancel-qr" onclick="huyQuetQR()">Hủy quét</button>
               </div>
           </div>
-          
       </div>
       <!-- KẾT THÚC BỌC KHU VỰC ĐĂNG NHẬP -->
       
-      <div id="app-author-text" style="margin-top: 30px; font-size: 12px; color: #999; font-weight: bold;"></div>
+      <div id="app-author-text" style="margin-top: 35px; font-size: 13px; color: #888; font-weight: bold; line-height: 1.5;"></div>
     </div>
   </div>
 
