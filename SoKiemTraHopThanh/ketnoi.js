@@ -28,9 +28,9 @@ const MA_TRAN_UI_CLIENT = {
     LOGO_URL: "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"
   },
   "TRUONG_2": {
-    TEN_TRUONG: "TRƯỜNG THCS B (DEMO)",
-    TEN_TRUONG_UP: "TRƯỜNG THCS B (DEMO)",
-    LOGO_URL: "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png" 
+    TEN_TRUONG: "TRƯỜNG TIỂU HỌC NGUYỄN DU",
+    TEN_TRUONG_UP: "TRƯỜNG TIỂU HỌC NGUYỄN DU",
+    LOGO_URL: "https://i.ibb.co/8Df1xXsN/Logo-nguyen-du.png" 
   }
 };
 
