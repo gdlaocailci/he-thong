@@ -1,9 +1,3 @@
-/**
- * CẤU HÌNH GIAO DIỆN & KẾT NỐI HỆ THỐNG WEB APP (MÔ HÌNH ĐA TRƯỜNG)
- * Hệ thống: Sổ Kiểm Tra Nội Bộ (SKT)
- * Thiết kế và phát triển: Hoàng Ngọc Lâm
- */
-
 /* KHỐI CÁC BIẾN CỐ ĐỊNH TÒAN HỆ THỐNG */
 const SKT_GAS_URL = "https://script.google.com/macros/s/AKfycbwWTAaDYT9DH8K3ys8Bti2OYoBss_T0PaSiigcRKm_qyL3grNQVi24m733na6oIED42/exec";
 const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
