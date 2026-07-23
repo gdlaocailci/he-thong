@@ -22,12 +22,12 @@ const MA_TRAN_UI_CLIENT = {
     TEN_TRUONG_UP: "",
     LOGO_URL: "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"
   },
-  "TRUONG_A": {
+  "TRUONG_1": {
     TEN_TRUONG: "TRƯỜNG TH&THCS HỢP THÀNH",
     TEN_TRUONG_UP: "TRƯỜNG TH&THCS HỢP THÀNH",
     LOGO_URL: "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"
   },
-  "TRUONG_B": {
+  "TRUONG_2": {
     TEN_TRUONG: "TRƯỜNG THCS B (DEMO)",
     TEN_TRUONG_UP: "TRƯỜNG THCS B (DEMO)",
     LOGO_URL: "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png" 
