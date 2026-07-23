@@ -13,21 +13,29 @@
     /* ========================================================================= */
     /* ĐỒNG BỘ GIAO DIỆN TỪ KETNOI.JS VÀ INTERNAL API BRIDGE                     */
     /* ========================================================================= */
-    document.addEventListener("DOMContentLoaded", function() {
+   document.addEventListener("DOMContentLoaded", function() {
       document.querySelectorAll('.login-logo, .sys-logo').forEach(img => { img.src = SKT_LOGO_URL; });
+      
       const loginTitle = document.getElementById('login-title-main');
       if (loginTitle) loginTitle.innerText = SKT_TEN_PM_UP;
+      
       const loginSubTitle = document.getElementById('login-subtitle-main');
       if (loginSubTitle) loginSubTitle.innerText = SKT_TEN_TRUONG;
+      
       const versionText = document.getElementById('app-version-text');
       if (versionText) versionText.innerText = "Phiên bản: " + SKT_PHIEN_BAN;
+      
       const authorText = document.getElementById('app-author-text');
-      if (authorText) authorText.innerText = "Phát triển bởi: " + SKT_TAC_GIA_UP;
+      // Đã sửa: Xóa cụm từ gõ cứng, chuyển innerText thành innerHTML để ép xuống dòng
+      if (authorText) authorText.innerHTML = SKT_TAC_GIA_UP.replace(/\n/g, '<br>');
+      
       const loaderText = document.querySelector('.loader-text');
       if (loaderText) loaderText.innerText = SKT_TEN_PM_DAY_DU + " " + SKT_TEN_TRUONG_UP;
+      
       const hdTacGia = document.getElementById('huong-dan-tac-gia');
-      if (hdTacGia) hdTacGia.innerText = "Phát triển bởi: " + SKT_TAC_GIA;
-    });
+      // Đã sửa tương tự cho phần hướng dẫn
+      if (hdTacGia) hdTacGia.innerHTML = SKT_TAC_GIA.replace(/\n/g, '<br>');
+});
 
     // INTERNAL API BRIDGE
     function createRunner(onSuccess, onFailure) {
