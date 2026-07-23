@@ -297,26 +297,32 @@
      
       <p id="app-version-text" style="font-size: 13px; color:#dc3545;font-weight: bold; margin-bottom: 20px;"></p>
       
-      <div id="g_id_onload"
-           data-callback="xulyphanhxt"
-           data-auto_prompt="false">
-      </div>
-      <script>document.getElementById('g_id_onload').setAttribute('data-client_id', SKT_GOOGLE_CLIENT_ID);</script>
-      
-      <div class="d-flex justify-content-center w-100 mt-2">
-         <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="continue_with" data-shape="rectangular" data-logo_alignment="left"></div>
-      </div>
-      
-      <div class="lua-chon-group">
-          <span class="label-lua-chon">— Hoặc lựa chọn đăng nhập phụ —</span>
-          <button class="btn-qr-login" id="btn-start-qr" onclick="batDauQuetQR()">
-              <i class="bi bi-camera"></i> Đăng nhập bằng Thẻ QR
-          </button>
-           <div id="qr-reader-container">
-              <div id="reader" style="width: 100%;"></div>
-              <button class="btn-cancel-qr" onclick="huyQuetQR()">Hủy quét</button>
+     <!-- BẮT ĐẦU BỌC VÀ ẨN KHU VỰC ĐĂNG NHẬP -->
+      <div id="khu_vuc_dang_nhap_google" style="display: none;">
+          
+          <div id="g_id_onload"
+               data-callback="xulyphanhxt"
+               data-auto_prompt="false">
           </div>
+          <script>document.getElementById('g_id_onload').setAttribute('data-client_id', SKT_GOOGLE_CLIENT_ID);</script>
+          
+          <div class="d-flex justify-content-center w-100 mt-2">
+             <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="continue_with" data-shape="rectangular" data-logo_alignment="left"></div>
+          </div>
+          
+          <div class="lua-chon-group">
+              <span class="label-lua-chon">— Hoặc lựa chọn đăng nhập phụ —</span>
+              <button class="btn-qr-login" id="btn-start-qr" onclick="batDauQuetQR()">
+                  <i class="bi bi-camera"></i> Đăng nhập bằng Thẻ QR
+              </button>
+               <div id="qr-reader-container">
+                  <div id="reader" style="width: 100%;"></div>
+                  <button class="btn-cancel-qr" onclick="huyQuetQR()">Hủy quét</button>
+              </div>
+          </div>
+          
       </div>
+      <!-- KẾT THÚC BỌC KHU VỰC ĐĂNG NHẬP -->
       
       <div id="app-author-text" style="margin-top: 30px; font-size: 12px; color: #999; font-weight: bold;"></div>
     </div>
@@ -397,6 +403,27 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
+
+   /**
+ * Hàm kiểm tra trạng thái chọn đơn vị để hiển thị nút đăng nhập
+ * Được gọi thông qua sự kiện onchange="kiemTraChonDonVi(this)" trên thẻ <select>
+ */
+function kiemTraChonDonVi(theSelect) {
+    // Lấy phần tử chứa nút đăng nhập Google
+    const khuVucDangNhap = document.getElementById("khu_vuc_dang_nhap_google");
+    
+    if (khuVucDangNhap) {
+        // Nếu giá trị chọn không rỗng (nghĩa là đã chọn một trường cụ thể)
+        if (theSelect.value !== "") {
+            // Hiển thị lại khối đăng nhập (sử dụng 'block' hoặc 'flex' tùy cấu trúc CSS của Thầy/Cô)
+            khuVucDangNhap.style.display = "block"; 
+        } else {
+            // Nếu chưa chọn (trường hợp này khó xảy ra vì đã khóa disabled, nhưng vẫn rào lỗi)
+            khuVucDangNhap.style.display = "none";
+        }
+    }
+}
+   
     function hienThongBaoUI(tieuDe, noiDung, loai = 'error') {
       const box = document.getElementById('custom-alert-box');
       const icon = document.getElementById('custom-alert-icon');
