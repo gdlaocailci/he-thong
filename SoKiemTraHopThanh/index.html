@@ -995,28 +995,33 @@ function thayDoiDonVi(maDonVi) {
         location.reload(); 
     }
 
-    // 3. CẬP NHẬT EVENT DOMContentLoaded Ở CUỐI FILE: Điều khiển ẩn/hiện Subtitle
+// ĐỒNG BỘ TRẠNG THÁI KHI TẢI TRANG
     document.addEventListener("DOMContentLoaded", function() {
         const maLuu = sessionStorage.getItem("SKT_MA_DON_VI");
         const khuVucDangNhap = document.getElementById('khu_vuc_dang_nhap_google');
         const loginSubTitle = document.getElementById('login-subtitle-main');
         const loginTitle = document.getElementById('login-title-main');
 
+        // Nạp tên trường hiện tại (do ketnoi.js quyết định là TRUONG_x hoặc DANG_NHAP)
+        const tenHienThi = typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP.trim() : '';
+        if (loginSubTitle) loginSubTitle.innerText = tenHienThi;
+
         if(maLuu && document.getElementById('sel_don_vi')) {
-            // Trường hợp ĐÃ CHỌN trường
+            // Trường hợp 1: ĐÃ CHỌN TRƯỜNG
             document.getElementById('sel_don_vi').value = maLuu;
             if (khuVucDangNhap) khuVucDangNhap.style.display = 'block';
-            if (loginSubTitle) {
-                loginSubTitle.style.display = 'block'; 
-                if (loginTitle) loginTitle.style.marginBottom = '5px'; // Ép khoảng cách gần lại
-            }
         } else {
-            // Trường hợp CHƯA CHỌN trường (như ảnh chụp)
+            // Trường hợp 2: CHƯA CHỌN TRƯỜNG (Trạng thái DANG_NHAP)
             if (khuVucDangNhap) khuVucDangNhap.style.display = 'none';
-            if (loginSubTitle) {
-                loginSubTitle.style.display = 'none'; // Ẩn thẻ để không bị trống không gian
-                if (loginTitle) loginTitle.style.marginBottom = '25px'; // Nới rộng khoảng cách chuẩn
-            }
+        }
+
+        // Tự động điều chỉnh khoảng cách và ẩn/hiện linh hoạt
+        if (tenHienThi !== "") {
+            if (loginSubTitle) loginSubTitle.style.display = 'block'; 
+            if (loginTitle) loginTitle.style.marginBottom = '5px'; 
+        } else {
+            if (loginSubTitle) loginSubTitle.style.display = 'none'; 
+            if (loginTitle) loginTitle.style.marginBottom = '25px'; 
         }
     });
 
