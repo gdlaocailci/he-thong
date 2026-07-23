@@ -19,8 +19,8 @@ const SKT_TAC_GIA_UP = "THIẾT KẾ VÀ PHÁT TRIỂN\nHOÀNG NGỌC LÂM";
 const MA_TRAN_UI_CLIENT = {
   "DANG_NHAP": {
     TEN_TRUONG: "",
-    TEN_TRUONG_UP: "",
-    LOGO_URL: "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"
+    TEN_TRUONG_UP: "HÃY CHỌN ĐƠN VỊ",
+    LOGO_URL: "https://i.ibb.co/p6G2MsnB/Chat-GPT-Image-07-54-46-4-thg-7-2026.png"
   },
   "TRUONG_1": {
     TEN_TRUONG: "TRƯỜNG TH&THCS HỢP THÀNH",
