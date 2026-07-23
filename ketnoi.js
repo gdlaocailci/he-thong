@@ -14,6 +14,7 @@ const KETNOI = {
     LINK_HINH_NEN: "https://bigpicturesb.org/wp-content/uploads/2024/10/anh-nen-win-10-51-scaled.jpeg",
    LINK_AVATAR_NAM: "https://i.postimg.cc/N22XJ7Lz/Nam.png",
     LINK_AVATAR_NU: "https://i.postimg.cc/9DC4Zjt2/NU.png",
+    LINK_AVATAR_NU_THU_KY: "https://i.postimg.cc/KYCGvkbp/Nu-thu-ky.png",
     
     // Bổ sung liên kết YouTube Hướng dẫn
     LINK_YOUTUBE: "https://www.youtube.com/channel/UCdfiTWwv78VITvzlgxnv02Q",
