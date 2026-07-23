@@ -34,8 +34,10 @@
         return {
             withSuccessHandler: function(cb) { return createRunner(cb, onFailure); },
             withFailureHandler: function(cb) { return createRunner(onSuccess, cb); },
-            _call: function(hdong, tso) {
+         
+    _call: function(hdong, tso) {
                 const sysId = window.skttktoanc || sessionStorage.getItem("SKT_DINHDANH_TAIK") || ""; 
+                const maDonVi = sessionStorage.getItem("SKT_MA_DON_VI") || "TRUONG_A"; 
                 const endpoint = typeof SKT_GAS_URL !== 'undefined' ? SKT_GAS_URL : "";
                 
                 if (!endpoint) {
@@ -44,10 +46,11 @@
                     return;
                 }
 
+                // Chèn thêm ma_don_vi vào gói tin gửi đi
                 fetch(endpoint, {
                     method: 'POST',
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ hdong: hdong, tso: tso, taik: sysId })
+                    body: JSON.stringify({ hdong: hdong, tso: tso, taik: sysId, ma_don_vi: maDonVi })
                 })
                 .then(res => res.json())
                 .then(res => {
@@ -78,7 +81,7 @@
             skt_taitm_minhc: function(idcha, tentmu, dltep, ddcu, cdghi) { this._call('skt_taitm_minhc', { idcha: idcha, tentmu: tentmu, dltep: dltep, ddcu: ddcu, cdghi: cdghi }); },
             skt_tk_laydl_loc: function() { this._call('skt_tk_laydl_loc', {}); },
             skt_timbg_kq: function(tchi) { this._call('skt_timbg_kq', { tchi: tchi }); },
-            skt_taobc_vba: function(tchi) { this._call('skt_taobc_vba', { tchi: tchi, logo: (typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : "") }); },
+            skt_taobc_vba: function(tchi) { this._call('skt_taobc_vba', { tchi: tchi, logo: (typeof SKT_LOGO_URL !== 'undefined' ? SKT_LOGO_URL : ""), tentruong: (typeof SKT_TEN_TRUONG_UP !== 'undefined' ? SKT_TEN_TRUONG_UP : "") }); },
             skt_pt_mc_ai: function(chuoilk, yeucau) { this._call('skt_pt_mc_ai', { chuoilk: chuoilk, yeucau: yeucau }); },
             skt_notebooklm_qa: function(question) { this._call('skt_notebooklm_qa', { question: question }); },
             skt_chatWithDocument: function(url, query) { this._call('skt_chatWithDocument', { url: url, query: query }); },
@@ -272,7 +275,17 @@
       <img src="" class="login-logo" alt="Logo Trường">
       <h2 id="login-title-main" style="color: #b91c1c; margin-top: 0; text-transform: uppercase;"></h2>
       <h3 id="login-subtitle-main" style="color: #1e3a8a; margin-bottom: 25px;"></h3>
-      
+
+     <!-- BẮT ĐẦU: KHỐI LỰA CHỌN ĐƠN VỊ -->
+      <div style="margin-bottom: 25px; text-align: left; padding: 15px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+          <label style="font-size: 13px; font-weight: bold; color: #b91c1c; display: block; margin-bottom: 8px;">📍 LỰA CHỌN ĐƠN VỊ TRỰC THUỘC:</label>
+          <select id="sel_don_vi" class="reactbits-btn" style="width: 100%; padding: 10px; border-radius: 6px; border: 2px solid #94a3b8; font-family: 'Times New Roman', serif; font-size: 15px; outline: none; background: #ffffff; color: #1e3a8a;" onchange="thayDoiDonVi(this.value)">
+              <option value="TRUONG_A">Trường TH&THCS Hợp Thành</option>
+              <option value="TRUONG_B">Trường THCS B (Demo)</option>
+          </select>
+      </div>
+      <!-- KẾT THÚC: KHỐI LỰA CHỌN ĐƠN VỊ -->
+     
       <p id="app-version-text" style="font-size: 13px; color:#dc3545;font-weight: bold; margin-bottom: 20px;"></p>
       
       <div id="g_id_onload"
@@ -949,15 +962,32 @@ function taiTepPdfDangXem() {
   the_tai_pdf.click();
   document.body.removeChild(the_tai_pdf);
 
-  if (nutTai) {
-      setTimeout(() => {
-          nutTai.innerHTML = chuGoc;
-          nutTai.disabled = false;
-          nutTai.style.background = "linear-gradient(135deg, #ef4444, #991b1b)"; 
-      }, 5000); 
-  }
+if (nutTai) {
+          setTimeout(() => {
+              nutTai.innerHTML = chuGoc;
+              nutTai.disabled = false;
+              nutTai.style.background = "linear-gradient(135deg, #ef4444, #991b1b)"; 
+          }, 5000); 
+      }
 }
 // KẾT THÚC NÂNG CẤP
+
+    // HÀM LƯU ĐỊNH DANH VÀ CẬP NHẬT UI TRÌNH DUYỆT TỨC THÌ
+    function thayDoiDonVi(maDonVi) {
+        sessionStorage.setItem("SKT_MA_DON_VI", maDonVi);
+        if (typeof capNhatGiaoDienClient === 'function') {
+            capNhatGiaoDienClient(maDonVi);
+        }
+    }
+
+    // ĐỒNG BỘ TRẠNG THÁI KHI TẢI TRANG
+    document.addEventListener("DOMContentLoaded", function() {
+        const maLuu = sessionStorage.getItem("SKT_MA_DON_VI");
+        if(maLuu && document.getElementById('sel_don_vi')) {
+            document.getElementById('sel_don_vi').value = maLuu;
+        }
+    });
+
   </script>
 </body>
 </html>
