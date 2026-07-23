@@ -41,11 +41,11 @@ var SKT_LOGO_URL = MA_TRAN_UI_CLIENT["DANG_NHAP"].LOGO_URL;
 
 /* KHỐI NÂNG CẤP: HÀM CẬP NHẬT GIAO DIỆN TỨC THÌ KHI CHỌN TRƯỜNG */
 function capNhatGiaoDienClient(ma_don_vi) {
-    var cau_hinh = MA_TRAN_UI_CLIENT[ma_don_vi] || MA_TRAN_UI_CLIENT["TRUONG_A"];
+    var cau_hinh = MA_TRAN_UI_CLIENT[ma_don_vi] || MA_TRAN_UI_CLIENT["TRUONG_1"];
     
-    SKT_TEN_TRUONG = cauHinh.TEN_TRUONG;
-    SKT_TEN_TRUONG_UP = cauHinh.TEN_TRUONG_UP;
-    SKT_LOGO_URL = cauHinh.LOGO_URL;
+    SKT_TEN_TRUONG = cau_hinh.TEN_TRUONG;
+    SKT_TEN_TRUONG_UP = cau_hinh.TEN_TRUONG_UP;
+    SKT_LOGO_URL = cau_hinh.LOGO_URL;
 
     // Thay đổi hiển thị tức thì trên DOM
     document.title = SKT_TEN_PM + " - " + SKT_TEN_TRUONG;
@@ -66,7 +66,6 @@ function capNhatGiaoDienClient(ma_don_vi) {
     const favicon = document.getElementById('skt_favicon');
     if (favicon) favicon.href = SKT_LOGO_URL;
 }
-
 /* ========================================================================= */
 /* KHỞI TẠO CẤU TRÚC HEADER TỰ ĐỘNG KHI LOAD TRANG BAN ĐẦU                   */
 /* ========================================================================= */
