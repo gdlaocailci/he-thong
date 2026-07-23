@@ -403,27 +403,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-
-   /**
- * Hàm kiểm tra trạng thái chọn đơn vị để hiển thị nút đăng nhập
- * Được gọi thông qua sự kiện onchange="kiemTraChonDonVi(this)" trên thẻ <select>
- */
-function kiemTraChonDonVi(theSelect) {
-    // Lấy phần tử chứa nút đăng nhập Google
-    const khuVucDangNhap = document.getElementById("khu_vuc_dang_nhap_google");
-    
-    if (khuVucDangNhap) {
-        // Nếu giá trị chọn không rỗng (nghĩa là đã chọn một trường cụ thể)
-        if (theSelect.value !== "") {
-            // Hiển thị lại khối đăng nhập (sử dụng 'block' hoặc 'flex' tùy cấu trúc CSS của Thầy/Cô)
-            khuVucDangNhap.style.display = "block"; 
-        } else {
-            // Nếu chưa chọn (trường hợp này khó xảy ra vì đã khóa disabled, nhưng vẫn rào lỗi)
-            khuVucDangNhap.style.display = "none";
-        }
-    }
-}
-   
+ 
     function hienThongBaoUI(tieuDe, noiDung, loai = 'error') {
       const box = document.getElementById('custom-alert-box');
       const icon = document.getElementById('custom-alert-icon');
@@ -1018,7 +998,14 @@ if (nutTai) {
     document.addEventListener("DOMContentLoaded", function() {
         const maLuu = sessionStorage.getItem("SKT_MA_DON_VI");
         if(maLuu && document.getElementById('sel_don_vi')) {
+            // Hiển thị đúng đơn vị đã chọn trên ô Select
             document.getElementById('sel_don_vi').value = maLuu;
+            
+            // Mở khóa khối đăng nhập
+            const khuVucDangNhap = document.getElementById('khu_vuc_dang_nhap_google');
+            if (khuVucDangNhap) {
+                khuVucDangNhap.style.display = 'block';
+            }
         }
     });
 
