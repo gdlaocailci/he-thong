@@ -749,8 +749,9 @@ function taiTepDangXem() {
         return JSON.parse(noidunjson);
     }
 
-    function dangxg() {
+function dangxg() {
         xoaluutrant("SKT_DINHDANH_TAIK");
+        sessionStorage.removeItem("SKT_MA_DON_VI"); // Thêm dòng khóa này
         window.skttktoanc = null;
         location.reload(); 
     }
@@ -985,22 +986,36 @@ if (nutTai) {
 // KẾT THÚC NÂNG CẤP
 
     // HÀM LƯU ĐỊNH DANH VÀ CẬP NHẬT UI TRÌNH DUYỆT TỨC THÌ
-   function thayDoiDonVi(maDonVi) {
-        sessionStorage.setItem("SKT_MA_DON_VI", maDonVi);
-   location.reload(); 
+function thayDoiDonVi(maDonVi) {
+        if (!maDonVi || maDonVi === "") {
+            sessionStorage.removeItem("SKT_MA_DON_VI");
+        } else {
+            sessionStorage.setItem("SKT_MA_DON_VI", maDonVi);
+        }
+        location.reload(); 
     }
 
-    // ĐỒNG BỘ TRẠNG THÁI KHI TẢI TRANG
+    // 3. CẬP NHẬT EVENT DOMContentLoaded Ở CUỐI FILE: Điều khiển ẩn/hiện Subtitle
     document.addEventListener("DOMContentLoaded", function() {
         const maLuu = sessionStorage.getItem("SKT_MA_DON_VI");
+        const khuVucDangNhap = document.getElementById('khu_vuc_dang_nhap_google');
+        const loginSubTitle = document.getElementById('login-subtitle-main');
+        const loginTitle = document.getElementById('login-title-main');
+
         if(maLuu && document.getElementById('sel_don_vi')) {
-            // Hiển thị đúng đơn vị đã chọn trên ô Select
+            // Trường hợp ĐÃ CHỌN trường
             document.getElementById('sel_don_vi').value = maLuu;
-            
-            // Mở khóa khối đăng nhập
-            const khuVucDangNhap = document.getElementById('khu_vuc_dang_nhap_google');
-            if (khuVucDangNhap) {
-                khuVucDangNhap.style.display = 'block';
+            if (khuVucDangNhap) khuVucDangNhap.style.display = 'block';
+            if (loginSubTitle) {
+                loginSubTitle.style.display = 'block'; 
+                if (loginTitle) loginTitle.style.marginBottom = '5px'; // Ép khoảng cách gần lại
+            }
+        } else {
+            // Trường hợp CHƯA CHỌN trường (như ảnh chụp)
+            if (khuVucDangNhap) khuVucDangNhap.style.display = 'none';
+            if (loginSubTitle) {
+                loginSubTitle.style.display = 'none'; // Ẩn thẻ để không bị trống không gian
+                if (loginTitle) loginTitle.style.marginBottom = '25px'; // Nới rộng khoảng cách chuẩn
             }
         }
     });
