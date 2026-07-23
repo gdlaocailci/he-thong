@@ -973,11 +973,9 @@ if (nutTai) {
 // KẾT THÚC NÂNG CẤP
 
     // HÀM LƯU ĐỊNH DANH VÀ CẬP NHẬT UI TRÌNH DUYỆT TỨC THÌ
-    function thayDoiDonVi(maDonVi) {
+   function thayDoiDonVi(maDonVi) {
         sessionStorage.setItem("SKT_MA_DON_VI", maDonVi);
-        if (typeof capNhatGiaoDienClient === 'function') {
-            capNhatGiaoDienClient(maDonVi);
-        }
+   location.reload(); 
     }
 
     // ĐỒNG BỘ TRẠNG THÁI KHI TẢI TRANG
