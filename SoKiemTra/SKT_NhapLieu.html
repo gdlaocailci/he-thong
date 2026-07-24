@@ -1,4 +1,16 @@
 <style>
+  /* NÂNG CẤP: Giao diện cho ô tìm kiếm Combobox */
+  input[list] {
+      cursor: pointer;
+  }
+  input[list]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.6;
+      transition: 0.2s;
+  }
+  input[list]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+  }
   .cell-input::placeholder { color: #94a3b8 !important; opacity: 0.5; font-style: italic; font-size: 13px; }
   #mainTable .cell-input::placeholder { opacity: 0.45; }
   select.cell-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231e3a8a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 5px top 50%; background-size: 8px auto; padding-right: 15px; text-align-last: center; }
@@ -36,14 +48,30 @@
 <div id="main_content">
   <div class="header-card">
    <h1 id="title_nhaplieu" style="text-align:center; color:var(--brand-red); margin-top:0; font-family: 'Times New Roman', serif; font-size: 22px; font-weight: bold;">ĐANG ĐỒNG BỘ DỮ LIỆU...</h1>
-    <div class="filter-section">
-      <div class="f-item"><span>Giáo viên</span><select id="cbGiaoVien" class="f-input" onchange="khindthd('GV')"></select></div>
-      <div class="f-item"><span>Người kiểm tra</span><select id="cbNguoiKiemTra" class="f-input" onchange="khindthd('NKT')"></select></div>
-      <div class="f-item"><span>Bộ phận</span><select id="cbBoPhan" class="f-input" onchange="capnmab()"></select></div>
-      <div class="f-item"><span>Mã bộ phận</span><input type="text" id="txtMaBoPhan" class="f-input" readonly style="background:#f3f4f6; text-align:center;"></div>
+<div class="filter-section">
       <div class="f-item">
-        <span>Mã hồ sơ (Lịch sử) <button id="btnRefreshMaHoSo" class="refresh-btn" title="Cập nhật danh sách" onclick="lammdsm()">↻</button></span>
-        <select id="cbMaHoSo" class="f-input" onchange="khindthd('MAHS')"></select>
+        <span>Giáo viên</span>
+        <input id="cbGiaoVien" list="list_cbGiaoVien" class="f-input" placeholder="-- Chọn / Nhập tìm kiếm --" onchange="khindthd('GV')" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+        <datalist id="list_cbGiaoVien"></datalist>
+      </div>
+      <div class="f-item">
+        <span>Người kiểm tra</span>
+        <input id="cbNguoiKiemTra" list="list_cbNguoiKiemTra" class="f-input" placeholder="-- Chọn / Nhập tìm kiếm --" onchange="khindthd('NKT')" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+        <datalist id="list_cbNguoiKiemTra"></datalist>
+      </div>
+      <div class="f-item">
+        <span>Bộ phận</span>
+        <input id="cbBoPhan" list="list_cbBoPhan" class="f-input" placeholder="-- Chọn / Nhập tìm kiếm --" onchange="capnmab()" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+        <datalist id="list_cbBoPhan"></datalist>
+      </div>
+      <div class="f-item">
+        <span>Mã bộ phận</span>
+        <input type="text" id="txtMaBoPhan" class="f-input" readonly style="background:#f3f4f6; text-align:center;">
+      </div>
+      <div class="f-item">
+        <span>Mã hồ sơ <button id="btnRefreshMaHoSo" class="refresh-btn" title="Cập nhật danh sách" onclick="lammdsm()">↻</button></span>
+        <input id="cbMaHoSo" list="list_cbMaHoSo" class="f-input" placeholder="-- Chọn / Nhập tìm kiếm --" onchange="khindthd('MAHS')" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+        <datalist id="list_cbMaHoSo"></datalist>
       </div>
     </div>
         <div class="status-stepper">
@@ -156,19 +184,21 @@
       return String(ch).normalize("NFC").toLowerCase().replace(/[\s\uFEFF\xA0]+/g, '');
   }
 
+// 4. Nâng cấp hàm set dữ liệu tự động (Nhận diện tự động Input hoặc Select)
   function dathopc(idd, gt) {
       const pht = document.getElementById(idd);
       if(!pht) return;
-      const t1 = chuanhchu(gt);
-      for(let iso = 0; iso < pht.options.length; iso++) {
-          if(chuanhchu(pht.options[iso].text) === t1 || chuanhchu(pht.options[iso].value) === t1) {
-              pht.selectedIndex = iso;
-              return;
+      if (pht.tagName.toLowerCase() === 'input') {
+          pht.value = gt || ""; // Trả thẳng giá trị vào thẻ input
+      } else {
+          // Tương thích ngược với các thẻ select cũ nếu còn
+          const t1 = chuanhchu(gt);
+          for(let iso = 0; iso < pht.options.length; iso++) {
+              if(chuanhchu(pht.options[iso].text) === t1 || chuanhchu(pht.options[iso].value) === t1) {
+                  pht.selectedIndex = iso; return;
+              }
           }
-      }
-      if(gt && gt.trim() !== "") {
-          pht.add(new Option(gt, gt));
-          pht.selectedIndex = pht.options.length - 1; 
+          if(gt && gt.trim() !== "") { pht.add(new Option(gt, gt)); pht.selectedIndex = pht.options.length - 1; }
       }
   }
 
@@ -673,15 +703,16 @@ function themdongmo(dld = null) {
   }
 
 /* ========================================================================== */
-/* HÀM THỰC THI LƯU/NỘP ĐÃ ĐỒNG BỘ MÃ LỆNH (SỬA LỖI THÔNG BÁO)                 */
+// 5. Cập nhật nhỏ trong hàm thuchms (Khắc phục lỗi đọc .options của Select cũ)
 /* ========================================================================== */
 function thuchms(ha, nt, ch) {
     const con_trau_nuoc = chuanhchu(window.skttktoanc || sessionStorage.getItem("SKT_USER_TAIK") || tknd);
     const hop_dien_thoai = document.getElementById('cbGiaoVien');
     const hop_may_tinh = document.getElementById('cbNguoiKiemTra');
     
-    const qua_chuoi_chin = String(hop_dien_thoai.options[hop_dien_thoai.selectedIndex]?.text || hop_dien_thoai.value || "").trim();
-    const qua_dua_hau = String(hop_may_tinh.options[hop_may_tinh.selectedIndex]?.text || hop_may_tinh.value || "").trim();
+    // NÂNG CẤP: Đọc giá trị trực tiếp từ .value vì các ô này nay đã là thẻ <input>
+    const qua_chuoi_chin = String(hop_dien_thoai.value || "").trim();
+    const qua_dua_hau = String(hop_may_tinh.value || "").trim();
     
     const cai_ban_go = String(window.sktquyenht || "").trim().toLowerCase();
     const quyen_toi_cao = (cai_ban_go === 'xxx'); 
@@ -696,7 +727,6 @@ function thuchms(ha, nt, ch) {
         // Kiểm tra quyền nộp (Chỉ người kiểm tra hoặc quản trị cao nhất)
         const canSubmit = (nguoi_cam_can && (cai_ban_go === 'x' || cai_ban_go === 'xx' || cai_ban_go === 'xxx')) || quyen_toi_cao;
         if (!canSubmit) {
-            // 👉 ĐÃ SỬA: Đổi nội dung cảnh báo chính xác theo yêu cầu
             hienhth("⛔ Bạn không có quyền nộp hồ sơ");
             return;
         }
@@ -710,11 +740,12 @@ function thuchms(ha, nt, ch) {
     }
 
     const gia_vi_1 = hop_dien_thoai.value;
-    const gia_vi_2 = qua_dua_hau;
+    const gia_vi_2 = hop_may_tinh.value;
     const gia_vi_3 = document.getElementById('cbBoPhan').value;
     const gia_vi_4 = document.getElementById('txtMaBoPhan').value;
     const thung_chua_do = [];
     
+    // Quét dữ liệu trên lưới
     document.querySelectorAll('#tableContent tr').forEach(dong_chay => {
         const cac_hat_tieu = dong_chay.querySelectorAll('.cell-input');
         const ma_the_bai = dong_chay.querySelector('.ma-ho-so-cell');
@@ -806,8 +837,22 @@ function thuchms(ha, nt, ch) {
   }
 
   function capnst() { document.querySelectorAll('#tableContent tr').forEach((dg, iso) => dg.querySelector('.stt-cell').innerText = iso + 1); }
-  function dienho(idd, dl) { const pht = document.getElementById(idd); pht.innerHTML='<option value="">-- Chọn --</option>'; dl.forEach(ptu=>pht.add(new Option(ptu.tenn,ptu.tenn))); }
-  function dienhopd(idd, ds) { const pht = document.getElementById(idd); pht.innerHTML='<option value="">-- Chọn --</option>'; if(ds) ds.forEach(v1=>v1&&pht.add(new Option(v1,v1))); }
+ // 1. Nâng cấp hàm đổ dữ liệu Giáo viên/NKT
+  function dienho(idd, dl) { 
+    const list = document.getElementById('list_' + idd); 
+    if(list) {
+        list.innerHTML = ''; 
+        dl.forEach(ptu => list.appendChild(new Option(ptu.tenn, ptu.tenn)));
+    }
+  }
+// 2. Nâng cấp hàm đổ dữ liệu Bộ phận
+  function dienhopd(idd, ds) { 
+    const list = document.getElementById('list_' + idd); 
+    if(list) {
+        list.innerHTML = ''; 
+        if(ds) ds.forEach(v1 => { if(v1) list.appendChild(new Option(v1, v1)); });
+    }
+  }
   function capnmab() { 
     document.getElementById('txtMaBoPhan').value = dlbpha[document.getElementById('cbBoPhan').value]||""; 
     
@@ -857,14 +902,19 @@ function datlbie() {
     apdquye(); // Cập nhật lại vòng kiểm soát quyền
 }
   
+// 3. Nâng cấp hàm đổ dữ liệu Mã hồ sơ
   function capnhopm() {
-    const hp = document.getElementById('cbMaHoSo'); const ht = hp.value;
-    hp.innerHTML = '<option value="">-- Chọn --</option>';
-    if (dlmhso && dlmhso.length > 0) {
-      const sx = [...dlmhso].sort().reverse();
-      sx.forEach(m1 => hp.add(new Option(m1, m1)));
-      if (ht) hp.value = ht;
-      document.getElementById('btnRefreshMaHoSo').title = `Danh sách (${sx.length})`;
+    const hp = document.getElementById('cbMaHoSo'); 
+    const ht = hp.value;
+    const list = document.getElementById('list_cbMaHoSo');
+    if(list) {
+        list.innerHTML = '';
+        if (dlmhso && dlmhso.length > 0) {
+          const sx = [...dlmhso].sort().reverse();
+          sx.forEach(m1 => list.appendChild(new Option(m1, m1)));
+          if (ht) hp.value = ht;
+          document.getElementById('btnRefreshMaHoSo').title = `Danh sách (${sx.length})`;
+        }
     }
   }
 function lammdsm() {
