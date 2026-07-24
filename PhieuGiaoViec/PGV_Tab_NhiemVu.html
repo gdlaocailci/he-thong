@@ -274,59 +274,114 @@ function kiemTraQuyenTruyCap() {
     apDungKhoaGiaoDien(); 
 }
 
+// Khởi tạo Custom Dropdown và bơm dữ liệu
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     var selectGv = document.getElementById("hopChonGv"); 
-    if (!selectGv) return;
+    var nhapTimGv = document.getElementById("nhapTimGv");
+    var khungDsGv = document.getElementById("khungDsGv");
     
-    // Tự động tạo datalist ngầm nếu chưa có để tránh lỗi HTML bị xóa
-    var dlGv = document.getElementById("dl_hopChonGv");
-    if (!dlGv) {
-        dlGv = document.createElement("datalist");
-        dlGv.id = "dl_hopChonGv";
-        document.body.appendChild(dlGv);
+    if (!selectGv || !nhapTimGv || !khungDsGv) return;
+
+    // KỸ THUẬT QUAN TRỌNG: Đánh lừa hệ thống để giữ nguyên độ ổn định của các hàm phân quyền cũ
+    if (typeof selectGv.value === 'undefined') {
+        Object.defineProperty(selectGv, 'value', {
+            get: function() { return this.getAttribute('data-value') || ""; },
+            set: function(val) { 
+                this.setAttribute('data-value', val); 
+                if(val === "") nhapTimGv.value = ""; 
+            }
+        });
     }
+    
+    // Đặt lại mặc định
+    selectGv.value = "";
+    khungDsGv.innerHTML = `<div class="muc-chon-gv p-2 border-bottom text-dark" style="cursor:pointer;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGvTuDanhSach('', '')">-- Lựa chọn hồ sơ --</div>`;
     
     var ds = danhSachGiaoVien;
-    if (ds && !Array.isArray(ds) && ds.dliu) {
-        ds = ds.dliu;
-    }
+    if (ds && !Array.isArray(ds) && ds.dliu) ds = ds.dliu;
     
-    let chuoiHtmlDatalist = "";
     let soNguoi = 0;
-
     if (ds && ds.length > 0) { 
         ds.forEach(function(cb) { 
             var qy = String(cb.quyen || "").trim().toLowerCase();
-            
-            // BỘ LỌC 2: Chỉ lấy những người có quyền rỗng, x, hoặc xx vào hộp chọn
+            // Lọc BGH, Quản trị và Giáo viên
             if (qy === "" || qy === "x" || qy === "xx") {
-                var tenHienThi = cb.ten || cb.hoTen || cb.tenn || "";
+                soNguoi++;
+                var ma = cb.id || cb.ma || cb.ttrg || "";
+                var ten = cb.ten || cb.hoTen || cb.tenn || "";
                 var cv = String(cb.chucvu || "").trim();
+                var textHienThi = cv ? (ten + " (" + cv + ")") : ten;
                 
-                if (tenHienThi !== "") {
-                    soNguoi++;
-                    // Ép trực tiếp HTML để đảm bảo 100% trình duyệt nhận diện được danh sách
-                    if(cv) {
-                        chuoiHtmlDatalist += `<option value="${tenHienThi}">${tenHienThi} (${cv})</option>`;
-                    } else {
-                        chuoiHtmlDatalist += `<option value="${tenHienThi}"></option>`;
-                    }
+                if (ma && ten) {
+                    khungDsGv.innerHTML += `<div class="muc-chon-gv p-2 border-bottom text-dark" data-text="${textHienThi.toLowerCase()}" style="cursor:pointer;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGvTuDanhSach('${ma}', '${textHienThi}')">${textHienThi}</div>`;
                 }
             }
         }); 
     } 
 
-    // Đổ toàn bộ danh sách vào thẻ datalist cùng 1 lúc
-    dlGv.innerHTML = chuoiHtmlDatalist;
-
     if (soNguoi > 0) {
         selectGv.style.setProperty('display', 'inline-block', 'important');
-        selectGv.disabled = false;
     } else {
         selectGv.style.setProperty('display', 'none', 'important');
-        selectGv.disabled = true;
     }
 }
+
+// ==========================================
+// CÁC HÀM BỔ TRỢ CHO CUSTOM DROPDOWN
+// ==========================================
+function moDanhSachTimGv(suKien) {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
+    var ds = document.getElementById("khungDsGv");
+    var input = document.getElementById("nhapTimGv");
+    if(ds) {
+        // Tự động đóng các list bảng điểm nếu đang mở
+        document.querySelectorAll('.khung-danh-sach').forEach(d => { if(d !== ds) d.style.display = 'none'; });
+        
+        ds.style.display = (ds.style.display === "none") ? "block" : "none";
+        if (ds.style.display === "block") {
+            input.select();
+            locDanhSachTimGv(); 
+        }
+    }
+    suKien.stopPropagation();
+}
+
+function locDanhSachTimGv() {
+    var input = document.getElementById("nhapTimGv");
+    var filter = input.value.toLowerCase();
+    var ds = document.getElementById("khungDsGv");
+    if(!ds) return;
+    
+    var muc = ds.getElementsByClassName("muc-chon-gv");
+    ds.style.display = "block"; // Luôn mở list khi đang gõ
+    for (var i = 1; i < muc.length; i++) { 
+        var txt = muc[i].getAttribute("data-text") || "";
+        if (txt.indexOf(filter) > -1) muc[i].style.display = "";
+        else muc[i].style.display = "none";
+    }
+}
+
+function chonGvTuDanhSach(maTrangDich, textHienThi) {
+    var selectGv = document.getElementById("hopChonGv");
+    var nhapTim = document.getElementById("nhapTimGv");
+    var ds = document.getElementById("khungDsGv");
+    
+    if (selectGv) selectGv.value = maTrangDich; // Kích hoạt thuộc tính lưu ẩn
+    if (nhapTim) nhapTim.value = textHienThi; // Hiển thị ra text
+    if (ds) ds.style.display = "none";
+    
+    // Gọi lại hàm kiểm tra quyền tổng
+    if (typeof kiemTraQuyenTruyCap === 'function') kiemTraQuyenTruyCap();
+}
+
+// Bắt sự kiện click ra ngoài màn hình để đóng hộp chọn
+document.addEventListener('click', function(suKien) {
+    var hopChon = document.getElementById('hopChonGv');
+    if (hopChon && !hopChon.contains(suKien.target)) {
+        var ds = document.getElementById("khungDsGv");
+        if(ds) ds.style.display = "none";
+    }
+});
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
     cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
@@ -406,19 +461,10 @@ function doiTrangThaiKhoa() {
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
     
     // NÂNG CẤP: Dò ngược từ Tên hiển thị sang Mã tài khoản
-    if (cotETonTai) { 
+  if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            let tenGvChon = selectGv.value.trim();
-            let ds = dsGiaoVien && dsGiaoVien.dliu ? dsGiaoVien.dliu : (dsGiaoVien || []);
-            let found = ds.find(cb => (cb.ten || cb.hoTen || cb.tenn) === tenGvChon);
-            
-            if (found) {
-                maTrangDich = found.id || found.ma || found.ttrg;
-            } else {
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Tên nhân sự không hợp lệ. Vui lòng chọn đúng tên từ danh sách gợi ý.");
-                return;
-            }
+            maTrangDich = selectGv.value;
         } 
     }
 
@@ -570,24 +616,14 @@ function xulyLuuTam(ath = false, xltc = null) {
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
 
     // NÂNG CẤP: Dò ngược từ Tên hiển thị sang Mã tài khoản
-    if (cotETonTai) { 
+if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
             if (!isBGH && !isGS) { 
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
                 return; 
             } 
-            
-            let tenGvChon = selectGv.value.trim();
-            let ds = dsGiaoVien && dsGiaoVien.dliu ? dsGiaoVien.dliu : (dsGiaoVien || []);
-            let found = ds.find(cb => (cb.ten || cb.hoTen || cb.tenn) === tenGvChon);
-            
-            if (found) {
-                maTrangDich = found.id || found.ma || found.ttrg;
-            } else {
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Lỗi: Tên nhân sự không khớp với cơ sở dữ liệu. Không thể lưu báo cáo.");
-                return;
-            }
+            maTrangDich = selectGv.value;
         } else if (isBGH || isGS) {
             if (!maTrangDich || maTrangDich.trim() === "") {
                 if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một nhân sự từ danh sách trước khi lưu.");
