@@ -1,4 +1,16 @@
 <style>
+  /* NÂNG CẤP: Giao diện cho ô tìm kiếm Combobox (Tab Tìm kiếm) */
+  input[list] {
+      cursor: pointer;
+  }
+  input[list]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.6;
+      transition: 0.2s;
+  }
+  input[list]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+  }
   .header-card {
     background: white; padding: 5px 10px; border-radius: 6px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 5px; border-top: 3px solid #b91c1c; 
@@ -116,19 +128,29 @@
 <div class="header-card">
   <div class="page-title" id="title_timkiem">ĐANG ĐỒNG BỘ DỮ LIỆU...</div>
   
-  <div class="filter-section-search">
-    <div class="f-item"><span>Giáo viên</span><select id="s_gv" class="f-input"><option value="">-- Tất cả --</option></select></div>
-    <div class="f-item"><span>Người kiểm tra</span><select id="s_nkt" class="f-input"><option value="">-- Tất cả --</option></select></div>
-    <div class="f-item"><span>Bộ phận</span><select id="s_bp" class="f-input"><option value="">-- Tất cả --</option></select></div>
+<div class="filter-section-search">
+    <div class="f-item">
+      <span>Giáo viên</span>
+      <input id="s_gv" list="list_s_gv" class="f-input" placeholder="-- Tất cả --" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+      <datalist id="list_s_gv"></datalist>
+    </div>
+    <div class="f-item">
+      <span>Người kiểm tra</span>
+      <input id="s_nkt" list="list_s_nkt" class="f-input" placeholder="-- Tất cả --" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+      <datalist id="list_s_nkt"></datalist>
+    </div>
+    <div class="f-item">
+      <span>Bộ phận</span>
+      <input id="s_bp" list="list_s_bp" class="f-input" placeholder="-- Tất cả --" onclick="this.select(); try{this.showPicker();}catch(e){}" autocomplete="off">
+      <datalist id="list_s_bp"></datalist>
+    </div>
     <div class="f-item"><span>Từ ngày</span><input type="text" id="s_from" class="f-input text-center" placeholder="dd/mm/yyyy" oninput="dinhdng(event);"></div>
     <div class="f-item"><span>Đến ngày</span><input type="text" id="s_to" class="f-input text-center" placeholder="dd/mm/yyyy" oninput="dinhdng(event);"></div>
     <div class="f-item" style="display:flex; align-items: flex-end;">
       <button id="btn_search_main" class="reactbits-btn search-btn" onclick="con_chuot_goi_api_tim_kiem()">🔍 Tìm</button>
-     <button class="reactbits-btn reset-search-btn" onclick="xoatti()">↻</button>
+      <button class="reactbits-btn reset-search-btn" onclick="xoatti()">↻</button>
       <button class="reactbits-btn print-btn" onclick="inba()" title="Xuất sổ kiểm tra">🖨️</button>
-      <!-- BẮT ĐẦU NÂNG CẤP: Ẩn nút PDF ngoài giao diện chính -->
       <button class="reactbits-btn print-pdf-btn" onclick="qua_tao_xuat_pdf()" title="Xuất kết quả ra file PDF" style="display: none;">📄</button>
-      <!-- KẾT THÚC NÂNG CẤP -->
       <span id="print_link_container"></span>
     </div>
   </div>
@@ -278,7 +300,6 @@
 
 // --- KÍCH HOẠT LÚC MỞ TAB: TẢI SẴN 12 THÁNG, HIỂN THỊ ĐỒNG BỘ DỮ LIỆU ---
   function khoitti() { 
-    // NÂNG CẤP 1: Bỏ cấu trúc (function...)() bọc ngoài để index.html có thể gọi lại hàm này khi có dữ liệu
     const hom_nay = new Date();
     const nam_nay = hom_nay.getFullYear();
     const thang_nay = String(hom_nay.getMonth() + 1).padStart(2, '0');
@@ -306,19 +327,22 @@
         });
     });
 
-    const gv = document.getElementById('s_gv');
-    const nkt = document.getElementById('s_nkt');
-    const bp = document.getElementById('s_bp');
+    // NÂNG CẤP: Gắn liên kết tới các thẻ datalist mới
+    const list_gv = document.getElementById('list_s_gv');
+    const list_nkt = document.getElementById('list_s_nkt');
+    const list_bp = document.getElementById('list_s_bp');
     
-    // NÂNG CẤP 2: Làm sạch các tùy chọn (giữ lại dòng "Tất cả") trước khi nạp dữ liệu mới
-    if (gv) gv.innerHTML = '<option value="">-- Tất cả --</option>';
-    if (nkt) nkt.innerHTML = '<option value="">-- Tất cả --</option>';
-    if (bp) bp.innerHTML = '<option value="">-- Tất cả --</option>';
+    // Làm sạch datalist cũ nếu có
+    if (list_gv) list_gv.innerHTML = '';
+    if (list_nkt) list_nkt.innerHTML = '';
+    if (list_bp) list_bp.innerHTML = '';
 
     const chaucay = window.ruongbac || { dgv: [], dnk: [], dbp: [] };
-    chaucay.dgv.forEach(m1 => gv.add(new Option(m1, m1)));
-    chaucay.dnk.forEach(m1 => nkt.add(new Option(m1, m1)));
-    chaucay.dbp.forEach(m1 => bp.add(new Option(m1, m1)));
+    
+    // Bơm dữ liệu từ bộ nhớ vào thẻ datalist tương ứng
+    if (list_gv) chaucay.dgv.forEach(m1 => list_gv.appendChild(new Option(m1, m1)));
+    if (list_nkt) chaucay.dnk.forEach(m1 => list_nkt.appendChild(new Option(m1, m1)));
+    if (list_bp) chaucay.dbp.forEach(m1 => list_bp.appendChild(new Option(m1, m1)));
     
     // Đồng bộ thời gian chặn đầu/chặn cuối trên trình duyệt
     const ngayBatDau = skt_chuyenDoiNgay_js(document.getElementById('s_from').value);
