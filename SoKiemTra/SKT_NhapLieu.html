@@ -584,55 +584,83 @@ function khindthd(lo) {
     }
 }
 //======================================================================================================
-function themdongmo(dld = null) {
-    const datg = new Date().getTime().toString().slice(-5);
-    const idng = Math.floor(Math.random() * 1000); 
-    const tbg = document.getElementById('tableContent');
-    const dmo = document.createElement('tr');
-    
-    // GẮN CỜ: Đánh dấu đây là dòng mới tạo, chưa lưu vào CSDL
-    if (!dld) dmo.setAttribute('data-isnew', '1');
-    
-    const tchs = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="TB">TB</option>';
-    const tcgd = '<option value=""></option><option value="Giỏi">Giỏi</option><option value="Khá">Khá</option><option value="TB">TB</option><option value="Yếu">Yếu</option>';
-    const tcks = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="Đạt">Đạt</option><option value="Yếu">Yếu</option>';
-    const tckh = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="TB">TB</option><option value="Chưa đạt">Chưa đạt</option>';
-
-    dmo.innerHTML = `
-      <td style="text-align:center;vertical-align:middle"><button class="btn-icon-del" onclick="xoado(this)" title="Xóa dòng">🗑️</button></td>
-      <td style="text-align:center;vertical-align:middle" class="stt-cell"></td>
-      <td><input class="cell-input text-center" value="${layngayh()}" oninput="dinhdng(event)" placeholder="dd/mm/yyyy" disabled></td>
-      <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
-      <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
-      <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
-      <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
-      <td><select class="cell-input text-center" disabled>${tchs}</select></td>
-      <td><select class="cell-input text-center" disabled>${tcgd}</select></td>
-      <td><select class="cell-input text-center" disabled>${tcks}</select></td>
-      <td><select class="cell-input text-center" disabled>${tckh}</select></td>
-      <td><textarea class="cell-input text-center" rows="1" oninput="tudochk(this)" style="text-align:center; padding-top:10px;" placeholder="(Ý kiến của giáo viên)" disabled></textarea></td>
-      <td><textarea class="cell-input text-center" rows="1" oninput="tudochk(this)" style="text-align:center; padding-top:10px; overflow:hidden;" placeholder="(Ghi họ và tên)" disabled></textarea></td>
-      <td style="text-align:center;vertical-align:middle; padding:5px;" class="evidence-cell">
-          <input type="hidden" class="cell-input link-input">
-          <div class="link-display-area" style="width:100%;"></div>
-          <button class="btn-upload-icon reactbits-btn" onclick="kichhta(this)" title="Chèn minh chứng">📎</button>
-      </td>
-      <td class="ma-ho-so-cell">MS-${datg}-${idng}</td>
-    `;
-    tbg.appendChild(dmo);
-    capnst(); capnticd();
-    
-    if(dld) {
-       const cacn = dmo.querySelectorAll('.cell-input');
-       for(let iso = 0; iso <= 10; iso++) cacn[iso].value = dld[iso+4] || ""; 
-       const ddnlk = dld[15]||"";
-       if(ddnlk) { donghtta = dmo; trallkch(ddnlk); }
-       dmo.querySelector('.ma-ho-so-cell').innerText = dld[16]||`MS-${datg}-${idng}`;
-       dmo.querySelectorAll('textarea').forEach(t1 => tudochk(t1));
+// NÂNG CẤP: Hàm kiểm tra sự kiện nhập liệu cột Ký tên (Căn chỉnh lại lề cho Icon SVG)
+function kiemTraKyTen(o_nhap) {
+    const td = o_nhap.closest('td');
+    const icon = td.querySelector('.icon-check-ky');
+    if (icon) {
+        if (o_nhap.value.trim() !== "") {
+            icon.style.display = 'inline-flex';
+            o_nhap.style.paddingLeft = '28px'; 
+        } else {
+            icon.style.display = 'none';
+            o_nhap.style.paddingLeft = '5px';
+        }
     }
-    apdquye();
-  }
+}
 
+// NÂNG CẤP: Thay thế emoji bằng Mã nhúng đồ họa (SVG) chuẩn xác theo hình ảnh
+function themdongmo(dld = null) {
+  const datg = new Date().getTime().toString().slice(-5);
+  const idng = Math.floor(Math.random() * 1000); 
+  const tbg = document.getElementById('tableContent');
+  const dmo = document.createElement('tr');
+  
+  if (!dld) dmo.setAttribute('data-isnew', '1');
+  
+  const tchs = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="TB">TB</option>';
+  const tcgd = '<option value=""></option><option value="Giỏi">Giỏi</option><option value="Khá">Khá</option><option value="TB">TB</option><option value="Yếu">Yếu</option>';
+  const tcks = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="Đạt">Đạt</option><option value="Yếu">Yếu</option>';
+  const tckh = '<option value=""></option><option value="Tốt">Tốt</option><option value="Khá">Khá</option><option value="TB">TB</option><option value="Chưa đạt">Chưa đạt</option>';
+
+  dmo.innerHTML = `
+    <td style="text-align:center;vertical-align:middle"><button class="btn-icon-del" onclick="xoado(this)" title="Xóa dòng">🗑️</button></td>
+    <td style="text-align:center;vertical-align:middle" class="stt-cell"></td>
+    <td><input class="cell-input text-center" value="${layngayh()}" oninput="dinhdng(event)" placeholder="dd/mm/yyyy" disabled></td>
+    <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
+    <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
+    <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
+    <td><textarea class="cell-input" rows="1" oninput="tudochk(this)" disabled></textarea></td>
+    <td><select class="cell-input text-center" disabled>${tchs}</select></td>
+    <td><select class="cell-input text-center" disabled>${tcgd}</select></td>
+    <td><select class="cell-input text-center" disabled>${tcks}</select></td>
+    <td><select class="cell-input text-center" disabled>${tckh}</select></td>
+    <td><textarea class="cell-input text-center" rows="1" oninput="tudochk(this)" style="text-align:center; padding-top:10px;" placeholder="(Ý kiến của giáo viên)" disabled></textarea></td>
+    
+    <td style="position: relative;">
+        <span class="icon-check-ky" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); display: none; align-items: center; justify-content: center; pointer-events: none; z-index: 10;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="7 12 11 16 17 9"></polyline>
+            </svg>
+        </span>
+        <textarea class="cell-input text-center input-ky-ten" rows="1" oninput="kiemTraKyTen(this); tudochk(this);" style="text-align:center; padding-top:10px; overflow:hidden;" placeholder="(Ghi họ và tên)" disabled></textarea>
+    </td>
+
+    <td style="text-align:center;vertical-align:middle; padding:5px;" class="evidence-cell">
+        <input type="hidden" class="cell-input link-input">
+        <div class="link-display-area" style="width:100%;"></div>
+        <button class="btn-upload-icon reactbits-btn" onclick="kichhta(this)" title="Chèn minh chứng">📎</button>
+    </td>
+    <td class="ma-ho-so-cell">MS-${datg}-${idng}</td>
+  `;
+  tbg.appendChild(dmo);
+  capnst(); capnticd();
+  
+  if(dld) {
+     const cacn = dmo.querySelectorAll('.cell-input');
+     for(let iso = 0; iso <= 10; iso++) cacn[iso].value = dld[iso+4] || ""; 
+     const ddnlk = dld[15]||"";
+     if(ddnlk) { donghtta = dmo; trallkch(ddnlk); }
+     dmo.querySelector('.ma-ho-so-cell').innerText = dld[16]||`MS-${datg}-${idng}`;
+     dmo.querySelectorAll('textarea').forEach(t1 => {
+         tudochk(t1);
+         if(t1.classList.contains('input-ky-ten')) kiemTraKyTen(t1);
+     });
+  }
+  apdquye();
+}
+//=======================================================================
   function xulylu() { if(hopllu()) thuchms("skt_luubg_nha", document.getElementById('btnSave'), "LƯU KẾT QUẢ"); }
   
   function xulyno() { 
