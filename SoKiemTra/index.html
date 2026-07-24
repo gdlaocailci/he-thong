@@ -1054,9 +1054,9 @@ function thayDoiDonVi(maDonVi) {
         }
     });
 
-   /**
+/**
  * TÊN KHỐI: GỬI YÊU CẦU DỌN DẸP BỘ NHỚ ĐỆM LÊN DOPOST
- * Chức năng: Gửi lệnh đóng gói lên máy chủ và tạo hiệu ứng chờ ở nút bấm
+ * Chức năng: Đóng gói biến hdong="skt_don_dep_cache" đúng chuẩn hệ thống, sử dụng URL khai báo sẵn
  */
 function yeuCauDonDepHeThong() {
     var nutBam = document.getElementById("nutDonDepHeThong");
@@ -1065,31 +1065,46 @@ function yeuCauDonDepHeThong() {
     nutBam.innerHTML = "..."; 
     nutBam.style.backgroundColor = "#ffc107"; 
     
-    // GÓI DỮ LIỆU ĐIỀU HƯỚNG LÊN doPost
-    // Lưu ý: Đổi chữ 'hanhDongYeuCau' khớp với biến Thầy/Cô dùng ở backend
+    // Trích xuất thông tin phiên làm việc hiện tại từ hệ thống
+    var sysId = window.skttktoanc || sessionStorage.getItem("SKT_DINHDANH_TAIK") || ""; 
+    var maDonVi = sessionStorage.getItem("SKT_MA_DON_VI") || "TRUONG_1"; 
+    var duongDanHeThong = typeof SKT_GAS_URL !== 'undefined' ? SKT_GAS_URL : "";
+    
+    if (!duongDanHeThong) {
+        alert("Lỗi: Chưa cấu hình đường dẫn máy chủ (SKT_GAS_URL).");
+        nutBam.innerHTML = "!";
+        nutBam.style.backgroundColor = "";
+        return;
+    }
+
+    // Đóng gói cấu trúc khớp tuyệt đối với quy tắc lấy dữ liệu của hàm doPost
     var duLieuDongGoi = {
-        hanhDongYeuCau: "LENH_DON_DEP_CACHE"
+        hdong: "skt_don_dep_cache", 
+        tso: {},
+        taik: sysId,
+        ma_don_vi: maDonVi
     };
 
-    // Chuẩn bị URL của Web App (Thầy/Cô dùng biến chứa đường dẫn hiện tại của dự án)
-    var duongDanHeThong = URL_UNG_DUNG_HIEN_TAI; 
-
-    // Gửi yêu cầu qua giao thức POST
+    // Gửi dữ liệu bằng phương thức POST chuẩn
     fetch(duongDanHeThong, {
         method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(duLieuDongGoi)
     })
     .then(function(phanHoi) {
         return phanHoi.json();
     })
     .then(function(ketQua) {
-        // Thông báo kết quả và trả nút về trạng thái ban đầu
-        alert(ketQua.thongBaoTraVe);
+        if (ketQua.trth === "tcon") {
+            alert(ketQua.dliu); // In ra câu thông báo thành công từ máy chủ
+        } else {
+            alert("Lỗi từ máy chủ: " + ketQua.tbao);
+        }
         nutBam.innerHTML = "!";
         nutBam.style.backgroundColor = ""; 
     })
     .catch(function(loiPhatSinh) {
-        alert("Lỗi kết nối đến máy chủ: " + loiPhatSinh);
+        alert("Lỗi kết nối đến máy chủ: " + loiPhatSinh.message);
         nutBam.innerHTML = "!";
         nutBam.style.backgroundColor = "";
     });
