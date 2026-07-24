@@ -122,7 +122,8 @@
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-        <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
+        <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --" autocomplete="off">
+        <datalist id="dl_hopChonGv"></datalist>
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
      </div>
@@ -258,8 +259,12 @@ function kiemTraQuyenTruyCap() {
 }
 
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
-    var selectGv = document.getElementById("hopChonGv"); if (!selectGv) return;
-    selectGv.innerHTML = '<option value="">-- Lựa chọn hồ sơ --</option>';
+    var selectGv = document.getElementById("hopChonGv"); 
+    var dlGv = document.getElementById("dl_hopChonGv");
+    if (!selectGv || !dlGv) return;
+    
+    // Làm sạch danh sách cũ
+    dlGv.innerHTML = '';
     
     var ds = danhSachGiaoVien;
     if (ds && !Array.isArray(ds) && ds.dliu) {
@@ -267,37 +272,26 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     }
     
     if (ds && ds.length > 0) { 
-        var nhomQL = document.createElement("optgroup"); nhomQL.label = "Ban Quản lý";
-        var nhomGV = document.createElement("optgroup"); nhomGV.label = "Giáo viên";
-        var nhomNV = document.createElement("optgroup"); nhomNV.label = "Nhân viên";
-        var nhomKhac = document.createElement("optgroup"); nhomKhac.label = "Khác";
-
         ds.forEach(function(cb) { 
             var qy = String(cb.quyen || "").trim().toLowerCase();
             
             // BỘ LỌC 2: Chỉ lấy những người có quyền rỗng, x, hoặc xx vào hộp chọn
             if (qy === "" || qy === "x" || qy === "xx") {
+                var tenHienThi = cb.ten || cb.hoTen || cb.tenn;
                 var option = document.createElement("option"); 
-                option.value = cb.id || cb.ma || cb.ttrg; 
-                option.textContent = cb.ten || cb.hoTen || cb.tenn; 
+                // Value bắt buộc là tên chính xác để điền vào ô input
+                option.value = tenHienThi; 
                 
-                var cv = String(cb.chucvu || "").toLowerCase().trim();
-                if (cv === "ql" || cv.includes("quản lý") || cv.includes("quan ly") || cv.includes("hiệu trưởng") || cv.includes("ht")) {
-                    nhomQL.appendChild(option);
-                } else if (cv === "nv" || cv.includes("nhân viên") || cv.includes("nhan vien")) {
-                    nhomNV.appendChild(option);
-                } else if (cv === "gv" || cv.includes("giáo viên") || cv.includes("giao vien")) {
-                    nhomGV.appendChild(option);
+                // Hiển thị thêm chức vụ trong danh sách xổ xuống (nếu có)
+                var cv = String(cb.chucvu || "").trim();
+                if(cv) {
+                    option.text = tenHienThi + " (" + cv + ")";
                 } else {
-                    nhomKhac.appendChild(option);
+                    option.text = tenHienThi;
                 }
+                dlGv.appendChild(option);
             }
         }); 
-
-        if (nhomQL.children.length > 0) selectGv.appendChild(nhomQL);
-        if (nhomGV.children.length > 0) selectGv.appendChild(nhomGV);
-        if (nhomNV.children.length > 0) selectGv.appendChild(nhomNV);
-        if (nhomKhac.children.length > 0) selectGv.appendChild(nhomKhac);
 
         selectGv.style.setProperty('display', 'inline-block', 'important');
         selectGv.disabled = false; 
@@ -384,10 +378,21 @@ function doiTrangThaiKhoa() {
     }
     
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
+    
+    // NÂNG CẤP: Dò ngược từ Tên hiển thị sang Mã tài khoản
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            maTrangDich = selectGv.value;
+            let tenGvChon = selectGv.value.trim();
+            let ds = dsGiaoVien && dsGiaoVien.dliu ? dsGiaoVien.dliu : (dsGiaoVien || []);
+            let found = ds.find(cb => (cb.ten || cb.hoTen || cb.tenn) === tenGvChon);
+            
+            if (found) {
+                maTrangDich = found.id || found.ma || found.ttrg;
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Tên nhân sự không hợp lệ. Vui lòng chọn đúng tên từ danh sách gợi ý.");
+                return;
+            }
         } 
     }
 
@@ -538,6 +543,7 @@ function xulyLuuTam(ath = false, xltc = null) {
     var isGS = kiemTraLaGS();
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
 
+    // NÂNG CẤP: Dò ngược từ Tên hiển thị sang Mã tài khoản
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
@@ -545,7 +551,17 @@ function xulyLuuTam(ath = false, xltc = null) {
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
                 return; 
             } 
-            maTrangDich = selectGv.value;
+            
+            let tenGvChon = selectGv.value.trim();
+            let ds = dsGiaoVien && dsGiaoVien.dliu ? dsGiaoVien.dliu : (dsGiaoVien || []);
+            let found = ds.find(cb => (cb.ten || cb.hoTen || cb.tenn) === tenGvChon);
+            
+            if (found) {
+                maTrangDich = found.id || found.ma || found.ttrg;
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Lỗi: Tên nhân sự không khớp với cơ sở dữ liệu. Không thể lưu báo cáo.");
+                return;
+            }
         } else if (isBGH || isGS) {
             if (!maTrangDich || maTrangDich.trim() === "") {
                 if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một nhân sự từ danh sách trước khi lưu.");
