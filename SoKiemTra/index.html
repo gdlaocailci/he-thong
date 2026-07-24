@@ -1054,8 +1054,49 @@ function thayDoiDonVi(maDonVi) {
         }
     });
 
+   /**
+ * TÊN KHỐI: GỬI YÊU CẦU DỌN DẸP BỘ NHỚ ĐỆM LÊN DOPOST
+ * Chức năng: Gửi lệnh đóng gói lên máy chủ và tạo hiệu ứng chờ ở nút bấm
+ */
+function yeuCauDonDepHeThong() {
+    var nutBam = document.getElementById("nutDonDepHeThong");
+    
+    // Đổi giao diện báo hiệu đang xử lý
+    nutBam.innerHTML = "..."; 
+    nutBam.style.backgroundColor = "#ffc107"; 
+    
+    // GÓI DỮ LIỆU ĐIỀU HƯỚNG LÊN doPost
+    // Lưu ý: Đổi chữ 'hanhDongYeuCau' khớp với biến Thầy/Cô dùng ở backend
+    var duLieuDongGoi = {
+        hanhDongYeuCau: "LENH_DON_DEP_CACHE"
+    };
+
+    // Chuẩn bị URL của Web App (Thầy/Cô dùng biến chứa đường dẫn hiện tại của dự án)
+    var duongDanHeThong = URL_UNG_DUNG_HIEN_TAI; 
+
+    // Gửi yêu cầu qua giao thức POST
+    fetch(duongDanHeThong, {
+        method: "POST",
+        body: JSON.stringify(duLieuDongGoi)
+    })
+    .then(function(phanHoi) {
+        return phanHoi.json();
+    })
+    .then(function(ketQua) {
+        // Thông báo kết quả và trả nút về trạng thái ban đầu
+        alert(ketQua.thongBaoTraVe);
+        nutBam.innerHTML = "!";
+        nutBam.style.backgroundColor = ""; 
+    })
+    .catch(function(loiPhatSinh) {
+        alert("Lỗi kết nối đến máy chủ: " + loiPhatSinh);
+        nutBam.innerHTML = "!";
+        nutBam.style.backgroundColor = "";
+    });
+}
   </script>
  <!-- KHỐI NÚT QUẢN TRỊ ẨN: Xóa bộ nhớ đệm hệ thống -->
-<button id="nutDonDepHeThong" class="kieu-nut-quan-tri" onclick="CLEAR_SYSTEM_CACHE()" title="Dọn dẹp bộ nhớ đệm hệ thống">!</button>
+<!-- Cập nhật lại sự kiện onclick trỏ về đúng hàm Javascript phía Client -->
+<button id="nutDonDepHeThong" class="kieu-nut-quan-tri" onclick="yeuCauDonDepHeThong()" title="Dọn dẹp bộ nhớ đệm hệ thống">!</button>
 </body>
 </html>
