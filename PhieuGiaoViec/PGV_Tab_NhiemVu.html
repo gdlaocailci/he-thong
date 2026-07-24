@@ -135,8 +135,14 @@
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-        <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --">
-        <datalist id="dl_hopChonGv"></datalist>
+        <div id="hopChonGv" class="form-control form-control-sm border-primary shadow-sm p-0 d-flex align-items-center vung-chon-gv-custom" style="display: none; height: 30px; width: 250px; position: relative; background: #fff;" data-value="">
+            <input type="text" id="nhapTimGv" class="fw-bold text-primary border-0 w-100 px-2" style="height: 100%; font-size: 13px; background: transparent; outline: none; box-shadow: none;" placeholder="🔍 Chọn / Gõ tên nhân sự..." autocomplete="off" onclick="moDanhSachGv(event)" onkeyup="locDanhSachGv()">
+            <i class="bi bi-chevron-down text-primary pe-2" style="cursor: pointer; font-size: 13px;" onclick="document.getElementById('nhapTimGv').click()"></i>
+            
+            <div id="khungDsGv" class="shadow" style="display:none; position:absolute; top:100%; right:0; width: 350px; max-height:300px; overflow-y:auto; background:#ffffff; border:1px solid #adb5bd; z-index:9999; border-radius:4px; font-size:13px; text-align:left;">
+                <!-- Danh sách tự động chèn -->
+            </div>
+        </div>
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
      </div>
@@ -288,51 +294,122 @@ function layMaGiaoVienDaChon() {
     return found ? (found.id || found.ma || found.ttrg) : "";
 }
 
-// Nâng cấp: Bơm dữ liệu vào Datalist
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
-    var selectGv = document.getElementById("hopChonGv"); 
-    var dlGv = document.getElementById("dl_hopChonGv");
+    var selectGv = document.getElementById("hopChonGv");
     if (!selectGv) return;
-    
-    // Đảm bảo datalist luôn tồn tại
-    if (!dlGv) {
-        dlGv = document.createElement("datalist");
-        dlGv.id = "dl_hopChonGv";
-        document.body.appendChild(dlGv);
+
+    // KỸ THUẬT LÕI: Giúp thẻ Div trả về giá trị ID y hệt như thẻ Select cũ, bảo vệ các hàm cũ không bị lỗi
+    if (selectGv.tagName === "DIV" && typeof selectGv.value === 'undefined') {
+        Object.defineProperty(selectGv, 'value', {
+            get: function() { return this.getAttribute('data-value') || ""; },
+            set: function(val) { this.setAttribute('data-value', val); }
+        });
     }
+
+    var khungDs = document.getElementById("khungDsGv");
+    var nhapTim = document.getElementById("nhapTimGv");
+    if (!khungDs || !nhapTim) return;
+
+    // Đặt lại mặc định
+    selectGv.value = ""; 
+    nhapTim.value = "";
+    khungDs.innerHTML = `<div class="muc-chon-gv p-2 border-bottom text-dark" style="cursor:pointer; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGv(event, '', '')">-- Lựa chọn hồ sơ --</div>`;
     
     var ds = danhSachGiaoVien;
-    if (ds && !Array.isArray(ds) && ds.dliu) {
-        ds = ds.dliu;
-    }
+    if (ds && !Array.isArray(ds) && ds.dliu) ds = ds.dliu;
     
-    let chuoiHtml = '';
     let soNguoi = 0;
-
     if (ds && ds.length > 0) { 
+        // Phân loại nhóm giống hệt logic nguyên bản
+        let nhomQL = "", nhomGV = "", nhomNV = "", nhomKhac = "";
+        
         ds.forEach(function(cb) { 
             var qy = String(cb.quyen || "").trim().toLowerCase();
             if (qy === "" || qy === "x" || qy === "xx") {
                 soNguoi++;
-                var ten = cb.ten || cb.hoTen || cb.tenn || "";
+                var ma = cb.id || cb.ma || cb.ttrg || ""; 
+                var ten = cb.ten || cb.hoTen || cb.tenn || ""; 
                 var cv = String(cb.chucvu || "").trim();
                 var textHienThi = cv ? (ten + " (" + cv + ")") : ten;
-                // Chỉ gán value để tương thích tốt nhất với datalist
-                if (ten) chuoiHtml += `<option value="${textHienThi}"></option>`;
+                
+                let htmlMuc = `<div class="muc-chon-gv p-2 border-bottom text-dark" data-text="${textHienThi.toLowerCase()}" style="cursor:pointer; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGv(event, '${ma}', '${textHienThi}')">${textHienThi}</div>`;
+                
+                var cvLower = cv.toLowerCase();
+                if (cvLower === "ql" || cvLower.includes("quản lý") || cvLower.includes("quan ly") || cvLower.includes("hiệu trưởng") || cvLower.includes("ht")) nhomQL += htmlMuc;
+                else if (cvLower === "nv" || cvLower.includes("nhân viên") || cvLower.includes("nhan vien")) nhomNV += htmlMuc;
+                else if (cvLower === "gv" || cvLower.includes("giáo viên") || cvLower.includes("giao vien")) nhomGV += htmlMuc;
+                else nhomKhac += htmlMuc;
             }
         }); 
+        
+        if (nhomQL) khungDs.innerHTML += `<div class="p-1 bg-light fw-bold text-muted small">Ban Quản lý</div>` + nhomQL;
+        if (nhomGV) khungDs.innerHTML += `<div class="p-1 bg-light fw-bold text-muted small">Giáo viên</div>` + nhomGV;
+        if (nhomNV) khungDs.innerHTML += `<div class="p-1 bg-light fw-bold text-muted small">Nhân viên</div>` + nhomNV;
+        if (nhomKhac) khungDs.innerHTML += `<div class="p-1 bg-light fw-bold text-muted small">Khác</div>` + nhomKhac;
     } 
 
-    dlGv.innerHTML = chuoiHtml;
-
-    if (soNguoi > 0) {
-        selectGv.style.setProperty('display', 'inline-block', 'important');
-        selectGv.disabled = false;
-    } else {
-        selectGv.style.setProperty('display', 'none', 'important');
-        selectGv.disabled = true;
+    if (soNguoi > 0) { 
+        selectGv.style.setProperty('display', 'flex', 'important'); 
+    } else { 
+        selectGv.style.setProperty('display', 'none', 'important'); 
     }
 }
+
+// CÁC HÀM XỬ LÝ SỰ KIỆN GÕ VÀ CHỌN
+function moDanhSachGv(suKien) {
+    if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
+    var ds = document.getElementById("khungDsGv");
+    var input = document.getElementById("nhapTimGv");
+    if(ds) {
+        // Tự động đóng các list đánh giá điểm khác (nếu đang mở) để giao diện gọn gàng
+        document.querySelectorAll('.khung-danh-sach').forEach(d => { if(d !== ds) d.style.display = 'none'; });
+        
+        ds.style.display = (ds.style.display === "none") ? "block" : "none";
+        if (ds.style.display === "block") {
+            input.select();
+            locDanhSachGv(); 
+        }
+    }
+    suKien.stopPropagation();
+}
+
+function locDanhSachGv() {
+    var input = document.getElementById("nhapTimGv");
+    var filter = input.value.toLowerCase();
+    var ds = document.getElementById("khungDsGv");
+    if(!ds) return;
+    
+    var muc = ds.getElementsByClassName("muc-chon-gv");
+    ds.style.display = "block"; 
+    for (var i = 0; i < muc.length; i++) { 
+        if (i === 0) continue; // Luôn hiển thị mục "Lựa chọn hồ sơ"
+        var txt = muc[i].getAttribute("data-text") || "";
+        if (txt.indexOf(filter) > -1) muc[i].style.display = "";
+        else muc[i].style.display = "none";
+    }
+}
+
+function chonGv(suKien, maTrangDich, textHienThi) {
+    var selectGv = document.getElementById("hopChonGv");
+    var nhapTim = document.getElementById("nhapTimGv");
+    var ds = document.getElementById("khungDsGv");
+    
+    if (selectGv) selectGv.value = maTrangDich; // Dữ liệu chìm: Mã định danh
+    if (nhapTim) nhapTim.value = textHienThi;   // Dữ liệu nổi: Tên hiển thị
+    if (ds) ds.style.display = "none";
+    
+    if (typeof kiemTraQuyenTruyCap === 'function') kiemTraQuyenTruyCap();
+    if (suKien) suKien.stopPropagation();
+}
+
+// Đóng danh sách khi click ra ngoài
+document.addEventListener('click', function(suKien) {
+    var hopChon = document.getElementById('hopChonGv');
+    if (hopChon && !hopChon.contains(suKien.target)) {
+        var ds = document.getElementById("khungDsGv");
+        if(ds) ds.style.display = "none";
+    }
+});
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
     cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
