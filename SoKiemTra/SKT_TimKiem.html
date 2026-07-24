@@ -404,52 +404,68 @@
       .skt_timbg_kq(cai_xeng);
   }
 
-  function hienThiBangKetQua(kqt) {
-    const tbg = document.getElementById('searchBody');
-    tbg.innerHTML = "";
+function hienThiBangKetQua(kqt) {
+  const tbg = document.getElementById('searchBody');
+  tbg.innerHTML = "";
+  
+  if (kqt.length > 0) {
+    document.getElementById('dashboard_stats').style.display = 'flex';
+    tinhtth(kqt);
+  } else {
+    document.getElementById('dashboard_stats').style.display = 'none';
+    tbg.innerHTML = '<tr><td colspan="17" class="no-result">❌ Không tìm thấy kết quả nào trùng khớp.</td></tr>';
+    return;
+  }
+  
+  kqt.forEach((bg, iso) => {
+    const dg = document.createElement('tr');
     
-    if (kqt.length > 0) {
-      document.getElementById('dashboard_stats').style.display = 'flex';
-      tinhtth(kqt);
-    } else {
-      document.getElementById('dashboard_stats').style.display = 'none';
-      tbg.innerHTML = '<tr><td colspan="17" class="no-result">❌ Không tìm thấy kết quả nào trùng khớp.</td></tr>';
-      return;
+    let hml = "";
+    if(bg[15] && bg[15].includes('http')) {
+        const clk = bg[15].toString().split(',').map(l1 => l1.trim()).filter(l1 => l1 !== "");
+        hml = clk.map((dd, c1) => 
+            `<a href="javascript:void(0)" onclick="moKhungXemTep('${dd}')" class="file-badge" title="Xem tài liệu ${c1 + 1}">📎 ${c1 + 1}</a>`
+        ).join('');
     }
     
-    kqt.forEach((bg, iso) => {
-      const dg = document.createElement('tr');
-      
-      let hml = "";
-      if(bg[15] && bg[15].includes('http')) {
-          const clk = bg[15].toString().split(',').map(l1 => l1.trim()).filter(l1 => l1 !== "");
-          hml = clk.map((dd, c1) => 
-              `<a href="javascript:void(0)" onclick="moKhungXemTep('${dd}')" class="file-badge" title="Xem tài liệu ${c1 + 1}">📎 ${c1 + 1}</a>`
-          ).join('');
-      }
-      
-      dg.innerHTML = `
-        <td style="text-align:center">${iso+1}</td>
-        <td style="text-align:center">${bg[4]}</td>
-        <td>${bg[0]}</td>
-        <td>${bg[1]}</td>
-        <td>${bg[2]}</td>
-        <td>${xuatndkno(bg[5])}</td> 
-        <td>${xuatndkno(bg[6])}</td>  
-        <td>${xuatndkno(bg[7])}</td>
-        <td>${xuatndkno(bg[8])}</td>
-        <td style="text-align:center; font-weight:bold;">${bg[9]}</td>
-        <td style="text-align:center; font-weight:bold;">${bg[10]}</td>
-        <td style="text-align:center; font-weight:bold;">${bg[11]}</td>
-        <td style="text-align:center; font-weight:bold;">${bg[12]}</td>
-        <td style="text-align:center;">${xuatndkno(bg[13])}</td>
-        <td>${xuatndkno(bg[14])}</td>
-        <td style="text-align:center">${hml}</td>
-        <td style="text-align:center; font-weight:bold; color:#555;">${bg[16]}</td>
-      `;
-      tbg.appendChild(dg);
-    });
-  }
+    // NÂNG CẤP: Chèn mã đồ họa (SVG) thay cho emoji ✅ mặc định
+    let htmlKyTen = "";
+    if (bg[14] && String(bg[14]).trim() !== "") {
+        htmlKyTen = `<div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        <span title="Đã ký xác nhận" style="display: inline-flex; align-items: center;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="7 12 11 16 17 9"></polyline>
+                            </svg>
+                        </span>
+                        <span>${xuatndkno(bg[14])}</span>
+                     </div>`;
+    } else {
+        htmlKyTen = xuatndkno(bg[14]);
+    }
+
+    dg.innerHTML = `
+      <td style="text-align:center">${iso+1}</td>
+      <td style="text-align:center">${bg[4]}</td>
+      <td>${bg[0]}</td>
+      <td>${bg[1]}</td>
+      <td>${bg[2]}</td>
+      <td>${xuatndkno(bg[5])}</td> 
+      <td>${xuatndkno(bg[6])}</td>  
+      <td>${xuatndkno(bg[7])}</td>
+      <td>${xuatndkno(bg[8])}</td>
+      <td style="text-align:center; font-weight:bold;">${bg[9]}</td>
+      <td style="text-align:center; font-weight:bold;">${bg[10]}</td>
+      <td style="text-align:center; font-weight:bold;">${bg[11]}</td>
+      <td style="text-align:center; font-weight:bold;">${bg[12]}</td>
+      <td style="text-align:center;">${xuatndkno(bg[13])}</td>
+      <td style="text-align:center;">${htmlKyTen}</td>
+      <td style="text-align:center">${hml}</td>
+      <td style="text-align:center; font-weight:bold; color:#555;">${bg[16]}</td>
+    `;
+    tbg.appendChild(dg);
+  });
+}
 
   function tinhtth(dl) {
     let dt = {
