@@ -123,14 +123,13 @@
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
         
-        <!-- ================= BẮT ĐẦU CỤM NÂNG CẤP COMBOBOX ================= -->
+        <!-- Ô CHỌN VÀ TÌM KIẾM GIÁO VIÊN KHÔI PHỤC ĐẦY ĐỦ VÀ CHUẨN XÁC -->
         <div class="position-relative d-inline-block">
-            <input type="text" id="nhapTimGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px; width: 175px !important;" placeholder="-- Lựa chọn giáo viên --" autocomplete="off" onkeyup="locGiaoVien()" onclick="hienDanhSachGv()" onblur="anDanhSachGvSauDelay()">
-            <input type="hidden" id="hopChonGv">
-            <div id="danhSachGvDrop" class="shadow-sm" style="display: none; position: absolute; top: 100%; right: 0; width: 250px; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #adb5bd; z-index: 1050; border-radius: 4px; font-size: 12px; text-align: left;"></div>
+            <input type="text" id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px; width: 220px !important;" placeholder="-- Lựa chọn giáo viên --" autocomplete="off" onkeyup="locGiaoVien()" onclick="hienDanhSachGv()" onblur="anDanhSachGvSauDelay()">
+            <input type="hidden" id="giaTriGvChinhThuc">
+            <div id="danhSachGvDrop" class="shadow-sm" style="display: none; position: absolute; top: 100%; right: 0; width: 280px; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #adb5bd; z-index: 1050; border-radius: 4px; font-size: 12px; text-align: left;"></div>
         </div>
-        <!-- ================= KẾT THÚC CỤM NÂNG CẤP COMBOBOX ================= -->
-        
+
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
      </div>
@@ -185,7 +184,7 @@
 <script>
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 let trangThaiKhoa = "Mở";
-let mngGiaoVienGoc = []; // Mảng hỗ trợ Combo Box tìm kiếm GV
+let mngGiaoVienGoc = [];
 
 function moRongHienThiDiem(sel) {
     if (sel.hasAttribute('data-dang-thu-gon')) {
@@ -223,15 +222,15 @@ function kiemTraLaGS() {
 }
 function kiemTraQuyenTruyCap() {
     var selectGv = document.getElementById("hopChonGv"); 
-    var nhapTim = document.getElementById("nhapTimGv");
+    var hidGv = document.getElementById("giaTriGvChinhThuc");
     var nutLuu = document.getElementById("nutLuuTam"); 
     var nutNop = document.getElementById("nutNopBcao");
     var diemThuong = document.getElementById("nhapDiemThuong");
     var isBGH = kiemTraLaBGH();
     var isGS = kiemTraLaGS();
 
-    if (cotETonTai && selectGv && nhapTim && nhapTim.style.display !== "none") {
-        var daChon = selectGv.value && selectGv.value !== "";
+    if (cotETonTai && selectGv && selectGv.style.display !== "none") {
+        var daChon = hidGv && hidGv.value && hidGv.value !== "";
         if (daChon) { 
             if (isBGH) {
                 if (nutLuu) nutLuu.disabled = false; 
@@ -267,17 +266,18 @@ function kiemTraQuyenTruyCap() {
     apDungKhoaGiaoDien(); 
 }
 
-// ================= HÀM NÂNG CẤP XỬ LÝ COMBO BOX TÌM KIẾM GIÁO VIÊN =================
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
-    var theAn = document.getElementById("hopChonGv"); 
-    var nhapTim = document.getElementById("nhapTimGv");
-    if (!theAn || !nhapTim) return;
+    var selectGv = document.getElementById("hopChonGv"); 
+    var hidGv = document.getElementById("giaTriGvChinhThuc");
+    if (!selectGv) return;
     
-    theAn.value = "";
-    nhapTim.value = "";
+    selectGv.value = "";
+    if(hidGv) hidGv.value = "";
     
     var ds = danhSachGiaoVien;
-    if (ds && !Array.isArray(ds) && ds.dliu) { ds = ds.dliu; }
+    if (ds && !Array.isArray(ds) && ds.dliu) {
+        ds = ds.dliu;
+    }
     
     if (ds && ds.length > 0) { 
         mngGiaoVienGoc = ds.filter(function(cb) {
@@ -286,12 +286,12 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
         });
         
         veDanhSachGiaoVien(mngGiaoVienGoc);
-        nhapTim.style.setProperty('display', 'inline-block', 'important');
-        nhapTim.disabled = false; 
+        selectGv.style.setProperty('display', 'inline-block', 'important');
+        selectGv.disabled = false; 
     } else { 
         mngGiaoVienGoc = [];
-        nhapTim.style.setProperty('display', 'none', 'important'); 
-        nhapTim.disabled = true; 
+        selectGv.style.setProperty('display', 'none', 'important'); 
+        selectGv.disabled = true; 
     }
 }
 
@@ -351,7 +351,7 @@ function veDanhSachGiaoVien(dsLoc) {
 }
 
 function locGiaoVien() {
-    var tuKhoa = document.getElementById("nhapTimGv").value.toLowerCase().trim();
+    var tuKhoa = document.getElementById("hopChonGv").value.toLowerCase().trim();
     function xoaDau(str) {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
     }
@@ -367,24 +367,23 @@ function locGiaoVien() {
 }
 
 function hienDanhSachGv() {
-    document.getElementById("nhapTimGv").select();
+    document.getElementById("hopChonGv").select();
     locGiaoVien(); 
 }
 
 function anDanhSachGvSauDelay() {
     setTimeout(function() {
-        var theAn = document.getElementById("hopChonGv");
-        var nhapTim = document.getElementById("nhapTimGv");
+        var selectGv = document.getElementById("hopChonGv");
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
         var valGoc = "";
-        if(theAn.value) {
+        if(hidGv && hidGv.value) {
             var found = mngGiaoVienGoc.find(function(cb) {
-               return (cb.id || cb.ma || cb.ttrg) === theAn.value;
+               return (cb.id || cb.ma || cb.ttrg) === hidGv.value;
             });
             if(found) valGoc = found.ten || found.hoTen || found.tenn;
         }
-        
-        if(valGoc !== "") nhapTim.value = valGoc;
-        else nhapTim.value = "";
+        if(valGoc !== "") selectGv.value = valGoc;
+        else selectGv.value = "";
         
         var listDrop = document.getElementById("danhSachGvDrop");
         if (listDrop) listDrop.style.display = "none";
@@ -392,19 +391,18 @@ function anDanhSachGvSauDelay() {
 }
 
 function chonGiaoVien(idGv, tenGv) {
-    var theAn = document.getElementById("hopChonGv");
-    var nhapTim = document.getElementById("nhapTimGv");
-    var oldVal = theAn.value;
+    var selectGv = document.getElementById("hopChonGv");
+    var hidGv = document.getElementById("giaTriGvChinhThuc");
+    var oldVal = hidGv ? hidGv.value : "";
     
-    theAn.value = idGv;
-    nhapTim.value = (idGv === '') ? '' : tenGv;
+    if(hidGv) hidGv.value = idGv;
+    selectGv.value = (idGv === '') ? '' : tenGv;
     document.getElementById("danhSachGvDrop").style.display = "none";
     
     if (oldVal !== idGv) {
         kiemTraQuyenTruyCap();
     }
 }
-// ================= KẾT THÚC CỤM XỬ LÝ COMBO BOX =================
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
     cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
@@ -483,10 +481,10 @@ function doiTrangThaiKhoa() {
     
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
     if (cotETonTai) { 
-        var selectGv = document.getElementById("hopChonGv"); 
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            maTrangDich = selectGv.value;
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
+            maTrangDich = hidGv.value;
         } 
     }
 
@@ -582,8 +580,8 @@ function apDungKhoaGiaoDien() {
     let isLocked = (trangThaiKhoa === "Khóa");
     
     var selectGv = document.getElementById("hopChonGv");
-    var nhapTim = document.getElementById("nhapTimGv");
-    var daChonGvKhac = selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "";
+    var hidGv = document.getElementById("giaTriGvChinhThuc");
+    var daChonGvKhac = selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "";
     let isBGH = kiemTraLaBGH();
     let isGS = kiemTraLaGS();
 
@@ -640,13 +638,13 @@ function xulyLuuTam(ath = false, xltc = null) {
 
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
+        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
             if (!isBGH && !isGS) { 
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
                 return; 
             } 
-            maTrangDich = selectGv.value;
+            maTrangDich = hidGv.value;
         } else if (isBGH || isGS) {
             if (!maTrangDich || maTrangDich.trim() === "") {
                 if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một nhân sự từ danh sách trước khi lưu.");
@@ -709,8 +707,8 @@ function nopBcaoChinh() {
 
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
+        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
             if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
             return; 
         } 
@@ -767,8 +765,8 @@ function mokBcao() {
             nt.disabled = false;
         } else {
             var selectGv = document.getElementById("hopChonGv");
-            var nhapTim = document.getElementById("nhapTimGv");
-            if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") {
+            var hidGv = document.getElementById("giaTriGvChinhThuc");
+            if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
                 nt.disabled = true;
             } else {
                 nt.disabled = false;
@@ -1172,9 +1170,9 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
     
     let chiecThuyenNan = false;
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
-        var hopChon = document.getElementById("hopChonGv");
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (hopChon && nhapTim && nhapTim.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
             chiecThuyenNan = true; 
         }
     }
@@ -1209,7 +1207,7 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
 }
 
 document.addEventListener('click', function(suKien) {
-    if (!suKien.target.closest('.vung-chon-diem') && !suKien.target.closest('#nhapTimGv') && !suKien.target.closest('#danhSachGvDrop')) {
+    if (!suKien.target.closest('.vung-chon-diem') && !suKien.target.closest('#hopChonGv') && !suKien.target.closest('#danhSachGvDrop')) {
         document.querySelectorAll('.khung-danh-sach').forEach(ds => ds.style.display = 'none');
         let listDropGv = document.getElementById("danhSachGvDrop");
         if(listDropGv) listDropGv.style.display = 'none';
@@ -1221,9 +1219,9 @@ function addNv() {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     var isBGH = kiemTraLaBGH();
     if (cotETonTai) {
-        var hopChon = document.getElementById("hopChonGv");
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (hopChon && nhapTim && nhapTim.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
             if (!isBGH) {
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác.");
                 return;
@@ -1471,8 +1469,8 @@ function khoiTaoTheoQuyen() {
         } else { xuLyCotE(canbHientai.quyen, []); }
     } else {
         cotETonTai = false; 
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (nhapTim) nhapTim.style.setProperty('display', 'none', 'important');
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv) selectGv.style.setProperty('display', 'none', 'important');
         kiemTraQuyenTruyCap();
     }
     
@@ -1709,9 +1707,9 @@ function xoaDinhKemBcao(chs) {
     
     let chiecThuyenNan = false;
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
-        var hopChon = document.getElementById("hopChonGv");
-        var nhapTim = document.getElementById("nhapTimGv");
-        if (hopChon && nhapTim && nhapTim.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+        var hidGv = document.getElementById("giaTriGvChinhThuc");
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
             chiecThuyenNan = true; 
         }
     }
