@@ -308,10 +308,10 @@
   </div>
 
 <div id="login-overlay">
-    <div class="login-box" style="padding-top: 35px; padding-bottom: 25px;">
+    <!-- NÂNG CẤP: Bổ sung position: relative để neo nút bấm vào đúng giới hạn của khung trắng -->
+    <div class="login-box" style="padding-top: 35px; padding-bottom: 25px; position: relative;">
       <img src="" class="login-logo" alt="Logo Trường">
       
-      <!-- Nâng cấp: Đặt ID và quản lý khoảng cách linh hoạt -->
       <h2 id="login-title-main" style="color: #b91c1c; margin-top: 0; margin-bottom: 25px; text-transform: uppercase; font-size: 26px;"></h2>
       <h3 id="login-subtitle-main" style="color: #1e3a8a; margin-bottom: 25px; display: none;"></h3>
 
@@ -351,11 +351,12 @@
       <!-- KẾT THÚC BỌC KHU VỰC ĐĂNG NHẬP -->
       
       <div id="app-author-text" style="margin-top: 35px; font-size: 13px; color: #888; font-weight: bold; line-height: 1.5;"></div>
-
-     <!-- NÚT DỌN DẸP CACHE (Đã chuyển vào bên trong khối thẻ, cố định ở góc trái dưới) -->
+      
+      <!-- NÚT DỌN DẸP CACHE (Đã chuyển vào bên trong khối thẻ, cố định ở góc trái dưới) -->
       <button id="nutDonDepHeThong" class="kieu-nut-quan-tri" onclick="yeuCauDonDepHeThong()" title="Dọn dẹp bộ nhớ đệm hệ thống" style="position: absolute; bottom: 15px; left: 15px;">!</button>
+      
     </div>
-  </div>
+</div>
 
   <div id="instant-loader" style="display: none;">
     <div class="spinner-ring"></div>
