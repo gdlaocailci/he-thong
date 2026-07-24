@@ -123,9 +123,12 @@
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
         
-        <!-- Ô CHỌN VÀ TÌM KIẾM GIÁO VIÊN KHÔI PHỤC ĐẦY ĐỦ VÀ CHUẨN XÁC -->
+        <!-- Ô CHỌN VÀ TÌM KIẾM GIÁO VIÊN KẾT HỢP DROPDOWN CHUẨN XÁC -->
         <div class="position-relative d-inline-block">
-            <input type="text" id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px; width: 220px !important;" placeholder="-- Lựa chọn giáo viên --" autocomplete="off" onkeyup="locGiaoVien()" onclick="hienDanhSachGv()" onblur="anDanhSachGvSauDelay()">
+            <div class="input-group input-group-sm" style="width: 230px;">
+                <input type="text" id="hopChonGv" class="form-control border-primary fw-bold text-primary shadow-sm" style="height: 30px; font-size: 12px;" placeholder="-- Lựa chọn giáo viên --" autocomplete="off" onkeyup="locGiaoVien()" onclick="hienDanhSachGv()" onfocus="hienDanhSachGv()">
+                <button type="button" class="btn btn-outline-primary border-primary bg-white text-primary" style="height: 30px; font-size: 12px;" onclick="toggleDanhSachGv(event)" title="Xổ danh sách"><i class="bi bi-chevron-down"></i></button>
+            </div>
             <input type="hidden" id="giaTriGvChinhThuc">
             <div id="danhSachGvDrop" class="shadow-sm" style="display: none; position: absolute; top: 100%; right: 0; width: 280px; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #adb5bd; z-index: 1050; border-radius: 4px; font-size: 12px; text-align: left;"></div>
         </div>
@@ -229,7 +232,7 @@ function kiemTraQuyenTruyCap() {
     var isBGH = kiemTraLaBGH();
     var isGS = kiemTraLaGS();
 
-    if (cotETonTai && selectGv && selectGv.style.display !== "none") {
+    if (cotETonTai && selectGv && selectGv.closest('.input-group').style.display !== "none") {
         var daChon = hidGv && hidGv.value && hidGv.value !== "";
         if (daChon) { 
             if (isBGH) {
@@ -269,7 +272,8 @@ function kiemTraQuyenTruyCap() {
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     var selectGv = document.getElementById("hopChonGv"); 
     var hidGv = document.getElementById("giaTriGvChinhThuc");
-    if (!selectGv) return;
+    var containerGv = selectGv ? selectGv.closest('.input-group') : null;
+    if (!selectGv || !containerGv) return;
     
     selectGv.value = "";
     if(hidGv) hidGv.value = "";
@@ -286,11 +290,11 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
         });
         
         veDanhSachGiaoVien(mngGiaoVienGoc);
-        selectGv.style.setProperty('display', 'inline-block', 'important');
+        containerGv.style.setProperty('display', 'flex', 'important');
         selectGv.disabled = false; 
     } else { 
         mngGiaoVienGoc = [];
-        selectGv.style.setProperty('display', 'none', 'important'); 
+        containerGv.style.setProperty('display', 'none', 'important'); 
         selectGv.disabled = true; 
     }
 }
@@ -367,27 +371,23 @@ function locGiaoVien() {
 }
 
 function hienDanhSachGv() {
-    document.getElementById("hopChonGv").select();
-    locGiaoVien(); 
+    var selectGv = document.getElementById("hopChonGv");
+    if(selectGv) selectGv.select();
+    veDanhSachGiaoVien(mngGiaoVienGoc);
+    document.getElementById("danhSachGvDrop").style.display = "block";
 }
 
-function anDanhSachGvSauDelay() {
-    setTimeout(function() {
+function toggleDanhSachGv(e) {
+    e.stopPropagation();
+    var listDrop = document.getElementById("danhSachGvDrop");
+    if (listDrop.style.display === "block") {
+        listDrop.style.display = "none";
+    } else {
         var selectGv = document.getElementById("hopChonGv");
-        var hidGv = document.getElementById("giaTriGvChinhThuc");
-        var valGoc = "";
-        if(hidGv && hidGv.value) {
-            var found = mngGiaoVienGoc.find(function(cb) {
-               return (cb.id || cb.ma || cb.ttrg) === hidGv.value;
-            });
-            if(found) valGoc = found.ten || found.hoTen || found.tenn;
-        }
-        if(valGoc !== "") selectGv.value = valGoc;
-        else selectGv.value = "";
-        
-        var listDrop = document.getElementById("danhSachGvDrop");
-        if (listDrop) listDrop.style.display = "none";
-    }, 200);
+        if(selectGv) selectGv.focus();
+        veDanhSachGiaoVien(mngGiaoVienGoc);
+        listDrop.style.display = "block";
+    }
 }
 
 function chonGiaoVien(idGv, tenGv) {
@@ -483,7 +483,7 @@ function doiTrangThaiKhoa() {
     if (cotETonTai) { 
         var hidGv = document.getElementById("giaTriGvChinhThuc");
         var selectGv = document.getElementById("hopChonGv");
-        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
+        if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
             maTrangDich = hidGv.value;
         } 
     }
@@ -581,7 +581,7 @@ function apDungKhoaGiaoDien() {
     
     var selectGv = document.getElementById("hopChonGv");
     var hidGv = document.getElementById("giaTriGvChinhThuc");
-    var daChonGvKhac = selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "";
+    var daChonGvKhac = selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "";
     let isBGH = kiemTraLaBGH();
     let isGS = kiemTraLaGS();
 
@@ -639,7 +639,7 @@ function xulyLuuTam(ath = false, xltc = null) {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         var hidGv = document.getElementById("giaTriGvChinhThuc");
-        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
+        if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
             if (!isBGH && !isGS) { 
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
                 return; 
@@ -708,7 +708,7 @@ function nopBcaoChinh() {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         var hidGv = document.getElementById("giaTriGvChinhThuc");
-        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
+        if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") { 
             if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
             return; 
         } 
@@ -766,7 +766,7 @@ function mokBcao() {
         } else {
             var selectGv = document.getElementById("hopChonGv");
             var hidGv = document.getElementById("giaTriGvChinhThuc");
-            if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
+            if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
                 nt.disabled = true;
             } else {
                 nt.disabled = false;
@@ -1172,7 +1172,7 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
         var hidGv = document.getElementById("giaTriGvChinhThuc");
         var selectGv = document.getElementById("hopChonGv");
-        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
+        if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
             chiecThuyenNan = true; 
         }
     }
@@ -1207,7 +1207,7 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
 }
 
 document.addEventListener('click', function(suKien) {
-    if (!suKien.target.closest('.vung-chon-diem') && !suKien.target.closest('#hopChonGv') && !suKien.target.closest('#danhSachGvDrop')) {
+    if (!suKien.target.closest('.vung-chon-diem') && !suKien.target.closest('#hopChonGv') && !suKien.target.closest('#danhSachGvDrop') && !suKien.target.closest('.input-group')) {
         document.querySelectorAll('.khung-danh-sach').forEach(ds => ds.style.display = 'none');
         let listDropGv = document.getElementById("danhSachGvDrop");
         if(listDropGv) listDropGv.style.display = 'none';
@@ -1221,7 +1221,7 @@ function addNv() {
     if (cotETonTai) {
         var hidGv = document.getElementById("giaTriGvChinhThuc");
         var selectGv = document.getElementById("hopChonGv");
-        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
+        if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
             if (!isBGH) {
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác.");
                 return;
@@ -1470,7 +1470,7 @@ function khoiTaoTheoQuyen() {
     } else {
         cotETonTai = false; 
         var selectGv = document.getElementById("hopChonGv");
-        if (selectGv) selectGv.style.setProperty('display', 'none', 'important');
+        if (selectGv && selectGv.closest('.input-group')) selectGv.closest('.input-group').style.setProperty('display', 'none', 'important');
         kiemTraQuyenTruyCap();
     }
     
@@ -1709,7 +1709,7 @@ function xoaDinhKemBcao(chs) {
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
         var hidGv = document.getElementById("giaTriGvChinhThuc");
         var selectGv = document.getElementById("hopChonGv");
-        if (selectGv && selectGv.style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
+        if (selectGv && selectGv.closest('.input-group').style.display !== "none" && hidGv && hidGv.value && hidGv.value !== "") {
             chiecThuyenNan = true; 
         }
     }
