@@ -137,9 +137,8 @@
     <div class="stat-group sg-general">
       <div class="sg-title">TỔNG QUAN</div>
       <div class="sg-row"><span style="color:#b91c1c; font-weight:bold;">TỔNG SỐ:</span> <span id="st_total" class="sg-total">0</span></div>
-      <div class="sg-row"><span>BGH:</span> <span id="st_bgh">0</span></div>
-      <div class="sg-row"><span>Tổ CM:</span> <span id="st_tcm">0</span></div>
-      <div class="sg-row"><span>Văn phòng:</span> <span id="st_tvp">0</span></div>
+      <!-- NÂNG CẤP: Vùng chứa để render động tên bộ phận do người dùng định nghĩa -->
+      <div id="box_thongke_bophan"></div>
     </div>
     <div class="stat-group sg-hoso">
       <div class="sg-title">XL HỒ SƠ</div>
@@ -467,21 +466,27 @@ function hienThiBangKetQua(kqt) {
   });
 }
 
-  function tinhtth(dl) {
+function tinhtth(dl) {
+    // Giữ nguyên các biến đếm kết quả chuyên môn
     let dt = {
-        bgh:0, tcm:0, tvp:0,
         hs_total:0, hs_tot:0, hs_kha:0, hs_tb:0,
         gd_total:0, gd_gioi:0, gd_kha:0, gd_tb:0, gd_yeu:0,
         ks_total:0, ks_tot:0, ks_kha:0, ks_dat:0, ks_yeu:0,
         khac_total:0, khac_tot:0, khac_kha:0, khac_tb:0, khac_cd:0
     };
 
-    dl.forEach(dg => {
-        let bph = String(dg[2]||"").toLowerCase().trim();
-        if(bph.includes("ban giám hiệu")) dt.bgh++;
-        else if(bph.includes("tổ chuyên môn")) dt.tcm++;
-        else if(bph.includes("tổ văn phòng")) dt.tvp++;
+    // NÂNG CẤP: Tạo đối tượng rỗng để tự động bắt và đếm tên bộ phận bất kỳ
+    let thongKeBoPhan = {}; 
 
+    dl.forEach(dg => {
+        // --- 1. XỬ LÝ ĐẾM BỘ PHẬN ĐỘNG ---
+        let tenBoPhan = String(dg[2] || "").trim();
+        if(tenBoPhan !== "") {
+            // Nếu bộ phận đã có thì cộng 1, chưa có thì gán bằng 1
+            thongKeBoPhan[tenBoPhan] = (thongKeBoPhan[tenBoPhan] || 0) + 1;
+        }
+
+        // --- 2. GIỮ NGUYÊN HOÀN TOÀN LOGIC ĐẾM CŨ ---
         let hs = String(dg[9]||"").toLowerCase().trim();
         if(hs !== "") {
            dt.hs_total++;
@@ -519,10 +524,16 @@ function hienThiBangKetQua(kqt) {
     });
 
     document.getElementById('st_total').innerText = dl.length;
-    document.getElementById('st_bgh').innerText = dt.bgh; 
-    document.getElementById('st_tcm').innerText = dt.tcm; 
-    document.getElementById('st_tvp').innerText = dt.tvp;
+    
+    // NÂNG CẤP: Render (xuất) động danh sách bộ phận ra giao diện
+    let htmlBoPhan = "";
+    for (let tenBP in thongKeBoPhan) {
+        htmlBoPhan += `<div class="sg-row"><span>${tenBP}:</span> <span>${thongKeBoPhan[tenBP]}</span></div>`;
+    }
+    let boxBP = document.getElementById('box_thongke_bophan');
+    if (boxBP) boxBP.innerHTML = htmlBoPhan;
 
+    // --- GIỮ NGUYÊN GÁN DỮ LIỆU HIỂN THỊ CŨ ---
     document.getElementById('st_hs_total').innerText = dt.hs_total;
     document.getElementById('st_hs_tot').innerText = dt.hs_tot; 
     document.getElementById('st_hs_kha').innerText = dt.hs_kha; 
