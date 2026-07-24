@@ -1,4 +1,17 @@
 <style>
+  /* NÂNG CẤP: Ép hiển thị mũi tên xổ xuống cho ô tìm kiếm (Ghi đè Bootstrap) */
+  input[list] {
+      cursor: pointer;
+  }
+  input[list]::-webkit-calendar-picker-indicator {
+      display: block !important;
+      cursor: pointer !important;
+      opacity: 0.7 !important;
+      transition: 0.2s;
+  }
+  input[list]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1 !important;
+  }
   .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
   .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
   .tDe { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; }
@@ -122,7 +135,7 @@
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-        <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --" autocomplete="off">
+       <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}" ondblclick="try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --" autocomplete="off">
         <datalist id="dl_hopChonGv"></datalist>
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
