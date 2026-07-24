@@ -135,7 +135,7 @@
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-       <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}" ondblclick="try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --" autocomplete="off">
+       <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --">
         <datalist id="dl_hopChonGv"></datalist>
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
@@ -273,45 +273,55 @@ function kiemTraQuyenTruyCap() {
 
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     var selectGv = document.getElementById("hopChonGv"); 
-    var dlGv = document.getElementById("dl_hopChonGv");
-    if (!selectGv || !dlGv) return;
+    if (!selectGv) return;
     
-    // Làm sạch danh sách cũ
-    dlGv.innerHTML = '';
+    // Tự động tạo datalist ngầm nếu chưa có để tránh lỗi HTML bị xóa
+    var dlGv = document.getElementById("dl_hopChonGv");
+    if (!dlGv) {
+        dlGv = document.createElement("datalist");
+        dlGv.id = "dl_hopChonGv";
+        document.body.appendChild(dlGv);
+    }
     
     var ds = danhSachGiaoVien;
     if (ds && !Array.isArray(ds) && ds.dliu) {
         ds = ds.dliu;
     }
     
+    let chuoiHtmlDatalist = "";
+    let soNguoi = 0;
+
     if (ds && ds.length > 0) { 
         ds.forEach(function(cb) { 
             var qy = String(cb.quyen || "").trim().toLowerCase();
             
             // BỘ LỌC 2: Chỉ lấy những người có quyền rỗng, x, hoặc xx vào hộp chọn
             if (qy === "" || qy === "x" || qy === "xx") {
-                var tenHienThi = cb.ten || cb.hoTen || cb.tenn;
-                var option = document.createElement("option"); 
-                // Value bắt buộc là tên chính xác để điền vào ô input
-                option.value = tenHienThi; 
-                
-                // Hiển thị thêm chức vụ trong danh sách xổ xuống (nếu có)
+                var tenHienThi = cb.ten || cb.hoTen || cb.tenn || "";
                 var cv = String(cb.chucvu || "").trim();
-                if(cv) {
-                    option.text = tenHienThi + " (" + cv + ")";
-                } else {
-                    option.text = tenHienThi;
+                
+                if (tenHienThi !== "") {
+                    soNguoi++;
+                    // Ép trực tiếp HTML để đảm bảo 100% trình duyệt nhận diện được danh sách
+                    if(cv) {
+                        chuoiHtmlDatalist += `<option value="${tenHienThi}">${tenHienThi} (${cv})</option>`;
+                    } else {
+                        chuoiHtmlDatalist += `<option value="${tenHienThi}"></option>`;
+                    }
                 }
-                dlGv.appendChild(option);
             }
         }); 
-
-        selectGv.style.setProperty('display', 'inline-block', 'important');
-        selectGv.disabled = false; 
     } 
-    else { 
-        selectGv.style.setProperty('display', 'none', 'important'); 
-        selectGv.disabled = true; 
+
+    // Đổ toàn bộ danh sách vào thẻ datalist cùng 1 lúc
+    dlGv.innerHTML = chuoiHtmlDatalist;
+
+    if (soNguoi > 0) {
+        selectGv.style.setProperty('display', 'inline-block', 'important');
+        selectGv.disabled = false;
+    } else {
+        selectGv.style.setProperty('display', 'none', 'important');
+        selectGv.disabled = true;
     }
 }
 
