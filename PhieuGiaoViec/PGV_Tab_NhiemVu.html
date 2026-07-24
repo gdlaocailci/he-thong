@@ -122,7 +122,15 @@
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-        <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
+        
+        <!-- ================= BẮT ĐẦU CỤM NÂNG CẤP COMBOBOX ================= -->
+        <div class="position-relative d-inline-block">
+            <input type="text" id="nhapTimGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px; width: 175px !important;" placeholder="-- Lựa chọn giáo viên --" autocomplete="off" onkeyup="locGiaoVien()" onclick="hienDanhSachGv()" onblur="anDanhSachGvSauDelay()">
+            <input type="hidden" id="hopChonGv">
+            <div id="danhSachGvDrop" class="shadow-sm" style="display: none; position: absolute; top: 100%; right: 0; width: 250px; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #adb5bd; z-index: 1050; border-radius: 4px; font-size: 12px; text-align: left;"></div>
+        </div>
+        <!-- ================= KẾT THÚC CỤM NÂNG CẤP COMBOBOX ================= -->
+        
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
      </div>
@@ -177,6 +185,7 @@
 <script>
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 let trangThaiKhoa = "Mở";
+let mngGiaoVienGoc = []; // Mảng hỗ trợ Combo Box tìm kiếm GV
 
 function moRongHienThiDiem(sel) {
     if (sel.hasAttribute('data-dang-thu-gon')) {
@@ -214,13 +223,14 @@ function kiemTraLaGS() {
 }
 function kiemTraQuyenTruyCap() {
     var selectGv = document.getElementById("hopChonGv"); 
+    var nhapTim = document.getElementById("nhapTimGv");
     var nutLuu = document.getElementById("nutLuuTam"); 
     var nutNop = document.getElementById("nutNopBcao");
     var diemThuong = document.getElementById("nhapDiemThuong");
     var isBGH = kiemTraLaBGH();
     var isGS = kiemTraLaGS();
 
-    if (cotETonTai && selectGv && selectGv.style.display !== "none") {
+    if (cotETonTai && selectGv && nhapTim && nhapTim.style.display !== "none") {
         var daChon = selectGv.value && selectGv.value !== "";
         if (daChon) { 
             if (isBGH) {
@@ -257,56 +267,144 @@ function kiemTraQuyenTruyCap() {
     apDungKhoaGiaoDien(); 
 }
 
+// ================= HÀM NÂNG CẤP XỬ LÝ COMBO BOX TÌM KIẾM GIÁO VIÊN =================
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
-    var selectGv = document.getElementById("hopChonGv"); if (!selectGv) return;
-    selectGv.innerHTML = '<option value="">-- Lựa chọn hồ sơ --</option>';
+    var theAn = document.getElementById("hopChonGv"); 
+    var nhapTim = document.getElementById("nhapTimGv");
+    if (!theAn || !nhapTim) return;
+    
+    theAn.value = "";
+    nhapTim.value = "";
     
     var ds = danhSachGiaoVien;
-    if (ds && !Array.isArray(ds) && ds.dliu) {
-        ds = ds.dliu;
-    }
+    if (ds && !Array.isArray(ds) && ds.dliu) { ds = ds.dliu; }
     
     if (ds && ds.length > 0) { 
-        var nhomQL = document.createElement("optgroup"); nhomQL.label = "Ban Quản lý";
-        var nhomGV = document.createElement("optgroup"); nhomGV.label = "Giáo viên";
-        var nhomNV = document.createElement("optgroup"); nhomNV.label = "Nhân viên";
-        var nhomKhac = document.createElement("optgroup"); nhomKhac.label = "Khác";
-
-        ds.forEach(function(cb) { 
+        mngGiaoVienGoc = ds.filter(function(cb) {
             var qy = String(cb.quyen || "").trim().toLowerCase();
-            
-            // BỘ LỌC 2: Chỉ lấy những người có quyền rỗng, x, hoặc xx vào hộp chọn
-            if (qy === "" || qy === "x" || qy === "xx") {
-                var option = document.createElement("option"); 
-                option.value = cb.id || cb.ma || cb.ttrg; 
-                option.textContent = cb.ten || cb.hoTen || cb.tenn; 
-                
-                var cv = String(cb.chucvu || "").toLowerCase().trim();
-                if (cv === "ql" || cv.includes("quản lý") || cv.includes("quan ly") || cv.includes("hiệu trưởng") || cv.includes("ht")) {
-                    nhomQL.appendChild(option);
-                } else if (cv === "nv" || cv.includes("nhân viên") || cv.includes("nhan vien")) {
-                    nhomNV.appendChild(option);
-                } else if (cv === "gv" || cv.includes("giáo viên") || cv.includes("giao vien")) {
-                    nhomGV.appendChild(option);
-                } else {
-                    nhomKhac.appendChild(option);
-                }
-            }
-        }); 
-
-        if (nhomQL.children.length > 0) selectGv.appendChild(nhomQL);
-        if (nhomGV.children.length > 0) selectGv.appendChild(nhomGV);
-        if (nhomNV.children.length > 0) selectGv.appendChild(nhomNV);
-        if (nhomKhac.children.length > 0) selectGv.appendChild(nhomKhac);
-
-        selectGv.style.setProperty('display', 'inline-block', 'important');
-        selectGv.disabled = false; 
-    } 
-    else { 
-        selectGv.style.setProperty('display', 'none', 'important'); 
-        selectGv.disabled = true; 
+            return (qy === "" || qy === "x" || qy === "xx");
+        });
+        
+        veDanhSachGiaoVien(mngGiaoVienGoc);
+        nhapTim.style.setProperty('display', 'inline-block', 'important');
+        nhapTim.disabled = false; 
+    } else { 
+        mngGiaoVienGoc = [];
+        nhapTim.style.setProperty('display', 'none', 'important'); 
+        nhapTim.disabled = true; 
     }
 }
+
+function veDanhSachGiaoVien(dsLoc) {
+    var listDrop = document.getElementById("danhSachGvDrop");
+    if (!listDrop) return;
+    
+    listDrop.innerHTML = '<div class="px-2 py-2 border-bottom text-muted fw-bold" style="cursor:pointer; background:#f8f9fa;" onmouseover="this.style.backgroundColor=\'#e2e6ea\'" onmouseout="this.style.backgroundColor=\'#f8f9fa\'" onclick="chonGiaoVien(\'\', \'-- Lựa chọn giáo viên --\')"><i class="bi bi-x-circle me-1"></i> Bỏ chọn / Trở về chính mình</div>';
+    
+    var nhomQL = []; var nhomGV = []; var nhomNV = []; var nhomKhac = [];
+
+    dsLoc.forEach(function(cb) { 
+        var cv = String(cb.chucvu || "").toLowerCase().trim();
+        if (cv === "ql" || cv.includes("quản lý") || cv.includes("quan ly") || cv.includes("hiệu trưởng") || cv.includes("ht")) {
+            nhomQL.push(cb);
+        } else if (cv === "nv" || cv.includes("nhân viên") || cv.includes("nhan vien")) {
+            nhomNV.push(cb);
+        } else if (cv === "gv" || cv.includes("giáo viên") || cv.includes("giao vien")) {
+            nhomGV.push(cb);
+        } else {
+            nhomKhac.push(cb);
+        }
+    }); 
+
+    function veNhom(tenNhom, mangNhom) {
+        if (mangNhom.length > 0) {
+            var divNhom = document.createElement("div");
+            divNhom.className = "fw-bold bg-light px-2 py-1 text-primary border-bottom";
+            divNhom.style.fontSize = "11px";
+            divNhom.style.textTransform = "uppercase";
+            divNhom.textContent = tenNhom;
+            listDrop.appendChild(divNhom);
+            
+            mangNhom.forEach(function(cb) {
+                var valId = cb.id || cb.ma || cb.ttrg; 
+                var valTen = cb.ten || cb.hoTen || cb.tenn;
+                var divItem = document.createElement("div");
+                divItem.className = "px-3 py-1 border-bottom text-dark";
+                divItem.style.cursor = "pointer";
+                divItem.onmouseover = function() { this.style.backgroundColor = '#cfe2ff'; };
+                divItem.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                divItem.onclick = function() { chonGiaoVien(valId, valTen); };
+                divItem.textContent = valTen;
+                listDrop.appendChild(divItem);
+            });
+        }
+    }
+
+    veNhom("Ban Quản lý", nhomQL);
+    veNhom("Giáo viên", nhomGV);
+    veNhom("Nhân viên", nhomNV);
+    veNhom("Khác", nhomKhac);
+    
+    if (dsLoc.length === 0) {
+        listDrop.innerHTML += '<div class="p-2 text-muted text-center fst-italic">Không tìm thấy kết quả phù hợp</div>';
+    }
+}
+
+function locGiaoVien() {
+    var tuKhoa = document.getElementById("nhapTimGv").value.toLowerCase().trim();
+    function xoaDau(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
+    }
+    var tuKhoaKhongDau = xoaDau(tuKhoa);
+    
+    var dsLoc = mngGiaoVienGoc.filter(function(cb) {
+        var valTen = (cb.ten || cb.hoTen || cb.tenn || "").toLowerCase();
+        var valTenKhongDau = xoaDau(valTen);
+        return valTen.includes(tuKhoa) || valTenKhongDau.includes(tuKhoaKhongDau);
+    });
+    veDanhSachGiaoVien(dsLoc);
+    document.getElementById("danhSachGvDrop").style.display = "block";
+}
+
+function hienDanhSachGv() {
+    document.getElementById("nhapTimGv").select();
+    locGiaoVien(); 
+}
+
+function anDanhSachGvSauDelay() {
+    setTimeout(function() {
+        var theAn = document.getElementById("hopChonGv");
+        var nhapTim = document.getElementById("nhapTimGv");
+        var valGoc = "";
+        if(theAn.value) {
+            var found = mngGiaoVienGoc.find(function(cb) {
+               return (cb.id || cb.ma || cb.ttrg) === theAn.value;
+            });
+            if(found) valGoc = found.ten || found.hoTen || found.tenn;
+        }
+        
+        if(valGoc !== "") nhapTim.value = valGoc;
+        else nhapTim.value = "";
+        
+        var listDrop = document.getElementById("danhSachGvDrop");
+        if (listDrop) listDrop.style.display = "none";
+    }, 200);
+}
+
+function chonGiaoVien(idGv, tenGv) {
+    var theAn = document.getElementById("hopChonGv");
+    var nhapTim = document.getElementById("nhapTimGv");
+    var oldVal = theAn.value;
+    
+    theAn.value = idGv;
+    nhapTim.value = (idGv === '') ? '' : tenGv;
+    document.getElementById("danhSachGvDrop").style.display = "none";
+    
+    if (oldVal !== idGv) {
+        kiemTraQuyenTruyCap();
+    }
+}
+// ================= KẾT THÚC CỤM XỬ LÝ COMBO BOX =================
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
     cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
@@ -386,7 +484,8 @@ function doiTrangThaiKhoa() {
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
-        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
             maTrangDich = selectGv.value;
         } 
     }
@@ -483,7 +582,8 @@ function apDungKhoaGiaoDien() {
     let isLocked = (trangThaiKhoa === "Khóa");
     
     var selectGv = document.getElementById("hopChonGv");
-    var daChonGvKhac = selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "";
+    var nhapTim = document.getElementById("nhapTimGv");
+    var daChonGvKhac = selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "";
     let isBGH = kiemTraLaBGH();
     let isGS = kiemTraLaGS();
 
@@ -540,7 +640,8 @@ function xulyLuuTam(ath = false, xltc = null) {
 
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
-        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
             if (!isBGH && !isGS) { 
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
                 return; 
@@ -608,7 +709,8 @@ function nopBcaoChinh() {
 
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
-        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
             if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
             return; 
         } 
@@ -665,7 +767,8 @@ function mokBcao() {
             nt.disabled = false;
         } else {
             var selectGv = document.getElementById("hopChonGv");
-            if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
+            var nhapTim = document.getElementById("nhapTimGv");
+            if (selectGv && nhapTim && nhapTim.style.display !== "none" && selectGv.value && selectGv.value !== "") {
                 nt.disabled = true;
             } else {
                 nt.disabled = false;
@@ -1070,7 +1173,8 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
     let chiecThuyenNan = false;
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
         var hopChon = document.getElementById("hopChonGv");
-        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (hopChon && nhapTim && nhapTim.style.display !== "none" && hopChon.value && hopChon.value !== "") {
             chiecThuyenNan = true; 
         }
     }
@@ -1105,8 +1209,10 @@ function chonGiaTriDiem(ptu, giaTriDiem) {
 }
 
 document.addEventListener('click', function(suKien) {
-    if (!suKien.target.closest('.vung-chon-diem')) {
+    if (!suKien.target.closest('.vung-chon-diem') && !suKien.target.closest('#nhapTimGv') && !suKien.target.closest('#danhSachGvDrop')) {
         document.querySelectorAll('.khung-danh-sach').forEach(ds => ds.style.display = 'none');
+        let listDropGv = document.getElementById("danhSachGvDrop");
+        if(listDropGv) listDropGv.style.display = 'none';
     }
 });
   
@@ -1115,8 +1221,9 @@ function addNv() {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     var isBGH = kiemTraLaBGH();
     if (cotETonTai) {
-        var selectGv = document.getElementById("hopChonGv");
-        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
+        var hopChon = document.getElementById("hopChonGv");
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (hopChon && nhapTim && nhapTim.style.display !== "none" && hopChon.value && hopChon.value !== "") {
             if (!isBGH) {
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác.");
                 return;
@@ -1357,15 +1464,15 @@ const tinhtTdong = debounce(function() {
 
 function capnhTdong() { tinhtTdong(); }
 
-  function khoiTaoTheoQuyen() {
+function khoiTaoTheoQuyen() {
     if (typeof canbHientai !== 'undefined' && canbHientai && (canbHientai.quyen === 'xx' || canbHientai.quyen === 'xxx' || canbHientai.quyen === 'gs')) {
         if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { 
             khachApi.gvLaydsCanb(function(dl) { xuLyCotE(canbHientai.quyen, dl); }, function(err) { xuLyCotE(canbHientai.quyen, []); }); 
         } else { xuLyCotE(canbHientai.quyen, []); }
     } else {
         cotETonTai = false; 
-        var selectGv = document.getElementById("hopChonGv");
-        if (selectGv) selectGv.style.setProperty('display', 'none', 'important');
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (nhapTim) nhapTim.style.setProperty('display', 'none', 'important');
         kiemTraQuyenTruyCap();
     }
     
@@ -1581,6 +1688,7 @@ function guiTepLenMayChu(mngTep) {
         alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
     }
 }
+
 function veDinhKemBcao() {
     const vung = document.getElementById('vungDinhkBcao');
     if (!vung) return;
@@ -1595,13 +1703,15 @@ function veDinhKemBcao() {
         vung.appendChild(theTep);
     });
 }
+
 function xoaDinhKemBcao(chs) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     
     let chiecThuyenNan = false;
     if (typeof cotETonTai !== 'undefined' && cotETonTai) {
         var hopChon = document.getElementById("hopChonGv");
-        if (hopChon && hopChon.style.display !== "none" && hopChon.value && hopChon.value !== "") {
+        var nhapTim = document.getElementById("nhapTimGv");
+        if (hopChon && nhapTim && nhapTim.style.display !== "none" && hopChon.value && hopChon.value !== "") {
             chiecThuyenNan = true; 
         }
     }
