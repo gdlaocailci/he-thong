@@ -351,6 +351,9 @@
       <!-- KẾT THÚC BỌC KHU VỰC ĐĂNG NHẬP -->
       
       <div id="app-author-text" style="margin-top: 35px; font-size: 13px; color: #888; font-weight: bold; line-height: 1.5;"></div>
+
+     <!-- NÚT DỌN DẸP CACHE (Đã chuyển vào bên trong khối thẻ, cố định ở góc trái dưới) -->
+      <button id="nutDonDepHeThong" class="kieu-nut-quan-tri" onclick="yeuCauDonDepHeThong()" title="Dọn dẹp bộ nhớ đệm hệ thống" style="position: absolute; bottom: 15px; left: 15px;">!</button>
     </div>
   </div>
 
@@ -1110,8 +1113,6 @@ function yeuCauDonDepHeThong() {
     });
 }
   </script>
- <!-- KHỐI NÚT QUẢN TRỊ ẨN: Xóa bộ nhớ đệm hệ thống -->
-<!-- Cập nhật lại sự kiện onclick trỏ về đúng hàm Javascript phía Client -->
-<button id="nutDonDepHeThong" class="kieu-nut-quan-tri" onclick="yeuCauDonDepHeThong()" title="Dọn dẹp bộ nhớ đệm hệ thống">!</button>
+
 </body>
 </html>
