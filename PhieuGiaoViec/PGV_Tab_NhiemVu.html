@@ -135,8 +135,11 @@
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
        <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
         <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-       <input id="hopChonGv" list="dl_hopChonGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 13px; min-width: 220px;" onchange="kiemTraQuyenTruyCap()" onclick="this.select(); try{this.showPicker();}catch(e){}" placeholder="-- Chọn/Gõ tên nhân sự --">
-        <datalist id="dl_hopChonGv"></datalist>
+       <div id="hopChonGv" style="display: none; position: relative; width: 250px; height: 30px; margin-right: 0.5rem;">
+            <input type="text" id="nhapTimGv" class="form-control form-control-sm border-primary fw-bold text-primary shadow-sm" style="height: 100%; font-size: 13px; cursor: pointer;" placeholder="🔍 Chọn / Gõ tên nhân sự..." onclick="moDanhSachTimGv(event)" onkeyup="locDanhSachTimGv()" autocomplete="off">
+            <div id="khungDsGv" class="shadow" style="display:none; position:absolute; top:100%; right:0; width: 350px; max-height:300px; overflow-y:auto; background:#ffffff; border:1px solid #adb5bd; z-index:9999; border-radius:4px; font-size:13px; text-align:left;">
+              </div>
+        </div>
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
      </div>
