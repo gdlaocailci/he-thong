@@ -806,22 +806,30 @@
     let sysRoles = "";       
     let sysIconRoles = "";   
 
-    // --- HÀM TRUNG TÂM XỬ LÝ DỮ LIỆU ĐÓNG GÓI ---
-    function getUrlAndTarget(encodedTd2) {
-        let decodedStr = encodedTd2;
+function getUrlAndTarget(encodedTd2) {
+        let decodedStr = encodedTd2 || '';
         try {
-            if (!encodedTd2.startsWith('http')) {
+            if (!decodedStr.toLowerCase().startsWith('http')) {
                 try {
                     decodedStr = decodeURIComponent(escape(atob(encodedTd2)));
                 } catch(e) {
                     decodedStr = atob(encodedTd2);
                 }
             }
-        } catch(e) {}
+        } catch(e) {
+            decodedStr = encodedTd2 || '';
+        }
         
         let parts = decodedStr.split('|||');
+        let finalUrl = parts[0] ? parts[0].trim() : '';
+        
+        // BẢO VỆ TẦNG SÂU: Tự động gán https:// nếu link cũ trong CSDL bị thiếu
+        if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://')) {
+            finalUrl = 'https://' + finalUrl;
+        }
+        
         return {
-            url: parts[0] || '',
+            url: finalUrl,
             target: parts.length > 1 ? parts[1] : '_blank'
         };
     }
@@ -1674,16 +1682,16 @@ function xuLySuaHoSo() {
         var vitri = document.getElementById('edit-vitri').value;
         var hieuung = document.getElementById('edit-hieuung').value; 
         
-        // BẢO TOÀN TRẠNG THÁI: Giữ nguyên quyền công khai cũ của dự án để không bị khóa nhầm
+        // KHÔI PHỤC ĐỒNG BỘ: Giữ nguyên trạng thái Công khai cũ, ngăn hệ thống khóa nhầm
         var isPublic = oldProfile.isPublic ? 'public' : ''; 
         
         if (!td1 || !td2_input || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
         
-        // BỔ SUNG LỚP BẢO VỆ: Tự động bù đắp giao thức mạng cho liên kết khi người dùng sửa lỗi
+        // BẢO VỆ TẦNG SỬA: Tự động chèn giao thức nếu thiếu
         if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) {
             td2_input = 'https://' + td2_input;
         }
-        
+
         var elEditCachMo = document.getElementById('edit-cachmo');
         var target = elEditCachMo ? elEditCachMo.value : '_blank';
         var td2_encoded = buildEncodedTd2(td2_input, target); 
@@ -1693,7 +1701,7 @@ function xuLySuaHoSo() {
         
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            // Đã chèn thêm isPublic vào payload để máy chủ không hạ quyền truy cập
+            // Bổ sung đầy đủ isPublic vào gói dữ liệu
             body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
@@ -1829,7 +1837,7 @@ function xuLyLuuHoSo() {
         var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
         var vitri = document.getElementById('hs-vitri').value;
         var td1 = elTd1.value.trim(); 
-        var td2_input = elTd2.value.trim(); // Khôi phục chuẩn tên biến td2_input
+        var td2_input = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
         var hieuung = elHieuUng.value; 
@@ -1841,8 +1849,7 @@ function xuLyLuuHoSo() {
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
-        // BỔ SUNG LỚP BẢO VỆ: Tự động nhận dạng và bù đắp giao thức mạng (http/https)
-        // Nếu chuỗi không bắt đầu bằng http:// hoặc https:// (không phân biệt hoa thường), hệ thống tự động gắn thêm
+        // BẢO VỆ TẦNG LƯU: Tự động chèn giao thức nếu thiếu
         if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) {
             td2_input = 'https://' + td2_input;
         }
@@ -1850,7 +1857,7 @@ function xuLyLuuHoSo() {
         var elCachMo = document.getElementById('hs-cachmo');
         var target = elCachMo ? elCachMo.value : '_blank';
         
-        var td2_encoded = buildEncodedTd2(td2_input, target); // Đồng bộ mã hóa chuẩn với target
+        var td2_encoded = buildEncodedTd2(td2_input, target);
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
