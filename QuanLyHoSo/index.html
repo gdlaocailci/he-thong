@@ -387,6 +387,8 @@
                         <option value="glow">Tỏa sáng (Glow)</option>
                     </select>
                 </div>
+                
+                <!-- Dropdown chọn cách mở Tab -->
                 <div class="form-group">
                     <label>Cơ chế mở Ứng dụng/Link:</label>
                     <select id="hs-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -394,6 +396,7 @@
                         <option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option>
                     </select>
                 </div>
+                
                 <div class="form-group">
                     <label>Vị trí hiển thị lưu trữ:</label>
                     <select id="hs-vitri">
@@ -651,6 +654,8 @@
                         <option value="glow">Tỏa sáng (Glow)</option>
                     </select>
                 </div>
+                
+                <!-- Bổ sung Dropdown chọn cách mở Tab -->
                 <div class="form-group">
                     <label>Cơ chế mở Ứng dụng/Link:</label>
                     <select id="edit-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -658,6 +663,7 @@
                         <option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option>
                     </select>
                 </div>
+                
                 <div class="form-group">
                     <label>Thay đổi vị trí lưu trữ:</label>
                     <select id="edit-vitri">
@@ -787,6 +793,40 @@
     let sysRoles = "";       
     let sysIconRoles = "";   
 
+    // --- HÀM TRUNG TÂM XỬ LÝ DỮ LIỆU ĐÓNG GÓI ---
+    function getUrlAndTarget(encodedTd2) {
+        let decodedStr = encodedTd2;
+        try {
+            // TÌM RA LỖI: Code.gs khi Gán mới lưu thành văn bản thường (Plain Text). 
+            // Khi Sửa thì lại lưu thành mã hóa Base64.
+            // Do đó hàm này bắt buộc phải giải mã (nếu là Base64) nhưng VẪN PHẢI CẮT CHUỖI ||| TRONG MỌI TRƯỜNG HỢP.
+            if (!encodedTd2.startsWith('http')) {
+                try {
+                    decodedStr = decodeURIComponent(escape(atob(encodedTd2)));
+                } catch(e) {
+                    decodedStr = atob(encodedTd2);
+                }
+            }
+        } catch(e) {}
+        
+        // QUAN TRỌNG: Luôn luôn tách chuỗi ||| bất kể là mã hóa hay plain text
+        let parts = decodedStr.split('|||');
+        return {
+            url: parts[0] || '',
+            target: parts.length > 1 ? parts[1] : '_blank'
+        };
+    }
+
+    function buildEncodedTd2(url, target) {
+        let raw = url + '|||' + target;
+        try {
+            return btoa(unescape(encodeURIComponent(raw)));
+        } catch(e) {
+            return btoa(raw); // Dự phòng cho link hoàn toàn không có dấu
+        }
+    }
+    // ---------------------------------------------
+
     window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
         tokenClient = google.accounts.oauth2.initTokenClient({
@@ -851,7 +891,7 @@
         });
     }
 
-function kiemTraTrangThaiDangNhap() {
+    function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
             isLoggedIn = false;
@@ -863,13 +903,11 @@ function kiemTraTrangThaiDangNhap() {
             document.getElementById('btn-google-login').style.display = 'none'; 
             document.getElementById('sys-name').style.display = 'block';
             
-            // Trích xuất bộ nhớ đệm cục bộ
             let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
             let cachedIconRoles = localStorage.getItem(PREFIX_MEM + 'sysIconRoles');
             let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
 
             if (cachedRoles !== null) {
-                // Kích hoạt ngay lập tức từ Cache
                 isLoggedIn = true;
                 document.getElementById('sys-name').innerText = cachedName || "Đã đăng nhập"; 
                 document.getElementById('btn-logout').style.display = 'flex';
@@ -877,7 +915,6 @@ function kiemTraTrangThaiDangNhap() {
                 sysIconRoles = cachedIconRoles || "";
                 apDungPhanQuyen(sysRoles);
             } else {
-                // Nếu chưa có Cache thì gọi máy chủ xác thực
                 document.getElementById('sys-name').innerText = "Đang xác thực...";
                 xacThucPhienDangNhap(sysSession);
             }
@@ -890,7 +927,6 @@ function kiemTraTrangThaiDangNhap() {
     }
     
    function dangXuat() { 
-        // Dọn dẹp toàn bộ phiên làm việc cục bộ
         localStorage.removeItem(PREFIX_MEM + 'session'); 
         localStorage.removeItem(PREFIX_MEM + 'sysRoles'); 
         localStorage.removeItem(PREFIX_MEM + 'sysIconRoles'); 
@@ -901,7 +937,7 @@ function kiemTraTrangThaiDangNhap() {
         location.reload(); 
     }
 
-function xacThucPhienDangNhap(sysSession) {
+    function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -919,7 +955,6 @@ function xacThucPhienDangNhap(sysSession) {
                     sysRoles = result.roles || "";
                     sysIconRoles = result.iconRoles || "";
                     
-                    // Ghi nhận Cache để tái sử dụng cho các lần tải sau
                     localStorage.setItem(PREFIX_MEM + 'sysRoles', sysRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysIconRoles', sysIconRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
@@ -967,7 +1002,8 @@ function xacThucPhienDangNhap(sysSession) {
     function kiemTraLaThuMuc(item) {
         if (item.iconType === 'hoso_thumuc') return true; 
         try {
-            return item.td2 && atob(item.td2) === '#INTERNAL_FOLDER_CONTAINER#';
+            let parsed = getUrlAndTarget(item.td2);
+            return parsed.url === '#INTERNAL_FOLDER_CONTAINER#';
         } catch(e) { return false; }
     }
 
@@ -1074,16 +1110,11 @@ function renderIconsFromData(data) {
         data.forEach((item, index) => {
             if (item.vitri && item.vitri !== 'desktop' && item.vitri !== '') return;
 
-            // Xử lý tách chuỗi để lấy 2 thông số
-            let hieuUngParts = (item.hieuung || 'none').split('|');
-            let realHieuUng = hieuUngParts[0];
-            let openTarget = hieuUngParts[1] || '_blank';
-
             let type = item.iconType; 
             let cfg = layCauHinhIcon(type);
             let iconContent = cfg.iconContent;
             let bgClass = cfg.bgClass;
-            let effectClass = layClassHieuUng(realHieuUng);
+            let effectClass = layClassHieuUng(item.hieuung);
 
             const div = document.createElement('div'); 
             div.className = `desktop-icon ${effectClass}`; 
@@ -1093,7 +1124,8 @@ function renderIconsFromData(data) {
 
             div.style.animationDelay = (index * 0.04) + 's';
 
-            let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+            // ĐÃ SỬA LẠI LOGIC: Nếu không Public (!item.isPublic) thì hiện ổ khóa Đỏ
+            let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
@@ -1107,16 +1139,11 @@ function renderIconsFromData(data) {
                     showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
-                var finalUrl = item.td2;
-                try {
-                    if (!finalUrl.startsWith('http')) { 
-                        finalUrl = atob(finalUrl); 
-                    }
-                } catch(e) {}
+                
+                let parsed = getUrlAndTarget(item.td2);
                 
                 if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    // Mở theo target (Tab mới hoặc Tab hiện tại)
-                    window.open(finalUrl, openTarget);
+                    window.open(parsed.url, parsed.target);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -1147,13 +1174,8 @@ function moCuaSoThuMuc(tenThuMuc) {
             folderArea.innerHTML = '<div style="width:100%; text-align:center; color:#ffffff; font-weight: 600; margin-top:50px; opacity: 0.7;">Thư mục trống hoặc chưa có phân hệ liên kết.</div>';
         } else {
             childItems.forEach((item, index) => {
-                // Xử lý tách chuỗi để lấy 2 thông số
-                let hieuUngParts = (item.hieuung || 'none').split('|');
-                let realHieuUng = hieuUngParts[0];
-                let openTarget = hieuUngParts[1] || '_blank';
-                
                 let cfg = layCauHinhIcon(item.iconType);
-                let effectClass = layClassHieuUng(realHieuUng); 
+                let effectClass = layClassHieuUng(item.hieuung); 
 
                 const div = document.createElement('div');
                 div.className = `desktop-icon ${effectClass}`;
@@ -1163,7 +1185,8 @@ function moCuaSoThuMuc(tenThuMuc) {
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
-                let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+                // ĐÃ SỬA LẠI LOGIC TƯƠNG TỰ BÊN TRONG THƯ MỤC
+                let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
                 
                 let moveOutBtn = "";
                 if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
@@ -1177,12 +1200,11 @@ function moCuaSoThuMuc(tenThuMuc) {
                         showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để có thể tương tác với cơ sở dữ liệu này!");
                         return;
                     }
-                    var finalUrl = item.td2;
-                    try { if (!finalUrl.startsWith('http')) finalUrl = atob(finalUrl); } catch(e) {}
+                    
+                    let parsed = getUrlAndTarget(item.td2);
                     
                     if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        // Mở theo target (Tab mới hoặc Tab hiện tại)
-                        window.open(finalUrl, openTarget);
+                        window.open(parsed.url, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
@@ -1197,9 +1219,8 @@ function moCuaSoThuMuc(tenThuMuc) {
         const item = globalProfiles.find(p => p.td1 === tenHoSo);
         if (!item) return;
 
-        let decodedUrl = item.td2;
-        try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
-        let safeEncodedTd2 = btoa(decodedUrl);
+        let parsed = getUrlAndTarget(item.td2);
+        let safeEncodedTd2 = buildEncodedTd2(parsed.url, parsed.target);
 
         let loading = document.createElement('div');
         loading.className = 'loading-screen';
@@ -1288,7 +1309,7 @@ function moCuaSoThuMuc(tenThuMuc) {
         let danhSachGom = [];
         document.querySelectorAll('.cb-chon-hoso:checked').forEach(cb => danhSachGom.push(cb.value));
 
-        var td2_encoded = btoa('#INTERNAL_FOLDER_CONTAINER#');
+        var td2_encoded = buildEncodedTd2('#INTERNAL_FOLDER_CONTAINER#', '_blank');
         var statusText = document.getElementById('tm-form-status');
         statusText.innerText = "Đang khởi tạo thư mục..."; 
         statusText.style.display = 'block';
@@ -1320,9 +1341,8 @@ function moCuaSoThuMuc(tenThuMuc) {
                             let item = globalProfiles.find(p => p.td1 === tenHosoGom);
                             if(!item) return Promise.resolve();
                             
-                            let decodedUrl = item.td2;
-                            try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
-                            let safeEncodedTd2 = btoa(decodedUrl);
+                            let parsed = getUrlAndTarget(item.td2);
+                            let safeEncodedTd2 = buildEncodedTd2(parsed.url, parsed.target);
 
                             return fetch(KETNOI.WEB_APP_URL, {
                                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1366,18 +1386,16 @@ function moCuaSoThuMuc(tenThuMuc) {
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
     
-function initializeLayout() { 
+    function initializeLayout() { 
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
         
-        // 1. Tự động lấy chiều cao thực của màn hình trừ đi 70px (Taskbar 48px + khoảng lề 22px) thay vì 150px như cũ
         let maxColHeight = window.innerHeight - 70; 
         if (maxColHeight < 200) maxColHeight = 500; 
         
-        // 2. Tự động tính số dòng (maxRows) có thể chứa tối đa dựa trên màn hình hiện tại
         let maxRows = Math.floor(maxColHeight / iconHeight);
         if (maxRows < 1) maxRows = 1; 
 
@@ -1390,7 +1408,6 @@ function initializeLayout() {
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
             } else { 
-                // 3. Sắp xếp tự động đảm bảo không bị so le cột
                 let col = Math.floor(gridIndex / maxRows);
                 let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1408,11 +1425,9 @@ function initializeLayout() {
         const startX = 20;
         const startY = 20;
         
-        // Tự động tính toán không gian khả dụng sát mép Taskbar
         let maxColHeight = window.innerHeight - 70; 
         if (maxColHeight < 200) maxColHeight = 500; 
         
-        // Tự động tính số dòng để cập nhật ngay khi thay đổi kích thước cửa sổ
         let maxRows = Math.floor(maxColHeight / iconHeight);
         if (maxRows < 1) maxRows = 1;
 
@@ -1448,7 +1463,7 @@ function initializeLayout() {
         }); 
     }
     
-function startDrag(e) { 
+    function startDrag(e) { 
         dragThresholdPassed = false; 
         draggedIcon = this; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
@@ -1459,7 +1474,6 @@ function startDrag(e) {
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
         
-        // Vô hiệu hóa hiệu ứng chuyển động CSS để icon bám sát chuột tức thì
         draggedIcon.style.transition = 'none';
 
         document.addEventListener('mousemove', drag); 
@@ -1514,7 +1528,6 @@ function startDrag(e) {
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
         
-        // Khôi phục lại hiệu ứng chuyển động sau khi thả chuột
         draggedIcon.style.transition = '';
         
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
@@ -1563,11 +1576,10 @@ function startDrag(e) {
         setTimeout(() => { isDragging = false; }, 100); 
     }
     
-function savePositions() { 
+    function savePositions() { 
         if (!draggedIcon) return;
         const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         
-        // GHI NHẬN TỌA ĐỘ THEO KHÓA TÊN BẤT BIẾN
         const titleKey = draggedIcon.getAttribute('data-title'); 
         
         if (titleKey) {
@@ -1583,12 +1595,11 @@ function savePositions() {
         initializeLayout(); 
     }
 
-    // Đảm bảo không gian không xô lệch khi xoay hoặc thu phóng trình duyệt
     window.addEventListener('resize', () => {
         if (typeof initializeLayout === 'function') initializeLayout();
     });
     
-function toggleHoSoModal(isShow) {
+    function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
         if(!isShow) {
             var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
@@ -1596,7 +1607,6 @@ function toggleHoSoModal(isShow) {
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; 
             elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc'; elHieuUng.value = 'none';
             
-            // Kiểm tra an toàn xem phần tử HTML có tồn tại không trước khi đặt giá trị
             var elCachMo = document.getElementById('hs-cachmo');
             if (elCachMo) elCachMo.value = '_blank';
             
@@ -1604,7 +1614,8 @@ function toggleHoSoModal(isShow) {
             document.getElementById('hs-vitri').value = 'desktop';
         }
     }
-function toggleSuaHoSoModal(isShow) {
+
+    function toggleSuaHoSoModal(isShow) {
         document.getElementById('window-sua-hoso').style.display = isShow ? 'flex' : 'none';
         if (isShow) {
             const select = document.getElementById('edit-hoso-select');
@@ -1620,7 +1631,6 @@ function toggleSuaHoSoModal(isShow) {
             document.getElementById('edit-loaiicon').value = '';
             document.getElementById('edit-hieuung').value = 'none';
             
-            // Kiểm tra an toàn xem phần tử HTML có tồn tại không
             var elEditCachMo = document.getElementById('edit-cachmo');
             if (elEditCachMo) elEditCachMo.value = '_blank';
             
@@ -1629,45 +1639,40 @@ function toggleSuaHoSoModal(isShow) {
         }
     }
 
-function taiThongTinSuaHoSo() {
+    function taiThongTinSuaHoSo() {
         const select = document.getElementById('edit-hoso-select');
         if (select.value === "") return;
         const profile = globalProfiles[select.value];
         document.getElementById('edit-td1').value = profile.td1;
         
-        let decodedUrl = profile.td2;
-        try { 
-            if (!decodedUrl.startsWith('http')) {
-                decodedUrl = atob(decodedUrl); 
-            }
-        } catch(e) {}
+        let parsed = getUrlAndTarget(profile.td2);
         
-        // Tách chuỗi URL và cách mở từ dữ liệu mã hóa
-        let urlParts = decodedUrl.split('|||');
-        document.getElementById('edit-td2').value = urlParts[0];
-        document.getElementById('edit-cachmo').value = urlParts[1] || '_blank';
+        document.getElementById('edit-td2').value = parsed.url;
+        let editCachMo = document.getElementById('edit-cachmo');
+        if (editCachMo) editCachMo.value = parsed.target;
         
-        // Trả lại nguyên bản cho biến hiệu ứng để không lỗi Google Sheets
         document.getElementById('edit-loaiicon').value = profile.iconType;
         document.getElementById('edit-hieuung').value = profile.hieuung || 'none';
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
     }
 
-function xuLySuaHoSo() {
+    function xuLySuaHoSo() {
         const select = document.getElementById('edit-hoso-select');
         if (select.value === "") { alert("Yêu cầu hệ thống: Vui lòng chọn một dự án cần cập nhật!"); return; }
         
         const oldProfile = globalProfiles[select.value];
         var td1 = document.getElementById('edit-td1').value.trim(); 
-        var td2_raw = document.getElementById('edit-td2').value.trim(); 
+        var td2_input = document.getElementById('edit-td2').value.trim(); 
         var loaiIcon = document.getElementById('edit-loaiicon').value;
         var vitri = document.getElementById('edit-vitri').value;
+        var hieuung = document.getElementById('edit-hieuung').value; 
         
-        // Gộp hiệu ứng và cách mở thành 1 chuỗi để lưu chung
-        var hieuung = document.getElementById('edit-hieuung').value + '|' + document.getElementById('edit-cachmo').value;
+        if (!td1 || !td2_input || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
         
-        if (!td1 || !td2_raw || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
-        var td2_encoded = btoa(td2_raw);
+        var elEditCachMo = document.getElementById('edit-cachmo');
+        var target = elEditCachMo ? elEditCachMo.value : '_blank';
+        
+        var td2_encoded = buildEncodedTd2(td2_input, target);
 
         document.getElementById('edit-form-status').innerText = "Đang đồng bộ cơ sở dữ liệu sửa chữa..."; 
         document.getElementById('edit-form-status').style.display = 'block';
@@ -1684,12 +1689,9 @@ function xuLySuaHoSo() {
                 if (result.status === 'success') {
                     toggleSuaHoSoModal(false);
                     taiBieuTuongCongKhai();
-                } else { 
-                    alert("Phát sinh sự cố: " + result.message); 
-                }
+                } else { alert("Phát sinh sự cố: " + result.message); }
             } catch (jsonError) {
-                console.error("Lỗi từ backend máy chủ Google:", text);
-                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: Hệ thống gặp lỗi khi truy vấn Code.gs.");
+                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.");
             }
         }).catch(err => { 
             document.getElementById('edit-form-status').style.display = 'none'; 
@@ -1821,7 +1823,7 @@ function xuLySuaHoSo() {
         });
     }
 
-function xuLyLuuHoSo() {
+    function xuLyLuuHoSo() {
         var elTd1 = document.getElementById('hs-td1'); 
         var elTd2 = document.getElementById('hs-td2'); 
         var elLoaiIcon = document.getElementById('hs-loaiicon'); 
@@ -1840,18 +1842,10 @@ function xuLyLuuHoSo() {
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
-        // Kiểm tra an toàn: Nếu chưa thêm HTML thì mặc định là mở tab mới (_blank)
         var elCachMo = document.getElementById('hs-cachmo');
         var target = elCachMo ? elCachMo.value : '_blank';
-        var td2_raw = td2_input + '|||' + target;
         
-        // Thuật toán mã hóa an toàn chống lỗi Unicode (Tiếng Việt)
-        var td2_encoded;
-        try {
-            td2_encoded = btoa(unescape(encodeURIComponent(td2_raw)));
-        } catch(e) {
-            td2_encoded = btoa(td2_raw); // Dự phòng
-        }
+        var td2_encoded = buildEncodedTd2(td2_input, target);
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
