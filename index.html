@@ -1679,6 +1679,11 @@ function xuLySuaHoSo() {
         
         if (!td1 || !td2_input || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
         
+        // BỔ SUNG LỚP BẢO VỆ: Tự động bù đắp giao thức mạng cho liên kết khi người dùng sửa lỗi
+        if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) {
+            td2_input = 'https://' + td2_input;
+        }
+        
         var elEditCachMo = document.getElementById('edit-cachmo');
         var target = elEditCachMo ? elEditCachMo.value : '_blank';
         var td2_encoded = buildEncodedTd2(td2_input, target); 
@@ -1836,10 +1841,16 @@ function xuLyLuuHoSo() {
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
+        // BỔ SUNG LỚP BẢO VỆ: Tự động nhận dạng và bù đắp giao thức mạng (http/https)
+        // Nếu chuỗi không bắt đầu bằng http:// hoặc https:// (không phân biệt hoa thường), hệ thống tự động gắn thêm
+        if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) {
+            td2_input = 'https://' + td2_input;
+        }
+
         var elCachMo = document.getElementById('hs-cachmo');
         var target = elCachMo ? elCachMo.value : '_blank';
         
-        var td2_encoded = buildEncodedTd2(td2_input, target); // Đồng bộ mã hóa chuẩn
+        var td2_encoded = buildEncodedTd2(td2_input, target); // Đồng bộ mã hóa chuẩn với target
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
