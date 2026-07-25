@@ -388,7 +388,6 @@
                     </select>
                 </div>
                 
-                <!-- Dropdown chọn cách mở Tab -->
                 <div class="form-group">
                     <label>Cơ chế mở Ứng dụng/Link:</label>
                     <select id="hs-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -655,7 +654,6 @@
                     </select>
                 </div>
                 
-                <!-- Bổ sung Dropdown chọn cách mở Tab -->
                 <div class="form-group">
                     <label>Cơ chế mở Ứng dụng/Link:</label>
                     <select id="edit-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -676,7 +674,7 @@
         </div>
     </div>
 
-    <!-- ĐÃ CẬP NHẬT CẤU TRÚC GIAO DIỆN QUẢN LÝ ĐA NHIỆM CHỌN NHIỀU -->
+    <!-- KHỐI QUẢN LÝ DỰ ÁN ĐA NHIỆM (ĐÃ THU GỌN VÀ CHỈNH SỬA) -->
     <div id="window-xoa-hoso" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
@@ -684,11 +682,10 @@
                 <button class="window-close" onclick="toggleXoaHoSoModal(false)">✕</button>
             </div>
             <div class="form-native">
-                <div class="form-group">
-                   <div class="form-group" style="margin-bottom: 10px;">
+                <div class="form-group" style="margin-bottom: 10px;">
                     <!-- Đưa nhãn và 2 nút lên cùng một hàng ngang để tiết kiệm không gian -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="margin-bottom: 0;">Lựa chọn ứng dung thao tác:</label>
+                        <label style="margin-bottom: 0;">Lựa chọn dự án thao tác:</label>
                         <div style="display: flex; gap: 8px;">
                             <button class="btn-picker" style="background: #546E7A; color: white;" onclick="chonTatCaQuanLy(true)">Chọn tất cả</button>
                             <button class="btn-picker" style="background: #9e9e9e; color: white;" onclick="chonTatCaQuanLy(false)">Bỏ chọn</button>
@@ -709,6 +706,7 @@
         </div>
     </div>
 
+    <!-- KHỐI MA TRẬN PHÂN QUYỀN (ĐÃ KIỂM TRA DOM) -->
     <div id="window-phanquyen" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
@@ -805,9 +803,6 @@
     function getUrlAndTarget(encodedTd2) {
         let decodedStr = encodedTd2;
         try {
-            // TÌM RA LỖI: Code.gs khi Gán mới lưu thành văn bản thường (Plain Text). 
-            // Khi Sửa thì lại lưu thành mã hóa Base64.
-            // Do đó hàm này bắt buộc phải giải mã (nếu là Base64) nhưng VẪN PHẢI CẮT CHUỖI ||| TRONG MỌI TRƯỜNG HỢP.
             if (!encodedTd2.startsWith('http')) {
                 try {
                     decodedStr = decodeURIComponent(escape(atob(encodedTd2)));
@@ -817,7 +812,6 @@
             }
         } catch(e) {}
         
-        // QUAN TRỌNG: Luôn luôn tách chuỗi ||| bất kể là mã hóa hay plain text
         let parts = decodedStr.split('|||');
         return {
             url: parts[0] || '',
@@ -830,7 +824,7 @@
         try {
             return btoa(unescape(encodeURIComponent(raw)));
         } catch(e) {
-            return btoa(raw); // Dự phòng cho link hoàn toàn không có dấu
+            return btoa(raw); 
         }
     }
     // ---------------------------------------------
@@ -1680,7 +1674,7 @@
         
         var td2_encoded = buildEncodedTd2(td2_input, target);
 
-        document.getElementById('edit-form-status').innerText = "Đang đồng bộ cơ sở dữ liệu sửa chữa..."; 
+        document.getElementById('edit-form-status').innerText = "Đang đồng bộ dữ liệu sửa chữa..."; 
         document.getElementById('edit-form-status').style.display = 'block';
         
         fetch(KETNOI.WEB_APP_URL, {
@@ -1870,7 +1864,9 @@
             iconListContainer.innerHTML = '';
             globalProfiles.forEach(profile => {
                 let pubLabel = profile.isPublic ? ' <span style="color: #2e7d32; font-weight: 600; font-size: 11px; background: #e8f5e9; padding: 2px 4px; border-radius: 3px; margin-left: 5px;">[Đã mở Công khai]</span>' : '';
-                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;"><input type="checkbox" class="icon-role-cb" value="${profile.td1}"> <span>${profile.td1}</span> ${pubLabel}</label>`;
+                // Thêm cơ chế làm sạch tên dự án để tránh lỗi HTML Injection khi tên có chứa dấu ngoặc kép
+                let safeVal = profile.td1.replace(/"/g, '&quot;');
+                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;"><input type="checkbox" class="icon-role-cb" value="${safeVal}"> <span>${profile.td1}</span> ${pubLabel}</label>`;
             });
             taiDuLieuQuyen(); 
         } else { lamMoiBieuMauQuyen(); }
