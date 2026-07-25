@@ -1663,7 +1663,7 @@
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
     }
 
-    function xuLySuaHoSo() {
+function xuLySuaHoSo() {
         const select = document.getElementById('edit-hoso-select');
         if (select.value === "") { alert("Yêu cầu hệ thống: Vui lòng chọn một dự án cần cập nhật!"); return; }
         
@@ -1674,19 +1674,22 @@
         var vitri = document.getElementById('edit-vitri').value;
         var hieuung = document.getElementById('edit-hieuung').value; 
         
+        // BẢO TOÀN TRẠNG THÁI: Giữ nguyên quyền công khai cũ của dự án để không bị khóa nhầm
+        var isPublic = oldProfile.isPublic ? 'public' : ''; 
+        
         if (!td1 || !td2_input || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
         
         var elEditCachMo = document.getElementById('edit-cachmo');
         var target = elEditCachMo ? elEditCachMo.value : '_blank';
-        
-        var td2_encoded = buildEncodedTd2(td2_input, target);
+        var td2_encoded = buildEncodedTd2(td2_input, target); 
 
         document.getElementById('edit-form-status').innerText = "Đang đồng bộ dữ liệu sửa chữa..."; 
         document.getElementById('edit-form-status').style.display = 'block';
         
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            // Đã chèn thêm isPublic vào payload để máy chủ không hạ quyền truy cập
+            body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
         .then(text => {
@@ -1816,14 +1819,12 @@
         });
     }
 
-    function xuLyLuuHoSo() {
-        var elTd1 = document.getElementById('hs-td1'); 
-        var elTd2 = document.getElementById('hs-td2'); 
-        var elLoaiIcon = document.getElementById('hs-loaiicon'); 
-        var elHieuUng = document.getElementById('hs-hieuung');
+function xuLyLuuHoSo() {
+        var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
+        var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
         var vitri = document.getElementById('hs-vitri').value;
         var td1 = elTd1.value.trim(); 
-        var td2_input = elTd2.value.trim(); 
+        var td2_input = elTd2.value.trim(); // Khôi phục chuẩn tên biến td2_input
         var loaiIcon = elLoaiIcon.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
         var hieuung = elHieuUng.value; 
@@ -1838,7 +1839,7 @@
         var elCachMo = document.getElementById('hs-cachmo');
         var target = elCachMo ? elCachMo.value : '_blank';
         
-        var td2_encoded = buildEncodedTd2(td2_input, target);
+        var td2_encoded = buildEncodedTd2(td2_input, target); // Đồng bộ mã hóa chuẩn
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
