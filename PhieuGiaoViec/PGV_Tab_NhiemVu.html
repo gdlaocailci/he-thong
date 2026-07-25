@@ -1677,7 +1677,7 @@ $(document).ready(function() {
     icon.style.pointerEvents = "none";
 
     const dropdown = document.createElement("div");
-    dropdown.className = "shadow-sm border rounded bg-white";
+    dropdown.className = "shadow-sm border rounded";
     dropdown.style.display = "none";
     dropdown.style.position = "absolute";
     dropdown.style.top = "100%";
@@ -1685,7 +1685,9 @@ $(document).ready(function() {
     dropdown.style.width = "280px";
     dropdown.style.maxHeight = "300px";
     dropdown.style.overflowY = "auto";
-    dropdown.style.zIndex = "1050";
+    dropdown.style.backgroundColor = "#ffffff"; // Ép cứng nền trắng
+    dropdown.style.opacity = "1"; // Độ đục 100%, khử hoàn toàn trong suốt
+    dropdown.style.zIndex = "9999"; // Đẩy phân lớp lên cao nhất để đè mọi thành phần khác
     dropdown.style.fontSize = "12px";
     dropdown.style.textAlign = "left";
 
