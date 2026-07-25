@@ -1581,6 +1581,7 @@ function guiTepLenMayChu(mngTep) {
         alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
     }
 }
+
 function veDinhKemBcao() {
     const vung = document.getElementById('vungDinhkBcao');
     if (!vung) return;
@@ -1595,6 +1596,7 @@ function veDinhKemBcao() {
         vung.appendChild(theTep);
     });
 }
+
 function xoaDinhKemBcao(chs) {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     
@@ -1645,4 +1647,189 @@ function xoaDinhKemBcao(chs) {
         alert("Lỗi hệ thống: API xóa tệp chưa được liên kết.");
     }
 }
+
+// ===== BẢN NÂNG CẤP COMBOBOX ĐỘC LẬP (Lớp phủ giao diện) =====
+// Tuyệt đối không can thiệp logic hệ thống gốc, chỉ đè UI và đồng bộ dữ liệu
+$(document).ready(function() {
+    const originalSelect = document.getElementById("hopChonGv");
+    if (!originalSelect) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "position-relative d-inline-block custom-gv-combobox";
+    wrapper.style.setProperty("display", originalSelect.style.display, "important");
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "form-control form-control-sm border-primary fw-bold text-primary shadow-sm text-nowrap";
+    input.style.height = "30px";
+    input.style.fontSize = "12px";
+    input.style.width = "220px";
+    input.style.paddingRight = "25px";
+    input.placeholder = "-- Lựa chọn giáo viên --";
+    input.autocomplete = "off";
+
+    const icon = document.createElement("i");
+    icon.className = "bi bi-chevron-down text-primary position-absolute";
+    icon.style.right = "8px";
+    icon.style.top = "50%";
+    icon.style.transform = "translateY(-50%)";
+    icon.style.fontSize = "12px";
+    icon.style.pointerEvents = "none";
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "shadow-sm border rounded bg-white";
+    dropdown.style.display = "none";
+    dropdown.style.position = "absolute";
+    dropdown.style.top = "100%";
+    dropdown.style.right = "0";
+    dropdown.style.width = "280px";
+    dropdown.style.maxHeight = "300px";
+    dropdown.style.overflowY = "auto";
+    dropdown.style.zIndex = "1050";
+    dropdown.style.fontSize = "12px";
+    dropdown.style.textAlign = "left";
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(dropdown);
+
+    originalSelect.parentNode.insertBefore(wrapper, originalSelect);
+
+    // Ẩn Select gốc bằng style trực tiếp (Giữ nguyên thẻ select trong DOM để không vỡ logic)
+    originalSelect.style.setProperty('position', 'absolute', 'important');
+    originalSelect.style.setProperty('opacity', '0', 'important');
+    originalSelect.style.setProperty('pointer-events', 'none', 'important');
+    originalSelect.style.setProperty('z-index', '-1', 'important');
+    originalSelect.style.setProperty('width', '1px', 'important');
+    originalSelect.style.setProperty('height', '1px', 'important');
+    originalSelect.style.setProperty('margin', '0', 'important');
+    originalSelect.style.setProperty('padding', '0', 'important');
+    originalSelect.style.setProperty('border', 'none', 'important');
+
+    function buildDropdown() {
+        dropdown.innerHTML = "";
+        
+        const defaultDiv = document.createElement("div");
+        defaultDiv.className = "px-2 py-2 border-bottom text-muted fw-bold";
+        defaultDiv.style.cursor = "pointer";
+        defaultDiv.style.background = "#f8f9fa";
+        defaultDiv.innerHTML = '<i class="bi bi-x-circle me-1"></i> Bỏ chọn / Trở về chính mình';
+        defaultDiv.onmouseover = () => defaultDiv.style.background = "#e2e6ea";
+        defaultDiv.onmouseout = () => defaultDiv.style.background = "#f8f9fa";
+        defaultDiv.onmousedown = (e) => { e.preventDefault(); selectOption("", "-- Lựa chọn giáo viên --"); };
+        dropdown.appendChild(defaultDiv);
+
+        Array.from(originalSelect.children).forEach(child => {
+            if (child.tagName === "OPTGROUP") {
+                const groupDiv = document.createElement("div");
+                groupDiv.className = "fw-bold bg-light px-2 py-1 text-primary border-bottom";
+                groupDiv.style.fontSize = "11px";
+                groupDiv.style.textTransform = "uppercase";
+                groupDiv.textContent = child.label;
+                dropdown.appendChild(groupDiv);
+
+                Array.from(child.children).forEach(opt => {
+                    addOptionToDropdown(opt.value, opt.textContent);
+                });
+            } else if (child.tagName === "OPTION" && child.value !== "") {
+                addOptionToDropdown(child.value, child.textContent);
+            }
+        });
+    }
+
+    function addOptionToDropdown(val, text) {
+        const optDiv = document.createElement("div");
+        optDiv.className = "muc-gv px-3 py-1 border-bottom text-dark";
+        optDiv.style.cursor = "pointer";
+        optDiv.textContent = text;
+        optDiv.dataset.val = val;
+        optDiv.onmouseover = () => optDiv.style.background = "#cfe2ff";
+        optDiv.onmouseout = () => optDiv.style.background = "transparent";
+        optDiv.onmousedown = (e) => { e.preventDefault(); selectOption(val, text); };
+        dropdown.appendChild(optDiv);
+    }
+
+    function filterDropdown(query) {
+        const q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+        const items = dropdown.querySelectorAll(".muc-gv");
+        let hasVisible = false;
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            const textNorm = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+            if (text.includes(q) || textNorm.includes(q)) {
+                item.style.display = "block";
+                hasVisible = true;
+            } else {
+                item.style.display = "none";
+            }
+        });
+        
+        let noRes = dropdown.querySelector(".khong-kq");
+        if (!hasVisible) {
+            if (!noRes) {
+                noRes = document.createElement("div");
+                noRes.className = "khong-kq p-2 text-muted text-center fst-italic";
+                noRes.textContent = "Không tìm thấy kết quả phù hợp";
+                dropdown.appendChild(noRes);
+            } else {
+                noRes.style.display = "block";
+            }
+        } else if (noRes) {
+            noRes.style.display = "none";
+        }
+    }
+
+    function selectOption(val, text) {
+        originalSelect.value = val;
+        input.value = val === "" ? "" : text;
+        dropdown.style.display = "none";
+        const event = new Event("change", { bubbles: true });
+        originalSelect.dispatchEvent(event);
+    }
+
+    input.addEventListener("keyup", (e) => {
+        dropdown.style.display = "block";
+        filterDropdown(e.target.value);
+    });
+
+    input.addEventListener("focus", () => {
+        dropdown.style.display = "block";
+        filterDropdown(""); 
+        input.select();
+    });
+
+    input.addEventListener("blur", () => {
+        const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
+        input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
+        dropdown.style.display = "none";
+    });
+
+    const observer = new MutationObserver(function(mutations) {
+        let needsRebuild = false;
+        mutations.forEach(function(mutation) {
+            if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                if (originalSelect.style.display === "none") {
+                    wrapper.style.setProperty("display", "none", "important");
+                } else {
+                    wrapper.style.setProperty("display", "inline-block", "important");
+                }
+            }
+            if (mutation.type === "attributes" && mutation.attributeName === "disabled") {
+                input.disabled = originalSelect.disabled;
+            }
+            if (mutation.type === "childList") {
+                needsRebuild = true;
+            }
+        });
+        if (needsRebuild) {
+            buildDropdown();
+            const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
+            input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
+        }
+    });
+    
+    observer.observe(originalSelect, { attributes: true, childList: true });
+    
+    buildDropdown();
+});
 </script>
