@@ -14,87 +14,6 @@
         let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
         const PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
 
-        // TÍCH HỢP DANH SÁCH ICON VÀO HẰNG SỐ ĐỂ TRÁNH LẶP MÃ
-        const COMMON_ICON_OPTIONS = `
-            <optgroup label="Thanh tra & Pháp chế">
-                <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
-                <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
-                <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
-            </optgroup>
-            <optgroup label="Giáo dục & Hành chính">
-                <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
-                <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
-                <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
-                <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
-                <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
-                <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
-                <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
-                <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
-                <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
-                <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
-                <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
-                <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
-                <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
-                <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
-                <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
-                <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
-            </optgroup>
-            <optgroup label="Công nghệ & Kỹ thuật">
-                <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
-                <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
-                <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
-                <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
-                <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
-                <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
-                <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
-                <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
-                <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
-                <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
-                <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
-                <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
-            </optgroup>
-            <optgroup label="Đời sống & Xã hội">
-                <option value="yte">Y tế & Sức khỏe (Y tế)</option>
-                <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
-                <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
-                <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
-                <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
-                <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
-                <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
-                <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
-                <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
-            </optgroup>
-            <optgroup label="Kinh tế & Ngoại giao">
-                <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
-                <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
-                <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
-                <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
-                <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
-                <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
-                <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
-                <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
-                <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
-                <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
-                <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
-                <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
-                <option value="thue">Thuế & Phí (Hóa đơn)</option>
-                <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
-            </optgroup>
-            <optgroup label="Giới tính & Cá nhân">
-                <option value="nam">Giới tính Nam (Cán bộ)</option>
-                <option value="nu">Giới tính Nữ (Giáo viên)</option>
-                <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
-            </optgroup>
-            <optgroup label="Khác">
-                <option value="danso">Dân số & Xã hội (Gia định)</option>
-                <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
-                <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
-                <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
-                <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
-                <option value="khac">Dự án Khác (Biểu tượng chung)</option>
-            </optgroup>
-        `;
-
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
             document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
@@ -102,13 +21,7 @@
             if (KETNOI.LINK_YOUTUBE) {
                 document.getElementById('btn-huong-dan').href = KETNOI.LINK_YOUTUBE;
             }
-
-            // Bơm dữ liệu Icon đồng bộ vào 3 khối cấu hình
-            document.getElementById('hs-loaiicon').innerHTML += COMMON_ICON_OPTIONS;
-            document.getElementById('tm-loaiicon').innerHTML += COMMON_ICON_OPTIONS;
-            document.getElementById('edit-loaiicon').innerHTML += COMMON_ICON_OPTIONS;
         });
-
         (function() {
             var savedBgUrl = localStorage.getItem(PREFIX_MEM + "bg");
             if (savedBgUrl && savedBgUrl.trim() !== "") {
@@ -385,6 +298,83 @@
                     <select id="hs-loaiicon">
                         <option value="">-- Chọn phân loại lĩnh vực --</option>
                         <option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
+                        <optgroup label="Thanh tra & Pháp chế">
+                            <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
+                            <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
+                            <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
+                        </optgroup>
+                        <optgroup label="Giáo dục & Hành chính">
+                            <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
+                            <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
+                            <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
+                            <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
+                            <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
+                            <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
+                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
+                            <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
+                            <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
+                            <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
+                            <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
+                            <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
+                            <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
+                            <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
+                            <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
+                            <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
+                        </optgroup>
+                        <optgroup label="Công nghệ & Kỹ thuật">
+                            <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
+                            <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
+                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
+                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
+                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
+                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
+                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
+                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
+                            <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
+                            <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
+                            <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
+                            <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
+                        </optgroup>
+                        <optgroup label="Đời sống & Xã hội">
+                            <option value="yte">Y tế & Sức khỏe (Y tế)</option>
+                            <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
+                            <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
+                            <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
+                            <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
+                            <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
+                            <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
+                            <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
+                            <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
+                        </optgroup>
+                        <optgroup label="Kinh tế & Ngoại giao">
+                            <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
+                            <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
+                            <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
+                            <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
+                            <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
+                            <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
+                            <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
+                            <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
+                            <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
+                            <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
+                            <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
+                            <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
+                            <option value="thue">Thuế & Phí (Hóa đơn)</option>
+                            <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
+                        </optgroup>
+                        <optgroup label="Giới tính & Cá nhân">
+                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
+                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
+                            <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
+                        </optgroup>
+                        <optgroup label="Khác">
+                            <option value="danso">Dân số & Xã hội (Gia định)</option>
+                            <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
+                            <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
+                            <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
+                            <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
+                            <option value="khac">Dự án Khác (Biểu tượng chung)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-group">
@@ -438,6 +428,83 @@
                     <label>Hình ảnh hiển thị / Icon lĩnh vực: <span style="color: red;">*</span></label>
                     <select id="tm-loaiicon">
                         <option value="hoso_thumuc">Thư mục tiêu chuẩn (Thư mục màu vàng)</option>
+                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)">
+                            <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
+                            <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
+                            <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
+                        </optgroup>
+                        <optgroup label="Giáo dục & Hành chính">
+                            <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
+                            <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
+                            <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
+                            <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
+                            <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
+                            <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
+                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
+                            <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
+                            <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
+                            <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
+                            <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
+                            <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
+                            <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
+                            <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
+                            <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
+                            <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
+                        </optgroup>
+                        <optgroup label="Công nghệ & Kỹ thuật">
+                            <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
+                            <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
+                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
+                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
+                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
+                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
+                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
+                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
+                            <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
+                            <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
+                            <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
+                            <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
+                        </optgroup>
+                        <optgroup label="Đời sống & Xã hội">
+                            <option value="yte">Y tế & Sức khỏe (Y tế)</option>
+                            <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
+                            <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
+                            <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
+                            <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
+                            <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
+                            <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
+                            <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
+                            <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
+                        </optgroup>
+                        <optgroup label="Kinh tế & Ngoại giao">
+                            <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
+                            <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
+                            <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
+                            <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
+                            <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
+                            <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
+                            <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
+                            <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
+                            <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
+                            <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
+                            <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
+                            <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
+                            <option value="thue">Thuế & Phí (Hóa đơn)</option>
+                            <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
+                        </optgroup>
+                        <optgroup label="Giới tính & Cá nhân">
+                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
+                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
+                            <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
+                        </optgroup>
+                        <optgroup label="Khác">
+                            <option value="danso">Dân số & Xã hội (Gia đình)</option>
+                            <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
+                            <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
+                            <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
+                            <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
+                            <option value="khac">Dự án Khác (Biểu tượng chung)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-group">
@@ -495,6 +562,83 @@
                     <select id="edit-loaiicon">
                         <option value="">-- Chọn phân loại lĩnh vực --</option>
                         <option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
+                        <optgroup label="Thanh tra & Pháp chế">
+                            <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
+                            <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
+                            <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
+                        </optgroup>
+                        <optgroup label="Giáo dục & Hành chính">
+                            <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
+                            <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
+                            <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
+                            <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
+                            <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
+                            <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
+                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
+                            <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
+                            <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
+                            <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
+                            <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
+                            <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
+                            <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
+                            <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
+                            <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
+                            <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
+                        </optgroup>
+                        <optgroup label="Công nghệ & Kỹ thuật">
+                            <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
+                            <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
+                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
+                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
+                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
+                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
+                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
+                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
+                            <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
+                            <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
+                            <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
+                            <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
+                        </optgroup>
+                        <optgroup label="Đời sống & Xã hội">
+                            <option value="yte">Y tế & Sức khỏe (Y tế)</option>
+                            <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
+                            <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
+                            <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
+                            <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
+                            <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
+                            <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
+                            <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
+                            <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
+                        </optgroup>
+                        <optgroup label="Kinh tế & Ngoại giao">
+                            <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
+                            <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
+                            <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
+                            <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
+                            <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
+                            <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
+                            <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
+                            <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
+                            <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
+                            <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
+                            <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
+                            <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
+                            <option value="thue">Thuế & Phí (Hóa đơn)</option>
+                            <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
+                        </optgroup>
+                        <optgroup label="Giới tính & Cá nhân">
+                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
+                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
+                            <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
+                        </optgroup>
+                        <optgroup label="Khác">
+                            <option value="danso">Dân số & Xã hội (Gia đình)</option>
+                            <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
+                            <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
+                            <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
+                            <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
+                            <option value="khac">Dự án Khác (Biểu tượng chung)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-group">
@@ -887,18 +1031,18 @@ function xacThucPhienDangNhap(sysSession) {
             case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
             case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
             
-           case 'nam': 
-            iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
-            bgClass = 'bg-avatar'; 
-            break;
-        case 'nu': 
-            iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
-            bgClass = 'bg-avatar'; 
-            break;
-        case 'thuky': 
-            iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU_THU_KY + '" class="custom-avatar" alt="Nữ thư ký">'; 
-            bgClass = 'bg-avatar'; 
-            break;
+            case 'nam': 
+                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
+                bgClass = 'bg-avatar'; 
+                break;
+            case 'nu': 
+                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
+                bgClass = 'bg-avatar'; 
+                break;
+            case 'thuky': 
+                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU_THU_KY + '" class="custom-avatar" alt="Thư ký">'; 
+                bgClass = 'bg-avatar'; 
+                break;
 
             case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
             case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
@@ -1451,12 +1595,15 @@ function toggleHoSoModal(isShow) {
             var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; 
             elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc'; elHieuUng.value = 'none';
-            document.getElementById('hs-cachmo').value = '_blank'; // Reset cách mở
+            
+            // Kiểm tra an toàn xem phần tử HTML có tồn tại không trước khi đặt giá trị
+            var elCachMo = document.getElementById('hs-cachmo');
+            if (elCachMo) elCachMo.value = '_blank';
+            
             document.getElementById('hs-ispublic').checked = false; 
             document.getElementById('hs-vitri').value = 'desktop';
         }
     }
-
 function toggleSuaHoSoModal(isShow) {
         document.getElementById('window-sua-hoso').style.display = isShow ? 'flex' : 'none';
         if (isShow) {
@@ -1472,7 +1619,11 @@ function toggleSuaHoSoModal(isShow) {
             document.getElementById('edit-td2').value = '';
             document.getElementById('edit-loaiicon').value = '';
             document.getElementById('edit-hieuung').value = 'none';
-            document.getElementById('edit-cachmo').value = '_blank'; // Reset cách mở
+            
+            // Kiểm tra an toàn xem phần tử HTML có tồn tại không
+            var elEditCachMo = document.getElementById('edit-cachmo');
+            if (elEditCachMo) elEditCachMo.value = '_blank';
+            
             document.getElementById('edit-vitri').value = 'desktop';
             document.getElementById('edit-form-status').style.display = 'none';
         }
@@ -1502,52 +1653,47 @@ function taiThongTinSuaHoSo() {
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
     }
 
-function xuLyLuuHoSo() {
-        var elTd1 = document.getElementById('hs-td1'); 
-        var elTd2 = document.getElementById('hs-td2'); 
-        var elLoaiIcon = document.getElementById('hs-loaiicon'); 
-        var elHieuUng = document.getElementById('hs-hieuung');
-        var vitri = document.getElementById('hs-vitri').value;
-        var td1 = elTd1.value.trim(); 
-        var td2_input = elTd2.value.trim(); 
-        var loaiIcon = elLoaiIcon.value;
-        var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
-        var hieuung = elHieuUng.value; // Trữ nguyên bản
+function xuLySuaHoSo() {
+        const select = document.getElementById('edit-hoso-select');
+        if (select.value === "") { alert("Yêu cầu hệ thống: Vui lòng chọn một dự án cần cập nhật!"); return; }
         
-        elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
-        var hasError = false;
-        if (!td1) { elTd1.style.borderColor = 'red'; hasError = true; } 
-        if (!td2_input) { elTd2.style.borderColor = 'red'; hasError = true; } 
-        if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
-        if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
-
-        // Gộp URL và cách mở, sau đó mã hóa Base64 để vượt rào kiểm duyệt Data Validation
-        var target = document.getElementById('hs-cachmo').value;
-        var td2_raw = td2_input + '|||' + target;
+        const oldProfile = globalProfiles[select.value];
+        var td1 = document.getElementById('edit-td1').value.trim(); 
+        var td2_raw = document.getElementById('edit-td2').value.trim(); 
+        var loaiIcon = document.getElementById('edit-loaiicon').value;
+        var vitri = document.getElementById('edit-vitri').value;
+        
+        // Gộp hiệu ứng và cách mở thành 1 chuỗi để lưu chung
+        var hieuung = document.getElementById('edit-hieuung').value + '|' + document.getElementById('edit-cachmo').value;
+        
+        if (!td1 || !td2_raw || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
         var td2_encoded = btoa(td2_raw);
 
-        document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
+        document.getElementById('edit-form-status').innerText = "Đang đồng bộ cơ sở dữ liệu sửa chữa..."; 
+        document.getElementById('edit-form-status').style.display = 'block';
+        
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
         .then(text => {
-            document.getElementById('form-status').style.display = 'none';
+            document.getElementById('edit-form-status').style.display = 'none';
             try {
                 let result = JSON.parse(text);
                 if (result.status === 'success') {
-                    toggleHoSoModal(false);
+                    toggleSuaHoSoModal(false);
                     taiBieuTuongCongKhai();
-                } else { alert("Phát sinh sự cố: " + result.message); }
+                } else { 
+                    alert("Phát sinh sự cố: " + result.message); 
+                }
             } catch (jsonError) {
-                console.error("Lỗi từ backend:", text);
-                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+                console.error("Lỗi từ backend máy chủ Google:", text);
+                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: Hệ thống gặp lỗi khi truy vấn Code.gs.");
             }
-        })
-        .catch(err => {
-            document.getElementById('form-status').style.display = 'none';
-            alert("Mất kết nối đường truyền mạng khi lưu hồ sơ: " + err);
+        }).catch(err => { 
+            document.getElementById('edit-form-status').style.display = 'none'; 
+            alert("Lỗi kết nối đường truyền: " + err); 
         });
     }
 
@@ -1675,24 +1821,37 @@ function xuLyLuuHoSo() {
         });
     }
 
-    function xuLyLuuHoSo() {
-        var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
-        var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
+function xuLyLuuHoSo() {
+        var elTd1 = document.getElementById('hs-td1'); 
+        var elTd2 = document.getElementById('hs-td2'); 
+        var elLoaiIcon = document.getElementById('hs-loaiicon'); 
+        var elHieuUng = document.getElementById('hs-hieuung');
         var vitri = document.getElementById('hs-vitri').value;
         var td1 = elTd1.value.trim(); 
-        var td2_raw = elTd2.value.trim(); 
+        var td2_input = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
-        var hieuung = elHieuUng.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
+        var hieuung = elHieuUng.value; 
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
         if (!td1) { elTd1.style.borderColor = 'red'; hasError = true; } 
-        if (!td2_raw) { elTd2.style.borderColor = 'red'; hasError = true; } 
+        if (!td2_input) { elTd2.style.borderColor = 'red'; hasError = true; } 
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
-        var td2_encoded = btoa(td2_raw);
+        // Kiểm tra an toàn: Nếu chưa thêm HTML thì mặc định là mở tab mới (_blank)
+        var elCachMo = document.getElementById('hs-cachmo');
+        var target = elCachMo ? elCachMo.value : '_blank';
+        var td2_raw = td2_input + '|||' + target;
+        
+        // Thuật toán mã hóa an toàn chống lỗi Unicode (Tiếng Việt)
+        var td2_encoded;
+        try {
+            td2_encoded = btoa(unescape(encodeURIComponent(td2_raw)));
+        } catch(e) {
+            td2_encoded = btoa(td2_raw); // Dự phòng
+        }
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
@@ -1707,11 +1866,8 @@ function xuLyLuuHoSo() {
                 if (result.status === 'success') {
                     toggleHoSoModal(false);
                     taiBieuTuongCongKhai();
-                } else { 
-                    alert("Phát sinh sự cố: " + result.message); 
-                }
+                } else { alert("Phát sinh sự cố: " + result.message); }
             } catch (jsonError) {
-                console.error("Lỗi từ backend:", text);
                 alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
             }
         })
@@ -1720,49 +1876,7 @@ function xuLyLuuHoSo() {
             alert("Mất kết nối đường truyền mạng khi lưu hồ sơ: " + err);
         });
     }
-function xuLySuaHoSo() {
-        const select = document.getElementById('edit-hoso-select');
-        if (select.value === "") { alert("Yêu cầu hệ thống: Vui lòng chọn một dự án cần cập nhật!"); return; }
-        
-        const oldProfile = globalProfiles[select.value];
-        var td1 = document.getElementById('edit-td1').value.trim(); 
-        var td2_raw = document.getElementById('edit-td2').value.trim(); 
-        var loaiIcon = document.getElementById('edit-loaiicon').value;
-        var vitri = document.getElementById('edit-vitri').value;
-        
-        // Gộp hiệu ứng và cách mở thành 1 chuỗi để lưu chung
-        var hieuung = document.getElementById('edit-hieuung').value + '|' + document.getElementById('edit-cachmo').value;
-        
-        if (!td1 || !td2_raw || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
-        var td2_encoded = btoa(td2_raw);
 
-        document.getElementById('edit-form-status').innerText = "Đang đồng bộ cơ sở dữ liệu sửa chữa..."; 
-        document.getElementById('edit-form-status').style.display = 'block';
-        
-        fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-        })
-        .then(response => response.text())
-        .then(text => {
-            document.getElementById('edit-form-status').style.display = 'none';
-            try {
-                let result = JSON.parse(text);
-                if (result.status === 'success') {
-                    toggleSuaHoSoModal(false);
-                    taiBieuTuongCongKhai();
-                } else { 
-                    alert("Phát sinh sự cố: " + result.message); 
-                }
-            } catch (jsonError) {
-                console.error("Lỗi từ backend máy chủ Google:", text);
-                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.\n\nNguyên nhân: Hệ thống gặp lỗi khi truy vấn Code.gs.");
-            }
-        }).catch(err => { 
-            document.getElementById('edit-form-status').style.display = 'none'; 
-            alert("Lỗi kết nối đường truyền: " + err); 
-        });
-    }
     function togglePhanQuyenModal(isShow) {
         document.getElementById('window-phanquyen').style.display = isShow ? 'flex' : 'none';
         if (isShow) { 
