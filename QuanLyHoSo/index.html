@@ -1229,27 +1229,24 @@ function initializeLayout() {
         const startX = 20;
         const startY = 20;
         
-        // Đảm bảo không gian được tính toán an toàn khi trình duyệt tải
-        let maxColHeight = window.innerHeight - 150; 
+        // 1. Tự động lấy chiều cao thực của màn hình trừ đi 70px (Taskbar 48px + khoảng lề 22px) thay vì 150px như cũ
+        let maxColHeight = window.innerHeight - 70; 
         if (maxColHeight < 200) maxColHeight = 500; 
         
-        // --- NÂNG CẤP LƯỚI ---
-        // Chú thích: Tính số lượng hàng tối đa có thể xếp trong 1 cột
+        // 2. Tự động tính số dòng (maxRows) có thể chứa tối đa dựa trên màn hình hiện tại
         let maxRows = Math.floor(maxColHeight / iconHeight);
         if (maxRows < 1) maxRows = 1; 
 
-        let gridIndex = 0; // Bộ đếm cho các icon chưa di chuyển
+        let gridIndex = 0; 
 
         icons.forEach((icon) => { 
             const titleKey = icon.getAttribute('data-title'); 
             
             if (titleKey && savedPositions[titleKey]) { 
-                // Nạp tọa độ tuyệt đối cho Icon đã từng di chuyển
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
             } else { 
-                // --- NÂNG CẤP LƯỚI ---
-                // Chú thích: Sắp xếp theo số dòng cố định để chống lệch cột
+                // 3. Sắp xếp tự động đảm bảo không bị so le cột
                 let col = Math.floor(gridIndex / maxRows);
                 let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1260,32 +1257,32 @@ function initializeLayout() {
         }); 
     }
     
-    // Hàm mới: Tính toán và lấp đầy khoảng trống cho các icon chưa ghim
     function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
-        const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
         
-        // --- NÂNG CẤP LƯỚI ---
+        // Tự động tính toán không gian khả dụng sát mép Taskbar
+        let maxColHeight = window.innerHeight - 70; 
+        if (maxColHeight < 200) maxColHeight = 500; 
+        
+        // Tự động tính số dòng để cập nhật ngay khi thay đổi kích thước cửa sổ
         let maxRows = Math.floor(maxColHeight / iconHeight);
         if (maxRows < 1) maxRows = 1;
 
         let gridIndex = 0; 
 
         icons.forEach((icon) => { 
-            // ĐỌC DỮ LIỆU TỪ KHÓA TÊN, KHÔNG ĐỌC BẰNG DATA-ID
             const titleKey = icon.getAttribute('data-title'); 
             
             if (titleKey && savedPositions[titleKey]) { 
-                icon.style.transition = 'none'; // Vô hiệu hóa animation tạm thời để ghim vị trí ngay lập tức
+                icon.style.transition = 'none'; 
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
                 setTimeout(() => { icon.style.transition = ''; }, 100);
             } else { 
-                // --- NÂNG CẤP LƯỚI ---
                 let col = Math.floor(gridIndex / maxRows);
                 let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
