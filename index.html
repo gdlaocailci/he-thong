@@ -1595,7 +1595,11 @@ function toggleHoSoModal(isShow) {
             var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; 
             elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc'; elHieuUng.value = 'none';
-            document.getElementById('hs-cachmo').value = '_blank'; // Reset cách mở
+            
+            // Kiểm tra an toàn xem phần tử HTML có tồn tại không trước khi đặt giá trị
+            var elCachMo = document.getElementById('hs-cachmo');
+            if (elCachMo) elCachMo.value = '_blank';
+            
             document.getElementById('hs-ispublic').checked = false; 
             document.getElementById('hs-vitri').value = 'desktop';
         }
@@ -1615,7 +1619,11 @@ function toggleSuaHoSoModal(isShow) {
             document.getElementById('edit-td2').value = '';
             document.getElementById('edit-loaiicon').value = '';
             document.getElementById('edit-hieuung').value = 'none';
-            document.getElementById('edit-cachmo').value = '_blank'; // Reset cách mở
+            
+            // Kiểm tra an toàn xem phần tử HTML có tồn tại không
+            var elEditCachMo = document.getElementById('edit-cachmo');
+            if (elEditCachMo) elEditCachMo.value = '_blank';
+            
             document.getElementById('edit-vitri').value = 'desktop';
             document.getElementById('edit-form-status').style.display = 'none';
         }
@@ -1823,7 +1831,7 @@ function xuLyLuuHoSo() {
         var td2_input = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
-        var hieuung = elHieuUng.value; // Trữ nguyên bản
+        var hieuung = elHieuUng.value; 
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
@@ -1832,10 +1840,18 @@ function xuLyLuuHoSo() {
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
-        // Gộp URL và cách mở, sau đó mã hóa Base64 để vượt rào kiểm duyệt Data Validation
-        var target = document.getElementById('hs-cachmo').value;
+        // Kiểm tra an toàn: Nếu chưa thêm HTML thì mặc định là mở tab mới (_blank)
+        var elCachMo = document.getElementById('hs-cachmo');
+        var target = elCachMo ? elCachMo.value : '_blank';
         var td2_raw = td2_input + '|||' + target;
-        var td2_encoded = btoa(td2_raw);
+        
+        // Thuật toán mã hóa an toàn chống lỗi Unicode (Tiếng Việt)
+        var td2_encoded;
+        try {
+            td2_encoded = btoa(unescape(encodeURIComponent(td2_raw)));
+        } catch(e) {
+            td2_encoded = btoa(td2_raw); // Dự phòng
+        }
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
@@ -1852,7 +1868,6 @@ function xuLyLuuHoSo() {
                     taiBieuTuongCongKhai();
                 } else { alert("Phát sinh sự cố: " + result.message); }
             } catch (jsonError) {
-                console.error("Lỗi từ backend:", text);
                 alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
             }
         })
