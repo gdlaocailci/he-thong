@@ -685,10 +685,14 @@
             </div>
             <div class="form-native">
                 <div class="form-group">
-                    <label>Lựa chọn dự án cần thao tác (Có thể chọn nhiều):</label>
-                    <div style="margin-bottom: 8px;">
-                        <button class="btn-picker" style="background: #546E7A; color: white;" onclick="chonTatCaQuanLy(true)">Chọn tất cả</button>
-                        <button class="btn-picker" style="background: #9e9e9e; color: white; margin-left: 5px;" onclick="chonTatCaQuanLy(false)">Bỏ chọn</button>
+                   <div class="form-group" style="margin-bottom: 10px;">
+                    <!-- Đưa nhãn và 2 nút lên cùng một hàng ngang để tiết kiệm không gian -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin-bottom: 0;">Lựa chọn ứng dung thao tác:</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-picker" style="background: #546E7A; color: white;" onclick="chonTatCaQuanLy(true)">Chọn tất cả</button>
+                            <button class="btn-picker" style="background: #9e9e9e; color: white;" onclick="chonTatCaQuanLy(false)">Bỏ chọn</button>
+                        </div>
                     </div>
                     <!-- Danh sách Checkbox đa nhiệm -->
                     <div id="del-danhsach-hoso" style="max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
