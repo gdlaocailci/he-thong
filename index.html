@@ -1626,16 +1626,22 @@ function taiThongTinSuaHoSo() {
         if (select.value === "") return;
         const profile = globalProfiles[select.value];
         document.getElementById('edit-td1').value = profile.td1;
+        
         let decodedUrl = profile.td2;
-        try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
-        document.getElementById('edit-td2').value = decodedUrl;
+        try { 
+            if (!decodedUrl.startsWith('http')) {
+                decodedUrl = atob(decodedUrl); 
+            }
+        } catch(e) {}
+        
+        // Tách chuỗi URL và cách mở từ dữ liệu mã hóa
+        let urlParts = decodedUrl.split('|||');
+        document.getElementById('edit-td2').value = urlParts[0];
+        document.getElementById('edit-cachmo').value = urlParts[1] || '_blank';
+        
+        // Trả lại nguyên bản cho biến hiệu ứng để không lỗi Google Sheets
         document.getElementById('edit-loaiicon').value = profile.iconType;
-        
-        // Tách chuỗi hiệu ứng và cách mở
-        let hieuUngParts = (profile.hieuung || 'none').split('|');
-        document.getElementById('edit-hieuung').value = hieuUngParts[0];
-        document.getElementById('edit-cachmo').value = hieuUngParts[1] || '_blank';
-        
+        document.getElementById('edit-hieuung').value = profile.hieuung || 'none';
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
     }
 
@@ -1808,24 +1814,27 @@ function xuLySuaHoSo() {
     }
 
 function xuLyLuuHoSo() {
-        var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
-        var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
+        var elTd1 = document.getElementById('hs-td1'); 
+        var elTd2 = document.getElementById('hs-td2'); 
+        var elLoaiIcon = document.getElementById('hs-loaiicon'); 
+        var elHieuUng = document.getElementById('hs-hieuung');
         var vitri = document.getElementById('hs-vitri').value;
         var td1 = elTd1.value.trim(); 
-        var td2_raw = elTd2.value.trim(); 
+        var td2_input = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
-        
-        // Gộp hiệu ứng và cách mở thành 1 chuỗi để lưu chung
-        var hieuung = elHieuUng.value + '|' + document.getElementById('hs-cachmo').value;
+        var hieuung = elHieuUng.value; // Trữ nguyên bản
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
         if (!td1) { elTd1.style.borderColor = 'red'; hasError = true; } 
-        if (!td2_raw) { elTd2.style.borderColor = 'red'; hasError = true; } 
+        if (!td2_input) { elTd2.style.borderColor = 'red'; hasError = true; } 
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
         if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
 
+        // Gộp URL và cách mở, sau đó mã hóa Base64 để vượt rào kiểm duyệt Data Validation
+        var target = document.getElementById('hs-cachmo').value;
+        var td2_raw = td2_input + '|||' + target;
         var td2_encoded = btoa(td2_raw);
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
@@ -1841,9 +1850,7 @@ function xuLyLuuHoSo() {
                 if (result.status === 'success') {
                     toggleHoSoModal(false);
                     taiBieuTuongCongKhai();
-                } else { 
-                    alert("Phát sinh sự cố: " + result.message); 
-                }
+                } else { alert("Phát sinh sự cố: " + result.message); }
             } catch (jsonError) {
                 console.error("Lỗi từ backend:", text);
                 alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
