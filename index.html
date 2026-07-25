@@ -1102,7 +1102,7 @@
         }
     }
 
-    function renderIconsFromData(data) {
+function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
         capNhatDropdownThuMuc();
@@ -1124,7 +1124,8 @@
 
             div.style.animationDelay = (index * 0.04) + 's';
 
-            let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+            // ĐÃ SỬA LẠI LOGIC: Nếu không Public (!item.isPublic) thì hiện ổ khóa Đỏ
+            let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
@@ -1162,7 +1163,7 @@
         document.getElementById('folder-content-area').innerHTML = '';
     }
 
-    function moCuaSoThuMuc(tenThuMuc) {
+function moCuaSoThuMuc(tenThuMuc) {
         document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
         folderArea.innerHTML = ''; 
@@ -1184,7 +1185,8 @@
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
-                let publicBadge = item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #4CAF50; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Tương tác công khai"><span class="material-icons" style="font-size: 12px; color: white;">lock_open</span></div>' : '';
+                // ĐÃ SỬA LẠI LOGIC TƯƠNG TỰ BÊN TRONG THƯ MỤC
+                let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
                 
                 let moveOutBtn = "";
                 if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
