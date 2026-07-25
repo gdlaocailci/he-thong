@@ -1353,6 +1353,11 @@ function initializeLayout() {
         let maxColHeight = window.innerHeight - 150; 
         if (maxColHeight < 200) maxColHeight = 500; 
         
+        // --- NÂNG CẤP LƯỚI ---
+        // Chú thích: Tính số lượng hàng tối đa có thể xếp trong 1 cột
+        let maxRows = Math.floor(maxColHeight / iconHeight);
+        if (maxRows < 1) maxRows = 1; 
+
         let gridIndex = 0; // Bộ đếm cho các icon chưa di chuyển
 
         icons.forEach((icon) => { 
@@ -1363,9 +1368,10 @@ function initializeLayout() {
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
             } else { 
-                // Tự động sắp xếp nối tiếp vào không gian trống
-                let col = Math.floor(gridIndex * iconHeight / maxColHeight);
-                let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
+                // --- NÂNG CẤP LƯỚI ---
+                // Chú thích: Sắp xếp theo số dòng cố định để chống lệch cột
+                let col = Math.floor(gridIndex / maxRows);
+                let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
                 icon.style.top = (startY + row * iconHeight) + 'px';
                 gridIndex++;
@@ -1375,7 +1381,7 @@ function initializeLayout() {
     }
     
     // Hàm mới: Tính toán và lấp đầy khoảng trống cho các icon chưa ghim
-function rearrangeGrid() {
+    function rearrangeGrid() {
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
@@ -1383,6 +1389,10 @@ function rearrangeGrid() {
         const startY = 20;
         const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
         
+        // --- NÂNG CẤP LƯỚI ---
+        let maxRows = Math.floor(maxColHeight / iconHeight);
+        if (maxRows < 1) maxRows = 1;
+
         let gridIndex = 0; 
 
         icons.forEach((icon) => { 
@@ -1395,8 +1405,9 @@ function rearrangeGrid() {
                 icon.style.top = savedPositions[titleKey].top; 
                 setTimeout(() => { icon.style.transition = ''; }, 100);
             } else { 
-                let col = Math.floor(gridIndex * iconHeight / maxColHeight);
-                let row = Math.floor((gridIndex * iconHeight) % maxColHeight / iconHeight);
+                // --- NÂNG CẤP LƯỚI ---
+                let col = Math.floor(gridIndex / maxRows);
+                let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
                 icon.style.top = (startY + row * iconHeight) + 'px';
                 gridIndex++;
