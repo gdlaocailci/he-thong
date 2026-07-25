@@ -11,23 +11,30 @@
     <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        let __matchId = KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/);
+        let __matchId = (typeof KETNOI !== 'undefined' && KETNOI.WEB_APP_URL) ? KETNOI.WEB_APP_URL.match(/\/s\/([a-zA-Z0-9_-]+)/) : null;
         const PREFIX_MEM = __matchId ? "ht_" + __matchId[1].substring(0, 10) + "_" : "ht_sys_";
 
         document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
-            document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
-            document.getElementById('sys-logo').src = KETNOI.LINK_LOGO;
-            if (KETNOI.LINK_YOUTUBE) {
-                document.getElementById('btn-huong-dan').href = KETNOI.LINK_YOUTUBE;
+            if (typeof KETNOI !== 'undefined') {
+                if (KETNOI.TIEU_DE_TRANG) document.getElementById('sys-title').innerText = KETNOI.TIEU_DE_TRANG;
+                if (KETNOI.LINK_LOGO) {
+                    document.getElementById('sys-favicon').href = KETNOI.LINK_LOGO;
+                    document.getElementById('sys-logo').src = KETNOI.LINK_LOGO;
+                }
+                if (KETNOI.LINK_YOUTUBE) {
+                    document.getElementById('btn-huong-dan').href = KETNOI.LINK_YOUTUBE;
+                }
             }
         });
+        
         (function() {
             var savedBgUrl = localStorage.getItem(PREFIX_MEM + "bg");
+            var defaultBgUrl = (typeof KETNOI !== 'undefined' && KETNOI.LINK_HINH_NEN) ? KETNOI.LINK_HINH_NEN : "";
+            
             if (savedBgUrl && savedBgUrl.trim() !== "") {
-                document.documentElement.style.setProperty('--default-bg', "url('" + savedBgUrl + "')");
-            } else {
-                document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')");
+                document.documentElement.style.setProperty('--default-bg', "url('" + savedBgUrl.trim() + "')");
+            } else if (defaultBgUrl.trim() !== "") {
+                document.documentElement.style.setProperty('--default-bg', "url('" + defaultBgUrl.trim() + "')");
             }
         })();
     </script>
@@ -2004,13 +2011,18 @@
         }
     }
 
-    function changeBackgroundImage() { 
+function changeBackgroundImage() { 
         var currentUrl = localStorage.getItem(PREFIX_MEM + "bg") || ""; 
         var newUrl = prompt("CẤU HÌNH HÌNH NỀN DESKTOP\n\nNhập đường dẫn (URL) hình ảnh:\n(Để trống nếu muốn quay về hình nền mặc định)", currentUrl); 
         if (newUrl !== null) { 
             if (newUrl.trim() === "") { 
                 localStorage.removeItem(PREFIX_MEM + "bg"); 
-                document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')"); 
+                var defaultBgUrl = (typeof KETNOI !== 'undefined' && KETNOI.LINK_HINH_NEN) ? KETNOI.LINK_HINH_NEN : "";
+                if (defaultBgUrl !== "") {
+                    document.documentElement.style.setProperty('--default-bg', "url('" + defaultBgUrl.trim() + "')"); 
+                } else {
+                    document.documentElement.style.setProperty('--default-bg', "#2c3e50"); // An toàn lùi về màu mặc định nếu không có ảnh
+                }
             } else { 
                 localStorage.setItem(PREFIX_MEM + "bg", newUrl.trim()); 
                 document.documentElement.style.setProperty('--default-bg', "url('" + newUrl.trim() + "')"); 
