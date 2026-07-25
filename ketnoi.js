@@ -5,7 +5,7 @@ const KETNOI = {
     
     // 2. Tài nguyên hình ảnh đại diện (Logo & Giao diện)
     LINK_LOGO: "https://i.ibb.co/6R8Y9DNq/logo-l-a-ch-n6.png",
-    LINK_HINH_NEN: "https://bigpicturesb.org/wp-content/uploads/2024/10/anh-nen-win-10-51-scaled.jpeg",
+    LINK_HINH_NEN: "https://www.wallpaperalchemy.com/storage/wallpapers/2256/windows-10-colorful-3d-logo-wallpaper-card.jpg",
    LINK_AVATAR_NAM: "https://i.postimg.cc/N22XJ7Lz/Nam.png",
     LINK_AVATAR_NU: "https://i.postimg.cc/9DC4Zjt2/NU.png",
     LINK_AVATAR_NU_THU_KY: "https://i.postimg.cc/KYCGvkbp/Nu-thu-ky.png",
