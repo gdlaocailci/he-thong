@@ -2011,13 +2011,18 @@
         }
     }
 
-    function changeBackgroundImage() { 
+function changeBackgroundImage() { 
         var currentUrl = localStorage.getItem(PREFIX_MEM + "bg") || ""; 
         var newUrl = prompt("CẤU HÌNH HÌNH NỀN DESKTOP\n\nNhập đường dẫn (URL) hình ảnh:\n(Để trống nếu muốn quay về hình nền mặc định)", currentUrl); 
         if (newUrl !== null) { 
             if (newUrl.trim() === "") { 
                 localStorage.removeItem(PREFIX_MEM + "bg"); 
-                document.documentElement.style.setProperty('--default-bg', "url('" + KETNOI.LINK_HINH_NEN + "')"); 
+                var defaultBgUrl = (typeof KETNOI !== 'undefined' && KETNOI.LINK_HINH_NEN) ? KETNOI.LINK_HINH_NEN : "";
+                if (defaultBgUrl !== "") {
+                    document.documentElement.style.setProperty('--default-bg', "url('" + defaultBgUrl.trim() + "')"); 
+                } else {
+                    document.documentElement.style.setProperty('--default-bg', "#2c3e50"); // An toàn lùi về màu mặc định nếu không có ảnh
+                }
             } else { 
                 localStorage.setItem(PREFIX_MEM + "bg", newUrl.trim()); 
                 document.documentElement.style.setProperty('--default-bg', "url('" + newUrl.trim() + "')"); 
