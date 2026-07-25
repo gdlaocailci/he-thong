@@ -388,6 +388,13 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Cơ chế mở Ứng dụng/Link:</label>
+                    <select id="hs-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="_blank">Mở trong Thẻ mới (New Tab)</option>
+                        <option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Vị trí hiển thị lưu trữ:</label>
                     <select id="hs-vitri">
                         <option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option>
@@ -642,6 +649,13 @@
                         <option value="pulse">Nhịp đập (Pulse)</option>
                         <option value="wobble">Lắc lư (Wobble)</option>
                         <option value="glow">Tỏa sáng (Glow)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cơ chế mở Ứng dụng/Link:</label>
+                    <select id="edit-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="_blank">Mở trong Thẻ mới (New Tab)</option>
+                        <option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1060,17 +1074,20 @@ function renderIconsFromData(data) {
         data.forEach((item, index) => {
             if (item.vitri && item.vitri !== 'desktop' && item.vitri !== '') return;
 
+            // Xử lý tách chuỗi để lấy 2 thông số
+            let hieuUngParts = (item.hieuung || 'none').split('|');
+            let realHieuUng = hieuUngParts[0];
+            let openTarget = hieuUngParts[1] || '_blank';
+
             let type = item.iconType; 
             let cfg = layCauHinhIcon(type);
             let iconContent = cfg.iconContent;
             let bgClass = cfg.bgClass;
-            let effectClass = layClassHieuUng(item.hieuung);
+            let effectClass = layClassHieuUng(realHieuUng);
 
             const div = document.createElement('div'); 
             div.className = `desktop-icon ${effectClass}`; 
             div.setAttribute('data-id', index + 1); 
-            
-            // BỔ SUNG KHÓA ĐỊNH DANH BẤT BIẾN THEO TÊN PHÂN HỆ
             div.setAttribute('data-title', item.td1.trim()); 
             div.setAttribute('data-desc', item.td1); 
 
@@ -1098,7 +1115,8 @@ function renderIconsFromData(data) {
                 } catch(e) {}
                 
                 if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    window.open(finalUrl, '_blank');
+                    // Mở theo target (Tab mới hoặc Tab hiện tại)
+                    window.open(finalUrl, openTarget);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -1118,7 +1136,7 @@ function renderIconsFromData(data) {
         document.getElementById('folder-content-area').innerHTML = '';
     }
 
-    function moCuaSoThuMuc(tenThuMuc) {
+function moCuaSoThuMuc(tenThuMuc) {
         document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
         folderArea.innerHTML = ''; 
@@ -1129,8 +1147,13 @@ function renderIconsFromData(data) {
             folderArea.innerHTML = '<div style="width:100%; text-align:center; color:#ffffff; font-weight: 600; margin-top:50px; opacity: 0.7;">Thư mục trống hoặc chưa có phân hệ liên kết.</div>';
         } else {
             childItems.forEach((item, index) => {
+                // Xử lý tách chuỗi để lấy 2 thông số
+                let hieuUngParts = (item.hieuung || 'none').split('|');
+                let realHieuUng = hieuUngParts[0];
+                let openTarget = hieuUngParts[1] || '_blank';
+                
                 let cfg = layCauHinhIcon(item.iconType);
-                let effectClass = layClassHieuUng(item.hieuung); 
+                let effectClass = layClassHieuUng(realHieuUng); 
 
                 const div = document.createElement('div');
                 div.className = `desktop-icon ${effectClass}`;
@@ -1158,7 +1181,8 @@ function renderIconsFromData(data) {
                     try { if (!finalUrl.startsWith('http')) finalUrl = atob(finalUrl); } catch(e) {}
                     
                     if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        window.open(finalUrl, '_blank');
+                        // Mở theo target (Tab mới hoặc Tab hiện tại)
+                        window.open(finalUrl, openTarget);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
@@ -1349,14 +1373,9 @@ function initializeLayout() {
         const startX = 20;
         const startY = 20;
         
-        // Đảm bảo không gian được tính toán an toàn khi trình duyệt tải
-        let maxColHeight = window.innerHeight - 150; 
-        if (maxColHeight < 200) maxColHeight = 500; 
-        
         // --- NÂNG CẤP LƯỚI ---
-        // Chú thích: Tính số lượng hàng tối đa có thể xếp trong 1 cột
-        let maxRows = Math.floor(maxColHeight / iconHeight);
-        if (maxRows < 1) maxRows = 1; 
+        // Cố định chính xác 6 icon cho mỗi cột theo yêu cầu
+        let maxRows = 6; 
 
         let gridIndex = 0; // Bộ đếm cho các icon chưa di chuyển
 
@@ -1368,8 +1387,7 @@ function initializeLayout() {
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
             } else { 
-                // --- NÂNG CẤP LƯỚI ---
-                // Chú thích: Sắp xếp theo số dòng cố định để chống lệch cột
+                // Sắp xếp theo số dòng cố định để chống lệch cột
                 let col = Math.floor(gridIndex / maxRows);
                 let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1387,16 +1405,15 @@ function initializeLayout() {
         const iconHeight = 120;
         const startX = 20;
         const startY = 20;
-        const maxColHeight = (window.innerHeight - 150) > 0 ? (window.innerHeight - 150) : 500; 
         
         // --- NÂNG CẤP LƯỚI ---
-        let maxRows = Math.floor(maxColHeight / iconHeight);
-        if (maxRows < 1) maxRows = 1;
+        // Cố định chính xác 6 icon cho mỗi cột theo yêu cầu
+        let maxRows = 6;
 
         let gridIndex = 0; 
 
         icons.forEach((icon) => { 
-            // ĐỌC DỮ LIỆU TỪ KHÓA TÊN, KHÔNG ĐỌC BẰNG DATA-ID
+            // Đọc dữ liệu từ khóa tên, không đọc bằng data-id
             const titleKey = icon.getAttribute('data-title'); 
             
             if (titleKey && savedPositions[titleKey]) { 
@@ -1405,7 +1422,7 @@ function initializeLayout() {
                 icon.style.top = savedPositions[titleKey].top; 
                 setTimeout(() => { icon.style.transition = ''; }, 100);
             } else { 
-                // --- NÂNG CẤP LƯỚI ---
+                // Sắp xếp theo số dòng cố định để chống lệch cột
                 let col = Math.floor(gridIndex / maxRows);
                 let row = gridIndex % maxRows;
                 icon.style.left = (startX + col * iconWidth) + 'px';
@@ -1567,19 +1584,19 @@ function savePositions() {
         if (typeof initializeLayout === 'function') initializeLayout();
     });
     
-    function toggleHoSoModal(isShow) {
+function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
         if(!isShow) {
             var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
             var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
             elTd1.value = ''; elTd1.style.borderColor = '#ccc'; elTd2.value = ''; elTd2.style.borderColor = '#ccc'; 
             elLoaiIcon.value = ''; elLoaiIcon.style.borderColor = '#ccc'; elHieuUng.value = 'none';
+            document.getElementById('hs-cachmo').value = '_blank'; // Reset cách mở
             document.getElementById('hs-ispublic').checked = false; 
             document.getElementById('hs-vitri').value = 'desktop';
         }
     }
-
-    function toggleSuaHoSoModal(isShow) {
+function toggleSuaHoSoModal(isShow) {
         document.getElementById('window-sua-hoso').style.display = isShow ? 'flex' : 'none';
         if (isShow) {
             const select = document.getElementById('edit-hoso-select');
@@ -1594,12 +1611,13 @@ function savePositions() {
             document.getElementById('edit-td2').value = '';
             document.getElementById('edit-loaiicon').value = '';
             document.getElementById('edit-hieuung').value = 'none';
+            document.getElementById('edit-cachmo').value = '_blank'; // Reset cách mở
             document.getElementById('edit-vitri').value = 'desktop';
             document.getElementById('edit-form-status').style.display = 'none';
         }
     }
 
-    function taiThongTinSuaHoSo() {
+function taiThongTinSuaHoSo() {
         const select = document.getElementById('edit-hoso-select');
         if (select.value === "") return;
         const profile = globalProfiles[select.value];
@@ -1608,11 +1626,16 @@ function savePositions() {
         try { if (!decodedUrl.startsWith('http')) decodedUrl = atob(decodedUrl); } catch(e) {}
         document.getElementById('edit-td2').value = decodedUrl;
         document.getElementById('edit-loaiicon').value = profile.iconType;
-        document.getElementById('edit-hieuung').value = profile.hieuung || 'none';
+        
+        // Tách chuỗi hiệu ứng và cách mở
+        let hieuUngParts = (profile.hieuung || 'none').split('|');
+        document.getElementById('edit-hieuung').value = hieuUngParts[0];
+        document.getElementById('edit-cachmo').value = hieuUngParts[1] || '_blank';
+        
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
     }
 
-    function xuLySuaHoSo() {
+function xuLySuaHoSo() {
         const select = document.getElementById('edit-hoso-select');
         if (select.value === "") { alert("Yêu cầu hệ thống: Vui lòng chọn một dự án cần cập nhật!"); return; }
         
@@ -1620,8 +1643,10 @@ function savePositions() {
         var td1 = document.getElementById('edit-td1').value.trim(); 
         var td2_raw = document.getElementById('edit-td2').value.trim(); 
         var loaiIcon = document.getElementById('edit-loaiicon').value;
-        var hieuung = document.getElementById('edit-hieuung').value;
         var vitri = document.getElementById('edit-vitri').value;
+        
+        // Gộp hiệu ứng và cách mở thành 1 chuỗi để lưu chung
+        var hieuung = document.getElementById('edit-hieuung').value + '|' + document.getElementById('edit-cachmo').value;
         
         if (!td1 || !td2_raw || !loaiIcon) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); return; }
         var td2_encoded = btoa(td2_raw);
@@ -1778,15 +1803,17 @@ function savePositions() {
         });
     }
 
-    function xuLyLuuHoSo() {
+function xuLyLuuHoSo() {
         var elTd1 = document.getElementById('hs-td1'); var elTd2 = document.getElementById('hs-td2'); 
         var elLoaiIcon = document.getElementById('hs-loaiicon'); var elHieuUng = document.getElementById('hs-hieuung');
         var vitri = document.getElementById('hs-vitri').value;
         var td1 = elTd1.value.trim(); 
         var td2_raw = elTd2.value.trim(); 
         var loaiIcon = elLoaiIcon.value;
-        var hieuung = elHieuUng.value;
         var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
+        
+        // Gộp hiệu ứng và cách mở thành 1 chuỗi để lưu chung
+        var hieuung = elHieuUng.value + '|' + document.getElementById('hs-cachmo').value;
         
         elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         var hasError = false;
