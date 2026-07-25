@@ -388,7 +388,7 @@
                     </select>
                 </div>
                 
-                <!-- Bổ sung Dropdown chọn cách mở Tab vào Form Gán Hồ Sơ -->
+                <!-- Dropdown chọn cách mở Tab -->
                 <div class="form-group">
                     <label>Cơ chế mở Ứng dụng/Link:</label>
                     <select id="hs-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -655,7 +655,7 @@
                     </select>
                 </div>
                 
-                <!-- Bổ sung Dropdown chọn cách mở Tab vào Form Sửa Hồ Sơ -->
+                <!-- Bổ sung Dropdown chọn cách mở Tab -->
                 <div class="form-group">
                     <label>Cơ chế mở Ứng dụng/Link:</label>
                     <select id="edit-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -795,21 +795,35 @@
 
     // --- HÀM TRUNG TÂM XỬ LÝ DỮ LIỆU ĐÓNG GÓI ---
     function getUrlAndTarget(encodedTd2) {
-        let url = encodedTd2;
-        let target = '_blank';
+        let decodedStr = encodedTd2;
         try {
+            // TÌM RA LỖI: Code.gs khi Gán mới lưu thành văn bản thường (Plain Text). 
+            // Khi Sửa thì lại lưu thành mã hóa Base64.
+            // Do đó hàm này bắt buộc phải giải mã (nếu là Base64) nhưng VẪN PHẢI CẮT CHUỖI ||| TRONG MỌI TRƯỜNG HỢP.
             if (!encodedTd2.startsWith('http')) {
-                let decoded = atob(encodedTd2);
-                let parts = decoded.split('|||');
-                url = parts[0];
-                if (parts.length > 1) target = parts[1];
+                try {
+                    decodedStr = decodeURIComponent(escape(atob(encodedTd2)));
+                } catch(e) {
+                    decodedStr = atob(encodedTd2);
+                }
             }
         } catch(e) {}
-        return { url: url, target: target };
+        
+        // QUAN TRỌNG: Luôn luôn tách chuỗi ||| bất kể là mã hóa hay plain text
+        let parts = decodedStr.split('|||');
+        return {
+            url: parts[0] || '',
+            target: parts.length > 1 ? parts[1] : '_blank'
+        };
     }
 
     function buildEncodedTd2(url, target) {
-        return btoa(url + '|||' + target);
+        let raw = url + '|||' + target;
+        try {
+            return btoa(unescape(encodeURIComponent(raw)));
+        } catch(e) {
+            return btoa(raw); // Dự phòng cho link hoàn toàn không có dấu
+        }
     }
     // ---------------------------------------------
 
