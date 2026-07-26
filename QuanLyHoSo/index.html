@@ -1468,10 +1468,11 @@ function getUrlAndTarget(encodedTd2) {
     }
 
 // -------------------------------------------------------------------------
-    // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (BẢN VÁ ĐỒNG BỘ LOGIC LƯỚI)
+    // BẮT ĐẦU KHỐI CẬP NHẬT: KÉO THẢ TỰ DO VÀ TỰ ĐỘNG TRÁNH (BẢN CHUẨN)
     // -------------------------------------------------------------------------
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    let lastSwapTarget = null; // Biến cờ ngăn hoán đổi lặp lại với cùng một đối tượng
+    let slotGoc = { left: '', top: '' }; 
+    let lastSwapTime = 0; 
 
     function setupDragEvents() { 
         icons.forEach(icon => { 
@@ -1480,20 +1481,6 @@ function getUrlAndTarget(encodedTd2) {
             icon.addEventListener('mousedown', startDrag); 
             icon.addEventListener('touchstart', startDrag, {passive: false}); 
         }); 
-    }
-
-    // Hàm đồng bộ toàn bộ vị trí hiện tại trên màn hình vào cơ sở dữ liệu ảo (localStorage)
-    // Giúp thuật toán luôn có tọa độ chuẩn của lưới, loại bỏ lỗi tọa độ rác.
-    function forceSyncAllPositions() {
-        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        document.querySelectorAll('.desktop-icon').forEach(icon => {
-            const titleKey = icon.getAttribute('data-title');
-            if (titleKey) {
-                // Chỉ lấy các giá trị tĩnh nguyên bản, không đọc giá trị khi đang bay (Animation)
-                positions[titleKey] = { left: icon.style.left, top: icon.style.top };
-            }
-        });
-        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
     }
 
     function startDrag(e) { 
@@ -1506,10 +1493,10 @@ function getUrlAndTarget(encodedTd2) {
         offsetX = clientX - rect.left; 
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
-        lastSwapTarget = null;
         
-        // Cập nhật mốc tọa độ chuẩn bị di chuyển vào CSDL Ảo
-        forceSyncAllPositions();
+        // Lưu trữ vị trí xuất phát gốc để các icon khác có thể chạy về đây khi bị đè
+        slotGoc.left = draggedIcon.style.left;
+        slotGoc.top = draggedIcon.style.top;
 
         draggedIcon.style.transition = 'none';
 
@@ -1517,19 +1504,6 @@ function getUrlAndTarget(encodedTd2) {
         document.addEventListener('touchmove', drag, {passive: false}); 
         document.addEventListener('mouseup', stopDrag); 
         document.addEventListener('touchend', stopDrag); 
-    }
-
-    // Hàm phụ trợ: Kích hoạt hiệu ứng hoán đổi cho các icon trên lưới (trừ icon đang được kéo)
-    function rearrangeOthers(excludeTitleKey) {
-        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        document.querySelectorAll('.desktop-icon').forEach((icon) => { 
-            const titleKey = icon.getAttribute('data-title'); 
-            if (titleKey && titleKey !== excludeTitleKey && savedPositions[titleKey]) { 
-                icon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                icon.style.left = savedPositions[titleKey].left; 
-                icon.style.top = savedPositions[titleKey].top; 
-            } 
-        }); 
     }
 
     function drag(e) { 
@@ -1547,79 +1521,83 @@ function getUrlAndTarget(encodedTd2) {
         
         if (dragThresholdPassed) { 
             const areaRect = desktopArea.getBoundingClientRect(); 
+            // Cho phép icon đi theo con trỏ chuột một cách tự do
             let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); 
             let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); 
             
-            // Icon đang kéo đi theo con trỏ chuột
             draggedIcon.style.left = newLeft + 'px'; 
             draggedIcon.style.top = newTop + 'px'; 
             
-            const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
-            const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
-
-            let swappedThisFrame = false;
-            const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {};
-
-            document.querySelectorAll('.desktop-icon').forEach(iconEl => {
-                if (iconEl === draggedIcon || swappedThisFrame) return;
+            const currentTime = new Date().getTime();
+            
+            // Cơ chế chống giật khi quét va chạm (350ms)
+            if (currentTime - lastSwapTime > 350) {
+                let hasSwapped = false;
                 
-                const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
-                if (isNaN(idx)) return;
-                const profile = globalProfiles[idx];
-                
-                const targetTitle = iconEl.getAttribute('data-title');
-                if (!targetTitle || !positions[targetTitle]) return;
+                const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
+                const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
 
-                // SỬ DỤNG TỌA ĐỘ ẢO (LOGICAL GRID) ĐỂ TÍNH TOÁN VA CHẠM
-                // (Chấm dứt hoàn toàn tình trạng đọc nhầm tọa độ rác)
-                const logicalLeft = parseFloat(positions[targetTitle].left) || 0;
-                const logicalTop = parseFloat(positions[targetTitle].top) || 0;
-                
-                const targetCenterX = logicalLeft + (iconEl.offsetWidth || 90) / 2;
-                const targetCenterY = logicalTop + (iconEl.offsetHeight || 105) / 2;
-                
-                const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+                document.querySelectorAll('.desktop-icon').forEach(iconEl => {
+                    if (iconEl === draggedIcon || hasSwapped) return;
+                    
+                    const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
+                    if (isNaN(idx)) return;
+                    const profile = globalProfiles[idx];
+                    
+                    // Chỉ đọc tọa độ từ CSS tĩnh, không đọc lúc đang chạy hiệu ứng
+                    const targetLeft = parseFloat(iconEl.style.left) || 0;
+                    const targetTop = parseFloat(iconEl.style.top) || 0;
+                    const targetCenterX = targetLeft + (iconEl.offsetWidth || 90) / 2;
+                    const targetCenterY = targetTop + (iconEl.offsetHeight || 105) / 2;
+                    
+                    const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
 
-                if (distance < 55) { 
-                    if (kiemTraLaThuMuc(profile)) {
-                        iconEl.style.transform = 'scale(1.15)';
-                        iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
+                    // Nếu khoảng cách đủ gần để xác nhận đè lên nhau
+                    if (distance < 60) { 
+                        if (kiemTraLaThuMuc(profile)) {
+                            iconEl.style.transform = 'scale(1.15)';
+                            iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
+                        } else {
+                            hasSwapped = true;
+                            lastSwapTime = currentTime;
+                            
+                            // Ghi nhớ vị trí của icon sắp bị chiếm chỗ
+                            let viTriTamLeft = iconEl.style.left;
+                            let viTriTamTop = iconEl.style.top;
+                            
+                            // Đẩy icon bị đè về vị trí an toàn (slotGoc)
+                            iconEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            iconEl.style.left = slotGoc.left;
+                            iconEl.style.top = slotGoc.top;
+                            
+                            // Cập nhật vị trí bị chiếm thành slotGoc mới để duy trì chuỗi hoán đổi
+                            slotGoc.left = viTriTamLeft;
+                            slotGoc.top = viTriTamTop;
+                            
+                            // Lưu ngay tọa độ mới của icon vừa bị đẩy đi vào bộ nhớ
+                            const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+                            const titleKey = iconEl.getAttribute('data-title');
+                            if (titleKey) {
+                                positions[titleKey] = { left: iconEl.style.left, top: iconEl.style.top };
+                                localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
+                            }
+                            
+                            // Xóa transition sau khi di chuyển xong để tránh lỗi ở lần kéo sau
+                            setTimeout(() => { iconEl.style.transition = ''; }, 300);
+                        }
                     } else {
-                        // CHỈ HOÁN ĐỔI KHI CHẠM VÀO MỤC TIÊU MỚI (CHỐNG GIẬT LAG)
-                        if (lastSwapTarget !== targetTitle) {
-                            swappedThisFrame = true;
-                            lastSwapTarget = targetTitle;
-                            
-                            const draggedTitle = draggedIcon.getAttribute('data-title');
-                            
-                            // Tráo đổi tọa độ chéo trong CSDL ảo một cách nguyên vẹn
-                            const tempLeft = positions[targetTitle].left;
-                            const tempTop = positions[targetTitle].top;
-                            
-                            positions[targetTitle].left = positions[draggedTitle].left;
-                            positions[targetTitle].top = positions[draggedTitle].top;
-                            
-                            positions[draggedTitle].left = tempLeft;
-                            positions[draggedTitle].top = tempTop;
-                            
-                            // Ghi đè CSDL ảo và phát lệnh di chuyển đồng loạt
-                            localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
-                            rearrangeOthers(draggedTitle);
+                        if (kiemTraLaThuMuc(profile)) {
+                            iconEl.style.transform = '';
+                            iconEl.style.boxShadow = '';
                         }
                     }
-                } else {
-                    if (kiemTraLaThuMuc(profile)) {
-                        iconEl.style.transform = '';
-                        iconEl.style.boxShadow = '';
-                    }
-                }
-            });
+                });
+            }
         } 
     }
 
     function stopDrag(e) { 
         if (!draggedIcon) return; 
-        
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
         draggedIcon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
@@ -1639,11 +1617,9 @@ function getUrlAndTarget(encodedTd2) {
             const draggedIndex = parseInt(draggedIcon.getAttribute('data-id')) - 1;
             const draggedProfile = globalProfiles[draggedIndex];
 
-            // Kiểm tra xem icon có thả vào Thư mục không (Chỉ dành cho Quản trị viên)
+            // Xử lý logic gộp thư mục nếu có quyền
             if (isLoggedIn && sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
                 if (!kiemTraLaThuMuc(draggedProfile)) {
-                    const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {};
-                    
                     document.querySelectorAll('.desktop-icon').forEach(iconEl => {
                         if (iconEl === draggedIcon) return;
                         const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
@@ -1651,15 +1627,13 @@ function getUrlAndTarget(encodedTd2) {
                         const profile = globalProfiles[idx];
                         
                         if (kiemTraLaThuMuc(profile)) {
-                            const targetTitle = iconEl.getAttribute('data-title');
-                            const logicalLeft = positions[targetTitle] ? parseFloat(positions[targetTitle].left) : (parseFloat(iconEl.style.left) || 0);
-                            const logicalTop = positions[targetTitle] ? parseFloat(positions[targetTitle].top) : (parseFloat(iconEl.style.top) || 0);
-                            
-                            const targetCenterX = logicalLeft + (iconEl.offsetWidth || 90) / 2;
-                            const targetCenterY = logicalTop + (iconEl.offsetHeight || 105) / 2;
+                            const targetLeft = parseFloat(iconEl.style.left) || 0;
+                            const targetTop = parseFloat(iconEl.style.top) || 0;
+                            const targetCenterX = targetLeft + (iconEl.offsetWidth || 90) / 2;
+                            const targetCenterY = targetTop + (iconEl.offsetHeight || 105) / 2;
                             
                             const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
-                            if (distance < 55) {
+                            if (distance < 60) {
                                 droppedFolder = profile;
                             }
                         }
@@ -1671,11 +1645,14 @@ function getUrlAndTarget(encodedTd2) {
                 if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
                     xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
                 } else { 
-                    snapDraggedIconToGrid();
+                    // Nếu hủy gộp thư mục, trả icon về slot an toàn
+                    draggedIcon.style.left = slotGoc.left;
+                    draggedIcon.style.top = slotGoc.top;
+                    savePositions(); 
                 }
             } else { 
-                // Tự động hít vào vị trí ô lưới chuẩn thay vì lưu vị trí thả chuột bừa bãi
-                snapDraggedIconToGrid();
+                // THẢ TỰ DO: Chấp nhận vị trí tùy ý mà chuột đang thả
+                savePositions(); 
             }
         } 
         
@@ -1691,23 +1668,17 @@ function getUrlAndTarget(encodedTd2) {
         }, 300); 
     }
     
-    // Hàm phụ trợ: Đưa icon đang kéo tự động hít về đúng vị trí chuẩn trên lưới
-    function snapDraggedIconToGrid() {
-        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        const titleKey = draggedIcon.getAttribute('data-title');
-        if (titleKey && savedPositions[titleKey]) {
-            draggedIcon.style.left = savedPositions[titleKey].left;
-            draggedIcon.style.top = savedPositions[titleKey].top;
+    function savePositions() { 
+        if (!draggedIcon) return;
+        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        const titleKey = draggedIcon.getAttribute('data-title'); 
+        if (titleKey) {
+            // Lưu trực tiếp tọa độ hiện tại, cho phép định vị tự do
+            positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
+            localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
         }
     }
-
-    // Cố ý ghi đè hàm savePositions cũ thành hàm rỗng để ngắt triệt để cơ chế lưu tọa độ chuột
-    function savePositions() { 
-        // Vị trí tĩnh đã được thuật toán Lưới Ảo (Logical Grid) tự động xử lý và lưu chuẩn xác
-        // Hàm này được làm trống để giữ nguyên các liên kết gọi biến cũ.
-    }
-    
-     
+   
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
         initializeLayout(); 
