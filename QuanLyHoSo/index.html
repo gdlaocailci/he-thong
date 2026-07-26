@@ -1468,9 +1468,9 @@ function getUrlAndTarget(encodedTd2) {
     }
 
 // -------------------------------------------------------------------------
-    // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (KÉO THẢ)
+    // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (BẢN VÁ LỖI CHỒNG ĐÈ)
     // -------------------------------------------------------------------------
-   let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
+    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
     let slotGoc = { left: '', top: '' }; 
     let lastSwapTime = 0; // Biến chống giật (debounce) để tránh việc hoán đổi xảy ra liên tục
 
@@ -1482,7 +1482,7 @@ function getUrlAndTarget(encodedTd2) {
             icon.addEventListener('touchstart', startDrag, {passive: false}); 
         }); 
     }
-    
+
     function startDrag(e) { 
         dragThresholdPassed = false; 
         draggedIcon = this; 
@@ -1494,7 +1494,7 @@ function getUrlAndTarget(encodedTd2) {
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
         
-        // Ghi nhận vị trí xuất phát trước khi di chuyển
+        // Ghi nhận vị trí xuất phát cố định trước khi di chuyển
         slotGoc.left = draggedIcon.style.left;
         slotGoc.top = draggedIcon.style.top;
 
@@ -1515,7 +1515,7 @@ function getUrlAndTarget(encodedTd2) {
             dragThresholdPassed = true; 
             isDragging = true; 
             draggedIcon.style.zIndex = '9999'; 
-            draggedIcon.style.opacity = '0.7'; 
+            draggedIcon.style.opacity = '0.8'; 
             e.preventDefault(); 
         } 
         
@@ -1526,61 +1526,69 @@ function getUrlAndTarget(encodedTd2) {
             draggedIcon.style.left = newLeft + 'px'; 
             draggedIcon.style.top = newTop + 'px'; 
             
-            const draggedRect = draggedIcon.getBoundingClientRect();
-            const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
+            const currentTime = new Date().getTime();
             
-            document.querySelectorAll('.desktop-icon').forEach(iconEl => {
-                if (iconEl === draggedIcon) return;
-                const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
-                if (isNaN(idx)) return;
-                const profile = globalProfiles[idx];
+            // Tránh kiểm tra hoán đổi quá nhanh liên tục (Cooldown 300ms)
+            if (currentTime - lastSwapTime > 300) {
+                let hasSwapped = false;
                 
-                const rect = iconEl.getBoundingClientRect();
-                const isHovering = (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && 
-                                    draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom);
+                // Tính toán tâm của icon đang được kéo
+                const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
+                const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
 
-                if (isHovering) {
-                    if (kiemTraLaThuMuc(profile)) {
-                        // Hiệu ứng tương tác khi kéo vào thư mục
-                        iconEl.style.transform = 'scale(1.15)';
-                        iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
-                    } else {
-                        // CƠ CHẾ TỰ ĐỘNG TRÁNH (HOÁN ĐỔI VỊ TRÍ) DÀNH CHO ICON THÔNG THƯỜNG
-                        if (!iconEl.dataset.isDodging) {
-                            iconEl.dataset.isDodging = "true"; // Khóa cờ tạm thời để ngăn hiệu ứng lặp liên tục
+                document.querySelectorAll('.desktop-icon').forEach(iconEl => {
+                    if (iconEl === draggedIcon || hasSwapped) return;
+                    
+                    const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
+                    if (isNaN(idx)) return;
+                    const profile = globalProfiles[idx];
+                    
+                    // SỬ DỤNG TỌA ĐỘ LOGIC ĐỂ TRÁNH LỖI ĐỌC NHẦM TỌA ĐỘ ANIMATION
+                    const targetLeft = parseFloat(iconEl.style.left) || 0;
+                    const targetTop = parseFloat(iconEl.style.top) || 0;
+                    const targetCenterX = targetLeft + (iconEl.offsetWidth || 90) / 2;
+                    const targetCenterY = targetTop + (iconEl.offsetHeight || 105) / 2;
+                    
+                    // Tính khoảng cách giữa hai tâm icon
+                    const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+
+                    // Nếu khoảng cách đủ gần (vượt ngưỡng va chạm 60px)
+                    if (distance < 60) { 
+                        if (kiemTraLaThuMuc(profile)) {
+                            iconEl.style.transform = 'scale(1.15)';
+                            iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
+                        } else {
+                            // TIẾN HÀNH HOÁN ĐỔI 1 LẦN DUY NHẤT TRONG CHU KỲ COOLDOWN
+                            hasSwapped = true;
+                            lastSwapTime = currentTime;
                             
-                            // Lưu trữ vị trí hiện tại của icon đang bị đè
                             let viTriTamLeft = iconEl.style.left;
                             let viTriTamTop = iconEl.style.top;
                             
-                            // Điều hướng icon bị đè di chuyển mượt mà về khoảng trống
                             iconEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                             iconEl.style.left = slotGoc.left;
                             iconEl.style.top = slotGoc.top;
                             
-                            // Gán tọa độ mới làm điểm đích cho icon đang được kéo
+                            // Gán tọa độ của icon vừa bị chiếm chỗ thành đích đến mới cho icon đang kéo
                             slotGoc.left = viTriTamLeft;
                             slotGoc.top = viTriTamTop;
                             
-                            // Lưu thay đổi vào vùng nhớ đệm cục bộ (Local Storage)
+                            // Cập nhật ngay bộ nhớ vị trí để chống lỗi ghi đè tọa độ hỏng
                             const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
                             const titleKey = iconEl.getAttribute('data-title');
                             if (titleKey) {
                                 positions[titleKey] = { left: iconEl.style.left, top: iconEl.style.top };
                                 localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
                             }
-
-                            // Giải phóng cờ trạng thái sau khi hoàn tất hiệu ứng chuyển động
-                            setTimeout(() => { iconEl.dataset.isDodging = ""; }, 350);
+                        }
+                    } else {
+                        if (kiemTraLaThuMuc(profile)) {
+                            iconEl.style.transform = '';
+                            iconEl.style.boxShadow = '';
                         }
                     }
-                } else {
-                    if (kiemTraLaThuMuc(profile)) {
-                        iconEl.style.transform = '';
-                        iconEl.style.boxShadow = '';
-                    }
-                }
-            });
+                });
+            }
         } 
     }
 
@@ -1598,8 +1606,12 @@ function getUrlAndTarget(encodedTd2) {
         if (dragThresholdPassed) { 
             if (isLoggedIn && sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
                 let droppedFolder = null;
-                const draggedRect = draggedIcon.getBoundingClientRect();
-                const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
+                const areaRect = desktopArea.getBoundingClientRect();
+                
+                const currentLeft = parseFloat(draggedIcon.style.left) || 0;
+                const currentTop = parseFloat(draggedIcon.style.top) || 0;
+                const draggedCenterX = currentLeft + (draggedIcon.offsetWidth || 90) / 2;
+                const draggedCenterY = currentTop + (draggedIcon.offsetHeight || 105) / 2;
                 
                 const draggedIndex = parseInt(draggedIcon.getAttribute('data-id')) - 1;
                 const draggedProfile = globalProfiles[draggedIndex];
@@ -1612,8 +1624,13 @@ function getUrlAndTarget(encodedTd2) {
                         const profile = globalProfiles[idx];
                         
                         if (kiemTraLaThuMuc(profile)) {
-                            const rect = iconEl.getBoundingClientRect();
-                            if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
+                            const targetLeft = parseFloat(iconEl.style.left) || 0;
+                            const targetTop = parseFloat(iconEl.style.top) || 0;
+                            const targetCenterX = targetLeft + (iconEl.offsetWidth || 90) / 2;
+                            const targetCenterY = targetTop + (iconEl.offsetHeight || 105) / 2;
+                            
+                            const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+                            if (distance < 60) {
                                 droppedFolder = profile;
                             }
                         }
@@ -1624,19 +1641,16 @@ function getUrlAndTarget(encodedTd2) {
                     if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
                         xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
                     } else { 
-                        // Nếu thao tác gộp bị hủy, điều hướng icon về vị trí trống (Slot đã hoán đổi)
                         draggedIcon.style.left = slotGoc.left;
                         draggedIcon.style.top = slotGoc.top;
                         savePositions(); 
                     }
                 } else { 
-                    // Cập bến an toàn tại vị trí đích
                     draggedIcon.style.left = slotGoc.left;
                     draggedIcon.style.top = slotGoc.top;
                     savePositions(); 
                 }
             } else { 
-                // Xử lý luồng dữ liệu đối với người dùng không có quyền quản lý thư mục
                 draggedIcon.style.left = slotGoc.left;
                 draggedIcon.style.top = slotGoc.top;
                 savePositions(); 
@@ -1648,7 +1662,6 @@ function getUrlAndTarget(encodedTd2) {
         document.removeEventListener('mouseup', stopDrag); 
         document.removeEventListener('touchend', stopDrag); 
         
-        // Hoàn nguyên trạng thái sau chu trình kéo thả
         setTimeout(() => { 
             if(draggedIcon) draggedIcon.style.transition = ''; 
             draggedIcon = null; 
@@ -1659,20 +1672,14 @@ function getUrlAndTarget(encodedTd2) {
     function savePositions() { 
         if (!draggedIcon) return;
         const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        
         const titleKey = draggedIcon.getAttribute('data-title'); 
-        
         if (titleKey) {
             positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
             localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
         }
-        
         rearrangeGrid(); 
     }
-    // -------------------------------------------------------------------------
-    // KẾT THÚC KHỐI CẬP NHẬT TÍNH NĂNG
-    // -------------------------------------------------------------------------
-    
+     
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
         initializeLayout(); 
