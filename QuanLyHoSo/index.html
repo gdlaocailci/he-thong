@@ -1470,8 +1470,9 @@ function getUrlAndTarget(encodedTd2) {
 // -------------------------------------------------------------------------
     // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (KÉO THẢ)
     // -------------------------------------------------------------------------
-    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    let slotGoc = { left: '', top: '' }; // Lưu trữ tọa độ gốc để thực hiện hoán đổi vị trí
+   let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
+    let slotGoc = { left: '', top: '' }; 
+    let lastSwapTime = 0; // Biến chống giật (debounce) để tránh việc hoán đổi xảy ra liên tục
 
     function setupDragEvents() { 
         icons.forEach(icon => { 
