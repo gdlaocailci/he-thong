@@ -1467,8 +1467,12 @@ function getUrlAndTarget(encodedTd2) {
         }); 
     }
 
+// -------------------------------------------------------------------------
+    // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (KÉO THẢ)
+    // -------------------------------------------------------------------------
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    
+    let slotGoc = { left: '', top: '' }; // Lưu trữ tọa độ gốc để thực hiện hoán đổi vị trí
+
     function setupDragEvents() { 
         icons.forEach(icon => { 
             icon.removeEventListener('mousedown', startDrag); 
@@ -1489,6 +1493,10 @@ function getUrlAndTarget(encodedTd2) {
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
         
+        // Ghi nhận vị trí xuất phát trước khi di chuyển
+        slotGoc.left = draggedIcon.style.left;
+        slotGoc.top = draggedIcon.style.top;
+
         draggedIcon.style.transition = 'none';
 
         document.addEventListener('mousemove', drag); 
@@ -1501,6 +1509,7 @@ function getUrlAndTarget(encodedTd2) {
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
+        
         if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { 
             dragThresholdPassed = true; 
             isDragging = true; 
@@ -1508,6 +1517,7 @@ function getUrlAndTarget(encodedTd2) {
             draggedIcon.style.opacity = '0.7'; 
             e.preventDefault(); 
         } 
+        
         if (dragThresholdPassed) { 
             const areaRect = desktopArea.getBoundingClientRect(); 
             let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); 
@@ -1524,12 +1534,47 @@ function getUrlAndTarget(encodedTd2) {
                 if (isNaN(idx)) return;
                 const profile = globalProfiles[idx];
                 
-                if (kiemTraLaThuMuc(profile)) {
-                    const rect = iconEl.getBoundingClientRect();
-                    if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
+                const rect = iconEl.getBoundingClientRect();
+                const isHovering = (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && 
+                                    draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom);
+
+                if (isHovering) {
+                    if (kiemTraLaThuMuc(profile)) {
+                        // Hiệu ứng tương tác khi kéo vào thư mục
                         iconEl.style.transform = 'scale(1.15)';
                         iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
                     } else {
+                        // CƠ CHẾ TỰ ĐỘNG TRÁNH (HOÁN ĐỔI VỊ TRÍ) DÀNH CHO ICON THÔNG THƯỜNG
+                        if (!iconEl.dataset.isDodging) {
+                            iconEl.dataset.isDodging = "true"; // Khóa cờ tạm thời để ngăn hiệu ứng lặp liên tục
+                            
+                            // Lưu trữ vị trí hiện tại của icon đang bị đè
+                            let viTriTamLeft = iconEl.style.left;
+                            let viTriTamTop = iconEl.style.top;
+                            
+                            // Điều hướng icon bị đè di chuyển mượt mà về khoảng trống
+                            iconEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            iconEl.style.left = slotGoc.left;
+                            iconEl.style.top = slotGoc.top;
+                            
+                            // Gán tọa độ mới làm điểm đích cho icon đang được kéo
+                            slotGoc.left = viTriTamLeft;
+                            slotGoc.top = viTriTamTop;
+                            
+                            // Lưu thay đổi vào vùng nhớ đệm cục bộ (Local Storage)
+                            const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+                            const titleKey = iconEl.getAttribute('data-title');
+                            if (titleKey) {
+                                positions[titleKey] = { left: iconEl.style.left, top: iconEl.style.top };
+                                localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
+                            }
+
+                            // Giải phóng cờ trạng thái sau khi hoàn tất hiệu ứng chuyển động
+                            setTimeout(() => { iconEl.dataset.isDodging = ""; }, 350);
+                        }
+                    }
+                } else {
+                    if (kiemTraLaThuMuc(profile)) {
                         iconEl.style.transform = '';
                         iconEl.style.boxShadow = '';
                     }
@@ -1542,8 +1587,7 @@ function getUrlAndTarget(encodedTd2) {
         if (!draggedIcon) return; 
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
-        
-        draggedIcon.style.transition = '';
+        draggedIcon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
             iconEl.style.transform = '';
@@ -1578,17 +1622,37 @@ function getUrlAndTarget(encodedTd2) {
                 if (droppedFolder) {
                     if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
                         xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
-                    } else { savePositions(); }
-                } else { savePositions(); }
-            } else { savePositions(); }
+                    } else { 
+                        // Nếu thao tác gộp bị hủy, điều hướng icon về vị trí trống (Slot đã hoán đổi)
+                        draggedIcon.style.left = slotGoc.left;
+                        draggedIcon.style.top = slotGoc.top;
+                        savePositions(); 
+                    }
+                } else { 
+                    // Cập bến an toàn tại vị trí đích
+                    draggedIcon.style.left = slotGoc.left;
+                    draggedIcon.style.top = slotGoc.top;
+                    savePositions(); 
+                }
+            } else { 
+                // Xử lý luồng dữ liệu đối với người dùng không có quyền quản lý thư mục
+                draggedIcon.style.left = slotGoc.left;
+                draggedIcon.style.top = slotGoc.top;
+                savePositions(); 
+            }
         } 
         
         document.removeEventListener('mousemove', drag); 
         document.removeEventListener('touchmove', drag); 
         document.removeEventListener('mouseup', stopDrag); 
         document.removeEventListener('touchend', stopDrag); 
-        draggedIcon = null; 
-        setTimeout(() => { isDragging = false; }, 100); 
+        
+        // Hoàn nguyên trạng thái sau chu trình kéo thả
+        setTimeout(() => { 
+            if(draggedIcon) draggedIcon.style.transition = ''; 
+            draggedIcon = null; 
+            isDragging = false; 
+        }, 300); 
     }
     
     function savePositions() { 
@@ -1604,6 +1668,9 @@ function getUrlAndTarget(encodedTd2) {
         
         rearrangeGrid(); 
     }
+    // -------------------------------------------------------------------------
+    // KẾT THÚC KHỐI CẬP NHẬT TÍNH NĂNG
+    // -------------------------------------------------------------------------
     
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
