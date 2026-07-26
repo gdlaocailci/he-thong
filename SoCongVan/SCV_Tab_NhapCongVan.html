@@ -15,18 +15,22 @@
     📂 NHẬP CÔNG VĂN ĐI / ĐẾN
   </div>
 </div>
+<!-- ĐÃ NÂNG CẤP: Chuyển đổi Select thành Input + Datalist (Combo box: vừa cho chọn, vừa cho nhập tự do) -->
 <div class="cv-controls" style="flex-direction: row; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: flex-start;">
     <div style="display: flex; align-items: center; gap: 5px;">
         <label class="cv-label" style="width: auto; margin-right: 5px;">Loại cơ quan: <span style="color:red">*</span></label>
-        <select id="cbLoaiCQ" class="cv-combo" style="width: 150px;"><option value="">-- Chọn --</option></select>
+        <input type="text" id="cbLoaiCQ" list="dl_cbLoaiCQ" class="cv-combo" placeholder="-- Chọn --" style="width: 150px;" autocomplete="off">
+        <datalist id="dl_cbLoaiCQ"></datalist>
     </div>
     <div style="display: flex; align-items: center; gap: 5px;">
         <label class="cv-label" style="width: auto; margin-right: 5px;">CQ ban hành: <span style="color:red">*</span></label>
-        <select id="cbCoQuan" class="cv-combo" style="width: 150px;"><option value="">-- Chọn --</option></select>
+        <input type="text" id="cbCoQuan" list="dl_cbCoQuan" class="cv-combo" placeholder="-- Chọn --" style="width: 150px;" autocomplete="off">
+        <datalist id="dl_cbCoQuan"></datalist>
     </div>
     <div style="display: flex; align-items: center; gap: 5px;">
         <label class="cv-label" style="width: auto; margin-right: 5px;">Loại văn bản: <span style="color:red">*</span></label>
-        <select id="cbLoaiVB" class="cv-combo" style="width: 150px;"><option value="">-- Chọn --</option></select>
+        <input type="text" id="cbLoaiVB" list="dl_cbLoaiVB" class="cv-combo" placeholder="-- Chọn --" style="width: 150px;" autocomplete="off">
+        <datalist id="dl_cbLoaiVB"></datalist>
     </div>
 </div>
 
@@ -75,34 +79,45 @@
     // BỔ SUNG: Cache Danh mục dùng chung
     window.SCV_DM_CONGVAN_CACHE = window.SCV_DM_CONGVAN_CACHE || null;
 
+/* ==========================================================
+       ĐÃ NÂNG CẤP: Hàm khởi tạo và nạp dữ liệu cho Combo box (Datalist)
+       ========================================================== */
     function initCongVan() {
         if (typeof google === 'undefined' || !google.script) {
             toast("❌ Lỗi: Chưa tải được file kết nối ketnoi.js"); return;
         }
         
-        // KIỂM TRA CACHE TỪ TAB TRA CỨU
+        // KIỂM TRA CACHE TỪ TAB TRA CỨU (Đẩy vào Datalist)
         if (window.SCV_DM_CONGVAN_CACHE) {
-            fillCombo('cbLoaiCQ', window.SCV_DM_CONGVAN_CACHE.loaiCQ); 
-            fillCombo('cbCoQuan', window.SCV_DM_CONGVAN_CACHE.coQuan); 
-            fillCombo('cbLoaiVB', window.SCV_DM_CONGVAN_CACHE.loaiVB);
+            fillCombo('dl_cbLoaiCQ', window.SCV_DM_CONGVAN_CACHE.loaiCQ); 
+            fillCombo('dl_cbCoQuan', window.SCV_DM_CONGVAN_CACHE.coQuan); 
+            fillCombo('dl_cbLoaiVB', window.SCV_DM_CONGVAN_CACHE.loaiVB);
             return;
         }
 
         google.script.run
             .withSuccessHandler(data => {
                 window.SCV_DM_CONGVAN_CACHE = data; // Lưu bộ nhớ đệm
-                fillCombo('cbLoaiCQ', data.loaiCQ); fillCombo('cbCoQuan', data.coQuan); fillCombo('cbLoaiVB', data.loaiVB);
+                fillCombo('dl_cbLoaiCQ', data.loaiCQ); 
+                fillCombo('dl_cbCoQuan', data.coQuan); 
+                fillCombo('dl_cbLoaiVB', data.loaiVB);
             })
             .withFailureHandler(err => toast("❌ Lỗi tải danh mục Công văn: " + err))
             .SCV_getDmCongVan();
     }
     
-    function fillCombo(id, list) {
-        const sel = document.getElementById(id);
-        const currentVal = sel.value; 
-        sel.innerHTML = '<option value="">-- Chọn --</option>';
-        if (list && list.length > 0) list.forEach(item => sel.add(new Option(item, item)));
-        if(currentVal) sel.value = currentVal;
+    /* Đã tối ưu lại hàm đẩy dữ liệu để tương thích chuẩn với thẻ HTML5 Datalist */
+    function fillCombo(listId, list) {
+        const datalist = document.getElementById(listId);
+        if (!datalist) return;
+        datalist.innerHTML = ''; // Làm sạch danh sách trước khi nạp
+        if (list && list.length > 0) { 
+            list.forEach(item => { 
+                let opt = document.createElement('option'); 
+                opt.value = item; 
+                datalist.appendChild(opt); 
+            }); 
+        }
     }
     
     function addRowCV() {
