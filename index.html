@@ -1467,8 +1467,12 @@ function getUrlAndTarget(encodedTd2) {
         }); 
     }
 
+// -------------------------------------------------------------------------
+    // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (BẢN VÁ ĐỒNG BỘ LOGIC LƯỚI)
+    // -------------------------------------------------------------------------
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    
+    let lastSwapTarget = null; // Biến cờ ngăn hoán đổi lặp lại với cùng một đối tượng
+
     function setupDragEvents() { 
         icons.forEach(icon => { 
             icon.removeEventListener('mousedown', startDrag); 
@@ -1477,7 +1481,21 @@ function getUrlAndTarget(encodedTd2) {
             icon.addEventListener('touchstart', startDrag, {passive: false}); 
         }); 
     }
-    
+
+    // Hàm đồng bộ toàn bộ vị trí hiện tại trên màn hình vào cơ sở dữ liệu ảo (localStorage)
+    // Giúp thuật toán luôn có tọa độ chuẩn của lưới, loại bỏ lỗi tọa độ rác.
+    function forceSyncAllPositions() {
+        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            const titleKey = icon.getAttribute('data-title');
+            if (titleKey) {
+                // Chỉ lấy các giá trị tĩnh nguyên bản, không đọc giá trị khi đang bay (Animation)
+                positions[titleKey] = { left: icon.style.left, top: icon.style.top };
+            }
+        });
+        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
+    }
+
     function startDrag(e) { 
         dragThresholdPassed = false; 
         draggedIcon = this; 
@@ -1488,7 +1506,11 @@ function getUrlAndTarget(encodedTd2) {
         offsetX = clientX - rect.left; 
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
+        lastSwapTarget = null;
         
+        // Cập nhật mốc tọa độ chuẩn bị di chuyển vào CSDL Ảo
+        forceSyncAllPositions();
+
         draggedIcon.style.transition = 'none';
 
         document.addEventListener('mousemove', drag); 
@@ -1497,39 +1519,96 @@ function getUrlAndTarget(encodedTd2) {
         document.addEventListener('touchend', stopDrag); 
     }
 
+    // Hàm phụ trợ: Kích hoạt hiệu ứng hoán đổi cho các icon trên lưới (trừ icon đang được kéo)
+    function rearrangeOthers(excludeTitleKey) {
+        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        document.querySelectorAll('.desktop-icon').forEach((icon) => { 
+            const titleKey = icon.getAttribute('data-title'); 
+            if (titleKey && titleKey !== excludeTitleKey && savedPositions[titleKey]) { 
+                icon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                icon.style.left = savedPositions[titleKey].left; 
+                icon.style.top = savedPositions[titleKey].top; 
+            } 
+        }); 
+    }
+
     function drag(e) { 
         if (!draggedIcon) return; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
+        
         if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { 
             dragThresholdPassed = true; 
             isDragging = true; 
             draggedIcon.style.zIndex = '9999'; 
-            draggedIcon.style.opacity = '0.7'; 
+            draggedIcon.style.opacity = '0.8'; 
             e.preventDefault(); 
         } 
+        
         if (dragThresholdPassed) { 
             const areaRect = desktopArea.getBoundingClientRect(); 
             let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); 
             let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); 
+            
+            // Icon đang kéo đi theo con trỏ chuột
             draggedIcon.style.left = newLeft + 'px'; 
             draggedIcon.style.top = newTop + 'px'; 
             
-            const draggedRect = draggedIcon.getBoundingClientRect();
-            const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
-            
+            const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
+            const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
+
+            let swappedThisFrame = false;
+            const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {};
+
             document.querySelectorAll('.desktop-icon').forEach(iconEl => {
-                if (iconEl === draggedIcon) return;
+                if (iconEl === draggedIcon || swappedThisFrame) return;
+                
                 const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
                 if (isNaN(idx)) return;
                 const profile = globalProfiles[idx];
                 
-                if (kiemTraLaThuMuc(profile)) {
-                    const rect = iconEl.getBoundingClientRect();
-                    if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
+                const targetTitle = iconEl.getAttribute('data-title');
+                if (!targetTitle || !positions[targetTitle]) return;
+
+                // SỬ DỤNG TỌA ĐỘ ẢO (LOGICAL GRID) ĐỂ TÍNH TOÁN VA CHẠM
+                // (Chấm dứt hoàn toàn tình trạng đọc nhầm tọa độ rác)
+                const logicalLeft = parseFloat(positions[targetTitle].left) || 0;
+                const logicalTop = parseFloat(positions[targetTitle].top) || 0;
+                
+                const targetCenterX = logicalLeft + (iconEl.offsetWidth || 90) / 2;
+                const targetCenterY = logicalTop + (iconEl.offsetHeight || 105) / 2;
+                
+                const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+
+                if (distance < 55) { 
+                    if (kiemTraLaThuMuc(profile)) {
                         iconEl.style.transform = 'scale(1.15)';
                         iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
                     } else {
+                        // CHỈ HOÁN ĐỔI KHI CHẠM VÀO MỤC TIÊU MỚI (CHỐNG GIẬT LAG)
+                        if (lastSwapTarget !== targetTitle) {
+                            swappedThisFrame = true;
+                            lastSwapTarget = targetTitle;
+                            
+                            const draggedTitle = draggedIcon.getAttribute('data-title');
+                            
+                            // Tráo đổi tọa độ chéo trong CSDL ảo một cách nguyên vẹn
+                            const tempLeft = positions[targetTitle].left;
+                            const tempTop = positions[targetTitle].top;
+                            
+                            positions[targetTitle].left = positions[draggedTitle].left;
+                            positions[targetTitle].top = positions[draggedTitle].top;
+                            
+                            positions[draggedTitle].left = tempLeft;
+                            positions[draggedTitle].top = tempTop;
+                            
+                            // Ghi đè CSDL ảo và phát lệnh di chuyển đồng loạt
+                            localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
+                            rearrangeOthers(draggedTitle);
+                        }
+                    }
+                } else {
+                    if (kiemTraLaThuMuc(profile)) {
                         iconEl.style.transform = '';
                         iconEl.style.boxShadow = '';
                     }
@@ -1540,10 +1619,10 @@ function getUrlAndTarget(encodedTd2) {
 
     function stopDrag(e) { 
         if (!draggedIcon) return; 
+        
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
-        
-        draggedIcon.style.transition = '';
+        draggedIcon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
             iconEl.style.transform = '';
@@ -1551,15 +1630,20 @@ function getUrlAndTarget(encodedTd2) {
         });
         
         if (dragThresholdPassed) { 
-            if (isLoggedIn && sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
-                let droppedFolder = null;
-                const draggedRect = draggedIcon.getBoundingClientRect();
-                const draggedCenter = { x: draggedRect.left + draggedRect.width / 2, y: draggedRect.top + draggedRect.height / 2 };
-                
-                const draggedIndex = parseInt(draggedIcon.getAttribute('data-id')) - 1;
-                const draggedProfile = globalProfiles[draggedIndex];
+            let droppedFolder = null;
+            const currentLeft = parseFloat(draggedIcon.style.left) || 0;
+            const currentTop = parseFloat(draggedIcon.style.top) || 0;
+            const draggedCenterX = currentLeft + (draggedIcon.offsetWidth || 90) / 2;
+            const draggedCenterY = currentTop + (draggedIcon.offsetHeight || 105) / 2;
+            
+            const draggedIndex = parseInt(draggedIcon.getAttribute('data-id')) - 1;
+            const draggedProfile = globalProfiles[draggedIndex];
 
+            // Kiểm tra xem icon có thả vào Thư mục không (Chỉ dành cho Quản trị viên)
+            if (isLoggedIn && sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
                 if (!kiemTraLaThuMuc(draggedProfile)) {
+                    const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {};
+                    
                     document.querySelectorAll('.desktop-icon').forEach(iconEl => {
                         if (iconEl === draggedIcon) return;
                         const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
@@ -1567,43 +1651,62 @@ function getUrlAndTarget(encodedTd2) {
                         const profile = globalProfiles[idx];
                         
                         if (kiemTraLaThuMuc(profile)) {
-                            const rect = iconEl.getBoundingClientRect();
-                            if (draggedCenter.x >= rect.left && draggedCenter.x <= rect.right && draggedCenter.y >= rect.top && draggedCenter.y <= rect.bottom) {
+                            const targetTitle = iconEl.getAttribute('data-title');
+                            const logicalLeft = positions[targetTitle] ? parseFloat(positions[targetTitle].left) : (parseFloat(iconEl.style.left) || 0);
+                            const logicalTop = positions[targetTitle] ? parseFloat(positions[targetTitle].top) : (parseFloat(iconEl.style.top) || 0);
+                            
+                            const targetCenterX = logicalLeft + (iconEl.offsetWidth || 90) / 2;
+                            const targetCenterY = logicalTop + (iconEl.offsetHeight || 105) / 2;
+                            
+                            const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+                            if (distance < 55) {
                                 droppedFolder = profile;
                             }
                         }
                     });
                 }
+            }
 
-                if (droppedFolder) {
-                    if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
-                        xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
-                    } else { savePositions(); }
-                } else { savePositions(); }
-            } else { savePositions(); }
+            if (droppedFolder) {
+                if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
+                    xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
+                } else { 
+                    snapDraggedIconToGrid();
+                }
+            } else { 
+                // Tự động hít vào vị trí ô lưới chuẩn thay vì lưu vị trí thả chuột bừa bãi
+                snapDraggedIconToGrid();
+            }
         } 
         
         document.removeEventListener('mousemove', drag); 
         document.removeEventListener('touchmove', drag); 
         document.removeEventListener('mouseup', stopDrag); 
         document.removeEventListener('touchend', stopDrag); 
-        draggedIcon = null; 
-        setTimeout(() => { isDragging = false; }, 100); 
+        
+        setTimeout(() => { 
+            if(draggedIcon) draggedIcon.style.transition = ''; 
+            draggedIcon = null; 
+            isDragging = false; 
+        }, 300); 
     }
     
-    function savePositions() { 
-        if (!draggedIcon) return;
-        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        
-        const titleKey = draggedIcon.getAttribute('data-title'); 
-        
-        if (titleKey) {
-            positions[titleKey] = { left: draggedIcon.style.left, top: draggedIcon.style.top }; 
-            localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions)); 
+    // Hàm phụ trợ: Đưa icon đang kéo tự động hít về đúng vị trí chuẩn trên lưới
+    function snapDraggedIconToGrid() {
+        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
+        const titleKey = draggedIcon.getAttribute('data-title');
+        if (titleKey && savedPositions[titleKey]) {
+            draggedIcon.style.left = savedPositions[titleKey].left;
+            draggedIcon.style.top = savedPositions[titleKey].top;
         }
-        
-        rearrangeGrid(); 
     }
+
+    // Cố ý ghi đè hàm savePositions cũ thành hàm rỗng để ngắt triệt để cơ chế lưu tọa độ chuột
+    function savePositions() { 
+        // Vị trí tĩnh đã được thuật toán Lưới Ảo (Logical Grid) tự động xử lý và lưu chuẩn xác
+        // Hàm này được làm trống để giữ nguyên các liên kết gọi biến cũ.
+    }
+  
     
     function resetPositions() { 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
