@@ -1401,7 +1401,7 @@ function getUrlAndTarget(encodedTd2) {
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
     
-    function initializeLayout() { 
+function initializeLayout() { 
         const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
         const iconWidth = 100;
         const iconHeight = 120;
@@ -1414,22 +1414,50 @@ function getUrlAndTarget(encodedTd2) {
         let maxRows = Math.floor(maxColHeight / iconHeight);
         if (maxRows < 1) maxRows = 1; 
 
-        let gridIndex = 0; 
+        // Khởi tạo tập hợp (Set) để ghi nhớ các "ô lưới" đã có icon chiếm chỗ
+        let occupiedGrid = new Set();
 
+        // BƯỚC 1: Xếp các icon đã có tọa độ lưu trữ và đánh dấu lưới bị chiếm
         icons.forEach((icon) => { 
             const titleKey = icon.getAttribute('data-title'); 
             
             if (titleKey && savedPositions[titleKey]) { 
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
-            } else { 
-                let col = Math.floor(gridIndex / maxRows);
-                let row = gridIndex % maxRows;
-                icon.style.left = (startX + col * iconWidth) + 'px';
-                icon.style.top = (startY + row * iconHeight) + 'px';
-                gridIndex++;
+                
+                // Quy đổi tọa độ Pixel sang vị trí (Cột-Hàng) trên lưới
+                let col = Math.round((parseInt(savedPositions[titleKey].left) - startX) / iconWidth);
+                let row = Math.round((parseInt(savedPositions[titleKey].top) - startY) / iconHeight);
+                occupiedGrid.add(`${col}-${row}`);
             } 
             icon.style.margin = '0'; 
+        }); 
+
+        // BƯỚC 2: Xếp các icon mới (chưa có tọa độ) vào các vị trí trống đầu tiên
+        let currentCol = 0;
+        let currentRow = 0;
+
+        icons.forEach((icon) => { 
+            const titleKey = icon.getAttribute('data-title'); 
+            
+            // Nếu icon hoàn toàn mới hoặc chưa có trong bộ nhớ
+            if (!titleKey || !savedPositions[titleKey]) { 
+                // Vòng lặp dò tìm ô lưới còn trống
+                while (occupiedGrid.has(`${currentCol}-${currentRow}`)) {
+                    currentRow++;
+                    if (currentRow >= maxRows) {
+                        currentRow = 0;
+                        currentCol++;
+                    }
+                }
+                
+                // Đặt icon mới vào ô trống an toàn tìm được
+                icon.style.left = (startX + currentCol * iconWidth) + 'px';
+                icon.style.top = (startY + currentRow * iconHeight) + 'px';
+                
+                // Cập nhật ô này vào danh sách đã bị chiếm dụng
+                occupiedGrid.add(`${currentCol}-${currentRow}`);
+            } 
         }); 
     }
     
@@ -1446,8 +1474,9 @@ function getUrlAndTarget(encodedTd2) {
         let maxRows = Math.floor(maxColHeight / iconHeight);
         if (maxRows < 1) maxRows = 1;
 
-        let gridIndex = 0; 
+        let occupiedGrid = new Set();
 
+        // BƯỚC 1: Xử lý các icon đã lưu tọa độ (Ngắt hiệu ứng để di chuyển tức thời)
         icons.forEach((icon) => { 
             const titleKey = icon.getAttribute('data-title'); 
             
@@ -1456,14 +1485,34 @@ function getUrlAndTarget(encodedTd2) {
                 icon.style.left = savedPositions[titleKey].left; 
                 icon.style.top = savedPositions[titleKey].top; 
                 setTimeout(() => { icon.style.transition = ''; }, 100);
-            } else { 
-                let col = Math.floor(gridIndex / maxRows);
-                let row = gridIndex % maxRows;
-                icon.style.left = (startX + col * iconWidth) + 'px';
-                icon.style.top = (startY + row * iconHeight) + 'px';
-                gridIndex++;
+
+                let col = Math.round((parseInt(savedPositions[titleKey].left) - startX) / iconWidth);
+                let row = Math.round((parseInt(savedPositions[titleKey].top) - startY) / iconHeight);
+                occupiedGrid.add(`${col}-${row}`);
             } 
             icon.style.margin = '0'; 
+        }); 
+
+        // BƯỚC 2: Rà soát và sắp xếp icon mới không bị đè
+        let currentCol = 0;
+        let currentRow = 0;
+
+        icons.forEach((icon) => { 
+            const titleKey = icon.getAttribute('data-title'); 
+            
+            if (!titleKey || !savedPositions[titleKey]) { 
+                while (occupiedGrid.has(`${currentCol}-${currentRow}`)) {
+                    currentRow++;
+                    if (currentRow >= maxRows) {
+                        currentRow = 0;
+                        currentCol++;
+                    }
+                }
+                
+                icon.style.left = (startX + currentCol * iconWidth) + 'px';
+                icon.style.top = (startY + currentRow * iconHeight) + 'px';
+                occupiedGrid.add(`${currentCol}-${currentRow}`);
+            } 
         }); 
     }
 
