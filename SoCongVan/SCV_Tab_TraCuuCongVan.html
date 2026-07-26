@@ -26,9 +26,16 @@
 </div>
 
 <div class="cv-controls" style="flex-direction: row; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-start; padding: 10px; background:#e0f2fe; border:1px solid #bae6fd;">
-    <select id="f_LoaiCQ" class="cv-combo" style="width: 130px;"><option value="">-- Loại CQ --</option></select>
-    <select id="f_CoQuan" class="cv-combo" style="width: 130px;"><option value="">-- CQ Ban Hành --</option></select>
-    <select id="f_LoaiVB" class="cv-combo" style="width: 130px;"><option value="">-- Loại VB --</option></select>
+    <!-- ĐÃ NÂNG CẤP: Chuyển đổi Select thành Input + Datalist (Combo box: vừa cho chọn, vừa cho nhập tự do) -->
+    <input type="text" id="f_LoaiCQ" list="dl_LoaiCQ" class="cv-combo" placeholder="-- Loại CQ --" style="width: 130px;" onkeydown="checkEnter(event)" autocomplete="off">
+    <datalist id="dl_LoaiCQ"></datalist>
+
+    <input type="text" id="f_CoQuan" list="dl_CoQuan" class="cv-combo" placeholder="-- CQ Ban Hành --" style="width: 130px;" onkeydown="checkEnter(event)" autocomplete="off">
+    <datalist id="dl_CoQuan"></datalist>
+
+    <input type="text" id="f_LoaiVB" list="dl_LoaiVB" class="cv-combo" placeholder="-- Loại VB --" style="width: 130px;" onkeydown="checkEnter(event)" autocomplete="off">
+    <datalist id="dl_LoaiVB"></datalist>
+  
     <input type="text" id="f_KyHieu" placeholder="Tìm Ký hiệu..." class="cv-combo" style="width:110px;" onkeydown="checkEnter(event)" autocomplete="off">
     <div style="display:flex; align-items:center; gap:5px; background:white; padding:3px; border-radius:4px; border:1px solid #ccc;">
        <span style="font-size:12px; font-weight:bold; color:#555;">Ngày:</span>
@@ -76,20 +83,24 @@
     window.SCV_AI_CACHE = window.SCV_AI_CACHE || {};
     window.SCV_DM_CONGVAN_CACHE = window.SCV_DM_CONGVAN_CACHE || null; 
 
+/* ==========================================================
+       ĐÃ NÂNG CẤP: Hàm khởi tạo và nạp dữ liệu cho Combo box (Datalist)
+       ========================================================== */
     function initSearchCV() {
         if (typeof google === 'undefined' || !google.script) return;
 
         if (window.SCV_DM_CONGVAN_CACHE) {
-            fillComboFilter('f_LoaiCQ', window.SCV_DM_CONGVAN_CACHE.loaiCQ, '-- Loại CQ --');
-            fillComboFilter('f_CoQuan', window.SCV_DM_CONGVAN_CACHE.coQuan, '-- CQ Ban Hành --');
-            fillComboFilter('f_LoaiVB', window.SCV_DM_CONGVAN_CACHE.loaiVB, '-- Loại VB --');
+            // Đẩy dữ liệu vào danh sách xổ xuống của Datalist
+            fillComboFilter('dl_LoaiCQ', window.SCV_DM_CONGVAN_CACHE.loaiCQ);
+            fillComboFilter('dl_CoQuan', window.SCV_DM_CONGVAN_CACHE.coQuan);
+            fillComboFilter('dl_LoaiVB', window.SCV_DM_CONGVAN_CACHE.loaiVB);
         } else {
             google.script.run
                 .withSuccessHandler(data => {
                     window.SCV_DM_CONGVAN_CACHE = data;
-                    fillComboFilter('f_LoaiCQ', data.loaiCQ, '-- Loại CQ --');
-                    fillComboFilter('f_CoQuan', data.coQuan, '-- CQ Ban Hành --');
-                    fillComboFilter('f_LoaiVB', data.loaiVB, '-- Loại VB --');
+                    fillComboFilter('dl_LoaiCQ', data.loaiCQ);
+                    fillComboFilter('dl_CoQuan', data.coQuan);
+                    fillComboFilter('dl_LoaiVB', data.loaiVB);
                 })
                 .withFailureHandler(err => toast("❌ Không tải được danh mục lọc: " + err))
                 .SCV_getDmCongVan();
@@ -104,6 +115,20 @@
         const disp = IS_AUTH_CV ? '' : 'none';
         document.getElementById('colSuaCV').style.display = disp;
         document.getElementById('thSuaCV').style.display = disp;
+    }
+
+    /* Đã tối ưu lại hàm đẩy dữ liệu để tương thích chuẩn với thẻ HTML5 Datalist */
+    function fillComboFilter(listId, list) {
+        const datalist = document.getElementById(listId);
+        if (!datalist) return;
+        datalist.innerHTML = ''; // Xóa dữ liệu cũ, chuẩn bị nạp mới
+        if (list && list.length > 0) { 
+            list.forEach(item => { 
+                let opt = document.createElement('option'); 
+                opt.value = item; 
+                datalist.appendChild(opt); 
+            }); 
+        }
     }
 
     function fillComboFilter(id, list, defaultText) {
