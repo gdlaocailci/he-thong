@@ -863,8 +863,8 @@ function getUrlAndTarget(encodedTd2) {
         let parts = decodedStr.split('|||');
         let finalUrl = parts[0] ? parts[0].trim() : '';
         
-        // BẢO VỆ TẦNG SÂU: Tự động gán https:// nếu link cũ trong CSDL bị thiếu
-        if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://')) {
+        // ĐÃ NÂNG CẤP: Ngoại trừ cờ hiệu Thư mục nội bộ khỏi logic tự động gán https://
+        if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://') && finalUrl !== '#INTERNAL_FOLDER_CONTAINER#') {
             finalUrl = 'https://' + finalUrl;
         }
         
@@ -1270,7 +1270,7 @@ function getUrlAndTarget(encodedTd2) {
         document.getElementById('window-folder-view').style.display = 'flex';
     }
 
-    function xuLyDiChuyenHoSo(tenHoSo, viTriMoi) {
+function xuLyDiChuyenHoSo(tenHoSo, viTriMoi) {
         const item = globalProfiles.find(p => p.td1 === tenHoSo);
         if (!item) return;
 
@@ -1283,9 +1283,20 @@ function getUrlAndTarget(encodedTd2) {
         loading.innerHTML = '<span class="material-icons">sync</span><h3>Đang đồng bộ cấu hình vị trí...</h3>';
         document.body.appendChild(loading);
 
+        // ĐÃ NÂNG CẤP: Bổ sung isPublic: item.isPublic ? 'public' : '' để không làm mất quyền khi kéo thả
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: viTriMoi, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            body: JSON.stringify({ 
+                action: 'editProfile', 
+                oldTd1: item.td1, 
+                td1: item.td1, 
+                td2: safeEncodedTd2, 
+                loaiIcon: item.iconType, 
+                isPublic: item.isPublic ? 'public' : '', 
+                vitri: viTriMoi, 
+                hieuung: item.hieuung || 'none', 
+                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+            })
         })
         .then(r => r.text())
         .then(text => {
@@ -1694,9 +1705,7 @@ function getUrlAndTarget(encodedTd2) {
         initializeLayout(); 
     }
 
-    // -------------------------------------------------------------------------
-    // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
- // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
     // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
     // -------------------------------------------------------------------------
     window.addEventListener('resize', () => {
@@ -1911,8 +1920,14 @@ function xuLySuaHoSo() {
 
     function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); }
 
-    function khoiTaoGooglePicker() {
-        if (pickerAccessToken === null) { tokenClient.requestAccessToken({prompt: 'consent'}); } else { hienThiGooglePicker(pickerAccessToken); }
+function khoiTaoGooglePicker() {
+        if (pickerAccessToken === null) { 
+            // Cấp mới lần đầu (hiển thị popup chọn tài khoản)
+            tokenClient.requestAccessToken({prompt: 'consent'}); 
+        } else { 
+            // ĐÃ NÂNG CẤP: Xin cấp lại (Renew) ngầm định token nếu đã hết hạn, không làm phiền người dùng
+            tokenClient.requestAccessToken({prompt: ''}); 
+        }
     }
 
     function hienThiGooglePicker(token) {
