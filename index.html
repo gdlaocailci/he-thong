@@ -1692,22 +1692,19 @@ function getUrlAndTarget(encodedTd2) {
 
     // -------------------------------------------------------------------------
     // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
+ // -------------------------------------------------------------------------
+    // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
     // -------------------------------------------------------------------------
     window.addEventListener('resize', () => {
         if (typeof initializeLayout === 'function') {
             clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(initializeLayout, 150); // Chống giật khi resize
+            window.resizeTimer = setTimeout(initializeLayout, 150); // Chống giật (Debounce) khi resize
         }
     });
 
     window.addEventListener('orientationchange', () => {
         setTimeout(initializeLayout, 200); // Dàn lại lưới khi xoay dọc/ngang máy
     });
-
-    window.addEventListener('resize', () => {
-        if (typeof initializeLayout === 'function') initializeLayout();
-    });
-    
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
         if(!isShow) {
