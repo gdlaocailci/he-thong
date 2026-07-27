@@ -882,13 +882,10 @@ function getUrlAndTarget(encodedTd2) {
 
     window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
-       tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: KETNOI.CLIENT_ID, 
-    // Thay đổi scope thành drive.file để tăng độ tin cậy bảo mật
-    scope: 'https://www.googleapis.com/auth/drive.file',
-    callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
-});
-      
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: KETNOI.CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
+            callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
+        });
         
         taiBieuTuongCongKhai();
         kiemTraTrangThaiDangNhap();
@@ -1911,42 +1908,21 @@ function xuLySuaHoSo() {
     }
     // KẾT THÚC CÁC HÀM QUẢN LÝ ĐA NHIỆM
 
-   function moDriveTaiKhoanKhac() { 
-        // Nâng cấp: Thay vì mở Tab mới, hệ thống gọi Token Client với cờ 'select_account'.
-        // Cửa sổ Google sẽ hiện ra để Thầy/Cô chọn tài khoản khác, sau đó tự động mở Picker.
-        tokenClient.requestAccessToken({prompt: 'select_account'}); 
-    }
+    function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); }
 
     function khoiTaoGooglePicker() {
-        // Nâng cấp: Luôn yêu cầu Token mới nhất của tài khoản hiện tại để tránh 
-        // bị kẹt Token nếu trước đó người dùng vừa thao tác với "Kho khác".
-        tokenClient.requestAccessToken({prompt: ''}); 
+        if (pickerAccessToken === null) { tokenClient.requestAccessToken({prompt: 'consent'}); } else { hienThiGooglePicker(pickerAccessToken); }
     }
 
-function hienThiGooglePicker(token) {
+    function hienThiGooglePicker(token) {
         document.getElementById('window-gan-hoso').style.display = 'none';
-        
         gapi.load('picker', function() {
-            var folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-                .setIncludeFolders(true)
-                .setSelectFolderEnabled(true); // Cho phép chọn trực tiếp Thư mục
-                
-            var picker = new google.picker.PickerBuilder()
-                .enableFeature(google.picker.Feature.SUPPORT_DRIVES)
-                .addView(folderView)
-                .addView(google.picker.ViewId.DOCS)
-                .setOAuthToken(token)
+            var folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true);
+            var picker = new google.picker.PickerBuilder().enableFeature(google.picker.Feature.SUPPORT_DRIVES).addView(folderView).addView(google.picker.ViewId.DOCS).setOAuthToken(token)
                 .setCallback(function(data) {
-                    if (data.action == google.picker.Action.PICKED) { 
-                        // Tự động trích xuất URL của Thư mục/Tệp và gán thẳng vào ô input Cột B
-                        document.getElementById('hs-td2').value = data.docs[0].url; 
-                        document.getElementById('hs-td2').style.borderColor = '#ccc'; 
-                        document.getElementById('window-gan-hoso').style.display = 'flex';
-                    } else if (data.action == google.picker.Action.CANCEL) { 
-                        document.getElementById('window-gan-hoso').style.display = 'flex'; 
-                    }
-                }).build(); 
-            picker.setVisible(true);
+                    if (data.action == google.picker.Action.PICKED) { document.getElementById('hs-td2').value = data.docs[0].url; document.getElementById('hs-td2').style.borderColor = '#ccc'; document.getElementById('window-gan-hoso').style.display = 'flex';
+                    } else if (data.action == google.picker.Action.CANCEL) { document.getElementById('window-gan-hoso').style.display = 'flex'; }
+                }).build(); picker.setVisible(true);
         });
     }
 
