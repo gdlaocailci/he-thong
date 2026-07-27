@@ -882,10 +882,13 @@ function getUrlAndTarget(encodedTd2) {
 
     window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: KETNOI.CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
-            callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
-        });
+       tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: KETNOI.CLIENT_ID, 
+    // Thay đổi scope thành drive.file để tăng độ tin cậy bảo mật
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
+});
+      
         
         taiBieuTuongCongKhai();
         kiemTraTrangThaiDangNhap();
