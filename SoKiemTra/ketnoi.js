@@ -86,3 +86,4 @@ function capNhatGiaoDienClient(ma_don_vi) {
     linkIcon.href = SKT_LOGO_URL;
     document.head.appendChild(linkIcon);
 })();
+
