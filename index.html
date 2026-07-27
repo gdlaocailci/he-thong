@@ -228,6 +228,42 @@
         .nut-huong-dan .kytu-hoi { font-size: 32px; font-weight: 900; font-family: 'Arial Black', Arial, sans-serif; line-height: 1; padding-top: 2px; }
         .nut-huong-dan span { position: absolute; top: 52px; font-size: 11px; font-weight: bold; color: #198754; white-space: nowrap; background: rgba(255,255,255,0.95); padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); pointer-events: none; }
         .nut-huong-dan:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.25); color: white; }
+
+        /* ------------------------------------------------------------------ */
+        /* TỐI ƯU HÓA HIỂN THỊ TRÊN THIẾT BỊ DI ĐỘNG (RESPONSIVE & TOUCH) */
+        /* ------------------------------------------------------------------ */
+        @media (max-width: 768px) {
+            /* 1. Thu nhỏ các biểu tượng Desktop */
+            .desktop-icon { width: 75px; min-height: 85px; padding: 4px; }
+            .icon-box { width: 42px; height: 42px; margin-bottom: 4px; }
+            .icon-box .material-icons { font-size: 26px; }
+            .icon-text { font-size: 11px; }
+            
+            /* 2. Co giãn linh hoạt các cửa sổ Modals */
+            #window-gan-hoso .window-container, 
+            #window-sua-hoso .window-container, 
+            #window-tao-thumuc .window-container, 
+            #window-xoa-hoso .window-container, 
+            #window-alert .window-container { width: 95vw !important; max-width: 400px; }
+            
+            /* 3. Tối ưu thanh Taskbar (Ẩn text, giữ Icon) */
+            .start-text { display: none !important; }
+            .btn-taskbar { font-size: 0; padding: 6px; } /* Ẩn chữ để tiết kiệm chỗ */
+            .btn-taskbar .material-icons { font-size: 20px; }
+            .clock-container { font-size: 10px; padding-left: 5px; margin-left: 5px; }
+            .nut-huong-dan { bottom: 65px; width: 35px; height: 35px; }
+            .nut-huong-dan .kytu-hoi { font-size: 24px; }
+            .nut-huong-dan span { display: none; }
+        }
+
+        /* 4. Khóa hiệu ứng Hover trên điện thoại để tránh lỗi "kẹt sáng" */
+        @media (hover: none) and (pointer: coarse) {
+            .desktop-icon:hover { 
+                background: transparent; border: 1px solid transparent; backdrop-filter: none; box-shadow: none;
+            }
+            .desktop-icon:hover .icon-box::after { left: -100%; }
+            .desktop-icon:hover .icon-box { transform: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); filter: none; }
+        }
     </style>
 </head>
 <body>
@@ -1401,77 +1437,65 @@ function getUrlAndTarget(encodedTd2) {
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
     
-    function initializeLayout() { 
-        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        const iconWidth = 100;
-        const iconHeight = 120;
-        const startX = 20;
-        const startY = 20;
-        
-        let maxColHeight = window.innerHeight - 70; 
-        if (maxColHeight < 200) maxColHeight = 500; 
-        
-        let maxRows = Math.floor(maxColHeight / iconHeight);
-        if (maxRows < 1) maxRows = 1; 
-
-        let gridIndex = 0; 
-
-        icons.forEach((icon) => { 
-            const titleKey = icon.getAttribute('data-title'); 
-            
-            if (titleKey && savedPositions[titleKey]) { 
-                icon.style.left = savedPositions[titleKey].left; 
-                icon.style.top = savedPositions[titleKey].top; 
-            } else { 
-                let col = Math.floor(gridIndex / maxRows);
-                let row = gridIndex % maxRows;
-                icon.style.left = (startX + col * iconWidth) + 'px';
-                icon.style.top = (startY + row * iconHeight) + 'px';
-                gridIndex++;
-            } 
-            icon.style.margin = '0'; 
-        }); 
-    }
     
-    function rearrangeGrid() {
-        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        const iconWidth = 100;
-        const iconHeight = 120;
-        const startX = 20;
-        const startY = 20;
+  // -------------------------------------------------------------------------
+    // CƠ CHẾ LƯỚI TỰ ĐỘNG VÀ KÉO THẢ TỐI ƯU CẢM ỨNG (MOBILE & DESKTOP)
+    // -------------------------------------------------------------------------
+    function getGridConfig() {
+        const isMobile = window.innerWidth <= 768;
+        return {
+            width: isMobile ? 75 : 100, // Nhỏ hơn trên điện thoại
+            height: isMobile ? 95 : 120,
+            startX: isMobile ? 10 : 20,
+            startY: isMobile ? 10 : 20
+        };
+    }
+
+    function initializeLayout() { applyGridOrder(null, false); }
+    function rearrangeGrid() { applyGridOrder(null, true); }
+
+    function applyGridOrder(excludeIcon = null, useTransition = true) {
+        let orderArray = JSON.parse(localStorage.getItem(PREFIX_MEM + 'iconOrder')) || [];
+        let currentTitles = Array.from(icons).map(i => i.getAttribute('data-title')).filter(Boolean);
         
+        // Cập nhật cấu trúc: Giữ trật tự cũ, nối icon mới chưa có vào đuôi danh sách
+        let newOrder = orderArray.filter(title => currentTitles.includes(title));
+        currentTitles.forEach(title => {
+            if (!newOrder.includes(title)) newOrder.push(title);
+        });
+        
+        orderArray = newOrder;
+        localStorage.setItem(PREFIX_MEM + 'iconOrder', JSON.stringify(orderArray));
+
+        const cfg = getGridConfig();
         let maxColHeight = window.innerHeight - 70; 
         if (maxColHeight < 200) maxColHeight = 500; 
         
-        let maxRows = Math.floor(maxColHeight / iconHeight);
+        let maxRows = Math.floor(maxColHeight / cfg.height);
         if (maxRows < 1) maxRows = 1;
 
-        let gridIndex = 0; 
+        orderArray.forEach((title, index) => {
+            let icon = Array.from(icons).find(i => i.getAttribute('data-title') === title);
+            if (icon) {
+                let col = Math.floor(index / maxRows);
+                let row = index % maxRows;
+                let targetLeft = cfg.startX + col * cfg.width;
+                let targetTop = cfg.startY + row * cfg.height;
+                
+                icon.dataset.gridLeft = targetLeft;
+                icon.dataset.gridTop = targetTop;
 
-        icons.forEach((icon) => { 
-            const titleKey = icon.getAttribute('data-title'); 
-            
-            if (titleKey && savedPositions[titleKey]) { 
-                icon.style.transition = 'none'; 
-                icon.style.left = savedPositions[titleKey].left; 
-                icon.style.top = savedPositions[titleKey].top; 
-                setTimeout(() => { icon.style.transition = ''; }, 100);
-            } else { 
-                let col = Math.floor(gridIndex / maxRows);
-                let row = gridIndex % maxRows;
-                icon.style.left = (startX + col * iconWidth) + 'px';
-                icon.style.top = (startY + row * iconHeight) + 'px';
-                gridIndex++;
-            } 
-            icon.style.margin = '0'; 
-        }); 
+                if (icon !== excludeIcon) {
+                    icon.style.transition = useTransition ? 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' : 'none';
+                    icon.style.left = targetLeft + 'px';
+                    icon.style.top = targetTop + 'px';
+                }
+            }
+        });
     }
 
-// -------------------------------------------------------------------------
-    // BẮT ĐẦU KHỐI CẬP NHẬT TÍNH NĂNG: DI CHUYỂN VÀ TRÁNH ICON (BẢN VÁ ĐỒNG BỘ LOGIC LƯỚI)
-    // -------------------------------------------------------------------------
     let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    let lastSwapTarget = null; // Biến cờ ngăn hoán đổi lặp lại với cùng một đối tượng
+    let lastSwapTime = 0;
 
     function setupDragEvents() { 
         icons.forEach(icon => { 
@@ -1482,54 +1506,25 @@ function getUrlAndTarget(encodedTd2) {
         }); 
     }
 
-    // Hàm đồng bộ toàn bộ vị trí hiện tại trên màn hình vào cơ sở dữ liệu ảo (localStorage)
-    // Giúp thuật toán luôn có tọa độ chuẩn của lưới, loại bỏ lỗi tọa độ rác.
-    function forceSyncAllPositions() {
-        const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        document.querySelectorAll('.desktop-icon').forEach(icon => {
-            const titleKey = icon.getAttribute('data-title');
-            if (titleKey) {
-                // Chỉ lấy các giá trị tĩnh nguyên bản, không đọc giá trị khi đang bay (Animation)
-                positions[titleKey] = { left: icon.style.left, top: icon.style.top };
-            }
-        });
-        localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
-    }
-
     function startDrag(e) { 
         dragThresholdPassed = false; 
         draggedIcon = this; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
         startX = clientX; startY = clientY; 
+        
         const rect = draggedIcon.getBoundingClientRect(); 
         offsetX = clientX - rect.left; 
         offsetY = clientY - rect.top; 
         tooltip.style.opacity = '0'; 
-        lastSwapTarget = null;
-        
-        // Cập nhật mốc tọa độ chuẩn bị di chuyển vào CSDL Ảo
-        forceSyncAllPositions();
 
         draggedIcon.style.transition = 'none';
+        applyGridOrder(draggedIcon, true);
 
         document.addEventListener('mousemove', drag); 
         document.addEventListener('touchmove', drag, {passive: false}); 
         document.addEventListener('mouseup', stopDrag); 
         document.addEventListener('touchend', stopDrag); 
-    }
-
-    // Hàm phụ trợ: Kích hoạt hiệu ứng hoán đổi cho các icon trên lưới (trừ icon đang được kéo)
-    function rearrangeOthers(excludeTitleKey) {
-        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        document.querySelectorAll('.desktop-icon').forEach((icon) => { 
-            const titleKey = icon.getAttribute('data-title'); 
-            if (titleKey && titleKey !== excludeTitleKey && savedPositions[titleKey]) { 
-                icon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                icon.style.left = savedPositions[titleKey].left; 
-                icon.style.top = savedPositions[titleKey].top; 
-            } 
-        }); 
     }
 
     function drag(e) { 
@@ -1541,8 +1536,9 @@ function getUrlAndTarget(encodedTd2) {
             dragThresholdPassed = true; 
             isDragging = true; 
             draggedIcon.style.zIndex = '9999'; 
-            draggedIcon.style.opacity = '0.8'; 
-            e.preventDefault(); 
+            draggedIcon.style.opacity = '0.85'; 
+            draggedIcon.style.transform = 'scale(1.05)';
+            if(e.cancelable) e.preventDefault(); // Tuyệt đối chống cuộn màn hình trên mobile
         } 
         
         if (dragThresholdPassed) { 
@@ -1550,70 +1546,62 @@ function getUrlAndTarget(encodedTd2) {
             let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); 
             let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); 
             
-            // Icon đang kéo đi theo con trỏ chuột
             draggedIcon.style.left = newLeft + 'px'; 
             draggedIcon.style.top = newTop + 'px'; 
             
-            const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
-            const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
-
-            let swappedThisFrame = false;
-            const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {};
-
-            document.querySelectorAll('.desktop-icon').forEach(iconEl => {
-                if (iconEl === draggedIcon || swappedThisFrame) return;
+            const currentTime = new Date().getTime();
+            
+            if (currentTime - lastSwapTime > 300) {
+                const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
+                const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
                 
-                const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
-                if (isNaN(idx)) return;
-                const profile = globalProfiles[idx];
-                
-                const targetTitle = iconEl.getAttribute('data-title');
-                if (!targetTitle || !positions[targetTitle]) return;
+                let orderArray = JSON.parse(localStorage.getItem(PREFIX_MEM + 'iconOrder')) || [];
+                const draggedTitle = draggedIcon.getAttribute('data-title');
+                const draggedIndex = orderArray.indexOf(draggedTitle);
 
-                // SỬ DỤNG TỌA ĐỘ ẢO (LOGICAL GRID) ĐỂ TÍNH TOÁN VA CHẠM
-                // (Chấm dứt hoàn toàn tình trạng đọc nhầm tọa độ rác)
-                const logicalLeft = parseFloat(positions[targetTitle].left) || 0;
-                const logicalTop = parseFloat(positions[targetTitle].top) || 0;
-                
-                const targetCenterX = logicalLeft + (iconEl.offsetWidth || 90) / 2;
-                const targetCenterY = logicalTop + (iconEl.offsetHeight || 105) / 2;
-                
-                const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+                let targetTitleToSwap = null;
+                const hitRadius = getGridConfig().width * 0.6; // Động bán kính va chạm theo độ phân giải
 
-                if (distance < 55) { 
-                    if (kiemTraLaThuMuc(profile)) {
-                        iconEl.style.transform = 'scale(1.15)';
-                        iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
+                document.querySelectorAll('.desktop-icon').forEach(iconEl => {
+                    if (iconEl === draggedIcon || targetTitleToSwap) return;
+                    
+                    const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
+                    if (isNaN(idx)) return;
+                    const profile = globalProfiles[idx];
+                    
+                    const targetCenterX = parseFloat(iconEl.dataset.gridLeft || 0) + (iconEl.offsetWidth || 90) / 2;
+                    const targetCenterY = parseFloat(iconEl.dataset.gridTop || 0) + (iconEl.offsetHeight || 105) / 2;
+                    
+                    const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
+
+                    if (distance < hitRadius) { 
+                        if (kiemTraLaThuMuc(profile)) {
+                            iconEl.style.transform = 'scale(1.15)';
+                            iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
+                        } else {
+                            targetTitleToSwap = iconEl.getAttribute('data-title');
+                        }
                     } else {
-                        // CHỈ HOÁN ĐỔI KHI CHẠM VÀO MỤC TIÊU MỚI (CHỐNG GIẬT LAG)
-                        if (lastSwapTarget !== targetTitle) {
-                            swappedThisFrame = true;
-                            lastSwapTarget = targetTitle;
-                            
-                            const draggedTitle = draggedIcon.getAttribute('data-title');
-                            
-                            // Tráo đổi tọa độ chéo trong CSDL ảo một cách nguyên vẹn
-                            const tempLeft = positions[targetTitle].left;
-                            const tempTop = positions[targetTitle].top;
-                            
-                            positions[targetTitle].left = positions[draggedTitle].left;
-                            positions[targetTitle].top = positions[draggedTitle].top;
-                            
-                            positions[draggedTitle].left = tempLeft;
-                            positions[draggedTitle].top = tempTop;
-                            
-                            // Ghi đè CSDL ảo và phát lệnh di chuyển đồng loạt
-                            localStorage.setItem(PREFIX_MEM + 'positions', JSON.stringify(positions));
-                            rearrangeOthers(draggedTitle);
+                        if (kiemTraLaThuMuc(profile)) {
+                            iconEl.style.transform = '';
+                            iconEl.style.boxShadow = '';
                         }
                     }
-                } else {
-                    if (kiemTraLaThuMuc(profile)) {
-                        iconEl.style.transform = '';
-                        iconEl.style.boxShadow = '';
+                });
+
+                if (targetTitleToSwap) {
+                    const targetIndex = orderArray.indexOf(targetTitleToSwap);
+                    if (targetIndex !== -1 && draggedIndex !== -1) {
+                        const temp = orderArray[draggedIndex];
+                        orderArray[draggedIndex] = orderArray[targetIndex];
+                        orderArray[targetIndex] = temp;
+                        
+                        localStorage.setItem(PREFIX_MEM + 'iconOrder', JSON.stringify(orderArray));
+                        lastSwapTime = currentTime;
+                        applyGridOrder(draggedIcon, true);
                     }
                 }
-            });
+            }
         } 
     }
 
@@ -1622,11 +1610,14 @@ function getUrlAndTarget(encodedTd2) {
         
         draggedIcon.style.zIndex = ''; 
         draggedIcon.style.opacity = '1'; 
-        draggedIcon.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        draggedIcon.style.transform = '';
+        draggedIcon.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
-            iconEl.style.transform = '';
-            iconEl.style.boxShadow = '';
+            if (iconEl !== draggedIcon) {
+                iconEl.style.transform = '';
+                iconEl.style.boxShadow = '';
+            }
         });
         
         if (dragThresholdPassed) { 
@@ -1636,14 +1627,12 @@ function getUrlAndTarget(encodedTd2) {
             const draggedCenterX = currentLeft + (draggedIcon.offsetWidth || 90) / 2;
             const draggedCenterY = currentTop + (draggedIcon.offsetHeight || 105) / 2;
             
-            const draggedIndex = parseInt(draggedIcon.getAttribute('data-id')) - 1;
-            const draggedProfile = globalProfiles[draggedIndex];
+            const draggedId = parseInt(draggedIcon.getAttribute('data-id')) - 1;
+            const draggedProfile = globalProfiles[draggedId];
+            const hitRadius = getGridConfig().width * 0.6;
 
-            // Kiểm tra xem icon có thả vào Thư mục không (Chỉ dành cho Quản trị viên)
             if (isLoggedIn && sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
                 if (!kiemTraLaThuMuc(draggedProfile)) {
-                    const positions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {};
-                    
                     document.querySelectorAll('.desktop-icon').forEach(iconEl => {
                         if (iconEl === draggedIcon) return;
                         const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
@@ -1651,15 +1640,11 @@ function getUrlAndTarget(encodedTd2) {
                         const profile = globalProfiles[idx];
                         
                         if (kiemTraLaThuMuc(profile)) {
-                            const targetTitle = iconEl.getAttribute('data-title');
-                            const logicalLeft = positions[targetTitle] ? parseFloat(positions[targetTitle].left) : (parseFloat(iconEl.style.left) || 0);
-                            const logicalTop = positions[targetTitle] ? parseFloat(positions[targetTitle].top) : (parseFloat(iconEl.style.top) || 0);
-                            
-                            const targetCenterX = logicalLeft + (iconEl.offsetWidth || 90) / 2;
-                            const targetCenterY = logicalTop + (iconEl.offsetHeight || 105) / 2;
+                            const targetCenterX = parseFloat(iconEl.dataset.gridLeft || 0) + (iconEl.offsetWidth || 90) / 2;
+                            const targetCenterY = parseFloat(iconEl.dataset.gridTop || 0) + (iconEl.offsetHeight || 105) / 2;
                             
                             const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
-                            if (distance < 55) {
+                            if (distance < hitRadius) {
                                 droppedFolder = profile;
                             }
                         }
@@ -1671,11 +1656,10 @@ function getUrlAndTarget(encodedTd2) {
                 if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
                     xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
                 } else { 
-                    snapDraggedIconToGrid();
+                    snapToGrid(draggedIcon);
                 }
             } else { 
-                // Tự động hít vào vị trí ô lưới chuẩn thay vì lưu vị trí thả chuột bừa bãi
-                snapDraggedIconToGrid();
+                snapToGrid(draggedIcon);
             }
         } 
         
@@ -1688,30 +1672,37 @@ function getUrlAndTarget(encodedTd2) {
             if(draggedIcon) draggedIcon.style.transition = ''; 
             draggedIcon = null; 
             isDragging = false; 
-        }, 300); 
+        }, 400); 
     }
-    
-    // Hàm phụ trợ: Đưa icon đang kéo tự động hít về đúng vị trí chuẩn trên lưới
-    function snapDraggedIconToGrid() {
-        const savedPositions = JSON.parse(localStorage.getItem(PREFIX_MEM + 'positions')) || {}; 
-        const titleKey = draggedIcon.getAttribute('data-title');
-        if (titleKey && savedPositions[titleKey]) {
-            draggedIcon.style.left = savedPositions[titleKey].left;
-            draggedIcon.style.top = savedPositions[titleKey].top;
+
+    function snapToGrid(icon) {
+        if (icon && icon.dataset.gridLeft !== undefined && icon.dataset.gridTop !== undefined) {
+            icon.style.left = icon.dataset.gridLeft + 'px';
+            icon.style.top = icon.dataset.gridTop + 'px';
         }
     }
 
-    // Cố ý ghi đè hàm savePositions cũ thành hàm rỗng để ngắt triệt để cơ chế lưu tọa độ chuột
-    function savePositions() { 
-        // Vị trí tĩnh đã được thuật toán Lưới Ảo (Logical Grid) tự động xử lý và lưu chuẩn xác
-        // Hàm này được làm trống để giữ nguyên các liên kết gọi biến cũ.
-    }
-  
-    
+    function savePositions() {}
+
     function resetPositions() { 
+        localStorage.removeItem(PREFIX_MEM + 'iconOrder'); 
         localStorage.removeItem(PREFIX_MEM + 'positions'); 
         initializeLayout(); 
     }
+
+    // -------------------------------------------------------------------------
+    // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
+    // -------------------------------------------------------------------------
+    window.addEventListener('resize', () => {
+        if (typeof initializeLayout === 'function') {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(initializeLayout, 150); // Chống giật khi resize
+        }
+    });
+
+    window.addEventListener('orientationchange', () => {
+        setTimeout(initializeLayout, 200); // Dàn lại lưới khi xoay dọc/ngang máy
+    });
 
     window.addEventListener('resize', () => {
         if (typeof initializeLayout === 'function') initializeLayout();
