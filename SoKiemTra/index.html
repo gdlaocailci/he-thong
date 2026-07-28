@@ -924,6 +924,9 @@ function kiemtqvata(tk_chuyen_den = null) {
                     try { if (typeof khoitti === 'function') khoitti(); } catch(loie) {}
                 }
             })
+             .withFailureHandler(err => {
+    console.log("Cảnh báo tải ngầm: " + err.message); // Bắt lỗi âm thầm, không bung popup
+})
             .skt_gopgio_thanhbao({ cucgach: taikht, uu_tien: 2 });
 
         }, 50);
