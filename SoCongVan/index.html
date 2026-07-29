@@ -150,16 +150,19 @@
     </div>
 </div>
 
-<!-- KHỐI GIAO DIỆN MODAL XEM TỆP (ĐÃ CHUẨN HOÁ HTML) -->
+<!-- KHỐI GIAO DIỆN MODAL XEM TỆP (THIẾT KẾ MỚI TỐI ƯU UI) -->
 <div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 999999;">
   <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 8px; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
-      <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC TÀI LIỆU</span>
+      
+      <!-- Cụm tiêu đề và nút tiện ích mở thẻ mới gọn gàng -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC TÀI LIỆU</span>
+          <a href="javascript:void(0)" id="btn_mo_the_moi_preview" onclick="moTheMoiDangXem()" style="display: none; font-size: 13px; color: #0369a1; text-decoration: none; font-style: italic; background: #e0f2fe; padding: 3px 10px; border-radius: 12px; border: 1px solid #bae6fd; transition: all 0.2s;" title="Mở tài liệu ở thẻ trình duyệt mới">🔗 Mở thẻ mới</a>
+      </div>
+      
+      <!-- Cụm nút thao tác chính -->
       <div style="display: flex; gap: 10px; align-items: center;">
-        
-        <!-- Nút MỞ TRANG NGOÀI (Được ẩn đi mặc định) -->
-        <button id="btn_mo_the_moi_preview" onclick="moTheMoiDangXem()" style="display: none; background: #0ea5e9; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;" title="Nhấn vào đây nếu tài liệu bị từ chối kết nối">🌐 MỞ TRANG NGOÀI</button>
-        
         <button id="btn_tai_tep_preview" onclick="taiTepDangXem()" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">📥 TẢI VỀ</button>
         <button onclick="dongKhungXemTep()" style="background: #ef4444; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">✖ ĐÓNG</button>
       </div>
@@ -462,7 +465,7 @@
     setTimeout(() => d.style.display = 'none', 5000);
   }
 
-  /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ NÂNG CẤP HOÀN CHỈNH) */
+  /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ TỐI ƯU HÓA LOGIC & GIAO DIỆN) */
   let urlTepXemTruocHienTai = ""; 
   
   function moKhungXemTep(duong_dan) {
@@ -473,14 +476,13 @@
     let mat_na = document.getElementById('mask_che_nut_drive');
     let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
     
-    // 1. Phân loại liên kết
+    // Kiểm tra định dạng Google
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
-    // Nâng cấp độ bao phủ đuôi tệp tĩnh (Word, Excel, PDF, Ảnh...)
-    let isDirectFile = /\.(pdf|jpg|jpeg|png|gif|txt|doc|docx|xls|xlsx)(?:\?.*)?$/i.test(link_nhung);
 
-    // KỊCH BẢN A: LÀ TÀI LIỆU GOOGLE CÓ ID (Chắc chắn nhúng được)
+    // PHÂN LUỒNG LOGIC TỐI GIẢN VÀ THỰC DỤNG NHẤT
     if (khop_id && isGoogleLink) {
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none'; // Ẩn nút mở ngoài
+        // 1. TÀI LIỆU GOOGLE: Chắc chắn nhúng được -> ẨN hoàn toàn nút mở ngoài
+        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none'; 
 
         if (link_nhung.includes("drive.google.com")) {
             link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
@@ -494,15 +496,11 @@
             link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
             if (mat_na) mat_na.style.display = 'none';
         }
-    } 
-    // KỊCH BẢN B: LÀ LIÊN KẾT TỆP TIN TRỰC TIẾP (Trình duyệt tự đọc được)
-    else if (isDirectFile) {
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none'; // Ẩn nút mở ngoài
-        if (mat_na) mat_na.style.display = 'none';
-    } 
-    // KỊCH BẢN C: LÀ CÁC TRANG WEB KHÁC (Có nguy cơ bị từ chối kết nối)
-    else {
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block'; // HIỆN NÚT DỰ PHÒNG
+    } else {
+        // 2. LIÊN KẾT NGOÀI (Bao gồm dangcongsan.vn, PDF...): 
+        // Luôn tiềm ẩn nguy cơ bị máy chủ từ chối kết nối (X-Frame-Options).
+        // -> LUÔN HIỂN THỊ liên kết tiện ích "Mở thẻ mới" gọn nhẹ để dự phòng.
+        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block'; 
         if (mat_na) mat_na.style.display = 'none';
     }
     
