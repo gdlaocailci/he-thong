@@ -497,21 +497,16 @@ function moKhungXemTep(duong_dan) {
     let link_nhung = urlTepXemTruocHienTai;
     let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
     let mat_na = document.getElementById('mask_che_nut_drive');
-    let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
-    
-    // 1. Phân loại liên kết Google
+    let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); // Bắt ID của nút mở ngoài
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
-    
-    // 2. NÂNG CẤP: Phân loại liên kết trỏ thẳng tới tệp tĩnh (PDF, Ảnh...)
-    let isDirectFile = /\.(pdf|jpg|jpeg|png|gif|txt)(?:\?.*)?$/i.test(link_nhung);
 
-    // KỊCH BẢN A: LÀ TÀI LIỆU GOOGLE CÓ ID (Chắc chắn nhúng được)
     if (khop_id && isGoogleLink) {
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none'; // Ẩn nút mở ngoài
+        // LÀ TÀI LIỆU GOOGLE: Chắc chắn mở được trong khung -> ẨN NÚT MỞ NGOÀI
+        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none';
 
         if (link_nhung.includes("drive.google.com")) {
             link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
-            if (mat_na) mat_na.style.display = 'block'; // Bật mặt nạ che nút Drive
+            if (mat_na) mat_na.style.display = 'block';
         } 
         else if (link_nhung.includes("docs.google.com/document")) {
             link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
@@ -521,19 +516,13 @@ function moKhungXemTep(duong_dan) {
             link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
             if (mat_na) mat_na.style.display = 'none';
         }
-    } 
-    // KỊCH BẢN B: LÀ LIÊN KẾT TỆP TIN TRỰC TIẾP (Trình duyệt tự đọc được)
-    else if (isDirectFile) {
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none'; // Ẩn nút mở ngoài
-        if (mat_na) mat_na.style.display = 'none';
-    } 
-    // KỊCH BẢN C: LÀ CÁC TRANG WEB KHÁC (Có nguy cơ bị từ chối kết nối)
-    else {
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block'; // HIỆN NÚT ĐỂ DỰ PHÒNG
+    } else {
+        // LÀ LIÊN KẾT WEB NGOÀI: Có nguy cơ bị chặn -> HIỆN NÚT MỞ NGOÀI ĐỂ DỰ PHÒNG
+        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block';
         if (mat_na) mat_na.style.display = 'none';
     }
     
-    // Thực thi mở khung
+    // Luôn ưu tiên đưa vào khung iframe trước
     document.getElementById('iframe_xem_tep').src = link_nhung;
     document.getElementById('modal_xem_tep').style.display = 'flex';
   }
