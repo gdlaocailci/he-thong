@@ -526,44 +526,48 @@
   let urlTepXemTruocHienTai = ""; 
   
 /* 
-   * [NÂNG CẤP]: Hiển thị nút "Mở thẻ mới" có điều kiện
-   * Nút chỉ ghim hiển thị khi người dùng đang thao tác tại tab "Nhập công văn".
-   * Các tab tra cứu khác vẫn giữ nguyên logic tự động ẩn đối với liên kết Google.
+   * [NÂNG CẤP & SỬA LỖI]: Hàm mở khung xem trước tài liệu
+   * - Đảm bảo tài liệu luôn được mở trong khung xem (iframe) trước tiên.
+   * - Nút "Mở thẻ mới" chỉ được phép ghim hiển thị khi đang ở tab Nhập công văn.
    */
   function moKhungXemTep(duong_dan) {
     if (!duong_dan) return;
+    
+    // Gán biến toàn cục để lưu link phục vụ cho nút "Mở thẻ mới" sau này
     urlTepXemTruocHienTai = String(duong_dan).trim(); 
     let link_nhung = urlTepXemTruocHienTai;
+    
     let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
     let mat_na = document.getElementById('mask_che_nut_drive');
     let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
+    let modal_xem = document.getElementById('modal_xem_tep');
+    let iframe_xem = document.getElementById('iframe_xem_tep');
     
-    // Kiểm tra định dạng Google
-    let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
-    
-    // NÂNG CẤP: Kiểm tra trạng thái hiện tại có phải đang ở Tab "Nhập công văn" hay không
+    // 1. KIỂM TRA TRẠNG THÁI GIAO DIỆN: Xác định xem có đang ở tab "Nhập công văn" không?
     let isTabNhapCongVan = false;
     let tabCongVan = document.getElementById('tabCongVan');
     if (tabCongVan && tabCongVan.classList.contains('active')) {
         isTabNhapCongVan = true;
     }
 
-    if (khop_id && isGoogleLink) {
-        // TÀI LIỆU GOOGLE: Kiểm tra logic hiển thị nút mở ngoài dựa trên Tab hiện tại
-        if (nut_mo_ngoai) {
-            if (isTabNhapCongVan) {
-                // Đang ở tab Nhập công văn -> Ghim hiển thị nút
-                nut_mo_ngoai.style.display = 'inline-block';
-            } else {
-                // Đang ở các tab khác (Tra cứu...) -> Ẩn nút theo chuẩn mặc định
-                nut_mo_ngoai.style.display = 'none';
-            }
-        }
+    // 2. PHÂN LOẠI LIÊN KẾT: Xác định liên kết có thuộc nền tảng Google không
+    let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
 
-        // Xử lý trích xuất đường dẫn xem trước
+    // 3. LOGIC HIỂN THỊ NÚT "MỞ THẺ MỚI" TRÊN KHUNG XEM
+    if (nut_mo_ngoai) {
+        // Bật nút nếu đang ở tab Nhập công văn HOẶC nếu đây không phải link Google (dự phòng lỗi kết nối)
+        if (isTabNhapCongVan || !isGoogleLink) {
+            nut_mo_ngoai.style.display = 'inline-block';
+        } else {
+            nut_mo_ngoai.style.display = 'none';
+        }
+    }
+
+    // 4. XỬ LÝ ĐƯỜNG DẪN XEM TRƯỚC (Bắt buộc phải có /preview để nhúng vào iframe)
+    if (khop_id && isGoogleLink) {
         if (link_nhung.includes("drive.google.com")) {
             link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
-            if (mat_na) mat_na.style.display = 'block';
+            if (mat_na) mat_na.style.display = 'block'; // Bật mặt nạ che nút tải/mở pop-out mặc định của Drive
         } 
         else if (link_nhung.includes("docs.google.com/document")) {
             link_nhung = "https://docs.google.com/document/d/" + khop_id[1] + "/preview";
@@ -574,14 +578,13 @@
             if (mat_na) mat_na.style.display = 'none';
         }
     } else {
-        // LIÊN KẾT NGOÀI: Luôn hiển thị nút mở thẻ mới để dự phòng sự cố từ chối kết nối (X-Frame-Options)
-        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block'; 
+        // Nếu là liên kết ngoài, ẩn mặt nạ đi
         if (mat_na) mat_na.style.display = 'none';
     }
     
-    // Thực thi mở khung
-    document.getElementById('iframe_xem_tep').src = link_nhung;
-    document.getElementById('modal_xem_tep').style.display = 'flex';
+    // 5. THỰC THI HIỂN THỊ KHUNG XEM (Luôn là xem trước, không tự động mở thẻ mới)
+    if (iframe_xem) iframe_xem.src = link_nhung;
+    if (modal_xem) modal_xem.style.display = 'flex';
   }
 
   function dongKhungXemTep() {
@@ -590,7 +593,7 @@
     urlTepXemTruocHienTai = ""; 
   }
 
-  function moTheMoiDangXem() {
+function moTheMoiDangXem() {
     if (!urlTepXemTruocHienTai) return;
     window.open(urlTepXemTruocHienTai, '_blank');
   }
