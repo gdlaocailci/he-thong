@@ -389,6 +389,7 @@
        }
     }
 
+
     function handleUpResultCV(res, st, btn) {
        if (res.success) { 
            st.style.color = "green";
@@ -400,15 +401,10 @@
                const links = res.fileUrl.split(',').map(l => l.trim()).filter(l => l !== "");
                let displayArea = container.querySelector('.link-display-area');
                
-               // Xử lý nút Xem trước an toàn với liên kết web
+               // CẬP NHẬT: Tất cả liên kết đều ép gọi hàm moKhungXemTep
                if(displayArea) {
                    displayArea.innerHTML = links.map((url, idx) => {
-                       let isDriveLink = url.includes("drive.google.com") || url.includes("docs.google.com");
-                       if (isDriveLink) {
-                           return `<a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" class="btn-icon btn-view-icon" title="Xem tài liệu minh chứng ${idx+1}">📎 ${idx+1}</a>`;
-                       } else {
-                           return `<a href="${url}" target="_blank" class="btn-icon btn-view-icon" title="Xem liên kết ngoài ${idx+1}">🔗 ${idx+1}</a>`;
-                       }
+                       return `<a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" class="btn-icon btn-view-icon" title="Xem tài liệu minh chứng ${idx+1}">📎 ${idx+1}</a>`;
                    }).join('');
                }
                
