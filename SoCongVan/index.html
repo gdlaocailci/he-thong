@@ -534,23 +534,37 @@
     let mat_na = document.getElementById('mask_che_nut_drive');
     let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
     
-    // 1. KIỂM TRA TRẠNG THÁI TAB (Cho phép 2 tab: Nhập công văn và Nhập lịch)
-    let isTabDuocPhepMoTheMoi = false;
+    // 1. NHẬN DIỆN ĐÍCH DANH CÁC THẺ (TABS) TRÊN GIAO DIỆN
+    // - Nhóm Nhập liệu
     let tabCongVan = document.getElementById('tabCongVan');
-    let tabNhapLich = document.getElementById('tabInput'); // Kiểm tra thêm Tab Nhập lịch
-    
-    if ((tabCongVan && tabCongVan.classList.contains('active')) || 
-        (tabNhapLich && tabNhapLich.classList.contains('active'))) {
-        isTabDuocPhepMoTheMoi = true;
-    }
+    let tabNhapLich = document.getElementById('tabInput');
+    let isTabNhap = (tabCongVan && tabCongVan.classList.contains('active')) || 
+                    (tabNhapLich && tabNhapLich.classList.contains('active'));
+                    
+    // - Nhóm Tra cứu
+    let tabTraCuuLich = document.getElementById('tabSearch');
+    let tabTraCuuCV = document.getElementById('tabSearchCongVan');
+    let isTabTraCuu = (tabTraCuuLich && tabTraCuuLich.classList.contains('active')) || 
+                      (tabTraCuuCV && tabTraCuuCV.classList.contains('active'));
 
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
 
-    // 2. LOGIC ĐIỀU KHIỂN HIỂN THỊ NÚT MỞ THẺ MỚI
+    // 2. LOGIC ĐIỀU KHIỂN NÚT "MỞ THẺ MỚI" PHÂN TÁCH RÕ RÀNG
     if (nut_mo_ngoai) {
-        if (!isGoogleLink || isTabDuocPhepMoTheMoi) {
+        if (isTabNhap) {
+            // TH1: Đang ở tab Nhập liệu -> LUÔN HIỆN (Bất chấp mọi loại file)
             nut_mo_ngoai.style.display = 'inline-block';
-        } else {
+        } 
+        else if (isTabTraCuu) {
+            // TH2: Đang ở tab Tra cứu -> Phân loại theo định dạng
+            if (isGoogleLink) {
+                nut_mo_ngoai.style.display = 'none'; // File Drive -> Ẩn
+            } else {
+                nut_mo_ngoai.style.display = 'inline-block'; // File Web -> Hiện
+            }
+        } 
+        else {
+            // TH3: Dự phòng an toàn cho các tab khác (nếu có)
             nut_mo_ngoai.style.display = 'none';
         }
     }
