@@ -524,11 +524,7 @@
 
   /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ TỐI ƯU HÓA LOGIC & GIAO DIỆN) */
   let urlTepXemTruocHienTai = ""; 
-  
-/* 
-   * [CẬP NHẬT CHUẨN - FINAL]: Hàm mở khung xem trước tài liệu
-   * Logic: LUÔN mở trên khung Iframe. Chỉ ghim hiển thị nút "Mở thẻ mới" khi đang thao tác ở Tab Nhập công văn.
-   */
+
   function moKhungXemTep(duong_dan) {
     if (!duong_dan) return;
     urlTepXemTruocHienTai = String(duong_dan).trim(); 
@@ -538,20 +534,21 @@
     let mat_na = document.getElementById('mask_che_nut_drive');
     let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
     
-    // 1. KIỂM TRA TRẠNG THÁI TAB (Đảm bảo yêu cầu: Chỉ tab Nhập công văn mới có nút mở thẻ mới)
-    let isTabNhapCongVan = false;
+    // 1. KIỂM TRA TRẠNG THÁI TAB (Cho phép 2 tab: Nhập công văn và Nhập lịch)
+    let isTabDuocPhepMoTheMoi = false;
     let tabCongVan = document.getElementById('tabCongVan');
-    if (tabCongVan && tabCongVan.classList.contains('active')) {
-        isTabNhapCongVan = true;
+    let tabNhapLich = document.getElementById('tabInput'); // Kiểm tra thêm Tab Nhập lịch
+    
+    if ((tabCongVan && tabCongVan.classList.contains('active')) || 
+        (tabNhapLich && tabNhapLich.classList.contains('active'))) {
+        isTabDuocPhepMoTheMoi = true;
     }
 
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
 
     // 2. LOGIC ĐIỀU KHIỂN HIỂN THỊ NÚT MỞ THẺ MỚI
     if (nut_mo_ngoai) {
-        // Nút mở thẻ mới sẽ LUÔN HIỆN nếu đang ở tab Nhập công văn.
-        // Đối với tab Tra cứu (isTabNhapCongVan = false), nếu là link Google thì ẩn đi theo mặc định.
-        if (!isGoogleLink || isTabNhapCongVan) {
+        if (!isGoogleLink || isTabDuocPhepMoTheMoi) {
             nut_mo_ngoai.style.display = 'inline-block';
         } else {
             nut_mo_ngoai.style.display = 'none';
