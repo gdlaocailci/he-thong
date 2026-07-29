@@ -157,7 +157,7 @@
       <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC TÀI LIỆU</span>
       <div style="display: flex; gap: 10px; align-items: center;">
         <!-- Bổ sung nút MỞ TRANG NGOÀI cho các trường hợp link bị từ chối kết nối -->
-        <button id="btn_mo_the_moi_preview" onclick="moTheMoiDangXem()" style="background: #0ea5e9; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;" title="Nhấn vào đây nếu tài liệu bị từ chối kết nối">🌐 MỞ TRANG NGOÀI</button>
+        <button id="btn_mo_the_moi_preview" onclick="moTheMoiDangXem()" style="display: none; background: #0ea5e9; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;" title="Nhấn vào đây nếu tài liệu bị từ chối kết nối">🌐 MỞ TRANG NGOÀI</button>
         
         <button id="btn_tai_tep_preview" onclick="taiTepDangXem()" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">📥 TẢI VỀ</button>
         <button onclick="dongKhungXemTep()" style="background: #ef4444; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">✖ ĐÓNG</button>
@@ -491,15 +491,19 @@
 /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ NÂNG CẤP) */
   let urlTepXemTruocHienTai = ""; 
   
-  function moKhungXemTep(duong_dan) {
+function moKhungXemTep(duong_dan) {
     if (!duong_dan) return;
     urlTepXemTruocHienTai = String(duong_dan).trim(); 
     let link_nhung = urlTepXemTruocHienTai;
     let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
     let mat_na = document.getElementById('mask_che_nut_drive');
+    let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); // Bắt ID của nút mở ngoài
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
 
     if (khop_id && isGoogleLink) {
+        // LÀ TÀI LIỆU GOOGLE: Chắc chắn mở được trong khung -> ẨN NÚT MỞ NGOÀI
+        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none';
+
         if (link_nhung.includes("drive.google.com")) {
             link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
             if (mat_na) mat_na.style.display = 'block';
@@ -513,11 +517,12 @@
             if (mat_na) mat_na.style.display = 'none';
         }
     } else {
-        // Nếu không phải tài liệu Google (link web ngoài), tắt mặt nạ che nút Drive
+        // LÀ LIÊN KẾT WEB NGOÀI: Có nguy cơ bị chặn -> HIỆN NÚT MỞ NGOÀI ĐỂ DỰ PHÒNG
+        if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block';
         if (mat_na) mat_na.style.display = 'none';
     }
     
-    // Luôn ưu tiên mở trong khung iframe trước theo yêu cầu
+    // Luôn ưu tiên đưa vào khung iframe trước
     document.getElementById('iframe_xem_tep').src = link_nhung;
     document.getElementById('modal_xem_tep').style.display = 'flex';
   }
