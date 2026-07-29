@@ -484,7 +484,7 @@
   }
 
   /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG */
-  let urlTepXemTruocHienTai = ""; 
+let urlTepXemTruocHienTai = ""; 
   function moKhungXemTep(duong_dan) {
     if (!duong_dan) return;
     urlTepXemTruocHienTai = String(duong_dan).trim(); 
@@ -492,7 +492,10 @@
     let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
     let mat_na = document.getElementById('mask_che_nut_drive');
 
-    if (khop_id) {
+    // NÂNG CẤP: Kiểm tra xem có phải link Google Drive/Docs không
+    let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
+
+    if (khop_id && isGoogleLink) {
         if (link_nhung.includes("drive.google.com")) {
             link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
             if (mat_na) mat_na.style.display = 'block';
@@ -505,9 +508,15 @@
             link_nhung = "https://docs.google.com/spreadsheets/d/" + khop_id[1] + "/preview";
             if (mat_na) mat_na.style.display = 'none';
         }
+        
+        // Mở trong khung iframe nếu là link Google
+        document.getElementById('iframe_xem_tep').src = link_nhung;
+        document.getElementById('modal_xem_tep').style.display = 'flex';
+    } else {
+        // NÂNG CẤP: Nếu không phải link Google (VD: link trang web ngoài như tulieuvankien)
+        // Mở trực tiếp sang thẻ trình duyệt mới, không dùng iframe
+        window.open(link_nhung, '_blank');
     }
-    document.getElementById('iframe_xem_tep').src = link_nhung;
-    document.getElementById('modal_xem_tep').style.display = 'flex';
   }
 
   function dongKhungXemTep() {
