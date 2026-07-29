@@ -36,11 +36,19 @@
     .main-wrapper { width: 1550px; max-width: 99%; margin: 10px auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display:none; }
     
     .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 10px; }
-    .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; border-bottom: 3px solid transparent; }
+    .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; border-bottom: 3px solid transparent; position: relative; }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f0f9ff; }
     .tab-content { display: none; min-height: 150px; }
     .tab-content.active { display: block; }
     
+    /* CSS HIỆU ỨNG CỜ THÔNG BÁO BÊN TRONG PHÂN HỆ */
+    @keyframes pulseBadge {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .badge-notify { animation: pulseBadge 2s infinite; }
+
     .table-scroll { width: 100%; overflow-x: auto; margin-top: 5px; }
     table { width: 100% !important; min-width: 100% !important; border-collapse: collapse; margin-bottom: 5px; table-layout: fixed !important; }
     th { background: #1e3a8a; color: white; padding: 10px; border: 1px solid #ccc; font-size: 14px; text-align: center; vertical-align: middle; }
@@ -123,7 +131,13 @@
 <div class="main-wrapper" id="mainApp" style="display:none;">
   <div class="tabs">
     <button id="btnTabSearch" class="tab-btn active" onclick="showTab('tabSearch', this)">🔍 TRA CỨU LỊCH</button>
-    <button id="btnTabSearchCV" class="tab-btn" onclick="showTab('tabSearchCongVan', this)">🔎 TÌM KIẾM VĂN BẢN</button>
+    
+    <!-- GẮN CỜ BÊN TRONG PHÂN HỆ ĐỂ TẠO SỰ ĐỒNG BỘ UI -->
+    <button id="btnTabSearchCV" class="tab-btn" onclick="showTab('tabSearchCongVan', this)">
+        🔎 TÌM KIẾM VĂN BẢN
+        <span id="badge_cv_moi" class="badge-notify" style="display:none; background:#ef4444; color:white; border-radius:12px; padding:2px 7px; font-size:11px; margin-left:5px; font-weight:bold;"></span>
+    </button>
+    
     <button id="btnTabNhap" class="tab-btn" onclick="showTab('tabInput', this)">📝 NHẬP LỊCH</button>
     <button id="btnTabCV" class="tab-btn" onclick="showTab('tabCongVan', this)">📂 NHẬP CÔNG VĂN</button>
     <button id="btnTabPhanQuyen" class="tab-btn" onclick="showTab('tabPhanQuyen', this)" style="display:none;">⚙️ PHÂN QUYỀN</button>
@@ -150,18 +164,16 @@
     </div>
 </div>
 
-<!-- KHỐI GIAO DIỆN MODAL XEM TỆP (THIẾT KẾ MỚI TỐI ƯU UI) -->
+<!-- KHỐI GIAO DIỆN MODAL XEM TỆP -->
 <div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 999999;">
   <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 8px; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
       
-      <!-- Cụm tiêu đề và nút tiện ích mở thẻ mới gọn gàng -->
       <div style="display: flex; align-items: center; gap: 12px;">
           <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC TÀI LIỆU</span>
           <a href="javascript:void(0)" id="btn_mo_the_moi_preview" onclick="moTheMoiDangXem()" style="display: none; font-size: 13px; color: #0369a1; text-decoration: none; font-style: italic; background: #e0f2fe; padding: 3px 10px; border-radius: 12px; border: 1px solid #bae6fd; transition: all 0.2s;" title="Mở tài liệu ở thẻ trình duyệt mới">🔗 Mở thẻ mới</a>
       </div>
       
-      <!-- Cụm nút thao tác chính -->
       <div style="display: flex; gap: 10px; align-items: center;">
         <button id="btn_tai_tep_preview" onclick="taiTepDangXem()" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">📥 TẢI VỀ</button>
         <button onclick="dongKhungXemTep()" style="background: #ef4444; color: white; border: none; padding: 5px 15px; font-size: 13px; font-weight: bold; height: 32px; border-radius: 4px; cursor: pointer;">✖ ĐÓNG</button>
@@ -427,11 +439,45 @@
              if(!res.error) {
                  window.SCV_CACHE_LICH = res.lich || [];
                  window.SCV_CACHE_CONGVAN = res.congvan || [];
+                 // GỌI HÀM CẬP NHẬT CỜ SAU KHI TẢI XONG
+                 capNhatCoThongBaoCongVan();
              }
              resolve();
          }).withFailureHandler(e => { console.error(e); resolve(); })
          .SCV_getAllDataCache();
      });
+  }
+
+  // THUẬT TOÁN ĐỒNG BỘ LOCAL STORAGE VỚI MÀN HÌNH MENU
+  function capNhatCoThongBaoCongVan() {
+      let tongCvHienTai = window.SCV_CACHE_CONGVAN.length;
+      let localKey = 'SCV_DA_XEM_CV_' + window.SCV_GLOBAL_ID;
+      
+      if (!localStorage.getItem(localKey)) {
+           localStorage.setItem(localKey, tongCvHienTai);
+      }
+      
+      let tongCvDaXem = parseInt(localStorage.getItem(localKey)) || tongCvHienTai;
+      let soCvMoi = tongCvHienTai - tongCvDaXem;
+      let badge = document.getElementById('badge_cv_moi');
+
+      if (document.getElementById('tabSearchCongVan').classList.contains('active')) {
+          localStorage.setItem(localKey, tongCvHienTai);
+          if(badge) badge.style.display = 'none';
+          return;
+      }
+
+      if (soCvMoi > 0) {
+          if(badge) {
+              badge.innerText = soCvMoi > 99 ? '99+' : soCvMoi;
+              badge.style.display = 'inline-block';
+          }
+      } else {
+          if (tongCvHienTai < tongCvDaXem) {
+              localStorage.setItem(localKey, tongCvHienTai);
+          }
+          if(badge) badge.style.display = 'none';
+      }
   }
 
   function preloadDriveFolders() {
@@ -455,7 +501,18 @@
     btn.classList.add('active');
     
     if(id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer();
-    if(id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV();
+    
+    if(id === 'tabSearchCongVan') {
+        // NÚT CHỐT ĐÃ ĐỌC: Khớp lệnh tắt cờ cho cả Phân hệ lẫn Màn hình Menu
+        let localKey = 'SCV_DA_XEM_CV_' + window.SCV_GLOBAL_ID;
+        let tongCvHienTai = window.SCV_CACHE_CONGVAN.length;
+        localStorage.setItem(localKey, tongCvHienTai);
+        let badge = document.getElementById('badge_cv_moi');
+        if (badge) badge.style.display = 'none';
+        
+        if(typeof loadDataSearchCV === 'function') loadDataSearchCV();
+    }
+    
     if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') loadPhanQuyen();
   }
   
@@ -476,12 +533,9 @@
     let mat_na = document.getElementById('mask_che_nut_drive');
     let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
     
-    // Kiểm tra định dạng Google
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
 
-    // PHÂN LUỒNG LOGIC TỐI GIẢN VÀ THỰC DỤNG NHẤT
     if (khop_id && isGoogleLink) {
-        // 1. TÀI LIỆU GOOGLE: Chắc chắn nhúng được -> ẨN hoàn toàn nút mở ngoài
         if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'none'; 
 
         if (link_nhung.includes("drive.google.com")) {
@@ -497,14 +551,10 @@
             if (mat_na) mat_na.style.display = 'none';
         }
     } else {
-        // 2. LIÊN KẾT NGOÀI (Bao gồm dangcongsan.vn, PDF...): 
-        // Luôn tiềm ẩn nguy cơ bị máy chủ từ chối kết nối (X-Frame-Options).
-        // -> LUÔN HIỂN THỊ liên kết tiện ích "Mở thẻ mới" gọn nhẹ để dự phòng.
         if (nut_mo_ngoai) nut_mo_ngoai.style.display = 'inline-block'; 
         if (mat_na) mat_na.style.display = 'none';
     }
     
-    // Thực thi mở khung
     document.getElementById('iframe_xem_tep').src = link_nhung;
     document.getElementById('modal_xem_tep').style.display = 'flex';
   }
