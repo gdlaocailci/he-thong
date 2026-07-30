@@ -525,7 +525,7 @@
   /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ TỐI ƯU HÓA LOGIC & GIAO DIỆN) */
   let urlTepXemTruocHienTai = ""; 
 
-  function moKhungXemTep(duong_dan) {
+function moKhungXemTep(duong_dan) {
     if (!duong_dan) return;
     urlTepXemTruocHienTai = String(duong_dan).trim(); 
     let link_nhung = urlTepXemTruocHienTai;
@@ -534,14 +534,11 @@
     let mat_na = document.getElementById('mask_che_nut_drive');
     let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
     
-    // 1. NHẬN DIỆN ĐÍCH DANH CÁC THẺ (TABS) TRÊN GIAO DIỆN
-    // - Nhóm Nhập liệu
     let tabCongVan = document.getElementById('tabCongVan');
     let tabNhapLich = document.getElementById('tabInput');
     let isTabNhap = (tabCongVan && tabCongVan.classList.contains('active')) || 
                     (tabNhapLich && tabNhapLich.classList.contains('active'));
                     
-    // - Nhóm Tra cứu
     let tabTraCuuLich = document.getElementById('tabSearch');
     let tabTraCuuCV = document.getElementById('tabSearchCongVan');
     let isTabTraCuu = (tabTraCuuLich && tabTraCuuLich.classList.contains('active')) || 
@@ -549,30 +546,20 @@
 
     let isGoogleLink = link_nhung.includes("drive.google.com") || link_nhung.includes("docs.google.com");
 
-    // 2. LOGIC ĐIỀU KHIỂN NÚT "MỞ THẺ MỚI" PHÂN TÁCH RÕ RÀNG
     if (nut_mo_ngoai) {
-        if (isTabNhap) {
-            // TH1: Đang ở tab Nhập liệu -> LUÔN HIỆN (Bất chấp mọi loại file)
-            nut_mo_ngoai.style.display = 'inline-block';
-        } 
-        else if (isTabTraCuu) {
-            // TH2: Đang ở tab Tra cứu -> Phân loại theo định dạng
-            if (isGoogleLink) {
-                nut_mo_ngoai.style.display = 'none'; // File Drive -> Ẩn
-            } else {
-                nut_mo_ngoai.style.display = 'inline-block'; // File Web -> Hiện
-            }
-        } 
-        else {
-            // TH3: Dự phòng an toàn cho các tab khác (nếu có)
-            nut_mo_ngoai.style.display = 'none';
-        }
+        if (isTabNhap) { nut_mo_ngoai.style.display = 'inline-block'; } 
+        else if (isTabTraCuu) { nut_mo_ngoai.style.display = isGoogleLink ? 'none' : 'inline-block'; } 
+        else { nut_mo_ngoai.style.display = 'none'; }
     }
 
-    // 3. XỬ LÝ ĐƯỜNG DẪN ÉP NHÚNG VÀO IFRAME
     if (khop_id && isGoogleLink) {
         if (link_nhung.includes("drive.google.com")) {
-            link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+            // SỬA LỖI KHUNG XEM: Tự động phân biệt Link Thư mục và Link File
+            if (link_nhung.includes("folders/") || link_nhung.includes("drive/folders")) {
+                link_nhung = "https://drive.google.com/embeddedfolderview?id=" + khop_id[1] + "#list";
+            } else {
+                link_nhung = "https://drive.google.com/file/d/" + khop_id[1] + "/preview";
+            }
             if (mat_na) mat_na.style.display = 'block';
         } 
         else if (link_nhung.includes("docs.google.com/document")) {
@@ -587,7 +574,6 @@
         if (mat_na) mat_na.style.display = 'none';
     }
     
-    // 4. THỰC THI GỌI CỬA SỔ XEM TRƯỚC (IFRAME)
     let iframe_xem = document.getElementById('iframe_xem_tep');
     let modal_xem = document.getElementById('modal_xem_tep');
     
