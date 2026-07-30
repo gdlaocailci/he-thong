@@ -499,7 +499,7 @@
     hks_hienThiManHinhTai_fn(false);
   }
 
-// --- MODULE: KẾT XUẤT BIỂU ĐỒ BÁO CÁO (Nâng cấp Master Chart & Phân tích trực quan) ---
+// --- MODULE: KẾT XUẤT BIỂU ĐỒ BÁO CÁO (Nâng cấp Master Chart & Ghép cặp logic) ---
 // Vị trí: Thay thế toàn bộ hàm hks_xuatBieuDo_fn hiện tại trong tệp Tab3.html
 function hks_xuatBieuDo_fn() {
     let hks_tuNam_str = document.getElementById('t3_tunam').value;
@@ -523,7 +523,6 @@ function hks_xuatBieuDo_fn() {
 
     // =========================================================================
     // ĐỘT PHÁ 1: TẠO BIỂU ĐỒ ĐỐI SÁNH MŨI NHỌN (MASTER CHART TỔNG QUAN)
-    // Chỉ kích hoạt khi người dùng đối sánh từ 2 năm trở lên
     // =========================================================================
     if (hks_danhSachNam_arr.length > 1) {
         let hks_cotMaster_el = document.createElement('div');
@@ -539,7 +538,6 @@ function hks_xuatBieuDo_fn() {
         hks_khungHienThi_el.appendChild(hks_cotMaster_el);
 
         let hks_tapDuLieuMaster_arr = [];
-        // Ma trận màu sắc phân biệt các năm (Bám sát hệ màu chuẩn Bootstrap)
         let hks_bangMau_arr = ['#dc3545', '#0d6efd', '#198754', '#ffc107', '#6f42c1', '#fd7e14']; 
 
         hks_danhSachNam_arr.forEach((nam, idx) => {
@@ -553,7 +551,7 @@ function hks_xuatBieuDo_fn() {
                     borderColor: hks_bangMau_arr[idx % hks_bangMau_arr.length],
                     backgroundColor: hks_bangMau_arr[idx % hks_bangMau_arr.length],
                     borderWidth: 3,
-                    tension: 0.4, // Làm mềm đường cong tạo cảm giác mượt mà
+                    tension: 0.4, 
                     pointRadius: 6,
                     pointHoverRadius: 9,
                     pointBackgroundColor: '#fff'
@@ -569,7 +567,7 @@ function hks_xuatBieuDo_fn() {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false }, // Hover hiển thị bộ thông số so sánh cùng lúc
+                interaction: { mode: 'index', intersect: false }, 
                 scales: { 
                     y: { beginAtZero: true, grid: { borderDash: [5, 5] }, title: { display: true, text: 'Số lượng Giải thưởng', font: { weight: 'bold' } } },
                     x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
@@ -583,7 +581,7 @@ function hks_xuatBieuDo_fn() {
     }
 
     // =========================================================================
-    // ĐỘT PHÁ 2: BIỂU ĐỒ CHI TIẾT TỪNG NĂM (CHUYỂN SANG GROUPED BAR)
+    // ĐỘT PHÁ 2: BIỂU ĐỒ CHI TIẾT TỪNG NĂM (ĐÃ CHUẨN HÓA CẶP LOGIC)
     // =========================================================================
     let hks_soLuongBieuDo_num = hks_danhSachNam_arr.length;
     let hks_classCot_str = 'col-12 col-md'; 
@@ -592,7 +590,6 @@ function hks_xuatBieuDo_fn() {
     else if (hks_soLuongBieuDo_num === 3) hks_classCot_str = 'col-12 col-md-4';
     else if (hks_soLuongBieuDo_num === 4) hks_classCot_str = 'col-12 col-md-3';
 
-    // Khởi tạo không gian lưới cho các biểu đồ chi tiết
     let hks_khungLuoiCon_el = document.createElement('div');
     hks_khungLuoiCon_el.className = 'row g-4 w-100 m-0';
     hks_khungHienThi_el.appendChild(hks_khungLuoiCon_el);
@@ -612,7 +609,6 @@ function hks_xuatBieuDo_fn() {
         `;
         hks_khungLuoiCon_el.appendChild(hks_cotGrid_el);
 
-        // Hiệu ứng Spotlight từ ULR https://reactbits.dev/
         let hks_theCard_el = hks_cotGrid_el.querySelector('.hks-chart-card');
         hks_theCard_el.addEventListener("mousemove", (e) => {
             const rect = hks_theCard_el.getBoundingClientRect();
@@ -627,18 +623,34 @@ function hks_xuatBieuDo_fn() {
             let hks_tongSoHocSinh_num = hks_dongTong_obj.tongSo || 0;
             const sumGiai = (cap) => hks_dongTong_obj.thanhTich[cap][1].c + hks_dongTong_obj.thanhTich[cap][2].c + hks_dongTong_obj.thanhTich[cap][3].c + hks_dongTong_obj.thanhTich[cap][4].c;
             
-            // Xử lý dữ liệu tương đồng kích thước mảng
-            let hks_duLieuDaiTra_arr = [hks_dongTong_obj.htxs, hks_dongTong_obj.htt, hks_dongTong_obj.ht, hks_dongTong_obj.cht, hks_dongTong_obj.hsNgoaiTuyen];
-            let hks_duLieuMuiNhon_arr = [sumGiai('xa'), sumGiai('huyen'), sumGiai('tinh'), sumGiai('qg'), sumGiai('qt')];
-            let hks_tongSoGiai_num = hks_duLieuMuiNhon_arr.reduce((a, b) => a + b, 0);
+            // Cấu trúc lại mảng Đại trà theo thứ tự chỉ định
+            let hks_duLieuDaiTra_arr = [
+                hks_dongTong_obj.htxs, 
+                hks_dongTong_obj.htt, 
+                hks_dongTong_obj.ht, 
+                hks_dongTong_obj.cht, 
+                hks_dongTong_obj.hsNgoaiTuyen
+            ];
+            
+            // Cấu trúc lại mảng Mũi nhọn bám sát cặp tương ứng với Đại trà
+            let hks_duLieuMuiNhon_arr = [
+                sumGiai('qg'), 
+                sumGiai('tinh'), 
+                sumGiai('huyen'), 
+                sumGiai('xa'), 
+                sumGiai('qt')
+            ];
+            
+            // Biến tổng phục vụ tính %
+            let hks_tongSoGiai_num = sumGiai('xa') + sumGiai('huyen') + sumGiai('tinh') + sumGiai('qg') + sumGiai('qt');
 
-            // Bẻ nhãn trục X thành mảng 2 chiều (hiển thị 2 dòng) để phân tách rõ khái niệm
+            // Đồng bộ nhãn trục X theo cặp
             let hks_nhanTrucX_arr = [
-                ['Đ.Trà: XS', 'M.Nhọn: Xã'], 
-                ['Đ.Trà: HTT', 'M.Nhọn: Huyện'], 
-                ['Đ.Trà: HT', 'M.Nhọn: Tỉnh'], 
-                ['Đ.Trà: CHT', 'M.Nhọn: Q.Gia'], 
-                ['Ngoại Tuyến', 'Q.Tế']
+                ['Đ.Trà: XS', 'M.Nhọn: Q.Gia'], 
+                ['Đ.Trà: HTT', 'M.Nhọn: Tỉnh'], 
+                ['Đ.Trà: HT', 'M.Nhọn: Huyện'], 
+                ['Đ.Trà: CHT', 'M.Nhọn: Xã'], 
+                ['Ngoại tuyến', 'M.Nhọn: Q.Tế']
             ];
 
             new Chart(document.getElementById(hks_maCanvas_str), {
@@ -647,7 +659,7 @@ function hks_xuatBieuDo_fn() {
                     labels: hks_nhanTrucX_arr,
                     datasets: [
                         {
-                            type: 'bar', // CHUYỂN LINE SANG BAR
+                            type: 'bar', 
                             label: 'Mũi nhọn (Giải)',
                             data: hks_duLieuMuiNhon_arr,
                             backgroundColor: '#b71c1c',
