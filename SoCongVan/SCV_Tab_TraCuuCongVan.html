@@ -26,7 +26,6 @@
 </div>
 
 <div class="cv-controls" style="flex-direction: row; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-start; padding: 10px; background:#e0f2fe; border:1px solid #bae6fd;">
-    <!-- ĐÃ NÂNG CẤP: Chuyển đổi Select thành Input + Datalist (Combo box: vừa cho chọn, vừa cho nhập tự do) -->
     <input type="text" id="f_LoaiCQ" list="dl_LoaiCQ" class="cv-combo" placeholder="-- Loại CQ --" style="width: 130px;" onkeydown="checkEnter(event)" autocomplete="off">
     <datalist id="dl_LoaiCQ"></datalist>
 
@@ -83,13 +82,10 @@
     window.SCV_AI_CACHE = window.SCV_AI_CACHE || {};
     window.SCV_DM_CONGVAN_CACHE = window.SCV_DM_CONGVAN_CACHE || null; 
 
-
-
-    /* Đã tối ưu lại hàm đẩy dữ liệu để tương thích chuẩn với thẻ HTML5 Datalist */
     function fillComboFilter(listId, list) {
         const datalist = document.getElementById(listId);
         if (!datalist) return;
-        datalist.innerHTML = ''; // Xóa dữ liệu cũ, chuẩn bị nạp mới
+        datalist.innerHTML = ''; 
         if (list && list.length > 0) { 
             list.forEach(item => { 
                 let opt = document.createElement('option'); 
@@ -99,14 +95,9 @@
         }
     }
 
-    function fillComboFilter(id, list, defaultText) {
-        const sel = document.getElementById(id);
-        sel.innerHTML = `<option value="">${defaultText}</option>`;
-        if (list && list.length > 0) { list.forEach(item => { let opt = document.createElement('option'); opt.value = item; opt.innerText = item; sel.appendChild(opt); }); }
-    }
-
     function checkEnter(e) { if (e.key === "Enter") { loadDataSearchCV(); } }
-function initSearchCV() {
+
+    function initSearchCV() {
         if (typeof google === 'undefined' || !google.script) return;
 
         if (window.SCV_DM_CONGVAN_CACHE) {
@@ -136,7 +127,6 @@ function initSearchCV() {
         document.getElementById('thSuaCV').style.display = disp;
     }
 
-    // NÂNG CẤP: Nhận tham số showOnlyNew để hiển thị tức thì đồ mới
     function loadDataSearchCV(showOnlyNew = false) {
         const tbody = document.getElementById('bodySearchCV');
         const filtersObj = {
@@ -267,7 +257,6 @@ function initSearchCV() {
                 htmlSua = `<td style="${center}"><button onclick="transferToEditCongVan(this, '${rowDataString}')" style="border:1px solid #94a3b8; background:#fff; cursor:pointer; padding:3px 8px; border-radius:4px; color:#1e3a8a; font-weight:bold;" title="Sửa">📝</button></td>`;
             }
 
-            // GẮN SỰ KIỆN XÓA CỜ VÀO DÒNG (onmousedown)
             tb.innerHTML += `
             <tr class="${classNew}" style="${styleBg} border-bottom:1px solid #eee;" onmousedown="if(typeof SCV_MarkAsSeen === 'function') SCV_MarkAsSeen('CV', '${r.id}', this)" title="${isNew ? 'Click vào dòng này để đánh dấu đã đọc' : ''}">
                 ${htmlSua} <td style="${center}">${i + 1}</td>
@@ -276,53 +265,6 @@ function initSearchCV() {
                 <td style="${left}">${r.trichYeu}</td>
                 <td style="${center}">${r.noiNhan}</td>
                 <td style="${center}" onclick="event.stopPropagation()">${linkHtml}</td>
-                <td style="${center} font-size:13px; color:#666;">${r.ghiChu}</td>
-            </tr>`;
-        });
-    }
-
-
-    function renderTableCV(data) {
-        const tb = document.getElementById('bodySearchCV');
-        tb.innerHTML = "";
-        const colSpanNum = IS_AUTH_CV ? 8 : 7;
-        
-        if(!data || data.length === 0) { 
-            tb.innerHTML = `<tr><td colspan="${colSpanNum}" class="text-center" style="padding:20px; color:red; border: 1px solid #ccc !important;">❌ Không tìm thấy văn bản phù hợp!</td></tr>`;
-            return; 
-        }
-
-        data.forEach((r, i) => {
-            let linkHtml = "";
-            if(r.vanBanUrl && r.vanBanUrl.includes('http')) { 
-                const links = r.vanBanUrl.split(',').map(l => l.trim()).filter(l => l !== "");
-                linkHtml = `<div style="display:flex; flex-direction:column; gap:4px; align-items:center;">` + 
-                           links.map((url, idx) => `
-                              <div style="display:flex; gap:4px;">
-                                 <a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:3px 6px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem tài liệu ${idx+1}">📎 Xem</a>
-                                 <button onclick="openChatModal('${url}')" style="background:#fef08a; border:1px solid #fde047; padding:3px 6px; border-radius:3px; font-size:12px; font-weight:bold; color:#854d0e; cursor:pointer;" title="Hỏi Trợ lý AI về văn bản này">🤖 Hỏi AI</button>
-                              </div>
-                           `).join('') +
-                           `</div>`;
-            }
-            
-            const center = 'text-align: center; vertical-align:middle; padding:6px; border: 1px solid #ccc !important;';
-            const left = 'text-align: left !important; vertical-align:middle; padding:6px 10px; border: 1px solid #ccc !important;';
-            const rowDataString = encodeURIComponent(JSON.stringify(r));
-
-            let htmlSua = "";
-            if (IS_AUTH_CV) {
-                htmlSua = `<td style="${center}"><button onclick="transferToEditCongVan(this, '${rowDataString}')" style="border:1px solid #94a3b8; background:#fff; cursor:pointer; padding:3px 8px; border-radius:4px; color:#1e3a8a; font-weight:bold;" title="Sửa">📝</button></td>`;
-            }
-
-            tb.innerHTML += `
-            <tr style="background-color:${i%2===0?'white':'#f9fafb'}; border-bottom:1px solid #eee;">
-                ${htmlSua} <td style="${center}">${i + 1}</td>
-                <td style="${center}">${r.ngayBH}</td>
-                <td style="${center} font-weight:bold; color:#1e3a8a;">${r.kyHieu}</td>
-                <td style="${left}">${r.trichYeu}</td>
-                <td style="${center}">${r.noiNhan}</td>
-                <td style="${center}">${linkHtml}</td>
                 <td style="${center} font-size:13px; color:#666;">${r.ghiChu}</td>
             </tr>`;
         });
