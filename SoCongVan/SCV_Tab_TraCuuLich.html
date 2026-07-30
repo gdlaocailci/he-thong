@@ -101,7 +101,9 @@
           }
 
           if (showOnlyNew) {
-              matchedData = dataLich.filter(r => r[7] && !seenLich.includes(r[7]));
+              // Chỉ lấy 200 lịch mới nhất để lọc
+              let latestLich = dataLich.slice(-200).map(r => r[7]);
+              matchedData = dataLich.filter(r => r[7] && latestLich.includes(r[7]) && !seenLich.includes(r[7]));
               matchedData.sort((a, b) => parseDateTime(b[0], b[1]) - parseDateTime(a[0], a[1]));
           } else {
               const fTu = parseDateTime(filtersObj.tuNgay, "00:00");
@@ -170,11 +172,13 @@
         return; 
     }
     
-    let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
+   let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
+    let latestLich = window.SCV_CACHE_LICH.slice(-200).map(r => r[7]); // Khai báo Active Zone
 
     data.forEach((r, i) => {
        let idLich = r[7];
-       let isNew = idLich && !seenLich.includes(idLich);
+       // Logic mới: Đủ 2 điều kiện mới được tô màu vàng
+       let isNew = idLich && latestLich.includes(idLich) && !seenLich.includes(idLich);
        let classNew = isNew ? "new-item-row" : "";
        let styleBg = isNew ? "" : `background-color:${i%2===0?'white':'#f9fafb'};`;
 
