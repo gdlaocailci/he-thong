@@ -273,6 +273,7 @@
   window.SCV_CACHE_LICH = [];
   window.SCV_CACHE_CONGVAN = [];
   window.SCV_FOLDER_TREE_CACHE = {}; 
+  window.SCV_DATA_READY = false; // BỔ SUNG CỜ KIỂM SOÁT LUỒNG
 
   let SYS_ACTIVE_ACCOUNT = "";
   let GLOBAL_PERM = false;
@@ -454,22 +455,38 @@
 
   function executePriorityLoading() {
       fetchCacheData().then(() => {
-          if(typeof loadDataServer === 'function') setTimeout(() => loadDataServer(), 100); 
-          if(typeof loadDataSearchCV === 'function') setTimeout(() => loadDataSearchCV(), 300);
+          
           setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 600);
           setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 700);
           preloadDriveFolders();
       });
   }
 
-  function fetchCacheData() {
+function fetchCacheData() {
      return new Promise((resolve) => {
          google.script.run.withSuccessHandler(res => {
              if(!res.error) {
                  window.SCV_CACHE_LICH = res.lich || [];
                  window.SCV_CACHE_CONGVAN = res.congvan || [];
+                 window.SCV_DATA_READY = true; // KÍCH HOẠT CỜ SAU KHI CÓ DỮ LIỆU
+                 
                  if(typeof SCV_UpdateBadges === 'function') {
                      SCV_UpdateBadges();
+                 }
+
+                 // SMART TRIGGER: Tự động phân tích Tab hiện tại để bung dữ liệu
+                 let activeTab = document.querySelector('.tab-content.active');
+                 if (activeTab) {
+                     let activeTabId = activeTab.id;
+                     if (activeTabId === 'tabSearch' && typeof loadDataServer === 'function') {
+                         let seenLich = SCV_GetSeenIDs('LICH');
+                         let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+                         loadDataServer(newLich.length > 0);
+                     } else if (activeTabId === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') {
+                         let seenCV = SCV_GetSeenIDs('CV');
+                         let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
+                         loadDataSearchCV(newCV.length > 0);
+                     }
                  }
              }
              resolve();
@@ -543,11 +560,15 @@ let syncTimeout = null;
       }
   }
 
-  function showTab(id, btn) {
+function showTab(id, btn) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
+    
+    // NGĂN CHẶN XUNG ĐỘT (RACE CONDITION): 
+    // Nếu click tab mà máy chủ chưa tải xong, chỉ lật giao diện, tuyệt đối không được bung lệnh tìm kiếm rỗng!
+    if (!window.SCV_DATA_READY) return;
     
     if(id === 'tabSearch' && typeof loadDataServer === 'function') {
         let seenLich = SCV_GetSeenIDs('LICH');
