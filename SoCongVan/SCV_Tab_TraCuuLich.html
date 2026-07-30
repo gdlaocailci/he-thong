@@ -35,19 +35,7 @@
 <script>
   let IS_AUTH_LICH = false; 
 
-  function initTabLich() {
-      setDefaultDates();
-      
-      IS_AUTH_LICH = (typeof GLOBAL_PERM !== 'undefined') ? GLOBAL_PERM : false; 
-      const userName = (typeof GLOBAL_USER !== 'undefined') ? GLOBAL_USER : ""; 
-      
-      const st = document.getElementById('status_search_lich');
-      if(st && userName) st.innerHTML = "👤 " + userName;
 
-      const disp = IS_AUTH_LICH ? '' : 'none';
-      if (document.getElementById('colSuaLich')) document.getElementById('colSuaLich').style.display = disp;
-      if (document.getElementById('thSuaLich')) document.getElementById('thSuaLich').style.display = disp;
-  }
 
   function setDefaultDates() {
       const now = new Date();
@@ -64,8 +52,22 @@
 
   function checkEnterLich(e) { if (e.key === "Enter") loadDataServer(); }
 
-  // TỐI ƯU SIÊU TỐC: Đọc và lọc trực tiếp trên RAM (window.SCV_CACHE_LICH)
-  function loadDataServer() {
+function initTabLich() {
+      setDefaultDates();
+      
+      IS_AUTH_LICH = (typeof GLOBAL_PERM !== 'undefined') ? GLOBAL_PERM : false; 
+      const accountName = (typeof SYS_ACTIVE_ACCOUNT !== 'undefined') ? SYS_ACTIVE_ACCOUNT : ""; 
+      
+      const st = document.getElementById('status_search_lich');
+      if(st && accountName) st.innerHTML = "👤 " + accountName;
+
+      const disp = IS_AUTH_LICH ? '' : 'none';
+      if (document.getElementById('colSuaLich')) document.getElementById('colSuaLich').style.display = disp;
+      if (document.getElementById('thSuaLich')) document.getElementById('thSuaLich').style.display = disp;
+  }
+
+  // NÂNG CẤP: Nhận tham số showOnlyNew
+  function loadDataServer(showOnlyNew = false) {
       const tbody = document.getElementById('bodyView');
       const filtersObj = {
           tuNgay: document.getElementById('dFrom').value,
@@ -74,7 +76,7 @@
           thanhPhan: document.getElementById('f_ThanhPhan').value.trim()
       };
       
-      if (!filtersObj.tuNgay && !filtersObj.denNgay && !filtersObj.noiDung && !filtersObj.thanhPhan) {
+      if (!showOnlyNew && !filtersObj.tuNgay && !filtersObj.denNgay && !filtersObj.noiDung && !filtersObj.thanhPhan) {
           tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding:20px; color:red; font-weight:bold; border: 1px solid #ccc !important;">⚠️ Vui lòng chọn ít nhất 1 điều kiện!</td></tr>';
           return;
       }
@@ -84,6 +86,8 @@
           
       setTimeout(() => {
           let dataLich = window.SCV_CACHE_LICH || [];
+          let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
+          let matchedData = [];
 
           function parseDateTime(dStr, tStr) {
               if(!dStr) return 0;
@@ -94,41 +98,42 @@
                   if(tStr && String(tStr).includes(':')) {
                       const t = String(tStr).split(':');
                       h = parseInt(t[0]) || 0; m = parseInt(t[1]) || 0;
-                  } else if (tStr && !isNaN(tStr)) { 
-                      h = parseInt(tStr) || 0; 
-                  }
+                  } else if (tStr && !isNaN(tStr)) { h = parseInt(tStr) || 0; }
                   return new Date(d[2], d[1]-1, d[0], h, m).getTime();
               } catch(e) { return 0; }
           }
 
-          const fTu = parseDateTime(filtersObj.tuNgay, "00:00");
-          const fDen = filtersObj.denNgay ? parseDateTime(filtersObj.denNgay, "23:59") : Number.MAX_SAFE_INTEGER;
-          const fTxt = filtersObj.noiDung.toLowerCase();
-          const fName = filtersObj.thanhPhan.toLowerCase();
-          const contentWords = fTxt ? fTxt.split(/\s+/) : [];
+          if (showOnlyNew) {
+              matchedData = dataLich.filter(r => r[7] && !seenLich.includes(r[7]));
+              matchedData.sort((a, b) => parseDateTime(b[0], b[1]) - parseDateTime(a[0], a[1]));
+          } else {
+              const fTu = parseDateTime(filtersObj.tuNgay, "00:00");
+              const fDen = filtersObj.denNgay ? parseDateTime(filtersObj.denNgay, "23:59") : Number.MAX_SAFE_INTEGER;
+              const fTxt = filtersObj.noiDung.toLowerCase();
+              const fName = filtersObj.thanhPhan.toLowerCase();
+              const contentWords = fTxt ? fTxt.split(/\s+/) : [];
 
-          let matchedData = dataLich.filter(r => {
-              let timeVal = parseDateTime(r[0], r[1] || "00:00");
-              if (fTu > 0 && timeVal < fTu) return false;
-              if (filtersObj.denNgay && timeVal > fDen) return false;
+              matchedData = dataLich.filter(r => {
+                  let timeVal = parseDateTime(r[0], r[1] || "00:00");
+                  if (fTu > 0 && timeVal < fTu) return false;
+                  if (filtersObj.denNgay && timeVal > fDen) return false;
 
-              if (contentWords.length > 0) {
-                  let content = ((r[2]||"") + " " + (r[3]||"") + " " + (r[4]||"") + " " + (r[5]||"")).toLowerCase();
-                  let isMatch = true;
-                  for (let w of contentWords) {
-                      if (!content.includes(w)) { isMatch = false; break; }
+                  if (contentWords.length > 0) {
+                      let content = ((r[2]||"") + " " + (r[3]||"") + " " + (r[4]||"") + " " + (r[5]||"")).toLowerCase();
+                      let isMatch = true;
+                      for (let w of contentWords) {
+                          if (!content.includes(w)) { isMatch = false; break; }
+                      }
+                      if (!isMatch) return false;
                   }
-                  if (!isMatch) return false;
-              }
-
-              if (fName) {
-                  let thanhPhan = String(r[5] || "").toLowerCase();
-                  if (!thanhPhan.includes(fName)) return false;
-              }
-              return true;
-          });
-
-          matchedData.sort((a, b) => parseDateTime(b[0], b[1]) - parseDateTime(a[0], a[1]));
+                  if (fName) {
+                      let thanhPhan = String(r[5] || "").toLowerCase();
+                      if (!thanhPhan.includes(fName)) return false;
+                  }
+                  return true;
+              });
+              matchedData.sort((a, b) => parseDateTime(b[0], b[1]) - parseDateTime(a[0], a[1]));
+          }
 
           const totalFound = matchedData.length;
           let limitApplied = false;
@@ -142,13 +147,73 @@
 
           const st = document.getElementById('status_search_lich');
           if (st) {
-              let text = `✅ Tìm thấy: <strong style="color:#e11d48;">${totalFound}</strong> lịch công tác.`;
-              if (limitApplied) text += ` <em>(Chỉ hiển thị 200 lịch mới nhất để chống quá tải)</em>`;
-              st.innerHTML = text;
+              if (showOnlyNew) {
+                  st.innerHTML = `🔔 Có <strong style="color:#e11d48;">${totalFound}</strong> lịch họp mới. Click vào cuộc họp để đánh dấu đã xem.`;
+              } else {
+                  let text = `✅ Tìm thấy: <strong style="color:#e11d48;">${totalFound}</strong> lịch công tác.`;
+                  if (limitApplied) text += ` <em>(Chỉ hiển thị 200 lịch mới nhất để chống quá tải)</em>`;
+                  st.innerHTML = text;
+              }
           }
-          
           renderTable(matchedData); 
       }, 10);
+  }
+
+  function renderTable(data) {
+    const disp = IS_AUTH_LICH ? '' : 'none';
+    if (document.getElementById('colSuaLich')) document.getElementById('colSuaLich').style.display = disp;
+    if (document.getElementById('thSuaLich')) document.getElementById('thSuaLich').style.display = disp;
+
+    const tb = document.getElementById('bodyView'); 
+    tb.innerHTML = "";
+    const colSpanNum = 9;
+    
+    if(!data || data.length === 0) { 
+        tb.innerHTML = `<tr><td colspan="${colSpanNum}" class="text-center" style="padding:20px; color:red; border: 1px solid #ccc !important;">❌ Không tìm thấy lịch nào phù hợp!</td></tr>`;
+        return; 
+    }
+    
+    let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
+
+    data.forEach((r, i) => {
+       let idLich = r[7];
+       let isNew = idLich && !seenLich.includes(idLich);
+       let classNew = isNew ? "new-item-row" : "";
+       let styleBg = isNew ? "" : `background-color:${i%2===0?'white':'#f9fafb'};`;
+
+       let cellVal = r[6], urlShow = "";
+       if (typeof cellVal === 'object' && cellVal !== null) { urlShow = cellVal.url || ""; } 
+       else { urlShow = String(cellVal || ""); }
+       
+       let linkHtml = "";
+       if (urlShow && urlShow.trim() !== "") { 
+           const links = urlShow.split(',').map(l => l.trim()).filter(l => l !== "");
+           linkHtml = `<div style="display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">` + 
+                      links.map((url, idx) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:2px 5px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem tài liệu ${idx+1}">📎 ${idx+1}</a>`).join('') +
+                      `</div>`;
+       }
+       
+       const centerStyle = 'text-align: center; vertical-align: middle; padding: 8px; word-wrap: break-word; border: 1px solid #ccc !important;';
+       const leftStyle   = 'text-align: left !important; vertical-align: middle; padding: 8px; padding-left: 8px; word-wrap: break-word; white-space: pre-wrap; border: 1px solid #ccc !important;';
+       const rowDataString = encodeURIComponent(JSON.stringify(r)).replace(/'/g, "%27");
+       
+       let styleSua = IS_AUTH_LICH ? centerStyle : 'display: none;';
+       let btnSua = IS_AUTH_LICH ? `<button onclick="transferToEditLich(this, '${rowDataString}')" style="border:1px solid #94a3b8; background:#fff; cursor:pointer; padding:3px 8px; border-radius:4px; color:#1e3a8a; font-weight:bold;" title="Sửa nội dung này">📝</button>` : "";
+       let htmlSua = `<td style="${styleSua}">${btnSua}</td>`;
+
+       tb.innerHTML += `
+       <tr class="${classNew}" style="${styleBg}" onmousedown="if(typeof SCV_MarkAsSeen === 'function') SCV_MarkAsSeen('LICH', '${idLich}', this)" title="${isNew ? 'Click vào dòng này để đánh dấu đã xem lịch' : ''}">
+           ${htmlSua}
+           <td style="${centerStyle}">${i+1}</td>
+           <td style="${centerStyle}">${r[0] || ""}</td>
+           <td style="${centerStyle}">${r[1] || ""}</td>
+           <td style="${leftStyle}">${r[2] || ""}</td>
+           <td style="${centerStyle}">${r[3] || ""}</td>
+           <td style="${centerStyle}">${r[4] || ""}</td>
+           <td style="${centerStyle}">${r[5] || ""}</td>
+           <td style="${centerStyle}" onclick="event.stopPropagation()">${linkHtml}</td>
+       </tr>`;
+    });
   }
 
   function renderTable(data) {
