@@ -525,27 +525,29 @@ function veBieuDoChatLuong() {
                 </div>
             `);
 
-// Vẽ Bar Chart (Biểu đồ cột) cho từng năm
+// Vẽ Bar Chart (Biểu đồ cột) cho từng năm với thông số UI hiện đại
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
-                type: 'bar', 
+                type: 'bar',
                 data: {
                     labels: cauHinh.nhan,
                     datasets: [{
                         label: 'Số lượng',
                         data: mangSoLieu,
                         backgroundColor: cauHinh.mauSac,
-                        borderWidth: 1,
-                        borderRadius: 4, // Bo góc nhẹ cho cột
-                        barPercentage: 0.4 // Thu nhỏ bề ngang cột (giảm 60%)
+                        borderWidth: 0, // Bỏ viền để cột nhìn phẳng, mượt và sang trọng hơn
+                        borderRadius: 6, // Tăng độ bo góc trên đỉnh cột tạo sự mềm mại
+                        maxBarThickness: 35 // KHÓA CỨNG CHIỀU RỘNG TỐI ĐA CỦA CỘT (Khắc phục lỗi cột quá to)
                     }]
                 },
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
                     plugins: { 
-                        legend: { display: false }, // Tắt legend vì trục X đã thể hiện nhãn
+                        legend: { display: false }, 
                         tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)', // Làm tối màu tooltip
+                            padding: 10,
                             callbacks: {
                                 label: function(context) {
                                     return ' ' + context.label + ': ' + context.raw + ' nhân sự';
@@ -556,10 +558,24 @@ function veBieuDoChatLuong() {
                     scales: {
                         y: { 
                             beginAtZero: true, 
-                            ticks: { stepSize: 1 } 
+                            ticks: { 
+                                stepSize: 1,
+                                font: { size: 11, family: "'Times New Roman', serif" } // Đồng bộ font chữ
+                            },
+                            grid: {
+                                borderDash: [5, 5], // Đường lưới nét đứt mờ, giúp tập trung vào biểu đồ
+                                color: '#e2e8f0'
+                            }
                         },
                         x: {
-                            ticks: { font: { size: 10 } } // Thu nhỏ font trục X để tránh tràn chữ
+                            ticks: { 
+                                font: { size: 11, family: "'Times New Roman', serif" },
+                                maxRotation: 25, // Góc nghiêng chữ 25 độ để chống lẹm nhãn
+                                minRotation: 25
+                            },
+                            grid: {
+                                display: false // Ẩn lưới dọc cho giao diện thoáng đãng
+                            }
                         }
                     }
                 }
