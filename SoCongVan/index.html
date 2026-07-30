@@ -534,9 +534,13 @@ let syncTimeout = null;
       }
   }
 
-  function SCV_UpdateBadges() {
+function SCV_UpdateBadges() {
+      // THUẬT TOÁN ACTIVE ZONE: Lấy danh sách ID của 200 bản ghi mới nhất
+      let latestCV = window.SCV_CACHE_CONGVAN.slice(-200).map(r => r.id);
       let seenCV = SCV_GetSeenIDs('CV');
-      let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
+      
+      // ĐIỀU KIỆN MỚI: Phải nằm trong Top 200 VÀ chưa từng xem
+      let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && latestCV.includes(r.id) && !seenCV.includes(r.id));
       let badgeCV = document.getElementById('badge_cv_moi');
       if (badgeCV) {
           if (newCV.length > 0) {
@@ -547,8 +551,11 @@ let syncTimeout = null;
           }
       }
 
+      let latestLich = window.SCV_CACHE_LICH.slice(-200).map(r => r[7]);
       let seenLich = SCV_GetSeenIDs('LICH');
-      let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+      
+      // ĐIỀU KIỆN MỚI: Phải nằm trong Top 200 VÀ chưa từng xem
+      let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && latestLich.includes(r[7]) && !seenLich.includes(r[7]));
       let badgeLich = document.getElementById('badge_lich_moi');
       if (badgeLich) {
           if (newLich.length > 0) {
