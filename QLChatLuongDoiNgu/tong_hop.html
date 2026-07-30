@@ -1,5 +1,5 @@
 <!-- TỆP: tong_hop.html -->
-<!-- PHIÊN BẢN: Nâng cấp Biểu đồ Cột đa lĩnh vực - Giao diện Toàn màn hình -->
+<!-- PHIÊN BẢN: Tích hợp Biểu đồ độc lập từng năm, tự động xuống dòng (Flex-wrap) -->
 
 <style>
   .o-chua-ghi-chu { position: relative; }
@@ -34,22 +34,21 @@
       100% { background-position: 100% 0; }
   }
 
-  /* Tùy chỉnh thanh cuộn cho khu vực biểu đồ */
-  .khu-vuc-cuon-ngang {
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 10px;
+  /* Khung chứa biểu đồ từng năm tự động co giãn và xuống dòng */
+  .bieu-do-container {
+      flex: 1 1 calc(25% - 15px); 
+      min-width: 260px; 
+      max-width: 400px;
+      background: #ffffff; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 10px; 
+      padding: 15px 10px; 
+      text-align: center;
+      transition: transform 0.2s ease-in-out;
   }
-  .khu-vuc-cuon-ngang::-webkit-scrollbar {
-      height: 8px;
-  }
-  .khu-vuc-cuon-ngang::-webkit-scrollbar-thumb {
-      background: #adb5bd; 
-      border-radius: 4px;
-  }
-  .khu-vuc-cuon-ngang::-webkit-scrollbar-track {
-      background: #f8f9fa;
+  .bieu-do-container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.08) !important;
   }
 </style>
 
@@ -72,7 +71,7 @@
           </ul>
           <!-- Nút kích hoạt Hệ thống biểu đồ -->
           <button class="btn btn-reactbits-shiny py-1 ms-2" onclick="moHopThoaiBieuDo()">
-              <i class="fas fa-chart-bar"></i> Biểu đồ chất lượng
+              <i class="fas fa-chart-pie"></i> Biểu đồ chất lượng
           </button>
       </div>
   </div>
@@ -137,19 +136,17 @@
   </div>
 </div>
 
-<!-- MODAL BIỂU ĐỒ CHẤT LƯỢNG - FULLSCREEN & SCROLLABLE -->
+<!-- MODAL BIỂU ĐỒ CHẤT LƯỢNG - FULLSCREEN -->
 <div class="modal fade" id="hopThoaiBieuDo" data-bs-focus="false">
-  <!-- CẬP NHẬT: modal-fullscreen để full màn hình -->
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content bg-light">
       <div class="modal-header bg-primary text-white py-2 shadow-sm">
           <h5 class="modal-title fw-bold text-uppercase" id="tieuDeModalBieuDo">
-              <i class="fas fa-chart-bar"></i> HỆ THỐNG BIỂU ĐỒ PHÂN TÍCH CHẤT LƯỢNG
+              <i class="fas fa-chart-pie"></i> HỆ THỐNG BIỂU ĐỒ PHÂN TÍCH CHẤT LƯỢNG
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       
-      <!-- CẬP NHẬT: modal-body tự động cuộn dọc khi nội dung vượt quá -->
       <div class="modal-body p-4">
         
         <!-- Khu vực Bộ lọc -->
@@ -183,16 +180,9 @@
             </div>
         </div>
         
-        <!-- Khu vực vẽ Biểu đồ cột (Có thanh cuộn ngang) -->
-        <div class="card border-0 shadow-sm mb-4 rounded-3">
-            <div class="card-body p-3">
-                <div class="khu-vuc-cuon-ngang">
-                    <!-- CẬP NHẬT: Chiều cao động (55vh) và chiều rộng tối thiểu được JS xử lý -->
-                    <div id="wrapperBieuDoChinh" style="position: relative; height: 55vh; min-height: 400px; width: 100%;">
-                        <canvas id="bieuDoChinh"></canvas>
-                    </div>
-                </div>
-            </div>
+        <!-- Khu vực chứa các biểu đồ nhỏ từng năm (Flex Wrap) -->
+        <div id="khuVucBieuDo" class="d-flex flex-wrap gap-3 justify-content-center mb-4">
+            <!-- Biểu đồ sinh tự động sẽ nằm ở đây -->
         </div>
 
         <!-- Khung đối sánh kết quả dạng bảng -->
@@ -226,6 +216,7 @@
 
 <script>
     let treAnTt;
+    let bieuDoCaNhan = []; // Mảng chứa các đối tượng biểu đồ để xóa sạch khi render lại
 
     function hienTooltipTen(e) {
         clearTimeout(treAnTt); 
@@ -380,14 +371,15 @@
     }
 
     // ============================================================
-    // LOGIC TRÍCH XUẤT BIỂU ĐỒ CỘT VÀ QUẢN LÝ THANH TRƯỢT
+    // LOGIC TRÍCH XUẤT BIỂU ĐỒ ĐA LĨNH VỰC (PIE CHART TỪNG NĂM)
     // ============================================================
     
+    // Cấu hình linh hoạt cho 5 lĩnh vực
     const CAU_HINH_BIEU_DO = {
         'vc': {
             tieuDe: 'CHẤT LƯỢNG VIÊN CHỨC',
             nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
-            mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545']
+            mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545'] 
         },
         'cnn': {
             tieuDe: 'ĐÁNH GIÁ CHUẨN NGHỀ NGHIỆP',
@@ -427,25 +419,25 @@
         $("#tuNamHoc").val(cacNamHoc[0]);
         $("#denNamHoc").val(cacNamHoc[cacNamHoc.length - 1]);
         
-        if (window.bieuDoChinhInstance) {
-            window.bieuDoChinhInstance.destroy();
-        }
+        // Hủy toàn bộ biểu đồ cũ nếu có
+        bieuDoCaNhan.forEach(chart => chart.destroy());
+        bieuDoCaNhan = [];
+        $("#khuVucBieuDo").empty();
+        
         $("#trTieuDeDoiSanh").html('<th style="width: 200px;" class="align-middle text-start px-3 py-2">Tiêu chí / Năm học</th>');
         $("#thanBangDoiSanh").empty();
-        
-        // Reset lại độ rộng của wrapper trước khi mở
-        $("#wrapperBieuDoChinh").css("width", "100%");
         
         $("#hopThoaiBieuDo").modal('show');
     }
 
     function demDuLieuTheoLinhVuc(dsNam, maLinhVuc) {
         let mangKetQua = [];
+        
         if (maLinhVuc === 'vc') {
             let l1 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); }).length;
             let l2 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); }).length;
             let l3 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }).length;
-            let l4 = dsNam.length - (l1 + l2 + l3); 
+            let l4 = dsNam.length - (l1 + l2 + l3);
             mangKetQua = [l1, l2, l3, l4];
         } 
         else if (maLinhVuc === 'cnn') {
@@ -495,20 +487,11 @@
             return;
         }
 
-        // CẬP NHẬT: Xử lý độ rộng động cho thanh cuộn
-        // Cấp tối thiểu 150px chiều rộng cho mỗi năm học để các cột không bị ép nhỏ
-        let doRongToiThieu = Math.max(100, danhSachNamHoc.length * 150); 
-        $("#wrapperBieuDoChinh").css("width", doRongToiThieu + "%");
-
-        let datasets = [];
-        cauHinh.nhan.forEach((nhan, idx) => {
-            datasets.push({
-                label: nhan,
-                backgroundColor: cauHinh.mauSac[idx],
-                data: [],
-                borderRadius: 4
-            });
-        });
+        // Làm sạch khu vực vẽ
+        bieuDoCaNhan.forEach(chart => chart.destroy());
+        bieuDoCaNhan = [];
+        let khuVuc = $("#khuVucBieuDo");
+        khuVuc.empty();
 
         let doiSanhHead = '<th style="width: 200px;" class="align-middle text-start px-3 py-2">Tiêu chí / Năm học</th>';
         let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">Tổng số (Mẫu thống kê)</td>`];
@@ -521,10 +504,6 @@
             let dsNam = dlToanc.filter(r => String(r[0]).trim() === nam && r[4] !== "Đã chuyển");
             let mangSoLieu = demDuLieuTheoLinhVuc(dsNam, maLinhVuc);
             
-            mangSoLieu.forEach((so, idx) => {
-                datasets[idx].data.push(so);
-            });
-
             let tongSo = (maLinhVuc === 'dhcm') ? mangSoLieu.reduce((a, b) => a + b, 0) : dsNam.length;
 
             doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
@@ -533,32 +512,41 @@
             mangSoLieu.forEach((so, idx) => {
                 cacHangDoiSanh[idx + 1] += `<td class="align-middle">${so} <br><small class="text-muted">(${tongSo>0 ? Math.round(so/tongSo*100) : 0}%)</small></td>`;
             });
-        });
 
-        if (window.bieuDoChinhInstance) {
-            window.bieuDoChinhInstance.destroy();
-        }
-        let ctx = document.getElementById('bieuDoChinh').getContext('2d');
-        window.bieuDoChinhInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: danhSachNamHoc,
-                datasets: datasets
-            },
-            options: {
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: { 
-                    legend: { position: 'top', labels: { boxWidth: 15, font: {size: 13, weight: 'bold'} } },
-                    title: { display: true, text: `BIỂU ĐỒ SO SÁNH: ${cauHinh.tieuDe}`, font: {size: 16} }
+            // Tự động sinh container và thẻ canvas cho từng năm
+            let canvasId = `bd_nam_${index}`;
+            khuVuc.append(`
+                <div class="bieu-do-container shadow-sm position-relative">
+                    <span class="badge bg-primary position-absolute top-0 start-0 m-3" style="font-size: 13px;">${nam}</span>
+                    <h6 class="fw-bold text-secondary mt-3 mb-1" style="font-size: 14px;">Năm học: ${nam}</h6>
+                    <div style="position: relative; height: 220px; width: 100%; margin-top: 15px;">
+                        <canvas id="${canvasId}"></canvas>
+                    </div>
+                </div>
+            `);
+
+            // Vẽ Pie Chart từng năm
+            let ctx = document.getElementById(canvasId).getContext('2d');
+            let bieuDo = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: cauHinh.nhan,
+                    datasets: [{
+                        data: mangSoLieu,
+                        backgroundColor: cauHinh.mauSac,
+                        borderWidth: 1,
+                        hoverOffset: 6
+                    }]
                 },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        ticks: { stepSize: 1 } 
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 11} } } 
                     }
                 }
-            }
+            });
+            bieuDoCaNhan.push(bieuDo);
         });
 
         $("#trTieuDeDoiSanh").html(doiSanhHead);
