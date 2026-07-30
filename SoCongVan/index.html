@@ -49,6 +49,19 @@
     }
     .badge-notify { animation: pulseBadge 2s infinite; }
 
+    /* HIỆU ỨNG CHO DÒNG DỮ LIỆU MỚI */
+    @keyframes pulseNewRow {
+        0% { background-color: #fef08a; }
+        50% { background-color: #fef9c3; }
+        100% { background-color: #fef08a; }
+    }
+    .new-item-row {
+        animation: pulseNewRow 2s infinite;
+        border-left: 4px solid #ef4444 !important;
+        cursor: pointer;
+    }
+    .new-item-row:hover { background-color: #fde047 !important; }
+
     .table-scroll { width: 100%; overflow-x: auto; margin-top: 5px; }
     table { width: 100% !important; min-width: 100% !important; border-collapse: collapse; margin-bottom: 5px; table-layout: fixed !important; }
     th { background: #1e3a8a; color: white; padding: 10px; border: 1px solid #ccc; font-size: 14px; text-align: center; vertical-align: middle; }
@@ -82,20 +95,6 @@
     .dev-text-box { display: flex; flex-direction: column; line-height: 1.1; }
     .dev-label-top { font-family: 'Segoe UI', sans-serif; font-size: 8px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
     .dev-name-main { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 850; color: #ffd700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
-
-    /* HIỆU ỨNG CHO DÒNG DỮ LIỆU MỚI */
-    @keyframes pulseNewRow {
-        0% { background-color: #fef08a; }
-        50% { background-color: #fef9c3; }
-        100% { background-color: #fef08a; }
-    }
-    .new-item-row {
-        animation: pulseNewRow 2s infinite;
-        border-left: 4px solid #ef4444 !important;
-        cursor: pointer;
-    }
-    .new-item-row:hover { background-color: #fde047 !important; }
-    
   </style>
 </head>
 <body>
@@ -219,7 +218,7 @@
           return;
         }
 
-        const sysId = window.SCV_GLOBAL_ID || sessionStorage.getItem("SCV_ACTIVE_ID");
+        const sysId = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID");
         args.push(sysId); 
 
         fetch(GAS_URL, {
@@ -316,7 +315,7 @@
     applySystemConfig(null); 
     const storedId = sessionStorage.getItem("SCV_ACTIVE_ID");
     if(storedId) {
-      window.SCV_GLOBAL_ID = storedId; 
+      window.SYS_ACTIVE_ID = storedId; 
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('loading-overlay').style.display = 'flex';
       if (storedId === "Khách") { handleGuestLogin(true); } 
@@ -344,7 +343,7 @@
     }
     
     sessionStorage.setItem("SCV_ACTIVE_ID", sysAccount);
-    window.SCV_GLOBAL_ID = sysAccount; 
+    window.SYS_ACTIVE_ID = sysAccount; 
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('loading-overlay').style.display = 'flex';
     checkPermissionAndLoad();
@@ -377,19 +376,19 @@
   }
 
   function logoutGoogle() {
-    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SCV_GLOBAL_ID = null; location.reload(); 
+    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SYS_ACTIVE_ID = null; location.reload(); 
   }
 
   function checkPermissionAndLoad() {
     google.script.run.withSuccessHandler(async res => {
       applySystemConfig(res.config); 
       SYS_ACTIVE_ACCOUNT = res.sysId; GLOBAL_PERM = res.canInput; 
-if (!res.canView) {
-    document.getElementById('loading-overlay').style.display = 'none';
-    document.getElementById('accessDeniedBanner').style.display = 'flex';
-    document.getElementById('blockedSysId').innerText = SYS_ACTIVE_ACCOUNT;
-    return; 
-}
+      if (!res.canView) {
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('accessDeniedBanner').style.display = 'flex';
+          document.getElementById('blockedSysId').innerText = SYS_ACTIVE_ACCOUNT;
+          return; 
+      }
       
       document.getElementById('loading-overlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
@@ -456,7 +455,6 @@ if (!res.canView) {
              if(!res.error) {
                  window.SCV_CACHE_LICH = res.lich || [];
                  window.SCV_CACHE_CONGVAN = res.congvan || [];
-                 // GỌI HÀM CẬP NHẬT CỜ SAU KHI TẢI XONG BẰNG THUẬT TOÁN MỚI
                  if(typeof SCV_UpdateBadges === 'function') {
                      SCV_UpdateBadges();
                  }
@@ -466,7 +464,8 @@ if (!res.canView) {
          .SCV_getAllDataCache();
      });
   }
-// THUẬT TOÁN ĐỒNG BỘ LOCAL STORAGE: LƯU VẾT THEO ID (ID-BASED TRACKING)
+
+  // THUẬT TOÁN ĐỒNG BỘ LOCAL STORAGE: LƯU VẾT THEO ID (ID-BASED TRACKING)
   function SCV_GetSeenIDs(type) {
       let key = 'SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID;
       let data = localStorage.getItem(key);
@@ -478,7 +477,7 @@ if (!res.canView) {
       let seen = SCV_GetSeenIDs(type);
       if (!seen.includes(id)) {
           seen.push(id);
-          if (seen.length > 2000) seen = seen.slice(seen.length - 2000); // Tránh tràn RAM trình duyệt
+          if (seen.length > 2000) seen = seen.slice(seen.length - 2000); 
           localStorage.setItem('SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID, JSON.stringify(seen));
           SCV_UpdateBadges();
       }
@@ -491,7 +490,6 @@ if (!res.canView) {
   }
 
   function SCV_UpdateBadges() {
-      // Xử lý Công văn
       let seenCV = SCV_GetSeenIDs('CV');
       let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
       let badgeCV = document.getElementById('badge_cv_moi');
@@ -504,7 +502,6 @@ if (!res.canView) {
           }
       }
 
-      // Xử lý Lịch
       let seenLich = SCV_GetSeenIDs('LICH');
       let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
       let badgeLich = document.getElementById('badge_lich_moi');
@@ -524,7 +521,6 @@ if (!res.canView) {
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
     
-    // Tự động kích hoạt hiển thị dữ liệu mới nếu có cờ
     if(id === 'tabSearch' && typeof loadDataServer === 'function') {
         let seenLich = SCV_GetSeenIDs('LICH');
         let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
@@ -554,7 +550,6 @@ if (!res.canView) {
       }, 1500);
   }
 
- 
   function toast(msg) {
     const d = document.getElementById('global_msg');
     d.innerText = msg; d.style.display = 'block';
@@ -564,7 +559,7 @@ if (!res.canView) {
   /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ TỐI ƯU HÓA LOGIC & GIAO DIỆN) */
   let urlTepXemTruocHienTai = ""; 
 
-function moKhungXemTep(duong_dan) {
+  function moKhungXemTep(duong_dan) {
     if (!duong_dan) return;
     urlTepXemTruocHienTai = String(duong_dan).trim(); 
     let link_nhung = urlTepXemTruocHienTai;
@@ -593,7 +588,6 @@ function moKhungXemTep(duong_dan) {
 
     if (khop_id && isGoogleLink) {
         if (link_nhung.includes("drive.google.com")) {
-            // SỬA LỖI KHUNG XEM: Tự động phân biệt Link Thư mục và Link File
             if (link_nhung.includes("folders/") || link_nhung.includes("drive/folders")) {
                 link_nhung = "https://drive.google.com/embeddedfolderview?id=" + khop_id[1] + "#list";
             } else {
@@ -626,7 +620,7 @@ function moKhungXemTep(duong_dan) {
     urlTepXemTruocHienTai = ""; 
   }
 
-function moTheMoiDangXem() {
+  function moTheMoiDangXem() {
     if (!urlTepXemTruocHienTai) return;
     window.open(urlTepXemTruocHienTai, '_blank');
   }
