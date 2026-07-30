@@ -1,5 +1,5 @@
 <!-- TỆP: tong_hop.html -->
-<!-- PHIÊN BẢN: Tích hợp Biểu đồ độc lập từng năm, tự động xuống dòng (Flex-wrap) -->
+<!-- PHIÊN BẢN: Tối ưu độ chính xác thuật toán đếm & UI cột sát nhau -->
 
 <style>
   .o-chua-ghi-chu { position: relative; }
@@ -371,24 +371,24 @@
     }
 
     // ============================================================
-    // LOGIC TRÍCH XUẤT BIỂU ĐỒ ĐA LĨNH VỰC (PIE CHART TỪNG NĂM)
+    // LOGIC TRÍCH XUẤT BIỂU ĐỒ ĐA LĨNH VỰC 
     // ============================================================
     
     // Cấu hình linh hoạt cho 5 lĩnh vực
     const CAU_HINH_BIEU_DO = {
         'vc': {
             tieuDe: 'CHẤT LƯỢNG VIÊN CHỨC',
-            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT'],
             mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545'] 
         },
         'cnn': {
             tieuDe: 'ĐÁNH GIÁ CHUẨN NGHỀ NGHIỆP',
-            nhan: ['Loại Tốt', 'Loại Khá', 'Loại Đạt/TB', 'Chưa đạt / KĐG'],
+            nhan: ['Loại Tốt', 'Loại Khá', 'Loại Đạt/TB', 'Chưa đạt'],
             mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545']
         },
         'dv': {
             tieuDe: 'CHẤT LƯỢNG ĐẢNG VIÊN',
-            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT'],
             mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545']
         },
         'dhcm': {
@@ -398,7 +398,7 @@
         },
         'td': {
             tieuDe: 'DANH HIỆU THI ĐUA',
-            nhan: ['Lao động Tiên tiến', 'Chiến sĩ Thi đua', 'Không đạt / KĐG'],
+            nhan: ['Lao động Tiên tiến', 'Chiến sĩ Thi đua', 'Không đạt'],
             mauSac: ['#0d6efd', '#d63384', '#6c757d']
         }
     };
@@ -419,7 +419,6 @@
         $("#tuNamHoc").val(cacNamHoc[0]);
         $("#denNamHoc").val(cacNamHoc[cacNamHoc.length - 1]);
         
-        // Hủy toàn bộ biểu đồ cũ nếu có
         bieuDoCaNhan.forEach(chart => chart.destroy());
         bieuDoCaNhan = [];
         $("#khuVucBieuDo").empty();
@@ -430,6 +429,7 @@
         $("#hopThoaiBieuDo").modal('show');
     }
 
+    // THUẬT TOÁN ĐẾM CHÍNH XÁC (KHÔNG GOM DỮ LIỆU RỖNG VÀO "CHƯA HOÀN THÀNH")
     function demDuLieuTheoLinhVuc(dsNam, maLinhVuc) {
         let mangKetQua = [];
         
@@ -437,21 +437,21 @@
             let l1 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); }).length;
             let l2 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); }).length;
             let l3 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }).length;
-            let l4 = dsNam.length - (l1 + l2 + l3);
+            let l4 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); }).length;
             mangKetQua = [l1, l2, l3, l4];
         } 
         else if (maLinhVuc === 'cnn') {
             let l1 = dsNam.filter(r => String(r[19]||"").trim() === "Tốt").length;
             let l2 = dsNam.filter(r => String(r[19]||"").trim() === "Khá").length;
             let l3 = dsNam.filter(r => String(r[19]||"").trim() === "TB" || String(r[19]||"").trim() === "Đạt").length;
-            let l4 = dsNam.length - (l1 + l2 + l3);
+            let l4 = dsNam.filter(r => { let v = String(r[19]||"").trim().toLowerCase(); return v === "chưa đạt" || v === "yếu" || v === "kém"; }).length;
             mangKetQua = [l1, l2, l3, l4];
         }
         else if (maLinhVuc === 'dv') {
             let l1 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); }).length;
             let l2 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); }).length;
             let l3 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }).length;
-            let l4 = dsNam.length - (l1 + l2 + l3);
+            let l4 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); }).length;
             mangKetQua = [l1, l2, l3, l4];
         }
         else if (maLinhVuc === 'dhcm') {
@@ -464,13 +464,13 @@
         else if (maLinhVuc === 'td') {
             let l1 = dsNam.filter(r => r[23] === "LĐTT").length;
             let l2 = dsNam.filter(r => r[23] === "CSTĐ").length;
-            let l3 = dsNam.length - (l1 + l2);
+            let l3 = dsNam.filter(r => { let v = (r[23]||"").toLowerCase(); return v.includes("không") || v.includes("chưa"); }).length;
             mangKetQua = [l1, l2, l3];
         }
         return mangKetQua;
     }
 
-function veBieuDoChatLuong() {
+    function veBieuDoChatLuong() {
         let namBatDau = $("#tuNamHoc").val();
         let namKetThuc = $("#denNamHoc").val();
         let maLinhVuc = $("#linhVucBieuDo").val();
@@ -487,14 +487,13 @@ function veBieuDoChatLuong() {
             return;
         }
 
-        // Làm sạch khu vực vẽ
         bieuDoCaNhan.forEach(chart => chart.destroy());
         bieuDoCaNhan = [];
         let khuVuc = $("#khuVucBieuDo");
         khuVuc.empty();
 
         let doiSanhHead = '<th style="width: 200px;" class="align-middle text-start px-3 py-2">Tiêu chí / Năm học</th>';
-        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">Tổng số (Mẫu thống kê)</td>`];
+        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">Tổng số (Mẫu thống kê hợp lệ)</td>`];
         
         cauHinh.nhan.forEach((nhanTen, idx) => {
             cacHangDoiSanh.push(`<td class="fw-bold text-start px-3 py-2" style="color: ${cauHinh.mauSac[idx]}; border-left: 4px solid ${cauHinh.mauSac[idx]};">${nhanTen}</td>`);
@@ -504,7 +503,8 @@ function veBieuDoChatLuong() {
             let dsNam = dlToanc.filter(r => String(r[0]).trim() === nam && r[4] !== "Đã chuyển");
             let mangSoLieu = demDuLieuTheoLinhVuc(dsNam, maLinhVuc);
             
-            let tongSo = (maLinhVuc === 'dhcm') ? mangSoLieu.reduce((a, b) => a + b, 0) : dsNam.length;
+            // Tính tổng số chỉ dựa trên mẫu thống kê thực tế (Những người được đánh giá)
+            let tongSo = mangSoLieu.reduce((a, b) => a + b, 0);
 
             doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
             cacHangDoiSanh[0] += `<td class="fw-bold align-middle bg-light">${tongSo}</td>`;
@@ -513,7 +513,6 @@ function veBieuDoChatLuong() {
                 cacHangDoiSanh[idx + 1] += `<td class="align-middle">${so} <br><small class="text-muted">(${tongSo>0 ? Math.round(so/tongSo*100) : 0}%)</small></td>`;
             });
 
-            // Tự động sinh container và thẻ canvas cho từng năm
             let canvasId = `bd_nam_${index}`;
             khuVuc.append(`
                 <div class="bieu-do-container shadow-sm position-relative">
@@ -525,7 +524,7 @@ function veBieuDoChatLuong() {
                 </div>
             `);
 
-// Vẽ Bar Chart (Biểu đồ cột) cho từng năm với thông số UI hiện đại
+            // VẼ BIỂU ĐỒ CỘT THIẾT KẾ ĐỨNG SÁT NHAU
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
                 type: 'bar',
@@ -535,9 +534,11 @@ function veBieuDoChatLuong() {
                         label: 'Số lượng',
                         data: mangSoLieu,
                         backgroundColor: cauHinh.mauSac,
-                        borderWidth: 0, // Bỏ viền để cột nhìn phẳng, mượt và sang trọng hơn
-                        borderRadius: 6, // Tăng độ bo góc trên đỉnh cột tạo sự mềm mại
-                        maxBarThickness: 35 // KHÓA CỨNG CHIỀU RỘNG TỐI ĐA CỦA CỘT (Khắc phục lỗi cột quá to)
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        barPercentage: 0.9,       // Độ lớn của cột chiếm 90% không gian
+                        categoryPercentage: 0.9   // Giúp các cột đứng sát vào nhau
+                        // Đã gỡ bỏ maxBarThickness để tránh gây lỗi khoảng cách (gap) quá lớn
                     }]
                 },
                 options: {
@@ -546,7 +547,7 @@ function veBieuDoChatLuong() {
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)', // Làm tối màu tooltip
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 10,
                             callbacks: {
                                 label: function(context) {
@@ -560,22 +561,20 @@ function veBieuDoChatLuong() {
                             beginAtZero: true, 
                             ticks: { 
                                 stepSize: 1,
-                                font: { size: 11, family: "'Times New Roman', serif" } // Đồng bộ font chữ
+                                font: { size: 11, family: "'Times New Roman', serif" }
                             },
                             grid: {
-                                borderDash: [5, 5], // Đường lưới nét đứt mờ, giúp tập trung vào biểu đồ
+                                borderDash: [5, 5],
                                 color: '#e2e8f0'
                             }
                         },
                         x: {
                             ticks: { 
                                 font: { size: 11, family: "'Times New Roman', serif" },
-                                maxRotation: 25, // Góc nghiêng chữ 25 độ để chống lẹm nhãn
+                                maxRotation: 25,
                                 minRotation: 25
                             },
-                            grid: {
-                                display: false // Ẩn lưới dọc cho giao diện thoáng đãng
-                            }
+                            grid: { display: false }
                         }
                     }
                 }
