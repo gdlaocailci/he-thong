@@ -525,10 +525,10 @@ function veBieuDoChatLuong() {
                 </div>
             `);
 
-            // Vẽ Bar Chart (Biểu đồ cột) cho từng năm
+// Vẽ Bar Chart (Biểu đồ cột) cho từng năm
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
-                type: 'bar', // Chuyển đổi thành biểu đồ cột
+                type: 'bar', 
                 data: {
                     labels: cauHinh.nhan,
                     datasets: [{
@@ -536,7 +536,8 @@ function veBieuDoChatLuong() {
                         data: mangSoLieu,
                         backgroundColor: cauHinh.mauSac,
                         borderWidth: 1,
-                        borderRadius: 4 // Bo góc nhẹ cho cột
+                        borderRadius: 4, // Bo góc nhẹ cho cột
+                        barPercentage: 0.4 // Thu nhỏ bề ngang cột (giảm 60%)
                     }]
                 },
                 options: {
