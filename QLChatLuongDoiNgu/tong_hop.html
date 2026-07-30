@@ -1,6 +1,3 @@
-<!-- TỆP: tong_hop.html -->
-<!-- CHỨC NĂNG: THỐNG KÊ, TỔNG HỢP VÀ BIỂU ĐỒ CHẤT LƯỢNG -->
-
 <style>
   .o-chua-ghi-chu { position: relative; }
   .goc-do-ghi-chu {
@@ -16,7 +13,7 @@
       max-height: 50vh; overflow-y: auto;
   }
   
-  /* HIỆU ỨNG TỪ REACT BITS (Animated Spotlight / Shiny) */
+  /* HIỆU ỨNG TỪ REACT BITS */
   .btn-reactbits-shiny {
       position: relative; overflow: hidden; font-weight: bold;
       background: linear-gradient(110deg, #0284c7 30%, #38bdf8 50%, #0284c7 70%);
@@ -35,9 +32,14 @@
   }
 
   .bieu-do-container {
-      flex: 1 1 calc(33.333% - 15px); min-width: 300px;
-      background: #f8fafc; border: 1px solid #e2e8f0; 
-      border-radius: 8px; padding: 15px; text-align: center;
+      flex: 1 1 calc(33.333% - 15px); min-width: 320px;
+      background: #ffffff; border: 1px solid #e2e8f0; 
+      border-radius: 10px; padding: 15px; text-align: center;
+      transition: transform 0.2s ease-in-out;
+  }
+  .bieu-do-container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.08) !important;
   }
 </style>
 
@@ -58,7 +60,6 @@
              <li class="nav-item me-1"><button class="nav-link active py-1" data-bs-toggle="pill" data-bs-target="#m3Phan1" type="button">3.1. Tổng hợp nhân sự</button></li>
              <li class="nav-item"><button class="nav-link py-1" data-bs-toggle="pill" data-bs-target="#m3Phan2" type="button">3.2. Kết quả đánh giá</button></li>
           </ul>
-          <!-- NÚT BIỂU ĐỒ CHẤT LƯỢNG MỚI -->
           <button class="btn btn-reactbits-shiny py-1 ms-2" onclick="moHopThoaiBieuDo()">
               <i class="fas fa-chart-pie"></i> Biểu đồ chất lượng
           </button>
@@ -123,54 +124,65 @@
   </div>
 </div>
 
-<!-- MODAL BIỂU ĐỒ CHẤT LƯỢNG -->
+<!-- MODAL BIỂU ĐỒ CHẤT LƯỢNG TOÀN DIỆN -->
 <div class="modal fade" id="hopThoaiBieuDo" data-bs-focus="false">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header bg-success text-white py-2">
-          <h5 class="modal-title fw-bold"><i class="fas fa-chart-pie"></i> BIỂU ĐỒ CHẤT LƯỢNG (XẾP LOẠI VIÊN CHỨC)</h5>
+          <h5 class="modal-title fw-bold" id="tieuDeModalBieuDo"><i class="fas fa-chart-pie"></i> HỆ THỐNG BIỂU ĐỒ CHẤT LƯỢNG</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
-        <div class="row mb-3 justify-content-center align-items-center">
-            <div class="col-md-3">
-                <label class="fw-bold">Từ năm học:</label>
-                <select id="tuNamHoc" class="form-select"></select>
-            </div>
-            <div class="col-md-3">
-                <label class="fw-bold">Đến năm học:</label>
-                <select id="denNamHoc" class="form-select"></select>
-            </div>
-            <div class="col-md-2 mt-4">
-                <button class="btn btn-primary w-100 fw-bold" onclick="veBieuDoChatLuong()"><i class="fas fa-play"></i> TRÍCH XUẤT</button>
+      <div class="modal-body bg-light">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+                <div class="row g-3 align-items-end justify-content-center">
+                    <div class="col-md-3">
+                        <label class="fw-bold text-primary mb-1">Lĩnh vực phân tích:</label>
+                        <select id="linhVucBieuDo" class="form-select border-primary">
+                            <option value="vc">1. Kết quả xếp loại Viên chức</option>
+                            <option value="cnn">2. Đánh giá Chuẩn nghề nghiệp</option>
+                            <option value="dv">3. Chất lượng Đảng viên</option>
+                            <option value="dhcm">4. Danh hiệu Chuyên môn giỏi</option>
+                            <option value="td">5. Danh hiệu Thi đua</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="fw-bold text-secondary mb-1">Từ năm học:</label>
+                        <select id="tuNamHoc" class="form-select"></select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="fw-bold text-secondary mb-1">Đến năm học:</label>
+                        <select id="denNamHoc" class="form-select"></select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="veBieuDoChatLuong()"><i class="fas fa-cogs"></i> TRÍCH XUẤT</button>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <hr>
-        
-        <!-- Khu vực chứa các biểu đồ (Flex Wrap) -->
-        <div id="khuVucBieuDo" class="d-flex flex-wrap gap-3 justify-content-center mb-4">
-            <!-- Biểu đồ sẽ được chèn tự động vào đây -->
-        </div>
+        <!-- Khu vực chứa các biểu đồ -->
+        <div id="khuVucBieuDo" class="d-flex flex-wrap gap-3 justify-content-center mb-4"></div>
 
         <!-- Khung đối sánh kết quả -->
-        <h6 class="text-primary fw-bold text-uppercase border-bottom pb-2 mb-3"><i class="fas fa-table"></i> Bảng đối sánh kết quả các năm</h6>
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm text-center table-hover" id="bangDoiSanh">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 150px;">Tiêu chí / Năm học</th>
-                        <!-- Cột năm học sẽ được chèn tự động -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Dữ liệu đối sánh sẽ được chèn tự động -->
-                </tbody>
-            </table>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <h6 class="bg-primary text-white fw-bold text-uppercase p-2 mb-0 rounded-top"><i class="fas fa-table"></i> Bảng đối sánh dữ liệu chi tiết</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm text-center table-hover mb-0" id="bangDoiSanh">
+                        <thead class="table-light">
+                            <tr id="trTieuDeDoiSanh">
+                                <th style="width: 200px;" class="align-middle text-start px-3">Tiêu chí / Năm học</th>
+                            </tr>
+                        </thead>
+                        <tbody id="thanBangDoiSanh"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
       </div>
-      <div class="modal-footer py-1">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+      <div class="modal-footer py-2 bg-white">
+          <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">Đóng cửa sổ</button>
       </div>
     </div>
   </div>
@@ -178,7 +190,7 @@
 
 <script>
     let treAnTt;
-    let bieuDoCaNhan = []; // Mảng chứa các instance biểu đồ để hủy khi vẽ lại
+    let bieuDoCaNhan = []; 
 
     function hienTooltipTen(e) {
         clearTimeout(treAnTt); 
@@ -246,7 +258,6 @@
         const nf = $("#nhapLocN3").val(); const bd1 = $("#bangTkeNs tbody"); bd1.empty(); const bd2 = $("#bangTkeDg tbody"); bd2.empty();
         let ns = layTuyc(0); if (nf) ns = [String(nf).trim()];
         
-        // Sắp xếp năm học giảm dần để thống kê từ mới đến cũ
         ns.sort((a, b) => b.localeCompare(a));
 
         ns.forEach(y => {
@@ -297,36 +308,30 @@
             let cn2 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "Khá")); 
             let cn3 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "TB"));
             
-            // Xếp loại Viên chức
             let xs1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
             let xs2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); })); 
             let xs4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             let xs3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
             
-            // Xếp loại Đảng viên
             let dv1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
             let dv2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); })); 
             let dv4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             let dv3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
             
-            // Danh hiệu chuyên môn
             let dh1 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("trường"))); 
             let dh2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[22]||"").toLowerCase(); return v.includes("huyện") || v.includes("tp") || v.includes("thành phố"); })); 
             let dh3 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("tỉnh"))); 
             let dh4 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("quốc gia") || (r[22]||"").toLowerCase().includes("qg")));
             
-            // Danh hiệu thi đua
             let td1 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "LĐTT")); 
             let td2 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "CSTĐ")); 
             
-            // Hình thức khen
             let ht1 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Giấy khen")); 
             let ht2 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Bằng khen")); 
             let ht3 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Kỷ niệm chương")); 
             let ht4 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huy chương")); 
             let ht5 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huân chương"));
 
-            // Cấp khen
             let ck1 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Xã")); 
             let ck2 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Huyện/TP")); 
             let ck3 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Tỉnh")); 
@@ -337,9 +342,38 @@
     }
 
     // ============================================================
-    // LOGIC TRÍCH XUẤT BIỂU ĐỒ CHẤT LƯỢNG (XẾP LOẠI VIÊN CHỨC)
+    // LOGIC TRÍCH XUẤT BIỂU ĐỒ ĐA LĨNH VỰC
     // ============================================================
     
+    // Cấu hình linh hoạt cho 5 lĩnh vực
+    const CAU_HINH_BIEU_DO = {
+        'vc': {
+            tieuDe: 'CHẤT LƯỢNG VIÊN CHỨC',
+            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+            mauSac: ['#4bc0c0', '#36a2eb', '#ffcd56', '#ff6384']
+        },
+        'cnn': {
+            tieuDe: 'ĐÁNH GIÁ CHUẨN NGHỀ NGHIỆP',
+            nhan: ['Loại Tốt', 'Loại Khá', 'Loại Đạt/TB', 'Chưa đạt / KĐG'],
+            mauSac: ['#4bc0c0', '#36a2eb', '#ffcd56', '#ff6384']
+        },
+        'dv': {
+            tieuDe: 'CHẤT LƯỢNG ĐẢNG VIÊN',
+            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+            mauSac: ['#4bc0c0', '#36a2eb', '#ffcd56', '#ff6384']
+        },
+        'dhcm': {
+            tieuDe: 'DANH HIỆU CHUYÊN MÔN',
+            nhan: ['Cấp Trường', 'Cấp Huyện/TP', 'Cấp Tỉnh', 'Cấp Quốc gia'],
+            mauSac: ['#9966ff', '#4bc0c0', '#36a2eb', '#ff6384']
+        },
+        'td': {
+            tieuDe: 'DANH HIỆU THI ĐUA',
+            nhan: ['Lao động Tiên tiến', 'Chiến sĩ Thi đua', 'Không đạt / KĐG'],
+            mauSac: ['#36a2eb', '#ff6384', '#c9cbcf']
+        }
+    };
+
     function moHopThoaiBieuDo() {
         let cacNamHoc = layTuyc(0);
         if (cacNamHoc.length === 0) {
@@ -347,36 +381,74 @@
             return;
         }
 
-        // Đổ dữ liệu vào Select Box
-        cacNamHoc.sort((a, b) => a.localeCompare(b)); // Tăng dần
+        cacNamHoc.sort((a, b) => a.localeCompare(b)); 
         let htmlOption = cacNamHoc.map(n => `<option value="${n}">${n}</option>`).join('');
         
         $("#tuNamHoc").html(htmlOption);
         $("#denNamHoc").html(htmlOption);
         
-        // Mặc định chọn từ năm cũ nhất đến năm mới nhất
         $("#tuNamHoc").val(cacNamHoc[0]);
         $("#denNamHoc").val(cacNamHoc[cacNamHoc.length - 1]);
         
         $("#khuVucBieuDo").empty();
-        $("#bangDoiSanh thead tr").html('<th style="width: 150px;">Tiêu chí / Năm học</th>');
-        $("#bangDoiSanh tbody").empty();
+        $("#trTieuDeDoiSanh").html('<th style="width: 200px;" class="align-middle text-start px-3">Tiêu chí / Năm học</th>');
+        $("#thanBangDoiSanh").empty();
         
         $("#hopThoaiBieuDo").modal('show');
     }
 
+    function demDuLieuTheoLinhVuc(dsNam, maLinhVuc) {
+        let mangKetQua = [];
+        
+        if (maLinhVuc === 'vc') {
+            let l1 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); }).length;
+            let l2 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); }).length;
+            let l3 = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }).length;
+            let l4 = dsNam.length - (l1 + l2 + l3); // Số còn lại gộp vào Chưa HT / KĐG
+            mangKetQua = [l1, l2, l3, l4];
+        } 
+        else if (maLinhVuc === 'cnn') {
+            let l1 = dsNam.filter(r => String(r[19]||"").trim() === "Tốt").length;
+            let l2 = dsNam.filter(r => String(r[19]||"").trim() === "Khá").length;
+            let l3 = dsNam.filter(r => String(r[19]||"").trim() === "TB" || String(r[19]||"").trim() === "Đạt").length;
+            let l4 = dsNam.length - (l1 + l2 + l3);
+            mangKetQua = [l1, l2, l3, l4];
+        }
+        else if (maLinhVuc === 'dv') {
+            let l1 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); }).length;
+            let l2 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); }).length;
+            let l3 = dsNam.filter(r => { let v = (r[21]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }).length;
+            let l4 = dsNam.length - (l1 + l2 + l3);
+            mangKetQua = [l1, l2, l3, l4];
+        }
+        else if (maLinhVuc === 'dhcm') {
+            let l1 = dsNam.filter(r => (r[22]||"").toLowerCase().includes("trường")).length;
+            let l2 = dsNam.filter(r => { let v = (r[22]||"").toLowerCase(); return v.includes("huyện") || v.includes("tp") || v.includes("thành phố"); }).length;
+            let l3 = dsNam.filter(r => (r[22]||"").toLowerCase().includes("tỉnh")).length;
+            let l4 = dsNam.filter(r => (r[22]||"").toLowerCase().includes("quốc gia") || (r[22]||"").toLowerCase().includes("qg")).length;
+            mangKetQua = [l1, l2, l3, l4];
+        }
+        else if (maLinhVuc === 'td') {
+            let l1 = dsNam.filter(r => r[23] === "LĐTT").length;
+            let l2 = dsNam.filter(r => r[23] === "CSTĐ").length;
+            let l3 = dsNam.length - (l1 + l2);
+            mangKetQua = [l1, l2, l3];
+        }
+
+        return mangKetQua;
+    }
+
     function veBieuDoChatLuong() {
-        // Xóa biểu đồ cũ khỏi bộ nhớ
         bieuDoCaNhan.forEach(chart => chart.destroy());
         bieuDoCaNhan = [];
         
         let namBatDau = $("#tuNamHoc").val();
         let namKetThuc = $("#denNamHoc").val();
+        let maLinhVuc = $("#linhVucBieuDo").val();
+        let cauHinh = CAU_HINH_BIEU_DO[maLinhVuc];
         
         if (namBatDau > namKetThuc) {
-            let temp = namBatDau;
-            namBatDau = namKetThuc;
-            namKetThuc = temp;
+            let temp = namBatDau; namBatDau = namKetThuc; namKetThuc = temp;
         }
 
         let danhSachNamHoc = layTuyc(0).filter(y => y >= namBatDau && y <= namKetThuc).sort((a, b) => a.localeCompare(b));
@@ -386,78 +458,67 @@
             return;
         }
 
+        $("#tieuDeModalBieuDo").html(`<i class="fas fa-chart-pie"></i> BÁO CÁO: ${cauHinh.tieuDe}`);
+
         let khuVuc = $("#khuVucBieuDo");
         khuVuc.empty();
         
-        // Chuẩn bị dữ liệu cho khung đối sánh
-        let doiSanhHead = '<th style="width: 150px;" class="fw-bold">Tiêu chí \\ Năm học</th>';
-        let rowTongSo = '<td class="fw-bold text-start">Tổng số đánh giá</td>';
-        let rowHTXS = '<td class="fw-bold text-start" style="color: #4bc0c0;">Hoàn thành Xuất sắc</td>';
-        let rowHTT = '<td class="fw-bold text-start" style="color: #36a2eb;">Hoàn thành Tốt</td>';
-        let rowHT = '<td class="fw-bold text-start" style="color: #ffcd56;">Hoàn thành</td>';
-        let rowCHT = '<td class="fw-bold text-start" style="color: #ff6384;">Không HT/Chưa đánh giá</td>';
+        // Khởi tạo khung đối sánh động theo số lượng Label của lĩnh vực
+        let doiSanhHead = '<th style="width: 200px;" class="align-middle text-start px-3">Tiêu chí / Năm học</th>';
+        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 text-primary">Tổng số đánh giá / T.kê</td>`];
         
+        cauHinh.nhan.forEach((nhanTen, idx) => {
+            cacHangDoiSanh.push(`<td class="fw-bold text-start px-3" style="color: ${cauHinh.mauSac[idx]}; border-left: 4px solid ${cauHinh.mauSac[idx]};">${nhanTen}</td>`);
+        });
+
         danhSachNamHoc.forEach((nam, index) => {
             let dsNam = dlToanc.filter(r => String(r[0]).trim() === nam && r[4] !== "Đã chuyển");
+            let mangSoLieu = demDuLieuTheoLinhVuc(dsNam, maLinhVuc);
             
-            // Tính toán số lượng Xếp loại Viên chức (Cột 20)
-            let slHTXS = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); }).length;
-            let slHTT = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); }).length;
-            let slCHT = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); }).length;
-            let slHT = dsNam.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }).length;
+            // Xếp hạng danh hiệu chỉ đếm người có giải, không tính tổng người tham gia
+            let tongSo = (maLinhVuc === 'dhcm') ? mangSoLieu.reduce((a, b) => a + b, 0) : dsNam.length;
+
+            doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
+            cacHangDoiSanh[0] += `<td class="fw-bold align-middle bg-light">${tongSo}</td>`;
             
-            let tongSo = slHTXS + slHTT + slHT + slCHT;
+            mangSoLieu.forEach((so, idx) => {
+                cacHangDoiSanh[idx + 1] += `<td class="align-middle">${so} <br><small class="text-muted">(${tongSo>0 ? Math.round(so/tongSo*100) : 0}%)</small></td>`;
+            });
 
-            // Xây dựng Khung Đối Sánh
-            doiSanhHead += `<th class="text-primary">${nam}</th>`;
-            rowTongSo += `<td class="fw-bold">${tongSo}</td>`;
-            rowHTXS += `<td>${slHTXS} <br><small class="text-muted">(${tongSo>0 ? Math.round(slHTXS/tongSo*100) : 0}%)</small></td>`;
-            rowHTT += `<td>${slHTT} <br><small class="text-muted">(${tongSo>0 ? Math.round(slHTT/tongSo*100) : 0}%)</small></td>`;
-            rowHT += `<td>${slHT} <br><small class="text-muted">(${tongSo>0 ? Math.round(slHT/tongSo*100) : 0}%)</small></td>`;
-            rowCHT += `<td>${slCHT} <br><small class="text-muted">(${tongSo>0 ? Math.round(slCHT/tongSo*100) : 0}%)</small></td>`;
-
-            // Dựng thẻ Canvas
             let canvasId = `bd_nam_${index}`;
             khuVuc.append(`
-                <div class="bieu-do-container shadow-sm">
-                    <h6 class="fw-bold text-primary mb-2">Năm học: ${nam}</h6>
-                    <div style="position: relative; height: 220px; width: 100%;">
+                <div class="bieu-do-container shadow-sm position-relative">
+                    <span class="badge bg-primary position-absolute top-0 start-0 m-3" style="font-size: 13px;">${nam}</span>
+                    <div style="position: relative; height: 230px; width: 100%; margin-top: 10px;">
                         <canvas id="${canvasId}"></canvas>
                     </div>
                 </div>
             `);
 
-            // Dựng Biểu đồ bằng Chart.js
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+                    labels: cauHinh.nhan,
                     datasets: [{
-                        data: [slHTXS, slHTT, slHT, slCHT],
-                        backgroundColor: ['#4bc0c0', '#36a2eb', '#ffcd56', '#ff6384'],
-                        borderWidth: 1
+                        data: mangSoLieu,
+                        backgroundColor: cauHinh.mauSac,
+                        borderWidth: 1,
+                        hoverOffset: 6
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } }
                 }
             });
             bieuDoCaNhan.push(bieuDo);
         });
 
-        // Ghi dữ liệu vào Bảng Đối sánh
-        $("#bangDoiSanh thead tr").html(doiSanhHead);
-        $("#bangDoiSanh tbody").html(`
-            <tr class="table-secondary">${rowTongSo}</tr>
-            <tr>${rowHTXS}</tr>
-            <tr>${rowHTT}</tr>
-            <tr>${rowHT}</tr>
-            <tr>${rowCHT}</tr>
-        `);
+        $("#trTieuDeDoiSanh").html(doiSanhHead);
+        
+        let htmlBodyTable = '';
+        cacHangDoiSanh.forEach(htmlHang => { htmlBodyTable += `<tr>${htmlHang}</tr>`; });
+        $("#thanBangDoiSanh").html(htmlBodyTable);
     }
 </script>
