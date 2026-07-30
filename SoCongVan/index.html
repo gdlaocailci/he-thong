@@ -82,6 +82,20 @@
     .dev-text-box { display: flex; flex-direction: column; line-height: 1.1; }
     .dev-label-top { font-family: 'Segoe UI', sans-serif; font-size: 8px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
     .dev-name-main { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 850; color: #ffd700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+
+    /* HIỆU ỨNG CHO DÒNG DỮ LIỆU MỚI */
+    @keyframes pulseNewRow {
+        0% { background-color: #fef08a; }
+        50% { background-color: #fef9c3; }
+        100% { background-color: #fef08a; }
+    }
+    .new-item-row {
+        animation: pulseNewRow 2s infinite;
+        border-left: 4px solid #ef4444 !important;
+        cursor: pointer;
+    }
+    .new-item-row:hover { background-color: #fde047 !important; }
+    
   </style>
 </head>
 <body>
@@ -130,7 +144,11 @@
 
 <div class="main-wrapper" id="mainApp" style="display:none;">
   <div class="tabs">
-    <button id="btnTabSearch" class="tab-btn active" onclick="showTab('tabSearch', this)">🔍 TRA CỨU LỊCH</button>
+    
+    <button id="btnTabSearch" class="tab-btn active" onclick="showTab('tabSearch', this)">
+        🔍 TRA CỨU LỊCH
+        <span id="badge_lich_moi" class="badge-notify" style="display:none; background:#ef4444; color:white; border-radius:12px; padding:2px 7px; font-size:11px; margin-left:5px; font-weight:bold;"></span>
+    </button>
     
     <!-- GẮN CỜ BÊN TRONG PHÂN HỆ ĐỂ TẠO SỰ ĐỒNG BỘ UI -->
     <button id="btnTabSearchCV" class="tab-btn" onclick="showTab('tabSearchCongVan', this)">
@@ -261,8 +279,8 @@
   window.SCV_CACHE_CONGVAN = [];
   window.SCV_FOLDER_TREE_CACHE = {}; 
 
-  let GLOBAL_USER = "";
-  let GLOBAL_PERM = false; 
+  let SYS_ACTIVE_ACCOUNT = "";
+  let GLOBAL_PERM = false;
 
   function applySystemConfig(config) {
       const tenTruong = typeof SCV_TEN_TRUONG !== 'undefined' ? SCV_TEN_TRUONG : 'ĐANG TẢI...';
@@ -337,8 +355,8 @@
     google.script.run.withSuccessHandler(async res => {
       applySystemConfig(res.config); 
       if (res && res.canView) {
-        sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SCV_GLOBAL_ID = "Khách";
-        GLOBAL_USER = "Khách"; GLOBAL_PERM = false; 
+        sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SYS_ACTIVE_ID = "Khách";
+        SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false;
         
         document.getElementById('loading-overlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -365,14 +383,13 @@
   function checkPermissionAndLoad() {
     google.script.run.withSuccessHandler(async res => {
       applySystemConfig(res.config); 
-      GLOBAL_USER = res.sysId; GLOBAL_PERM = res.canInput; 
-      
-      if (!res.canView) {
-          document.getElementById('loading-overlay').style.display = 'none';
-          document.getElementById('accessDeniedBanner').style.display = 'flex';
-          document.getElementById('blockedSysId').innerText = GLOBAL_USER;
-          return; 
-      }
+      SYS_ACTIVE_ACCOUNT = res.sysId; GLOBAL_PERM = res.canInput; 
+if (!res.canView) {
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('accessDeniedBanner').style.display = 'flex';
+    document.getElementById('blockedSysId').innerText = SYS_ACTIVE_ACCOUNT;
+    return; 
+}
       
       document.getElementById('loading-overlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
@@ -386,7 +403,7 @@
       await loadSystemModules();
       executePriorityLoading();
 
-    }).SCV_getInitialData(window.SCV_GLOBAL_ID);
+    }).SCV_getInitialData(window.SYS_ACTIVE_ID);
   }
 
   async function loadSystemModules() {
@@ -433,51 +450,94 @@
       });
   }
 
-  function fetchCacheData() {
+ function fetchCacheData() {
      return new Promise((resolve) => {
          google.script.run.withSuccessHandler(res => {
              if(!res.error) {
                  window.SCV_CACHE_LICH = res.lich || [];
                  window.SCV_CACHE_CONGVAN = res.congvan || [];
-                 // GỌI HÀM CẬP NHẬT CỜ SAU KHI TẢI XONG
-                 capNhatCoThongBaoCongVan();
+                 // GỌI HÀM CẬP NHẬT CỜ SAU KHI TẢI XONG BẰNG THUẬT TOÁN MỚI
+                 if(typeof SCV_UpdateBadges === 'function') {
+                     SCV_UpdateBadges();
+                 }
              }
              resolve();
          }).withFailureHandler(e => { console.error(e); resolve(); })
          .SCV_getAllDataCache();
      });
   }
+// THUẬT TOÁN ĐỒNG BỘ LOCAL STORAGE: LƯU VẾT THEO ID (ID-BASED TRACKING)
+  function SCV_GetSeenIDs(type) {
+      let key = 'SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID;
+      let data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+  }
 
-  // THUẬT TOÁN ĐỒNG BỘ LOCAL STORAGE VỚI MÀN HÌNH MENU
-  function capNhatCoThongBaoCongVan() {
-      let tongCvHienTai = window.SCV_CACHE_CONGVAN.length;
-      let localKey = 'SCV_DA_XEM_CV_' + window.SCV_GLOBAL_ID;
-      
-      if (!localStorage.getItem(localKey)) {
-           localStorage.setItem(localKey, tongCvHienTai);
+  function SCV_MarkAsSeen(type, id, rowElement) {
+      if (!id) return;
+      let seen = SCV_GetSeenIDs(type);
+      if (!seen.includes(id)) {
+          seen.push(id);
+          if (seen.length > 2000) seen = seen.slice(seen.length - 2000); // Tránh tràn RAM trình duyệt
+          localStorage.setItem('SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID, JSON.stringify(seen));
+          SCV_UpdateBadges();
       }
-      
-      let tongCvDaXem = parseInt(localStorage.getItem(localKey)) || tongCvHienTai;
-      let soCvMoi = tongCvHienTai - tongCvDaXem;
-      let badge = document.getElementById('badge_cv_moi');
-
-      if (document.getElementById('tabSearchCongVan').classList.contains('active')) {
-          localStorage.setItem(localKey, tongCvHienTai);
-          if(badge) badge.style.display = 'none';
-          return;
+      if(rowElement) {
+          rowElement.style.animation = 'none';
+          rowElement.style.borderLeft = '';
+          rowElement.classList.remove('new-item-row');
+          rowElement.style.backgroundColor = 'white';
       }
+  }
 
-      if (soCvMoi > 0) {
-          if(badge) {
-              badge.innerText = soCvMoi > 99 ? '99+' : soCvMoi;
-              badge.style.display = 'inline-block';
+  function SCV_UpdateBadges() {
+      // Xử lý Công văn
+      let seenCV = SCV_GetSeenIDs('CV');
+      let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
+      let badgeCV = document.getElementById('badge_cv_moi');
+      if (badgeCV) {
+          if (newCV.length > 0) {
+              badgeCV.innerText = newCV.length > 99 ? '99+' : newCV.length;
+              badgeCV.style.display = 'inline-block';
+          } else {
+              badgeCV.style.display = 'none';
           }
-      } else {
-          if (tongCvHienTai < tongCvDaXem) {
-              localStorage.setItem(localKey, tongCvHienTai);
-          }
-          if(badge) badge.style.display = 'none';
       }
+
+      // Xử lý Lịch
+      let seenLich = SCV_GetSeenIDs('LICH');
+      let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+      let badgeLich = document.getElementById('badge_lich_moi');
+      if (badgeLich) {
+          if (newLich.length > 0) {
+              badgeLich.innerText = newLich.length > 99 ? '99+' : newLich.length;
+              badgeLich.style.display = 'inline-block';
+          } else {
+              badgeLich.style.display = 'none';
+          }
+      }
+  }
+
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    
+    // Tự động kích hoạt hiển thị dữ liệu mới nếu có cờ
+    if(id === 'tabSearch' && typeof loadDataServer === 'function') {
+        let seenLich = SCV_GetSeenIDs('LICH');
+        let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+        loadDataServer(newLich.length > 0); 
+    }
+    
+    if(id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') {
+        let seenCV = SCV_GetSeenIDs('CV');
+        let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
+        loadDataSearchCV(newCV.length > 0);
+    }
+    
+    if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') loadPhanQuyen();
   }
 
   function preloadDriveFolders() {
@@ -494,28 +554,7 @@
       }, 1500);
   }
 
-  function showTab(id, btn) {
-    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    btn.classList.add('active');
-    
-    if(id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer();
-    
-    if(id === 'tabSearchCongVan') {
-        // NÚT CHỐT ĐÃ ĐỌC: Khớp lệnh tắt cờ cho cả Phân hệ lẫn Màn hình Menu
-        let localKey = 'SCV_DA_XEM_CV_' + window.SCV_GLOBAL_ID;
-        let tongCvHienTai = window.SCV_CACHE_CONGVAN.length;
-        localStorage.setItem(localKey, tongCvHienTai);
-        let badge = document.getElementById('badge_cv_moi');
-        if (badge) badge.style.display = 'none';
-        
-        if(typeof loadDataSearchCV === 'function') loadDataSearchCV();
-    }
-    
-    if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') loadPhanQuyen();
-  }
-  
+ 
   function toast(msg) {
     const d = document.getElementById('global_msg');
     d.innerText = msg; d.style.display = 'block';
