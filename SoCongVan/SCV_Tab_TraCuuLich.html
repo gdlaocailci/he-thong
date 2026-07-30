@@ -35,8 +35,6 @@
 <script>
   let IS_AUTH_LICH = false; 
 
-
-
   function setDefaultDates() {
       const now = new Date();
       const ddTo = ("0" + now.getDate()).slice(-2);
@@ -52,7 +50,7 @@
 
   function checkEnterLich(e) { if (e.key === "Enter") loadDataServer(); }
 
-function initTabLich() {
+  function initTabLich() {
       setDefaultDates();
       
       IS_AUTH_LICH = (typeof GLOBAL_PERM !== 'undefined') ? GLOBAL_PERM : false; 
@@ -66,7 +64,6 @@ function initTabLich() {
       if (document.getElementById('thSuaLich')) document.getElementById('thSuaLich').style.display = disp;
   }
 
-  // NÂNG CẤP: Nhận tham số showOnlyNew
   function loadDataServer(showOnlyNew = false) {
       const tbody = document.getElementById('bodyView');
       const filtersObj = {
@@ -216,57 +213,6 @@ function initTabLich() {
     });
   }
 
-  function renderTable(data) {
-    const disp = IS_AUTH_LICH ? '' : 'none';
-    if (document.getElementById('colSuaLich')) document.getElementById('colSuaLich').style.display = disp;
-    if (document.getElementById('thSuaLich')) document.getElementById('thSuaLich').style.display = disp;
-
-    const tb = document.getElementById('bodyView'); 
-    tb.innerHTML = "";
-    const colSpanNum = 9;
-    
-    if(!data || data.length === 0) { 
-        tb.innerHTML = `<tr><td colspan="${colSpanNum}" class="text-center" style="padding:20px; color:red; border: 1px solid #ccc !important;">❌ Không tìm thấy lịch nào phù hợp!</td></tr>`;
-        return; 
-    }
-    
-    data.forEach((r, i) => {
-       let cellVal = r[6], urlShow = "";
-       if (typeof cellVal === 'object' && cellVal !== null) { urlShow = cellVal.url || ""; } 
-       else { urlShow = String(cellVal || ""); }
-       
-       let linkHtml = "";
-       if (urlShow && urlShow.trim() !== "") { 
-           const links = urlShow.split(',').map(l => l.trim()).filter(l => l !== "");
-           linkHtml = `<div style="display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">` + 
-                      links.map((url, idx) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:2px 5px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem tài liệu ${idx+1}">📎 ${idx+1}</a>`).join('') +
-                      `</div>`;
-       }
-       
-       const centerStyle = 'text-align: center; vertical-align: middle; padding: 8px; word-wrap: break-word; border: 1px solid #ccc !important;';
-       const leftStyle   = 'text-align: left !important; vertical-align: middle; padding: 8px; padding-left: 8px; word-wrap: break-word; white-space: pre-wrap; border: 1px solid #ccc !important;';
-       
-       const rowDataString = encodeURIComponent(JSON.stringify(r)).replace(/'/g, "%27");
-       
-       let styleSua = IS_AUTH_LICH ? centerStyle : 'display: none;';
-       let btnSua = IS_AUTH_LICH ? `<button onclick="transferToEditLich(this, '${rowDataString}')" style="border:1px solid #94a3b8; background:#fff; cursor:pointer; padding:3px 8px; border-radius:4px; color:#1e3a8a; font-weight:bold;" title="Sửa nội dung này">📝</button>` : "";
-       let htmlSua = `<td style="${styleSua}">${btnSua}</td>`;
-
-       tb.innerHTML += `
-       <tr style="background-color:${i%2===0?'white':'#f9fafb'};">
-           ${htmlSua}
-           <td style="${centerStyle}">${i+1}</td>
-           <td style="${centerStyle}">${r[0] || ""}</td>
-           <td style="${centerStyle}">${r[1] || ""}</td>
-           <td style="${leftStyle}">${r[2] || ""}</td>
-           <td style="${centerStyle}">${r[3] || ""}</td>
-           <td style="${centerStyle}">${r[4] || ""}</td>
-           <td style="${centerStyle}">${r[5] || ""}</td>
-           <td style="${centerStyle}">${linkHtml}</td>
-       </tr>`;
-    });
-  }
-  
   function transferToEditLich(btn, dataEncoded) {
        try {
            const rowData = JSON.parse(decodeURIComponent(dataEncoded));
