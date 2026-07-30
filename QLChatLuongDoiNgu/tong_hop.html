@@ -470,7 +470,7 @@
         return mangKetQua;
     }
 
-    function veBieuDoChatLuong() {
+function veBieuDoChatLuong() {
         let namBatDau = $("#tuNamHoc").val();
         let namKetThuc = $("#denNamHoc").val();
         let maLinhVuc = $("#linhVucBieuDo").val();
@@ -525,24 +525,41 @@
                 </div>
             `);
 
-            // Vẽ Pie Chart từng năm
+            // Vẽ Bar Chart (Biểu đồ cột) cho từng năm
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
-                type: 'pie',
+                type: 'bar', // Chuyển đổi thành biểu đồ cột
                 data: {
                     labels: cauHinh.nhan,
                     datasets: [{
+                        label: 'Số lượng',
                         data: mangSoLieu,
                         backgroundColor: cauHinh.mauSac,
                         borderWidth: 1,
-                        hoverOffset: 6
+                        borderRadius: 4 // Bo góc nhẹ cho cột
                     }]
                 },
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
                     plugins: { 
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 11} } } 
+                        legend: { display: false }, // Tắt legend vì trục X đã thể hiện nhãn
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + ' nhân sự';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 } 
+                        },
+                        x: {
+                            ticks: { font: { size: 10 } } // Thu nhỏ font trục X để tránh tràn chữ
+                        }
                     }
                 }
             });
