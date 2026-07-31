@@ -1,5 +1,5 @@
 <!-- TỆP: tong_hop.html -->
-<!-- PHIÊN BẢN: Hoàn thiện - 5 Biểu đồ/hàng, có %, Biểu đồ đường đối sánh -->
+<!-- PHIÊN BẢN: Chuẩn hóa tính % theo Tổng nhân sự năm học & Bổ sung đầy đủ Khen thưởng -->
 
 <style>
   .o-chua-ghi-chu { position: relative; }
@@ -34,7 +34,7 @@
       100% { background-position: 100% 0; }
   }
 
-  /* Khung chứa biểu đồ từng năm tự động co giãn và xuống dòng (Tối đa 5 biểu đồ) */
+  /* Khung chứa biểu đồ từng năm (Tối đa 5 biểu đồ/hàng ngang) */
   .bieu-do-container {
       flex: 1 1 calc(20% - 20px); 
       min-width: 220px; 
@@ -160,7 +160,7 @@
                             <option value="cnn">2. Đánh giá Chuẩn nghề nghiệp</option>
                             <option value="dv">3. Chất lượng Đảng viên</option>
                             <option value="dhcm">4. Danh hiệu Chuyên môn giỏi</option>
-                            <option value="td">5. Danh hiệu Thi đua</option>
+                            <option value="td">5. Thi đua & Khen thưởng</option> <!-- Đã đổi tên -->
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -180,7 +180,7 @@
             </div>
         </div>
 
-        <!-- Biểu đồ Đường (Line Chart) đối sánh tổng hợp giữa các năm -->
+        <!-- Biểu đồ Đường (Line Chart) -->
         <div class="card border-0 shadow-sm mb-4 rounded-3" id="khungBieuDoDoiSanh" style="display: none;">
             <div class="card-body p-3">
                 <div style="position: relative; height: 320px; width: 100%;">
@@ -189,7 +189,7 @@
             </div>
         </div>
         
-        <!-- Khu vực chứa các biểu đồ Cột chi tiết từng năm (Flex Wrap) -->
+        <!-- Khu vực chứa các biểu đồ Cột chi tiết từng năm -->
         <div id="khuVucBieuDo" class="d-flex flex-wrap gap-4 justify-content-center mb-4">
             <!-- Biểu đồ sinh tự động sẽ nằm ở đây -->
         </div>
@@ -252,34 +252,23 @@
             let kcach = 15; 
             
             let toaDoY = e.clientY + kcach;
-            if (toaDoY + rect.height > window.innerHeight) {
-                toaDoY = e.clientY - rect.height - kcach;
-            }
+            if (toaDoY + rect.height > window.innerHeight) toaDoY = e.clientY - rect.height - kcach;
             if (toaDoY < 0) toaDoY = kcach; 
 
             let toaDoX = e.clientX + kcach;
-            if (toaDoX + rect.width > window.innerWidth) {
-                toaDoX = e.clientX - rect.width - kcach;
-            }
+            if (toaDoX + rect.width > window.innerWidth) toaDoX = e.clientX - rect.width - kcach;
             
             tt.style.top = toaDoY + 'px';
             tt.style.left = toaDoX + 'px';
         }
     }
 
-    function anTooltipTen() {
-        treAnTt = setTimeout(anTtNgay, 200);
-    }
-
-    function anTtNgay() {
-        let tt = document.getElementById('tooltip-toan-cuc');
-        if (tt) tt.style.display = 'none';
-    }
+    function anTooltipTen() { treAnTt = setTimeout(anTtNgay, 200); }
+    function anTtNgay() { let tt = document.getElementById('tooltip-toan-cuc'); if (tt) tt.style.display = 'none'; }
 
     function taoODuLieuCoGhiChu(mangLoc) {
         let soLuong = mangLoc.length;
         if (soLuong === 0) return `<td>0</td>`;
-        
         const cotTen = 1; 
         let danhSachHTML = mangLoc.map(r => r[cotTen] ? String(r[cotTen]).trim() : "Chưa cập nhật tên").join('<br>');
         let chuoiAnToan = danhSachHTML.replace(/"/g, '&quot;');
@@ -291,18 +280,18 @@
     }
 
     // ============================================================
-    // LOGIC VẼ BẢNG 3.1 VÀ 3.2 
+    // LOGIC VẼ BẢNG 3.1 VÀ 3.2 (Đã rút gọn logic DOM)
     // ============================================================
     function veTke() {
         const nf = $("#nhapLocN3").val(); const bd1 = $("#bangTkeNs tbody"); bd1.empty(); const bd2 = $("#bangTkeDg tbody"); bd2.empty();
         let ns = layTuyc(0); if (nf) ns = [String(nf).trim()];
-        
         ns.sort((a, b) => b.localeCompare(a));
 
         ns.forEach(y => {
             let dy = dlToanc.filter(r => String(r[0]).trim() === y && r[4] !== "Đã chuyển");
             if (dy.length === 0) return;
             
+            // Xử lý dữ liệu bảng 3.1
             let ts = taoODuLieuCoGhiChu(dy); 
             let ng1 = taoODuLieuCoGhiChu(dy.filter(r => r[3] === "Nữ")); 
             let dnc = taoODuLieuCoGhiChu(dy.filter(r => r[5] && r[5] !== "Kinh")); 
@@ -310,71 +299,49 @@
             let dvi = taoODuLieuCoGhiChu(dy.filter(r => r[10] && (String(r[10]).toLowerCase() === "x"))); 
             let ndv = taoODuLieuCoGhiChu(dy.filter(r => r[3] === "Nữ" && r[10] && (String(r[10]).toLowerCase() === "x"))); 
             let ddt = taoODuLieuCoGhiChu(dy.filter(r => r[5] && r[5] !== "Kinh" && r[10] && (String(r[10]).toLowerCase() === "x")));
-            
             let cql = taoODuLieuCoGhiChu(dy.filter(r => r[11] && r[11].includes("Quản lý"))); 
             let cgv = taoODuLieuCoGhiChu(dy.filter(r => r[11] && r[11].includes("Giáo viên"))); 
             let cnv = taoODuLieuCoGhiChu(dy.filter(r => r[11] && r[11].includes("Nhân viên")));
-            
             let ctd1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[15]||"").toLowerCase(); return v.includes("trên") || v.includes("thạc sĩ") || v.includes("tiến sĩ"); })); 
             let ctd2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[15]||"").toLowerCase(); return v.includes("đại học") && !v.includes("trên"); })); 
             let ctd3 = taoODuLieuCoGhiChu(dy.filter(r => (r[15]||"").toLowerCase().includes("cao đẳng"))); 
             let ctd4 = taoODuLieuCoGhiChu(dy.filter(r => (r[15]||"").toLowerCase().includes("trung cấp"))); 
             let ctd5 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[15]||"").toLowerCase(); return !v.includes("trên") && !v.includes("thạc sĩ") && !v.includes("tiến sĩ") && !v.includes("đại học") && !v.includes("cao đẳng") && !v.includes("trung cấp"); }));
-            
             let h1 = taoODuLieuCoGhiChu(dy.filter(r => r[14] === "TH-H1")); 
             let h2 = taoODuLieuCoGhiChu(dy.filter(r => r[14] === "TH-H2")); 
             let h3 = taoODuLieuCoGhiChu(dy.filter(r => r[14] === "TH-H3")); 
             let h4 = taoODuLieuCoGhiChu(dy.filter(r => r[14] === "TH-H4")); 
             let hk = taoODuLieuCoGhiChu(dy.filter(r => r[14] === "TH_Khác"));
-            
             let ll1 = taoODuLieuCoGhiChu(dy.filter(r => r[16] === "Cao cấp")); 
             let ll2 = taoODuLieuCoGhiChu(dy.filter(r => r[16] === "Trung cấp")); 
             let ll3 = taoODuLieuCoGhiChu(dy.filter(r => r[16] === "Sơ cấp"));
             
             bd1.append(`<tr><td class="fw-bold text-primary">${y}</td>${ts}${ng1}${dnc}${ndt}${dvi}${ndv}${ddt}${cql}${cgv}${cnv}${ctd1}${ctd2}${ctd3}${ctd4}${ctd5}${h1}${h2}${h3}${h4}${hk}${ll1}${ll2}${ll3}</tr>`);
             
-            let g1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "Giỏi")); 
-            let k1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "Khá")); 
-            let tb1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "TB")); 
-            let y1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "Yếu"));
-            
-            let g2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "Giỏi")); 
-            let k2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "Khá")); 
-            let tb2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "TB")); 
-            let y2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "Yếu"));
-            
-            let cn1 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "Tốt")); 
-            let cn2 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "Khá")); 
-            let cn3 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "TB"));
-            
+            // Xử lý dữ liệu bảng 3.2
+            let g1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "Giỏi")); let k1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "Khá")); let tb1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "TB")); let y1 = taoODuLieuCoGhiChu(dy.filter(r => r[17] === "Yếu"));
+            let g2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "Giỏi")); let k2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "Khá")); let tb2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "TB")); let y2 = taoODuLieuCoGhiChu(dy.filter(r => r[18] === "Yếu"));
+            let cn1 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "Tốt")); let cn2 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "Khá")); let cn3 = taoODuLieuCoGhiChu(dy.filter(r => r[19] === "TB"));
             let xs1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
             let xs2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("htt") || v.includes("tốt"); })); 
             let xs4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             let xs3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[20]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
-            
             let dv1 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc"); })); 
             let dv2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("htt") || (v.includes("tốt") && !v.includes("không")); })); 
             let dv4 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return (v.includes("ht") || v.includes("hoàn thành")) && !(v.includes("htxs") || v.includes("xs") || v.includes("xuất sắc") || v.includes("htt") || v.includes("tốt") || v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht")); }));
             let dv3 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[21]||"").toLowerCase(); return v.includes("cht") || v.includes("chưa") || v.includes("không") || v.includes("kht"); })); 
-            
             let dh1 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("trường"))); 
             let dh2 = taoODuLieuCoGhiChu(dy.filter(r => { let v = (r[22]||"").toLowerCase(); return v.includes("huyện") || v.includes("tp") || v.includes("thành phố"); })); 
             let dh3 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("tỉnh"))); 
             let dh4 = taoODuLieuCoGhiChu(dy.filter(r => (r[22]||"").toLowerCase().includes("quốc gia") || (r[22]||"").toLowerCase().includes("qg")));
-            
             let td1 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "LĐTT")); 
             let td2 = taoODuLieuCoGhiChu(dy.filter(r => r[23] === "CSTĐ")); 
-            
             let ht1 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Giấy khen")); 
             let ht2 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Bằng khen")); 
             let ht3 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Kỷ niệm chương")); 
             let ht4 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huy chương")); 
             let ht5 = taoODuLieuCoGhiChu(dy.filter(r => r[24] === "Huân chương"));
-
-            let ck1 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Xã")); 
-            let ck2 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Huyện/TP")); 
-            let ck3 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Tỉnh")); 
-            let ck4 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Chính phủ")); 
+            let ck1 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Xã")); let ck2 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Huyện/TP")); let ck3 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Tỉnh")); let ck4 = taoODuLieuCoGhiChu(dy.filter(r => r[25] === "Chính phủ")); 
 
             bd2.append(`<tr><td class="fw-bold text-primary">${y}</td>${g1}${k1}${tb1}${y1}${g2}${k2}${tb2}${y2}${cn1}${cn2}${cn3}${xs1}${xs2}${xs4}${xs3}${dv1}${dv2}${dv4}${dv3}${dh1}${dh2}${dh3}${dh4}${td1}${td2}${ht1}${ht2}${ht3}${ht4}${ht5}${ck1}${ck2}${ck3}${ck4}</tr>`);
         });
@@ -406,9 +373,10 @@
             mauSac: ['#b91c1c', '#3b82f6', '#f59e0b', '#6b7280']
         },
         'td': {
-            tieuDe: 'DANH HIỆU THI ĐUA',
-            nhan: ['Lao động Tiên tiến', 'Chiến sĩ Thi đua', 'Không đạt / KĐG'],
-            mauSac: ['#3b82f6', '#b91c1c', '#6b7280']
+            tieuDe: 'THI ĐUA VÀ KHEN THƯỞNG', // Đã mở rộng tiêu đề
+            // Bổ sung đầy đủ các hình thức Khen thưởng
+            nhan: ['LĐ Tiên tiến', 'Chiến sĩ Thi đua', 'Giấy khen', 'Bằng khen', 'Hình thức khác', 'Không đạt / KĐG'],
+            mauSac: ['#3b82f6', '#b91c1c', '#f59e0b', '#10b981', '#8b5cf6', '#6b7280']
         }
     };
 
@@ -472,10 +440,22 @@
             mangKetQua = [l1, l2, l3, l4];
         }
         else if (maLinhVuc === 'td') {
+            // Mở rộng thuật toán đếm số liệu khen thưởng (Cột Thi Đua r[23] & Cột Hình Thức Khen r[24])
             let l1 = dsNam.filter(r => r[23] === "LĐTT").length;
             let l2 = dsNam.filter(r => r[23] === "CSTĐ").length;
-            let l3 = dsNam.filter(r => { let v = (r[23]||"").toLowerCase(); return v.includes("không") || v.includes("chưa"); }).length;
-            mangKetQua = [l1, l2, l3];
+            let l3 = dsNam.filter(r => r[24] === "Giấy khen").length;
+            let l4 = dsNam.filter(r => r[24] === "Bằng khen").length;
+            let l5 = dsNam.filter(r => { 
+                let v = r[24]||""; 
+                return v === "Kỷ niệm chương" || v === "Huy chương" || v === "Huân chương"; 
+            }).length;
+            let l6 = dsNam.filter(r => {
+                let td = (r[23]||"").toLowerCase(); 
+                let ht = (r[24]||"").toLowerCase();
+                return (td.includes("không") || td.includes("chưa") || td === "") && 
+                       (ht.includes("không") || ht.includes("chưa") || ht === "");
+            }).length;
+            mangKetQua = [l1, l2, l3, l4, l5, l6];
         }
         return mangKetQua;
     }
@@ -504,13 +484,13 @@
         khuVuc.empty();
 
         let doiSanhHead = '<th style="width: 200px;" class="align-middle text-start px-3 py-2">Tiêu chí / Năm học</th>';
-        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">Tổng số (Mẫu thống kê hợp lệ)</td>`];
+        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">Tổng số (Nhân sự năm học)</td>`];
         
         cauHinh.nhan.forEach((nhanTen, idx) => {
             cacHangDoiSanh.push(`<td class="fw-bold text-start px-3 py-2" style="color: ${cauHinh.mauSac[idx]}; border-left: 4px solid ${cauHinh.mauSac[idx]};">${nhanTen}</td>`);
         });
 
-        // 1. CHUẨN BỊ DỮ LIỆU CHO LINE CHART (BIỂU ĐỒ ĐỐI SÁNH TỔNG HỢP)
+        // 1. CHUẨN BỊ DỮ LIỆU CHO LINE CHART
         let datasetsLine = [];
 
         danhSachNamHoc.forEach((nam, index) => {
@@ -533,7 +513,8 @@
                 tension: 0.4
             });
             
-            let tongSo = mangSoLieu.reduce((a, b) => a + b, 0);
+            // SỬA LỖI MẪU SỐ TÍNH TỶ LỆ PHẦN TRĂM: Phải lấy tổng số lượng nhân sự của năm học đó
+            let tongSo = dsNam.length; 
 
             doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
             cacHangDoiSanh[0] += `<td class="fw-bold align-middle bg-light">${tongSo}</td>`;
