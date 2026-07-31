@@ -470,6 +470,9 @@
         return mangKetQua;
     }
 
+// ============================================================
+    // NÂNG CẤP: VẼ BIỂU ĐỒ CỘT THEO FORM MẪU THẨM MỸ MỚI
+    // ============================================================
     function veBieuDoChatLuong() {
         let namBatDau = $("#tuNamHoc").val();
         let namKetThuc = $("#denNamHoc").val();
@@ -503,7 +506,6 @@
             let dsNam = dlToanc.filter(r => String(r[0]).trim() === nam && r[4] !== "Đã chuyển");
             let mangSoLieu = demDuLieuTheoLinhVuc(dsNam, maLinhVuc);
             
-            // Tính tổng số chỉ dựa trên mẫu thống kê thực tế (Những người được đánh giá)
             let tongSo = mangSoLieu.reduce((a, b) => a + b, 0);
 
             doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
@@ -514,17 +516,21 @@
             });
 
             let canvasId = `bd_nam_${index}`;
+            // ÁP DỤNG THIẾT KẾ UI KHUNG CHỨA THEO ẢNH MẪU
             khuVuc.append(`
-                <div class="bieu-do-container shadow-sm position-relative">
-                    <span class="badge bg-primary position-absolute top-0 start-0 m-3" style="font-size: 13px;">${nam}</span>
-                    <h6 class="fw-bold text-secondary mt-3 mb-1" style="font-size: 14px;">Năm học: ${nam}</h6>
-                    <div style="position: relative; height: 220px; width: 100%; margin-top: 15px;">
+                <div class="bieu-do-container shadow-sm" style="border: 1px solid #d4af37; border-radius: 8px; padding: 15px; background: #fff; text-align: left;">
+                    <div style="border-bottom: 2px solid #b91c1c; display: inline-block; padding-bottom: 4px; margin-bottom: 15px; padding-right: 20px;">
+                        <h5 class="fw-bold mb-0" style="color: #b91c1c; font-family: 'Times New Roman', serif;">
+                            <i class="far fa-window-maximize"></i> CHI TIẾT ${nam}
+                        </h5>
+                    </div>
+                    <div style="position: relative; height: 260px; width: 100%;">
                         <canvas id="${canvasId}"></canvas>
                     </div>
                 </div>
             `);
 
-            // VẼ BIỂU ĐỒ CỘT THIẾT KẾ ĐỨNG SÁT NHAU
+            // VẼ BIỂU ĐỒ VỚI TỶ LỆ CỘT VÀ ĐƯỜNG VIỀN NHƯ ẢNH MẪU
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
                 type: 'bar',
@@ -534,11 +540,12 @@
                         label: 'Số lượng',
                         data: mangSoLieu,
                         backgroundColor: cauHinh.mauSac,
-                        borderWidth: 0,
-                        borderRadius: 4,
-                        barPercentage: 0.9,       // Độ lớn của cột chiếm 90% không gian
-                        categoryPercentage: 0.9   // Giúp các cột đứng sát vào nhau
-                        // Đã gỡ bỏ maxBarThickness để tránh gây lỗi khoảng cách (gap) quá lớn
+                        borderColor: '#555555', // Thêm đường viền tối màu cho cột
+                        borderWidth: 1,         // Độ dày viền 1px
+                        borderRadius: 2,        // Bo góc đỉnh cột rất nhẹ
+                        barPercentage: 0.5,     // Thu hẹp bề ngang cột (chỉ chiếm 50% không gian được chia)
+                        categoryPercentage: 0.8,// Mở rộng khoảng cách giữa các nhóm cột
+                        maxBarThickness: 35     // Khóa cứng chiều rộng tối đa
                     }]
                 },
                 options: {
@@ -561,18 +568,17 @@
                             beginAtZero: true, 
                             ticks: { 
                                 stepSize: 1,
-                                font: { size: 11, family: "'Times New Roman', serif" }
+                                font: { size: 12, family: "'Times New Roman', serif", color: '#555' }
                             },
                             grid: {
-                                borderDash: [5, 5],
                                 color: '#e2e8f0'
                             }
                         },
                         x: {
                             ticks: { 
-                                font: { size: 11, family: "'Times New Roman', serif" },
-                                maxRotation: 25,
-                                minRotation: 25
+                                font: { size: 12, family: "'Times New Roman', serif", color: '#555' },
+                                maxRotation: 45, // Ép nhãn nghiêng cố định 45 độ giống ảnh
+                                minRotation: 45
                             },
                             grid: { display: false }
                         }
