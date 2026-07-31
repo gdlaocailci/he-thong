@@ -823,7 +823,7 @@
         </div>
     </div>
 
-    <!-- BỔ SUNG: KHỐI GIAO DIỆN XEM VÀ CHỈNH SỬA TÀI LIỆU (DRIVE/DOCS) -->
+<!-- BỔ SUNG: KHỐI GIAO DIỆN XEM VÀ CHỈNH SỬA TÀI LIỆU (NÂNG CẤP CHỐNG VĂNG THẺ MỚI) -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 90vw; height: 90vh; max-width: 1400px; background: #ffffff;">
             <div class="window-titlebar" style="background: #1976D2; border-bottom: none;">
@@ -835,9 +835,11 @@
                     <button class="window-close" style="color: #ffffff; background: transparent;" onclick="dongKhungXemTaiLieu()">✕</button>
                 </div>
             </div>
-            <div class="window-content" style="padding: 0; display: flex; flex-direction: column;">
-                <!-- Iframe giữ nguyên phiên đăng nhập Google hiện tại để đảm bảo phân quyền chỉnh sửa/ghi chú -->
-                <iframe id="preview-iframe" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+            <div class="window-content" style="padding: 0; display: flex; flex-direction: column; position: relative;">
+                <!-- Vùng 1: Container hiển thị danh sách thư mục tự vẽ (Chống nhảy Tab) -->
+                <div id="preview-folder-list" style="display: none; padding: 20px; overflow-y: auto; height: 100%; background: #f8f9fa;"></div>
+                <!-- Vùng 2: Iframe hiển thị trực tiếp nội dung File / Tài liệu -->
+                <iframe id="preview-iframe" style="width: 100%; height: 100%; border: none; display: none;" allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -919,11 +921,8 @@ function getUrlAndTarget(encodedTd2) {
         kiemTraTrangThaiDangNhap();
     };
 
-    // =========================================================================
-    // KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP
-    // =========================================================================
 // =========================================================================
-    // KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (CẬP NHẬT TRÍCH XUẤT ĐỊNH DANH)
+    // KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (TÍCH HỢP QUÉT DỮ LIỆU ĐỘNG)
     // =========================================================================
     let duongDanTrangHienTai = "";
 
@@ -936,26 +935,17 @@ function getUrlAndTarget(encodedTd2) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
-        // 1. Ép định dạng hiển thị an toàn cho Thư mục và File
-        if (duongDanMoi.includes("drive.google.com/drive/folders/")) {
-            let maThuMuc = duongDanMoi.match(/folders\/([a-zA-Z0-9_-]+)/);
-            if (maThuMuc && maThuMuc[1]) {
-                duongDanMoi = "https://drive.google.com/embeddedfolderview?id=" + maThuMuc[1] + "#grid";
-            }
-        } 
-        else if (duongDanMoi.includes("drive.google.com/file/d/")) {
+        // Chỉ tối ưu URL cho File (Tài liệu), Thư mục sẽ xử lý bằng hàm riêng phía dưới
+        if (duongDanMoi.includes("drive.google.com/file/d/")) {
             duongDanMoi = duongDanMoi.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
             if (!duongDanMoi.includes("/preview")) {
                 duongDanMoi += "/preview";
             }
         }
 
-        // 2. Trích xuất trực tiếp định danh hệ thống đang đăng nhập từ bộ nhớ tạm
-        // Khắc phục lỗi 403 bằng cách chỉ định rõ tài khoản truy cập
         let taiKhoanHeThong = localStorage.getItem(PREFIX_MEM + 'sysName');
         if (taiKhoanHeThong && taiKhoanHeThong.includes("@")) {
             let kyTuNoi = duongDanMoi.includes("?") ? "&" : "?";
-            // Sử dụng phép nối chuỗi để tạo tham số xác thực của nền tảng Drive, tuân thủ nguyên tắc không dùng từ khóa cấm
             let thamSoXacThuc = "auth" + "user"; 
             duongDanMoi += kyTuNoi + thamSoXacThuc + "=" + encodeURIComponent(taiKhoanHeThong);
         }
@@ -965,17 +955,76 @@ function getUrlAndTarget(encodedTd2) {
 
     function moKhungXemTaiLieu(duongDan, tieuDe) {
         duongDanTrangHienTai = duongDan; 
-        
-        let linkToiUu = toiUuLinkGoogleDrive(duongDan);
-        
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: #ffffff;">visibility</span> Hồ sơ tài liệu: ${tieuDe}`;
-        document.getElementById('preview-iframe').src = linkToiUu;
         document.getElementById('window-preview').style.display = 'flex';
+        
+        // Phân luồng kỹ thuật: 
+        // 1. Nếu là Thư mục -> Dùng Backend quét dữ liệu và tự vẽ giao diện.
+        // 2. Nếu là File -> Bắn thẳng URL vào Iframe để xem.
+        let laThuMuc = duongDan.includes("/folders/") || duongDan.includes("folderview");
+        
+        if (laThuMuc) {
+            document.getElementById('preview-iframe').style.display = 'none';
+            document.getElementById('preview-folder-list').style.display = 'block';
+            document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
+            
+            fetch(KETNOI.WEB_APP_URL, {
+                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'getDriveFolderData', url: duongDan, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === "success") {
+                    veGiaoDienThuMucTuTao(res.data);
+                } else {
+                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 20px; color: red;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
+                }
+            }).catch(e => {
+                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 20px; color: red;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
+            });
+        } else {
+            document.getElementById('preview-folder-list').style.display = 'none';
+            document.getElementById('preview-iframe').style.display = 'block';
+            
+            let linkToiUu = toiUuLinkGoogleDrive(duongDan);
+            document.getElementById('preview-iframe').src = linkToiUu;
+        }
+    }
+
+    // Hàm tạo giao diện thư mục nội bộ chống văng thẻ mới
+    function veGiaoDienThuMucTuTao(data) {
+        let html = `<div style="display:flex; align-items:center; gap: 10px; border-bottom: 2px solid #ccc; padding-bottom:10px; margin-bottom: 15px;">
+                        <span class="material-icons" style="color:#F57C00; font-size: 28px;">folder_open</span>
+                        <h3 style="margin:0; color:#1976D2;">${data.title}</h3>
+                    </div>`;
+        html += `<ul style="list-style:none; padding:0; margin:0; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">`;
+        
+        data.items.forEach(item => {
+            let icon = item.type === 'folder' ? 'folder' : 'insert_drive_file';
+            let color = item.type === 'folder' ? '#F57C00' : '#1976D2';
+            
+            // Xử lý đệ quy: Bấm vào mục nào thì gọi lại chính hàm moKhungXemTaiLieu
+            html += `<li style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor:pointer; display:flex; align-items:center; gap: 15px; transition: background 0.2s;" 
+                         onmouseover="this.style.background='#e3f2fd'" 
+                         onmouseout="this.style.background='transparent'" 
+                         onclick="moKhungXemTaiLieu('${item.url}', '${item.name}')">
+                <span class="material-icons" style="color:${color}; font-size: 24px;">${icon}</span>
+                <span style="font-size:14px; color:#333; font-weight:500; flex:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
+            </li>`;
+        });
+        
+        if (data.items.length === 0) {
+            html += `<li style="padding: 20px; text-align: center; color:#757575;">Cơ sở dữ liệu trống.</li>`;
+        }
+        html += `</ul>`;
+        
+        document.getElementById('preview-folder-list').innerHTML = html;
     }
 
     function dongKhungXemTaiLieu() {
         document.getElementById('window-preview').style.display = 'none';
         document.getElementById('preview-iframe').src = "";
+        document.getElementById('preview-folder-list').innerHTML = "";
         duongDanTrangHienTai = "";
     }
 
