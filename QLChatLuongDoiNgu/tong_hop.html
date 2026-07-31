@@ -1,3 +1,6 @@
+<!-- TỆP: tong_hop.html -->
+<!-- PHIÊN BẢN: Tích hợp Biểu đồ Đường đối sánh tổng hợp & Tối ưu UI Biểu đồ Cột -->
+
 <style>
   .o-chua-ghi-chu { position: relative; }
   .goc-do-ghi-chu {
@@ -37,10 +40,10 @@
       min-width: 260px; 
       max-width: 400px;
       background: #ffffff; 
-      border: 1px solid #e2e8f0; 
-      border-radius: 10px; 
-      padding: 15px 10px; 
-      text-align: center;
+      border: 1px solid #d4af37; /* Viền vàng gold theo mẫu */
+      border-radius: 8px; 
+      padding: 15px; 
+      text-align: left;
       transition: transform 0.2s ease-in-out;
   }
   .bieu-do-container:hover {
@@ -176,9 +179,18 @@
                 </div>
             </div>
         </div>
+
+        <!-- Biểu đồ Đường (Line Chart) đối sánh tổng hợp giữa các năm -->
+        <div class="card border-0 shadow-sm mb-4 rounded-3" id="khungBieuDoDoiSanh" style="display: none;">
+            <div class="card-body p-3">
+                <div style="position: relative; height: 320px; width: 100%;">
+                    <canvas id="bieuDoDoiSanh"></canvas>
+                </div>
+            </div>
+        </div>
         
-        <!-- Khu vực chứa các biểu đồ nhỏ từng năm (Flex Wrap) -->
-        <div id="khuVucBieuDo" class="d-flex flex-wrap gap-3 justify-content-center mb-4">
+        <!-- Khu vực chứa các biểu đồ Cột chi tiết từng năm (Flex Wrap) -->
+        <div id="khuVucBieuDo" class="d-flex flex-wrap gap-4 justify-content-center mb-4">
             <!-- Biểu đồ sinh tự động sẽ nằm ở đây -->
         </div>
 
@@ -213,7 +225,8 @@
 
 <script>
     let treAnTt;
-    let bieuDoCaNhan = []; // Mảng chứa các đối tượng biểu đồ để xóa sạch khi render lại
+    let bieuDoCaNhan = []; // Quản lý Chart.js instance của các năm
+    const MAU_NAM_HOC = ['#dc3545', '#0d6efd', '#198754', '#ffc107', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c']; // Màu sắc cho các đường Line Chart
 
     function hienTooltipTen(e) {
         clearTimeout(treAnTt); 
@@ -368,35 +381,34 @@
     }
 
     // ============================================================
-    // LOGIC TRÍCH XUẤT BIỂU ĐỒ ĐA LĨNH VỰC 
+    // LOGIC TRÍCH XUẤT HỆ THỐNG BIỂU ĐỒ ĐA LĨNH VỰC 
     // ============================================================
     
-    // Cấu hình linh hoạt cho 5 lĩnh vực
     const CAU_HINH_BIEU_DO = {
         'vc': {
             tieuDe: 'CHẤT LƯỢNG VIÊN CHỨC',
-            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT'],
-            mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545'] 
+            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+            mauSac: ['#b91c1c', '#3b82f6', '#f59e0b', '#6b7280'] 
         },
         'cnn': {
             tieuDe: 'ĐÁNH GIÁ CHUẨN NGHỀ NGHIỆP',
-            nhan: ['Loại Tốt', 'Loại Khá', 'Loại Đạt/TB', 'Chưa đạt'],
-            mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545']
+            nhan: ['Loại Tốt', 'Loại Khá', 'Loại Đạt/TB', 'Chưa đạt / KĐG'],
+            mauSac: ['#b91c1c', '#3b82f6', '#f59e0b', '#6b7280']
         },
         'dv': {
             tieuDe: 'CHẤT LƯỢNG ĐẢNG VIÊN',
-            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT'],
-            mauSac: ['#198754', '#0d6efd', '#ffc107', '#dc3545']
+            nhan: ['HT Xuất sắc', 'HT Tốt', 'Hoàn thành', 'Chưa HT / KĐG'],
+            mauSac: ['#b91c1c', '#3b82f6', '#f59e0b', '#6b7280']
         },
         'dhcm': {
             tieuDe: 'DANH HIỆU CHUYÊN MÔN GIỎI',
             nhan: ['Cấp Trường', 'Cấp Huyện/TP', 'Cấp Tỉnh', 'Cấp Quốc gia'],
-            mauSac: ['#0dcaf0', '#0d6efd', '#6f42c1', '#d63384']
+            mauSac: ['#b91c1c', '#3b82f6', '#f59e0b', '#6b7280']
         },
         'td': {
             tieuDe: 'DANH HIỆU THI ĐUA',
-            nhan: ['Lao động Tiên tiến', 'Chiến sĩ Thi đua', 'Không đạt'],
-            mauSac: ['#0d6efd', '#d63384', '#6c757d']
+            nhan: ['Lao động Tiên tiến', 'Chiến sĩ Thi đua', 'Không đạt / KĐG'],
+            mauSac: ['#3b82f6', '#b91c1c', '#6b7280']
         }
     };
 
@@ -416,9 +428,11 @@
         $("#tuNamHoc").val(cacNamHoc[0]);
         $("#denNamHoc").val(cacNamHoc[cacNamHoc.length - 1]);
         
+        if(window.bieuDoDoiSanhInstance) window.bieuDoDoiSanhInstance.destroy();
         bieuDoCaNhan.forEach(chart => chart.destroy());
         bieuDoCaNhan = [];
         $("#khuVucBieuDo").empty();
+        $("#khungBieuDoDoiSanh").hide();
         
         $("#trTieuDeDoiSanh").html('<th style="width: 200px;" class="align-middle text-start px-3 py-2">Tiêu chí / Năm học</th>');
         $("#thanBangDoiSanh").empty();
@@ -426,7 +440,6 @@
         $("#hopThoaiBieuDo").modal('show');
     }
 
-    // THUẬT TOÁN ĐẾM CHÍNH XÁC (KHÔNG GOM DỮ LIỆU RỖNG VÀO "CHƯA HOÀN THÀNH")
     function demDuLieuTheoLinhVuc(dsNam, maLinhVuc) {
         let mangKetQua = [];
         
@@ -467,9 +480,6 @@
         return mangKetQua;
     }
 
-// ============================================================
-    // NÂNG CẤP: VẼ BIỂU ĐỒ CỘT THEO FORM MẪU THẨM MỸ MỚI
-    // ============================================================
     function veBieuDoChatLuong() {
         let namBatDau = $("#tuNamHoc").val();
         let namKetThuc = $("#denNamHoc").val();
@@ -487,8 +497,11 @@
             return;
         }
 
+        // Hủy Chart cũ và làm sạch DOM
+        if(window.bieuDoDoiSanhInstance) window.bieuDoDoiSanhInstance.destroy();
         bieuDoCaNhan.forEach(chart => chart.destroy());
         bieuDoCaNhan = [];
+        
         let khuVuc = $("#khuVucBieuDo");
         khuVuc.empty();
 
@@ -499,10 +512,30 @@
             cacHangDoiSanh.push(`<td class="fw-bold text-start px-3 py-2" style="color: ${cauHinh.mauSac[idx]}; border-left: 4px solid ${cauHinh.mauSac[idx]};">${nhanTen}</td>`);
         });
 
+        // 1. CHUẨN BỊ DỮ LIỆU CHO LINE CHART (BIỂU ĐỒ ĐỐI SÁNH TỔNG HỢP)
+        let datasetsLine = [];
+        
         danhSachNamHoc.forEach((nam, index) => {
             let dsNam = dlToanc.filter(r => String(r[0]).trim() === nam && r[4] !== "Đã chuyển");
             let mangSoLieu = demDuLieuTheoLinhVuc(dsNam, maLinhVuc);
             
+            // Xây dựng dataset cho 1 năm học (1 đường line)
+            let mauDuong = MAU_NAM_HOC[index % MAU_NAM_HOC.length];
+            datasetsLine.push({
+                label: 'Năm học ' + nam,
+                data: mangSoLieu,
+                borderColor: mauDuong,
+                backgroundColor: '#ffffff',
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: mauDuong,
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                borderWidth: 2.5,
+                fill: false,
+                tension: 0.4 // Tạo độ cong mượt mà cho đường
+            });
+
             let tongSo = mangSoLieu.reduce((a, b) => a + b, 0);
 
             doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
@@ -512,10 +545,10 @@
                 cacHangDoiSanh[idx + 1] += `<td class="align-middle">${so} <br><small class="text-muted">(${tongSo>0 ? Math.round(so/tongSo*100) : 0}%)</small></td>`;
             });
 
+            // 2. VẼ BIỂU ĐỒ CỘT CHI TIẾT TỪNG NĂM
             let canvasId = `bd_nam_${index}`;
-            // ÁP DỤNG THIẾT KẾ UI KHUNG CHỨA THEO ẢNH MẪU
             khuVuc.append(`
-                <div class="bieu-do-container shadow-sm" style="border: 1px solid #d4af37; border-radius: 8px; padding: 15px; background: #fff; text-align: left;">
+                <div class="bieu-do-container shadow-sm">
                     <div style="border-bottom: 2px solid #b91c1c; display: inline-block; padding-bottom: 4px; margin-bottom: 15px; padding-right: 20px;">
                         <h5 class="fw-bold mb-0" style="color: #b91c1c; font-family: 'Times New Roman', serif;">
                             <i class="far fa-window-maximize"></i> CHI TIẾT ${nam}
@@ -527,7 +560,6 @@
                 </div>
             `);
 
-            // VẼ BIỂU ĐỒ VỚI TỶ LỆ CỘT VÀ ĐƯỜNG VIỀN NHƯ ẢNH MẪU
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
                 type: 'bar',
@@ -537,12 +569,12 @@
                         label: 'Số lượng',
                         data: mangSoLieu,
                         backgroundColor: cauHinh.mauSac,
-                        borderColor: '#555555', // Thêm đường viền tối màu cho cột
-                        borderWidth: 1,         // Độ dày viền 1px
-                        borderRadius: 2,        // Bo góc đỉnh cột rất nhẹ
-                        barPercentage: 0.5,     // Thu hẹp bề ngang cột (chỉ chiếm 50% không gian được chia)
-                        categoryPercentage: 0.8,// Mở rộng khoảng cách giữa các nhóm cột
-                        maxBarThickness: 35     // Khóa cứng chiều rộng tối đa
+                        borderColor: '#555555',
+                        borderWidth: 1,         
+                        borderRadius: 2,        
+                        // Tối ưu giải quyết lỗi khoảng trống giữa các cột
+                        barPercentage: 0.8,      // Mở rộng bề ngang cột
+                        categoryPercentage: 0.9  // Đẩy các cột sát vào nhau
                     }]
                 },
                 options: {
@@ -554,27 +586,20 @@
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 10,
                             callbacks: {
-                                label: function(context) {
-                                    return ' ' + context.label + ': ' + context.raw + ' nhân sự';
-                                }
+                                label: function(context) { return ' ' + context.label + ': ' + context.raw + ' nhân sự'; }
                             }
                         }
                     },
                     scales: {
                         y: { 
                             beginAtZero: true, 
-                            ticks: { 
-                                stepSize: 1,
-                                font: { size: 12, family: "'Times New Roman', serif", color: '#555' }
-                            },
-                            grid: {
-                                color: '#e2e8f0'
-                            }
+                            ticks: { stepSize: 1, font: { size: 12, family: "'Times New Roman', serif", color: '#555' } },
+                            grid: { color: '#e2e8f0' }
                         },
                         x: {
                             ticks: { 
                                 font: { size: 12, family: "'Times New Roman', serif", color: '#555' },
-                                maxRotation: 45, // Ép nhãn nghiêng cố định 45 độ giống ảnh
+                                maxRotation: 45, 
                                 minRotation: 45
                             },
                             grid: { display: false }
@@ -585,6 +610,48 @@
             bieuDoCaNhan.push(bieuDo);
         });
 
+        // 3. VẼ LINE CHART TỔNG HỢP (Hiện thẻ div và khởi tạo Chart)
+        $("#khungBieuDoDoiSanh").show();
+        let ctxLine = document.getElementById('bieuDoDoiSanh').getContext('2d');
+        window.bieuDoDoiSanhInstance = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: cauHinh.nhan, // Trục X là các tiêu chí
+                datasets: datasetsLine // Các đường Line là các Năm học
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'top', 
+                        labels: { 
+                            usePointStyle: true, 
+                            boxWidth: 8, 
+                            font: { size: 13, family: "'Times New Roman', serif", weight: 'bold' } 
+                        } 
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1, font: { family: "'Times New Roman', serif" } }, 
+                        grid: { color: '#e2e8f0' },
+                        title: { display: true, text: 'Số lượng nhân sự', font: { family: "'Times New Roman', serif", weight: 'bold' } }
+                    },
+                    x: { 
+                        ticks: { font: { family: "'Times New Roman', serif", weight: 'bold', size: 12 } }, 
+                        grid: { display: false } 
+                    }
+                }
+            }
+        });
+
+        // 4. HIỂN THỊ BẢNG ĐỐI SÁNH
         $("#trTieuDeDoiSanh").html(doiSanhHead);
         let htmlBodyTable = '';
         cacHangDoiSanh.forEach(htmlHang => { htmlBodyTable += `<tr>${htmlHang}</tr>`; });
