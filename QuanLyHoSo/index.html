@@ -776,17 +776,21 @@
                         <label>Định danh hệ thống (ID nội bộ):</label>
                         <input type="text" id="pq-tsb" class="form-native" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Nhập ID tham chiếu hệ thống...">
                     </div>
+                    
                     <div class="form-group">
                         <label>Chỉ định Phân quyền:</label>
                         <div class="checkbox-group">
                             <label class="checkbox-label"><input type="checkbox" id="role-taohoso" value="taohoso"> Nút Tạo dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-ganhoso" value="ganhoso"> Nút Gán dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Quản lý dữ liệu</label>
+                            <!-- BỔ SUNG: Quyền kiểm soát nút Tải lên và Xóa -->
+                            <label class="checkbox-label" style="color:#F57C00; font-weight: 600;"><input type="checkbox" id="role-quanlyfile" value="quanlyfile"> Nút Tải lên / Xóa file</label>
                             <label class="checkbox-label" style="color:#d32f2f; font-weight: bold;">
                                 <input type="checkbox" id="role-xx" value="xx"> Quản trị tối cao (Admin)
                             </label>
                         </div>
                     </div>
+                    
                     <div class="form-group">
                         <label>Ma trận quyền truy cập thư mục (Dấu x):</label>
                         <div class="checkbox-group" id="icon-permission-list" style="max-height: 200px; overflow-y: auto;">
@@ -942,7 +946,7 @@ function getUrlAndTarget(encodedTd2) {
     };
 
 // =========================================================================
-    // KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (TẢI NHIỀU FILE & QUẢN TRỊ XÓA)
+    // KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PHIÊN BẢN CHUYỂN HƯỚNG BẢO MẬT GỐC)
     // =========================================================================
     let duongDanTrangHienTai = "";
     let tieuDeHienTai = "";
@@ -955,7 +959,7 @@ function getUrlAndTarget(encodedTd2) {
         return chuoiKiemTra.includes("drive.google.com") || chuoiKiemTra.includes("docs.google.com");
     }
 
-    function toiUuLinkGoogleDrive(duongDanGoc) {
+function toiUuLinkGoogleDrive(duongDanGoc) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
@@ -973,7 +977,7 @@ function getUrlAndTarget(encodedTd2) {
         return duongDanMoi;
     }
 
-    function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
+function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
         if (!isBack && duongDanTrangHienTai !== "") {
             lichSuDuyet.push({ url: duongDanTrangHienTai, title: tieuDeHienTai, id: idThuMucHienTai });
         }
@@ -988,7 +992,6 @@ function getUrlAndTarget(encodedTd2) {
         let laThuMuc = duongDan.includes("/folders/") || duongDan.includes("folderview");
         var boLocID = duongDan.match(/[-\w]{25,}/);
         
-        // Đồng bộ ID hiện tại để phục vụ nút Tải lên/Xóa trên thanh công cụ
         if (truyenId !== "") {
             if (laThuMuc) idThuMucHienTai = truyenId;
             else idFileHienTai = truyenId;
@@ -997,9 +1000,13 @@ function getUrlAndTarget(encodedTd2) {
             else idFileHienTai = boLocID ? boLocID[0] : "";
         }
         
-        document.getElementById('btn-upload-preview').style.display = laThuMuc ? 'block' : 'none';
+        // KIỂM TRA QUYỀN ĐỂ BẬT/TẮT NÚT TRÊN THANH CÔNG CỤ
+        let quyenThaoTacFile = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('quanlyfile')));
+        
+        document.getElementById('btn-upload-preview').style.display = (laThuMuc && quyenThaoTacFile) ? 'block' : 'none';
         document.getElementById('btn-download-preview').style.display = !laThuMuc ? 'block' : 'none';
-        document.getElementById('btn-delete-preview').style.display = !laThuMuc ? 'block' : 'none';
+        // Khóa hẳn nút xóa trên thanh công cụ gốc, chỉ dùng nút xóa trong danh sách
+        document.getElementById('btn-delete-preview').style.display = 'none'; 
         
         if (laThuMuc) {
             idFileHienTai = "";
@@ -1027,51 +1034,74 @@ function getUrlAndTarget(encodedTd2) {
         }
     }
 
-    function veGiaoDienThuMucTuTao(data) {
-        let html = `<div style="display:flex; align-items:center; gap: 10px; border-bottom: 2px solid #ccc; padding-bottom:10px; margin-bottom: 15px;">
-                        <span class="material-icons" style="color:#F57C00; font-size: 28px;">folder_open</span>
-                        <h3 style="margin:0; color:#1976D2;">${data.title}</h3>
-                    </div>`;
-        html += `<ul style="list-style:none; padding:0; margin:0; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">`;
+function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
+        if (!isBack && duongDanTrangHienTai !== "") {
+            lichSuDuyet.push({ url: duongDanTrangHienTai, title: tieuDeHienTai, id: idThuMucHienTai });
+        }
         
-        data.items.forEach(item => {
-            let icon = item.type === 'folder' ? 'folder' : 'insert_drive_file';
-            let color = item.type === 'folder' ? '#F57C00' : '#1976D2';
+        duongDanTrangHienTai = duongDan; 
+        tieuDeHienTai = tieuDe;
+        
+        document.getElementById('btn-back-preview').style.display = lichSuDuyet.length > 0 ? 'block' : 'none';
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: #ffffff;">visibility</span> Hồ sơ tài liệu: ${tieuDe}`;
+        document.getElementById('window-preview').style.display = 'flex';
+        
+        let laThuMuc = duongDan.includes("/folders/") || duongDan.includes("folderview");
+        var boLocID = duongDan.match(/[-\w]{25,}/);
+        
+        if (truyenId !== "") {
+            if (laThuMuc) idThuMucHienTai = truyenId;
+            else idFileHienTai = truyenId;
+        } else {
+            if (laThuMuc) idThuMucHienTai = boLocID ? boLocID[0] : "";
+            else idFileHienTai = boLocID ? boLocID[0] : "";
+        }
+        
+        // KIỂM TRA QUYỀN ĐỂ BẬT/TẮT NÚT TRÊN THANH CÔNG CỤ
+        let quyenThaoTacFile = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('quanlyfile')));
+        
+        document.getElementById('btn-upload-preview').style.display = (laThuMuc && quyenThaoTacFile) ? 'block' : 'none';
+        document.getElementById('btn-download-preview').style.display = !laThuMuc ? 'block' : 'none';
+        // Khóa hẳn nút xóa trên thanh công cụ gốc, chỉ dùng nút xóa trong danh sách
+        document.getElementById('btn-delete-preview').style.display = 'none'; 
+        
+        if (laThuMuc) {
+            idFileHienTai = "";
+            document.getElementById('preview-iframe').style.display = 'none';
+            document.getElementById('preview-folder-list').style.display = 'block';
+            document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
             
-            // Xây dựng nút chức năng ngay tại mỗi hàng của danh sách
-            let hanhDongNhanh = "";
-            if (item.type === 'file') {
-                hanhDongNhanh += `<span class="material-icons" style="color:#1976D2; padding: 6px; margin-right: 5px; border-radius: 4px;" onmouseover="this.style.background='#bbdefb'" onmouseout="this.style.background='transparent'" title="Tải về" onclick="event.stopPropagation(); taiVeTepTinTrucTiep('${item.id}')">download</span>`;
-            }
-            hanhDongNhanh += `<span class="material-icons" style="color:#d32f2f; padding: 6px; border-radius: 4px;" onmouseover="this.style.background='#ffcdd2'" onmouseout="this.style.background='transparent'" title="Xóa dữ liệu" onclick="event.stopPropagation(); xoaTepTinTrucTiep('${item.id}', '${item.name}')">delete</span>`;
-
-            html += `<li style="padding: 10px 15px; border-bottom: 1px solid #f0f0f0; cursor:pointer; display:flex; align-items:center; gap: 15px; transition: background 0.2s;" 
-                         onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='transparent'" 
-                         onclick="moKhungXemTaiLieu('${item.url}', '${item.name}', false, '${item.id}')">
-                <span class="material-icons" style="color:${color}; font-size: 24px;">${icon}</span>
-                <span style="font-size:14px; color:#333; font-weight:500; flex:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
-                <div style="display:flex; align-items:center;">${hanhDongNhanh}</div>
-            </li>`;
-        });
-        
-        if (data.items.length === 0) html += `<li style="padding: 20px; text-align: center; color:#757575;">Cơ sở dữ liệu trống.</li>`;
-        html += `</ul>`;
-        document.getElementById('preview-folder-list').innerHTML = html;
+            let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
+            fetch(KETNOI.WEB_APP_URL, {
+                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'getDriveFolderData', url: duongDan, dinhDanhGiaoDien: taiKhoanGiaoDien, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === "success") veGiaoDienThuMucTuTao(res.data);
+                else document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
+            }).catch(e => {
+                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối mạng.</div>`;
+            });
+        } else {
+            idThuMucHienTai = "";
+            document.getElementById('preview-folder-list').style.display = 'none';
+            document.getElementById('preview-iframe').style.display = 'block';
+            document.getElementById('preview-iframe').src = toiUuLinkGoogleDrive(duongDan);
+        }
     }
-
-    function quayLaiTaiLieu() {
+function quayLaiTaiLieu() {
         if (lichSuDuyet.length > 0) {
             let mucTruoc = lichSuDuyet.pop();
             moKhungXemTaiLieu(mucTruoc.url, mucTruoc.title, true, mucTruoc.id); 
         }
     }
 
-    // --- KHỐI CHỨC NĂNG TẢI VỀ ---
-    function taiVeTaiLieuHienTai() {
+function taiVeTaiLieuHienTai() {
         if (idFileHienTai !== "") taiVeTepTinTrucTiep(idFileHienTai);
     }
     
-    function taiVeTepTinTrucTiep(idTepTin) {
+function taiVeTepTinTrucTiep(idTepTin) {
         let linkTaiVe = "https://drive.google.com/uc?export=download&id=" + idTepTin;
         window.open(linkTaiVe, '_blank');
     }
@@ -1081,30 +1111,22 @@ function getUrlAndTarget(encodedTd2) {
     // Khai báo biến toàn cục để giữ phiên bản quyền trong suốt quá trình tải tệp
     let phienBanQuyenToanCuc = null;
 
-    function taiLenTaiLieu() {
+function taiLenTaiLieu() {
         if (idThuMucHienTai === "") {
-            alert("Không xác định được Thư mục hiện tại để tải lên."); return;
+            alert("Hệ thống không xác định được mã Thư mục."); return;
         }
-
-        // [XỬ LÝ LÕI]: Yêu cầu Token ngay khi click nút bấm. Trình duyệt sẽ cho phép mở popup an toàn.
-        let tokenTaiLenClient = google.accounts.oauth2.initTokenClient({
-            client_id: KETNOI.CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/drive',
-            callback: (phienXacThuc) => {
-                if (phienXacThuc.error) {
-                    alert("Cảnh báo: Hệ thống Google từ chối cấp quyền thao tác tải lên!");
-                    return;
-                }
-                // Lưu trữ Token và kích hoạt cửa sổ chọn file
-                phienBanQuyenToanCuc = phienXacThuc.access_token;
-                document.getElementById('file-upload-input').click();
-            }
-        });
-        
-        // Tự động làm mới phiên ẩn nếu đã có quyền, hoặc bung cửa sổ xin quyền mượt mà
-        tokenTaiLenClient.requestAccessToken({prompt: ''});
+        // Mở thẳng Thư mục đó trên tab mới của Drive để người dùng kéo thả tải lên theo đúng chuẩn
+        window.open('https://drive.google.com/drive/folders/' + idThuMucHienTai, '_blank');
     }
-
+function chuyenHuongDriveDeXoa(idTepTin) {
+        // Mở thư mục chứa file đó trên Tab mới của Drive để người dùng click chuột phải -> Xóa
+        if (idThuMucHienTai !== "") {
+            window.open('https://drive.google.com/drive/folders/' + idThuMucHienTai, '_blank');
+        } else {
+            // Dự phòng: Nếu không có id thư mục thì trỏ thẳng vào file
+            window.open('https://drive.google.com/file/d/' + idTepTin + '/view', '_blank');
+        }
+    }
     function xuLyFileTaiLen(event) {
         let danhSachTep = event.target.files;
         if (!danhSachTep || danhSachTep.length === 0) return;
@@ -1219,7 +1241,7 @@ function getUrlAndTarget(encodedTd2) {
     }
 
     // --- KHỐI DỌN DẸP ---
-    function dongKhungXemTaiLieu() {
+function dongKhungXemTaiLieu() {
         document.getElementById('window-preview').style.display = 'none';
         document.getElementById('preview-iframe').src = "";
         document.getElementById('preview-folder-list').innerHTML = "";
@@ -2387,15 +2409,20 @@ function xuLyLuuHoSo() {
         });
     }
 
+// =========================================================================
+    // KHỐI LOGIC MA TRẬN PHÂN QUYỀN (CẬP NHẬT QUYỀN QUẢN LÝ FILE)
+    // =========================================================================
     function hienThiBangQuyen(danhSachQuyen) {
         const tbody = document.getElementById('bang-phanquyen-body'); tbody.innerHTML = '';
         if (danhSachQuyen.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; return; }
+        
         danhSachQuyen.forEach(quyen => {
             const tr = document.createElement('tr'); let displayRoles = [];
-            if (quyen.roles.includes('taohoso')) displayRoles.push('Tạo dữ liệu');
-            if (quyen.roles.includes('ganhoso')) displayRoles.push('Gán dữ liệu');
-            if (quyen.roles.includes('xoahoso')) displayRoles.push('Quản lý dữ liệu');
-            if (quyen.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Quản trị tối cao</b>');
+            if (quyen.roles.includes('taohoso')) displayRoles.push('Tạo DL');
+            if (quyen.roles.includes('ganhoso')) displayRoles.push('Gán DL');
+            if (quyen.roles.includes('xoahoso')) displayRoles.push('Quản lý DL');
+            if (quyen.roles.includes('quanlyfile')) displayRoles.push('<b style="color:#F57C00">Tải lên/Xóa</b>');
+            if (quyen.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Admin</b>');
             
             const safeTsa = quyen.tsa.replace(/'/g, "\\'");
             const safeRoles = quyen.roles.replace(/'/g, "\\'");
@@ -2413,6 +2440,7 @@ function xuLyLuuHoSo() {
         document.getElementById('role-taohoso').checked = roles.includes('taohoso');
         document.getElementById('role-ganhoso').checked = roles.includes('ganhoso');
         document.getElementById('role-xoahoso').checked = roles.includes('xoahoso');
+        document.getElementById('role-quanlyfile').checked = roles.includes('quanlyfile');
         document.getElementById('role-xx').checked = roles.includes('xx');
 
         const allowedIcons = (iconRoles || "").split('|');
@@ -2423,17 +2451,23 @@ function xuLyLuuHoSo() {
 
     function lamMoiBieuMauQuyen() {
         document.getElementById('pq-tsa').value = ''; document.getElementById('pq-tsb').value = '';
-        document.getElementById('role-taohoso').checked = false; document.getElementById('role-ganhoso').checked = false; document.getElementById('role-xoahoso').checked = false; document.getElementById('role-xx').checked = false;
+        document.getElementById('role-taohoso').checked = false; 
+        document.getElementById('role-ganhoso').checked = false; 
+        document.getElementById('role-xoahoso').checked = false; 
+        document.getElementById('role-quanlyfile').checked = false;
+        document.getElementById('role-xx').checked = false;
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
     }
 
     function ghiNhanQuyen() {
         const tsa = document.getElementById('pq-tsa').value.trim(); const tsb = document.getElementById('pq-tsb').value.trim();
         if (!tsa || !tsb) { alert("Yêu cầu hệ thống: Bắt buộc điền đủ các trường định danh!"); return; }
+        
         let roles = [];
         if (document.getElementById('role-taohoso').checked) roles.push('taohoso');
         if (document.getElementById('role-ganhoso').checked) roles.push('ganhoso');
         if (document.getElementById('role-xoahoso').checked) roles.push('xoahoso');
+        if (document.getElementById('role-quanlyfile').checked) roles.push('quanlyfile');
         if (document.getElementById('role-xx').checked) roles.push('xx');
 
         let selectedIcons = [];
@@ -2455,12 +2489,9 @@ function xuLyLuuHoSo() {
                     lamMoiBieuMauQuyen(); 
                     taiDuLieuQuyen(); 
                     xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
-                } else { 
-                    alert("Cảnh báo: " + result.message); 
-                }
+                } else { alert("Cảnh báo: " + result.message); }
             } catch (jsonError) {
-                console.error("Lỗi từ backend:", text);
-                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
+                alert("Cảnh báo: Lỗi cấu hình máy chủ.");
             }
         });
     }
