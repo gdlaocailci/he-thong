@@ -953,14 +953,11 @@ function getUrlAndTarget(encodedTd2) {
         return duongDanMoi;
     }
 
-    function moKhungXemTaiLieu(duongDan, tieuDe) {
+function moKhungXemTaiLieu(duongDan, tieuDe) {
         duongDanTrangHienTai = duongDan; 
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: #ffffff;">visibility</span> Hồ sơ tài liệu: ${tieuDe}`;
         document.getElementById('window-preview').style.display = 'flex';
         
-        // Phân luồng kỹ thuật: 
-        // 1. Nếu là Thư mục -> Dùng Backend quét dữ liệu và tự vẽ giao diện.
-        // 2. Nếu là File -> Bắn thẳng URL vào Iframe để xem.
         let laThuMuc = duongDan.includes("/folders/") || duongDan.includes("folderview");
         
         if (laThuMuc) {
@@ -968,19 +965,27 @@ function getUrlAndTarget(encodedTd2) {
             document.getElementById('preview-folder-list').style.display = 'block';
             document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
             
+            // BƯỚC NÂNG CẤP: Trích xuất quyền từ định danh hiển thị ở khung đỏ (Taskbar)
+            let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
+            
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'getDriveFolderData', url: duongDan, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+                body: JSON.stringify({ 
+                    action: 'getDriveFolderData', 
+                    url: duongDan, 
+                    dinhDanhGiaoDien: taiKhoanGiaoDien, // Bắn định danh xuống Backend để xác định quyền
+                    khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                })
             })
             .then(res => res.json())
             .then(res => {
                 if (res.status === "success") {
                     veGiaoDienThuMucTuTao(res.data);
                 } else {
-                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 20px; color: red;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
+                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center; font-size: 15px;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
                 }
             }).catch(e => {
-                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 20px; color: red;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
+                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center; font-size: 15px;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
             });
         } else {
             document.getElementById('preview-folder-list').style.display = 'none';
