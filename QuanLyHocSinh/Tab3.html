@@ -752,16 +752,16 @@ function hks_xuatBieuDo_fn() {
             // Biến tổng phục vụ tính %
             let hks_tongSoGiai_num = sumGiai('xa') + sumGiai('huyen') + sumGiai('tinh') + sumGiai('qg') + sumGiai('qt');
 
-            // Đồng bộ nhãn trục X theo cặp
+// Đồng bộ nhãn trục X theo cặp (Đã cập nhật chính xác danh xưng bạn yêu cầu)
             let hks_nhanTrucX_arr = [
-                ['Đ.Trà: XS', 'M.Nhọn: Q.Gia'], 
+                ['Đ.Trà: XS', 'M.Nhọn: Quốc gia'], 
                 ['Đ.Trà: HTT', 'M.Nhọn: Tỉnh'], 
-                ['Đ.Trà: HT', 'M.Nhọn: Huyện'], 
+                ['Đ.Trà: HT', 'M.Nhọn: Cụm (khu vực)'], 
                 ['Đ.Trà: CHT', 'M.Nhọn: Xã'], 
-                ['Ngoại tuyến', 'M.Nhọn: Q.Tế']
+                ['Ngoại tuyến', 'M.Nhọn: Quốc tế']
             ];
 
-// BẮT ĐẦU THAY THẾ KHỐI KHỞI TẠO BIỂU ĐỒ CHI TIẾT
+            // BẮT ĐẦU THAY THẾ KHỐI KHỞI TẠO BIỂU ĐỒ CHI TIẾT
             new Chart(document.getElementById(hks_maCanvas_str), {
                 type: 'bar',
                 data: {
@@ -792,7 +792,7 @@ function hks_xuatBieuDo_fn() {
                     ]
                 },
                 
-                // Bổ sung plugin nội tuyến để vẽ % lên đỉnh cột
+                // Plugin nội tuyến vẽ % lên đỉnh cột
                 plugins: [{
                     id: 'veNhanPhanTram',
                     afterDatasetsDraw(chart) {
@@ -807,17 +807,15 @@ function hks_xuatBieuDo_fn() {
                             if (!meta.hidden) {
                                 meta.data.forEach((element, index) => {
                                     const val = dataset.data[index];
-                                    if (val > 0) { // Chỉ hiển thị % nếu cột có dữ liệu (> 0)
+                                    if (val > 0) {
                                         let hks_chuoiPhanTram_str = '';
-                                        if (i === 1) { // Dataset 1: Đại trà
+                                        if (i === 1) { 
                                             hks_chuoiPhanTram_str = hks_tongSoHocSinh_num > 0 ? ((val / hks_tongSoHocSinh_num) * 100).toFixed(1) + '%' : '';
-                                            ctx.fillStyle = '#003366'; // Trùng màu viền cột đại trà
-                                        } else if (i === 0) { // Dataset 0: Mũi nhọn
+                                            ctx.fillStyle = '#003366'; 
+                                        } else if (i === 0) { 
                                             hks_chuoiPhanTram_str = hks_tongSoGiai_num > 0 ? ((val / hks_tongSoGiai_num) * 100).toFixed(1) + '%' : '';
-                                            ctx.fillStyle = '#b71c1c'; // Trùng màu viền cột mũi nhọn
+                                            ctx.fillStyle = '#b71c1c'; 
                                         }
-                                        
-                                        // Căn chỉnh tọa độ X ở giữa cột và Y cao hơn đỉnh cột 3px
                                         ctx.fillText(hks_chuoiPhanTram_str, element.x, element.y - 3);
                                     }
                                 });
@@ -830,11 +828,19 @@ function hks_xuatBieuDo_fn() {
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     layout: {
-                        padding: { top: 25 } // Tăng khoảng trống phía trên Canvas để nhãn % không bị lẹm viền
+                        padding: { top: 25, bottom: 10 } 
                     },
                     interaction: { mode: 'index', intersect: false },
                     scales: {
-                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { 
+                                font: { size: 10 }, 
+                                autoSkip: false,  // Ép hiển thị 100% nhãn
+                                maxRotation: 45,  // TRẢ LẠI LOGIC NGHIÊNG 45 ĐỘ (Khắc phục lỗi đè chữ)
+                                minRotation: 45   // Bắt buộc nghiêng để xếp khít trên lưới hẹp
+                            } 
+                        },
                         y: { type: 'linear', position: 'left', title: { display: hks_soLuongBieuDo_num <= 2, text: 'Số HS' } },
                         y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: hks_soLuongBieuDo_num <= 2, text: 'Số Giải' } }
                     },
@@ -862,7 +868,5 @@ function hks_xuatBieuDo_fn() {
                 }
             });
             // KẾT THÚC THAY THẾ KHỐI KHỞI TẠO BIỂU ĐỒ CHI TIẾT
-        }
-    });
 }
 </script>
