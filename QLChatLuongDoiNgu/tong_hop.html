@@ -541,7 +541,7 @@
                 cacHangDoiSanh[idx + 1] += `<td class="align-middle">${so} <br><small class="text-muted">(${tongSo>0 ? Math.round(so/tongSo*100) : 0}%)</small></td>`;
             });
 
-            // 2. VẼ BIỂU ĐỒ CỘT CHI TIẾT TỪNG NĂM
+// 2. VẼ BIỂU ĐỒ CỘT CHI TIẾT TỪNG NĂM
             let canvasId = `bd_nam_${index}`;
             khuVuc.append(`
                 <div class="bieu-do-container shadow-sm">
@@ -556,6 +556,9 @@
                 </div>
             `);
 
+            // Tính toán mảng phần trăm để hiển thị trên đỉnh cột
+            let mangPhanTram = mangSoLieu.map(so => tongSo > 0 ? Math.round(so/tongSo*100) + '%' : '0%');
+
             let ctx = document.getElementById(canvasId).getContext('2d');
             let bieuDo = new Chart(ctx, {
                 type: 'bar',
@@ -564,25 +567,31 @@
                     datasets: [{
                         label: 'Số lượng',
                         data: mangSoLieu,
+                        phanTram: mangPhanTram, // Lưu trữ % vào dataset để dùng cho Plugin
                         backgroundColor: cauHinh.mauSac,
                         borderColor: '#555555',
                         borderWidth: 1,         
                         borderRadius: 2,        
-                        // Tối ưu giải quyết lỗi khoảng trống giữa các cột
-                        barPercentage: 0.8,      // Mở rộng bề ngang cột
-                        categoryPercentage: 0.9  // Đẩy các cột sát vào nhau
+                        barPercentage: 0.8,      
+                        categoryPercentage: 0.9  
                     }]
                 },
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 20 } // Tăng khoảng trống phía trên để chữ % không bị lẹm
+                    },
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 10,
                             callbacks: {
-                                label: function(context) { return ' ' + context.label + ': ' + context.raw + ' nhân sự'; }
+                                label: function(context) { 
+                                    // Tooltip hiển thị cả số lượng và %
+                                    return ' ' + context.label + ': ' + context.raw + ' nhân sự (' + context.dataset.phanTram[context.dataIndex] + ')'; 
+                                }
                             }
                         }
                     },
@@ -601,10 +610,32 @@
                             grid: { display: false }
                         }
                     }
-                }
+                },
+                // PLUGIN TỰ TẠO: VẼ CHỮ % LÊN ĐỈNH CỘT
+                plugins: [{
+                    id: 'hienThiPhanTramTrenCot',
+                    afterDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        ctx.font = "bold 13px 'Times New Roman', serif"; // Định dạng font chữ
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillStyle = '#b91c1c'; // Màu đỏ nổi bật
+                        
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            meta.data.forEach((bar, index) => {
+                                const value = dataset.data[index];
+                                if (value > 0) { // Chỉ hiển thị % nếu cột có dữ liệu
+                                    const pt = dataset.phanTram[index];
+                                    // bar.x, bar.y là tọa độ đỉnh của cột. Trừ đi 3px để chữ nổi nhẹ lên trên
+                                    ctx.fillText(pt, bar.x, bar.y - 3); 
+                                }
+                            });
+                        });
+                    }
+                }]
             });
             bieuDoCaNhan.push(bieuDo);
-        });
 
         // 3. VẼ LINE CHART TỔNG HỢP (Hiện thẻ div và khởi tạo Chart)
         $("#khungBieuDoDoiSanh").show();
