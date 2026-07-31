@@ -1076,12 +1076,33 @@ function getUrlAndTarget(encodedTd2) {
         window.open(linkTaiVe, '_blank');
     }
 
-    // --- KHỐI CHỨC NĂNG TẢI LÊN NHIỀU FILE ---
+// --- KHỐI CHỨC NĂNG TẢI LÊN NHIỀU FILE (KHẮC PHỤC LỖI CHẶN POPUP) ---
+    
+    // Khai báo biến toàn cục để giữ phiên bản quyền trong suốt quá trình tải tệp
+    let phienBanQuyenToanCuc = null;
+
     function taiLenTaiLieu() {
         if (idThuMucHienTai === "") {
             alert("Không xác định được Thư mục hiện tại để tải lên."); return;
         }
-        document.getElementById('file-upload-input').click();
+
+        // [XỬ LÝ LÕI]: Yêu cầu Token ngay khi click nút bấm. Trình duyệt sẽ cho phép mở popup an toàn.
+        let tokenTaiLenClient = google.accounts.oauth2.initTokenClient({
+            client_id: KETNOI.CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/drive',
+            callback: (phienXacThuc) => {
+                if (phienXacThuc.error) {
+                    alert("Cảnh báo: Hệ thống Google từ chối cấp quyền thao tác tải lên!");
+                    return;
+                }
+                // Lưu trữ Token và kích hoạt cửa sổ chọn file
+                phienBanQuyenToanCuc = phienXacThuc.access_token;
+                document.getElementById('file-upload-input').click();
+            }
+        });
+        
+        // Tự động làm mới phiên ẩn nếu đã có quyền, hoặc bung cửa sổ xin quyền mượt mà
+        tokenTaiLenClient.requestAccessToken({prompt: ''});
     }
 
     function xuLyFileTaiLen(event) {
@@ -1091,69 +1112,60 @@ function getUrlAndTarget(encodedTd2) {
         if (idThuMucHienTai === "") {
             alert("Lỗi cấu trúc: Không xác định được định danh thư mục đích."); return;
         }
+        
+        if (!phienBanQuyenToanCuc) {
+            alert("Lỗi xác thực: Không tìm thấy phiên bản quyền hợp lệ. Vui lòng thao tác lại!"); return;
+        }
 
         document.getElementById('upload-progress-bar').style.display = 'block';
         document.getElementById('upload-progress-fill').style.width = '5%';
         
-        let tokenTaiLenClient = google.accounts.oauth2.initTokenClient({
-            client_id: KETNOI.CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/drive',
-            callback: async (phienXacThuc) => {
-                if (phienXacThuc.error) {
-                    document.getElementById('upload-progress-bar').style.display = 'none';
-                    alert("Cảnh báo: Hệ thống Google từ chối cấp quyền thao tác tải lên!");
-                    return;
-                }
-                
-                // Cơ chế Hàng đợi: Xử lý lần lượt từng file để đảm bảo an toàn băng thông
-                let soLuongThanhCong = 0;
-                let tongSoFile = danhSachTep.length;
-
-                for (let i = 0; i < tongSoFile; i++) {
-                    let phanTram = 5 + (90 * (i / tongSoFile));
-                    document.getElementById('upload-progress-fill').style.width = phanTram + '%';
-                    
-                    let ketQua = await thucHienGuiFileLenDrive(danhSachTep[i], idThuMucHienTai, phienXacThuc.access_token);
-                    if (ketQua) soLuongThanhCong++;
-                }
-
-                document.getElementById('upload-progress-fill').style.width = '100%';
-                setTimeout(() => { document.getElementById('upload-progress-bar').style.display = 'none'; }, 500);
-                
-                if (soLuongThanhCong > 0) {
-                    moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
-                }
-            }
-        });
-        tokenTaiLenClient.requestAccessToken({prompt: ''});
-        document.getElementById('file-upload-input').value = ""; 
+        // Chuyển giao danh sách tệp và Token sang hàng đợi tải lên đồng loạt
+        tienHanhTaiLenDongLoat(danhSachTep, phienBanQuyenToanCuc);
     }
 
-function thucHienGuiFileLenDrive(fileTepTin, maThuMucDich, maThongBaoQuyen) {
+    // Cơ chế xử lý bất đồng bộ (Async/Await) để tải tuần tự không giật lag
+    async function tienHanhTaiLenDongLoat(danhSachTep, maThongBaoQuyen) {
+        let soLuongThanhCong = 0;
+        let tongSoFile = danhSachTep.length;
+
+        for (let i = 0; i < tongSoFile; i++) {
+            // Cập nhật thanh tiến trình giao diện
+            let phanTram = 5 + (90 * (i / tongSoFile));
+            document.getElementById('upload-progress-fill').style.width = phanTram + '%';
+            
+            let ketQua = await thucHienGuiFileLenDrive(danhSachTep[i], idThuMucHienTai, maThongBaoQuyen);
+            if (ketQua) soLuongThanhCong++;
+        }
+
+        // Hoàn tất tiến trình
+        document.getElementById('upload-progress-fill').style.width = '100%';
+        setTimeout(() => { document.getElementById('upload-progress-bar').style.display = 'none'; }, 500);
+        
+        if (soLuongThanhCong > 0) {
+            moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
+        }
+        document.getElementById('file-upload-input').value = ""; // Dọn dẹp bộ nhớ đệm Input
+    }
+
+    // Hàm REST API giao tiếp chuẩn xác với Google Drive (Bảo lưu cấu trúc Metadata)
+    function thucHienGuiFileLenDrive(fileTepTin, maThuMucDich, maThongBaoQuyen) {
         return new Promise((resolve) => {
-            // Định dạng metadata chứa chính xác ID thư mục đích đang mở
             let sieuDuLieu = { name: fileTepTin.name, parents: [maThuMucDich] };
             
-            // Xây dựng ranh giới multipart/related thủ công theo chuẩn Google API
             const ranhGioi = 'HT_RANH_GIOI_DU_LIEU_GOOGLE_DRIVE';
             const phanCach = '\r\n--' + ranhGioi + '\r\n';
             const ketThuc = '\r\n--' + ranhGioi + '--';
 
-            // Khối 1: Header và nội dung của Metadata (Chứa thông tin thư mục đích)
             let noiDungMetadata = 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(sieuDuLieu);
-            
-            // Khối 2: Header của Tệp tin
             let kieuFile = fileTepTin.type || 'application/octet-stream';
             let noiDungFileHeader = '\r\n--' + ranhGioi + '\r\nContent-Type: ' + kieuFile + '\r\n\r\n';
             
-            // Chuyển đổi các chuỗi văn bản thành đối tượng Blob
             let blobMetadata = new Blob([phanCach, noiDungMetadata, noiDungFileHeader], {type: 'text/plain'});
             let blobKetThuc = new Blob([ketThuc], {type: 'text/plain'});
             
-            // Gộp toàn bộ (Metadata + Dữ liệu File thực tế + Kết thúc) thành một khối thống nhất
             let goiDuLieu = new Blob([blobMetadata, fileTepTin, blobKetThuc], {type: 'multipart/related; boundary=' + ranhGioi});
 
-            // Bắn luồng dữ liệu chuẩn xác lên máy chủ Google
             fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
                 method: 'POST', 
                 headers: { 
