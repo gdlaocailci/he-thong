@@ -460,7 +460,7 @@
         return mangKetQua;
     }
 
-    function veBieuDoChatLuong() {
+function veBieuDoChatLuong() {
         let namBatDau = $("#tuNamHoc").val();
         let namKetThuc = $("#denNamHoc").val();
         let maLinhVuc = $("#linhVucBieuDo").val();
@@ -484,7 +484,18 @@
         khuVuc.empty();
 
         let doiSanhHead = '<th style="width: 200px;" class="align-middle text-start px-3 py-2">Tiêu chí / Năm học</th>';
-        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">Tổng số (Nhân sự năm học)</td>`];
+        
+        // CẬP NHẬT: Thay đổi nhãn dòng Tổng số tùy theo đối tượng thống kê
+        let nhanTongSo = "";
+        if (maLinhVuc === 'dv') {
+            nhanTongSo = "Tổng số (Đảng viên)";
+        } else if (maLinhVuc === 'cnn' || maLinhVuc === 'dhcm') {
+            nhanTongSo = "Tổng số (CBQL & Giáo viên)";
+        } else {
+            nhanTongSo = "Tổng số (Đội ngũ nhân sự)";
+        }
+
+        let cacHangDoiSanh = [`<td class="fw-bold text-start px-3 py-2 text-primary">${nhanTongSo}</td>`];
         
         cauHinh.nhan.forEach((nhanTen, idx) => {
             cacHangDoiSanh.push(`<td class="fw-bold text-start px-3 py-2" style="color: ${cauHinh.mauSac[idx]}; border-left: 4px solid ${cauHinh.mauSac[idx]};">${nhanTen}</td>`);
@@ -513,8 +524,18 @@
                 tension: 0.4
             });
             
-            // SỬA LỖI MẪU SỐ TÍNH TỶ LỆ PHẦN TRĂM: Phải lấy tổng số lượng nhân sự của năm học đó
-            let tongSo = dsNam.length; 
+            // CẬP NHẬT LOGIC TÍNH TOÁN MẪU SỐ
+            let tongSo = 0;
+            if (maLinhVuc === 'dv') {
+                // Chỉ đếm Đảng viên (cột 10)
+                tongSo = dsNam.filter(r => r[10] && String(r[10]).trim().toLowerCase() === "x").length;
+            } else if (maLinhVuc === 'cnn' || maLinhVuc === 'dhcm') {
+                // Chỉ đếm Quản lý và Giáo viên (cột 11), không tính Nhân viên
+                tongSo = dsNam.filter(r => r[11] && (String(r[11]).includes("Quản lý") || String(r[11]).includes("Giáo viên"))).length;
+            } else {
+                // Viên chức, Thi đua: Tính tổng số đội ngũ toàn đơn vị
+                tongSo = dsNam.length; 
+            }
 
             doiSanhHead += `<th class="text-primary text-center align-middle">${nam}</th>`;
             cacHangDoiSanh[0] += `<td class="fw-bold align-middle bg-light">${tongSo}</td>`;
@@ -567,7 +588,7 @@
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 10,
                             callbacks: {
-                                label: function(context) { return ' ' + context.label + ': ' + context.raw + ' nhân sự (' + context.dataset.phanTram[context.dataIndex] + ')'; }
+                                label: function(context) { return ' ' + context.label + ': ' + context.raw + ' (' + context.dataset.phanTram[context.dataIndex] + ')'; }
                             }
                         }
                     },
@@ -636,7 +657,7 @@
                         beginAtZero: true, 
                         ticks: { stepSize: 1, font: { family: "'Times New Roman', serif" } }, 
                         grid: { color: '#e2e8f0' },
-                        title: { display: true, text: 'Số lượng nhân sự', font: { family: "'Times New Roman', serif", weight: 'bold' } }
+                        title: { display: true, text: 'Số lượng', font: { family: "'Times New Roman', serif", weight: 'bold' } }
                     },
                     x: { 
                         ticks: { font: { family: "'Times New Roman', serif", weight: 'bold', size: 12 } }, 
