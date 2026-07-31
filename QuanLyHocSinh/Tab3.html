@@ -541,60 +541,124 @@ function hks_xuatBieuDo_fn() {
         return;
     }
 
-    // =========================================================================
-    // ĐỘT PHÁ 1: TẠO BIỂU ĐỒ ĐỐI SÁNH MŨI NHỌN (MASTER CHART TỔNG QUAN)
+// =========================================================================
+    // ĐỘT PHÁ 1: TẠO BIỂU ĐỒ ĐỐI SÁNH TỔNG QUAN (MASTER CHART SONG SONG)
     // =========================================================================
     if (hks_danhSachNam_arr.length > 1) {
         let hks_cotMaster_el = document.createElement('div');
         hks_cotMaster_el.className = 'col-12 mb-4';
         hks_cotMaster_el.innerHTML = `
-            <div class="hks-chart-card shadow-sm border-primary" style="background: #f8fbff; border-top: 4px solid #b71c1c !important;">
-                <h4 class="hks-chart-title text-primary" style="border-bottom: none;"><i class="bi bi-graph-up-arrow"></i> ĐỐI SÁNH CHẤT LƯỢNG MŨI NHỌN GIAI ĐOẠN ${hks_tuNam_str} - ${hks_denNam_str}</h4>
-                <div style="position: relative; height: 40vh; min-height: 300px; width: 100%;">
-                    <canvas id="chart_master_muinhon"></canvas>
+            <div class="row g-4">
+                <!-- MASTER 1: ĐẠI TRÀ -->
+                <div class="col-12 col-lg-6">
+                    <div class="hks-chart-card shadow-sm" style="background: #f8fbff; border-top: 4px solid #0d6efd !important;">
+                        <h5 class="hks-chart-title text-primary" style="border-bottom: none; font-size: 15px;">
+                            <i class="bi bi-graph-up-arrow"></i> ĐỐI SÁNH ĐẠI TRÀ (TỶ LỆ %) GIAI ĐOẠN ${hks_tuNam_str} - ${hks_denNam_str}
+                        </h5>
+                        <div style="position: relative; height: 40vh; min-height: 300px; width: 100%;">
+                            <canvas id="chart_master_daitra"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <!-- MASTER 2: MŨI NHỌN -->
+                <div class="col-12 col-lg-6">
+                    <div class="hks-chart-card shadow-sm" style="background: #fff5f5; border-top: 4px solid #b71c1c !important;">
+                        <h5 class="hks-chart-title text-danger" style="border-bottom: none; font-size: 15px;">
+                            <i class="bi bi-trophy"></i> ĐỐI SÁNH MŨI NHỌN (SỐ GIẢI) GIAI ĐOẠN ${hks_tuNam_str} - ${hks_denNam_str}
+                        </h5>
+                        <div style="position: relative; height: 40vh; min-height: 300px; width: 100%;">
+                            <canvas id="chart_master_muinhon"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
         hks_khungHienThi_el.appendChild(hks_cotMaster_el);
 
-        let hks_tapDuLieuMaster_arr = [];
+        let hks_tapDuLieuMasterDT_arr = [];
+        let hks_tapDuLieuMasterMN_arr = [];
         let hks_bangMau_arr = ['#dc3545', '#0d6efd', '#198754', '#ffc107', '#6f42c1', '#fd7e14']; 
 
         hks_danhSachNam_arr.forEach((nam, idx) => {
             let hks_thongKeNam_arr = hks_xuLyThongKeBoNhoDem_fn(nam);
             let hks_tongNam_obj = hks_thongKeNam_arr.find(item => item.lop === 'TỔNG');
+            
             if (hks_tongNam_obj) {
+                let ts = hks_tongNam_obj.tongSo || 0;
+                
+                // Tính Tỷ lệ % Đại trà (Sử dụng tỷ lệ để mặt bằng so sánh các năm không bị lệch trục khi sĩ số thay đổi)
+                let pt_xs = ts > 0 ? parseFloat((hks_tongNam_obj.htxs / ts * 100).toFixed(1)) : 0;
+                let pt_htt = ts > 0 ? parseFloat((hks_tongNam_obj.htt / ts * 100).toFixed(1)) : 0;
+                let pt_ht = ts > 0 ? parseFloat((hks_tongNam_obj.ht / ts * 100).toFixed(1)) : 0;
+                let pt_cht = ts > 0 ? parseFloat((hks_tongNam_obj.cht / ts * 100).toFixed(1)) : 0;
+
                 const sumGiai = (cap) => hks_tongNam_obj.thanhTich[cap][1].c + hks_tongNam_obj.thanhTich[cap][2].c + hks_tongNam_obj.thanhTich[cap][3].c + hks_tongNam_obj.thanhTich[cap][4].c;
-                hks_tapDuLieuMaster_arr.push({
+                
+                let mauHienTai = hks_bangMau_arr[idx % hks_bangMau_arr.length];
+
+                // Data ĐẠI TRÀ
+                hks_tapDuLieuMasterDT_arr.push({
+                    label: `Năm học ${nam}`,
+                    data: [pt_xs, pt_htt, pt_ht, pt_cht],
+                    borderColor: mauHienTai,
+                    backgroundColor: mauHienTai,
+                    borderWidth: 3, tension: 0.4, pointRadius: 5, pointHoverRadius: 8, pointBackgroundColor: '#fff'
+                });
+
+                // Data MŨI NHỌN
+                hks_tapDuLieuMasterMN_arr.push({
                     label: `Năm học ${nam}`,
                     data: [sumGiai('xa'), sumGiai('huyen'), sumGiai('tinh'), sumGiai('qg'), sumGiai('qt')],
-                    borderColor: hks_bangMau_arr[idx % hks_bangMau_arr.length],
-                    backgroundColor: hks_bangMau_arr[idx % hks_bangMau_arr.length],
-                    borderWidth: 3,
-                    tension: 0.4, 
-                    pointRadius: 6,
-                    pointHoverRadius: 9,
-                    pointBackgroundColor: '#fff'
+                    borderColor: mauHienTai,
+                    backgroundColor: mauHienTai,
+                    borderWidth: 3, tension: 0.4, pointRadius: 5, pointHoverRadius: 8, pointBackgroundColor: '#fff'
                 });
             }
         });
 
+        // 1. Kích hoạt Chart ĐẠI TRÀ
+        new Chart(document.getElementById('chart_master_daitra'), {
+            type: 'line',
+            data: {
+                labels: ['Xuất sắc', 'Hoàn thành Tốt', 'Hoàn thành', 'Chưa HT'],
+                datasets: hks_tapDuLieuMasterDT_arr
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: { 
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tỷ lệ %', font: { weight: 'bold' } } },
+                    x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                },
+                plugins: { 
+                    legend: { position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 12, weight: 'bold' } } },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 51, 102, 0.9)', titleFont: { size: 13 }, bodyFont: { size: 13 }, padding: 10,
+                        callbacks: {
+                            label: function(context) { return context.dataset.label + ': ' + context.parsed.y + '%'; }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Kích hoạt Chart MŨI NHỌN
         new Chart(document.getElementById('chart_master_muinhon'), {
             type: 'line',
             data: {
                 labels: ['Cấp Xã', 'Cấp Huyện', 'Cấp Tỉnh', 'Cấp Quốc Gia', 'Cấp Quốc Tế'],
-                datasets: hks_tapDuLieuMaster_arr
+                datasets: hks_tapDuLieuMasterMN_arr
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false }, 
                 scales: { 
-                    y: { beginAtZero: true, grid: { borderDash: [5, 5] }, title: { display: true, text: 'Số lượng Giải thưởng', font: { weight: 'bold' } } },
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] }, title: { display: true, text: 'Số lượng Giải', font: { weight: 'bold' } }, ticks: { stepSize: 1, precision: 0 } },
                     x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
                 },
                 plugins: { 
-                    legend: { position: 'top', labels: { usePointStyle: true, padding: 20, font: { size: 13, weight: 'bold' } } },
-                    tooltip: { backgroundColor: 'rgba(0, 51, 102, 0.9)', titleFont: { size: 14 }, bodyFont: { size: 13 }, padding: 12 }
+                    legend: { position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 12, weight: 'bold' } } },
+                    tooltip: { backgroundColor: 'rgba(183, 28, 28, 0.9)', titleFont: { size: 13 }, bodyFont: { size: 13 }, padding: 10 }
                 }
             }
         });
