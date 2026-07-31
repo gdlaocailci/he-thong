@@ -33,11 +33,10 @@
       0% { background-position: -100% 0; }
       100% { background-position: 100% 0; }
   }
-
-  /* Khung chứa biểu đồ từng năm tự động co giãn và xuống dòng */
+ /* Khung chứa biểu đồ từng năm tự động co giãn và xuống dòng */
   .bieu-do-container {
-      flex: 1 1 calc(25% - 15px); 
-      min-width: 260px; 
+      flex: 1 1 calc(20% - 20px); /* Ép tỷ lệ 20% để bố trí tối đa 5 biểu đồ/hàng ngang */
+      min-width: 220px; /* Thu nhỏ min-width để 5 cột vừa vặn trên màn hình tiêu chuẩn */
       max-width: 400px;
       background: #ffffff; 
       border: 1px solid #d4af37; /* Viền vàng gold theo mẫu */
