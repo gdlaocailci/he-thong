@@ -823,6 +823,25 @@
         </div>
     </div>
 
+    <!-- BỔ SUNG: KHỐI GIAO DIỆN XEM VÀ CHỈNH SỬA TÀI LIỆU (DRIVE/DOCS) -->
+    <div id="window-preview" class="window-overlay">
+        <div class="window-container" style="width: 90vw; height: 90vh; max-width: 1400px; background: #ffffff;">
+            <div class="window-titlebar" style="background: #1976D2; border-bottom: none;">
+                <div class="window-title" id="preview-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">visibility</span> Đang tải dữ liệu...</div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="window-close" style="color: #ffffff; width: auto; padding: 0 10px; font-size: 14px; background: transparent;" onclick="moTabMoiTaiLieu()" title="Mở sang thẻ mới (Tab)">
+                        <span class="material-icons" style="font-size: 18px;">open_in_new</span>
+                    </button>
+                    <button class="window-close" style="color: #ffffff; background: transparent;" onclick="dongKhungXemTaiLieu()">✕</button>
+                </div>
+            </div>
+            <div class="window-content" style="padding: 0; display: flex; flex-direction: column;">
+                <!-- Iframe giữ nguyên phiên đăng nhập Google hiện tại để đảm bảo phân quyền chỉnh sửa/ghi chú -->
+                <iframe id="preview-iframe" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
     <div id="window-alert" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
@@ -899,6 +918,35 @@ function getUrlAndTarget(encodedTd2) {
         taiBieuTuongCongKhai();
         kiemTraTrangThaiDangNhap();
     };
+
+    // =========================================================================
+    // KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP
+    // =========================================================================
+    let duongDanTrangHienTai = "";
+
+    function kiemTraLinkTaiLieu(duongDan) {
+        var chuoiKiemTra = duongDan.toLowerCase();
+        return chuoiKiemTra.includes("drive.google.com") || chuoiKiemTra.includes("docs.google.com");
+    }
+
+    function moKhungXemTaiLieu(duongDan, tieuDe) {
+        duongDanTrangHienTai = duongDan;
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: #ffffff;">visibility</span> Hồ sơ tài liệu: ${tieuDe}`;
+        document.getElementById('preview-iframe').src = duongDan;
+        document.getElementById('window-preview').style.display = 'flex';
+    }
+
+    function dongKhungXemTaiLieu() {
+        document.getElementById('window-preview').style.display = 'none';
+        document.getElementById('preview-iframe').src = "";
+        duongDanTrangHienTai = "";
+    }
+
+    function moTabMoiTaiLieu() {
+        if (duongDanTrangHienTai !== "") {
+            window.open(duongDanTrangHienTai, '_blank');
+        }
+    }
 
     function taiBieuTuongCongKhai() {
         let cachedIcons = localStorage.getItem(PREFIX_MEM + 'icons_cache');
@@ -1164,7 +1212,7 @@ function getUrlAndTarget(encodedTd2) {
         }
     }
 
-    function renderIconsFromData(data) {
+function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
         capNhatDropdownThuMuc();
@@ -1204,7 +1252,12 @@ function getUrlAndTarget(encodedTd2) {
                 let parsed = getUrlAndTarget(item.td2);
                 
                 if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    window.open(parsed.url, parsed.target);
+                    // Cập nhật: Kiểm tra đường dẫn để mở Modal Khung xem hoặc mở Thẻ mới
+                    if (kiemTraLinkTaiLieu(parsed.url)) {
+                        moKhungXemTaiLieu(parsed.url, item.td1);
+                    } else {
+                        window.open(parsed.url, parsed.target);
+                    }
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -1224,7 +1277,7 @@ function getUrlAndTarget(encodedTd2) {
         document.getElementById('folder-content-area').innerHTML = '';
     }
 
-    function moCuaSoThuMuc(tenThuMuc) {
+function moCuaSoThuMuc(tenThuMuc) {
         document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
         folderArea.innerHTML = ''; 
@@ -1264,7 +1317,12 @@ function getUrlAndTarget(encodedTd2) {
                     let parsed = getUrlAndTarget(item.td2);
                     
                     if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        window.open(parsed.url, parsed.target);
+                        // Cập nhật: Kiểm tra đường dẫn để mở Modal Khung xem hoặc mở Thẻ mới
+                        if (kiemTraLinkTaiLieu(parsed.url)) {
+                            moKhungXemTaiLieu(parsed.url, item.td1);
+                        } else {
+                            window.open(parsed.url, parsed.target);
+                        }
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
