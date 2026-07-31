@@ -719,14 +719,15 @@
               
               let hks_tongSoGiai_num = sumGiai('xa') + sumGiai('huyen') + sumGiai('tinh') + sumGiai('qg') + sumGiai('qt');
 
+              l// BẮT ĐẦU THAY THẾ: Cập nhật nhãn trục X (Mũi nhọn đứng trước Đại trà)
               let hks_nhanTrucX_arr = [
-                  ['Đ.Trà: XS', 'M.Nhọn: Quốc gia'], 
-                  ['Đ.Trà: HTT', 'M.Nhọn: Tỉnh'], 
-                  ['Đ.Trà: HT', 'M.Nhọn: Cụm (khu vực)'], 
-                  ['Đ.Trà: CHT', 'M.Nhọn: Xã'], 
-                  ['Ngoại tuyến', 'M.Nhọn: Quốc tế']
+                  ['M.Nhọn: Quốc gia', 'Đ.Trà: XS'], 
+                  ['M.Nhọn: Tỉnh', 'Đ.Trà: HTT'], 
+                  ['M.Nhọn: Cụm (khu vực)', 'Đ.Trà: HT'], 
+                  ['M.Nhọn: Xã', 'Đ.Trà: CHT'], 
+                  ['M.Nhọn: Quốc tế', 'Ngoại tuyến']
               ];
-
+              // KẾT THÚC THAY THẾ
               new Chart(document.getElementById(hks_maCanvas_str), {
                   type: 'bar',
                   data: {
