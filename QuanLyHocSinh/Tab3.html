@@ -78,29 +78,33 @@
     <div class="tab-pane fade show active" id="tk_soluong_th">
       <div class="table-container">
         <table class="table table-bordered table-striped table-sm text-center mb-0" id="bang3_1">
+         <!-- BẮT ĐẦU THAY THẾ KHỐI THEAD CỦA #bang3_2 -->
           <thead>
             <tr>
               <th rowspan="2" style="width:40px">STT</th><th rowspan="2" style="min-width:80px">Lớp</th>
               <th rowspan="2" class="col-compact">TS</th>
-              <th rowspan="2" class="col-compact">DT</th><th rowspan="2" class="col-compact">Nữ</th>
-              <th rowspan="2" class="col-compact">Nữ<br>DT</th><th rowspan="2" class="col-compact">K.<br>Tật</th><th rowspan="2" class="col-compact">Nữ<br>KT</th>
-              <th rowspan="2" class="col-compact">Hộ<br>Nghèo</th><th rowspan="2" class="col-compact">Cận<br>Nghèo</th><th rowspan="2" class="col-compact">Chính<br>Sách</th><th rowspan="2" class="col-compact" style="white-space: normal; font-size: 12px; line-height: 1.2;">HS<br>ngoại<br>tuyến</th><th rowspan="2" class="col-compact">BH<br>YT</th>
-              <th colspan="2" class="col-age">6 tuổi</th><th colspan="2" class="col-age">7 tuổi</th><th colspan="2" class="col-age">8 tuổi</th>
-              <th colspan="2" class="col-age">9 tuổi</th><th colspan="2" class="col-age">10 tuổi</th><th colspan="2" class="col-age">11 tuổi</th>
-              <th colspan="2" class="col-age">12 tuổi</th><th colspan="2" class="col-age">13 tuổi</th><th colspan="2" class="col-age">14 tuổi</th>
+              <th colspan="8" class="th-ket-qua">Kết quả học tập</th>
+              <th colspan="4" class="th-cap-xa">Giải Cấp Xã</th>
+              <th colspan="4" class="th-cap-huyen">Giải Huyện/Khu vực</th>
+              <th colspan="4" class="th-cap-tinh">Giải Cấp Tỉnh</th>
+              <th colspan="4" class="th-cap-qg">Giải Quốc Gia</th>
+              <th colspan="4" class="th-cap-qt">Giải Quốc Tế</th>
             </tr>
             <tr>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
-              <th class="col-compact" style="font-size:11px">TS</th><th class="col-compact" style="font-size:11px">Nữ</th>
+              <!-- Thêm các cột % đan xen với các cột số lượng -->
+              <th class="col-compact">XS</th><th class="col-compact" style="font-size:11px">%</th>
+              <th class="col-compact">HTT</th><th class="col-compact" style="font-size:11px">%</th>
+              <th class="col-compact">HT</th><th class="col-compact" style="font-size:11px">%</th>
+              <th class="col-compact">CHT</th><th class="col-compact" style="font-size:11px">%</th>
+              
+              <th class="col-compact">Nhất</th><th class="col-compact">Nhì</th><th class="col-compact">Ba</th><th class="col-compact">KK</th>
+              <th class="col-compact">Nhất</th><th class="col-compact">Nhì</th><th class="col-compact">Ba</th><th class="col-compact">KK</th>
+              <th class="col-compact">Nhất</th><th class="col-compact">Nhì</th><th class="col-compact">Ba</th><th class="col-compact">KK</th>
+              <th class="col-compact">Nhất</th><th class="col-compact">Nhì</th><th class="col-compact">Ba</th><th class="col-compact">KK</th>
+              <th class="col-compact">Nhất</th><th class="col-compact">Nhì</th><th class="col-compact">Ba</th><th class="col-compact">KK</th>
             </tr>
           </thead>
+<!-- KẾT THÚC THAY THẾ KHỐI THEAD CỦA #bang3_2 -->
           <tbody></tbody>
         </table>
       </div>
@@ -425,12 +429,27 @@
       return `<td class="col-compact" style="position: relative; cursor: pointer;" ${jsEvent}><span class="has-val">${val}</span>${noteHtml}</td>`;
   }
 
+// BẮT ĐẦU THAY THẾ: Nâng cấp hàm hks_taoGiaoDienChatLuong_fn để tính % chất lượng đại trà
   function hks_taoGiaoDienChatLuong_fn(item, stt, cssClass, labelLop = null) {
       let hks_lopHienThi_str = labelLop ? labelLop : item.lop;
+      let ts = item.tongSo || 0;
+
+      // Xử lý tính toán % (Kiểm tra mẫu số > 0 để tránh lỗi chia cho 0)
+      let pt_xs = ts > 0 ? ((item.htxs / ts) * 100).toFixed(1) + '%' : '-';
+      let pt_htt = ts > 0 ? ((item.htt / ts) * 100).toFixed(1) + '%' : '-';
+      let pt_ht = ts > 0 ? ((item.ht / ts) * 100).toFixed(1) + '%' : '-';
+      let pt_cht = ts > 0 ? ((item.cht / ts) * 100).toFixed(1) + '%' : '-';
+      
       return `<tr class="${cssClass}">
         <td>${stt}</td><td class="text-start px-2">${hks_lopHienThi_str}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.tongSo)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.htxs)}</td>
-        <td class="col-compact">${hks_dinhDangOChua_fn(item.htt)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.ht)}</td><td class="col-compact">${hks_dinhDangOChua_fn(item.cht)}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.tongSo)}</td>
+        
+        <!-- Kết xuất Số lượng và % đan xen -->
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.htxs)}</td><td class="col-compact" style="font-size:11px; color:#555;">${pt_xs}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.htt)}</td><td class="col-compact" style="font-size:11px; color:#555;">${pt_htt}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.ht)}</td><td class="col-compact" style="font-size:11px; color:#555;">${pt_ht}</td>
+        <td class="col-compact">${hks_dinhDangOChua_fn(item.cht)}</td><td class="col-compact" style="font-size:11px; color:#555;">${pt_cht}</td>
+        
         ${hks_taoTdThanhTich_fn(item.thanhTich.xa[1])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[2])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[3])}${hks_taoTdThanhTich_fn(item.thanhTich.xa[4])}
         ${hks_taoTdThanhTich_fn(item.thanhTich.huyen[1])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[2])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[3])}${hks_taoTdThanhTich_fn(item.thanhTich.huyen[4])}
         ${hks_taoTdThanhTich_fn(item.thanhTich.tinh[1])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[2])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[3])}${hks_taoTdThanhTich_fn(item.thanhTich.tinh[4])}
@@ -438,6 +457,7 @@
         ${hks_taoTdThanhTich_fn(item.thanhTich.qt[1])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[2])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[3])}${hks_taoTdThanhTich_fn(item.thanhTich.qt[4])}
       </tr>`;
   }
+  // KẾT THÚC THAY THẾ
 
   function hks_veBangPhanBa_fn(data) {
     const hks_bangTH_el = document.querySelector('#bang3_1 tbody');
