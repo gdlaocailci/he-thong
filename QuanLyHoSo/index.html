@@ -2049,8 +2049,12 @@ function apDungPhanQuyen(roles) {
         document.querySelectorAll('.cb-del-hoso').forEach(cb => cb.checked = isCheck);
     }
 
+// =========================================================================
+    // KHỐI QUẢN LÝ ĐA NHIỆM - THUẬT TOÁN ĐA LUỒNG (CONCURRENT BATCH PROCESSING)
+    // =========================================================================
     async function xuLyDoiTrangThaiNhieu(isMakePublic) {
-        let checkedBoxes = document.querySelectorAll('.cb-del-hoso:checked');
+        // Chuyển đổi NodeList thành Array để hỗ trợ cắt mảng (slice)
+        let checkedBoxes = Array.from(document.querySelectorAll('.cb-del-hoso:checked'));
         if (checkedBoxes.length === 0) { 
             alert("Yêu cầu hệ thống: Vui lòng chọn ít nhất một dự án để thao tác!"); 
             return; 
@@ -2064,18 +2068,33 @@ function apDungPhanQuyen(roles) {
         const statusText = document.getElementById('del-form-status');
         statusText.style.display = 'block';
 
-        for (let i = 0; i < checkedBoxes.length; i++) {
-            let profile = globalProfiles[checkedBoxes[i].value];
-            statusText.innerText = `Đang đồng bộ trạng thái (${i + 1}/${checkedBoxes.length}): ${profile.td1}...`;
+        let completed = 0;
+        const total = checkedBoxes.length;
+        const batchSize = 4; // Cấu hình xử lý 4 luồng song song cùng lúc
+
+        // Vòng lặp chia lô dữ liệu để phân phối tải lên máy chủ Google
+        for (let i = 0; i < total; i += batchSize) {
+            const batch = checkedBoxes.slice(i, i + batchSize);
             
-            try {
-                await fetch(KETNOI.WEB_APP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'togglePublicProfile', td1: profile.td1, newStatus: newStatus, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-                });
-            } catch (err) {
-                console.error("Lỗi đồng bộ mục: " + profile.td1);
-            }
+            // Khởi tạo các luồng Promise song song cho cụm hiện tại
+            const batchPromises = batch.map(async (cb) => {
+                let profile = globalProfiles[cb.value];
+                try {
+                    await fetch(KETNOI.WEB_APP_URL, {
+                        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'togglePublicProfile', td1: profile.td1, newStatus: newStatus, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+                    });
+                } catch (err) {
+                    console.error("Lỗi đồng bộ mục: " + profile.td1);
+                }
+                
+                // Cập nhật tiến trình hiển thị trên giao diện theo thời gian thực
+                completed++;
+                statusText.innerText = `Đang đồng bộ trạng thái (${completed}/${total}): ${profile.td1}...`;
+            });
+
+            // Hệ thống đợi cụm 4 tệp hoàn tất trước khi nạp cụm tiếp theo, tránh quá tải API
+            await Promise.all(batchPromises);
         }
 
         statusText.style.display = 'none';
@@ -2084,7 +2103,7 @@ function apDungPhanQuyen(roles) {
     }
 
     async function xuLyXoaHoSoNhieu() {
-        let checkedBoxes = document.querySelectorAll('.cb-del-hoso:checked');
+        let checkedBoxes = Array.from(document.querySelectorAll('.cb-del-hoso:checked'));
         if (checkedBoxes.length === 0) { 
             alert("Yêu cầu hệ thống: Vui lòng chọn ít nhất một dự án để hủy bỏ!"); 
             return; 
@@ -2095,18 +2114,30 @@ function apDungPhanQuyen(roles) {
         const statusText = document.getElementById('del-form-status');
         statusText.style.display = 'block';
 
-        for (let i = 0; i < checkedBoxes.length; i++) {
-            let profile = globalProfiles[checkedBoxes[i].value];
-            statusText.innerText = `Đang tiến hành hủy bỏ (${i + 1}/${checkedBoxes.length}): ${profile.td1}...`;
+        let completed = 0;
+        const total = checkedBoxes.length;
+        const batchSize = 4; 
+
+        // Áp dụng thuật toán chia lô tương tự đối với luồng Xóa dữ liệu
+        for (let i = 0; i < total; i += batchSize) {
+            const batch = checkedBoxes.slice(i, i + batchSize);
             
-            try {
-                await fetch(KETNOI.WEB_APP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'deleteProfile', td1: profile.td1, td2: profile.td2, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
-                });
-            } catch (err) {
-                console.error("Lỗi xóa mục: " + profile.td1);
-            }
+            const batchPromises = batch.map(async (cb) => {
+                let profile = globalProfiles[cb.value];
+                try {
+                    await fetch(KETNOI.WEB_APP_URL, {
+                        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'deleteProfile', td1: profile.td1, td2: profile.td2, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+                    });
+                } catch (err) {
+                    console.error("Lỗi xóa mục: " + profile.td1);
+                }
+                
+                completed++;
+                statusText.innerText = `Đang tiến hành hủy bỏ (${completed}/${total}): ${profile.td1}...`;
+            });
+
+            await Promise.all(batchPromises);
         }
 
         statusText.style.display = 'none';
