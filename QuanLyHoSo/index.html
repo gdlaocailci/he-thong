@@ -1069,45 +1069,81 @@ function getUrlAndTarget(encodedTd2) {
         document.getElementById('file-upload-input').click();
     }
 
-    function xuLyFileTaiLen(event) {
-        let file = event.target.files[0];
-        if (!file) return;
+function xuLyFileTaiLen(event) {
+        let fileTepTin = event.target.files[0];
+        if (!fileTepTin) return;
         
-        // Đọc file sang Base64 để truyền đi an toàn
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let data = e.target.result;
-            let base64 = data.split(',')[1];
-            let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
-            
-            document.getElementById('upload-progress-bar').style.display = 'block';
-            document.getElementById('upload-progress-fill').style.width = '60%';
-            
-            fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ 
-                    action: 'uploadFileToDrive', folderId: idThuMucHienTai, fileName: file.name, mimeType: file.type,
-                    fileData: base64, dinhDanhGiaoDien: taiKhoanGiaoDien, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-                })
-            })
-            .then(res => res.json())
-            .then(res => {
-                document.getElementById('upload-progress-fill').style.width = '100%';
-                setTimeout(() => { document.getElementById('upload-progress-bar').style.display = 'none'; }, 500);
-                
-                if (res.status === 'success') {
-                    // Cập nhật lại khung nhìn ngay sau khi upload thành công
-                    moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true);
-                } else {
-                    alert("Lỗi tải lên: " + res.message);
+        if (idThuMucHienTai === "") {
+            alert("Lỗi cấu trúc: Không xác định được định danh thư mục đích."); 
+            return;
+        }
+
+        document.getElementById('upload-progress-bar').style.display = 'block';
+        document.getElementById('upload-progress-fill').style.width = '10%';
+        
+        // Khởi tạo luồng xin quyền Token trực tiếp từ nền tảng Google API
+        // Cơ chế này ép Google Drive phải đọc quyền của đúng tài khoản đang hiển thị trên giao diện
+        let tokenTaiLenClient = google.accounts.oauth2.initTokenClient({
+            client_id: KETNOI.CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/drive',
+            callback: (phienXacThuc) => {
+                if (phienXacThuc.error) {
+                    document.getElementById('upload-progress-bar').style.display = 'none';
+                    alert("Cảnh báo: Hệ thống Google từ chối cấp quyền thao tác tải lên!");
+                    return;
                 }
-            }).catch(err => {
-                document.getElementById('upload-progress-bar').style.display = 'none';
-                alert("Mất kết nối đường truyền mạng khi tải tệp.");
-            });
-            document.getElementById('file-upload-input').value = ""; // Dọn dẹp input
+                // Giao quyền cho Client-side tải thẳng lên Drive, bỏ qua Backend
+                thucHienGuiFileLenDrive(fileTepTin, idThuMucHienTai, phienXacThuc.access_token);
+            }
+        });
+        
+        // Kích hoạt yêu cầu mã thông báo (sẽ tự động cấp ngầm nếu đã đăng nhập)
+        tokenTaiLenClient.requestAccessToken({prompt: ''});
+        document.getElementById('file-upload-input').value = ""; // Dọn dẹp input sau khi chọn
+    }
+
+    // BỔ SUNG: Hàm giao tiếp REST API nội bộ trực tiếp với Google Drive
+    function thucHienGuiFileLenDrive(fileTepTin, maThuMucDich, maThongBaoQuyen) {
+        document.getElementById('upload-progress-fill').style.width = '40%';
+        
+        // Định cấu hình siêu dữ liệu (đẩy đúng vào thư mục ID đang mở)
+        let sieuDuLieu = {
+            name: fileTepTin.name,
+            parents: [maThuMucDich]
         };
-        reader.readAsDataURL(file);
+
+        let bieuMauDuLieu = new FormData();
+        bieuMauDuLieu.append('metadata', new Blob([JSON.stringify(sieuDuLieu)], { type: 'application/json' }));
+        bieuMauDuLieu.append('file', fileTepTin);
+
+        // Đẩy thẳng lên máy chủ Google, kèm Token định danh của Thầy/Cô
+        fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + maThongBaoQuyen
+            },
+            body: bieuMauDuLieu
+        })
+        .then(phanHoi => {
+            document.getElementById('upload-progress-fill').style.width = '100%';
+            setTimeout(() => { document.getElementById('upload-progress-bar').style.display = 'none'; }, 500);
+            
+            if (phanHoi.ok) {
+                // Tải lên thành công: Làm mới lại danh sách Khung xem ngay lập tức
+                moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true);
+            } else {
+                // Phân tích chính xác lỗi phân quyền (403) từ Google Drive
+                if (phanHoi.status === 403) {
+                    alert("TỪ CHỐI TRUY CẬP:\nTài khoản của Thầy/Cô CHƯA ĐƯỢC CẤP QUYỀN CHỈNH SỬA tại thư mục này trên Google Drive gốc. Vui lòng liên hệ quản trị viên!");
+                } else {
+                    alert("Trạng thái lỗi từ Google: " + phanHoi.statusText);
+                }
+            }
+        })
+        .catch(loiTruyenTai => {
+            document.getElementById('upload-progress-bar').style.display = 'none';
+            alert("Mất kết nối đường truyền khi giao tiếp trực tiếp với máy chủ Google Drive.");
+        });
     }
 
     function dongKhungXemTaiLieu() {
