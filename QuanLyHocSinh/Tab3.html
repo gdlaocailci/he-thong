@@ -673,6 +673,7 @@ function hks_xuatBieuDo_fn() {
                 ['Ngoại tuyến', 'M.Nhọn: Q.Tế']
             ];
 
+// BẮT ĐẦU THAY THẾ KHỐI KHỞI TẠO BIỂU ĐỒ CHI TIẾT
             new Chart(document.getElementById(hks_maCanvas_str), {
                 type: 'bar',
                 data: {
@@ -702,8 +703,47 @@ function hks_xuatBieuDo_fn() {
                         }
                     ]
                 },
+                
+                // Bổ sung plugin nội tuyến để vẽ % lên đỉnh cột
+                plugins: [{
+                    id: 'veNhanPhanTram',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.save();
+                        ctx.font = 'bold 11px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            if (!meta.hidden) {
+                                meta.data.forEach((element, index) => {
+                                    const val = dataset.data[index];
+                                    if (val > 0) { // Chỉ hiển thị % nếu cột có dữ liệu (> 0)
+                                        let hks_chuoiPhanTram_str = '';
+                                        if (i === 1) { // Dataset 1: Đại trà
+                                            hks_chuoiPhanTram_str = hks_tongSoHocSinh_num > 0 ? ((val / hks_tongSoHocSinh_num) * 100).toFixed(1) + '%' : '';
+                                            ctx.fillStyle = '#003366'; // Trùng màu viền cột đại trà
+                                        } else if (i === 0) { // Dataset 0: Mũi nhọn
+                                            hks_chuoiPhanTram_str = hks_tongSoGiai_num > 0 ? ((val / hks_tongSoGiai_num) * 100).toFixed(1) + '%' : '';
+                                            ctx.fillStyle = '#b71c1c'; // Trùng màu viền cột mũi nhọn
+                                        }
+                                        
+                                        // Căn chỉnh tọa độ X ở giữa cột và Y cao hơn đỉnh cột 3px
+                                        ctx.fillText(hks_chuoiPhanTram_str, element.x, element.y - 3);
+                                    }
+                                });
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
+
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 25 } // Tăng khoảng trống phía trên Canvas để nhãn % không bị lẹm viền
+                    },
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
@@ -719,10 +759,10 @@ function hks_xuatBieuDo_fn() {
                                     let hks_giaTri_num = context.parsed.y;
                                     let hks_chuoiHienThi_str = hks_nhan_str + ': ' + hks_giaTri_num;
                                     
-                                    if (context.datasetIndex === 1) { // Đại trà
+                                    if (context.datasetIndex === 1) { 
                                         let hks_phanTram_num = hks_tongSoHocSinh_num > 0 ? ((hks_giaTri_num / hks_tongSoHocSinh_num) * 100).toFixed(1) : 0;
                                         hks_chuoiHienThi_str += ` (${hks_phanTram_num}%)`;
-                                    } else if (context.datasetIndex === 0) { // Mũi nhọn
+                                    } else if (context.datasetIndex === 0) { 
                                         let hks_phanTram_num = hks_tongSoGiai_num > 0 ? ((hks_giaTri_num / hks_tongSoGiai_num) * 100).toFixed(1) : 0;
                                         hks_chuoiHienThi_str += ` (${hks_phanTram_num}%)`;
                                     }
@@ -733,6 +773,7 @@ function hks_xuatBieuDo_fn() {
                     }
                 }
             });
+            // KẾT THÚC THAY THẾ KHỐI KHỞI TẠO BIỂU ĐỒ CHI TIẾT
         }
     });
 }
