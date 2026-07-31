@@ -669,17 +669,37 @@ function hks_xuatBieuDo_fn() {
     }
 
     // =========================================================================
-    // ĐỘT PHÁ 2: BIỂU ĐỒ CHI TIẾT TỪNG NĂM (ĐÃ CHUẨN HÓA CẶP LOGIC)
+    // ĐỘT PHÁ 2: BIỂU ĐỒ CHI TIẾT TỪNG NĂM (XỬ LÝ GRID TỰ ĐỘNG XUỐNG DÒNG)
     // =========================================================================
+    // 1. Tự động bơm CSS cục bộ để xử lý chia 5 cột trên màn hình lớn
+    if (!document.getElementById('hks_grid_style')) {
+        let hks_css_el = document.createElement('style');
+        hks_css_el.id = 'hks_grid_style';
+        hks_css_el.innerHTML = `
+            @media (min-width: 1200px) { .hks-col-5 { flex: 0 0 auto; width: 20%; } }
+            @media (min-width: 768px) and (max-width: 1199px) { .hks-col-5 { flex: 0 0 auto; width: 33.333%; } }
+        `;
+        document.head.appendChild(hks_css_el);
+    }
+
     let hks_soLuongBieuDo_num = hks_danhSachNam_arr.length;
-    let hks_classCot_str = 'col-12 col-md'; 
-    if (hks_soLuongBieuDo_num === 1) hks_classCot_str = 'col-12';
-    else if (hks_soLuongBieuDo_num === 2) hks_classCot_str = 'col-12 col-md-6';
-    else if (hks_soLuongBieuDo_num === 3) hks_classCot_str = 'col-12 col-md-4';
-    else if (hks_soLuongBieuDo_num === 4) hks_classCot_str = 'col-12 col-md-3';
+    let hks_classCot_str = ''; 
+
+    // 2. Thuật toán phân bổ cột thông minh, chống bành trướng biểu đồ
+    if (hks_soLuongBieuDo_num === 1) {
+        hks_classCot_str = 'col-12 col-lg-8 mx-auto'; // Tối ưu: Nếu chỉ 1 biểu đồ thì căn giữa, độ rộng 8/12 vừa phải
+    } else if (hks_soLuongBieuDo_num === 2) {
+        hks_classCot_str = 'col-12 col-md-6';
+    } else if (hks_soLuongBieuDo_num === 3) {
+        hks_classCot_str = 'col-12 col-md-4';
+    } else if (hks_soLuongBieuDo_num === 4) {
+        hks_classCot_str = 'col-12 col-md-6 col-lg-3';
+    } else {
+        hks_classCot_str = 'col-12 hks-col-5'; // Từ 5 biểu đồ trở lên: Ép cứng tối đa 20% mỗi khung
+    }
 
     let hks_khungLuoiCon_el = document.createElement('div');
-    hks_khungLuoiCon_el.className = 'row g-4 w-100 m-0';
+    hks_khungLuoiCon_el.className = 'row g-4 w-100 m-0 justify-content-center'; 
     hks_khungHienThi_el.appendChild(hks_khungLuoiCon_el);
 
     hks_danhSachNam_arr.forEach((hks_chuKy_str, index) => {
