@@ -1213,9 +1213,21 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         if (idFileHienTai !== "") taiVeTepTinTrucTiep(idFileHienTai);
     }
     
-    function taiVeTepTinTrucTiep(idTepTin) {
+function taiVeTepTinTrucTiep(idTepTin) {
         let linkTaiVe = "https://drive.google.com/uc?export=download&id=" + idTepTin;
-        window.open(linkTaiVe, '_blank');
+        
+        // Tạo một iframe ẩn để hệ thống tải file ngầm mà không nhảy thẻ mới
+        let khungTaiAn = document.createElement('iframe');
+        khungTaiAn.style.display = 'none';
+        khungTaiAn.src = linkTaiVe;
+        document.body.appendChild(khungTaiAn);
+        
+        // Dọn dẹp DOM (xóa iframe) sau khi luồng tải đã kích hoạt an toàn (10 giây)
+        setTimeout(function() {
+            if (khungTaiAn && khungTaiAn.parentNode) {
+                khungTaiAn.parentNode.removeChild(khungTaiAn);
+            }
+        }, 10000);
     }
 
     function taiLenTaiLieu() {
