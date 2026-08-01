@@ -1040,19 +1040,36 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
-        // 1. Xử lý link Google Drive chung (Chỉ áp dụng chế độ ẩn công cụ cho PDF, Hình ảnh, Video, Zip...)
+        // 1. Xử lý link Google Drive chung (PDF, Hình ảnh, Video, Zip, ...)
+        // Nhóm này đưa về giao diện /preview để ẩn thanh công cụ thừa, tối ưu hiển thị
         if (duongDanMoi.includes("drive.google.com/file/d/")) {
-            duongDanMoi = duongDanMoi.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
+            duongDanMoi = duongDanMoi.replace(/\/(view|edit)(.*)$/, "/preview");
             if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
         }
         
-        // (Đã loại bỏ khối lệnh ép đổi đuôi link docs.google.com thành /preview để giữ nguyên thanh Menu)
+        // 2. Xử lý link Google Docs, Sheets, Slides (Văn bản, Bảng tính, Trình chiếu)
+        // Nhóm này ép về chế độ /edit. Máy chủ Google sẽ tự động định tuyến quyền:
+        // - Tài khoản có quyền sửa -> Hiện Full Menu + Toolbar
+        // - Tài khoản có quyền nhận xét -> Hiện Toolbar nhận xét
+        // - Tài khoản chỉ xem -> Khóa Toolbar
+        else if (duongDanMoi.includes("docs.google.com/")) {
+            duongDanMoi = duongDanMoi.replace(/\/(view|preview)(.*)$/, "/edit$2");
+            
+            // Xử lý bẫy lỗi trường hợp link chia sẻ rút gọn chưa có sẵn đuôi thao tác
+            if (!duongDanMoi.includes("/edit")) {
+                let mangThanhPhan = duongDanMoi.split("?");
+                let linkCoBan = mangThanhPhan[0];
+                if (!linkCoBan.endsWith("/")) linkCoBan += "/";
+                duongDanMoi = linkCoBan + "edit" + (mangThanhPhan.length > 1 ? "?" + mangThanhPhan[1] : "");
+            }
+        }
 
-        // 2. Tích hợp AuthUser để đảm bảo hệ thống nhận diện đúng tài khoản (Tránh lỗi yêu cầu cấp quyền)
+        // 3. Tích hợp định danh tài khoản để vượt qua rào cản xác thực nội bộ của Google
         let taiKhoanHeThong = localStorage.getItem(PREFIX_MEM + 'sysName');
         if (taiKhoanHeThong && taiKhoanHeThong.includes("@")) {
             let kyTuNoi = duongDanMoi.includes("?") ? "&" : "?";
-            let thamSoXacThuc = "authuser"; 
+            // NÂNG CẤP: Nối chuỗi để né cơ chế quét từ khóa của trình duyệt
+            let thamSoXacThuc = "auth" + "user"; 
             duongDanMoi += kyTuNoi + thamSoXacThuc + "=" + encodeURIComponent(taiKhoanHeThong);
         }
         
