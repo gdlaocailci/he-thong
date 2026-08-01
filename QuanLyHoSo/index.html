@@ -1040,23 +1040,19 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
-        // 1. Xử lý link Google Drive chung (PDF, Hình ảnh, Video, Zip...)
+        // 1. Xử lý link Google Drive chung (Chỉ áp dụng chế độ ẩn công cụ cho PDF, Hình ảnh, Video, Zip...)
         if (duongDanMoi.includes("drive.google.com/file/d/")) {
             duongDanMoi = duongDanMoi.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
             if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
         }
-        // 2. Xử lý link Google Docs, Sheets, Slides (Văn bản, Bảng tính, Trình chiếu)
-        else if (duongDanMoi.includes("docs.google.com/")) {
-            // Chuyển đổi đuôi /edit hoặc /view thành /preview để loại bỏ hoàn toàn thanh Menu/Toolbar
-            duongDanMoi = duongDanMoi.replace(/\/edit.*$/, "/preview").replace(/\/view.*$/, "/preview");
-            if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
-        }
+        
+        // (Đã loại bỏ khối lệnh ép đổi đuôi link docs.google.com thành /preview để giữ nguyên thanh Menu)
 
-        // 3. Tích hợp AuthUser để đảm bảo mở đúng tài khoản hệ thống (Chống lỗi xin quyền)
+        // 2. Tích hợp AuthUser để đảm bảo hệ thống nhận diện đúng tài khoản (Tránh lỗi yêu cầu cấp quyền)
         let taiKhoanHeThong = localStorage.getItem(PREFIX_MEM + 'sysName');
         if (taiKhoanHeThong && taiKhoanHeThong.includes("@")) {
             let kyTuNoi = duongDanMoi.includes("?") ? "&" : "?";
-            let thamSoXacThuc = "auth" + "user"; 
+            let thamSoXacThuc = "authuser"; 
             duongDanMoi += kyTuNoi + thamSoXacThuc + "=" + encodeURIComponent(taiKhoanHeThong);
         }
         
