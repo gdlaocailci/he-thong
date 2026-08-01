@@ -1230,12 +1230,73 @@ function taiVeTepTinTrucTiep(idTepTin) {
         }, 10000);
     }
 
-    function taiLenTaiLieu() {
+function taiLenTaiLieu() {
         if (!idThuMucHienTai || idThuMucHienTai === "" || idThuMucHienTai === "undefined") {
             alert("Hệ thống chưa nhận diện được mã ID Thư mục. Vui lòng tải lại trang."); 
             return;
         }
-        window.open('https://drive.google.com/drive/folders/' + idThuMucHienTai, '_blank');
+
+        // 1. Tạo một thẻ input ẩn để kích hoạt cửa sổ chọn file của hệ điều hành
+        let inputChonFile = document.createElement('input');
+        inputChonFile.type = 'file';
+        inputChonFile.style.display = 'none';
+
+        // 2. Lắng nghe sự kiện khi người dùng đã chọn xong file
+        inputChonFile.onchange = function(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+
+            // Hiển thị hiệu ứng tải dữ liệu đè lên danh sách thư mục hiện tại
+            let khuVucDanhSach = document.getElementById('preview-folder-list');
+            let htmlCu = khuVucDanhSach.innerHTML; // Lưu tạm giao diện cũ để khôi phục nếu có lỗi
+            khuVucDanhSach.innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">cloud_upload</span><h3 style="color:#333;">Đang đẩy tệp "' + file.name + '" lên hệ thống. Vui lòng chờ...</h3></div>';
+
+            // 3. Sử dụng FileReader để chuyển đổi file thành chuỗi Base64
+            let reader = new FileReader();
+            reader.onload = function(event) {
+                // Tách bỏ phần tiền tố định dạng (VD: data:image/png;base64,...)
+                let base64Data = event.target.result.split(',')[1];
+                let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
+
+                // 4. Bắn luồng dữ liệu (POST) lên API Backend (Luồng 9 ở Code.gs)
+                fetch(KETNOI.WEB_APP_URL, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'uploadFileToDrive', 
+                        folderId: idThuMucHienTai,
+                        fileName: file.name,
+                        mimeType: file.type || 'application/octet-stream',
+                        fileData: base64Data,
+                        dinhDanhGiaoDien: taiKhoanGiaoDien,
+                        khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        // Tải lên thành công -> Làm mới (Refresh) lại khung xem ngay lập tức
+                        // Truyền isBack = true để không ghi đè lịch sử điều hướng
+                        moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
+                    } else {
+                        khuVucDanhSach.innerHTML = htmlCu; // Khôi phục danh sách nếu lỗi
+                        alert("Sự cố tải lên: " + res.message);
+                    }
+                })
+                .catch(err => {
+                    khuVucDanhSach.innerHTML = htmlCu;
+                    alert("Mất kết nối đường truyền khi đang đẩy dữ liệu.");
+                });
+            };
+            
+            // Tiến hành đọc dữ liệu file
+            reader.readAsDataURL(file);
+        };
+
+        // Gắn input vào Body, mô phỏng thao tác Click để mở cửa sổ, rồi dọn dẹp biến
+        document.body.appendChild(inputChonFile);
+        inputChonFile.click();
+        document.body.removeChild(inputChonFile);
     }
 
     function chuyenHuongDriveDeXoa(idTepTin) {
