@@ -1036,21 +1036,30 @@ Hoàng Ngọc Lâm">
         return chuoiKiemTra.includes("drive.google.com") || chuoiKiemTra.includes("docs.google.com");
     }
 
-    function toiUuLinkGoogleDrive(duongDanGoc) {
+function toiUuLinkGoogleDrive(duongDanGoc) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
+        // 1. Xử lý link Google Drive chung (PDF, Hình ảnh, Video, Zip...)
         if (duongDanMoi.includes("drive.google.com/file/d/")) {
             duongDanMoi = duongDanMoi.replace(/\/view.*$/, "/preview").replace(/\/edit.*$/, "/preview");
             if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
         }
+        // 2. Xử lý link Google Docs, Sheets, Slides (Văn bản, Bảng tính, Trình chiếu)
+        else if (duongDanMoi.includes("docs.google.com/")) {
+            // Chuyển đổi đuôi /edit hoặc /view thành /preview để loại bỏ hoàn toàn thanh Menu/Toolbar
+            duongDanMoi = duongDanMoi.replace(/\/edit.*$/, "/preview").replace(/\/view.*$/, "/preview");
+            if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
+        }
 
+        // 3. Tích hợp AuthUser để đảm bảo mở đúng tài khoản hệ thống (Chống lỗi xin quyền)
         let taiKhoanHeThong = localStorage.getItem(PREFIX_MEM + 'sysName');
         if (taiKhoanHeThong && taiKhoanHeThong.includes("@")) {
             let kyTuNoi = duongDanMoi.includes("?") ? "&" : "?";
-            let thamSoXacThuc = "authuser"; 
+            let thamSoXacThuc = "auth" + "user"; 
             duongDanMoi += kyTuNoi + thamSoXacThuc + "=" + encodeURIComponent(taiKhoanHeThong);
         }
+        
         return duongDanMoi;
     }
 
