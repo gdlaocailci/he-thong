@@ -957,9 +957,6 @@ Hoàng Ngọc Lâm">
       <span>Hướng dẫn</span>
     </a>
 
-<!-- =========================================
-     KHỐI JAVASCRIPT - LOGIC XỬ LÝ HỆ THỐNG
-     ========================================= -->
 <script>
     /* =========================================================================
        1. KHAI BÁO BIẾN TOÀN CỤC VÀ KHỞI TẠO CƠ BẢN
@@ -972,6 +969,15 @@ Hoàng Ngọc Lâm">
     let isLoggedIn = false;
     let sysRoles = "";       
     let sysIconRoles = "";   
+
+    // [BẢN HOÀN CHỈNH] Khai báo bộ nhớ đệm toàn cục O(1) chống lỗi ngầm
+    window.boNhoDemThuMuc = window.boNhoDemThuMuc || {};
+    let duongDanTrangHienTai = "";
+    let tieuDeHienTai = "";
+    let tieuDeHoSoGoc = ""; 
+    let lichSuDuyet = []; 
+    let idThuMucHienTai = "";
+    let idFileHienTai = "";
 
     function getUrlAndTarget(encodedTd2) {
         let decodedStr = encodedTd2 || '';
@@ -1018,32 +1024,21 @@ Hoàng Ngọc Lâm">
         kiemTraTrangThaiDangNhap();
     };
 
-   /* =========================================================================
-       2. KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PREVIEW) - BẢN KHẮC PHỤC
+    /* =========================================================================
+       2. KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PREVIEW) - ĐÃ ĐỒNG BỘ LOGIC
        ========================================================================= */
-    let duongDanTrangHienTai = "";
-    let tieuDeHienTai = "";
-    let tieuDeHoSoGoc = ""; 
-    let lichSuDuyet = []; 
-    let idThuMucHienTai = "";
-    let idFileHienTai = "";
-   
-    window.boNhoDemThuMuc = window.boNhoDemThuMuc || {};
-
     function kiemTraLinkTaiLieu(duongDan) {
         var chuoiKiemTra = duongDan.toLowerCase();
         return chuoiKiemTra.includes("drive.google.com") || chuoiKiemTra.includes("docs.google.com");
     }
 
-function toiUuLinkGoogleDrive(duongDanGoc) {
+    function toiUuLinkGoogleDrive(duongDanGoc) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
-        // 1. Ép Link Drive về preview và bổ sung rm=minimal để ẨN nút Pop-out của Google
         if (duongDanMoi.includes("drive.google.com/file/d/")) {
             duongDanMoi = duongDanMoi.replace(/\/(view|edit)(.*)$/, "/preview");
             if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
-            
             let kyTuNoiToiUu = duongDanMoi.includes("?") ? "&" : "?";
             duongDanMoi += kyTuNoiToiUu + "rm=minimal";
         }
@@ -1060,14 +1055,12 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         let taiKhoanHeThong = localStorage.getItem(PREFIX_MEM + 'sysName');
         if (taiKhoanHeThong && taiKhoanHeThong.includes("@")) {
             let kyTuNoi = duongDanMoi.includes("?") ? "&" : "?";
-            let thamSoXacThuc = "auth" + "user"; 
-            duongDanMoi += kyTuNoi + thamSoXacThuc + "=" + encodeURIComponent(taiKhoanHeThong);
+            duongDanMoi += kyTuNoi + "authuser=" + encodeURIComponent(taiKhoanHeThong);
         }
-        
         return duongDanMoi;
     }
 
-function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
+    function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
         try {
             if (!isBack && duongDanTrangHienTai !== "") {
                 lichSuDuyet.push({ url: duongDanTrangHienTai, title: tieuDeHienTai, id: idThuMucHienTai });
@@ -1075,7 +1068,7 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
             
             if (duongDanTrangHienTai === "") {
                 tieuDeHoSoGoc = tieuDe;
-                window.boNhoDemThuMuc = {}; // Làm mới toàn bộ đệm khi mở phân hệ dự án mới
+                window.boNhoDemThuMuc = {}; // Reset RAM khi mở thư mục gốc mới
             }
             
             duongDanTrangHienTai = duongDan; 
@@ -1114,10 +1107,7 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
                 document.getElementById('preview-iframe').style.display = 'none';
                 document.getElementById('preview-folder-list').style.display = 'block';
                 
-                // =================================================================
-                // KIỂM TRA BỘ NHỚ ĐỆM RAM (O(1))
-                // Giúp nút "Quay lại" phản hồi tức thì (0.01 giây), không độ trễ
-                // =================================================================
+                // Gọi dữ liệu từ RAM Cache O(1) nếu đã quét trước đó
                 if (window.boNhoDemThuMuc && window.boNhoDemThuMuc[idThuMucHienTai]) {
                     veGiaoDienThuMucTuTao(window.boNhoDemThuMuc[idThuMucHienTai]);
                     return; 
@@ -1140,10 +1130,16 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
                 .then(res => res.json())
                 .then(res => {
                     if (res.status === "success") {
-                        window.boNhoDemThuMuc[idThuMucHienTai] = res.data; // Lưu dữ liệu vào RAM
+                        window.boNhoDemThuMuc[idThuMucHienTai] = res.data;
                         veGiaoDienThuMucTuTao(res.data);
                     } else {
                         document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
+                        let msg = res.message.toLowerCase();
+                        if (msg.includes("phiên đăng nhập") || msg.includes("hết hạn")) {
+                            setTimeout(() => { alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!"); dangXuat(); }, 1200);
+                        } else if (msg.includes("chặn") || msg.includes("quyền") || msg.includes("chưa được cấp")) {
+                            setTimeout(() => { alert("Tài khoản chưa được cấp quyền truy cập cơ sở dữ liệu này."); }, 500);
+                        }
                     }
                 }).catch(e => {
                     document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
@@ -1155,19 +1151,18 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
                 document.getElementById('preview-iframe').src = toiUuLinkGoogleDrive(duongDan);
             }
         } catch (loiGiaoDien) {
-            // [BẪY LỖI TUYỆT ĐỐI]: Bắt mọi lỗi ngầm của trình duyệt và hiển thị ra màn hình
-            console.error("Lỗi giao diện:", loiGiaoDien);
+            console.error("Lỗi giao diện ngầm:", loiGiaoDien);
             document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Lỗi trình duyệt (Client-side):</b> ${loiGiaoDien.message}<br>Vui lòng ấn F5 để tải lại trang.</div>`;
             document.getElementById('preview-folder-list').style.display = 'block';
         }
     }
 
-function veGiaoDienThuMucTuTao(data) {
+    function veGiaoDienThuMucTuTao(data) {
         let quyenThaoTacFile = false;
-        if (sysRoles && sysRoles.includes('xx')) {
+        if (typeof sysRoles !== 'undefined' && sysRoles.includes('xx')) {
             quyenThaoTacFile = true;
-        } else if (sysRoles && sysRoles.includes('quanlyfile')) {
-            if (sysIconRoles && sysIconRoles.split('|').includes(tieuDeHoSoGoc.trim())) {
+        } else if (typeof sysRoles !== 'undefined' && sysRoles.includes('quanlyfile')) {
+            if (typeof sysIconRoles !== 'undefined' && sysIconRoles.split('|').includes(tieuDeHoSoGoc.trim())) {
                 quyenThaoTacFile = true;
             }
         }
@@ -1187,7 +1182,6 @@ function veGiaoDienThuMucTuTao(data) {
                 hanhDongNhanh += `<span class="material-icons" style="color:#1976D2; padding: 6px; margin-right: 5px; border-radius: 4px;" onmouseover="this.style.background='#bbdefb'" onmouseout="this.style.background='transparent'" title="Tải về" onclick="event.stopPropagation(); taiVeTepTinTrucTiep('${item.id}')">download</span>`;
                 
                 if (quyenThaoTacFile) {
-                    // CẬP NHẬT: Thay thế hàm cũ bằng hàm Xóa ngầm trực tiếp
                     hanhDongNhanh += `<span class="material-icons" style="color:#d32f2f; padding: 6px; border-radius: 4px;" onmouseover="this.style.background='#ffcdd2'" onmouseout="this.style.background='transparent'" title="Xóa tệp này" onclick="event.stopPropagation(); xoaTaiLieuTrucTiep('${item.id}', '${item.name}')">delete</span>`;
                 }
             }
@@ -1206,22 +1200,14 @@ function veGiaoDienThuMucTuTao(data) {
         document.getElementById('preview-folder-list').innerHTML = html;
     }
 
-    // [THÊM MỚI]: Hàm gọi API Xóa Ngầm (Bắn tín hiệu POST)
     function xoaTaiLieuTrucTiep(idTepTin, tenTepTin) {
-        if (!idTepTin || idTepTin === "") {
-            alert("Không định vị được mã tài liệu để xóa.");
-            return;
-        }
-        
+        if (!idTepTin || idTepTin === "") { alert("Không định vị được mã tài liệu để xóa."); return; }
         let tenHienThi = tenTepTin ? tenTepTin : "tài liệu này";
-        if (!confirm('CẢNH BÁO: Thầy/Cô có chắc chắn muốn XÓA BỎ tệp "' + tenHienThi + '" khỏi hệ thống không? (Tệp sẽ được đưa vào Thùng rác Drive)')) {
-            return;
-        }
+        if (!confirm('CẢNH BÁO: Thầy/Cô có chắc chắn muốn XÓA BỎ tệp "' + tenHienThi + '" khỏi hệ thống không?')) return;
 
         let khuVucDanhSach = document.getElementById('preview-folder-list');
         let htmlCu = khuVucDanhSach ? khuVucDanhSach.innerHTML : "";
         
-        // Hiển thị Mask Loading nếu đang ở dạng Thư mục
         if (khuVucDanhSach && khuVucDanhSach.style.display !== 'none') {
              khuVucDanhSach.innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#d32f2f;">delete_sweep</span><h3 style="color:#333;">Đang loại bỏ tệp khỏi hệ thống...</h3></div>';
         }
@@ -1240,8 +1226,7 @@ function veGiaoDienThuMucTuTao(data) {
         .then(res => {
             if (res.status === 'success') {
                 if (idThuMucHienTai) {
-                    // Xóa bộ nhớ đệm của thư mục hiện tại để ép hệ thống tải dữ liệu mới
-                    delete boNhoDemThuMuc[idThuMucHienTai];
+                    delete window.boNhoDemThuMuc[idThuMucHienTai]; // Xóa Cache để cập nhật giao diện
                     moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
                 } else {
                     dongKhungXemTaiLieu();
@@ -1258,11 +1243,9 @@ function veGiaoDienThuMucTuTao(data) {
         });
     }
 
-function quayLaiTaiLieu() {
+    function quayLaiTaiLieu() {
         if (lichSuDuyet.length > 0) {
             let mucTruoc = lichSuDuyet.pop();
-            // Việc thiết lập tham số isBack = true kết hợp với window.boNhoDemThuMuc
-            // sẽ giúp thao tác quay lại đạt tốc độ phản hồi ngay lập tức
             moKhungXemTaiLieu(mucTruoc.url, mucTruoc.title, true, mucTruoc.id); 
         }
     }
@@ -1271,51 +1254,38 @@ function quayLaiTaiLieu() {
         if (idFileHienTai !== "") taiVeTepTinTrucTiep(idFileHienTai);
     }
     
-function taiVeTepTinTrucTiep(idTepTin) {
+    function taiVeTepTinTrucTiep(idTepTin) {
         let linkTaiVe = "https://drive.google.com/uc?export=download&id=" + idTepTin;
-        
-        // [NÂNG CẤP]: Hủy bỏ cơ chế iframe ẩn để tránh bị trình duyệt chặn Cookie chéo (CORS).
-        // Sử dụng window.open giúp trình duyệt tự động bắt luồng tải về an toàn thông qua phiên đăng nhập Google của người dùng.
-        window.open(linkTaiVe, '_blank');
+        window.open(linkTaiVe, '_blank'); // Sử dụng Tab mới giải quyết dứt điểm lỗi iframe CORS
     }
 
-function taiLenTaiLieu() {
+    function taiLenTaiLieu() {
         if (!idThuMucHienTai || idThuMucHienTai === "" || idThuMucHienTai === "undefined") {
-            alert("Hệ thống chưa nhận diện được mã ID Thư mục. Vui lòng tải lại trang."); 
-            return;
+            alert("Hệ thống chưa nhận diện được mã ID Thư mục. Vui lòng tải lại trang."); return;
         }
 
-        // 1. Tạo một thẻ input ẩn để kích hoạt cửa sổ chọn file của hệ điều hành
         let inputChonFile = document.createElement('input');
         inputChonFile.type = 'file';
         inputChonFile.style.display = 'none';
 
-        // 2. Lắng nghe sự kiện khi người dùng đã chọn xong file
         inputChonFile.onchange = function(e) {
             let file = e.target.files[0];
             if (!file) return;
 
-            // [NÂNG CẤP]: Bổ sung bộ lọc kiểm soát dung lượng (Giới hạn 25MB)
-            // Tránh tình trạng treo trình duyệt hoặc quá tải máy chủ Google khi chuyển đổi Base64
-            let dungLuongToiDa = 25 * 1024 * 1024; // 25MB
+            let dungLuongToiDa = 25 * 1024 * 1024; 
             if (file.size > dungLuongToiDa) {
-                alert("Cảnh báo: Dung lượng tệp [" + file.name + "] vượt quá giới hạn cho phép (25MB).\n👉 Vui lòng chọn tệp tin nhỏ hơn hoặc tải trực tiếp lên Google Drive.");
-                return;
+                alert("Cảnh báo: Dung lượng tệp vượt quá giới hạn 25MB."); return;
             }
 
-            // Hiển thị hiệu ứng tải dữ liệu đè lên danh sách thư mục hiện tại
             let khuVucDanhSach = document.getElementById('preview-folder-list');
-            let htmlCu = khuVucDanhSach.innerHTML; // Lưu tạm giao diện cũ để khôi phục nếu có lỗi
-            khuVucDanhSach.innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">cloud_upload</span><h3 style="color:#333;">Đang đẩy tệp "' + file.name + '" lên hệ thống. Vui lòng chờ...</h3></div>';
+            let htmlCu = khuVucDanhSach.innerHTML; 
+            khuVucDanhSach.innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">cloud_upload</span><h3 style="color:#333;">Đang đẩy tệp lên hệ thống...</h3></div>';
 
-            // 3. Sử dụng FileReader để chuyển đổi file thành chuỗi Base64
             let reader = new FileReader();
             reader.onload = function(event) {
-                // Tách bỏ phần tiền tố định dạng (VD: data:image/png;base64,...)
                 let base64Data = event.target.result.split(',')[1];
-                let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
+                let taiKhoanGiaoDien = document.getElementById('sys-name') ? document.getElementById('sys-name').innerText : "";
 
-                // 4. Bắn luồng dữ liệu (POST) lên API Backend
                 fetch(KETNOI.WEB_APP_URL, {
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1330,10 +1300,9 @@ function taiLenTaiLieu() {
                     })
                 })
                 .then(res => res.json())
-                  .then(res => {
+                .then(res => {
                     if (res.status === 'success') {
-                        // Xóa bộ nhớ đệm của thư mục hiện tại để phản ánh tài liệu vừa tải lên
-                        if (idThuMucHienTai) delete boNhoDemThuMuc[idThuMucHienTai];
+                        if (idThuMucHienTai) delete window.boNhoDemThuMuc[idThuMucHienTai]; // Xóa Cache
                         moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
                     } else {
                         khuVucDanhSach.innerHTML = htmlCu; 
@@ -1345,27 +1314,14 @@ function taiLenTaiLieu() {
                     alert("Mất kết nối đường truyền khi đang đẩy dữ liệu.");
                 });
             };
-            
-            // Tiến hành đọc dữ liệu file
             reader.readAsDataURL(file);
         };
-
-        // Gắn input vào Body, mô phỏng thao tác Click để mở cửa sổ, rồi dọn dẹp biến
         document.body.appendChild(inputChonFile);
         inputChonFile.click();
         document.body.removeChild(inputChonFile);
     }
-    function chuyenHuongDriveDeXoa(idTepTin) {
-        if (idThuMucHienTai && idThuMucHienTai !== "" && idThuMucHienTai !== "undefined") {
-            window.open('https://drive.google.com/drive/folders/' + idThuMucHienTai, '_blank');
-        } else if (idTepTin && idTepTin !== "" && idTepTin !== "undefined") {
-            window.open('https://drive.google.com/file/d/' + idTepTin + '/view', '_blank');
-        } else {
-            alert("Không định vị được tài liệu để xóa.");
-        }
-    }
 
-function dongKhungXemTaiLieu() {
+    function dongKhungXemTaiLieu() {
         document.getElementById('window-preview').style.display = 'none';
         document.getElementById('preview-iframe').src = "";
         document.getElementById('preview-folder-list').innerHTML = "";
@@ -1376,14 +1332,7 @@ function dongKhungXemTaiLieu() {
         lichSuDuyet = []; 
         idThuMucHienTai = ""; 
         idFileHienTai = "";
-        window.boNhoDemThuMuc = {}; // Giải phóng RAM để hệ thống nhẹ nhàng
-    }
-
-    function moTabMoiTaiLieu() {
-        if (duongDanTrangHienTai !== "") {
-            window.open(duongDanTrangHienTai, '_blank');
-            dongKhungXemTaiLieu();
-        }
+        window.boNhoDemThuMuc = {}; 
     }
 
     /* =========================================================================
@@ -1392,10 +1341,7 @@ function dongKhungXemTaiLieu() {
     function taiBieuTuongCongKhai() {
         let cachedIcons = localStorage.getItem(PREFIX_MEM + 'icons_cache');
         if (cachedIcons) {
-            try {
-                let parsedData = JSON.parse(cachedIcons);
-                renderIconsFromData(parsedData);
-            } catch (e) {}
+            try { renderIconsFromData(JSON.parse(cachedIcons)); } catch (e) {}
         } else {
             desktopArea.innerHTML = '<div class="loading-screen" id="loading-mask"><span class="material-icons">sync</span><h3>Đang trích xuất không gian làm việc...</h3></div>';
         }
@@ -1414,31 +1360,17 @@ function dongKhungXemTaiLieu() {
                     renderIconsFromData(result.data); 
                 } else {
                     if (!cachedIcons) {
-                        desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;">
-                            <span class="material-icons" style="font-size: 64px; color: #f44336; animation: none; margin-bottom: 15px;">error_outline</span>
-                            <h3 style="color: white; margin-bottom: 10px;">Hệ thống từ chối truy xuất</h3>
-                            <p style="color: #ffcdd2; font-size: 14px; max-width: 80%; line-height: 1.5;">${result.message}</p>
-                        </div>`;
+                        desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;"><span class="material-icons" style="font-size: 64px; color: #f44336; animation: none; margin-bottom: 15px;">error_outline</span><h3 style="color: white; margin-bottom: 10px;">Hệ thống từ chối truy xuất</h3><p style="color: #ffcdd2; font-size: 14px; max-width: 80%; line-height: 1.5;">${result.message}</p></div>`;
                     }
-                    console.error("Báo cáo hệ thống (Backend):", result.message);
                 }
             } catch (jsonError) {
                 if (!cachedIcons) {
-                    desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;">
-                        <span class="material-icons" style="font-size: 64px; color: #ff9800; animation: none; margin-bottom: 15px;">dns</span>
-                        <h3 style="color: white; margin-bottom: 10px;">Cảnh báo Cấu hình Web App</h3>
-                        <p style="color: #ffe0b2; font-size: 14px; max-width: 80%; line-height: 1.5;">Máy chủ Google chặn truy cập. Vui lòng rà soát lại thông số Deploy hoặc kiểm tra biến CONFIG.</p>
-                    </div>`;
+                    desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;"><span class="material-icons" style="font-size: 64px; color: #ff9800; animation: none; margin-bottom: 15px;">dns</span><h3 style="color: white; margin-bottom: 10px;">Cảnh báo Cấu hình Web App</h3><p style="color: #ffe0b2; font-size: 14px; max-width: 80%; line-height: 1.5;">Máy chủ Google chặn truy cập.</p></div>`;
                 }
-                console.error("Cảnh báo từ máy chủ Google:", text);
             }
         }).catch(error => {
             if (!cachedIcons) {
-                 desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;">
-                    <span class="material-icons" style="font-size: 64px; color: #9e9e9e; animation: none; margin-bottom: 15px;">wifi_off</span>
-                    <h3 style="color: white; margin-bottom: 10px;">Mất kết nối đường truyền</h3>
-                    <button onclick="taiBieuTuongCongKhai()" style="margin-top: 15px; padding: 10px 20px; background: #1976D2; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Tải lại dữ liệu</button>
-                </div>`;
+                 desktopArea.innerHTML = `<div class="loading-screen" style="background: rgba(0,0,0,0.85); flex-direction: column; padding: 20px; text-align: center;"><span class="material-icons" style="font-size: 64px; color: #9e9e9e; animation: none; margin-bottom: 15px;">wifi_off</span><h3 style="color: white; margin-bottom: 10px;">Mất kết nối đường truyền</h3><button onclick="taiBieuTuongCongKhai()" style="margin-top: 15px; padding: 10px 20px; background: #1976D2; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Tải lại dữ liệu</button></div>`;
             }
         });
     }
@@ -1452,12 +1384,8 @@ function dongKhungXemTaiLieu() {
             document.getElementById('btn-google-login').style.display = 'block';
             
             google.accounts.id.renderButton(document.getElementById("btn-google-login"), { 
-                theme: "outline", 
-                size: "medium", 
-                type: "standard", 
-                text: "signin" 
+                theme: "outline", size: "medium", type: "standard", text: "signin" 
             });
-            
             google.accounts.id.prompt();
         } else {
             document.getElementById('btn-google-login').style.display = 'none'; 
@@ -1491,9 +1419,7 @@ function dongKhungXemTaiLieu() {
         localStorage.removeItem(PREFIX_MEM + 'sysRoles'); 
         localStorage.removeItem(PREFIX_MEM + 'sysIconRoles'); 
         localStorage.removeItem(PREFIX_MEM + 'sysName'); 
-        
         isLoggedIn = false;
-        
         if (typeof dongKhungXemTaiLieu === "function") dongKhungXemTaiLieu();
         location.reload(); 
     }
@@ -1511,7 +1437,6 @@ function dongKhungXemTaiLieu() {
                 if (result.status === 'success') { 
                     isLoggedIn = true;
                     let accountName = result.thongTinXacThuc || "Đã đăng nhập";
-                    
                     document.getElementById('sys-name').innerText = accountName; 
                     document.getElementById('btn-logout').style.display = 'flex';
                     sysRoles = result.roles || "";
@@ -1520,15 +1445,13 @@ function dongKhungXemTaiLieu() {
                     localStorage.setItem(PREFIX_MEM + 'sysRoles', sysRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysIconRoles', sysIconRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
-
                     apDungPhanQuyen(sysRoles); 
                 } else { 
                     alert("Yêu cầu hệ thống: " + result.message); 
                     dangXuat(); 
                 }
             } catch (jsonError) {
-                console.error("Cảnh báo máy chủ khi xác thực:", text);
-                alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Hệ thống sẽ làm mới phiên làm việc.");
+                alert("Xác thực gặp sự cố. Hệ thống sẽ làm mới phiên làm việc.");
                 dangXuat();
             }
         }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
@@ -1542,52 +1465,31 @@ function dongKhungXemTaiLieu() {
         const btnAuth = document.getElementById('btn-auth-profile');
         const btnCreateFolder = document.getElementById('btn-create-folder');
         
-        btnCreate.style.display = 'none'; 
-        btnAssign.style.display = 'none'; 
-        btnEdit.style.display = 'none'; 
-        btnDelete.style.display = 'none'; 
-        btnAuth.style.display = 'none';
-        if (btnCreateFolder) btnCreateFolder.style.display = 'none';
+        btnCreate.style.display = 'none'; btnAssign.style.display = 'none'; 
+        btnEdit.style.display = 'none'; btnDelete.style.display = 'none'; 
+        btnAuth.style.display = 'none'; if (btnCreateFolder) btnCreateFolder.style.display = 'none';
         
         if (roles.includes('xx')) { 
-            btnCreate.style.display = 'flex'; 
-            btnAssign.style.display = 'flex'; 
-            btnEdit.style.display = 'flex'; 
-            btnDelete.style.display = 'flex'; 
-            btnAuth.style.display = 'flex'; 
-            if (btnCreateFolder) btnCreateFolder.style.display = 'flex';
+            btnCreate.style.display = 'flex'; btnAssign.style.display = 'flex'; 
+            btnEdit.style.display = 'flex'; btnDelete.style.display = 'flex'; 
+            btnAuth.style.display = 'flex'; if (btnCreateFolder) btnCreateFolder.style.display = 'flex';
         } else {
-            if (roles.includes('taohoso')) {
-                btnCreate.style.display = 'flex';
-                if (btnCreateFolder) btnCreateFolder.style.display = 'flex';
-            }
+            if (roles.includes('taohoso')) { btnCreate.style.display = 'flex'; if (btnCreateFolder) btnCreateFolder.style.display = 'flex'; }
             if (roles.includes('ganhoso')) btnAssign.style.display = 'flex';
-            if (roles.includes('xoahoso')) { 
-                btnDelete.style.display = 'flex';
-                btnEdit.style.display = 'flex'; 
-            }
+            if (roles.includes('xoahoso')) { btnDelete.style.display = 'flex'; btnEdit.style.display = 'flex'; }
         }
         
-        if (globalProfiles && globalProfiles.length > 0) {
-            let tempData = [...globalProfiles]; 
-            renderIconsFromData(tempData);
-        }
+        if (globalProfiles && globalProfiles.length > 0) renderIconsFromData([...globalProfiles]);
     }
 
     function kiemTraLaThuMuc(item) {
         if (item.iconType === 'hoso_thumuc') return true; 
-        try {
-            let parsed = getUrlAndTarget(item.td2);
-            return parsed.url === '#INTERNAL_FOLDER_CONTAINER#';
-        } catch(e) { 
-            return false; 
-        }
+        try { return getUrlAndTarget(item.td2).url === '#INTERNAL_FOLDER_CONTAINER#'; } catch(e) { return false; }
     }
 
     function layCauHinhIcon(type) {
         let iconContent = '<span class="material-icons">apps</span>'; 
         let bgClass = 'bg-default'; 
-
         switch(type) {
             case 'cong_ly': iconContent = '<span class="material-icons">balance</span>'; bgClass = 'bg-6'; break;
             case 'thanh_tra': iconContent = '<span class="material-icons">manage_search</span>'; bgClass = 'bg-9'; break;
@@ -1643,18 +1545,9 @@ function dongKhungXemTaiLieu() {
             case 'baohiem': iconContent = '<span class="material-icons">shield</span>'; bgClass = 'bg-10'; break;
             case 'thue': iconContent = '<span class="material-icons">request_quote</span>'; bgClass = 'bg-8'; break;
             case 'nangluong': iconContent = '<span class="material-icons">bolt</span>'; bgClass = 'bg-2'; break;
-            case 'nam': 
-                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; 
-                bgClass = 'bg-avatar'; 
-                break;
-            case 'nu': 
-                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; 
-                bgClass = 'bg-avatar'; 
-                break;
-            case 'thuky': 
-                iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU_THU_KY + '" class="custom-avatar" alt="Thư ký">'; 
-                bgClass = 'bg-avatar'; 
-                break;
+            case 'nam': iconContent = '<img src="' + KETNOI.LINK_AVATAR_NAM + '" class="custom-avatar" alt="Nam">'; bgClass = 'bg-avatar'; break;
+            case 'nu': iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU + '" class="custom-avatar" alt="Nữ">'; bgClass = 'bg-avatar'; break;
+            case 'thuky': iconContent = '<img src="' + KETNOI.LINK_AVATAR_NU_THU_KY + '" class="custom-avatar" alt="Thư ký">'; bgClass = 'bg-avatar'; break;
             case 'danso': iconContent = '<span class="material-icons">family_restroom</span>'; bgClass = 'bg-5'; break;
             case 'tainguyen': iconContent = '<span class="material-icons">forest</span>'; bgClass = 'bg-3'; break;
             case 'phucvu': iconContent = '<span class="material-icons">room_service</span>'; bgClass = 'bg-7'; break;
@@ -1685,10 +1578,7 @@ function dongKhungXemTaiLieu() {
         data.forEach((item, index) => {
             if (item.vitri && item.vitri !== 'desktop' && item.vitri !== '') return;
 
-            let type = item.iconType; 
-            let cfg = layCauHinhIcon(type);
-            let iconContent = cfg.iconContent;
-            let bgClass = cfg.bgClass;
+            let cfg = layCauHinhIcon(item.iconType);
             let effectClass = layClassHieuUng(item.hieuung);
 
             const div = document.createElement('div'); 
@@ -1696,50 +1586,34 @@ function dongKhungXemTaiLieu() {
             div.setAttribute('data-id', index + 1); 
             div.setAttribute('data-title', item.td1.trim()); 
             div.setAttribute('data-desc', item.td1); 
-
             div.style.animationDelay = (index * 0.04) + 's';
 
             let coQuyenTruyCap = false;
             if (isLoggedIn) {
-                if (sysRoles && sysRoles.includes('xx')) {
-                    coQuyenTruyCap = true; 
-                } else if (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim())) {
-                    coQuyenTruyCap = true; 
-                }
+                if (sysRoles && sysRoles.includes('xx')) coQuyenTruyCap = true; 
+                else if (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim())) coQuyenTruyCap = true; 
             }
             
             let hienThiKhoa = !item.isPublic && !coQuyenTruyCap;
             let publicBadge = hienThiKhoa ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập & Cấp quyền"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
 
-            div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
+            div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${cfg.bgClass}">${cfg.iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
             div.onclick = function() { 
-                if (isDragging) { 
-                    isDragging = false; 
-                    return; 
-                }
-                if (kiemTraLaThuMuc(item)) {
-                    moCuaSoThuMuc(item.td1);
-                    return;
-                }
+                if (isDragging) { isDragging = false; return; }
+                if (kiemTraLaThuMuc(item)) { moCuaSoThuMuc(item.td1); return; }
                 if (!isLoggedIn && !item.isPublic) {
-                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
-                    return;
+                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để thao tác!"); return;
                 }
                 
                 let parsed = getUrlAndTarget(item.td2);
-                
                 if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    if (kiemTraLinkTaiLieu(parsed.url)) {
-                        moKhungXemTaiLieu(parsed.url, item.td1);
-                    } else {
-                        window.open(parsed.url, parsed.target);
-                    }
+                    if (kiemTraLinkTaiLieu(parsed.url)) moKhungXemTaiLieu(parsed.url, item.td1);
+                    else window.open(parsed.url, parsed.target);
                 } else {
-                    showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
+                    showAlertModal("Tài khoản chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                 }
             };
-
             desktopArea.appendChild(div);
         });
         
@@ -1767,7 +1641,7 @@ function dongKhungXemTaiLieu() {
         if (childItems.length === 0) {
             folderArea.innerHTML = '<div style="width:100%; text-align:center; color:#ffffff; font-weight: 600; margin-top:50px; opacity: 0.7;">Thư mục trống hoặc chưa có phân hệ liên kết.</div>';
         } else {
-            childItems.forEach((item, index) => {
+            childItems.forEach((item) => {
                 let cfg = layCauHinhIcon(item.iconType);
                 let effectClass = layClassHieuUng(item.hieuung); 
 
@@ -1776,44 +1650,32 @@ function dongKhungXemTaiLieu() {
                 div.style.position = 'relative'; 
                 div.style.opacity = '1';
                 
-                let iconContent = cfg.iconContent;
-                let bgClass = cfg.bgClass;
-                
                 let coQuyenTruyCap = false;
                 if (isLoggedIn) {
-                    if (sysRoles && sysRoles.includes('xx')) {
-                        coQuyenTruyCap = true;
-                    } else if (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim())) {
-                        coQuyenTruyCap = true;
-                    }
+                    if (sysRoles && sysRoles.includes('xx')) coQuyenTruyCap = true;
+                    else if (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim())) coQuyenTruyCap = true;
                 }
                 
                 let hienThiKhoa = !item.isPublic && !coQuyenTruyCap;
-                let publicBadge = hienThiKhoa ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập & Cấp quyền"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
+                let publicBadge = hienThiKhoa ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
                 
                 let moveOutBtn = "";
                 if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
-                    moveOutBtn = `<div onclick="event.stopPropagation(); xuLyDiChuyenHoSo('${item.td1}', 'desktop')" style="position: absolute; top: -5px; left: -5px; background: #d32f2f; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; cursor: pointer; transition: all 0.2s;" title="Chuyển Icon này ra Desktop"><span class="material-icons" style="font-size: 14px; color: white;">logout</span></div>`;
+                    moveOutBtn = `<div onclick="event.stopPropagation(); xuLyDiChuyenHoSo('${item.td1}', 'desktop')" style="position: absolute; top: -5px; left: -5px; background: #d32f2f; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; cursor: pointer; transition: all 0.2s;" title="Chuyển Icon ra Desktop"><span class="material-icons" style="font-size: 14px; color: white;">logout</span></div>`;
                 }
 
-                div.innerHTML = `<div style="position:relative;">${moveOutBtn}${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
+                div.innerHTML = `<div style="position:relative;">${moveOutBtn}${publicBadge}<div class="icon-box ${cfg.bgClass}">${cfg.iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
                 
                 div.onclick = function() { 
                     if (!isLoggedIn && !item.isPublic) {
-                        showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để có thể tương tác với cơ sở dữ liệu này!");
-                        return;
+                        showAlertModal("Vui lòng thực hiện <b>đăng nhập hệ thống</b> để thao tác!"); return;
                     }
-                    
                     let parsed = getUrlAndTarget(item.td2);
-                    
                     if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        if (kiemTraLinkTaiLieu(parsed.url)) {
-                            moKhungXemTaiLieu(parsed.url, item.td1);
-                        } else {
-                            window.open(parsed.url, parsed.target);
-                        }
+                        if (kiemTraLinkTaiLieu(parsed.url)) moKhungXemTaiLieu(parsed.url, item.td1);
+                        else window.open(parsed.url, parsed.target);
                     } else {
-                        showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
+                        showAlertModal("Tài khoản chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
                 };
                 folderArea.appendChild(div);
@@ -1839,28 +1701,19 @@ function dongKhungXemTaiLieu() {
             method: 'POST', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ 
-                action: 'editProfile', 
-                oldTd1: item.td1, 
-                td1: item.td1, 
-                td2: safeEncodedTd2, 
-                loaiIcon: item.iconType, 
-                isPublic: item.isPublic ? 'public' : '', 
-                vitri: viTriMoi, 
-                hieuung: item.hieuung || 'none', 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, 
+                loaiIcon: item.iconType, isPublic: item.isPublic ? 'public' : '', vitri: viTriMoi, 
+                hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
             })
         })
         .then(r => r.text())
         .then(text => {
             let loadingEl = document.getElementById('move-loading');
             if(loadingEl) loadingEl.remove();
-            
             try {
                 let result = JSON.parse(text);
-                if (result.status === 'success') {
-                    dongCuaSoThuMuc();
-                    taiBieuTuongCongKhai();
-                } else { alert("Lỗi đồng bộ: " + result.message); }
+                if (result.status === 'success') { dongCuaSoThuMuc(); taiBieuTuongCongKhai(); }
+                else alert("Lỗi đồng bộ: " + result.message); 
             } catch(e) { alert("Lỗi xử lý máy chủ Google."); }
         }).catch(err => {
             let loadingEl = document.getElementById('move-loading');
@@ -1875,9 +1728,7 @@ function dongKhungXemTaiLieu() {
         const selSua = document.getElementById('edit-vitri');
         
         let optionsHtml = '<option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option>';
-        danhSachThuMuc.forEach(tm => {
-            optionsHtml += `<option value="${tm.td1}">${tm.td1}</option>`;
-        });
+        danhSachThuMuc.forEach(tm => { optionsHtml += `<option value="${tm.td1}">${tm.td1}</option>`; });
         
         if (selGan) selGan.innerHTML = optionsHtml;
         if (selSua) selSua.innerHTML = optionsHtml;
@@ -1892,19 +1743,13 @@ function dongKhungXemTaiLieu() {
             globalProfiles.forEach(p => {
                 if ((!p.vitri || p.vitri === 'desktop') && !kiemTraLaThuMuc(p)) {
                     countHoso++;
-                    containerDanhSach.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: flex-start; margin-bottom: 8px; cursor: pointer;">
-                        <input type="checkbox" class="cb-chon-hoso" value="${p.td1}" style="margin-top: 3px;"> 
-                        <span style="flex: 1; word-break: break-word; line-height: 1.4;">${p.td1}</span>
-                    </label>`;
+                    containerDanhSach.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: flex-start; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="cb-chon-hoso" value="${p.td1}" style="margin-top: 3px;"> <span style="flex: 1; word-break: break-word; line-height: 1.4;">${p.td1}</span></label>`;
                 }
             });
-            if (countHoso === 0) {
-                containerDanhSach.innerHTML = '<span style="color:#777; font-size:12px;">Không có hồ sơ nào trên màn hình để gom.</span>';
-            }
+            if (countHoso === 0) containerDanhSach.innerHTML = '<span style="color:#777; font-size:12px;">Không có hồ sơ nào trên màn hình để gom.</span>';
         } else {
             var elTd1 = document.getElementById('tm-td1');
-            elTd1.value = ''; 
-            elTd1.style.borderColor = '#ccc'; 
+            elTd1.value = ''; elTd1.style.borderColor = '#ccc'; 
             document.getElementById('tm-loaiicon').value = 'hoso_thumuc'; 
             document.getElementById('tm-hieuung').value = 'none';
             document.getElementById('tm-ispublic').checked = false; 
@@ -1922,11 +1767,7 @@ function dongKhungXemTaiLieu() {
         var isPublic = document.getElementById('tm-ispublic').checked ? 'public' : ''; 
         
         elTd1.style.borderColor = '#ccc';
-        if (!td1) { 
-            elTd1.style.borderColor = 'red'; 
-            alert("Yêu cầu hệ thống: Vui lòng nhập tên thư mục cần tạo!"); 
-            return; 
-        }
+        if (!td1) { elTd1.style.borderColor = 'red'; alert("Vui lòng nhập tên thư mục!"); return; }
 
         let danhSachGom = [];
         document.querySelectorAll('.cb-chon-hoso:checked').forEach(cb => danhSachGom.push(cb.value));
@@ -1940,14 +1781,8 @@ function dongKhungXemTaiLieu() {
             method: 'POST', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ 
-                action: 'saveProfile', 
-                td1: td1, 
-                td2: td2_encoded, 
-                loaiIcon: loaiIcon, 
-                isPublic: isPublic,
-                vitri: 'desktop',
-                hieuung: hieuung,
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic,
+                vitri: 'desktop', hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
             })
         })
         .then(response => response.text())
@@ -1955,54 +1790,30 @@ function dongKhungXemTaiLieu() {
             try {
                 let result = JSON.parse(text);
                 if (result.status === 'success') {
-                    
                     if (danhSachGom.length > 0) {
                         statusText.innerText = "Đang gom " + danhSachGom.length + " hồ sơ vào thư mục...";
-                        
                         let gomPromises = danhSachGom.map(tenHosoGom => {
                             let item = globalProfiles.find(p => p.td1 === tenHosoGom);
                             if(!item) return Promise.resolve();
-                            
                             let parsed = getUrlAndTarget(item.td2);
                             let safeEncodedTd2 = buildEncodedTd2(parsed.url, parsed.target);
-
                             return fetch(KETNOI.WEB_APP_URL, {
-                                method: 'POST', 
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ 
-                                    action: 'editProfile', 
-                                    oldTd1: item.td1, 
-                                    td1: item.td1, 
-                                    td2: safeEncodedTd2, 
-                                    loaiIcon: item.iconType, 
-                                    vitri: td1, 
-                                    hieuung: item.hieuung || 'none', 
-                                    khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                                    action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, 
+                                    loaiIcon: item.iconType, vitri: td1, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
                                 })
                             }).then(r => r.json()).catch(e => null);
                         });
-
-                        Promise.all(gomPromises).then(() => {
-                            toggleTaoThuMucModal(false);
-                            taiBieuTuongCongKhai(); 
-                        });
-                    } else {
-                        toggleTaoThuMucModal(false);
-                        taiBieuTuongCongKhai(); 
-                    }
-
-                } else { 
-                    statusText.style.display = 'none';
-                    alert("Phát sinh sự cố từ máy chủ: " + result.message); 
-                }
+                        Promise.all(gomPromises).then(() => { toggleTaoThuMucModal(false); taiBieuTuongCongKhai(); });
+                    } else { toggleTaoThuMucModal(false); taiBieuTuongCongKhai(); }
+                } else { statusText.style.display = 'none'; alert("Phát sinh sự cố: " + result.message); }
             } catch (jsonError) {
                 statusText.style.display = 'none';
-                console.error("Lỗi đồng bộ cấu hình:", text);
                 alert("Cảnh báo hệ thống: Kiểm tra lại cấu hình phân quyền Web App.");
             }
         }).catch(err => {
-            statusText.style.display = 'none';
-            alert("Lỗi kết nối đường truyền băng thông: " + err);
+            statusText.style.display = 'none'; alert("Lỗi kết nối đường truyền: " + err);
         });
     }
 
@@ -2011,24 +1822,18 @@ function dongKhungXemTaiLieu() {
         document.getElementById('window-alert').style.display = 'flex';
     }
 
-    function closeAlertModal() {
-        document.getElementById('window-alert').style.display = 'none';
-    }
+    function closeAlertModal() { document.getElementById('window-alert').style.display = 'none'; }
     
     function setupTooltipEvents() { 
         icons.forEach(icon => { 
             icon.addEventListener('mouseenter', function(e) { 
                 if (isDragging) return; 
-                tooltip.innerText = this.getAttribute('data-desc'); 
-                tooltip.style.opacity = '1'; 
+                tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; 
             }); 
             icon.addEventListener('mousemove', function(e) { 
-                tooltip.style.left = (e.clientX + 15) + 'px'; 
-                tooltip.style.top = (e.clientY + 15) + 'px'; 
+                tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; 
             }); 
-            icon.addEventListener('mouseleave', function() { 
-                tooltip.style.opacity = '0'; 
-            }); 
+            icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); 
         }); 
     }
     
@@ -2036,21 +1841,14 @@ function dongKhungXemTaiLieu() {
         const now = new Date(); 
         document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; 
     } 
-    
-    setInterval(updateClock, 1000); 
-    updateClock();
+    setInterval(updateClock, 1000); updateClock();
     
     /* =========================================================================
        5. CƠ CHẾ LƯỚI TỰ ĐỘNG VÀ KÉO THẢ (DRAG & DROP)
        ========================================================================= */
     function getGridConfig() {
         const isMobile = window.innerWidth <= 768;
-        return {
-            width: isMobile ? 75 : 100,
-            height: isMobile ? 95 : 120,
-            startX: isMobile ? 10 : 20,
-            startY: isMobile ? 10 : 20
-        };
+        return { width: isMobile ? 75 : 100, height: isMobile ? 95 : 120, startX: isMobile ? 10 : 20, startY: isMobile ? 10 : 20 };
     }
 
     function initializeLayout() { applyGridOrder(null, false); }
@@ -2060,9 +1858,7 @@ function dongKhungXemTaiLieu() {
         let currentTitles = Array.from(icons).map(i => i.getAttribute('data-title')).filter(Boolean);
         
         let newOrder = orderArray.filter(title => currentTitles.includes(title));
-        currentTitles.forEach(title => {
-            if (!newOrder.includes(title)) newOrder.push(title);
-        });
+        currentTitles.forEach(title => { if (!newOrder.includes(title)) newOrder.push(title); });
         
         orderArray = newOrder;
         localStorage.setItem(PREFIX_MEM + 'iconOrder', JSON.stringify(orderArray));
@@ -2070,7 +1866,6 @@ function dongKhungXemTaiLieu() {
         const cfg = getGridConfig();
         let maxColHeight = window.innerHeight - 70; 
         if (maxColHeight < 200) maxColHeight = 500; 
-        
         let maxRows = Math.floor(maxColHeight / cfg.height);
         if (maxRows < 1) maxRows = 1;
 
@@ -2081,50 +1876,37 @@ function dongKhungXemTaiLieu() {
                 let row = index % maxRows;
                 let targetLeft = cfg.startX + col * cfg.width;
                 let targetTop = cfg.startY + row * cfg.height;
-                
-                icon.dataset.gridLeft = targetLeft;
-                icon.dataset.gridTop = targetTop;
-
+                icon.dataset.gridLeft = targetLeft; icon.dataset.gridTop = targetTop;
                 if (icon !== excludeIcon) {
                     icon.style.transition = useTransition ? 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' : 'none';
-                    icon.style.left = targetLeft + 'px';
-                    icon.style.top = targetTop + 'px';
+                    icon.style.left = targetLeft + 'px'; icon.style.top = targetTop + 'px';
                 }
             }
         });
     }
 
-    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY;
-    let lastSwapTime = 0;
+    let draggedIcon = null, offsetX = 0, offsetY = 0, dragThresholdPassed = false, startX, startY, lastSwapTime = 0;
 
     function setupDragEvents() { 
         icons.forEach(icon => { 
-            icon.removeEventListener('mousedown', startDrag); 
-            icon.removeEventListener('touchstart', startDrag); 
-            icon.addEventListener('mousedown', startDrag); 
-            icon.addEventListener('touchstart', startDrag, {passive: false}); 
+            icon.removeEventListener('mousedown', startDrag); icon.removeEventListener('touchstart', startDrag); 
+            icon.addEventListener('mousedown', startDrag); icon.addEventListener('touchstart', startDrag, {passive: false}); 
         }); 
     }
 
     function startDrag(e) { 
-        dragThresholdPassed = false; 
-        draggedIcon = this; 
+        dragThresholdPassed = false; draggedIcon = this; 
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
         startX = clientX; startY = clientY; 
         
         const rect = draggedIcon.getBoundingClientRect(); 
-        offsetX = clientX - rect.left; 
-        offsetY = clientY - rect.top; 
-        tooltip.style.opacity = '0'; 
-
-        draggedIcon.style.transition = 'none';
+        offsetX = clientX - rect.left; offsetY = clientY - rect.top; 
+        tooltip.style.opacity = '0'; draggedIcon.style.transition = 'none';
         applyGridOrder(draggedIcon, true);
 
-        document.addEventListener('mousemove', drag); 
-        document.addEventListener('touchmove', drag, {passive: false}); 
-        document.addEventListener('mouseup', stopDrag); 
-        document.addEventListener('touchend', stopDrag); 
+        document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, {passive: false}); 
+        document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag); 
     }
 
     function drag(e) { 
@@ -2133,11 +1915,8 @@ function dongKhungXemTaiLieu() {
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
         
         if (Math.abs(clientX - startX) > 3 || Math.abs(clientY - startY) > 3) { 
-            dragThresholdPassed = true; 
-            isDragging = true; 
-            draggedIcon.style.zIndex = '9999'; 
-            draggedIcon.style.opacity = '0.85'; 
-            draggedIcon.style.transform = 'scale(1.05)';
+            dragThresholdPassed = true; isDragging = true; 
+            draggedIcon.style.zIndex = '9999'; draggedIcon.style.opacity = '0.85'; draggedIcon.style.transform = 'scale(1.05)';
             if(e.cancelable) e.preventDefault(); 
         } 
         
@@ -2145,16 +1924,12 @@ function dongKhungXemTaiLieu() {
             const areaRect = desktopArea.getBoundingClientRect(); 
             let newLeft = Math.max(0, Math.min(clientX - areaRect.left - offsetX, areaRect.width - draggedIcon.offsetWidth)); 
             let newTop = Math.max(0, Math.min(clientY - areaRect.top - offsetY, areaRect.height - draggedIcon.offsetHeight)); 
-            
-            draggedIcon.style.left = newLeft + 'px'; 
-            draggedIcon.style.top = newTop + 'px'; 
+            draggedIcon.style.left = newLeft + 'px'; draggedIcon.style.top = newTop + 'px'; 
             
             const currentTime = new Date().getTime();
-            
             if (currentTime - lastSwapTime > 300) {
                 const draggedCenterX = newLeft + (draggedIcon.offsetWidth || 90) / 2;
                 const draggedCenterY = newTop + (draggedIcon.offsetHeight || 105) / 2;
-                
                 let orderArray = JSON.parse(localStorage.getItem(PREFIX_MEM + 'iconOrder')) || [];
                 const draggedTitle = draggedIcon.getAttribute('data-title');
                 const draggedIndex = orderArray.indexOf(draggedTitle);
@@ -2164,28 +1939,18 @@ function dongKhungXemTaiLieu() {
 
                 document.querySelectorAll('.desktop-icon').forEach(iconEl => {
                     if (iconEl === draggedIcon || targetTitleToSwap) return;
-                    
                     const idx = parseInt(iconEl.getAttribute('data-id')) - 1;
                     if (isNaN(idx)) return;
                     const profile = globalProfiles[idx];
-                    
                     const targetCenterX = parseFloat(iconEl.dataset.gridLeft || 0) + (iconEl.offsetWidth || 90) / 2;
                     const targetCenterY = parseFloat(iconEl.dataset.gridTop || 0) + (iconEl.offsetHeight || 105) / 2;
-                    
                     const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
 
                     if (distance < hitRadius) { 
-                        if (kiemTraLaThuMuc(profile)) {
-                            iconEl.style.transform = 'scale(1.15)';
-                            iconEl.style.boxShadow = '0 0 20px #4CAF50'; 
-                        } else {
-                            targetTitleToSwap = iconEl.getAttribute('data-title');
-                        }
+                        if (kiemTraLaThuMuc(profile)) { iconEl.style.transform = 'scale(1.15)'; iconEl.style.boxShadow = '0 0 20px #4CAF50'; } 
+                        else targetTitleToSwap = iconEl.getAttribute('data-title');
                     } else {
-                        if (kiemTraLaThuMuc(profile)) {
-                            iconEl.style.transform = '';
-                            iconEl.style.boxShadow = '';
-                        }
+                        if (kiemTraLaThuMuc(profile)) { iconEl.style.transform = ''; iconEl.style.boxShadow = ''; }
                     }
                 });
 
@@ -2193,12 +1958,9 @@ function dongKhungXemTaiLieu() {
                     const targetIndex = orderArray.indexOf(targetTitleToSwap);
                     if (targetIndex !== -1 && draggedIndex !== -1) {
                         const temp = orderArray[draggedIndex];
-                        orderArray[draggedIndex] = orderArray[targetIndex];
-                        orderArray[targetIndex] = temp;
-                        
+                        orderArray[draggedIndex] = orderArray[targetIndex]; orderArray[targetIndex] = temp;
                         localStorage.setItem(PREFIX_MEM + 'iconOrder', JSON.stringify(orderArray));
-                        lastSwapTime = currentTime;
-                        applyGridOrder(draggedIcon, true);
+                        lastSwapTime = currentTime; applyGridOrder(draggedIcon, true);
                     }
                 }
             }
@@ -2207,17 +1969,11 @@ function dongKhungXemTaiLieu() {
 
     function stopDrag(e) { 
         if (!draggedIcon) return; 
-        
-        draggedIcon.style.zIndex = ''; 
-        draggedIcon.style.opacity = '1'; 
-        draggedIcon.style.transform = '';
+        draggedIcon.style.zIndex = ''; draggedIcon.style.opacity = '1'; draggedIcon.style.transform = '';
         draggedIcon.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         
         document.querySelectorAll('.desktop-icon').forEach(iconEl => {
-            if (iconEl !== draggedIcon) {
-                iconEl.style.transform = '';
-                iconEl.style.boxShadow = '';
-            }
+            if (iconEl !== draggedIcon) { iconEl.style.transform = ''; iconEl.style.boxShadow = ''; }
         });
         
         if (dragThresholdPassed) { 
@@ -2226,7 +1982,6 @@ function dongKhungXemTaiLieu() {
             const currentTop = parseFloat(draggedIcon.style.top) || 0;
             const draggedCenterX = currentLeft + (draggedIcon.offsetWidth || 90) / 2;
             const draggedCenterY = currentTop + (draggedIcon.offsetHeight || 105) / 2;
-            
             const draggedId = parseInt(draggedIcon.getAttribute('data-id')) - 1;
             const draggedProfile = globalProfiles[draggedId];
             const hitRadius = getGridConfig().width * 0.6;
@@ -2242,86 +1997,46 @@ function dongKhungXemTaiLieu() {
                         if (kiemTraLaThuMuc(profile)) {
                             const targetCenterX = parseFloat(iconEl.dataset.gridLeft || 0) + (iconEl.offsetWidth || 90) / 2;
                             const targetCenterY = parseFloat(iconEl.dataset.gridTop || 0) + (iconEl.offsetHeight || 105) / 2;
-                            
-                            const distance = Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY);
-                            if (distance < hitRadius) {
-                                droppedFolder = profile;
-                            }
+                            if (Math.hypot(draggedCenterX - targetCenterX, draggedCenterY - targetCenterY) < hitRadius) droppedFolder = profile;
                         }
                     });
                 }
             }
 
             if (droppedFolder) {
-                if (confirm("Thầy/Cô có chắc chắn muốn gộp [" + draggedProfile.td1 + "] vào bên trong thư mục [" + droppedFolder.td1 + "] không?")) {
-                    xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1);
-                } else { 
-                    snapToGrid(draggedIcon);
-                }
-            } else { 
-                snapToGrid(draggedIcon);
-            }
+                if (confirm("Gộp [" + draggedProfile.td1 + "] vào thư mục [" + droppedFolder.td1 + "]?")) { xuLyDiChuyenHoSo(draggedProfile.td1, droppedFolder.td1); } 
+                else snapToGrid(draggedIcon);
+            } else snapToGrid(draggedIcon);
         } 
         
-        document.removeEventListener('mousemove', drag); 
-        document.removeEventListener('touchmove', drag); 
-        document.removeEventListener('mouseup', stopDrag); 
-        document.removeEventListener('touchend', stopDrag); 
+        document.removeEventListener('mousemove', drag); document.removeEventListener('touchmove', drag); 
+        document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag); 
         
-        setTimeout(() => { 
-            if(draggedIcon) draggedIcon.style.transition = ''; 
-            draggedIcon = null; 
-            isDragging = false; 
-        }, 400); 
+        setTimeout(() => { if(draggedIcon) draggedIcon.style.transition = ''; draggedIcon = null; isDragging = false; }, 400); 
     }
 
     function snapToGrid(icon) {
         if (icon && icon.dataset.gridLeft !== undefined && icon.dataset.gridTop !== undefined) {
-            icon.style.left = icon.dataset.gridLeft + 'px';
-            icon.style.top = icon.dataset.gridTop + 'px';
+            icon.style.left = icon.dataset.gridLeft + 'px'; icon.style.top = icon.dataset.gridTop + 'px';
         }
     }
 
-    function resetPositions() { 
-        localStorage.removeItem(PREFIX_MEM + 'iconOrder'); 
-        initializeLayout(); 
-    }
-
-    window.addEventListener('resize', () => {
-        if (typeof initializeLayout === 'function') {
-            clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(initializeLayout, 150); 
-        }
-    });
-
-    window.addEventListener('orientationchange', () => {
-        setTimeout(initializeLayout, 200); 
-    });
+    function resetPositions() { localStorage.removeItem(PREFIX_MEM + 'iconOrder'); initializeLayout(); }
+    window.addEventListener('resize', () => { if (typeof initializeLayout === 'function') { clearTimeout(window.resizeTimer); window.resizeTimer = setTimeout(initializeLayout, 150); }});
+    window.addEventListener('orientationchange', () => { setTimeout(initializeLayout, 200); });
 
     /* =========================================================================
-       6. KHỐI QUẢN LÝ DỰ ÁN (THÊM / SỬA / CẤP QUYỀN / GIAO DIỆN)
+       6. KHỐI QUẢN LÝ DỰ ÁN VÀ MA TRẬN QUYỀN
        ========================================================================= */
     function toggleHoSoModal(isShow) {
         document.getElementById('window-gan-hoso').style.display = isShow ? 'flex' : 'none';
         if(!isShow) {
-            var elTd1 = document.getElementById('hs-td1'); 
-            var elTd2 = document.getElementById('hs-td2'); 
-            var elLoaiIcon = document.getElementById('hs-loaiicon'); 
-            var elHieuUng = document.getElementById('hs-hieuung');
-            
-            elTd1.value = ''; 
-            elTd1.style.borderColor = '#ccc'; 
-            elTd2.value = ''; 
-            elTd2.style.borderColor = '#ccc'; 
-            elLoaiIcon.value = ''; 
-            elLoaiIcon.style.borderColor = '#ccc'; 
-            elHieuUng.value = 'none';
-            
-            var elCachMo = document.getElementById('hs-cachmo');
-            if (elCachMo) elCachMo.value = '_blank';
-            
-            document.getElementById('hs-ispublic').checked = false; 
-            document.getElementById('hs-vitri').value = 'desktop';
+            document.getElementById('hs-td1').value = ''; document.getElementById('hs-td1').style.borderColor = '#ccc'; 
+            document.getElementById('hs-td2').value = ''; document.getElementById('hs-td2').style.borderColor = '#ccc'; 
+            document.getElementById('hs-loaiicon').value = ''; document.getElementById('hs-loaiicon').style.borderColor = '#ccc'; 
+            document.getElementById('hs-hieuung').value = 'none';
+            if (document.getElementById('hs-cachmo')) document.getElementById('hs-cachmo').value = '_blank';
+            document.getElementById('hs-ispublic').checked = false; document.getElementById('hs-vitri').value = 'desktop';
         }
     }
 
@@ -2331,37 +2046,22 @@ function dongKhungXemTaiLieu() {
             const select = document.getElementById('edit-hoso-select');
             select.innerHTML = '<option value="">-- Lựa chọn dự án cần sửa chữa --</option>';
             globalProfiles.forEach((item, index) => {
-                const opt = document.createElement('option');
-                opt.value = index; 
-                opt.text = item.td1;
-                select.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = index; opt.text = item.td1; select.appendChild(opt);
             });
-            document.getElementById('edit-td1').value = '';
-            document.getElementById('edit-td2').value = '';
-            document.getElementById('edit-loaiicon').value = '';
-            document.getElementById('edit-hieuung').value = 'none';
-            
-            var elEditCachMo = document.getElementById('edit-cachmo');
-            if (elEditCachMo) elEditCachMo.value = '_blank';
-            
-            document.getElementById('edit-vitri').value = 'desktop';
-            document.getElementById('edit-form-status').style.display = 'none';
+            document.getElementById('edit-td1').value = ''; document.getElementById('edit-td2').value = '';
+            document.getElementById('edit-loaiicon').value = ''; document.getElementById('edit-hieuung').value = 'none';
+            if (document.getElementById('edit-cachmo')) document.getElementById('edit-cachmo').value = '_blank';
+            document.getElementById('edit-vitri').value = 'desktop'; document.getElementById('edit-form-status').style.display = 'none';
         }
     }
 
     function taiThongTinSuaHoSo() {
-        const select = document.getElementById('edit-hoso-select');
-        if (select.value === "") return;
-        
+        const select = document.getElementById('edit-hoso-select'); if (select.value === "") return;
         const profile = globalProfiles[select.value];
         document.getElementById('edit-td1').value = profile.td1;
-        
         let parsed = getUrlAndTarget(profile.td2);
-        
         document.getElementById('edit-td2').value = parsed.url;
-        let editCachMo = document.getElementById('edit-cachmo');
-        if (editCachMo) editCachMo.value = parsed.target;
-        
+        if (document.getElementById('edit-cachmo')) document.getElementById('edit-cachmo').value = parsed.target;
         document.getElementById('edit-loaiicon').value = profile.iconType;
         document.getElementById('edit-hieuung').value = profile.hieuung || 'none';
         document.getElementById('edit-vitri').value = profile.vitri || 'desktop';
@@ -2369,49 +2069,25 @@ function dongKhungXemTaiLieu() {
 
     function xuLySuaHoSo() {
         const select = document.getElementById('edit-hoso-select');
-        if (select.value === "") { 
-            alert("Yêu cầu hệ thống: Vui lòng chọn một dự án cần cập nhật!"); 
-            return; 
-        }
-        
+        if (select.value === "") { alert("Vui lòng chọn một dự án cần cập nhật!"); return; }
         const oldProfile = globalProfiles[select.value];
-        var td1 = document.getElementById('edit-td1').value.trim(); 
-        var td2_input = document.getElementById('edit-td2').value.trim(); 
-        var loaiIcon = document.getElementById('edit-loaiicon').value;
-        var vitri = document.getElementById('edit-vitri').value;
-        var hieuung = document.getElementById('edit-hieuung').value; 
-        
+        var td1 = document.getElementById('edit-td1').value.trim(), td2_input = document.getElementById('edit-td2').value.trim(); 
+        var loaiIcon = document.getElementById('edit-loaiicon').value, vitri = document.getElementById('edit-vitri').value, hieuung = document.getElementById('edit-hieuung').value; 
         var isPublic = oldProfile.isPublic ? 'public' : ''; 
         
-        if (!td1 || !td2_input || !loaiIcon) { 
-            alert("Yêu cầu hệ thống: Vui lòng điền đủ các thông số!"); 
-            return; 
-        }
-        
-        if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) {
-            td2_input = 'https://' + td2_input;
-        }
+        if (!td1 || !td2_input || !loaiIcon) { alert("Vui lòng điền đủ thông số!"); return; }
+        if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) td2_input = 'https://' + td2_input;
 
         var elEditCachMo = document.getElementById('edit-cachmo');
-        var target = elEditCachMo ? elEditCachMo.value : '_blank';
-        var td2_encoded = buildEncodedTd2(td2_input, target); 
+        var td2_encoded = buildEncodedTd2(td2_input, elEditCachMo ? elEditCachMo.value : '_blank'); 
 
-        document.getElementById('edit-form-status').innerText = "Đang đồng bộ dữ liệu sửa chữa..."; 
-        document.getElementById('edit-form-status').style.display = 'block';
+        document.getElementById('edit-form-status').innerText = "Đang đồng bộ dữ liệu sửa chữa..."; document.getElementById('edit-form-status').style.display = 'block';
         
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ 
-                action: 'editProfile', 
-                oldTd1: oldProfile.td1, 
-                td1: td1, 
-                td2: td2_encoded, 
-                loaiIcon: loaiIcon, 
-                isPublic: isPublic, 
-                vitri: vitri, 
-                hieuung: hieuung, 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, 
+                loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
             })
         })
         .then(response => response.text())
@@ -2419,402 +2095,200 @@ function dongKhungXemTaiLieu() {
             document.getElementById('edit-form-status').style.display = 'none';
             try {
                 let result = JSON.parse(text);
-                if (result.status === 'success') {
-                    toggleSuaHoSoModal(false);
-                    taiBieuTuongCongKhai();
-                } else { alert("Phát sinh sự cố: " + result.message); }
-            } catch (jsonError) {
-                alert("CẢNH BÁO QUẢN TRỊ:\nMáy chủ Google trả về trang báo lỗi HTML thay vì định dạng chuẩn JSON.");
-            }
-        }).catch(err => { 
-            document.getElementById('edit-form-status').style.display = 'none'; 
-            alert("Lỗi kết nối đường truyền: " + err); 
-        });
+                if (result.status === 'success') { toggleSuaHoSoModal(false); taiBieuTuongCongKhai(); } else alert("Phát sinh sự cố: " + result.message);
+            } catch (jsonError) { alert("Lỗi HTML máy chủ Google."); }
+        }).catch(err => { document.getElementById('edit-form-status').style.display = 'none'; alert("Lỗi mạng: " + err); });
     }
 
     function toggleXoaHoSoModal(isShow) {
         document.getElementById('window-xoa-hoso').style.display = isShow ? 'flex' : 'none';
         if (isShow) {
-            const container = document.getElementById('del-danhsach-hoso');
-            container.innerHTML = '';
-            
+            const container = document.getElementById('del-danhsach-hoso'); container.innerHTML = '';
             globalProfiles.forEach((item, index) => {
-                let statusLabel = item.isPublic 
-                    ? '<span style="color: #2e7d32; font-size: 12px; margin-left: 5px; font-weight: 600;">[Đang Mở Công Khai]</span>' 
-                    : '<span style="color: #d32f2f; font-size: 12px; margin-left: 5px; font-weight: 600;">[Đang Khóa]</span>';
-                
-                container.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 6px;">
-                    <input type="checkbox" class="cb-del-hoso" value="${index}" style="width: auto; margin-right: 10px;"> 
-                    <span style="flex: 1;"><strong>${item.td1}</strong></span>
-                    ${statusLabel}
-                </label>`;
+                let statusLabel = item.isPublic ? '<span style="color: #2e7d32; font-size: 12px; margin-left: 5px; font-weight: 600;">[Đang Mở Công Khai]</span>' : '<span style="color: #d32f2f; font-size: 12px; margin-left: 5px; font-weight: 600;">[Đang Khóa]</span>';
+                container.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 6px;"><input type="checkbox" class="cb-del-hoso" value="${index}" style="width: auto; margin-right: 10px;"> <span style="flex: 1;"><strong>${item.td1}</strong></span>${statusLabel}</label>`;
             });
             document.getElementById('del-form-status').style.display = 'none';
         }
     }
 
-    function chonTatCaQuanLy(isCheck) {
-        document.querySelectorAll('.cb-del-hoso').forEach(cb => cb.checked = isCheck);
-    }
+    function chonTatCaQuanLy(isCheck) { document.querySelectorAll('.cb-del-hoso').forEach(cb => cb.checked = isCheck); }
 
-    /* =========================================================================
-       7. KHỐI QUẢN LÝ ĐA NHIỆM (BATCH PROCESSING - ĐA LUỒNG)
-       ========================================================================= */
     async function xuLyDoiTrangThaiNhieu(isMakePublic) {
         let checkedBoxes = Array.from(document.querySelectorAll('.cb-del-hoso:checked'));
-        if (checkedBoxes.length === 0) { 
-            alert("Yêu cầu hệ thống: Vui lòng chọn ít nhất một dự án để thao tác!"); 
-            return; 
-        }
-
+        if (checkedBoxes.length === 0) { alert("Vui lòng chọn ít nhất một dự án!"); return; }
         const newStatus = isMakePublic ? "public" : "";
-        const confirmMsg = isMakePublic ? "MỞ CÔNG KHAI (Không cần đăng nhập)" : "KHÓA LẠI (Yêu cầu phải đăng nhập)";
-        
-        if (!confirm(`Thầy/Cô có chắc chắn muốn ${confirmMsg} cho ${checkedBoxes.length} dự án đã chọn?`)) return;
+        if (!confirm(`Thầy/Cô có chắc chắn muốn ${isMakePublic ? "MỞ CÔNG KHAI" : "KHÓA LẠI"} cho ${checkedBoxes.length} dự án?`)) return;
 
-        const statusText = document.getElementById('del-form-status');
-        statusText.style.display = 'block';
-
-        let completed = 0;
-        const total = checkedBoxes.length;
-        const batchSize = 4; 
+        const statusText = document.getElementById('del-form-status'); statusText.style.display = 'block';
+        let completed = 0; const total = checkedBoxes.length; const batchSize = 4; 
 
         for (let i = 0; i < total; i += batchSize) {
-            const batch = checkedBoxes.slice(i, i + batchSize);
-            
-            const batchPromises = batch.map(async (cb) => {
+            const batchPromises = checkedBoxes.slice(i, i + batchSize).map(async (cb) => {
                 let profile = globalProfiles[cb.value];
                 try {
                     await fetch(KETNOI.WEB_APP_URL, {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ 
-                            action: 'togglePublicProfile', 
-                            td1: profile.td1, 
-                            newStatus: newStatus, 
-                            khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-                        })
+                        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'togglePublicProfile', td1: profile.td1, newStatus: newStatus, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
                     });
-                } catch (err) {
-                    console.error("Lỗi đồng bộ mục: " + profile.td1);
-                }
-                
-                completed++;
-                statusText.innerText = `Đang đồng bộ trạng thái (${completed}/${total}): ${profile.td1}...`;
+                } catch (err) {}
+                completed++; statusText.innerText = `Đang đồng bộ (${completed}/${total}): ${profile.td1}...`;
             });
-
             await Promise.all(batchPromises);
         }
-
-        statusText.style.display = 'none';
-        toggleXoaHoSoModal(false); 
-        taiBieuTuongCongKhai(); 
+        statusText.style.display = 'none'; toggleXoaHoSoModal(false); taiBieuTuongCongKhai(); 
     }
 
     async function xuLyXoaHoSoNhieu() {
         let checkedBoxes = Array.from(document.querySelectorAll('.cb-del-hoso:checked'));
-        if (checkedBoxes.length === 0) { 
-            alert("Yêu cầu hệ thống: Vui lòng chọn ít nhất một dự án để hủy bỏ!"); 
-            return; 
-        }
+        if (checkedBoxes.length === 0) { alert("Vui lòng chọn ít nhất một dự án!"); return; }
+        if (!confirm(`CẢNH BÁO: HỦY BỎ HOÀN TOÀN ${checkedBoxes.length} dự án đã chọn khỏi hệ thống?`)) return;
 
-        if (!confirm(`CẢNH BÁO: Thầy/Cô có chắc chắn muốn HỦY BỎ HOÀN TOÀN ${checkedBoxes.length} dự án đã chọn khỏi hệ thống?`)) return;
-
-        const statusText = document.getElementById('del-form-status');
-        statusText.style.display = 'block';
-
-        let completed = 0;
-        const total = checkedBoxes.length;
-        const batchSize = 4; 
+        const statusText = document.getElementById('del-form-status'); statusText.style.display = 'block';
+        let completed = 0; const total = checkedBoxes.length; const batchSize = 4; 
 
         for (let i = 0; i < total; i += batchSize) {
-            const batch = checkedBoxes.slice(i, i + batchSize);
-            
-            const batchPromises = batch.map(async (cb) => {
+            const batchPromises = checkedBoxes.slice(i, i + batchSize).map(async (cb) => {
                 let profile = globalProfiles[cb.value];
                 try {
                     await fetch(KETNOI.WEB_APP_URL, {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ 
-                            action: 'deleteProfile', 
-                            td1: profile.td1, 
-                            td2: profile.td2, 
-                            khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-                        })
+                        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'deleteProfile', td1: profile.td1, td2: profile.td2, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
                     });
-                } catch (err) {
-                    console.error("Lỗi xóa mục: " + profile.td1);
-                }
-                
-                completed++;
-                statusText.innerText = `Đang tiến hành hủy bỏ (${completed}/${total}): ${profile.td1}...`;
+                } catch (err) {}
+                completed++; statusText.innerText = `Đang hủy bỏ (${completed}/${total}): ${profile.td1}...`;
             });
-
             await Promise.all(batchPromises);
         }
-
-        statusText.style.display = 'none';
-        toggleXoaHoSoModal(false); 
-        taiBieuTuongCongKhai(); 
+        statusText.style.display = 'none'; toggleXoaHoSoModal(false); taiBieuTuongCongKhai(); 
     }
 
-    function moDriveTaiKhoanKhac() { 
-        window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); 
-    }
+    function moDriveTaiKhoanKhac() { window.open('https://accounts.google.com/AccountChooser?continue=https://drive.google.com/drive/', '_blank'); }
 
     function xuLyLuuHoSo() {
-        var elTd1 = document.getElementById('hs-td1'); 
-        var elTd2 = document.getElementById('hs-td2'); 
-        var elLoaiIcon = document.getElementById('hs-loaiicon'); 
-        var elHieuUng = document.getElementById('hs-hieuung');
-        
-        var vitri = document.getElementById('hs-vitri').value;
-        var td1 = elTd1.value.trim(); 
-        var td2_input = elTd2.value.trim(); 
-        var loaiIcon = elLoaiIcon.value;
-        var isPublic = document.getElementById('hs-ispublic').checked ? 'public' : ''; 
-        var hieuung = elHieuUng.value; 
-        
-        elTd1.style.borderColor = '#ccc'; 
-        elTd2.style.borderColor = '#ccc'; 
-        elLoaiIcon.style.borderColor = '#ccc';
+        var elTd1 = document.getElementById('hs-td1'), elTd2 = document.getElementById('hs-td2'), elLoaiIcon = document.getElementById('hs-loaiicon'); 
+        var td1 = elTd1.value.trim(), td2_input = elTd2.value.trim(), loaiIcon = elLoaiIcon.value;
+        elTd1.style.borderColor = '#ccc'; elTd2.style.borderColor = '#ccc'; elLoaiIcon.style.borderColor = '#ccc';
         
         var hasError = false;
         if (!td1) { elTd1.style.borderColor = 'red'; hasError = true; } 
         if (!td2_input) { elTd2.style.borderColor = 'red'; hasError = true; } 
         if (!loaiIcon) { elLoaiIcon.style.borderColor = 'red'; hasError = true; }
-        if (hasError) { alert("Yêu cầu hệ thống: Vui lòng điền đủ các tham số!"); return; }
-
-        if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) {
-            td2_input = 'https://' + td2_input;
-        }
+        if (hasError) { alert("Vui lòng điền đủ tham số!"); return; }
+        if (td2_input !== "" && !td2_input.toLowerCase().startsWith('http://') && !td2_input.toLowerCase().startsWith('https://')) td2_input = 'https://' + td2_input;
 
         var elCachMo = document.getElementById('hs-cachmo');
-        var target = elCachMo ? elCachMo.value : '_blank';
-        var td2_encoded = buildEncodedTd2(td2_input, target);
-
-        document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; 
-        document.getElementById('form-status').style.display = 'block';
+        var td2_encoded = buildEncodedTd2(td2_input, elCachMo ? elCachMo.value : '_blank');
+        document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ 
-                action: 'saveProfile', 
-                td1: td1, 
-                td2: td2_encoded, 
-                loaiIcon: loaiIcon, 
-                isPublic: isPublic, 
-                vitri: vitri, 
-                hieuung: hieuung, 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, 
+                isPublic: document.getElementById('hs-ispublic').checked ? 'public' : '', vitri: document.getElementById('hs-vitri').value, 
+                hieuung: document.getElementById('hs-hieuung').value, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
             })
-        })
-        .then(response => response.text())
-        .then(text => {
+        }).then(response => response.text()).then(text => {
             document.getElementById('form-status').style.display = 'none';
             try {
                 let result = JSON.parse(text);
-                if (result.status === 'success') {
-                    toggleHoSoModal(false);
-                    taiBieuTuongCongKhai();
-                } else { alert("Phát sinh sự cố: " + result.message); }
-            } catch (jsonError) {
-                alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
-            }
-        })
-        .catch(err => {
-            document.getElementById('form-status').style.display = 'none';
-            alert("Mất kết nối đường truyền mạng khi lưu hồ sơ: " + err);
-        });
+                if (result.status === 'success') { toggleHoSoModal(false); taiBieuTuongCongKhai(); } else alert("Sự cố: " + result.message);
+            } catch (jsonError) { alert("Lỗi HTML Backend."); }
+        }).catch(err => { document.getElementById('form-status').style.display = 'none'; alert("Lỗi mạng: " + err); });
     }
 
     function togglePhanQuyenModal(isShow) {
         document.getElementById('window-phanquyen').style.display = isShow ? 'flex' : 'none';
         if (isShow) { 
-            const iconListContainer = document.getElementById('icon-permission-list');
-            iconListContainer.innerHTML = '';
-            
+            const iconListContainer = document.getElementById('icon-permission-list'); iconListContainer.innerHTML = '';
             globalProfiles.forEach(profile => {
                 let pubLabel = profile.isPublic ? ' <span style="color: #2e7d32; font-weight: 600; font-size: 11px; background: #e8f5e9; padding: 2px 4px; border-radius: 3px; margin-left: 5px;">[Đã mở Công khai]</span>' : '';
-                let safeVal = profile.td1.replace(/"/g, '&quot;');
-                
-                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;"><input type="checkbox" class="icon-role-cb" value="${safeVal}"> <span>${profile.td1}</span> ${pubLabel}</label>`;
+                iconListContainer.innerHTML += `<label class="checkbox-label" style="display: flex; align-items: center;"><input type="checkbox" class="icon-role-cb" value="${profile.td1.replace(/"/g, '&quot;')}"> <span>${profile.td1}</span> ${pubLabel}</label>`;
             });
             taiDuLieuQuyen(); 
-        } else { 
-            lamMoiBieuMauQuyen(); 
-        }
+        } else lamMoiBieuMauQuyen(); 
     }
 
     function taiDuLieuQuyen() {
-        const tbody = document.getElementById('bang-phanquyen-body');
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
-        
+        const tbody = document.getElementById('bang-phanquyen-body'); tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                action: 'getAccounts', 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-            })
-        })
-        .then(response => response.text())
-        .then(text => {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'getAccounts', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+        }).then(response => response.text()).then(text => {
             try {
                 let result = JSON.parse(text);
-                if (result.status === 'success') { 
-                    hienThiBangQuyen(result.data); 
-                } else { 
-                    alert(result.message); 
-                }
-            } catch (jsonError) {
-                console.error("Lỗi từ backend khi tải quyền:", text);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Máy chủ trả về dữ liệu HTML (Crash Backend). Vui lòng kiểm tra log!</td></tr>';
-            }
-        }).catch(err => { 
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Sự cố truy xuất băng thông máy chủ!</td></tr>'; 
-        });
+                if (result.status === 'success') hienThiBangQuyen(result.data); else alert(result.message); 
+            } catch (jsonError) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Lỗi HTML Backend!</td></tr>'; }
+        }).catch(err => { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Sự cố truy xuất băng thông!</td></tr>'; });
     }
 
     function hienThiBangQuyen(danhSachQuyen) {
-        const tbody = document.getElementById('bang-phanquyen-body'); 
-        tbody.innerHTML = '';
-        
-        if (danhSachQuyen.length === 0) { 
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; 
-            return; 
-        }
-        
+        const tbody = document.getElementById('bang-phanquyen-body'); tbody.innerHTML = '';
+        if (danhSachQuyen.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; return; }
         danhSachQuyen.forEach(quyen => {
-            const tr = document.createElement('tr'); 
-            let displayRoles = [];
+            const tr = document.createElement('tr'); let displayRoles = [];
             if (quyen.roles.includes('taohoso')) displayRoles.push('Tạo DL');
             if (quyen.roles.includes('ganhoso')) displayRoles.push('Gán DL');
             if (quyen.roles.includes('xoahoso')) displayRoles.push('Quản lý DL');
             if (quyen.roles.includes('quanlyfile')) displayRoles.push('<b style="color:#F57C00">Tải lên/Xóa</b>');
             if (quyen.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Admin</b>');
             
-            const safeTsa = quyen.tsa.replace(/'/g, "\\'");
-            const safeRoles = quyen.roles.replace(/'/g, "\\'");
-            const safeIconRoles = (quyen.iconRoles || "").replace(/'/g, "\\'");
-
             tr.innerHTML = `<td>${quyen.tsa}</td><td>${quyen.tsb}</td><td>${displayRoles.join(' | ')}</td>
-                <td><span class="action-link" onclick="dieuChinhQuyen('${safeTsa}', '${quyen.tsb}', '${safeRoles}', '${safeIconRoles}')">Điều chỉnh</span>
+                <td><span class="action-link" onclick="dieuChinhQuyen('${quyen.tsa.replace(/'/g, "\\'")}', '${quyen.tsb}', '${quyen.roles.replace(/'/g, "\\'")}', '${(quyen.iconRoles || "").replace(/'/g, "\\'")}')">Điều chỉnh</span>
                     <span class="action-link delete" onclick="goBoQuyen('${quyen.tsb}')">Gỡ bỏ</span></td>`;
             tbody.appendChild(tr);
         });
     }
 
     function dieuChinhQuyen(tsa, tsb, roles, iconRoles) {
-        document.getElementById('pq-tsa').value = tsa; 
-        document.getElementById('pq-tsb').value = tsb;
-        
-        document.getElementById('role-taohoso').checked = roles.includes('taohoso');
-        document.getElementById('role-ganhoso').checked = roles.includes('ganhoso');
-        document.getElementById('role-xoahoso').checked = roles.includes('xoahoso');
-        document.getElementById('role-quanlyfile').checked = roles.includes('quanlyfile');
+        document.getElementById('pq-tsa').value = tsa; document.getElementById('pq-tsb').value = tsb;
+        document.getElementById('role-taohoso').checked = roles.includes('taohoso'); document.getElementById('role-ganhoso').checked = roles.includes('ganhoso');
+        document.getElementById('role-xoahoso').checked = roles.includes('xoahoso'); document.getElementById('role-quanlyfile').checked = roles.includes('quanlyfile');
         document.getElementById('role-xx').checked = roles.includes('xx');
-
-        const allowedIcons = (iconRoles || "").split('|');
-        document.querySelectorAll('.icon-role-cb').forEach(cb => {
-            cb.checked = allowedIcons.includes(cb.value);
-        });
+        const allowedIcons = (iconRoles || "").split('|'); document.querySelectorAll('.icon-role-cb').forEach(cb => { cb.checked = allowedIcons.includes(cb.value); });
     }
 
     function lamMoiBieuMauQuyen() {
-        document.getElementById('pq-tsa').value = ''; 
-        document.getElementById('pq-tsb').value = '';
-        
-        document.getElementById('role-taohoso').checked = false; 
-        document.getElementById('role-ganhoso').checked = false; 
-        document.getElementById('role-xoahoso').checked = false; 
-        document.getElementById('role-quanlyfile').checked = false;
-        document.getElementById('role-xx').checked = false;
-        
+        document.getElementById('pq-tsa').value = ''; document.getElementById('pq-tsb').value = '';
+        ['role-taohoso', 'role-ganhoso', 'role-xoahoso', 'role-quanlyfile', 'role-xx'].forEach(id => document.getElementById(id).checked = false);
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
     }
 
     function ghiNhanQuyen() {
-        const tsa = document.getElementById('pq-tsa').value.trim(); 
-        const tsb = document.getElementById('pq-tsb').value.trim();
-        
-        if (!tsa || !tsb) { 
-            alert("Yêu cầu hệ thống: Bắt buộc điền đủ các trường định danh!"); 
-            return; 
-        }
+        const tsa = document.getElementById('pq-tsa').value.trim(), tsb = document.getElementById('pq-tsb').value.trim();
+        if (!tsa || !tsb) { alert("Bắt buộc điền đủ các trường định danh!"); return; }
         
         let roles = [];
-        if (document.getElementById('role-taohoso').checked) roles.push('taohoso');
-        if (document.getElementById('role-ganhoso').checked) roles.push('ganhoso');
-        if (document.getElementById('role-xoahoso').checked) roles.push('xoahoso');
-        if (document.getElementById('role-quanlyfile').checked) roles.push('quanlyfile');
-        if (document.getElementById('role-xx').checked) roles.push('xx');
-
-        let selectedIcons = [];
-        document.querySelectorAll('.icon-role-cb:checked').forEach(cb => selectedIcons.push(cb.value));
-        let iconRolesStr = selectedIcons.join('|');
-
-        document.getElementById('pq-status').style.display = 'block';
+        ['taohoso', 'ganhoso', 'xoahoso', 'quanlyfile', 'xx'].forEach(r => { if (document.getElementById(`role-${r}`).checked) roles.push(r); });
+        let selectedIcons = []; document.querySelectorAll('.icon-role-cb:checked').forEach(cb => selectedIcons.push(cb.value));
         
+        document.getElementById('pq-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                action: 'saveAccount', 
-                tsa: tsa, 
-                tsb: tsb, 
-                roles: roles.join(','), 
-                iconRoles: iconRolesStr, 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-            })
-        })
-        .then(response => response.text())
-        .then(text => {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'saveAccount', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: selectedIcons.join('|'), khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+        }).then(response => response.text()).then(text => {
             document.getElementById('pq-status').style.display = 'none';
             try {
                 let result = JSON.parse(text);
-                if (result.status === 'success') { 
-                    lamMoiBieuMauQuyen(); 
-                    taiDuLieuQuyen(); 
-                    xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
-                } else { alert("Cảnh báo: " + result.message); }
-            } catch (jsonError) {
-                alert("Cảnh báo: Lỗi cấu hình máy chủ.");
-            }
+                if (result.status === 'success') { lamMoiBieuMauQuyen(); taiDuLieuQuyen(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } 
+                else alert("Cảnh báo: " + result.message);
+            } catch (jsonError) { alert("Lỗi cấu hình máy chủ."); }
         });
     }
 
     function goBoQuyen(tsb) {
         if (confirm("Thầy/Cô có chắc chắn muốn gỡ bỏ phân quyền đối với định danh ID: " + tsb + " ?")) {
             document.getElementById('pq-status').style.display = 'block';
-            
             fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ 
-                    action: 'deleteAccount', 
-                    tsb: tsb, 
-                    khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-                })
-            })
-            .then(response => response.text())
-            .then(text => {
+                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'deleteAccount', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
+            }).then(response => response.text()).then(text => {
                 document.getElementById('pq-status').style.display = 'none';
                 try {
                     let result = JSON.parse(text);
-                    if (result.status === 'success') { 
-                        alert("Đã hoàn tất quá trình gỡ bỏ!"); 
-                        taiDuLieuQuyen(); 
-                        xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
-                    } else { 
-                        alert("Cảnh báo: " + result.message); 
-                    }
-                } catch (jsonError) {
-                    console.error("Lỗi từ backend:", text);
-                    alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
-                }
+                    if (result.status === 'success') { alert("Đã gỡ bỏ thành công!"); taiDuLieuQuyen(); xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); } 
+                    else alert("Cảnh báo: " + result.message); 
+                } catch (jsonError) { alert("Lỗi định dạng HTML Backend."); }
             });
         }
     }
@@ -2824,18 +2298,12 @@ function dongKhungXemTaiLieu() {
        ========================================================================= */
     function changeBackgroundImage() { 
         var currentUrl = localStorage.getItem(PREFIX_MEM + "bg") || ""; 
-        var newUrl = prompt("CẤU HÌNH HÌNH NỀN DESKTOP\n\nNhập đường dẫn (URL) hình ảnh:\n(Để trống nếu muốn quay về hình nền mặc định)", currentUrl); 
-        
+        var newUrl = prompt("CẤU HÌNH HÌNH NỀN DESKTOP\n\nNhập đường dẫn URL:\n(Để trống nếu muốn quay về mặc định)", currentUrl); 
         if (newUrl !== null) { 
             if (newUrl.trim() === "") { 
                 localStorage.removeItem(PREFIX_MEM + "bg"); 
                 var defaultBgUrl = (typeof KETNOI !== 'undefined' && KETNOI.LINK_HINH_NEN) ? KETNOI.LINK_HINH_NEN : "";
-                
-                if (defaultBgUrl !== "") {
-                    document.documentElement.style.setProperty('--default-bg', "url('" + defaultBgUrl.trim() + "')"); 
-                } else {
-                    document.documentElement.style.setProperty('--default-bg', "#2c3e50"); 
-                }
+                document.documentElement.style.setProperty('--default-bg', defaultBgUrl !== "" ? "url('" + defaultBgUrl.trim() + "')" : "#2c3e50"); 
             } else { 
                 localStorage.setItem(PREFIX_MEM + "bg", newUrl.trim()); 
                 document.documentElement.style.setProperty('--default-bg', "url('" + newUrl.trim() + "')"); 
@@ -2843,76 +2311,36 @@ function dongKhungXemTaiLieu() {
         } 
     }
     
-    function toggleUtilities(isShow) { 
-        document.getElementById('window-utilities').style.display = isShow ? 'flex' : 'none'; 
-    }
+    function toggleUtilities(isShow) { document.getElementById('window-utilities').style.display = isShow ? 'flex' : 'none'; }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => {}); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
 
-    function toggleFullScreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                console.log(`Cảnh báo màn hình: ${err.message}`);
-            });
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
-        }
-    }
-
-    let dangChoTuongTac = true; 
-    const danhSachSuKien = ['click', 'touchstart', 'keydown'];
-
+    let dangChoTuongTac = true; const danhSachSuKien = ['click', 'touchstart', 'keydown'];
     function xuLyBungManHinh(e) {
         if (!dangChoTuongTac || (e && e.target && e.target.closest && e.target.closest('.tray-icon'))) return;
-        
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                console.log("Hệ thống: Trình duyệt từ chối lệnh full màn hình do chính sách bảo mật.");
-            });
-        }
-        dangChoTuongTac = false;
-        danhSachSuKien.forEach(suKien => document.removeEventListener(suKien, xuLyBungManHinh));
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => {});
+        dangChoTuongTac = false; danhSachSuKien.forEach(suKien => document.removeEventListener(suKien, xuLyBungManHinh));
     }
-
     danhSachSuKien.forEach(suKien => document.addEventListener(suKien, xuLyBungManHinh));
 
     document.addEventListener('fullscreenchange', () => {
         const icon = document.getElementById('fullscreen-icon');
-        if (document.fullscreenElement) {
-            if (icon) icon.innerText = 'fullscreen_exit';
-        } else {
+        if (document.fullscreenElement) { if (icon) icon.innerText = 'fullscreen_exit'; } 
+        else {
             if (icon) icon.innerText = 'fullscreen';
-            setTimeout(() => {
-                dangChoTuongTac = true;
-                danhSachSuKien.forEach(suKien => document.addEventListener(suKien, xuLyBungManHinh));
-            }, 300);
+            setTimeout(() => { dangChoTuongTac = true; danhSachSuKien.forEach(suKien => document.addEventListener(suKien, xuLyBungManHinh)); }, 300);
         }
     });
 
     function khoaTruyCapMaNguon() {
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12' || e.keyCode === 123) {
-                e.preventDefault();
-            }
-            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
-                e.preventDefault();
-            }
-            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
-                e.preventDefault();
-            }
-            if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
-                e.preventDefault();
-            }
-            if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
-                e.preventDefault();
-            }
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || e.keyCode === 123) e.preventDefault();
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) e.preventDefault();
+            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) e.preventDefault();
+            if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) e.preventDefault();
+            if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) e.preventDefault();
         });
     }
-    
     khoaTruyCapMaNguon();
 </script>
 </body>
