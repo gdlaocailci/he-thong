@@ -823,7 +823,6 @@
             <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">edit_document</span> Không gian làm việc...</div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- ĐÃ XÓA BỎ NÚT MỞ THẺ MỚI ĐỂ ÉP BUỘC LÀM VIỆC TRONG KHUNG -->
                     <button class="window-close" style="color: white; width: 35px; border-radius: 4px;" onclick="dongKhuXemTruoc()">✕</button>
                 </div>
             </div>
@@ -831,15 +830,19 @@
             <!-- THANH CẢNH BÁO QUẢN TRỊ -->
             <div style="background-color: #fff3e0; border-bottom: 1px solid #ffe0b2; padding: 6px 15px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e65100;">
                 <span class="material-icons" style="font-size: 18px;">info</span>
-                <span><b>Lưu ý:</b> Để xem và nhận xét trực tiếp trong khung này, Thầy/Cô vui lòng đảm bảo chỉ đăng nhập <b>một tài khoản Google duy nhất</b> có quyền truy cập trên trình duyệt (Nếu báo lỗi 403, hãy đăng xuất các tài khoản khác).</span>
+                <span><b>Lưu ý:</b> Hệ thống đã thiết lập không gian khép kín. Nếu khung báo lỗi 403, vui lòng đăng xuất các phiên ngoại lai và chỉ giữ lại tài khoản được cấp quyền.</span>
             </div>
 
             <!-- Lớp phủ báo trạng thái đang tải dữ liệu -->
-            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 75px; left: 0; width: 100%; height: calc(100% - 75px); background: #f9f9f9; color: #333; z-index: 1;">
+            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 75px; left: 0; width: 100%; height: calc(100% - 75px); background: #f9f9f9; color: #333; z-index: 10;">
                 <span class="material-icons" style="color: #1976D2; font-size: 40px;">sync</span>
-                <h3 style="color: #333; font-size: 14px; margin-top: 10px;">Đang thiết lập không gian làm việc...</h3>
+                <h3 style="color: #333; font-size: 14px; margin-top: 10px;" id="preview-loading-text">Đang thiết lập không gian làm việc...</h3>
             </div>
             
+            <!-- KHU VỰC 1: Hiển thị danh sách tệp tự xây dựng (Thay thế Google Drive Folder) -->
+            <div id="drive-folder-list" class="window-content" style="display: none; flex: 1; width: 100%; overflow-y: auto; background: #ffffff; padding: 20px; box-sizing: border-box;"></div>
+
+            <!-- KHU VỰC 2: Iframe hiển thị tài liệu chi tiết -->
             <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 2; position: relative;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
         </div>
     </div>
