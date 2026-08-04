@@ -1027,6 +1027,7 @@ Hoàng Ngọc Lâm">
     let lichSuDuyet = []; 
     let idThuMucHienTai = "";
     let idFileHienTai = "";
+    let boNhoDemThuMuc = {};
 
     function kiemTraLinkTaiLieu(duongDan) {
         var chuoiKiemTra = duongDan.toLowerCase();
@@ -1065,13 +1066,14 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         return duongDanMoi;
     }
 
-    function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
+function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
         if (!isBack && duongDanTrangHienTai !== "") {
             lichSuDuyet.push({ url: duongDanTrangHienTai, title: tieuDeHienTai, id: idThuMucHienTai });
         }
         
         if (duongDanTrangHienTai === "") {
             tieuDeHoSoGoc = tieuDe;
+            boNhoDemThuMuc = {}; // Làm mới toàn bộ đệm khi mở một phân hệ dự án mới
         }
         
         duongDanTrangHienTai = duongDan; 
@@ -1109,6 +1111,16 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
             idFileHienTai = "";
             document.getElementById('preview-iframe').style.display = 'none';
             document.getElementById('preview-folder-list').style.display = 'block';
+            
+            // =================================================================
+            // [THUẬT TOÁN ĐIỀU HƯỚNG]: Kiểm tra Cache trước khi gọi API
+            // Loại bỏ hoàn toàn độ trễ khi người dùng ấn nút Quay lại (Back)
+            // =================================================================
+            if (boNhoDemThuMuc[idThuMucHienTai]) {
+                veGiaoDienThuMucTuTao(boNhoDemThuMuc[idThuMucHienTai]);
+                return; // Ngắt luồng gọi API, kết xuất giao diện tức thì
+            }
+
             document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
             
             let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
@@ -1125,20 +1137,19 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
             .then(res => res.json())
             .then(res => {
                 if (res.status === "success") {
+                    boNhoDemThuMuc[idThuMucHienTai] = res.data; // Lưu kết quả vào biến đệm O(1)
                     veGiaoDienThuMucTuTao(res.data);
                 } else {
                     document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
-                    
                     let msg = res.message.toLowerCase();
-                    if (msg.includes("chặn") || msg.includes("xác thực") || msg.includes("quyền") || msg.includes("chưa được cấp")) {
-                        setTimeout(() => { 
-                            alert("Cảnh báo: Tài khoản của Thầy/Cô đã bị chặn hoặc phiên bản hết hạn. Vui lòng đăng nhập lại!");
-                            dangXuat(); 
-                        }, 1200);
+                    if (msg.includes("phiên đăng nhập") || msg.includes("hết hạn")) {
+                        setTimeout(() => { alert("Cảnh báo: Phiên đăng nhập đã hết hạn. Vui lòng tiến hành đăng nhập lại!"); dangXuat(); }, 1200);
+                    } else if (msg.includes("chặn") || msg.includes("quyền") || msg.includes("chưa được cấp")) {
+                        setTimeout(() => { alert("Hệ thống từ chối: Tài khoản của Thầy/Cô chưa được cấp quyền truy cập cơ sở dữ liệu này."); }, 500);
                     }
                 }
             }).catch(e => {
-                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối mạng.</div>`;
+                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
             });
         } else {
             idThuMucHienTai = "";
@@ -1226,10 +1237,10 @@ function veGiaoDienThuMucTuTao(data) {
         .then(res => {
             if (res.status === 'success') {
                 if (idThuMucHienTai) {
-                    // Nếu đang xem danh sách: Refresh lại khung ngầm
+                    // Xóa bộ nhớ đệm của thư mục hiện tại để ép hệ thống tải dữ liệu mới
+                    delete boNhoDemThuMuc[idThuMucHienTai];
                     moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
                 } else {
-                    // Nếu đang xem trực tiếp nội dung File: Xóa xong thì đóng khung
                     dongKhungXemTaiLieu();
                     alert("Đã xóa tệp thành công!");
                 }
@@ -1244,9 +1255,11 @@ function veGiaoDienThuMucTuTao(data) {
         });
     }
 
-    function quayLaiTaiLieu() {
+function quayLaiTaiLieu() {
         if (lichSuDuyet.length > 0) {
             let mucTruoc = lichSuDuyet.pop();
+            // Việc thiết lập tham số isBack = true kết hợp với bộ nhớ đệm boNhoDemThuMuc 
+            // sẽ giúp thao tác quay lại đạt tốc độ phản hồi ngay lập tức, không sinh lỗi nghẽn.
             moKhungXemTaiLieu(mucTruoc.url, mucTruoc.title, true, mucTruoc.id); 
         }
     }
@@ -1314,13 +1327,13 @@ function taiLenTaiLieu() {
                     })
                 })
                 .then(res => res.json())
-                .then(res => {
+                  .then(res => {
                     if (res.status === 'success') {
-                        // Tải lên thành công -> Làm mới (Refresh) lại khung xem ngay lập tức
-                        // Truyền isBack = true để không ghi đè lịch sử điều hướng
+                        // Xóa bộ nhớ đệm của thư mục hiện tại để phản ánh tài liệu vừa tải lên
+                        if (idThuMucHienTai) delete boNhoDemThuMuc[idThuMucHienTai];
                         moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
                     } else {
-                        khuVucDanhSach.innerHTML = htmlCu; // Khôi phục danh sách nếu lỗi
+                        khuVucDanhSach.innerHTML = htmlCu; 
                         alert("Sự cố tải lên: " + res.message);
                     }
                 })
@@ -1349,7 +1362,7 @@ function taiLenTaiLieu() {
         }
     }
 
-    function dongKhungXemTaiLieu() {
+function dongKhungXemTaiLieu() {
         document.getElementById('window-preview').style.display = 'none';
         document.getElementById('preview-iframe').src = "";
         document.getElementById('preview-folder-list').innerHTML = "";
@@ -1360,6 +1373,7 @@ function taiLenTaiLieu() {
         lichSuDuyet = []; 
         idThuMucHienTai = ""; 
         idFileHienTai = "";
+        boNhoDemThuMuc = {}; // Làm sạch bộ nhớ RAM để đảm bảo vận hành ổn định
     }
 
     function moTabMoiTaiLieu() {
