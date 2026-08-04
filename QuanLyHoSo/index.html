@@ -815,7 +815,7 @@
         </div>
     </div>
 
-    <!-- ========================================================================= -->
+<!-- ========================================================================= -->
     <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC TỆP / ỨNG DỤNG BÊN TRONG HỆ THỐNG -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
@@ -823,12 +823,19 @@
             <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới (Dùng khi Web bị chặn nhúng)"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
+                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới để cấp quyền/đổi tài khoản"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
                     <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
                 </div>
             </div>
+            
+            <!-- [CẬP NHẬT]: THANH CẢNH BÁO XUNG ĐỘT TÀI KHOẢN -->
+            <div style="background-color: #fff3e0; border-bottom: 1px solid #ffe0b2; padding: 6px 15px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e65100;">
+                <span class="material-icons" style="font-size: 16px;">info</span>
+                <span><b>Lưu ý:</b> Nếu khung bên dưới báo lỗi <b>403</b>, trình duyệt đang kẹt tài khoản. Vui lòng bấm nút <b>[Mở Thẻ Mới]</b> ở góc trên bên phải để đổi email truy cập.</span>
+            </div>
+
             <!-- Lớp phủ báo trạng thái đang tải dữ liệu -->
-            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); background: #f9f9f9; color: #333; z-index: 1;">
+            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 70px; left: 0; width: 100%; height: calc(100% - 70px); background: #f9f9f9; color: #333; z-index: 1;">
                 <span class="material-icons" style="color: #1976D2; font-size: 40px;">sync</span>
                 <h3 style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
             </div>
