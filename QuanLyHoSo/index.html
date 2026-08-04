@@ -1429,7 +1429,7 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         location.reload(); 
     }
 
-    function xacThucPhienDangNhap(sysSession) {
+function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1452,14 +1452,29 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
                     apDungPhanQuyen(sysRoles); 
                 } else { 
-                    alert("Yêu cầu hệ thống: " + result.message); 
-                    dangXuat(); 
+                    // [ĐÃ TINH CHỈNH]: Chỉ hiển thị cảnh báo nhẹ, không tự động ép đăng xuất gây phiền toái
+                    console.warn("Phản hồi xác thực:", result.message);
+                    document.getElementById('sys-name').innerText = "Khách (Chưa xác thực)";
                 }
             } catch (jsonError) {
-                alert("Xác thực gặp sự cố. Hệ thống sẽ làm mới phiên làm việc.");
-                dangXuat();
+                // [BẪY LỖI THÔNG MINH]: Nếu máy chủ trả về HTML hoặc lỗi mạng tạm thời, 
+                // hệ thống sẽ sử dụng lại dữ liệu Cache cũ trên trình duyệt thay vì bắt người dùng đăng nhập lại từ đầu.
+                let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
+                let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
+                if (cachedName && cachedRoles !== null) {
+                    isLoggedIn = true;
+                    document.getElementById('sys-name').innerText = cachedName;
+                    document.getElementById('btn-logout').style.display = 'flex';
+                    sysRoles = cachedRoles;
+                    sysIconRoles = localStorage.getItem(PREFIX_MEM + 'sysIconRoles') || "";
+                    apDungPhanQuyen(sysRoles);
+                } else {
+                    console.error("Lỗi phân tích JSON xác thực:", text);
+                }
             }
-        }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
+        }).catch(error => {
+            console.error("Lỗi đường truyền xác thực:", error);
+        });
     }
 
     function apDungPhanQuyen(roles) {
