@@ -923,7 +923,7 @@ function dongKhuXemTruoc() {
     function moLienKetGoc() {
         if(urlXemTruocHienTai !== "") { window.open(urlXemTruocHienTai, '_blank'); }
     }
-// [HÀM BỘ TRỢ 1]: Gọi API lấy danh sách tệp
+// [HÀM BỘ TRỢ 1]: Gọi API lấy danh sách tệp (ĐÃ BỔ SUNG CƠ CHẾ LOG LỖI)
     function hienThiThuMucDrive(folderId, title) {
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${title}`;
         document.getElementById('preview-iframe').style.display = 'none'; 
@@ -933,7 +933,8 @@ function dongKhuXemTruoc() {
         document.getElementById('window-preview').style.display = 'flex';
 
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
                 action: 'getFolderContents',
                 folderId: folderId,
@@ -943,19 +944,26 @@ function dongKhuXemTruoc() {
         .then(response => response.text())
         .then(text => {
             document.getElementById('preview-loading').style.display = 'none';
+            console.log("Dữ liệu thô từ Server Google:", text); // Phục vụ kiểm tra lỗi qua F12
+
             try {
                 let result = JSON.parse(text);
-                if (result.status === 'success') {
+                // Mở rộng bộ lọc trạng thái để tương thích chuẩn cấu hình hệ thống
+                if (result.status === 'success' || result.status === 200 || result.status === true) {
                     renderDriveFileList(result.data, title);
                 } else {
-                    alert("Cảnh báo từ máy chủ: " + result.message);
+                    alert("Cảnh báo từ máy chủ: " + (result.message || "Không xác định"));
                     dongKhuXemTruoc();
                 }
             } catch(e) {
-                alert("Lỗi cấu trúc phản hồi. Vui lòng kiểm tra log."); dongKhuXemTruoc();
+                console.error("Lỗi biên dịch dữ liệu:", e);
+                // Hiển thị một phần HTML lỗi để nhận diện ngay lập tức
+                alert("Hệ thống Google chặn truy xuất (Không trả về JSON). Nội dung lỗi: " + text.substring(0, 150) + "...");
+                dongKhuXemTruoc();
             }
         }).catch(err => {
-            alert("Mất kết nối đường truyền mạng!"); dongKhuXemTruoc();
+            alert("Mất kết nối đường truyền mạng! Vui lòng kiểm tra console."); 
+            dongKhuXemTruoc();
         });
     }
 
