@@ -1259,18 +1259,9 @@ function veGiaoDienThuMucTuTao(data) {
 function taiVeTepTinTrucTiep(idTepTin) {
         let linkTaiVe = "https://drive.google.com/uc?export=download&id=" + idTepTin;
         
-        // Tạo một iframe ẩn để hệ thống tải file ngầm mà không nhảy thẻ mới
-        let khungTaiAn = document.createElement('iframe');
-        khungTaiAn.style.display = 'none';
-        khungTaiAn.src = linkTaiVe;
-        document.body.appendChild(khungTaiAn);
-        
-        // Dọn dẹp DOM (xóa iframe) sau khi luồng tải đã kích hoạt an toàn (10 giây)
-        setTimeout(function() {
-            if (khungTaiAn && khungTaiAn.parentNode) {
-                khungTaiAn.parentNode.removeChild(khungTaiAn);
-            }
-        }, 10000);
+        // [NÂNG CẤP]: Hủy bỏ cơ chế iframe ẩn để tránh bị trình duyệt chặn Cookie chéo (CORS).
+        // Sử dụng window.open giúp trình duyệt tự động bắt luồng tải về an toàn thông qua phiên đăng nhập Google của người dùng.
+        window.open(linkTaiVe, '_blank');
     }
 
 function taiLenTaiLieu() {
@@ -1289,6 +1280,14 @@ function taiLenTaiLieu() {
             let file = e.target.files[0];
             if (!file) return;
 
+            // [NÂNG CẤP]: Bổ sung bộ lọc kiểm soát dung lượng (Giới hạn 25MB)
+            // Tránh tình trạng treo trình duyệt hoặc quá tải máy chủ Google khi chuyển đổi Base64
+            let dungLuongToiDa = 25 * 1024 * 1024; // 25MB
+            if (file.size > dungLuongToiDa) {
+                alert("Cảnh báo: Dung lượng tệp [" + file.name + "] vượt quá giới hạn cho phép (25MB).\n👉 Vui lòng chọn tệp tin nhỏ hơn hoặc tải trực tiếp lên Google Drive.");
+                return;
+            }
+
             // Hiển thị hiệu ứng tải dữ liệu đè lên danh sách thư mục hiện tại
             let khuVucDanhSach = document.getElementById('preview-folder-list');
             let htmlCu = khuVucDanhSach.innerHTML; // Lưu tạm giao diện cũ để khôi phục nếu có lỗi
@@ -1301,7 +1300,7 @@ function taiLenTaiLieu() {
                 let base64Data = event.target.result.split(',')[1];
                 let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
 
-                // 4. Bắn luồng dữ liệu (POST) lên API Backend (Luồng 9 ở Code.gs)
+                // 4. Bắn luồng dữ liệu (POST) lên API Backend
                 fetch(KETNOI.WEB_APP_URL, {
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1341,7 +1340,6 @@ function taiLenTaiLieu() {
         inputChonFile.click();
         document.body.removeChild(inputChonFile);
     }
-
     function chuyenHuongDriveDeXoa(idTepTin) {
         if (idThuMucHienTai && idThuMucHienTai !== "" && idThuMucHienTai !== "undefined") {
             window.open('https://drive.google.com/drive/folders/' + idThuMucHienTai, '_blank');
