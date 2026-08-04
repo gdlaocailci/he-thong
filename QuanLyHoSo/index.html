@@ -1018,8 +1018,8 @@ Hoàng Ngọc Lâm">
         kiemTraTrangThaiDangNhap();
     };
 
-    /* =========================================================================
-       2. KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PREVIEW)
+   /* =========================================================================
+       2. KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PREVIEW) - BẢN KHẮC PHỤC
        ========================================================================= */
     let duongDanTrangHienTai = "";
     let tieuDeHienTai = "";
@@ -1027,7 +1027,8 @@ Hoàng Ngọc Lâm">
     let lichSuDuyet = []; 
     let idThuMucHienTai = "";
     let idFileHienTai = "";
-    let boNhoDemThuMuc = {};
+   
+    window.boNhoDemThuMuc = window.boNhoDemThuMuc || {};
 
     function kiemTraLinkTaiLieu(duongDan) {
         var chuoiKiemTra = duongDan.toLowerCase();
@@ -1067,95 +1068,97 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
     }
 
 function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
-        if (!isBack && duongDanTrangHienTai !== "") {
-            lichSuDuyet.push({ url: duongDanTrangHienTai, title: tieuDeHienTai, id: idThuMucHienTai });
-        }
-        
-        if (duongDanTrangHienTai === "") {
-            tieuDeHoSoGoc = tieuDe;
-            boNhoDemThuMuc = {}; // Làm mới toàn bộ đệm khi mở một phân hệ dự án mới
-        }
-        
-        duongDanTrangHienTai = duongDan; 
-        tieuDeHienTai = tieuDe;
-        
-        document.getElementById('btn-back-preview').style.display = lichSuDuyet.length > 0 ? 'block' : 'none';
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: #ffffff;">visibility</span> Hồ sơ tài liệu: ${tieuDe}`;
-        document.getElementById('window-preview').style.display = 'flex';
-        
-        let laThuMuc = duongDan.includes("/folders/") || duongDan.includes("folderview");
-        var boLocID = duongDan.match(/[-\w]{25,}/);
-        
-        if (truyenId && truyenId !== "" && truyenId !== "undefined" && truyenId !== "null") {
-            if (laThuMuc) idThuMucHienTai = truyenId;
-            else idFileHienTai = truyenId;
-        } else {
-            if (laThuMuc) idThuMucHienTai = boLocID ? boLocID[0] : "";
-            else idFileHienTai = boLocID ? boLocID[0] : "";
-        }
-        
-        let quyenThaoTacFile = false;
-        if (sysRoles && sysRoles.includes('xx')) {
-            quyenThaoTacFile = true; 
-        } else if (sysRoles && sysRoles.includes('quanlyfile')) {
-            if (sysIconRoles && sysIconRoles.split('|').includes(tieuDeHoSoGoc.trim())) {
-                quyenThaoTacFile = true;
+        try {
+            if (!isBack && duongDanTrangHienTai !== "") {
+                lichSuDuyet.push({ url: duongDanTrangHienTai, title: tieuDeHienTai, id: idThuMucHienTai });
             }
-        }
-        
-        document.getElementById('btn-upload-preview').style.display = (laThuMuc && quyenThaoTacFile) ? 'block' : 'none';
-        document.getElementById('btn-download-preview').style.display = !laThuMuc ? 'block' : 'none';
-        document.getElementById('btn-delete-preview').style.display = 'none'; 
-        
-        if (laThuMuc) {
-            idFileHienTai = "";
-            document.getElementById('preview-iframe').style.display = 'none';
-            document.getElementById('preview-folder-list').style.display = 'block';
             
-            // =================================================================
-            // [THUẬT TOÁN ĐIỀU HƯỚNG]: Kiểm tra Cache trước khi gọi API
-            // Loại bỏ hoàn toàn độ trễ khi người dùng ấn nút Quay lại (Back)
-            // =================================================================
-            if (boNhoDemThuMuc[idThuMucHienTai]) {
-                veGiaoDienThuMucTuTao(boNhoDemThuMuc[idThuMucHienTai]);
-                return; // Ngắt luồng gọi API, kết xuất giao diện tức thì
+            if (duongDanTrangHienTai === "") {
+                tieuDeHoSoGoc = tieuDe;
+                window.boNhoDemThuMuc = {}; // Làm mới toàn bộ đệm khi mở phân hệ dự án mới
             }
-
-            document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
             
-            let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
-            fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ 
-                    action: 'getDriveFolderData', 
-                    url: duongDan, 
-                    dinhDanhGiaoDien: taiKhoanGiaoDien, 
-                    khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
-                })
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === "success") {
-                    boNhoDemThuMuc[idThuMucHienTai] = res.data; // Lưu kết quả vào biến đệm O(1)
-                    veGiaoDienThuMucTuTao(res.data);
-                } else {
-                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
-                    let msg = res.message.toLowerCase();
-                    if (msg.includes("phiên đăng nhập") || msg.includes("hết hạn")) {
-                        setTimeout(() => { alert("Cảnh báo: Phiên đăng nhập đã hết hạn. Vui lòng tiến hành đăng nhập lại!"); dangXuat(); }, 1200);
-                    } else if (msg.includes("chặn") || msg.includes("quyền") || msg.includes("chưa được cấp")) {
-                        setTimeout(() => { alert("Hệ thống từ chối: Tài khoản của Thầy/Cô chưa được cấp quyền truy cập cơ sở dữ liệu này."); }, 500);
-                    }
+            duongDanTrangHienTai = duongDan; 
+            tieuDeHienTai = tieuDe;
+            
+            document.getElementById('btn-back-preview').style.display = lichSuDuyet.length > 0 ? 'block' : 'none';
+            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: #ffffff;">visibility</span> Hồ sơ tài liệu: ${tieuDe}`;
+            document.getElementById('window-preview').style.display = 'flex';
+            
+            let laThuMuc = duongDan.includes("/folders/") || duongDan.includes("folderview");
+            var boLocID = duongDan.match(/[-\w]{25,}/);
+            
+            if (truyenId && truyenId !== "" && truyenId !== "undefined" && truyenId !== "null") {
+                if (laThuMuc) idThuMucHienTai = truyenId;
+                else idFileHienTai = truyenId;
+            } else {
+                if (laThuMuc) idThuMucHienTai = boLocID ? boLocID[0] : "";
+                else idFileHienTai = boLocID ? boLocID[0] : "";
+            }
+            
+            let quyenThaoTacFile = false;
+            if (typeof sysRoles !== 'undefined' && sysRoles.includes('xx')) {
+                quyenThaoTacFile = true; 
+            } else if (typeof sysRoles !== 'undefined' && sysRoles.includes('quanlyfile')) {
+                if (typeof sysIconRoles !== 'undefined' && sysIconRoles.split('|').includes(tieuDeHoSoGoc.trim())) {
+                    quyenThaoTacFile = true;
                 }
-            }).catch(e => {
-                document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
-            });
-        } else {
-            idThuMucHienTai = "";
-            document.getElementById('preview-folder-list').style.display = 'none';
-            document.getElementById('preview-iframe').style.display = 'block';
-            document.getElementById('preview-iframe').src = toiUuLinkGoogleDrive(duongDan);
+            }
+            
+            document.getElementById('btn-upload-preview').style.display = (laThuMuc && quyenThaoTacFile) ? 'block' : 'none';
+            document.getElementById('btn-download-preview').style.display = !laThuMuc ? 'block' : 'none';
+            document.getElementById('btn-delete-preview').style.display = 'none'; 
+            
+            if (laThuMuc) {
+                idFileHienTai = "";
+                document.getElementById('preview-iframe').style.display = 'none';
+                document.getElementById('preview-folder-list').style.display = 'block';
+                
+                // =================================================================
+                // KIỂM TRA BỘ NHỚ ĐỆM RAM (O(1))
+                // Giúp nút "Quay lại" phản hồi tức thì (0.01 giây), không độ trễ
+                // =================================================================
+                if (window.boNhoDemThuMuc && window.boNhoDemThuMuc[idThuMucHienTai]) {
+                    veGiaoDienThuMucTuTao(window.boNhoDemThuMuc[idThuMucHienTai]);
+                    return; 
+                }
+
+                document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
+                
+                let taiKhoanGiaoDien = document.getElementById('sys-name') ? document.getElementById('sys-name').innerText : "";
+                
+                fetch(KETNOI.WEB_APP_URL, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'getDriveFolderData', 
+                        url: duongDan, 
+                        dinhDanhGiaoDien: taiKhoanGiaoDien, 
+                        khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === "success") {
+                        window.boNhoDemThuMuc[idThuMucHienTai] = res.data; // Lưu dữ liệu vào RAM
+                        veGiaoDienThuMucTuTao(res.data);
+                    } else {
+                        document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Từ chối truy xuất:</b> ${res.message}</div>`;
+                    }
+                }).catch(e => {
+                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối đường truyền mạng.</div>`;
+                });
+            } else {
+                idThuMucHienTai = "";
+                document.getElementById('preview-folder-list').style.display = 'none';
+                document.getElementById('preview-iframe').style.display = 'block';
+                document.getElementById('preview-iframe').src = toiUuLinkGoogleDrive(duongDan);
+            }
+        } catch (loiGiaoDien) {
+            // [BẪY LỖI TUYỆT ĐỐI]: Bắt mọi lỗi ngầm của trình duyệt và hiển thị ra màn hình
+            console.error("Lỗi giao diện:", loiGiaoDien);
+            document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Lỗi trình duyệt (Client-side):</b> ${loiGiaoDien.message}<br>Vui lòng ấn F5 để tải lại trang.</div>`;
+            document.getElementById('preview-folder-list').style.display = 'block';
         }
     }
 
@@ -1258,8 +1261,8 @@ function veGiaoDienThuMucTuTao(data) {
 function quayLaiTaiLieu() {
         if (lichSuDuyet.length > 0) {
             let mucTruoc = lichSuDuyet.pop();
-            // Việc thiết lập tham số isBack = true kết hợp với bộ nhớ đệm boNhoDemThuMuc 
-            // sẽ giúp thao tác quay lại đạt tốc độ phản hồi ngay lập tức, không sinh lỗi nghẽn.
+            // Việc thiết lập tham số isBack = true kết hợp với window.boNhoDemThuMuc
+            // sẽ giúp thao tác quay lại đạt tốc độ phản hồi ngay lập tức
             moKhungXemTaiLieu(mucTruoc.url, mucTruoc.title, true, mucTruoc.id); 
         }
     }
@@ -1373,7 +1376,7 @@ function dongKhungXemTaiLieu() {
         lichSuDuyet = []; 
         idThuMucHienTai = ""; 
         idFileHienTai = "";
-        boNhoDemThuMuc = {}; // Làm sạch bộ nhớ RAM để đảm bảo vận hành ổn định
+        window.boNhoDemThuMuc = {}; // Giải phóng RAM để hệ thống nhẹ nhàng
     }
 
     function moTabMoiTaiLieu() {
