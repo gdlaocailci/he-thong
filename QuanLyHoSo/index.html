@@ -1141,9 +1141,13 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
                             }, 1200);
                         }
                     }
-                } catch (jsonErr) {
+} catch (jsonErr) {
                     console.error("Dữ liệu trả về không phải JSON:", text);
-                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Lỗi đồng bộ Máy chủ:</b> Yêu cầu Deploy > New version để nhận code mới.</div>`;
+                    document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;">
+                        <span class="material-icons" style="font-size: 48px; margin-bottom: 10px;">timer_off</span><br>
+                        <b>Máy chủ Google từ chối phản hồi (Timeout)</b><br>
+                        Thư mục này chứa quá nhiều tệp tin khiến hệ thống quét bị kiệt sức. Vui lòng sắp xếp lại dữ liệu thư mục!
+                    </div>`;
                 }
             }).catch(e => {
                 document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Cảnh báo:</b> Mất kết nối mạng.</div>`;
