@@ -1032,11 +1032,15 @@ Hoàng Ngọc Lâm">
         return chuoiKiemTra.includes("drive.google.com") || chuoiKiemTra.includes("docs.google.com");
     }
 
-    function toiUuLinkGoogleDrive(duongDanGoc) {
+function toiUuLinkGoogleDrive(duongDanGoc) {
         if (!duongDanGoc) return duongDanGoc;
         let duongDanMoi = duongDanGoc;
         
-        if (duongDanMoi.includes("drive.google.com/file/d/")) {
+        // [NÂNG CẤP THÔNG MINH]: Chỉ áp dụng chế độ xem thu gọn (preview) cho các tệp thông thường (PDF, ảnh, video...),
+        // tuyệt đối KHÔNG ép preview đối với tài liệu Google Docs/Sheets hoặc tệp văn phòng để giữ quyền chỉnh sửa (edit).
+        let laTaiLieuChinhSua = duongDanMoi.includes("docs.google.com") || duongDanMoi.includes("/edit") || duongDanMoi.includes("spreadsheets");
+
+        if (!laTaiLieuChinhSua && duongDanMoi.includes("drive.google.com/file/d/")) {
             duongDanMoi = duongDanMoi.replace(/\/(view|edit)(.*)$/, "/preview");
             if (!duongDanMoi.includes("/preview")) duongDanMoi += "/preview";
             let kyTuNoiToiUu = duongDanMoi.includes("?") ? "&" : "?";
@@ -1052,6 +1056,7 @@ Hoàng Ngọc Lâm">
             }
         }
 
+        // Giữ nguyên cơ chế định tuyến đúng tài khoản hệ thống đang đăng nhập
         let taiKhoanHeThong = localStorage.getItem(PREFIX_MEM + 'sysName');
         if (taiKhoanHeThong && taiKhoanHeThong.includes("@")) {
             let kyTuNoi = duongDanMoi.includes("?") ? "&" : "?";
