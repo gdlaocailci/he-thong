@@ -816,30 +816,22 @@
     </div>
 
 <!-- ========================================================================= -->
-    <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC VÀ LÀM VIỆC KHÉP KÍN (SANDBOX WORKSPACE) -->
+    <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC TỆP / ỨNG DỤNG BÊN TRONG HỆ THỐNG -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
-        <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1400px; display: flex; flex-direction: column;">
+        <div class="window-container" style="width: 90vw; height: 90vh; max-width: 1200px; display: flex; flex-direction: column;">
             <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
-                <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">edit_document</span> Không gian làm việc...</div>
+                <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- ĐÃ XÓA BỎ NÚT MỞ THẺ MỚI ĐỂ ÉP BUỘC LÀM VIỆC TRONG KHUNG -->
-                    <button class="window-close" style="color: white; width: 35px; border-radius: 4px;" onclick="dongKhuXemTruoc()">✕</button>
+                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới (Dùng khi Web bị chặn nhúng)"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
+                    <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
                 </div>
             </div>
-            
-            <!-- THANH CẢNH BÁO QUẢN TRỊ -->
-            <div style="background-color: #fff3e0; border-bottom: 1px solid #ffe0b2; padding: 6px 15px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e65100;">
-                <span class="material-icons" style="font-size: 18px;">info</span>
-                <span><b>Lưu ý:</b> Để xem và nhận xét trực tiếp trong khung này, Thầy/Cô vui lòng đảm bảo chỉ đăng nhập <b>một tài khoản Google duy nhất</b> có quyền truy cập trên trình duyệt (Nếu báo lỗi 403, hãy đăng xuất các tài khoản khác).</span>
-            </div>
-
             <!-- Lớp phủ báo trạng thái đang tải dữ liệu -->
-            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 75px; left: 0; width: 100%; height: calc(100% - 75px); background: #f9f9f9; color: #333; z-index: 1;">
+            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); background: #f9f9f9; color: #333; z-index: 1;">
                 <span class="material-icons" style="color: #1976D2; font-size: 40px;">sync</span>
-                <h3 style="color: #333; font-size: 14px; margin-top: 10px;">Đang thiết lập không gian làm việc...</h3>
+                <h3 style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
             </div>
-            
             <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 2; position: relative;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
         </div>
     </div>
@@ -873,36 +865,25 @@
     let sysRoles = "";       
     let sysIconRoles = "";
 
-// [CẬP NHẬT TỐI ƯU TẬT ĐỂ]: HÀM XỬ LÝ KHU LÀM VIỆC KHÉP KÍN
+// [CẬP NHẬT]: BIẾN VÀ HÀM XỬ LÝ KHU XEM TRƯỚC (PREVIEW ZONE)
     let urlXemTruocHienTai = "";
     
     function moKhuXemTruoc(url, title, target) {
         urlXemTruocHienTai = url;
-        let secureUrl = url;
-
-        // 1. THUẬT TOÁN XỬ LÝ THƯ MỤC: Ép sang dạng nhúng danh sách
-        let folderMatch = secureUrl.match(/drive\.google\.com\/.*folders\/([a-zA-Z0-9-_]+)/) || 
-                          secureUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9-_]+)/);
+        let embedUrl = url;
         
-        if (folderMatch && folderMatch[1]) {
-            secureUrl = 'https://drive.google.com/embeddedfolderview?id=' + folderMatch[1] + '#list';
-        } 
-        // 2. THUẬT TOÁN XỬ LÝ VĂN BẢN/BẢNG TÍNH: Ép sang chế độ CHỈNH SỬA (/edit)
-        // Đảm bảo thanh công cụ nhận xét, chỉnh sửa luôn khả dụng bên trong Iframe
-        else if (secureUrl.includes('docs.google.com/document/d/') || 
-                 secureUrl.includes('docs.google.com/spreadsheets/d/') || 
-                 secureUrl.includes('docs.google.com/presentation/d/')) {
-            secureUrl = secureUrl.replace(/\/(edit|view|preview).*$/, '/edit');
-        }
-        // 3. THUẬT TOÁN XỬ LÝ TỆP LẺ (PDF, Ảnh): Ép sang chế độ xem trước
-        else if (secureUrl.includes('drive.google.com/file/d/')) {
-            secureUrl = secureUrl.replace(/\/(edit|view).*$/, '/preview');
+        // Thuật toán: Chuyển đổi định dạng URL của hệ sinh thái Google sang đuôi /preview để tránh lỗi từ chối kết nối
+        if (embedUrl.includes('drive.google.com/file/d/')) {
+            embedUrl = embedUrl.replace(/\/view.*$/, '/preview');
+        } else if (embedUrl.includes('docs.google.com/document/d/') || 
+                   embedUrl.includes('docs.google.com/spreadsheets/d/') || 
+                   embedUrl.includes('docs.google.com/presentation/d/')) {
+            embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
         }
 
-        // Kích hoạt Iframe
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">edit_document</span> Không gian làm việc: ${title}`;
-        document.getElementById('preview-loading').style.display = 'flex';
-        document.getElementById('preview-iframe').src = secureUrl;
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${title}`;
+        document.getElementById('preview-loading').style.display = 'flex'; 
+        document.getElementById('preview-iframe').src = embedUrl;
         document.getElementById('window-preview').style.display = 'flex';
     }
 
