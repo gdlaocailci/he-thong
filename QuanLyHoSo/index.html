@@ -879,46 +879,127 @@
 // [CẬP NHẬT TỐI ƯU TẬT ĐỂ]: HÀM XỬ LÝ KHU LÀM VIỆC KHÉP KÍN
     let urlXemTruocHienTai = "";
     
-    function moKhuXemTruoc(url, title, target) {
+function moKhuXemTruoc(url, title, target) {
         urlXemTruocHienTai = url;
         let secureUrl = url;
 
-        // 1. THUẬT TOÁN XỬ LÝ THƯ MỤC: Ép sang dạng nhúng danh sách
+        // 1. Nếu là THƯ MỤC -> Dừng tải Iframe, gọi API vẽ giao diện nội bộ
         let folderMatch = secureUrl.match(/drive\.google\.com\/.*folders\/([a-zA-Z0-9-_]+)/) || 
                           secureUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9-_]+)/);
         
         if (folderMatch && folderMatch[1]) {
-            secureUrl = 'https://drive.google.com/embeddedfolderview?id=' + folderMatch[1] + '#list';
-        } 
-        // 2. THUẬT TOÁN XỬ LÝ VĂN BẢN/BẢNG TÍNH: Ép sang chế độ CHỈNH SỬA (/edit)
-        // Đảm bảo thanh công cụ nhận xét, chỉnh sửa luôn khả dụng bên trong Iframe
-        else if (secureUrl.includes('docs.google.com/document/d/') || 
-                 secureUrl.includes('docs.google.com/spreadsheets/d/') || 
-                 secureUrl.includes('docs.google.com/presentation/d/')) {
-            secureUrl = secureUrl.replace(/\/(edit|view|preview).*$/, '/edit');
+            hienThiThuMucDrive(folderMatch[1], title);
+            return;
         }
-        // 3. THUẬT TOÁN XỬ LÝ TỆP LẺ (PDF, Ảnh): Ép sang chế độ xem trước
+
+        // 2. Nếu là TỆP -> Ép định dạng để xem và chỉnh sửa khép kín
+        if (secureUrl.includes('docs.google.com/document/d/') || 
+            secureUrl.includes('docs.google.com/spreadsheets/d/') || 
+            secureUrl.includes('docs.google.com/presentation/d/')) {
+            secureUrl = secureUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+        } 
         else if (secureUrl.includes('drive.google.com/file/d/')) {
             secureUrl = secureUrl.replace(/\/(edit|view).*$/, '/preview');
         }
 
-        // Kích hoạt Iframe
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">edit_document</span> Không gian làm việc: ${title}`;
+        // 3. Ẩn danh sách thư mục, hiển thị Iframe làm việc
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">edit_document</span> Tệp: ${title}`;
+        document.getElementById('drive-folder-list').style.display = 'none';
+        document.getElementById('preview-iframe').style.display = 'block';
         document.getElementById('preview-loading').style.display = 'flex';
+        document.getElementById('preview-loading-text').innerText = 'Đang đồng bộ tệp dữ liệu...';
         document.getElementById('preview-iframe').src = secureUrl;
         document.getElementById('window-preview').style.display = 'flex';
     }
 
-    function dongKhuXemTruoc() {
+function dongKhuXemTruoc() {
         document.getElementById('window-preview').style.display = 'none';
         document.getElementById('preview-iframe').src = ""; 
+        document.getElementById('preview-iframe').style.display = 'none';
+        document.getElementById('drive-folder-list').innerHTML = "";
         urlXemTruocHienTai = "";
     }
     
     function moLienKetGoc() {
         if(urlXemTruocHienTai !== "") { window.open(urlXemTruocHienTai, '_blank'); }
     }
+// [HÀM BỘ TRỢ 1]: Gọi API lấy danh sách tệp
+    function hienThiThuMucDrive(folderId, title) {
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${title}`;
+        document.getElementById('preview-iframe').style.display = 'none'; 
+        document.getElementById('drive-folder-list').style.display = 'none';
+        document.getElementById('preview-loading').style.display = 'flex';
+        document.getElementById('preview-loading-text').innerText = 'Đang trích xuất cấu trúc thư mục từ hệ thống...';
+        document.getElementById('window-preview').style.display = 'flex';
 
+        fetch(KETNOI.WEB_APP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: 'getFolderContents',
+                folderId: folderId,
+                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
+            })
+        })
+        .then(response => response.text())
+        .then(text => {
+            document.getElementById('preview-loading').style.display = 'none';
+            try {
+                let result = JSON.parse(text);
+                if (result.status === 'success') {
+                    renderDriveFileList(result.data, title);
+                } else {
+                    alert("Cảnh báo từ máy chủ: " + result.message);
+                    dongKhuXemTruoc();
+                }
+            } catch(e) {
+                alert("Lỗi cấu trúc phản hồi. Vui lòng kiểm tra log."); dongKhuXemTruoc();
+            }
+        }).catch(err => {
+            alert("Mất kết nối đường truyền mạng!"); dongKhuXemTruoc();
+        });
+    }
+
+    // [HÀM BỘ TRỢ 2]: Tự vẽ giao diện để kiểm soát 100% sự kiện Click
+    function renderDriveFileList(files, folderTitle) {
+        let container = document.getElementById('drive-folder-list');
+        container.innerHTML = `<h3 style="margin-top:0; color:#333; border-bottom:2px solid #1976D2; padding-bottom:10px; font-size:16px;">Cấu trúc tệp: ${folderTitle}</h3>`;
+
+        if (files.length === 0) {
+            container.innerHTML += '<div style="text-align:center; padding: 40px; color:#777; font-size:14px;">Thư mục này hiện chưa có tài liệu.</div>';
+        } else {
+            let ul = document.createElement('div');
+            ul.style.display = 'flex'; ul.style.flexDirection = 'column'; ul.style.gap = '10px';
+
+            files.forEach(f => {
+                let row = document.createElement('div');
+                row.style.padding = '12px 18px'; row.style.border = '1px solid #e0e0e0'; row.style.borderRadius = '6px';
+                row.style.cursor = 'pointer'; row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '15px';
+                row.style.transition = 'all 0.2s';
+                
+                row.onmouseover = () => { row.style.background = '#e3f2fd'; row.style.borderColor = '#2196F3'; };
+                row.onmouseout = () => { row.style.background = '#ffffff'; row.style.borderColor = '#e0e0e0'; };
+
+                let icon = 'insert_drive_file'; let color = '#757575';
+                if (f.mimeType.includes('document')) { icon = 'description'; color = '#1976D2'; }
+                else if (f.mimeType.includes('spreadsheet')) { icon = 'table_chart'; color = '#388E3C'; }
+                else if (f.mimeType.includes('presentation')) { icon = 'slideshow'; color = '#F57C00'; }
+                else if (f.mimeType.includes('pdf')) { icon = 'picture_as_pdf'; color = '#d32f2f'; }
+
+                row.innerHTML = `<span class="material-icons" style="color:${color}; font-size:28px;">${icon}</span>
+                                 <span style="flex:1; font-size:14px; font-weight:600; color:#333;">${f.name}</span>
+                                 <span class="material-icons" style="color:#1976D2; font-size:20px;" title="Mở làm việc">keyboard_arrow_right</span>`;
+
+                // TRỌNG TÂM KỸ THUẬT: Khi bấm vào tệp, gọi lại hàm moKhuXemTruoc để mở thẳng vào Iframe
+                row.onclick = () => moKhuXemTruoc(f.url, f.name, '_blank');
+                
+                ul.appendChild(row);
+            });
+            container.appendChild(ul);
+        }
+        document.getElementById('preview-iframe').style.display = 'none';
+        document.getElementById('drive-folder-list').style.display = 'block';
+    }
+    
 function getUrlAndTarget(encodedTd2) {
         let decodedStr = encodedTd2 || '';
         try {
