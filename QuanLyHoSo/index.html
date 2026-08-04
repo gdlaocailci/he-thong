@@ -1113,9 +1113,10 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
             document.getElementById('preview-folder-list').innerHTML = '<div class="loading-screen" style="position:relative; background:transparent;"><span class="material-icons" style="color:#1976D2;">sync</span><h3 style="color:#333;">Hệ thống đang đồng bộ cấu trúc lưu trữ...</h3></div>';
             
             let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
-            // [NÂNG CẤP]: Lược bỏ dinhDanhGiaoDien, xử lý lỗi đăng xuất an toàn
+// [NÂNG CẤP]: Bổ sung credentials: 'omit' để triệt tiêu xung đột đa tài khoản khi mở thư mục
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', 
+                credentials: 'omit', // Bắt buộc chặn Cookie trình duyệt tại luồng trích xuất dữ liệu
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ 
                     action: 'getDriveFolderData', 
@@ -1133,7 +1134,6 @@ function moKhungXemTaiLieu(duongDan, tieuDe, isBack = false, truyenId = "") {
                         document.getElementById('preview-folder-list').innerHTML = `<div style="padding: 30px 20px; color: #d32f2f; text-align: center;"><b>Từ chối truy xuất:</b> ${parsedRes.message}</div>`;
                         
                         let msg = parsedRes.message.toLowerCase();
-                        // CHỈ đăng xuất nếu thực sự lỗi Token hoặc hết phiên
                         if (msg.includes("hết phiên") || msg.includes("token")) {
                             setTimeout(() => { 
                                 alert("Cảnh báo: Phiên đăng nhập hết hạn. Vui lòng tải lại trang và đăng nhập lại!");
