@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -876,22 +875,33 @@
     // [CẬP NHẬT]: BIẾN VÀ HÀM XỬ LÝ KHU XEM TRƯỚC (PREVIEW ZONE)
     let urlXemTruocHienTai = "";
     
-    function moKhuXemTruoc(url, title, target) {
+function moKhuXemTruoc(url, title, target) {
         urlXemTruocHienTai = url;
-        let embedUrl = url;
-        
-        // Thuật toán: Chuyển đổi định dạng URL của hệ sinh thái Google sang đuôi /preview để tránh lỗi từ chối kết nối
-        if (embedUrl.includes('drive.google.com/file/d/')) {
-            embedUrl = embedUrl.replace(/\/view.*$/, '/preview');
-        } else if (embedUrl.includes('docs.google.com/document/d/') || 
-                   embedUrl.includes('docs.google.com/spreadsheets/d/') || 
-                   embedUrl.includes('docs.google.com/presentation/d/')) {
-            embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
+
+        // Thuật toán định tuyến thông minh: Nhận diện hệ sinh thái Google
+        let isGoogleWorkspace = url.includes('drive.google.com') || 
+                                url.includes('docs.google.com') || 
+                                url.includes('script.google.com');
+
+        if (isGoogleWorkspace) {
+            // GIẢI PHÁP TỐI ƯU: Mở Popup Window nổi chính giữa màn hình thay vì Iframe
+            // Kỹ thuật này vượt qua chính sách chặn Cookie, đảm bảo giữ nguyên quyền truy cập, xem, và nhận xét.
+            let w = Math.min(1100, window.screen.width * 0.85);
+            let h = Math.min(750, window.screen.height * 0.85);
+            let left = (screen.width / 2) - (w / 2);
+            let top = (screen.height / 2) - (h / 2);
+
+            let popupFeatures = `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=${w}, height=${h}, top=${top}, left=${left}`;
+            window.open(url, '_blank', popupFeatures);
+            
+            dongKhuXemTruoc(); // Đảm bảo đóng khung nền tối phía sau nếu nó vô tình hiện
+            return; 
         }
 
+        // Đối với các liên kết website thông thường không bị chặn Cookie
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${title}`;
-        document.getElementById('preview-loading').style.display = 'flex'; 
-        document.getElementById('preview-iframe').src = embedUrl;
+        document.getElementById('preview-loading').style.display = 'flex';
+        document.getElementById('preview-iframe').src = url;
         document.getElementById('window-preview').style.display = 'flex';
     }
 
