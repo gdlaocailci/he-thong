@@ -1492,10 +1492,9 @@ function taiLenTaiLieu() {
     }
 
 function xacThucPhienDangNhap(sysSession) {
-        // [NÂNG CẤP]: Bổ sung credentials: 'omit' để triệt tiêu hoàn toàn xung đột đa tài khoản từ bộ nhớ trình duyệt
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', 
-            credentials: 'omit', 
+            credentials: 'omit', // Triệt tiêu xung đột đa tài khoản từ bộ nhớ trình duyệt
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
         })
@@ -1505,7 +1504,7 @@ function xacThucPhienDangNhap(sysSession) {
                 let result = JSON.parse(text);
                 if (result.status === 'success') { 
                     isLoggedIn = true;
-                    let accountName = result.thongTinXacThuc || "Đã đăng nhập";
+                    let accountName = result.thongTinXacThuc || "Khách truy cập (Chưa cấp quyền)";
                     
                     document.getElementById('sys-name').innerText = accountName; 
                     document.getElementById('btn-logout').style.display = 'flex';
@@ -1522,11 +1521,27 @@ function xacThucPhienDangNhap(sysSession) {
                     dangXuat(); 
                 }
             } catch (jsonError) {
-                console.error("Cảnh báo máy chủ khi xác thực:", text);
-                alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Hệ thống sẽ làm mới phiên làm việc.");
+                // [BẪY LỖI CHUYÊN SÂU]: Ép Google khai báo lý do từ chối
+                let loaiLoi = text;
+                if (text.includes("Script function not found") || text.includes("SyntaxError")) {
+                    loaiLoi = "Lỗi cú pháp tại Code.gs (Thường do dư/thiếu dấu ngoặc khi thao tác Copy/Paste).";
+                } else if (text.includes("Authorization is required")) {
+                    loaiLoi = "Tài khoản quản trị bị mất quyền ủy quyền. Hãy mở Code.gs và chạy lại hàm kichHoatQuyen.";
+                } else if (text.includes("Service invoked too many times")) {
+                    loaiLoi = "Hệ thống báo quá giới hạn truy cập API của Google trong ngày.";
+                } else {
+                    loaiLoi = "Mã HTML từ máy chủ:\n" + text.substring(0, 250) + "..."; 
+                }
+                
+                alert("HỆ THỐNG PHÁT HIỆN TỪ CHỐI TRUY CẬP\n\n🔍 Dữ liệu bẫy được:\n" + loaiLoi + "\n\n👉 Thầy/Cô vui lòng chụp màn hình thông báo này để chúng ta phân tích mạch logic ngầm.");
+                console.error("Mã lỗi thô từ Google:", text);
                 dangXuat();
             }
-        }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
+        }).catch(error => {
+            alert("Cảnh báo: Đường truyền mạng chập chờn hoặc máy chủ Google không phản hồi.");
+            console.error("Lỗi mạng:", error);
+            dangXuat();
+        });
     }
 
     function apDungPhanQuyen(roles) {
