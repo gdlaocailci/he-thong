@@ -1252,14 +1252,15 @@ function renderIconsFromData(data) {
 
             div.style.animationDelay = (index * 0.04) + 's';
 
+            // [CẬP NHẬT TỐI ƯU]: Thuật toán kiểm tra quyền để quyết định ẩn/hiện ổ khóa
             let duocPhepMo = false;
             if (item.isPublic) {
                 duocPhepMo = true;
             } else if (isLoggedIn) {
                 if (sysRoles && sysRoles.includes('xx')) {
-                    duocPhepMo = true;
+                    duocPhepMo = true; // Quản trị viên (xx) được mở mọi icon
                 } else if (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim())) {
-                    duocPhepMo = true;
+                    duocPhepMo = true; // Tài khoản thường nhưng được cấp quyền icon đích
                 }
             }
             
@@ -1281,8 +1282,7 @@ function renderIconsFromData(data) {
                 let parsed = getUrlAndTarget(item.td2);
                 
                 if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    // [CẬP NHẬT TỐI ƯU 2]: Mở trong Khu Xem Trước thay vì mở tab mới
-                    moKhuXemTruoc(parsed.url, item.td1, parsed.target);
+                    window.open(parsed.url, parsed.target);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -1324,6 +1324,7 @@ function moCuaSoThuMuc(tenThuMuc) {
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
+                // [CẬP NHẬT TỐI ƯU]: Thuật toán kiểm tra quyền để quyết định ẩn/hiện ổ khóa trong thư mục con
                 let duocPhepMo = false;
                 if (item.isPublic) {
                     duocPhepMo = true;
@@ -1353,8 +1354,7 @@ function moCuaSoThuMuc(tenThuMuc) {
                     let parsed = getUrlAndTarget(item.td2);
                     
                     if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        // [CẬP NHẬT TỐI ƯU 2]: Mở trong Khu Xem Trước thay vì mở tab mới
-                        moKhuXemTruoc(parsed.url, item.td1, parsed.target);
+                        window.open(parsed.url, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
