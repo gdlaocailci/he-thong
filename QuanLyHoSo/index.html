@@ -1430,7 +1430,7 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
     }
 
 function xacThucPhienDangNhap(sysSession) {
-        // [NÂNG CẤP]: Thêm bộ điều khiển thời gian (Timeout 5 giây) để ngắt lệnh nếu mạng treo
+        // [NÂNG CẤP]: Thêm Timeout 5 giây để ngắt lệnh nếu máy chủ Google treo
         const boDieuKhienThoiGian = new AbortController();
         const gioiHanThoiGian = setTimeout(() => boDieuKhienThoiGian.abort(), 5000);
 
@@ -1438,10 +1438,10 @@ function xacThucPhienDangNhap(sysSession) {
             method: 'POST', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }),
-            signal: boDieuKhienThoiGian.signal // Gắn tín hiệu ngắt Timeout
+            signal: boDieuKhienThoiGian.signal
         })
         .then(response => {
-            clearTimeout(gioiHanThoiGian); // Hủy bộ đếm nếu máy chủ phản hồi đúng hạn
+            clearTimeout(gioiHanThoiGian);
             return response.text();
         })
         .then(text => {
@@ -1452,23 +1452,21 @@ function xacThucPhienDangNhap(sysSession) {
                     let accountName = result.thongTinXacThuc || "Đã đăng nhập";
                     document.getElementById('sys-name').innerText = accountName; 
                     document.getElementById('btn-logout').style.display = 'flex';
-                    
-                    // [BẢO TOÀN LÕI]: Khôi phục giữ nguyên vẹn logic lấy ma trận quyền
                     sysRoles = result.roles || "";
                     sysIconRoles = result.iconRoles || "";
                     
                     localStorage.setItem(PREFIX_MEM + 'sysRoles', sysRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysIconRoles', sysIconRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
-                    
-                    // Kích hoạt phân quyền lên giao diện
                     apDungPhanQuyen(sysRoles); 
                 } else { 
+                    // [ĐÃ TINH CHỈNH]: Chỉ hiển thị cảnh báo nhẹ, không tự động ép đăng xuất gây phiền toái
                     console.warn("Phản hồi xác thực:", result.message);
                     document.getElementById('sys-name').innerText = "Khách (Chưa xác thực)";
                 }
             } catch (jsonError) {
-                // Bẫy lỗi JSON hoặc phản hồi HTML rác từ server
+                // [BẪY LỖI THÔNG MINH]: Nếu máy chủ trả về HTML hoặc lỗi mạng tạm thời, 
+                // hệ thống sẽ sử dụng lại dữ liệu Cache cũ trên trình duyệt thay vì bắt người dùng đăng nhập lại từ đầu.
                 let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
                 let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
                 if (cachedName && cachedRoles !== null) {
@@ -1484,9 +1482,9 @@ function xacThucPhienDangNhap(sysSession) {
             }
         }).catch(error => {
             clearTimeout(gioiHanThoiGian);
-            console.warn("Lỗi đường truyền hoặc Timeout:", error);
+            console.error("Lỗi đường truyền xác thực:", error);
             
-            // [CƠ CHẾ DỰ PHÒNG CHỐNG TREO]: Sử dụng lại logic bẫy lỗi để nạp ma trận quyền từ Cache khi mạng nghẽn
+            // [NÂNG CẤP]: Mở rộng Bẫy lỗi thông minh - Khôi phục từ Cache khi bị Timeout mạng
             let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
             let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
             if (cachedName && cachedRoles !== null) {
@@ -1496,8 +1494,6 @@ function xacThucPhienDangNhap(sysSession) {
                 sysRoles = cachedRoles;
                 sysIconRoles = localStorage.getItem(PREFIX_MEM + 'sysIconRoles') || "";
                 apDungPhanQuyen(sysRoles);
-            } else {
-                document.getElementById('sys-name').innerText = "Khách (Chưa xác thực)";
             }
         });
     }
