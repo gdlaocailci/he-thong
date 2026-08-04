@@ -1015,15 +1015,18 @@ Hoàng Ngọc Lâm">
         }
     }
 
-    window.onload = function() {
+window.onload = function() {
         google.accounts.id.initialize({ 
             client_id: KETNOI.CLIENT_ID, 
             callback: xuLyDangNhapThanhCong 
         });
-        taiBieuTuongCongKhai();
-        kiemTraTrangThaiDangNhap();
+        
+        // [NÂNG CẤP]: Chuyển luồng từ "Đồng thời" sang "Tuần tự" để tránh xung đột LockService
+        // Tải xong không gian làm việc (Icon) thì mới bắt đầu xác thực phiên đăng nhập
+        taiBieuTuongCongKhai(function() {
+            kiemTraTrangThaiDangNhap();
+        });
     };
-
     /* =========================================================================
        2. KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PREVIEW) - ĐÃ ĐỒNG BỘ LOGIC
        ========================================================================= */
