@@ -816,22 +816,22 @@
     </div>
 
 <!-- ========================================================================= -->
-    <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC TỆP / ỨNG DỤNG BÊN TRONG HỆ THỐNG -->
+    <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC KHÉP KÍN (SANDBOX PREVIEW) -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 90vw; height: 90vh; max-width: 1200px; display: flex; flex-direction: column;">
             <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới để cấp quyền/đổi tài khoản"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
+                    <!-- ĐÃ KHÓA: Hủy bỏ hoàn toàn nút mở sang thẻ mới theo chỉ đạo -->
                     <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
                 </div>
             </div>
             
-            <!-- [CẬP NHẬT]: THANH CẢNH BÁO XUNG ĐỘT TÀI KHOẢN -->
+            <!-- THANH CẢNH BÁO QUẢN TRỊ (Hướng dẫn xử lý lỗi 403 nội bộ) -->
             <div style="background-color: #fff3e0; border-bottom: 1px solid #ffe0b2; padding: 6px 15px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e65100;">
                 <span class="material-icons" style="font-size: 16px;">info</span>
-                <span><b>Lưu ý:</b> Nếu khung bên dưới báo lỗi <b>403</b>, trình duyệt đang kẹt tài khoản. Vui lòng bấm nút <b>[Mở Thẻ Mới]</b> ở góc trên bên phải để đổi email truy cập.</span>
+                <span><b>Quy định hệ thống:</b> Nếu khung bên dưới báo lỗi <b>403</b>, Thầy/Cô vui lòng đăng xuất các tài khoản Gmail cá nhân trên trình duyệt, <b>chỉ giữ lại duy nhất tài khoản đã được cấp quyền</b> để đảm bảo an toàn thông tin.</span>
             </div>
 
             <!-- Lớp phủ báo trạng thái đang tải dữ liệu -->
@@ -872,55 +872,44 @@
     let sysRoles = "";       
     let sysIconRoles = "";
 
-    // [CẬP NHẬT]: BIẾN VÀ HÀM XỬ LÝ KHU XEM TRƯỚC (PREVIEW ZONE)
+// [CẬP NHẬT TỐI ƯU TẬT ĐỂ]: HÀM XỬ LÝ KHU XEM TRƯỚC KHÉP KÍN
     let urlXemTruocHienTai = "";
     
-// [CẬP NHẬT TỐI ƯU]: HÀM XỬ LÝ KHU XEM TRƯỚC VỚI THUẬT TOÁN "MINIMAL MODE"
     function moKhuXemTruoc(url, title, target) {
         urlXemTruocHienTai = url;
+        let secureUrl = url;
 
-        // Phân loại liên kết thuộc hệ sinh thái Google
-        let isGoogleWorkspace = url.includes('drive.google.com') || 
-                                url.includes('docs.google.com') || 
-                                url.includes('script.google.com');
-
-        if (isGoogleWorkspace) {
-            let secureUrl = url;
-            
-            // THUẬT TOÁN 1: Xử lý file Văn bản / Bảng tính / Trình chiếu (Cho phép nhận xét nhưng khóa điều hướng)
-            if (secureUrl.includes('docs.google.com/document/d/') || 
-                secureUrl.includes('docs.google.com/spreadsheets/d/') || 
-                secureUrl.includes('docs.google.com/presentation/d/')) {
-                // Ép URL sang chế độ Minimal (Giấu thanh Menu và nút Trang chủ Docs, giữ lại tính năng Nhận xét)
-                secureUrl = secureUrl.replace(/\/edit.*$/, '/edit?rm=minimal');
-            } 
-            // THUẬT TOÁN 2: Xử lý file PDF, Ảnh, Media lưu trên Drive
-            else if (secureUrl.includes('drive.google.com/file/d/')) {
-                // Ép URL sang chế độ Preview (Xóa bỏ toàn bộ thanh công cụ của Drive)
-                secureUrl = secureUrl.replace(/\/view.*$/, '/preview');
-            }
-
-            // Kích hoạt Cửa sổ Nổi Khép Kín (Tước quyền thanh địa chỉ và nút điều hướng của trình duyệt)
-            let w = Math.min(1100, window.screen.width * 0.85);
-            let h = Math.min(750, window.screen.height * 0.85);
-            let left = (screen.width / 2) - (w / 2);
-            let top = (screen.height / 2) - (h / 2);
-
-            let popupFeatures = `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=${w}, height=${h}, top=${top}, left=${left}`;
-            
-            // Mở cửa sổ popup với URL đã được khóa chặt
-            window.open(secureUrl, '_blank', popupFeatures);
-            
-            // Ẩn khung iframe tối màu phía sau để giao diện sạch sẽ
-            dongKhuXemTruoc(); 
-            return; 
+        // 1. THUẬT TOÁN NHÚNG THƯ MỤC DRIVE (Ngăn hiển thị toàn bộ giao diện Drive)
+        // Tìm và trích xuất ID thư mục từ các định dạng URL khác nhau của Google Drive
+        let folderMatch = secureUrl.match(/drive\.google\.com\/.*folders\/([a-zA-Z0-9-_]+)/) || 
+                          secureUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9-_]+)/);
+        
+        if (folderMatch && folderMatch[1]) {
+            // Thay thế bằng URL nhúng chuẩn của Google dành cho thư mục (Chỉ hiện danh sách tệp)
+            secureUrl = 'https://drive.google.com/embeddedfolderview?id=' + folderMatch[1] + '#list';
+        } 
+        // 2. THUẬT TOÁN NHÚNG TỆP DRIVE (Ảnh, PDF, Video...)
+        else if (secureUrl.includes('drive.google.com/file/d/')) {
+            secureUrl = secureUrl.replace(/\/view.*$/, '/preview');
+        }
+        // 3. THUẬT TOÁN NHÚNG VĂN BẢN/BẢNG TÍNH (Giấu Menu, khóa điều hướng)
+        else if (secureUrl.includes('docs.google.com/document/d/') || 
+                 secureUrl.includes('docs.google.com/spreadsheets/d/') || 
+                 secureUrl.includes('docs.google.com/presentation/d/')) {
+            secureUrl = secureUrl.replace(/\/edit.*$/, '/edit?rm=minimal');
         }
 
-        // Đối với các liên kết Website thông thường (Không bị lỗi 403) thì vẫn mở trong Iframe nội bộ
+        // BẮT BUỘC 100% MỞ TRONG IFRAME (Hủy bỏ cơ chế Popup)
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${title}`;
         document.getElementById('preview-loading').style.display = 'flex';
-        document.getElementById('preview-iframe').src = url;
+        document.getElementById('preview-iframe').src = secureUrl;
         document.getElementById('window-preview').style.display = 'flex';
+    }
+
+    function dongKhuXemTruoc() {
+        document.getElementById('window-preview').style.display = 'none';
+        document.getElementById('preview-iframe').src = ""; 
+        urlXemTruocHienTai = "";
     }
 
     function dongKhuXemTruoc() {
