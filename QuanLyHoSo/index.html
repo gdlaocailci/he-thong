@@ -1308,13 +1308,14 @@ function taiLenTaiLieu() {
             // 3. Sử dụng FileReader để chuyển đổi file thành chuỗi Base64
             let reader = new FileReader();
             reader.onload = function(event) {
-                // Tách bỏ phần tiền tố định dạng (VD: data:image/png;base64,...)
+                // Tách bỏ phần tiền tố định dạng
                 let base64Data = event.target.result.split(',')[1];
                 let taiKhoanGiaoDien = document.getElementById('sys-name').innerText;
 
-                // 4. Bắn luồng dữ liệu (POST) lên API Backend (Luồng 9 ở Code.gs)
+                // 4. Bắn luồng dữ liệu (POST) lên API Backend
                 fetch(KETNOI.WEB_APP_URL, {
                     method: 'POST', 
+                    credentials: 'omit', // [NÂNG CẤP]: Bổ sung chốt chặn chống xung đột đa tài khoản
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
                         action: 'uploadFileToDrive', 
@@ -1326,15 +1327,21 @@ function taiLenTaiLieu() {
                         khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') 
                     })
                 })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.status === 'success') {
-                        // Tải lên thành công -> Làm mới (Refresh) lại khung xem ngay lập tức
-                        // Truyền isBack = true để không ghi đè lịch sử điều hướng
-                        moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
-                    } else {
-                        khuVucDanhSach.innerHTML = htmlCu; // Khôi phục danh sách nếu lỗi
-                        alert("Sự cố tải lên: " + res.message);
+                .then(res => res.text()) // [NÂNG CẤP]: Lấy text thô để chống bẫy lỗi HTML
+                .then(text => {
+                    try {
+                        let res = JSON.parse(text);
+                        if (res.status === 'success') {
+                            // Tải lên thành công -> Làm mới lại khung xem ngay lập tức
+                            moKhungXemTaiLieu(duongDanTrangHienTai, tieuDeHienTai, true, idThuMucHienTai);
+                        } else {
+                            khuVucDanhSach.innerHTML = htmlCu; // Khôi phục danh sách nếu lỗi
+                            alert("Sự cố tải lên: " + res.message);
+                        }
+                    } catch (jsonErr) {
+                        khuVucDanhSach.innerHTML = htmlCu;
+                        console.error("Lỗi HTML máy chủ khi tải tệp:", text);
+                        alert("Máy chủ Google từ chối luồng tải tệp. \nNguyên nhân: Tệp quá dung lượng hoặc phiên bản Web App chưa đồng bộ.");
                     }
                 })
                 .catch(err => {
