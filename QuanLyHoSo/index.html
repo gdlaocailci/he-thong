@@ -1020,12 +1020,8 @@ window.onload = function() {
             client_id: KETNOI.CLIENT_ID, 
             callback: xuLyDangNhapThanhCong 
         });
-        
-        // [NÂNG CẤP]: Chuyển luồng từ "Đồng thời" sang "Tuần tự" để tránh xung đột LockService
-        // Tải xong không gian làm việc (Icon) thì mới bắt đầu xác thực phiên đăng nhập
-        taiBieuTuongCongKhai(function() {
-            kiemTraTrangThaiDangNhap();
-        });
+        // Ưu tiên kiểm tra đăng nhập để hiển thị nút Google NGAY LẬP TỨC
+        kiemTraTrangThaiDangNhap();
     };
     /* =========================================================================
        2. KHỐI XỬ LÝ KHUNG XEM TÀI LIỆU TRỰC TIẾP (PREVIEW) - ĐÃ ĐỒNG BỘ LOGIC
@@ -1383,7 +1379,7 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
         });
     }
 
-    function kiemTraTrangThaiDangNhap() {
+function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
             isLoggedIn = false;
@@ -1395,6 +1391,9 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
                 theme: "outline", size: "medium", type: "standard", text: "signin" 
             });
             google.accounts.id.prompt();
+            
+            // Trạng thái khách: Đã hiện nút xong, bắt đầu tải dữ liệu không gian
+            taiBieuTuongCongKhai();
         } else {
             document.getElementById('btn-google-login').style.display = 'none'; 
             document.getElementById('sys-name').style.display = 'block';
@@ -1410,8 +1409,12 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
                 sysRoles = cachedRoles;
                 sysIconRoles = cachedIconRoles || "";
                 apDungPhanQuyen(sysRoles);
+                
+                // Có sẵn Cache phân quyền: Tải dữ liệu không gian ngay
+                taiBieuTuongCongKhai();
             } else {
                 document.getElementById('sys-name').innerText = "Đang xác thực...";
+                // Mất Cache: Phải gọi xác thực mạng trước, tải dữ liệu sau để tránh kẹt băng thông
                 xacThucPhienDangNhap(sysSession);
             }
         }
@@ -1433,7 +1436,6 @@ function toiUuLinkGoogleDrive(duongDanGoc) {
     }
 
 function xacThucPhienDangNhap(sysSession) {
-        // [NÂNG CẤP]: Thêm Timeout 5 giây để ngắt lệnh nếu máy chủ Google treo
         const boDieuKhienThoiGian = new AbortController();
         const gioiHanThoiGian = setTimeout(() => boDieuKhienThoiGian.abort(), 5000);
 
@@ -1463,13 +1465,10 @@ function xacThucPhienDangNhap(sysSession) {
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
                     apDungPhanQuyen(sysRoles); 
                 } else { 
-                    // [ĐÃ TINH CHỈNH]: Chỉ hiển thị cảnh báo nhẹ, không tự động ép đăng xuất gây phiền toái
                     console.warn("Phản hồi xác thực:", result.message);
                     document.getElementById('sys-name').innerText = "Khách (Chưa xác thực)";
                 }
             } catch (jsonError) {
-                // [BẪY LỖI THÔNG MINH]: Nếu máy chủ trả về HTML hoặc lỗi mạng tạm thời, 
-                // hệ thống sẽ sử dụng lại dữ liệu Cache cũ trên trình duyệt thay vì bắt người dùng đăng nhập lại từ đầu.
                 let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
                 let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
                 if (cachedName && cachedRoles !== null) {
@@ -1487,7 +1486,6 @@ function xacThucPhienDangNhap(sysSession) {
             clearTimeout(gioiHanThoiGian);
             console.error("Lỗi đường truyền xác thực:", error);
             
-            // [NÂNG CẤP]: Mở rộng Bẫy lỗi thông minh - Khôi phục từ Cache khi bị Timeout mạng
             let cachedName = localStorage.getItem(PREFIX_MEM + 'sysName');
             let cachedRoles = localStorage.getItem(PREFIX_MEM + 'sysRoles');
             if (cachedName && cachedRoles !== null) {
@@ -1498,6 +1496,10 @@ function xacThucPhienDangNhap(sysSession) {
                 sysIconRoles = localStorage.getItem(PREFIX_MEM + 'sysIconRoles') || "";
                 apDungPhanQuyen(sysRoles);
             }
+        }).finally(() => {
+            // [CỐT LÕI MỚI]: Đảm bảo quá trình xác thực ngầm chạy xong hoàn toàn, 
+            // giải phóng LockService xong thì mới gọi tải dữ liệu Icon.
+            taiBieuTuongCongKhai();
         });
     }
 
