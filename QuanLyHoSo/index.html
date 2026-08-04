@@ -1492,9 +1492,10 @@ function taiLenTaiLieu() {
     }
 
 function xacThucPhienDangNhap(sysSession) {
+        // [NÂNG CẤP]: Bổ sung credentials: 'omit' để triệt tiêu hoàn toàn xung đột đa tài khoản từ bộ nhớ trình duyệt
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', 
-            credentials: 'omit', // BỔ SUNG DÒNG NÀY: Ép trình duyệt không gửi Cookie để chống xung đột đa tài khoản
+            credentials: 'omit', 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
         })
