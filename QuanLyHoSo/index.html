@@ -514,7 +514,7 @@
         });
     }
 
-    function veGiaoDienThuMucDrive(data) {
+function veGiaoDienThuMucDrive(data) {
         let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #e0e0e0;">';
         html += '<tr style="background: #f1f8ff; border-bottom: 2px solid #1976D2;"><th style="text-align: left; padding: 12px 15px; color:#1976D2;">Tên Dữ liệu</th><th style="width: 120px; text-align: center; color:#1976D2;">Định dạng</th></tr>';
 
@@ -525,7 +525,8 @@
                 let icon = item.type === 'folder' ? '<span class="material-icons" style="color: #F57C00; vertical-align: middle; margin-right: 10px; font-size: 24px;">folder</span>' : '<span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span>';
                 let typeText = item.type === 'folder' ? 'Thư mục' : 'Tệp tin';
 
-                html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${item.id}', '${item.type}', '${item.name.replace(/'/g, "\\'")}')">
+                // [CẬP NHẬT] Truyền thêm mimeType vào hàm onClick
+                html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${item.id}', '${item.type}', '${item.name.replace(/'/g, "\\'")}', '${item.mimeType || ''}')">
                     <td style="padding: 12px 15px; font-weight: 500; color: #333;">${icon} ${item.name}</td>
                     <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">${typeText}</td>
                 </tr>`;
@@ -535,7 +536,7 @@
         document.getElementById('preview-custom-folder').innerHTML = html;
     }
 
-    function moItemTuThuMuc(id, type, name) {
+    function moItemTuThuMuc(id, type, name, mimeType) {
         if (type === 'folder') {
             let newUrl = 'https://drive.google.com/drive/folders/' + id;
             urlXemTruocHienTai = newUrl; 
@@ -548,7 +549,19 @@
             document.getElementById('btn-preview-back').style.display = 'flex';
             document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${name}`;
 
-            let fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
+            let fileUrl = "";
+            // [CẬP NHẬT] Phân loại MimeType để giữ nguyên thanh công cụ Chỉnh sửa/Nhận xét
+            if (mimeType === 'application/vnd.google-apps.document') {
+                fileUrl = 'https://docs.google.com/document/d/' + id + '/edit';
+            } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
+                fileUrl = 'https://docs.google.com/spreadsheets/d/' + id + '/edit';
+            } else if (mimeType === 'application/vnd.google-apps.presentation') {
+                fileUrl = 'https://docs.google.com/presentation/d/' + id + '/edit';
+            } else {
+                // PDF, Ảnh, Video sẽ ép sang preview
+                fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
+            }
+
             urlXemTruocHienTai = fileUrl; 
             
             document.getElementById('preview-loading-text').innerText = 'Hệ thống đang trích xuất nội dung tệp...';
