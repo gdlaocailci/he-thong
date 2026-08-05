@@ -605,7 +605,7 @@
         document.getElementById('preview-custom-folder').innerHTML = html;
     }
 
-    // 2. BỔ SUNG HÀM XÓA TRỰC TIẾP TỪ BẢNG (Xóa xong ẩn dòng ngay lập tức 0s)
+// 2. BỔ SUNG HÀM XÓA TRỰC TIẾP TỪ BẢNG (Xóa xong ẩn dòng ngay lập tức 0s)
     function xuLyXoaTepTrucTiep(fileId, rowElement) {
         if (!confirm("Cảnh báo: Thầy/Cô có chắc chắn muốn xóa tệp này vào Thùng rác Drive?")) return;
         
@@ -616,6 +616,7 @@
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ĐÃ SỬA LỖI MẤT KẾT NỐI
             body: JSON.stringify({
                 action: 'deleteDriveFile', url: fileUrl,
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
@@ -633,14 +634,14 @@
         });
     }
 
-    // 3. CẬP NHẬT HÀM TẢI LÊN (DOM Injection thêm nút Xóa cho tệp vừa tải)
+// 3. CẬP NHẬT HÀM TẢI LÊN (DOM Injection)
     function xuLyTaiLenTuKhung() {
         const fileInput = document.getElementById('preview-upload-input');
         const file = fileInput.files[0];
         if (!file) return;
 
         if (file.size > 25 * 1024 * 1024) {
-            showAlertModal("<b>CẢNH BÁO DUNG LƯỢNG</b><br><br>Hệ thống chỉ hỗ trợ tải lên tệp tin tối đa <b>25MB</b> qua cổng giao tiếp trực tiếp. Vui lòng nén nhỏ tệp tin của Thầy/Cô!");
+            showAlertModal("<b>CẢNH BÁO DUNG LƯỢNG</b><br><br>Hệ thống chỉ hỗ trợ tải lên tệp tin tối đa <b>25MB</b>. Vui lòng nén nhỏ tệp tin của Thầy/Cô!");
             fileInput.value = "";
             return;
         }
@@ -658,7 +659,9 @@
             document.getElementById('preview-loading-text').innerText = 'Đang mã hóa và đẩy tệp lên máy chủ lưu trữ...';
 
             fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST', body: JSON.stringify(payload)
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ĐÃ SỬA LỖI MẤT KẾT NỐI
+                body: JSON.stringify(payload)
             }).then(r => r.json()).then(res => {
                 fileInput.value = ""; 
                 if(res.status === 'success') { 
@@ -678,7 +681,7 @@
                                 <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">Tệp tin</td>
                                 ${actionBtn}
                             </tr>`;
-                            tableBody.insertAdjacentHTML('afterbegin', newRowHTML); // Đẩy file mới lên đầu bảng cho dễ nhìn
+                            tableBody.insertAdjacentHTML('afterbegin', newRowHTML); 
                         }
                     }
                 } else { 
@@ -836,7 +839,7 @@
         reader.readAsDataURL(file);
     }
 
-    function xuLyXoaTepTuKhung() {
+function xuLyXoaTepTuKhung() {
         if (!confirm("Cảnh báo: Thầy/Cô có chắc chắn muốn xóa tệp này vào Thùng rác Drive?")) return;
         
         document.getElementById('preview-loading').style.display = 'flex';
@@ -844,6 +847,7 @@
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ĐÃ SỬA LỖI MẤT KẾT NỐI
             body: JSON.stringify({
                 action: 'deleteDriveFile', url: urlXemTruocHienTai,
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
