@@ -355,7 +355,6 @@
                             <label class="checkbox-label"><input type="checkbox" id="role-ganhoso" value="ganhoso"> Nút Gán dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Quản lý dữ liệu</label>
                             
-                            <!-- BỔ SUNG CẤU HÌNH TÍNH NĂNG XEM TRƯỚC VÀ THAO TÁC FILE -->
                             <label class="checkbox-label" style="color:#1976D2;"><input type="checkbox" id="role-nhanxet" value="nhanxet"> Quyền Xem & Nhận xét</label>
                             <label class="checkbox-label" style="color:#F57C00;"><input type="checkbox" id="role-tailen" value="tailen"> Quyền Tải lên & Sửa, Xóa tệp</label>
                             
@@ -389,6 +388,7 @@
 
     <!-- ========================================================================= -->
     <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
+    <!-- ĐÃ XÓA TOÀN BỘ NÚT MỞ THẺ MỚI NHẰM ÉP TƯƠNG TÁC 100% TRONG KHUNG        -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
@@ -396,7 +396,6 @@
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- Nút Quay lại thư mục cha -->
                     <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
                     </button>
@@ -409,7 +408,6 @@
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">delete</span> Xóa tệp
                     </button>
                     
-                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px; margin-left: 10px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
                     <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
                 </div>
             </div>
@@ -419,10 +417,8 @@
                 <h3 id="preview-loading-text" style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
             </div>
             
-            <!-- Vùng 1: Hiển thị danh sách File tự dựng -->
             <div id="preview-custom-folder" class="window-content" style="display: none; background: #fff; padding: 20px; overflow-y: auto; flex: 1; z-index: 2; position: relative;"></div>
             
-            <!-- Vùng 2: Iframe hiển thị ruột File -->
             <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 1; position: relative; display: none;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
         </div>
     </div>
@@ -514,7 +510,7 @@
         });
     }
 
-function veGiaoDienThuMucDrive(data) {
+    function veGiaoDienThuMucDrive(data) {
         let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #e0e0e0;">';
         html += '<tr style="background: #f1f8ff; border-bottom: 2px solid #1976D2;"><th style="text-align: left; padding: 12px 15px; color:#1976D2;">Tên Dữ liệu</th><th style="width: 120px; text-align: center; color:#1976D2;">Định dạng</th></tr>';
 
@@ -525,7 +521,6 @@ function veGiaoDienThuMucDrive(data) {
                 let icon = item.type === 'folder' ? '<span class="material-icons" style="color: #F57C00; vertical-align: middle; margin-right: 10px; font-size: 24px;">folder</span>' : '<span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span>';
                 let typeText = item.type === 'folder' ? 'Thư mục' : 'Tệp tin';
 
-                // [CẬP NHẬT] Truyền thêm mimeType vào hàm onClick
                 html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${item.id}', '${item.type}', '${item.name.replace(/'/g, "\\'")}', '${item.mimeType || ''}')">
                     <td style="padding: 12px 15px; font-weight: 500; color: #333;">${icon} ${item.name}</td>
                     <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">${typeText}</td>
@@ -547,18 +542,19 @@ function veGiaoDienThuMucDrive(data) {
             document.getElementById('preview-custom-folder').style.display = 'none';
             document.getElementById('preview-iframe').style.display = 'block';
             document.getElementById('btn-preview-back').style.display = 'flex';
-            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${name}`;
+            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${name}`;
 
             let fileUrl = "";
-            // [CẬP NHẬT] Phân loại MimeType để giữ nguyên thanh công cụ Chỉnh sửa/Nhận xét
-            if (mimeType === 'application/vnd.google-apps.document') {
+            let mime = mimeType ? mimeType.toLowerCase() : "";
+
+            // Nâng cấp: Nhận diện cả Google Format và MS Office Format để mở Full Editor
+            if (mime.includes('document') || mime.includes('word') || mime === 'application/msword') {
                 fileUrl = 'https://docs.google.com/document/d/' + id + '/edit';
-            } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
+            } else if (mime.includes('spreadsheet') || mime.includes('excel')) {
                 fileUrl = 'https://docs.google.com/spreadsheets/d/' + id + '/edit';
-            } else if (mimeType === 'application/vnd.google-apps.presentation') {
+            } else if (mime.includes('presentation') || mime.includes('powerpoint')) {
                 fileUrl = 'https://docs.google.com/presentation/d/' + id + '/edit';
             } else {
-                // PDF, Ảnh, Video sẽ ép sang preview
                 fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
             }
 
@@ -588,10 +584,6 @@ function veGiaoDienThuMucDrive(data) {
         document.getElementById('preview-custom-folder').innerHTML = "";
         urlXemTruocHienTai = "";
         thuMucHienTaiId = "";
-    }
-    
-    function moLienKetGoc() {
-        if(urlXemTruocHienTai !== "") { window.open(urlXemTruocHienTai, '_blank'); }
     }
 
     function xuLyTaiLenTuKhung() {
