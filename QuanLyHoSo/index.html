@@ -355,6 +355,7 @@
                             <label class="checkbox-label"><input type="checkbox" id="role-ganhoso" value="ganhoso"> Nút Gán dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Quản lý dữ liệu</label>
                             
+                            <!-- BỔ SUNG CẤU HÌNH TÍNH NĂNG XEM TRƯỚC VÀ THAO TÁC FILE -->
                             <label class="checkbox-label" style="color:#1976D2;"><input type="checkbox" id="role-nhanxet" value="nhanxet"> Quyền Xem & Nhận xét</label>
                             <label class="checkbox-label" style="color:#F57C00;"><input type="checkbox" id="role-tailen" value="tailen"> Quyền Tải lên & Sửa, Xóa tệp</label>
                             
@@ -388,7 +389,6 @@
 
     <!-- ========================================================================= -->
     <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
-    <!-- ĐÃ XÓA TOÀN BỘ NÚT MỞ THẺ MỚI NHẰM ÉP TƯƠNG TÁC 100% TRONG KHUNG        -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
@@ -398,6 +398,11 @@
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
+                    </button>
+
+                    <!-- [CẬP NHẬT] Nút chuyển đổi sang chế độ Chỉnh sửa/Nhận xét -->
+                    <button id="btn-preview-edit" class="window-close" style="color: white; background: #E65100; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 5px;" onclick="chuyenCheDoChinhSua()" title="Mở bộ công cụ Chỉnh sửa / Nhận xét">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">edit_note</span> Chỉnh sửa / Nhận xét
                     </button>
 
                     <input type="file" id="preview-upload-input" style="display: none;" onchange="xuLyTaiLenTuKhung()">
@@ -446,6 +451,7 @@
 
 // =========================================================================
 // [CẬP NHẬT ĐỒNG BỘ]: KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ
+// Khóa 100% bằng chế độ /preview, chỉ cho phép Chỉnh sửa qua Nút bấm
 // =========================================================================
     let urlXemTruocHienTai = "";
     let thuMucHienTaiId = ""; 
@@ -460,7 +466,8 @@
         document.getElementById('btn-preview-upload').style.display = hasEditUploadRole ? 'flex' : 'none';
         document.getElementById('btn-preview-delete').style.display = hasEditUploadRole ? 'flex' : 'none';
         document.getElementById('btn-preview-back').style.display = 'none';
-
+        document.getElementById('btn-preview-edit').style.display = 'none'; 
+        
         document.getElementById('preview-iframe').style.display = 'none';
         document.getElementById('preview-custom-folder').style.display = 'none';
         document.getElementById('window-preview').style.display = 'flex';
@@ -468,6 +475,7 @@
 
         let folderIdMatch = embedUrl.match(/folders\/([-\w]{25,})/);
         if (!folderIdMatch) folderIdMatch = embedUrl.match(/open\?id=([-\w]{25,})/);
+        let fileIdMatch = embedUrl.match(/d\/([-\w]{25,})/);
 
         if (folderIdMatch && !embedUrl.includes('file/d/')) {
             thuMucHienTaiId = folderIdMatch[1];
@@ -476,10 +484,26 @@
             thuMucHienTaiId = "";
             document.getElementById('preview-iframe').style.display = 'block';
 
+            let canEdit = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen') || sysRoles.includes('nhanxet')));
+            let isGoogleDoc = embedUrl.includes('docs.google.com');
+            
+            // Hiện nút nếu có quyền và là file Google Docs/Sheets
+            if (isGoogleDoc && canEdit && fileIdMatch) {
+                document.getElementById('btn-preview-edit').style.display = 'flex';
+                document.getElementById('btn-preview-edit').setAttribute('data-id', fileIdMatch[1]);
+                if (embedUrl.includes('document')) document.getElementById('btn-preview-edit').setAttribute('data-mime', 'document');
+                else if (embedUrl.includes('spreadsheets')) document.getElementById('btn-preview-edit').setAttribute('data-mime', 'spreadsheet');
+                else if (embedUrl.includes('presentation')) document.getElementById('btn-preview-edit').setAttribute('data-mime', 'presentation');
+            }
+
+            // Ép mọi tệp về /preview mặc định để khóa chặt giao diện
             if (embedUrl.includes('drive.google.com/file/d/')) {
                 embedUrl = embedUrl.replace(/\/view.*$/, '/preview');
+            } else if (isGoogleDoc) {
+                embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
             }
-            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải dữ liệu tệp, vui lòng chờ...';
+
+            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải dữ liệu tệp an toàn, vui lòng chờ...';
             document.getElementById('preview-loading').style.display = 'flex'; 
             document.getElementById('preview-iframe').src = embedUrl;
         }
@@ -542,33 +566,57 @@
             document.getElementById('preview-custom-folder').style.display = 'none';
             document.getElementById('preview-iframe').style.display = 'block';
             document.getElementById('btn-preview-back').style.display = 'flex';
-            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${name}`;
+            document.getElementById('btn-preview-edit').style.display = 'none';
+            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${name}`;
 
-            let fileUrl = "";
+            let fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
             let mime = mimeType ? mimeType.toLowerCase() : "";
 
-            // Nâng cấp: Nhận diện cả Google Format và MS Office Format để mở Full Editor
-            if (mime.includes('document') || mime.includes('word') || mime === 'application/msword') {
-                fileUrl = 'https://docs.google.com/document/d/' + id + '/edit';
-            } else if (mime.includes('spreadsheet') || mime.includes('excel')) {
-                fileUrl = 'https://docs.google.com/spreadsheets/d/' + id + '/edit';
-            } else if (mime.includes('presentation') || mime.includes('powerpoint')) {
-                fileUrl = 'https://docs.google.com/presentation/d/' + id + '/edit';
-            } else {
-                fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
+            let canEdit = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen') || sysRoles.includes('nhanxet')));
+            let isGoogleDoc = mime.includes('document') || mime.includes('word') || mime === 'application/msword' || 
+                              mime.includes('spreadsheet') || mime.includes('excel') || 
+                              mime.includes('presentation') || mime.includes('powerpoint');
+
+            if (isGoogleDoc && canEdit) {
+                document.getElementById('btn-preview-edit').style.display = 'flex';
+                document.getElementById('btn-preview-edit').setAttribute('data-id', id);
+                document.getElementById('btn-preview-edit').setAttribute('data-mime', mime);
             }
 
             urlXemTruocHienTai = fileUrl; 
-            
-            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang trích xuất nội dung tệp...';
+            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang trích xuất nội dung tệp an toàn...';
             document.getElementById('preview-loading').style.display = 'flex';
             document.getElementById('preview-iframe').src = fileUrl;
         }
     }
 
+    // [THUẬT TOÁN ĐẶC BIỆT] Kích hoạt Chỉnh sửa với bộ Minimal UI (Xóa Menu, Cấm mở tệp khác)
+    function chuyenCheDoChinhSua() {
+        let id = document.getElementById('btn-preview-edit').getAttribute('data-id');
+        let mime = document.getElementById('btn-preview-edit').getAttribute('data-mime');
+        let editUrl = "";
+
+        if (mime.includes('document') || mime.includes('word') || mime === 'application/msword') {
+            editUrl = 'https://docs.google.com/document/d/' + id + '/edit?rm=minimal';
+        } else if (mime.includes('spreadsheet') || mime.includes('excel')) {
+            editUrl = 'https://docs.google.com/spreadsheets/d/' + id + '/edit?rm=minimal';
+        } else if (mime.includes('presentation') || mime.includes('powerpoint')) {
+            editUrl = 'https://docs.google.com/presentation/d/' + id + '/edit?rm=minimal';
+        } else {
+            editUrl = 'https://drive.google.com/file/d/' + id + '/edit?rm=minimal';
+        }
+
+        document.getElementById('preview-loading-text').innerText = 'Đang khởi tạo không gian Chỉnh sửa/Nhận xét độc lập...';
+        document.getElementById('preview-loading').style.display = 'flex';
+        document.getElementById('preview-iframe').src = editUrl;
+        
+        document.getElementById('btn-preview-edit').style.display = 'none';
+    }
+
     function quayLaiThuMuc() {
         if (!thuMucHienTaiId) return;
         document.getElementById('btn-preview-back').style.display = 'none';
+        document.getElementById('btn-preview-edit').style.display = 'none';
         document.getElementById('preview-iframe').src = "";
         document.getElementById('preview-iframe').style.display = 'none';
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${titleHienTai}`;
