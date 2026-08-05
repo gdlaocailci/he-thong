@@ -249,7 +249,7 @@
                         <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
                         <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
                         <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
-                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia định)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
                 <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
@@ -355,7 +355,6 @@
                             <label class="checkbox-label"><input type="checkbox" id="role-ganhoso" value="ganhoso"> Nút Gán dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Quản lý dữ liệu</label>
                             
-                            <!-- BỔ SUNG CẤU HÌNH TÍNH NĂNG XEM TRƯỚC VÀ THAO TÁC FILE -->
                             <label class="checkbox-label" style="color:#1976D2;"><input type="checkbox" id="role-nhanxet" value="nhanxet"> Quyền Xem & Nhận xét</label>
                             <label class="checkbox-label" style="color:#F57C00;"><input type="checkbox" id="role-tailen" value="tailen"> Quyền Tải lên & Sửa, Xóa tệp</label>
                             
@@ -389,6 +388,7 @@
 
     <!-- ========================================================================= -->
     <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
+    <!-- ĐÃ CẤU HÌNH LOẠI BỎ TOÀN BỘ NÚT MỞ THẺ MỚI. ÉP TƯƠNG TÁC 100% TRONG KHUNG -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
@@ -396,11 +396,12 @@
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
+                    <!-- Nút Quay lại 0 giây bằng cách hiển thị lại DOM -->
                     <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
                     </button>
 
-                    <!-- [CẬP NHẬT] Nút chuyển đổi sang chế độ Chỉnh sửa/Nhận xét -->
+                    <!-- Nút chuyển đổi Chỉnh sửa (Loại bỏ Menu, cấm mở file khác) -->
                     <button id="btn-preview-edit" class="window-close" style="color: white; background: #E65100; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 5px;" onclick="chuyenCheDoChinhSua()" title="Mở bộ công cụ Chỉnh sửa / Nhận xét">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">edit_note</span> Chỉnh sửa / Nhận xét
                     </button>
@@ -451,7 +452,6 @@
 
 // =========================================================================
 // [CẬP NHẬT ĐỒNG BỘ]: KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ
-// Khóa 100% bằng chế độ /preview, chỉ cho phép Chỉnh sửa qua Nút bấm
 // =========================================================================
     let urlXemTruocHienTai = "";
     let thuMucHienTaiId = ""; 
@@ -462,9 +462,9 @@
         titleHienTai = title;
         let embedUrl = url;
         
-        let hasEditUploadRole = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
-        document.getElementById('btn-preview-upload').style.display = hasEditUploadRole ? 'flex' : 'none';
-        document.getElementById('btn-preview-delete').style.display = hasEditUploadRole ? 'flex' : 'none';
+        let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
+        
+        document.getElementById('btn-preview-upload').style.display = hasTailen ? 'flex' : 'none';
         document.getElementById('btn-preview-back').style.display = 'none';
         document.getElementById('btn-preview-edit').style.display = 'none'; 
         
@@ -479,15 +479,16 @@
 
         if (folderIdMatch && !embedUrl.includes('file/d/')) {
             thuMucHienTaiId = folderIdMatch[1];
+            document.getElementById('btn-preview-delete').style.display = 'none'; 
             taiDuLieuThuMucDrive(embedUrl);
         } else {
             thuMucHienTaiId = "";
             document.getElementById('preview-iframe').style.display = 'block';
-
+            document.getElementById('btn-preview-delete').style.display = hasTailen ? 'flex' : 'none'; 
+            
             let canEdit = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen') || sysRoles.includes('nhanxet')));
             let isGoogleDoc = embedUrl.includes('docs.google.com');
             
-            // Hiện nút nếu có quyền và là file Google Docs/Sheets
             if (isGoogleDoc && canEdit && fileIdMatch) {
                 document.getElementById('btn-preview-edit').style.display = 'flex';
                 document.getElementById('btn-preview-edit').setAttribute('data-id', fileIdMatch[1]);
@@ -496,7 +497,7 @@
                 else if (embedUrl.includes('presentation')) document.getElementById('btn-preview-edit').setAttribute('data-mime', 'presentation');
             }
 
-            // Ép mọi tệp về /preview mặc định để khóa chặt giao diện
+            // Ép chết chế độ Preview để khóa thanh Menu gốc của Google
             if (embedUrl.includes('drive.google.com/file/d/')) {
                 embedUrl = embedUrl.replace(/\/view.*$/, '/preview');
             } else if (isGoogleDoc) {
@@ -556,17 +557,26 @@
     }
 
     function moItemTuThuMuc(id, type, name, mimeType) {
+        let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
+
         if (type === 'folder') {
             let newUrl = 'https://drive.google.com/drive/folders/' + id;
             urlXemTruocHienTai = newUrl; 
-            taiDuLieuThuMucDrive(newUrl);
+            thuMucHienTaiId = id; 
+            titleHienTai = name;  
+            
             document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${name}`;
-            document.getElementById('btn-preview-back').style.display = 'flex'; 
+            document.getElementById('btn-preview-back').style.display = 'none'; 
+            document.getElementById('btn-preview-delete').style.display = 'none'; 
+            
+            taiDuLieuThuMucDrive(newUrl);
         } else {
             document.getElementById('preview-custom-folder').style.display = 'none';
             document.getElementById('preview-iframe').style.display = 'block';
-            document.getElementById('btn-preview-back').style.display = 'flex';
+            document.getElementById('btn-preview-back').style.display = 'flex'; 
             document.getElementById('btn-preview-edit').style.display = 'none';
+            document.getElementById('btn-preview-upload').style.display = hasTailen ? 'flex' : 'none';
+            document.getElementById('btn-preview-delete').style.display = hasTailen ? 'flex' : 'none'; 
             document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${name}`;
 
             let fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
@@ -590,7 +600,6 @@
         }
     }
 
-    // [THUẬT TOÁN ĐẶC BIỆT] Kích hoạt Chỉnh sửa với bộ Minimal UI (Xóa Menu, Cấm mở tệp khác)
     function chuyenCheDoChinhSua() {
         let id = document.getElementById('btn-preview-edit').getAttribute('data-id');
         let mime = document.getElementById('btn-preview-edit').getAttribute('data-mime');
@@ -615,15 +624,22 @@
 
     function quayLaiThuMuc() {
         if (!thuMucHienTaiId) return;
+        
+        let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
+
         document.getElementById('btn-preview-back').style.display = 'none';
         document.getElementById('btn-preview-edit').style.display = 'none';
+        document.getElementById('btn-preview-delete').style.display = 'none'; 
+        document.getElementById('btn-preview-upload').style.display = hasTailen ? 'flex' : 'none';
+        
         document.getElementById('preview-iframe').src = "";
         document.getElementById('preview-iframe').style.display = 'none';
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${titleHienTai}`;
+        
+        document.getElementById('preview-custom-folder').style.display = 'block';
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${titleHienTai}`;
 
         let rootUrl = 'https://drive.google.com/drive/folders/' + thuMucHienTaiId;
         urlXemTruocHienTai = rootUrl;
-        taiDuLieuThuMucDrive(rootUrl);
     }
 
     function dongKhuXemTruoc() {
@@ -685,6 +701,7 @@
                 alert('Đã chuyển tệp vào thùng rác!'); 
                 if (document.getElementById('btn-preview-back').style.display === 'flex' && thuMucHienTaiId) {
                     quayLaiThuMuc(); 
+                    taiDuLieuThuMucDrive(urlXemTruocHienTai); 
                 } else {
                     dongKhuXemTruoc();
                 }
