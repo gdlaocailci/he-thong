@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2c3e50">
     
-    <meta name="author" content="Phát triển Hoàng Ngọc Lâm">
+    <meta name="author" content="Phát triển và thiết kế: Hoàng Ngọc Lâm">
     <title id="sys-title">Hồ sơ</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://apis.google.com/js/api.js"></script> 
@@ -720,7 +720,7 @@
         </div>
     </div>
 
-    <!-- KHỐI QUẢN LÝ DỰ ÁN ĐA NHIỆM (ĐÃ THU GỌN VÀ CHỈNH SỬA) -->
+    <!-- KHỐI QUẢN LÝ DỰ ÁN ĐA NHIỆM -->
     <div id="window-xoa-hoso" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
@@ -750,7 +750,7 @@
         </div>
     </div>
 
-    <!-- KHỐI MA TRẬN PHÂN QUYỀN (ĐÃ KIỂM TRA DOM) -->
+    <!-- KHỐI MA TRẬN PHÂN QUYỀN (ĐÃ BỔ SUNG QUYỀN PREVIEW) -->
     <div id="window-phanquyen" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar">
@@ -774,6 +774,11 @@
                             <label class="checkbox-label"><input type="checkbox" id="role-taohoso" value="taohoso"> Nút Tạo dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-ganhoso" value="ganhoso"> Nút Gán dữ liệu</label>
                             <label class="checkbox-label"><input type="checkbox" id="role-xoahoso" value="xoahoso"> Nút Quản lý dữ liệu</label>
+                            
+                            <!-- BỔ SUNG CẤU HÌNH TÍNH NĂNG XEM TRƯỚC VÀ THAO TÁC FILE -->
+                            <label class="checkbox-label" style="color:#1976D2;"><input type="checkbox" id="role-nhanxet" value="nhanxet"> Quyền Xem & Nhận xét</label>
+                            <label class="checkbox-label" style="color:#F57C00;"><input type="checkbox" id="role-tailen" value="tailen"> Quyền Tải lên & Sửa, Xóa tệp</label>
+                            
                             <label class="checkbox-label" style="color:#d32f2f; font-weight: bold;">
                                 <input type="checkbox" id="role-xx" value="xx"> Quản trị tối cao (Admin)
                             </label>
@@ -815,22 +820,32 @@
         </div>
     </div>
 
-<!-- ========================================================================= -->
-    <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC TỆP / ỨNG DỤNG BÊN TRONG HỆ THỐNG -->
+    <!-- ========================================================================= -->
+    <!-- KHỐI NÂNG CẤP: KHU XEM TRƯỚC (PREVIEW ZONE) FULL 95% MÀN HÌNH -->
+    <!-- Đã tích hợp API Tải lên và Xóa File theo Phân quyền -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
-        <div class="window-container" style="width: 90vw; height: 90vh; max-width: 1200px; display: flex; flex-direction: column;">
+        <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
             <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
+                
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới (Dùng khi Web bị chặn nhúng)"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
+                    <input type="file" id="preview-upload-input" style="display: none;" onchange="xuLyTaiLenTuKhung()">
+                    <button id="btn-preview-upload" class="window-close" style="color: white; background: #388E3C; width: auto; padding: 0 10px; font-size: 13px; display: none;" onclick="document.getElementById('preview-upload-input').click()" title="Tải tệp lên thư mục này">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">upload_file</span> Tải lên
+                    </button>
+                    <button id="btn-preview-delete" class="window-close" style="color: white; background: #d32f2f; width: auto; padding: 0 10px; font-size: 13px; display: none;" onclick="xuLyXoaTepTuKhung()" title="Xóa tệp đang xem">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">delete</span> Xóa tệp
+                    </button>
+                    
+                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px; margin-left: 10px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới (Dùng khi Web bị chặn nhúng)"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
                     <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
                 </div>
             </div>
             <!-- Lớp phủ báo trạng thái đang tải dữ liệu -->
             <div id="preview-loading" class="loading-screen" style="position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); background: #f9f9f9; color: #333; z-index: 1;">
                 <span class="material-icons" style="color: #1976D2; font-size: 40px;">sync</span>
-                <h3 style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
+                <h3 id="preview-loading-text" style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
             </div>
             <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 2; position: relative;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
         </div>
@@ -865,12 +880,19 @@
     let sysRoles = "";       
     let sysIconRoles = "";
 
-// [CẬP NHẬT]: BIẾN VÀ HÀM XỬ LÝ KHU XEM TRƯỚC (PREVIEW ZONE)
+// =========================================================================
+// [CẬP NHẬT]: BIẾN VÀ HÀM XỬ LÝ KHU XEM TRƯỚC (PREVIEW ZONE TÍCH HỢP DRIVE)
+// =========================================================================
     let urlXemTruocHienTai = "";
     
     function moKhuXemTruoc(url, title, target) {
         urlXemTruocHienTai = url;
         let embedUrl = url;
+        
+        // Cấp quyền hiển thị Nút Upload/Delete nếu là Admin (xx) hoặc có quyền Tải lên (tailen)
+        let hasEditUploadRole = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
+        document.getElementById('btn-preview-upload').style.display = hasEditUploadRole ? 'flex' : 'none';
+        document.getElementById('btn-preview-delete').style.display = hasEditUploadRole ? 'flex' : 'none';
         
         // Thuật toán: Chuyển đổi định dạng URL của hệ sinh thái Google sang đuôi /preview để tránh lỗi từ chối kết nối
         if (embedUrl.includes('drive.google.com/file/d/')) {
@@ -881,7 +903,8 @@
             embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
         }
 
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${title}`;
+        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${title}`;
+        document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải tệp, vui lòng chờ...';
         document.getElementById('preview-loading').style.display = 'flex'; 
         document.getElementById('preview-iframe').src = embedUrl;
         document.getElementById('window-preview').style.display = 'flex';
@@ -895,6 +918,63 @@
     
     function moLienKetGoc() {
         if(urlXemTruocHienTai !== "") { window.open(urlXemTruocHienTai, '_blank'); }
+    }
+
+    // Giao thức Tải lên tệp (Dùng FileReader mã hóa Base64 để gửi qua GAS API)
+    function xuLyTaiLenTuKhung() {
+        const fileInput = document.getElementById('preview-upload-input');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64 = e.target.result.split(',')[1];
+            const payload = {
+                action: 'uploadFile', 
+                fileName: file.name, 
+                mimeType: file.type,
+                base64: base64, 
+                url: urlXemTruocHienTai,
+                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
+            };
+            
+            document.getElementById('preview-loading').style.display = 'flex';
+            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải tệp lên, xin vui lòng chờ...';
+
+            fetch(KETNOI.WEB_APP_URL, {
+                method: 'POST', body: JSON.stringify(payload)
+            }).then(r => r.json()).then(res => {
+                document.getElementById('preview-loading').style.display = 'none';
+                fileInput.value = ""; 
+                if(res.status === 'success') { 
+                    alert('Đã tải lên thành công! Kính nhờ Thầy/Cô tải lại trang để làm mới hiển thị.'); 
+                } else { alert("Lỗi xử lý: " + res.message); }
+            }).catch(e => { alert("Mất kết nối đường truyền mạng!"); document.getElementById('preview-loading').style.display = 'none'; });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Giao thức Xóa tệp
+    function xuLyXoaTepTuKhung() {
+        if (!confirm("Cảnh báo an ninh: Thầy/Cô có chắc chắn muốn xóa tệp này và chuyển vào Thùng rác Google Drive không?")) return;
+        
+        document.getElementById('preview-loading').style.display = 'flex';
+        document.getElementById('preview-loading-text').innerText = 'Đang tiến hành xử lý lệnh xóa tệp...';
+
+        fetch(KETNOI.WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deleteDriveFile', 
+                url: urlXemTruocHienTai,
+                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
+            })
+        }).then(r => r.json()).then(res => {
+            document.getElementById('preview-loading').style.display = 'none';
+            if(res.status === 'success') { 
+                alert('Tệp đã được chuyển vào thùng rác thành công!'); 
+                dongKhuXemTruoc();
+            } else { alert("Lỗi xử lý từ máy chủ: " + res.message); }
+        }).catch(e => { alert("Mất kết nối đường truyền mạng!"); document.getElementById('preview-loading').style.display = 'none'; });
     }
 
 function getUrlAndTarget(encodedTd2) {
@@ -1019,7 +1099,6 @@ function getUrlAndTarget(encodedTd2) {
                 sysIconRoles = cachedIconRoles || "";
                 apDungPhanQuyen(sysRoles);
                 
-                // [NÂNG CẤP] Đồng bộ ID để nhận diện LocalStorage liên thông với phân hệ
                 sessionStorage.setItem("SCV_ACTIVE_ID", cachedName || "Khách");
                 localStorage.setItem("SCV_ACTIVE_ID", cachedName || "Khách");
                 setTimeout(kiemTraCongVanMoi, 500);
@@ -1069,7 +1148,6 @@ function getUrlAndTarget(encodedTd2) {
                     localStorage.setItem(PREFIX_MEM + 'sysIconRoles', sysIconRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
 
-                    // [NÂNG CẤP] Đồng bộ ID định danh cho các phân hệ
                     sessionStorage.setItem("SCV_ACTIVE_ID", accountName);
                     localStorage.setItem("SCV_ACTIVE_ID", accountName);
 
@@ -1113,7 +1191,6 @@ function apDungPhanQuyen(roles) {
             }
         }
         
-        // [CẬP NHẬT TỐI ƯU]: Gọi lại hàm vẽ lưới Desktop (Render) để đồng bộ hiển thị ổ khóa theo quyền vừa nhận dạng. Quá trình này diễn ra mượt mà và an toàn.
         if (globalProfiles && globalProfiles.length > 0) {
             renderIconsFromData(globalProfiles);
         }
@@ -1233,15 +1310,14 @@ function renderIconsFromData(data) {
 
             div.style.animationDelay = (index * 0.04) + 's';
 
-            // [CẬP NHẬT TỐI ƯU]: Thuật toán kiểm tra quyền để quyết định ẩn/hiện ổ khóa
             let duocPhepMo = false;
             if (item.isPublic) {
                 duocPhepMo = true;
             } else if (isLoggedIn) {
                 if (sysRoles && sysRoles.includes('xx')) {
-                    duocPhepMo = true; // Quản trị viên (xx) được mở mọi icon
+                    duocPhepMo = true;
                 } else if (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim())) {
-                    duocPhepMo = true; // Tài khoản thường nhưng được cấp quyền icon đích
+                    duocPhepMo = true;
                 }
             }
             
@@ -1249,6 +1325,7 @@ function renderIconsFromData(data) {
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
+            // Cập nhật Sự kiện Click với Nhận diện Drive Link
             div.onclick = function() { 
                 if (isDragging) { isDragging = false; return; }
                 if (kiemTraLaThuMuc(item)) {
@@ -1261,9 +1338,15 @@ function renderIconsFromData(data) {
                 }
                 
                 let parsed = getUrlAndTarget(item.td2);
+                let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                 
-                if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                    window.open(parsed.url, parsed.target);
+                if (allowed) {
+                    // Tự động nhận diện link Drive/Docs để mở trong khung xem trước 95%
+                    if (parsed.url.includes("drive.google.com") || parsed.url.includes("docs.google.com")) {
+                        moKhuXemTruoc(parsed.url, item.td1, parsed.target);
+                    } else {
+                        window.open(parsed.url, parsed.target);
+                    }
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -1305,7 +1388,6 @@ function moCuaSoThuMuc(tenThuMuc) {
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
-                // [CẬP NHẬT TỐI ƯU]: Thuật toán kiểm tra quyền để quyết định ẩn/hiện ổ khóa trong thư mục con
                 let duocPhepMo = false;
                 if (item.isPublic) {
                     duocPhepMo = true;
@@ -1326,6 +1408,7 @@ function moCuaSoThuMuc(tenThuMuc) {
 
                 div.innerHTML = `<div style="position:relative;">${moveOutBtn}${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
                 
+                // Cập nhật Sự kiện Click với Nhận diện Drive Link trong Thư mục con
                 div.onclick = function() { 
                     if (!isLoggedIn && !item.isPublic) {
                         showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để có thể tương tác với cơ sở dữ liệu này!");
@@ -1333,9 +1416,14 @@ function moCuaSoThuMuc(tenThuMuc) {
                     }
                     
                     let parsed = getUrlAndTarget(item.td2);
+                    let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                     
-                    if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
-                        window.open(parsed.url, parsed.target);
+                    if (allowed) {
+                        if (parsed.url.includes("drive.google.com") || parsed.url.includes("docs.google.com")) {
+                            moKhuXemTruoc(parsed.url, item.td1, parsed.target);
+                        } else {
+                            window.open(parsed.url, parsed.target);
+                        }
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
@@ -2088,14 +2176,18 @@ function xuLySuaHoSo() {
         });
     }
 
+    // [CẬP NHẬT] Đẩy thông tin quyền mới vào mảng hiển thị
     function hienThiBangQuyen(danhSachQuyen) {
         const tbody = document.getElementById('bang-phanquyen-body'); tbody.innerHTML = '';
         if (danhSachQuyen.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; return; }
         danhSachQuyen.forEach(quyen => {
             const tr = document.createElement('tr'); let displayRoles = [];
+            
             if (quyen.roles.includes('taohoso')) displayRoles.push('Tạo dữ liệu');
             if (quyen.roles.includes('ganhoso')) displayRoles.push('Gán dữ liệu');
             if (quyen.roles.includes('xoahoso')) displayRoles.push('Quản lý dữ liệu');
+            if (quyen.roles.includes('nhanxet')) displayRoles.push('Xem & Nhận xét');
+            if (quyen.roles.includes('tailen')) displayRoles.push('Tải lên & Xóa');
             if (quyen.roles.includes('xx')) displayRoles.push('<b style="color:#d32f2f">Quản trị tối cao</b>');
             
             const safeTsa = quyen.tsa.replace(/'/g, "\\'");
@@ -2109,11 +2201,14 @@ function xuLySuaHoSo() {
         });
     }
 
+    // [CẬP NHẬT] Load dữ liệu vào ô Checkbox cho Quyền Preview
     function dieuChinhQuyen(tsa, tsb, roles, iconRoles) {
         document.getElementById('pq-tsa').value = tsa; document.getElementById('pq-tsb').value = tsb;
         document.getElementById('role-taohoso').checked = roles.includes('taohoso');
         document.getElementById('role-ganhoso').checked = roles.includes('ganhoso');
         document.getElementById('role-xoahoso').checked = roles.includes('xoahoso');
+        document.getElementById('role-nhanxet').checked = roles.includes('nhanxet');
+        document.getElementById('role-tailen').checked = roles.includes('tailen');
         document.getElementById('role-xx').checked = roles.includes('xx');
 
         const allowedIcons = (iconRoles || "").split('|');
@@ -2124,10 +2219,13 @@ function xuLySuaHoSo() {
 
     function lamMoiBieuMauQuyen() {
         document.getElementById('pq-tsa').value = ''; document.getElementById('pq-tsb').value = '';
-        document.getElementById('role-taohoso').checked = false; document.getElementById('role-ganhoso').checked = false; document.getElementById('role-xoahoso').checked = false; document.getElementById('role-xx').checked = false;
+        document.getElementById('role-taohoso').checked = false; document.getElementById('role-ganhoso').checked = false; 
+        document.getElementById('role-xoahoso').checked = false; document.getElementById('role-nhanxet').checked = false; 
+        document.getElementById('role-tailen').checked = false; document.getElementById('role-xx').checked = false;
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
     }
 
+    // [CẬP NHẬT] Gói quyền Preview vào payload để ném cho Backend
     function ghiNhanQuyen() {
         const tsa = document.getElementById('pq-tsa').value.trim(); const tsb = document.getElementById('pq-tsb').value.trim();
         if (!tsa || !tsb) { alert("Yêu cầu hệ thống: Bắt buộc điền đủ các trường định danh!"); return; }
@@ -2135,6 +2233,8 @@ function xuLySuaHoSo() {
         if (document.getElementById('role-taohoso').checked) roles.push('taohoso');
         if (document.getElementById('role-ganhoso').checked) roles.push('ganhoso');
         if (document.getElementById('role-xoahoso').checked) roles.push('xoahoso');
+        if (document.getElementById('role-nhanxet').checked) roles.push('nhanxet');
+        if (document.getElementById('role-tailen').checked) roles.push('tailen');
         if (document.getElementById('role-xx').checked) roles.push('xx');
 
         let selectedIcons = [];
@@ -2264,13 +2364,9 @@ function xuLySuaHoSo() {
     }
     khoaTruyCapMaNguon();
     
-    // =========================================================================
-    // [NÂNG CẤP MỚI] THUẬT TOÁN ĐỒNG BỘ CỜ THÔNG BÁO VĂN BẢN TRÊN MÀN HÌNH CHÍNH
-    // =========================================================================
     function kiemTraCongVanMoi() {
         if (!isLoggedIn) return; 
         
-        // Chỉ đích danh hệ thống Công văn thông qua tên hiển thị
         let targetIconNodes = Array.from(icons).filter(i => {
             let title = i.getAttribute('data-title').toLowerCase();
             return title.includes('công văn') || title.includes('lịch công tác');
@@ -2281,12 +2377,10 @@ function xuLySuaHoSo() {
             let profile = globalProfiles[profileId];
             if (!profile) return;
             
-            // Trích xuất link truy xuất (API) của phân hệ con
             let parsed = getUrlAndTarget(profile.td2);
             let gasUrl = parsed.url; 
             if(!gasUrl.includes("script.google.com")) return; 
             
-            // Liên kết ID người dùng giữa Màn hình chính và Phân hệ con
             let scvActiveId = sessionStorage.getItem("SCV_ACTIVE_ID") || localStorage.getItem(PREFIX_MEM + 'sysName') || "Khách";
             
             fetch(gasUrl, {
@@ -2307,11 +2401,9 @@ function xuLySuaHoSo() {
                     let tongCvDaXem = parseInt(localStorage.getItem(localKey)) || tongSoMoiNhat;
                     let soCvMoi = tongSoMoiNhat - tongCvDaXem;
                     
-                    // Dọn dẹp cờ cũ
                     let oldBadge = iconNode.querySelector('.menu-badge');
                     if (oldBadge) oldBadge.remove();
                     
-                    // Vẽ cờ mới nếu có thông báo
                     if (soCvMoi > 0) {
                         let container = iconNode.querySelector('div[style*="position:relative"]');
                         if (container) {
@@ -2322,18 +2414,16 @@ function xuLySuaHoSo() {
                         }
                     }
                 }
-            }).catch(e => { /* Im lặng hệ thống nếu đường truyền chập chờn */ }); 
+            }).catch(e => { }); 
         });
     }
 
-    // Tự động làm mới cờ khi cán bộ chuyển Tab trên trình duyệt
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === 'visible' && isLoggedIn) {
             kiemTraCongVanMoi();
         }
     });
 
-    // Làm mới tự động mỗi 1 phút để đồng bộ dữ liệu Real-time
     setInterval(() => {
         if (isLoggedIn) kiemTraCongVanMoi();
     }, 60000);
