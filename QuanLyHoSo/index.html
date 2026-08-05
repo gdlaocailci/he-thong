@@ -249,7 +249,7 @@
                         <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
                         <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
                         <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
-                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia định)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
                 <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
@@ -314,6 +314,7 @@
         </div>
     </div>
 
+    <!-- KHỐI QUẢN LÝ DỰ ÁN ĐA NHIỆM -->
     <div id="window-xoa-hoso" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar"><div class="window-title"><span class="material-icons" style="color:#ffffff">settings_applications</span> Quản lý & Cấu hình Dự án</div><button class="window-close" onclick="toggleXoaHoSoModal(false)">✕</button></div>
@@ -387,7 +388,6 @@
 
     <!-- ========================================================================= -->
     <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
-    <!-- ĐÃ CẤU HÌNH TRẠM KIỂM SOÁT HIỂN THỊ NÚT ĐỒNG BỘ                       -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
@@ -395,10 +395,12 @@
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
+                    <!-- Nút Quay lại 0 giây (Luôn hiện để thoát khỏi File hoặc Thư mục con) -->
+                    <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: flex; margin-right: 15px;" onclick="quayLaiThuMuc()">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
                     </button>
 
+                    <!-- Nút chuyển đổi Chỉnh sửa (Loại bỏ Menu, cấm mở file khác) -->
                     <button id="btn-preview-edit" class="window-close" style="color: white; background: #E65100; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 5px;" onclick="chuyenCheDoChinhSua()" title="Mở bộ công cụ Chỉnh sửa / Nhận xét">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">edit_note</span> Chỉnh sửa / Nhận xét
                     </button>
@@ -448,13 +450,12 @@
     let sysIconRoles = "";
 
 // =========================================================================
-// [CẬP NHẬT ĐỒNG BỘ]: TRẠM KIỂM SOÁT HIỂN THỊ NÚT & ĐIỀU HƯỚNG BẢO MẬT
+// [CẬP NHẬT ĐỒNG BỘ]: TRẠM KIỂM SOÁT HIỂN THỊ NÚT & NGĂN XẾP QUAY LẠI (STACK)
 // =========================================================================
     let urlXemTruocHienTai = "";
-    let thuMucHienTaiId = ""; 
-    let titleHienTai = ""; 
+    let folderHistory = []; // Ngăn xếp lưu lịch sử lùi thư mục nhanh
 
-    // Hàm thiết lập hiển thị nút duy nhất, dẹp bỏ tranh chấp trạng thái cũ
+    // Trạm kiểm soát nút (Quét quyền tự động)
     function capNhatTrangThaiCacNut(mode, fileId = null, mimeType = "") {
         let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
         let hasNhanxet = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('nhanxet') || sysRoles.includes('tailen')));
@@ -464,8 +465,8 @@
         let btnDelete = document.getElementById('btn-preview-delete');
         let btnEdit = document.getElementById('btn-preview-edit');
 
-        // Mặc định ẩn tất cả
-        btnBack.style.display = 'none';
+        // Reset trạng thái mặc định
+        btnBack.style.display = 'flex'; // Nút quay lại luôn hiện trong cửa sổ UX
         btnUpload.style.display = 'none';
         btnDelete.style.display = 'none';
         btnEdit.style.display = 'none';
@@ -474,7 +475,6 @@
             if (hasTailen) btnUpload.style.display = 'flex';
         } 
         else if (mode === 'file') {
-            if (thuMucHienTaiId) btnBack.style.display = 'flex';
             if (hasTailen) btnDelete.style.display = 'flex';
             
             let mime = mimeType ? mimeType.toLowerCase() : "";
@@ -491,8 +491,7 @@
     }
 
     function moKhuXemTruoc(url, title, target) {
-        urlXemTruocHienTai = url;
-        titleHienTai = title;
+        folderHistory = []; // Reset ngăn xếp khi mở từ Desktop
         let embedUrl = url;
         
         document.getElementById('preview-iframe').style.display = 'none';
@@ -505,11 +504,13 @@
         let fileIdMatch = embedUrl.match(/d\/([-\w]{25,})/);
 
         if (folderIdMatch && !embedUrl.includes('file/d/')) {
-            thuMucHienTaiId = folderIdMatch[1];
+            let fid = folderIdMatch[1];
+            folderHistory.push({id: fid, name: title, url: embedUrl});
+            urlXemTruocHienTai = embedUrl;
+            
             capNhatTrangThaiCacNut('folder_root');
             taiDuLieuThuMucDrive(embedUrl);
         } else {
-            thuMucHienTaiId = "";
             document.getElementById('preview-iframe').style.display = 'block';
             
             let mimeGuess = "";
@@ -525,6 +526,7 @@
                 embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
             }
 
+            urlXemTruocHienTai = embedUrl;
             document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải dữ liệu tệp an toàn, vui lòng chờ...';
             document.getElementById('preview-loading').style.display = 'flex'; 
             document.getElementById('preview-iframe').src = embedUrl;
@@ -580,9 +582,8 @@
     function moItemTuThuMuc(id, type, name, mimeType) {
         if (type === 'folder') {
             let newUrl = 'https://drive.google.com/drive/folders/' + id;
+            folderHistory.push({id: id, name: name, url: newUrl});
             urlXemTruocHienTai = newUrl; 
-            thuMucHienTaiId = id; 
-            titleHienTai = name;  
             
             document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${name}`;
             capNhatTrangThaiCacNut('folder_root');
@@ -626,18 +627,35 @@
     }
 
     function quayLaiThuMuc() {
-        if (!thuMucHienTaiId) return;
-        
-        capNhatTrangThaiCacNut('folder_root');
-        
-        document.getElementById('preview-iframe').src = "";
-        document.getElementById('preview-iframe').style.display = 'none';
-        
-        document.getElementById('preview-custom-folder').style.display = 'block';
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${titleHienTai}`;
+        let iframe = document.getElementById('preview-iframe');
+        let isViewingFile = iframe.style.display === 'block';
 
-        let rootUrl = 'https://drive.google.com/drive/folders/' + thuMucHienTaiId;
-        urlXemTruocHienTai = rootUrl;
+        if (isViewingFile) {
+            // Lùi từ File ra Thư mục chứa nó (Đóng băng DOM, load 0 giây)
+            if (folderHistory.length > 0) {
+                let currentFolder = folderHistory[folderHistory.length - 1];
+                capNhatTrangThaiCacNut('folder_root');
+                iframe.src = "";
+                iframe.style.display = 'none';
+                document.getElementById('preview-custom-folder').style.display = 'block';
+                document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${currentFolder.name}`;
+                urlXemTruocHienTai = currentFolder.url;
+            } else {
+                dongKhuXemTruoc();
+            }
+        } else {
+            // Đang xem Thư mục, lùi về Thư mục cha
+            folderHistory.pop(); 
+            if (folderHistory.length > 0) {
+                let parentFolder = folderHistory[folderHistory.length - 1];
+                capNhatTrangThaiCacNut('folder_root');
+                urlXemTruocHienTai = parentFolder.url;
+                document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${parentFolder.name}`;
+                taiDuLieuThuMucDrive(parentFolder.url);
+            } else {
+                dongKhuXemTruoc();
+            }
+        }
     }
 
     function dongKhuXemTruoc() {
@@ -645,7 +663,7 @@
         document.getElementById('preview-iframe').src = ""; 
         document.getElementById('preview-custom-folder').innerHTML = "";
         urlXemTruocHienTai = "";
-        thuMucHienTaiId = "";
+        folderHistory = [];
     }
 
     function xuLyTaiLenTuKhung() {
@@ -672,7 +690,7 @@
                 fileInput.value = ""; 
                 if(res.status === 'success') { 
                     alert('Tải lên thành công!'); 
-                    if (thuMucHienTaiId && document.getElementById('preview-custom-folder').style.display !== 'none') {
+                    if (folderHistory.length > 0 && document.getElementById('preview-custom-folder').style.display !== 'none') {
                         taiDuLieuThuMucDrive(urlXemTruocHienTai);
                     }
                 } else { alert("Lỗi: " + res.message); }
@@ -697,12 +715,8 @@
             document.getElementById('preview-loading').style.display = 'none';
             if(res.status === 'success') { 
                 alert('Đã chuyển tệp vào thùng rác!'); 
-                if (thuMucHienTaiId) {
-                    quayLaiThuMuc(); 
-                    taiDuLieuThuMucDrive(urlXemTruocHienTai); 
-                } else {
-                    dongKhuXemTruoc();
-                }
+                quayLaiThuMuc(); 
+                if (folderHistory.length > 0) taiDuLieuThuMucDrive(urlXemTruocHienTai); 
             } else { alert("Lỗi: " + res.message); }
         }).catch(e => { alert("Lỗi kết nối!"); document.getElementById('preview-loading').style.display = 'none'; });
     }
