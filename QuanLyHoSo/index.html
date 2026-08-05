@@ -276,7 +276,7 @@
                         <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
                         <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
                         <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
-                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">D dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
                 <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="tm-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
@@ -453,25 +453,22 @@
     let sysIconRoles = "";
 
 // =========================================================================
-// [CẬP NHẬT ĐỒNG BỘ]: KIỂM SOÁT UX/UI SIÊU NGHIÊM NGẶT & CHẠY NGẦM KHÔNG ALERT
+// [CẬP NHẬT ĐỒNG BỘ]: KIỂM SOÁT NÚT, TẢI FILE TIÊM TRỰC TIẾP
 // =========================================================================
     let urlXemTruocHienTai = "";
     let folderHistory = []; 
 
-    // Ép tắt (display: none) hoàn toàn nút Tải Lên/Xóa nếu không có quyền
     function capNhatTrangThaiCacNut(mode, fileId = null, mimeType = "") {
         let btnBack = document.getElementById('btn-preview-back');
         let btnUpload = document.getElementById('btn-preview-upload');
         let btnDelete = document.getElementById('btn-preview-delete');
         let btnEdit = document.getElementById('btn-preview-edit');
 
-        // Khởi tạo ẩn tất cả để dọn dẹp bộ nhớ đồ họa trước
         btnBack.style.display = 'none'; 
         btnUpload.style.display = 'none';
         btnDelete.style.display = 'none';
         btnEdit.style.display = 'none';
 
-        // Phân rã quyền truy cập hệ thống
         let hasTailen = false;
         let hasNhanxet = false;
         if (sysRoles) {
@@ -573,8 +570,9 @@
         let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #e0e0e0;">';
         html += '<tr style="background: #f1f8ff; border-bottom: 2px solid #1976D2;"><th style="text-align: left; padding: 12px 15px; color:#1976D2;">Tên Dữ liệu</th><th style="width: 120px; text-align: center; color:#1976D2;">Định dạng</th></tr>';
 
+        html += '<tbody>';
         if (data.length === 0) {
-            html += '<tr><td colspan="2" style="text-align: center; padding: 30px; color: #777;">Thư mục hiện tại không chứa dữ liệu.</td></tr>';
+            html += '<tr class="no-data-row"><td colspan="2" style="text-align: center; padding: 30px; color: #777;">Thư mục hiện tại không chứa dữ liệu.</td></tr>';
         } else {
             data.forEach(item => {
                 let icon = item.type === 'folder' ? '<span class="material-icons" style="color: #F57C00; vertical-align: middle; margin-right: 10px; font-size: 24px;">folder</span>' : '<span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span>';
@@ -586,7 +584,7 @@
                 </tr>`;
             });
         }
-        html += '</table>';
+        html += '</tbody></table>';
         document.getElementById('preview-custom-folder').innerHTML = html;
     }
 
@@ -675,11 +673,18 @@
         folderHistory = [];
     }
 
-    // TẢI LÊN XUYÊN SUỐT: Lẳng lặng tải dữ liệu, không ngắt quãng Alert
+    // TẢI LÊN DOM INJECTION: Nhanh gọn, không vướng LockService
     function xuLyTaiLenTuKhung() {
         const fileInput = document.getElementById('preview-upload-input');
         const file = fileInput.files[0];
         if (!file) return;
+
+        // Giới hạn file tải lên qua chuẩn Base64 của Google App Script (Tối đa 25MB)
+        if (file.size > 25 * 1024 * 1024) {
+            alert("Lỗi dung lượng: Máy chủ Google chỉ hỗ trợ tải lên tệp tin tối đa 25MB. Vui lòng nén nhỏ tệp!");
+            fileInput.value = "";
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -691,18 +696,26 @@
             };
             
             document.getElementById('preview-loading').style.display = 'flex';
-            document.getElementById('preview-loading-text').innerText = 'Đang đẩy tệp lên cơ sở dữ liệu...';
+            document.getElementById('preview-loading-text').innerText = 'Đang mã hóa và đẩy tệp lên máy chủ lưu trữ...';
 
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', body: JSON.stringify(payload)
             }).then(r => r.json()).then(res => {
                 fileInput.value = ""; 
                 if(res.status === 'success') { 
-                    // Tự động tải lại giao diện mà không cần vướng víu vào Alert
-                    if (document.getElementById('preview-custom-folder').style.display !== 'none') {
-                        taiDuLieuThuMucDrive(urlXemTruocHienTai);
-                    } else {
-                        document.getElementById('preview-loading').style.display = 'none';
+                    document.getElementById('preview-loading').style.display = 'none';
+                    if (document.getElementById('preview-custom-folder').style.display !== 'none' && res.file) {
+                        let tableBody = document.querySelector('#preview-custom-folder table tbody');
+                        if (tableBody) {
+                            let noDataRow = tableBody.querySelector('.no-data-row');
+                            if (noDataRow) noDataRow.remove();
+
+                            let newRowHTML = `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${res.file.id}', 'file', '${res.file.name.replace(/'/g, "\\'")}', '${res.file.mimeType}')">
+                                <td style="padding: 12px 15px; font-weight: 500; color: #333;"><span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span> ${res.file.name}</td>
+                                <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">Tệp tin</td>
+                            </tr>`;
+                            tableBody.insertAdjacentHTML('beforeend', newRowHTML);
+                        }
                     }
                 } else { 
                     document.getElementById('preview-loading').style.display = 'none';
@@ -710,7 +723,7 @@
                 }
             }).catch(e => { 
                 document.getElementById('preview-loading').style.display = 'none';
-                alert("Sự cố mất kết nối đường truyền mạng!"); 
+                alert("Sự cố mất kết nối đường truyền mạng khi đang tải tệp lên!"); 
             });
         };
         reader.readAsDataURL(file);
