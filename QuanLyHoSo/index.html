@@ -889,22 +889,33 @@
         urlXemTruocHienTai = url;
         let embedUrl = url;
         
-        // Cấp quyền hiển thị Nút Upload/Delete nếu là Admin (xx) hoặc có quyền Tải lên (tailen)
+        // 1. Phân quyền Hiển thị Nút bấm Tải lên / Xóa
+        // Nút bấm chỉ hiện khi Cán bộ có quyền Admin (xx) hoặc quyền Tải lên (tailen).
+        // Nếu chỉ có quyền 'nhanxet', các nút này sẽ ẩn, chỉ cho phép tương tác trong lõi iframe.
         let hasEditUploadRole = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
         document.getElementById('btn-preview-upload').style.display = hasEditUploadRole ? 'flex' : 'none';
         document.getElementById('btn-preview-delete').style.display = hasEditUploadRole ? 'flex' : 'none';
         
-        // Thuật toán: Chuyển đổi định dạng URL của hệ sinh thái Google sang đuôi /preview để tránh lỗi từ chối kết nối
-        if (embedUrl.includes('drive.google.com/file/d/')) {
+        // 2. THUẬT TOÁN ÉP KIỂU LINK NHÚNG (TRÁNH LỖI 403 & BẢO TOÀN QUYỀN)
+        let folderIdMatch = embedUrl.match(/folders\/([-\w]{25,})/);
+        if (!folderIdMatch) folderIdMatch = embedUrl.match(/open\?id=([-\w]{25,})/);
+
+        if (folderIdMatch) {
+            // Trường hợp 1: Là THƯ MỤC DRIVE -> Bắt buộc dùng giao thức embeddedfolderview để Google không chặn 403
+            embedUrl = 'https://drive.google.com/embeddedfolderview?id=' + folderIdMatch[1] + '#list';
+        } 
+        else if (embedUrl.includes('drive.google.com/file/d/')) {
+            // Trường hợp 2: Là FILE LẺ TRÊN DRIVE (PDF, Ảnh, Video) -> Ép sang /preview để xem trực tiếp
             embedUrl = embedUrl.replace(/\/view.*$/, '/preview');
-        } else if (embedUrl.includes('docs.google.com/document/d/') || 
-                   embedUrl.includes('docs.google.com/spreadsheets/d/') || 
-                   embedUrl.includes('docs.google.com/presentation/d/')) {
-            embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
+        } 
+        else if (embedUrl.includes('docs.google.com/')) {
+            // Trường hợp 3: Là GOOGLE DOCS / SHEETS / SLIDES -> Tuyệt đối KHÔNG ép sang /preview.
+            // Phải giữ nguyên /edit để giữ lại thanh công cụ Nhận xét / Chỉnh sửa trực tiếp.
+            // (Thầy/Cô có quyền edit sẽ thấy toàn bộ công cụ, có quyền view sẽ chỉ xem).
         }
 
         document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${title}`;
-        document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải tệp, vui lòng chờ...';
+        document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải dữ liệu, vui lòng chờ...';
         document.getElementById('preview-loading').style.display = 'flex'; 
         document.getElementById('preview-iframe').src = embedUrl;
         document.getElementById('window-preview').style.display = 'flex';
