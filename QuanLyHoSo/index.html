@@ -387,12 +387,12 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
-    <!-- ĐÃ CẤU HÌNH TRẠM KIỂM SOÁT HIỂN THỊ NÚT ĐỒNG BỘ                       -->
+    <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (ĐÃ FIX UX/UI FLEXBOX)   -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
-        <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
-            <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
+        <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column; overflow: hidden;">
+            
+            <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none; flex-shrink: 0;">
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
@@ -416,14 +416,18 @@
                 </div>
             </div>
 
-            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); background: #f9f9f9; color: #333; z-index: 5;">
-                <span class="material-icons" style="color: #1976D2; font-size: 40px;">sync</span>
-                <h3 id="preview-loading-text" style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
+            <!-- Khối bọc nội dung (Loại bỏ khoảng trắng cứng tuyệt đối - Auto scale) -->
+            <div style="flex: 1; position: relative; display: flex; flex-direction: column; background: #fff;">
+                <div id="preview-loading" class="loading-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f9f9f9; color: #333; z-index: 5;">
+                    <span class="material-icons" style="color: #1976D2; font-size: 40px; animation: spinHT 1.2s linear infinite;">sync</span>
+                    <h3 id="preview-loading-text" style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
+                </div>
+                
+                <div id="preview-custom-folder" class="window-content" style="display: none; background: #fff; padding: 20px; overflow-y: auto; flex: 1; z-index: 2; position: relative;"></div>
+                
+                <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 1; position: relative; display: none;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
             </div>
-            
-            <div id="preview-custom-folder" class="window-content" style="display: none; background: #fff; padding: 20px; overflow-y: auto; flex: 1; z-index: 2; position: relative;"></div>
-            
-            <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 1; position: relative; display: none;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
+
         </div>
     </div>
     
@@ -449,29 +453,37 @@
     let sysIconRoles = "";
 
 // =========================================================================
-// [CẬP NHẬT ĐỒNG BỘ]: TRẠM KIỂM SOÁT HIỂN THỊ NÚT & NGĂN XẾP QUAY LẠI (STACK)
+// [CẬP NHẬT ĐỒNG BỘ]: KIỂM SOÁT UX/UI SIÊU NGHIÊM NGẶT & CHẠY NGẦM KHÔNG ALERT
 // =========================================================================
     let urlXemTruocHienTai = "";
-    let folderHistory = []; // Ngăn xếp lưu lịch sử lùi thư mục nhanh
+    let folderHistory = []; 
 
-    // Trạm kiểm soát nút (Quét quyền tự động)
+    // Ép tắt (display: none) hoàn toàn nút Tải Lên/Xóa nếu không có quyền
     function capNhatTrangThaiCacNut(mode, fileId = null, mimeType = "") {
-        let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
-        let hasNhanxet = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('nhanxet') || sysRoles.includes('tailen')));
-        
         let btnBack = document.getElementById('btn-preview-back');
         let btnUpload = document.getElementById('btn-preview-upload');
         let btnDelete = document.getElementById('btn-preview-delete');
         let btnEdit = document.getElementById('btn-preview-edit');
 
-        // Reset trạng thái mặc định
-        btnBack.style.display = 'flex'; // Nút quay lại luôn hiện trong cửa sổ UX
+        // Khởi tạo ẩn tất cả để dọn dẹp bộ nhớ đồ họa trước
+        btnBack.style.display = 'none'; 
         btnUpload.style.display = 'none';
         btnDelete.style.display = 'none';
         btnEdit.style.display = 'none';
+
+        // Phân rã quyền truy cập hệ thống
+        let hasTailen = false;
+        let hasNhanxet = false;
+        if (sysRoles) {
+            let rolesArr = sysRoles.split(',');
+            if (rolesArr.includes('xx') || rolesArr.includes('tailen')) hasTailen = true;
+            if (rolesArr.includes('xx') || rolesArr.includes('tailen') || rolesArr.includes('nhanxet')) hasNhanxet = true;
+        }
         
-        if (mode === 'folder_root') {
-            if (hasTailen) btnUpload.style.display = 'flex';
+        btnBack.style.display = 'flex'; 
+        
+        if (mode === 'folder_root' && hasTailen) {
+            btnUpload.style.display = 'flex';
         } 
         else if (mode === 'file') {
             if (hasTailen) btnDelete.style.display = 'flex';
@@ -490,7 +502,7 @@
     }
 
     function moKhuXemTruoc(url, title, target) {
-        folderHistory = []; // Reset ngăn xếp khi mở từ Desktop
+        folderHistory = []; 
         let embedUrl = url;
         
         document.getElementById('preview-iframe').style.display = 'none';
@@ -630,7 +642,6 @@
         let isViewingFile = iframe.style.display === 'block';
 
         if (isViewingFile) {
-            // Lùi từ File ra Thư mục chứa nó (Đóng băng DOM, load 0 giây)
             if (folderHistory.length > 0) {
                 let currentFolder = folderHistory[folderHistory.length - 1];
                 capNhatTrangThaiCacNut('folder_root');
@@ -643,7 +654,6 @@
                 dongKhuXemTruoc();
             }
         } else {
-            // Đang xem Thư mục, lùi về Thư mục cha
             folderHistory.pop(); 
             if (folderHistory.length > 0) {
                 let parentFolder = folderHistory[folderHistory.length - 1];
@@ -665,7 +675,7 @@
         folderHistory = [];
     }
 
-    // [CẬP NHẬT] LUỒNG TẢI LÊN CHUẨN XÁC, MƯỢT MÀ, KHÔNG CẢNH BÁO
+    // TẢI LÊN XUYÊN SUỐT: Lẳng lặng tải dữ liệu, không ngắt quãng Alert
     function xuLyTaiLenTuKhung() {
         const fileInput = document.getElementById('preview-upload-input');
         const file = fileInput.files[0];
@@ -676,7 +686,7 @@
             const base64 = e.target.result.split(',')[1];
             const payload = {
                 action: 'uploadFile', fileName: file.name, mimeType: file.type,
-                base64: base64, url: urlXemTruocHienTai, // urlXemTruocHienTai luôn bám sát vị trí hiện tại
+                base64: base64, url: urlXemTruocHienTai, 
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
             };
             
@@ -688,7 +698,7 @@
             }).then(r => r.json()).then(res => {
                 fileInput.value = ""; 
                 if(res.status === 'success') { 
-                    // KHÔNG DÙNG ALERT - tự động tải lại bảng dữ liệu tệp ngay lập tức
+                    // Tự động tải lại giao diện mà không cần vướng víu vào Alert
                     if (document.getElementById('preview-custom-folder').style.display !== 'none') {
                         taiDuLieuThuMucDrive(urlXemTruocHienTai);
                     } else {
@@ -696,11 +706,11 @@
                     }
                 } else { 
                     document.getElementById('preview-loading').style.display = 'none';
-                    alert("Lỗi: " + res.message); 
+                    alert("Cảnh báo: " + res.message); 
                 }
             }).catch(e => { 
                 document.getElementById('preview-loading').style.display = 'none';
-                alert("Mất kết nối mạng!"); 
+                alert("Sự cố mất kết nối đường truyền mạng!"); 
             });
         };
         reader.readAsDataURL(file);
@@ -721,11 +731,10 @@
         }).then(r => r.json()).then(res => {
             document.getElementById('preview-loading').style.display = 'none';
             if(res.status === 'success') { 
-                alert('Đã chuyển tệp vào thùng rác!'); 
                 quayLaiThuMuc(); 
                 if (folderHistory.length > 0) taiDuLieuThuMucDrive(urlXemTruocHienTai); 
             } else { alert("Lỗi: " + res.message); }
-        }).catch(e => { alert("Lỗi kết nối!"); document.getElementById('preview-loading').style.display = 'none'; });
+        }).catch(e => { alert("Lỗi kết nối mạng!"); document.getElementById('preview-loading').style.display = 'none'; });
     }
 
 function getUrlAndTarget(encodedTd2) {
