@@ -4,11 +4,8 @@
     <script src="ketnoi.js"></script>
     <link id="sys-favicon" rel="icon" href="">
     <meta charset="UTF-8">
-    
-    <!-- CẬP NHẬT: GIỮ LẠI LỆNH KHÓA ZOOM ĐỂ TRÁNH LỆCH KHUNG HÌNH TRÊN ĐIỆN THOẠI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2c3e50">
-    
     <meta name="author" content="Phát triển và thiết kế: Hoàng Ngọc Lâm">
     <title id="sys-title">Hồ sơ</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -50,107 +47,34 @@
         
         #desktop-area { flex: 1; position: relative; overflow: hidden; }
         
-        /* BỘ HIỆU ỨNG TỪ REACT BITS */
-        @keyframes reactBitsPopIn {
-            0% { opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(10px); }
-            60% { opacity: 1; transform: translateY(-5px) scale(1.05); filter: blur(0); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes reactBitsFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        @keyframes reactBitsPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.06); }
-        }
-        @keyframes reactBitsWobble {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-4deg); }
-            75% { transform: rotate(4deg); }
-        }
-        @keyframes reactBitsGlow {
-            0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); }
-            50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
-        }
+        @keyframes reactBitsPopIn { 0% { opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(10px); } 60% { opacity: 1; transform: translateY(-5px) scale(1.05); filter: blur(0); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes reactBitsFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes reactBitsPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        @keyframes reactBitsWobble { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+        @keyframes reactBitsGlow { 0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); } 50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); } }
 
-        /* KHỐI GIAO DIỆN CỜ THÔNG BÁO VĂN BẢN MỚI */
         .menu-badge { position: absolute; top: -5px; right: -10px; background: #ef4444; color: white; border-radius: 50%; padding: 2px 7px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); animation: pulseBadge 2s infinite; z-index: 20; pointer-events: none; }
         @keyframes pulseBadge { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-        .desktop-icon { 
-            position: absolute; 
-            width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; touch-action: none; 
-            transition: all 0.3s ease, transform 0.2s;
-            opacity: 0;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0);
-        }
-
+        .desktop-icon { position: absolute; width: 90px; min-height: 105px; display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; touch-action: none; transition: all 0.3s ease, transform 0.2s; opacity: 0; z-index: 10; background: rgba(255, 255, 255, 0); }
         .effect-none { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .effect-float { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsFloat 3s ease-in-out infinite 0.6s; }
         .effect-pulse { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsPulse 2s ease-in-out infinite 0.6s; }
         .effect-wobble { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsWobble 2.5s ease-in-out infinite 0.6s; }
         .effect-glow { animation: reactBitsPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, reactBitsGlow 2s ease-in-out infinite 0.6s; }
         
-        .desktop-icon:hover { 
-            background: rgba(255, 255, 255, 0.15); 
-            border: 1px solid rgba(255, 255, 255, 0.4); 
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-        }
+        .desktop-icon:hover { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); }
+        .desktop-icon:active { background-color: rgba(255, 255, 255, 0.25); transform: scale(0.95); }
         
-        .desktop-icon:active { 
-            background-color: rgba(255, 255, 255, 0.25); 
-            transform: scale(0.95); 
-        }
-        
-        .icon-box { 
-            width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .icon-box::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
-            transform: skewX(-25deg);
-            transition: all 0.6s ease;
-        }
-
-        .desktop-icon:hover .icon-box::after {
-            left: 200%;
-        }
-
-        .desktop-icon:hover .icon-box {
-            transform: translateY(-10px) scale(1.15) rotate(5deg);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 25px rgba(255, 255, 255, 0.6);
-            filter: brightness(1.15);
-        }
-       
+        .icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .icon-box::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%); transform: skewX(-25deg); transition: all 0.6s ease; }
+        .desktop-icon:hover .icon-box::after { left: 200%; }
+        .desktop-icon:hover .icon-box { transform: translateY(-10px) scale(1.15) rotate(5deg); box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 25px rgba(255, 255, 255, 0.6); filter: brightness(1.15); }
         .icon-box .material-icons { font-size: 34px; color: #ffffff; }
 
-        .bg-1 { background: #1976D2; border: 2px solid #90CAF9; } 
-        .bg-2 { background: #F57C00; border: 2px solid #FFCC80; } 
-        .bg-3 { background: #388E3C; border: 2px solid #A5D6A7; } 
-        .bg-4 { background: #00796B; border: 2px solid #80CBC4; } 
-        .bg-5 { background: #7B1FA2; border: 2px solid #CE93D8; } 
-        .bg-6 { background: #795548; border: 2px solid #BCAAA4; } 
-        .bg-7 { background: #D32F2F; border: 2px solid #EF9A9A; } 
-        .bg-8 { background: #E65100; border: 2px solid #FFCC80; } 
-        .bg-9 { background: #546E7A; border: 2px solid #B0BEC5; } 
-        .bg-10 { background: #0097A7; border: 2px solid #80DEEA; } 
-        .bg-default { background: #546E7A; border: 2px solid #B0BEC5; } 
-        
+        .bg-1 { background: #1976D2; border: 2px solid #90CAF9; } .bg-2 { background: #F57C00; border: 2px solid #FFCC80; } .bg-3 { background: #388E3C; border: 2px solid #A5D6A7; } .bg-4 { background: #00796B; border: 2px solid #80CBC4; } .bg-5 { background: #7B1FA2; border: 2px solid #CE93D8; } .bg-6 { background: #795548; border: 2px solid #BCAAA4; } .bg-7 { background: #D32F2F; border: 2px solid #EF9A9A; } .bg-8 { background: #E65100; border: 2px solid #FFCC80; } .bg-9 { background: #546E7A; border: 2px solid #B0BEC5; } .bg-10 { background: #0097A7; border: 2px solid #80DEEA; } .bg-default { background: #546E7A; border: 2px solid #B0BEC5; } 
         .bg-avatar { background: #fdfdfd !important; border: 2px solid rgba(255,255,255,0.8) !important; border-radius: 50% !important; overflow: hidden; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important; }
         .custom-avatar { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; object-position: top center; transform: scale(1.1); }
-
         .icon-text { color: #ffffff; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.3; text-shadow: 1px 1px 2px #000000, 0 0 10px rgba(0,0,0,0.8); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word; pointer-events: none; }
         
         .taskbar { height: 48px; background: rgba(20, 20, 20, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 1000; }
@@ -191,11 +115,9 @@
         .form-native { padding: 20px; user-select: text; }
         .form-native .form-group { margin-bottom: 15px; }
         .form-native label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #333; }
-        
         .form-native input:not([type="checkbox"]):not([type="radio"]), .form-native select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; font-family: inherit; outline: none; transition: border-color 0.2s;}
         .form-native input:not([type="checkbox"]):not([type="radio"]):focus, .form-native select:focus { border-color: #1976D2; }
         .form-native input[type="checkbox"], .form-native input[type="radio"] { width: auto; margin: 0 10px 0 0; padding: 0; cursor: pointer; flex-shrink: 0; }
-        
         .form-native .input-group { display: flex; gap: 8px; }
         .form-native .btn-picker { display: flex; align-items: center; gap: 4px; background: #F57C00; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 12px; transition: background 0.2s;}
         .form-native .btn-picker:hover { background: #EF6C00; }
@@ -240,7 +162,6 @@
         .nut-huong-dan span { position: absolute; top: 52px; font-size: 11px; font-weight: bold; color: #198754; white-space: nowrap; background: rgba(255,255,255,0.95); padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); pointer-events: none; }
         .nut-huong-dan:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.25); color: white; }
 
-        /* TỐI ƯU HÓA HIỂN THỊ TRÊN THIẾT BỊ DI ĐỘNG */
         @media (max-width: 768px) {
             .desktop-icon { width: 75px; min-height: 85px; padding: 4px; }
             .icon-box { width: 42px; height: 42px; margin-bottom: 4px; }
@@ -261,9 +182,7 @@
         }
 
         @media (hover: none) and (pointer: coarse) {
-            .desktop-icon:hover { 
-                background: transparent; border: 1px solid transparent; backdrop-filter: none; box-shadow: none;
-            }
+            .desktop-icon:hover { background: transparent; border: 1px solid transparent; backdrop-filter: none; box-shadow: none; }
             .desktop-icon:hover .icon-box::after { left: -100%; }
             .desktop-icon:hover .icon-box { transform: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); filter: none; }
         }
@@ -278,26 +197,13 @@
             <div id="btn-google-login" style="display:none; margin-left: 5px;"></div>
             <span class="start-text" id="sys-name" style="display:none;">Đang tải...</span>
         </div>
-        
         <div class="system-tray">
-            <button class="btn-taskbar blue" id="btn-create-profile" style="display:none;" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')">
-                <span class="material-icons">add_to_drive</span> Tạo hồ sơ
-            </button>
-            <button class="btn-taskbar purple" id="btn-create-folder" style="display:none;" onclick="toggleTaoThuMucModal(true)">
-                <span class="material-icons">create_new_folder</span> Tạo Thư mục
-            </button>
-            <button class="btn-taskbar green" id="btn-assign-profile" style="display:none;" onclick="toggleHoSoModal(true)">
-                <span class="material-icons">attachment</span> Gán hồ sơ
-            </button>
-            <button class="btn-taskbar orange" id="btn-edit-profile" style="display:none;" onclick="toggleSuaHoSoModal(true)">
-                <span class="material-icons">edit</span> Sửa hồ sơ
-            </button>
-            <button class="btn-taskbar red" id="btn-delete-profile" style="display:none;" onclick="toggleXoaHoSoModal(true)">
-                <span class="material-icons">settings_applications</span> Quản lý Dự án
-            </button>
-            <button class="btn-taskbar purple" id="btn-auth-profile" style="display:none;" onclick="togglePhanQuyenModal(true)">
-                <span class="material-icons">manage_accounts</span> Cấp quyền
-            </button>
+            <button class="btn-taskbar blue" id="btn-create-profile" style="display:none;" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')"><span class="material-icons">add_to_drive</span> Tạo hồ sơ</button>
+            <button class="btn-taskbar purple" id="btn-create-folder" style="display:none;" onclick="toggleTaoThuMucModal(true)"><span class="material-icons">create_new_folder</span> Tạo Thư mục</button>
+            <button class="btn-taskbar green" id="btn-assign-profile" style="display:none;" onclick="toggleHoSoModal(true)"><span class="material-icons">attachment</span> Gán hồ sơ</button>
+            <button class="btn-taskbar orange" id="btn-edit-profile" style="display:none;" onclick="toggleSuaHoSoModal(true)"><span class="material-icons">edit</span> Sửa hồ sơ</button>
+            <button class="btn-taskbar red" id="btn-delete-profile" style="display:none;" onclick="toggleXoaHoSoModal(true)"><span class="material-icons">settings_applications</span> Quản lý Dự án</button>
+            <button class="btn-taskbar purple" id="btn-auth-profile" style="display:none;" onclick="togglePhanQuyenModal(true)"><span class="material-icons">manage_accounts</span> Cấp quyền</button>
 
             <div class="tray-icon" onclick="toggleFullScreen()" title="Bật/Tắt Toàn màn hình"><span class="material-icons" id="fullscreen-icon">fullscreen</span></div>
             <div class="tray-icon" onclick="resetPositions()" title="Khôi phục vị trí gốc của các biểu tượng"><span class="material-icons">restore</span></div>
@@ -327,395 +233,83 @@
                 <button class="window-close" onclick="toggleHoSoModal(false)">✕</button>
             </div>
             <div class="form-native">
-                <div class="form-group">
-                    <label>Tên dự án / phân hệ (Cột A): <span style="color: red;">*</span></label>
-                    <input type="text" id="hs-td1" placeholder="Nhập tên dự án hoặc thư mục...">
-                </div>
+                <div class="form-group"><label>Tên dự án / phân hệ (Cột A): <span style="color: red;">*</span></label><input type="text" id="hs-td1" placeholder="Nhập tên dự án hoặc thư mục..."></div>
                 <div class="form-group">
                     <label>Tệp hồ sơ trên Drive (Cột B): <span style="color: red;">*</span></label>
                     <input type="text" id="hs-td2" placeholder="Dán link hoặc chọn từ hệ thống..." style="margin-bottom: 8px;">
-                    <div class="input-group">
-                       
-                        <button class="btn-picker" style="background: #546E7A; color: white;" onclick="moDriveTaiKhoanKhac()"><span class="material-icons" style="font-size: 16px;">switch_account</span>Mở nơi lưu hồ sơ</button>
-                    </div>
+                    <div class="input-group"><button class="btn-picker" style="background: #546E7A; color: white;" onclick="moDriveTaiKhoanKhac()"><span class="material-icons" style="font-size: 16px;">switch_account</span>Mở nơi lưu hồ sơ</button></div>
                 </div>
                 <div class="form-group">
                     <label>Lĩnh vực Dự án (Cột C): <span style="color: red;">*</span></label>
                     <select id="hs-loaiicon">
-                        <option value="">-- Chọn phân loại lĩnh vực --</option>
-                        <option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
-                        <optgroup label="Thanh tra & Pháp chế">
-                            <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
-                            <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
-                            <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
-                        </optgroup>
-                        <optgroup label="Giáo dục & Hành chính">
-                            <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
-                            <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
-                            <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
-                            <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
-                            <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
-                            <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
-                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
-                            <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
-                            <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
-                            <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
-                            <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
-                            <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
-                            <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
-                            <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
-                            <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
-                            <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
-                        </optgroup>
-                        <optgroup label="Công nghệ & Kỹ thuật">
-                            <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
-                            <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
-                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
-                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
-                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
-                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
-                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
-                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
-                            <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
-                            <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
-                            <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
-                            <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
-                        </optgroup>
-                        <optgroup label="Đời sống & Xã hội">
-                            <option value="yte">Y tế & Sức khỏe (Y tế)</option>
-                            <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
-                            <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
-                            <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
-                            <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
-                            <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
-                            <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
-                            <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
-                            <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
-                        </optgroup>
-                        <optgroup label="Kinh tế & Ngoại giao">
-                            <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
-                            <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
-                            <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
-                            <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
-                            <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
-                            <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
-                            <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
-                            <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
-                            <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
-                            <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
-                            <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
-                            <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
-                            <option value="thue">Thuế & Phí (Hóa đơn)</option>
-                            <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
-                        </optgroup>
-                        <optgroup label="Giới tính & Cá nhân">
-                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
-                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
-                            <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
-                        </optgroup>
-                        <optgroup label="Khác">
-                            <option value="danso">Dân số & Xã hội (Gia định)</option>
-                            <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
-                            <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
-                            <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
-                            <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
-                            <option value="khac">Dự án Khác (Biểu tượng chung)</option>
-                        </optgroup>
+                        <option value="">-- Chọn phân loại lĩnh vực --</option><option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
+                        <optgroup label="Thanh tra & Pháp chế"><option value="cong_ly">Pháp chế & Công lý (Cái cân)</option><option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option><option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option></optgroup>
+                        <optgroup label="Giáo dục & Hành chính"><option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option><option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option><option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option><option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option><option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option><option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option><option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option><option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option><option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option><option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option><option value="thoigian">Thời gian & Lịch trình (Lịch)</option><option value="taichinh">Tài chính & Quỹ (Ví tiền)</option><option value="csvc">Cơ sở vật chất (Kho chứa)</option><option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option><option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option><option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option></optgroup>
+                        <optgroup label="Công nghệ & Kỹ thuật"><option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option><option value="congnghe">Công nghệ số & IT (Vi mạch)</option><option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option><option value="vimach">Vi mạch & Điện tử (Bo mạch)</option><option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option><option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option><option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option><option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option><option value="mang">Mạng Internet & Viễn thông (Wifi)</option><option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option><option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option><option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option></optgroup>
+                        <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
+                        <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
+                        <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia định)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Hiệu ứng hiển thị (từ React Bits):</label>
-                    <select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                        <option value="none">Mặc định (Nổi bật một lần)</option>
-                        <option value="float">Lơ lửng (Float)</option>
-                        <option value="pulse">Nhịp đập (Pulse)</option>
-                        <option value="wobble">Lắc lư (Wobble)</option>
-                        <option value="glow">Tỏa sáng (Glow)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Cơ chế mở Ứng dụng/Link:</label>
-                    <select id="hs-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                        <option value="_blank">Mở trong Thẻ mới (New Tab)</option>
-                        <option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Vị trí hiển thị lưu trữ:</label>
-                    <select id="hs-vitri">
-                        <option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-top: 15px;">
-                    <label class="checkbox-label" style="background: #e8f5e9; padding: 10px; border-radius: 4px; border: 1px solid #a5d6a7;">
-                        <input type="checkbox" id="hs-ispublic" value="public">
-                        <span style="color: #2e7d32; font-weight: 600;">Mở khóa Công khai (Tương tác không cần Đăng nhập)</span>
-                    </label>
-                </div>
-                
-                <button class="form-native btn-submit" onclick="xuLyLuuHoSo()">Ghi Nhận Dữ Liệu</button>
-                <div id="form-status" class="status-text">Đang xử lý, vui lòng chờ...</div>
+                <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
+                <div class="form-group"><label>Cơ chế mở Ứng dụng/Link:</label><select id="hs-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="_blank">Mở trong Thẻ mới (New Tab)</option><option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option></select></div>
+                <div class="form-group"><label>Vị trí hiển thị lưu trữ:</label><select id="hs-vitri"><option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option></select></div>
+                <div class="form-group" style="margin-top: 15px;"><label class="checkbox-label" style="background: #e8f5e9; padding: 10px; border-radius: 4px; border: 1px solid #a5d6a7;"><input type="checkbox" id="hs-ispublic" value="public"><span style="color: #2e7d32; font-weight: 600;">Mở khóa Công khai (Tương tác không cần Đăng nhập)</span></label></div>
+                <button class="form-native btn-submit" onclick="xuLyLuuHoSo()">Ghi Nhận Dữ Liệu</button><div id="form-status" class="status-text">Đang xử lý, vui lòng chờ...</div>
             </div>
         </div>
     </div>
 
     <div id="window-tao-thumuc" class="window-overlay">
         <div class="window-container">
-            <div class="window-titlebar" style="background: #8E24AA;">
-                <div class="window-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">create_new_folder</span> Công cụ Khởi tạo Thư mục Cha</div>
-                <button class="window-close" style="color: #ffffff;" onclick="toggleTaoThuMucModal(false)">✕</button>
-            </div>
+            <div class="window-titlebar" style="background: #8E24AA;"><div class="window-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">create_new_folder</span> Công cụ Khởi tạo Thư mục Cha</div><button class="window-close" style="color: #ffffff;" onclick="toggleTaoThuMucModal(false)">✕</button></div>
             <div class="form-native">
-                <div class="form-group">
-                    <label>Tên Thư mục / Nhóm phân hệ: <span style="color: red;">*</span></label>
-                    <input type="text" id="tm-td1" placeholder="Nhập tên thư mục (VD: Tổ Tự nhiên, Văn bản Đảng)...">
-                </div>
+                <div class="form-group"><label>Tên Thư mục / Nhóm phân hệ: <span style="color: red;">*</span></label><input type="text" id="tm-td1" placeholder="Nhập tên thư mục (VD: Tổ Tự nhiên, Văn bản Đảng)..."></div>
                 <div class="form-group">
                     <label>Hình ảnh hiển thị / Icon lĩnh vực: <span style="color: red;">*</span></label>
                     <select id="tm-loaiicon">
                         <option value="hoso_thumuc">Thư mục tiêu chuẩn (Thư mục màu vàng)</option>
-                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)">
-                            <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
-                            <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
-                            <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
-                        </optgroup>
-                        <optgroup label="Giáo dục & Hành chính">
-                            <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
-                            <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
-                            <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
-                            <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
-                            <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
-                            <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
-                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
-                            <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
-                            <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
-                            <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
-                            <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
-                            <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
-                            <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
-                            <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
-                            <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
-                            <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
-                        </optgroup>
-                        <optgroup label="Công nghệ & Kỹ thuật">
-                            <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
-                            <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
-                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
-                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
-                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
-                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
-                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
-                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
-                            <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
-                            <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
-                            <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
-                            <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
-                        </optgroup>
-                        <optgroup label="Đời sống & Xã hội">
-                            <option value="yte">Y tế & Sức khỏe (Y tế)</option>
-                            <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
-                            <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
-                            <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
-                            <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
-                            <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
-                            <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
-                            <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
-                            <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
-                        </optgroup>
-                        <optgroup label="Kinh tế & Ngoại giao">
-                            <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
-                            <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
-                            <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
-                            <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
-                            <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
-                            <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
-                            <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
-                            <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
-                            <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
-                            <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
-                            <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
-                            <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
-                            <option value="thue">Thuế & Phí (Hóa đơn)</option>
-                            <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
-                        </optgroup>
-                        <optgroup label="Giới tính & Cá nhân">
-                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
-                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
-                            <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
-                        </optgroup>
-                        <optgroup label="Khác">
-                            <option value="danso">Dân số & Xã hội (Gia đình)</option>
-                            <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
-                            <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
-                            <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
-                            <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
-                            <option value="khac">Dự án Khác (Biểu tượng chung)</option>
-                        </optgroup>
+                        <optgroup label="Thanh tra & Pháp chế (Bổ sung)"><option value="cong_ly">Pháp chế & Công lý (Cái cân)</option><option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option><option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option></optgroup>
+                        <optgroup label="Giáo dục & Hành chính"><option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option><option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option><option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option><option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option><option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option><option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option><option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option><option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option><option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option><option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option><option value="thoigian">Thời gian & Lịch trình (Lịch)</option><option value="taichinh">Tài chính & Quỹ (Ví tiền)</option><option value="csvc">Cơ sở vật chất (Kho chứa)</option><option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option><option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option><option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option></optgroup>
+                        <optgroup label="Công nghệ & Kỹ thuật"><option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option><option value="congnghe">Công nghệ số & IT (Vi mạch)</option><option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option><option value="vimach">Vi mạch & Điện tử (Bo mạch)</option><option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option><option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option><option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option><option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option><option value="mang">Mạng Internet & Viễn thông (Wifi)</option><option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option><option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option><option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option></optgroup>
+                        <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
+                        <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
+                        <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Hiệu ứng hiển thị (từ React Bits):</label>
-                    <select id="tm-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                        <option value="none">Mặc định (Nổi bật một lần)</option>
-                        <option value="float">Lơ lửng (Float)</option>
-                        <option value="pulse">Nhịp đập (Pulse)</option>
-                        <option value="wobble">Lắc lư (Wobble)</option>
-                        <option value="glow">Tỏa sáng (Glow)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" style="margin-top: 10px;">
-                    <label>Gom nhanh các hồ sơ vào thư mục này:</label>
-                    <div id="tm-danhsach-hoso" style="max-height: 120px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-top: 10px;">
-                    <label class="checkbox-label" style="background: #e8f5e9; padding: 10px; border-radius: 4px; border: 1px solid #a5d6a7;">
-                        <input type="checkbox" id="tm-ispublic" value="public">
-                        <span style="color: #2e7d32; font-weight: 600;">Mở khóa Công khai (Tương tác không cần Đăng nhập)</span>
-                    </label>
-                </div>
-                <button class="form-native btn-submit" style="background-color: #8E24AA;" onclick="xuLyLuuThuMuc()">Khởi tạo & Gom dữ liệu</button>
-                <div id="tm-form-status" class="status-text" style="color: #8E24AA;">Đang xử lý dữ liệu, vui lòng chờ...</div>
+                <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="tm-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
+                <div class="form-group" style="margin-top: 10px;"><label>Gom nhanh các hồ sơ vào thư mục này:</label><div id="tm-danhsach-hoso" style="max-height: 120px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div></div>
+                <div class="form-group" style="margin-top: 10px;"><label class="checkbox-label" style="background: #e8f5e9; padding: 10px; border-radius: 4px; border: 1px solid #a5d6a7;"><input type="checkbox" id="tm-ispublic" value="public"><span style="color: #2e7d32; font-weight: 600;">Mở khóa Công khai (Tương tác không cần Đăng nhập)</span></label></div>
+                <button class="form-native btn-submit" style="background-color: #8E24AA;" onclick="xuLyLuuThuMuc()">Khởi tạo & Gom dữ liệu</button><div id="tm-form-status" class="status-text" style="color: #8E24AA;">Đang xử lý dữ liệu, vui lòng chờ...</div>
             </div>
         </div>
     </div>
 
     <div id="window-sua-hoso" class="window-overlay">
         <div class="window-container">
-            <div class="window-titlebar">
-                <div class="window-title"><span class="material-icons">edit</span> Cập nhật Hồ sơ / Dự án</div>
-                <button class="window-close" onclick="toggleSuaHoSoModal(false)">✕</button>
-            </div>
+            <div class="window-titlebar"><div class="window-title"><span class="material-icons">edit</span> Cập nhật Hồ sơ / Dự án</div><button class="window-close" onclick="toggleSuaHoSoModal(false)">✕</button></div>
             <div class="form-native">
-                <div class="form-group">
-                    <label>Lựa chọn dự án cần sửa chữa:</label>
-                    <select id="edit-hoso-select" onchange="taiThongTinSuaHoSo()" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">
-                        <option value="">-- Đang tải danh sách --</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Cập nhật Tên hiển thị mới:</label>
-                    <input type="text" id="edit-td1" placeholder="Nhập tên mới...">
-                </div>
-                <div class="form-group">
-                    <label>Cập nhật Tệp hồ sơ (Link Drive) mới:</label>
-                    <input type="text" id="edit-td2" placeholder="Dán link mới...">
-                </div>
-                <div class="form-group">
-                    <label>Thay đổi Icon lĩnh vực (Cột C):</label>
+                <div class="form-group"><label>Lựa chọn dự án cần sửa chữa:</label><select id="edit-hoso-select" onchange="taiThongTinSuaHoSo()" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;"><option value="">-- Đang tải danh sách --</option></select></div>
+                <div class="form-group"><label>Cập nhật Tên hiển thị mới:</label><input type="text" id="edit-td1" placeholder="Nhập tên mới..."></div>
+                <div class="form-group"><label>Cập nhật Tệp hồ sơ (Link Drive) mới:</label><input type="text" id="edit-td2" placeholder="Dán link mới..."></div>
+                <div class="form-group"><label>Thay đổi Icon lĩnh vực (Cột C):</label>
                     <select id="edit-loaiicon">
-                        <option value="">-- Chọn phân loại lĩnh vực --</option>
-                        <option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
-                        <optgroup label="Thanh tra & Pháp chế">
-                            <option value="cong_ly">Pháp chế & Công lý (Cái cân)</option>
-                            <option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option>
-                            <option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option>
-                        </optgroup>
-                        <optgroup label="Giáo dục & Hành chính">
-                            <option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option>
-                            <option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option>
-                            <option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option>
-                            <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
-                            <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
-                            <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
-                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
-                            <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
-                            <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
-                            <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
-                            <option value="thoigian">Thời gian & Lịch trình (Lịch)</option>
-                            <option value="taichinh">Tài chính & Quỹ (Ví tiền)</option>
-                            <option value="csvc">Cơ sở vật chất (Kho chứa)</option>
-                            <option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option>
-                            <option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option>
-                            <option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option>
-                        </optgroup>
-                        <optgroup label="Công nghệ & Kỹ thuật">
-                            <option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option>
-                            <option value="congnghe">Công nghệ số & IT (Vi mạch)</option>
-                            <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
-                            <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
-                            <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
-                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
-                            <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
-                            <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
-                            <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
-                            <option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option>
-                            <option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option>
-                            <option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option>
-                        </optgroup>
-                        <optgroup label="Đời sống & Xã hội">
-                            <option value="yte">Y tế & Sức khỏe (Y tế)</option>
-                            <option value="thethao">Thể dục Thể thao (Quả bóng)</option>
-                            <option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option>
-                            <option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option>
-                            <option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option>
-                            <option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option>
-                            <option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option>
-                            <option value="vesinh">Vệ sinh & Môi trường (Chổi)</option>
-                            <option value="xeco">Phương tiện & Nhà xe (Ô tô)</option>
-                        </optgroup>
-                        <optgroup label="Kinh tế & Ngoại giao">
-                            <option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option>
-                            <option value="du_an">Dự án & Sáng kiến (Tên lửa)</option>
-                            <option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option>
-                            <option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option>
-                            <option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option>
-                            <option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option>
-                            <option value="dulich">Du lịch & Tham quan (Máy bay)</option>
-                            <option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option>
-                            <option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option>
-                            <option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option>
-                            <option value="logictics">Vận chuyển & Logistics (Xe tải)</option>
-                            <option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option>
-                            <option value="thue">Thuế & Phí (Hóa đơn)</option>
-                            <option value="nangluong">Năng lượng & Điện (Tia chớp)</option>
-                        </optgroup>
-                        <optgroup label="Giới tính & Cá nhân">
-                            <option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option>
-                            <option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option>
-                            <option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option>
-                        </optgroup>
-                        <optgroup label="Khác">
-                            <option value="danso">Dân số & Xã hội (Gia đình)</option>
-                            <option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option>
-                            <option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option>
-                            <option value="bando">Bản đồ & Địa lý (Bản đồ)</option>
-                            <option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option>
-                            <option value="khac">Dự án Khác (Biểu tượng chung)</option>
-                        </optgroup>
+                        <option value="">-- Chọn phân loại lĩnh vực --</option><option value="hoso_thumuc">Thư mục tiêu chuẩn (Màu vàng)</option>
+                        <optgroup label="Thanh tra & Pháp chế"><option value="cong_ly">Pháp chế & Công lý (Cái cân)</option><option value="thanh_tra">Công tác Thanh tra (Kính lúp)</option><option value="cong_bang">Đảm bảo Công bằng (Khiên bảo vệ)</option></optgroup>
+                        <optgroup label="Giáo dục & Hành chính"><option value="hocsinh">Học sinh & Đào tạo (Học sinh)</option><option value="nhansu">Nhân sự & Đội ngũ (Nhiều người)</option><option value="vanban">Văn bản & Chỉ đạo (Tài liệu)</option><option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option><option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option><option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option><option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option><option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option><option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option><option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option><option value="thoigian">Thời gian & Lịch trình (Lịch)</option><option value="taichinh">Tài chính & Quỹ (Ví tiền)</option><option value="csvc">Cơ sở vật chất (Kho chứa)</option><option value="thuvien">Thư viện & Đọc sách (Cuốn sách)</option><option value="doandoi">Đoàn Đội & Thanh niên (Lá cờ)</option><option value="ghi_chep">Sổ Công tác & Hội họp (Cuốn sổ mở)</option></optgroup>
+                        <optgroup label="Công nghệ & Kỹ thuật"><option value="caidat">Cài đặt & Hệ thống (Bánh răng)</option><option value="congnghe">Công nghệ số & IT (Vi mạch)</option><option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option><option value="vimach">Vi mạch & Điện tử (Bo mạch)</option><option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option><option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option><option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option><option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option><option value="mang">Mạng Internet & Viễn thông (Wifi)</option><option value="dienthoai">Điện thoại & Liên lạc (Smartphone)</option><option value="trituemay">AI & Trí tuệ nhân tạo (Robot)</option><option value="phantich">Phân tích & Data (Biểu đồ nâng cao)</option></optgroup>
+                        <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
+                        <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
+                        <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Hiệu ứng hiển thị (từ React Bits):</label>
-                    <select id="edit-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                        <option value="none">Mặc định (Nổi bật một lần)</option>
-                        <option value="float">Lơ lửng (Float)</option>
-                        <option value="pulse">Nhịp đập (Pulse)</option>
-                        <option value="wobble">Lắc lư (Wobble)</option>
-                        <option value="glow">Tỏa sáng (Glow)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Cơ chế mở Ứng dụng/Link:</label>
-                    <select id="edit-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                        <option value="_blank">Mở trong Thẻ mới (New Tab)</option>
-                        <option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Thay đổi vị trí lưu trữ:</label>
-                    <select id="edit-vitri">
-                        <option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option>
-                    </select>
-                </div>
-                <button class="form-native btn-submit" style="background-color: #F57C00;" onclick="xuLySuaHoSo()">Ghi Nhận Thay Đổi</button>
-                <div id="edit-form-status" class="status-text">Đang đồng bộ dữ liệu sửa chữa...</div>
+                <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="edit-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
+                <div class="form-group"><label>Cơ chế mở Ứng dụng/Link:</label><select id="edit-cachmo" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="_blank">Mở trong Thẻ mới (New Tab)</option><option value="_self">Mở đè ở Thẻ hiện tại (Current Tab)</option></select></div>
+                <div class="form-group"><label>Thay đổi vị trí lưu trữ:</label><select id="edit-vitri"><option value="desktop">-- Đặt ngoài Màn hình chính (Desktop) --</option></select></div>
+                <button class="form-native btn-submit" style="background-color: #F57C00;" onclick="xuLySuaHoSo()">Ghi Nhận Thay Đổi</button><div id="edit-form-status" class="status-text">Đang đồng bộ dữ liệu sửa chữa...</div>
             </div>
         </div>
     </div>
@@ -723,10 +317,7 @@
     <!-- KHỐI QUẢN LÝ DỰ ÁN ĐA NHIỆM -->
     <div id="window-xoa-hoso" class="window-overlay">
         <div class="window-container">
-            <div class="window-titlebar">
-                <div class="window-title"><span class="material-icons" style="color:#ffffff">settings_applications</span> Quản lý & Cấu hình Dự án</div>
-                <button class="window-close" onclick="toggleXoaHoSoModal(false)">✕</button>
-            </div>
+            <div class="window-titlebar"><div class="window-title"><span class="material-icons" style="color:#ffffff">settings_applications</span> Quản lý & Cấu hình Dự án</div><button class="window-close" onclick="toggleXoaHoSoModal(false)">✕</button></div>
             <div class="form-native">
                 <div class="form-group" style="margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -736,9 +327,7 @@
                             <button class="btn-picker" style="background: #9e9e9e; color: white;" onclick="chonTatCaQuanLy(false)">Bỏ chọn</button>
                         </div>
                     </div>
-                    <div id="del-danhsach-hoso" style="max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                        <!-- Nội dung sẽ được JavaScript tạo tự động -->
-                    </div>
+                    <div id="del-danhsach-hoso" style="max-height: 250px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div>
                 </div>
                 <div class="input-group" style="margin-top: 20px;">
                     <button class="form-native btn-submit" style="background-color: #2e7d32; color: white; margin-top: 0; padding: 10px 5px;" onclick="xuLyDoiTrangThaiNhieu(true)">Mở Công Khai</button>
@@ -750,24 +339,15 @@
         </div>
     </div>
 
-    <!-- KHỐI MA TRẬN PHÂN QUYỀN (ĐÃ BỔ SUNG QUYỀN PREVIEW) -->
+    <!-- KHỐI MA TRẬN PHÂN QUYỀN -->
     <div id="window-phanquyen" class="window-overlay">
         <div class="window-container">
-            <div class="window-titlebar">
-                <div class="window-title"><span class="material-icons">manage_accounts</span> Ma trận Cấp quyền Hệ thống</div>
-                <button class="window-close" onclick="togglePhanQuyenModal(false)">✕</button>
-            </div>
+            <div class="window-titlebar"><div class="window-title"><span class="material-icons">manage_accounts</span> Ma trận Cấp quyền Hệ thống</div><button class="window-close" onclick="togglePhanQuyenModal(false)">✕</button></div>
             <div class="phanquyen-layout">
                 <div class="pq-panel pq-form">
                     <h3>Thông số Cấp quyền</h3>
-                    <div class="form-group">
-                        <label>Tên định danh hiển thị:</label>
-                        <input type="text" id="pq-tsa" class="form-native" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Nhập tên hiển thị...">
-                    </div>
-                    <div class="form-group">
-                        <label>Định danh hệ thống (ID nội bộ):</label>
-                        <input type="text" id="pq-tsb" class="form-native" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Nhập ID tham chiếu hệ thống...">
-                    </div>
+                    <div class="form-group"><label>Tên định danh hiển thị:</label><input type="text" id="pq-tsa" class="form-native" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Nhập tên hiển thị..."></div>
+                    <div class="form-group"><label>Định danh hệ thống (ID nội bộ):</label><input type="text" id="pq-tsb" class="form-native" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Nhập ID tham chiếu hệ thống..."></div>
                     <div class="form-group">
                         <label>Chỉ định Phân quyền:</label>
                         <div class="checkbox-group">
@@ -779,16 +359,10 @@
                             <label class="checkbox-label" style="color:#1976D2;"><input type="checkbox" id="role-nhanxet" value="nhanxet"> Quyền Xem & Nhận xét</label>
                             <label class="checkbox-label" style="color:#F57C00;"><input type="checkbox" id="role-tailen" value="tailen"> Quyền Tải lên & Sửa, Xóa tệp</label>
                             
-                            <label class="checkbox-label" style="color:#d32f2f; font-weight: bold;">
-                                <input type="checkbox" id="role-xx" value="xx"> Quản trị tối cao (Admin)
-                            </label>
+                            <label class="checkbox-label" style="color:#d32f2f; font-weight: bold;"><input type="checkbox" id="role-xx" value="xx"> Quản trị tối cao (Admin)</label>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Ma trận quyền truy cập thư mục (Dấu x):</label>
-                        <div class="checkbox-group" id="icon-permission-list" style="max-height: 200px; overflow-y: auto;">
-                        </div>
-                    </div>
+                    <div class="form-group"><label>Ma trận quyền truy cập thư mục (Dấu x):</label><div class="checkbox-group" id="icon-permission-list" style="max-height: 200px; overflow-y: auto;"></div></div>
                     <button class="form-native btn-submit" style="background-color: #8E24AA; color: white;" onclick="ghiNhanQuyen()">Ghi Nhận Thay Đổi</button>
                     <button class="form-native btn-submit" style="background-color: #757575; color: white;" onclick="lamMoiBieuMauQuyen()">Làm Mới Biểu Mẫu</button>
                     <div id="pq-status" class="status-text" style="color:#8E24AA;">Đang đồng bộ...</div>
@@ -797,28 +371,82 @@
                 <div class="pq-panel pq-table-container">
                     <h3>Danh mục Cán bộ trực thuộc</h3>
                     <table class="pq-table">
-                        <thead>
-                            <tr><th>Tên định danh</th><th>ID Hệ thống</th><th>Chi tiết Phân quyền</th><th width="100">Cơ chế</th></tr>
-                        </thead>
-                        <tbody id="bang-phanquyen-body">
-                            <tr><td colspan="4" style="text-align:center;">Đang trích xuất cấu hình...</td></tr>
-                        </tbody>
+                        <thead><tr><th>Tên định danh</th><th>ID Hệ thống</th><th>Chi tiết Phân quyền</th><th width="100">Cơ chế</th></tr></thead>
+                        <tbody id="bang-phanquyen-body"><tr><td colspan="4" style="text-align:center;">Đang trích xuất cấu hình...</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- KHỐI HIỂN THỊ THƯ MỤC CHA TRÊN DESKTOP -->
     <div id="window-folder-view" class="window-overlay">
         <div class="window-container">
-            <div class="window-titlebar" style="background: #2c3e50;">
-                <div class="window-title" id="folder-view-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">folder_open</span> Đang trích xuất dữ liệu thư mục...</div>
-                <button class="window-close" style="color: #ffffff;" onclick="dongCuaSoThuMuc()">✕</button>
+            <div class="window-titlebar" style="background: #2c3e50;"><div class="window-title" id="folder-view-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">folder_open</span> Đang trích xuất dữ liệu thư mục...</div><button class="window-close" style="color: #ffffff;" onclick="dongCuaSoThuMuc()">✕</button></div>
+            <div class="window-content" id="folder-content-area" style="position: relative; background: rgba(30, 30, 30, 0.45); backdrop-filter: blur(20px); padding: 25px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; align-content: flex-start;"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
+    <!-- ========================================================================= -->
+    <div id="window-preview" class="window-overlay">
+        <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
+            <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none;">
+                <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
+                
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <!-- Nút Quay lại thư mục cha -->
+                    <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
+                    </button>
+
+                    <input type="file" id="preview-upload-input" style="display: none;" onchange="xuLyTaiLenTuKhung()">
+                    <button id="btn-preview-upload" class="window-close" style="color: white; background: #388E3C; width: auto; padding: 0 10px; font-size: 13px; display: none;" onclick="document.getElementById('preview-upload-input').click()" title="Tải tệp lên thư mục này">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">upload_file</span> Tải lên
+                    </button>
+                    <button id="btn-preview-delete" class="window-close" style="color: white; background: #d32f2f; width: auto; padding: 0 10px; font-size: 13px; display: none;" onclick="xuLyXoaTepTuKhung()" title="Xóa tệp đang xem">
+                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">delete</span> Xóa tệp
+                    </button>
+                    
+                    <button class="window-close" style="color: white; background: rgba(255,255,255,0.2); width: 35px; margin-left: 10px;" onclick="moLienKetGoc()" title="Mở sang Thẻ mới"><span class="material-icons" style="font-size: 18px;">open_in_new</span></button>
+                    <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
+                </div>
             </div>
-            <div class="window-content" id="folder-content-area" style="position: relative; background: rgba(30, 30, 30, 0.45); backdrop-filter: blur(20px); padding: 25px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; align-content: flex-start;">
+
+            <div id="preview-loading" class="loading-screen" style="position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); background: #f9f9f9; color: #333; z-index: 5;">
+                <span class="material-icons" style="color: #1976D2; font-size: 40px;">sync</span>
+                <h3 id="preview-loading-text" style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
+            </div>
+            
+            <!-- Vùng 1: Hiển thị danh sách File tự dựng -->
+            <div id="preview-custom-folder" class="window-content" style="display: none; background: #fff; padding: 20px; overflow-y: auto; flex: 1; z-index: 2; position: relative;"></div>
+            
+            <!-- Vùng 2: Iframe hiển thị ruột File -->
+            <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 1; position: relative; display: none;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
+        </div>
+    </div>
+    
+    <div id="window-alert" class="window-overlay">
+        <div class="window-container">
+            <div class="window-titlebar"><div class="window-title"><span class="material-icons">warning</span> Trạng thái Cảnh báo</div><button class="window-close" onclick="closeAlertModal()">✕</button></div>
+            <div class="alert-content">
+                <span class="material-icons alert-icon">gpp_bad</span><h3 class="alert-heading">Yêu cầu truy cập</h3>
+                <div id="alert-message" class="alert-message"></div>
+                <button class="btn-confirm" onclick="closeAlertModal()">Xác nhận</button>
             </div>
         </div>
     </div>
+
+    <a href="#" target="_blank" class="nut-huong-dan" title="Hướng dẫn sử dụng" id="btn-huong-dan"><div class="kytu-hoi">?</div><span>Hướng dẫn</span></a>
+
+<script>
+    let icons = []; let isDragging = false; const tooltip = document.getElementById('win-tooltip'); const desktopArea = document.getElementById('desktop-area');
+    let tokenClient; let pickerAccessToken = null;
+    let globalProfiles = []; 
+    let isLoggedIn = false;
+    let sysRoles = "";       
+    let sysIconRoles = "";
 
 // =========================================================================
 // [CẬP NHẬT ĐỒNG BỘ]: KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ
@@ -837,7 +465,6 @@
         document.getElementById('btn-preview-delete').style.display = hasEditUploadRole ? 'flex' : 'none';
         document.getElementById('btn-preview-back').style.display = 'none';
 
-        // Xóa trạng thái giao diện cũ
         document.getElementById('preview-iframe').style.display = 'none';
         document.getElementById('preview-custom-folder').style.display = 'none';
         document.getElementById('window-preview').style.display = 'flex';
@@ -846,13 +473,10 @@
         let folderIdMatch = embedUrl.match(/folders\/([-\w]{25,})/);
         if (!folderIdMatch) folderIdMatch = embedUrl.match(/open\?id=([-\w]{25,})/);
 
-        // KIỂM SOÁT ĐIỀU HƯỚNG
         if (folderIdMatch && !embedUrl.includes('file/d/')) {
-            // LÀ THƯ MỤC -> Tự động gọi API vẽ bảng danh sách File nội bộ
             thuMucHienTaiId = folderIdMatch[1];
             taiDuLieuThuMucDrive(embedUrl);
         } else {
-            // LÀ TỆP ĐƠN LẺ -> Bật Iframe soi ruột File
             thuMucHienTaiId = "";
             document.getElementById('preview-iframe').style.display = 'block';
 
@@ -911,7 +535,6 @@
         document.getElementById('preview-custom-folder').innerHTML = html;
     }
 
-    // Bắt sự kiện Click vào Tệp để mở ngay trong Khung, KHÔNG bật Tab mới
     function moItemTuThuMuc(id, type, name) {
         if (type === 'folder') {
             let newUrl = 'https://drive.google.com/drive/folders/' + id;
@@ -982,7 +605,6 @@
                 fileInput.value = ""; 
                 if(res.status === 'success') { 
                     alert('Tải lên thành công!'); 
-                    // Làm mới lại bảng danh sách ngay lập tức
                     if (thuMucHienTaiId && document.getElementById('preview-custom-folder').style.display !== 'none') {
                         taiDuLieuThuMucDrive(urlXemTruocHienTai);
                     }
@@ -1008,7 +630,6 @@
             document.getElementById('preview-loading').style.display = 'none';
             if(res.status === 'success') { 
                 alert('Đã chuyển tệp vào thùng rác!'); 
-                // Xóa xong tự động lùi về 1 cấp thư mục
                 if (document.getElementById('btn-preview-back').style.display === 'flex' && thuMucHienTaiId) {
                     quayLaiThuMuc(); 
                 } else {
@@ -1366,7 +987,6 @@ function renderIconsFromData(data) {
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
-            // Cập nhật Sự kiện Click với Nhận diện Drive Link
             div.onclick = function() { 
                 if (isDragging) { isDragging = false; return; }
                 if (kiemTraLaThuMuc(item)) {
@@ -1382,7 +1002,6 @@ function renderIconsFromData(data) {
                 let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                 
                 if (allowed) {
-                    // Tự động nhận diện link Drive/Docs để mở trong khung xem trước 95%
                     if (parsed.url.includes("drive.google.com") || parsed.url.includes("docs.google.com")) {
                         moKhuXemTruoc(parsed.url, item.td1, parsed.target);
                     } else {
@@ -1449,7 +1068,6 @@ function moCuaSoThuMuc(tenThuMuc) {
 
                 div.innerHTML = `<div style="position:relative;">${moveOutBtn}${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
                 
-                // Cập nhật Sự kiện Click với Nhận diện Drive Link trong Thư mục con
                 div.onclick = function() { 
                     if (!isLoggedIn && !item.isPublic) {
                         showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để có thể tương tác với cơ sở dữ liệu này!");
@@ -2217,7 +1835,6 @@ function xuLySuaHoSo() {
         });
     }
 
-    // [CẬP NHẬT] Đẩy thông tin quyền mới vào mảng hiển thị
     function hienThiBangQuyen(danhSachQuyen) {
         const tbody = document.getElementById('bang-phanquyen-body'); tbody.innerHTML = '';
         if (danhSachQuyen.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Hệ thống chưa ghi nhận cấu hình.</td></tr>'; return; }
@@ -2242,7 +1859,6 @@ function xuLySuaHoSo() {
         });
     }
 
-    // [CẬP NHẬT] Load dữ liệu vào ô Checkbox cho Quyền Preview
     function dieuChinhQuyen(tsa, tsb, roles, iconRoles) {
         document.getElementById('pq-tsa').value = tsa; document.getElementById('pq-tsb').value = tsb;
         document.getElementById('role-taohoso').checked = roles.includes('taohoso');
@@ -2266,7 +1882,6 @@ function xuLySuaHoSo() {
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
     }
 
-    // [CẬP NHẬT] Gói quyền Preview vào payload để ném cho Backend
     function ghiNhanQuyen() {
         const tsa = document.getElementById('pq-tsa').value.trim(); const tsb = document.getElementById('pq-tsb').value.trim();
         if (!tsa || !tsb) { alert("Yêu cầu hệ thống: Bắt buộc điền đủ các trường định danh!"); return; }
