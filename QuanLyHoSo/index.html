@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -250,7 +249,7 @@
                         <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
                         <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
                         <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
-                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia định)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
                 <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="hs-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
@@ -389,6 +388,7 @@
 
     <!-- ========================================================================= -->
     <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (CUSTOM EXPLORER)        -->
+    <!-- ĐÃ CẤU HÌNH TRẠM KIỂM SOÁT HIỂN THỊ NÚT ĐỒNG BỘ                       -->
     <!-- ========================================================================= -->
     <div id="window-preview" class="window-overlay">
         <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column;">
@@ -396,12 +396,10 @@
                 <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- Nút Quay lại 0 giây (Luôn hiện để thoát khỏi File hoặc Thư mục con) -->
-                    <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: flex; margin-right: 15px;" onclick="quayLaiThuMuc()">
+                    <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
                     </button>
 
-                    <!-- Nút chuyển đổi Chỉnh sửa (Loại bỏ Menu, cấm mở file khác) -->
                     <button id="btn-preview-edit" class="window-close" style="color: white; background: #E65100; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 5px;" onclick="chuyenCheDoChinhSua()" title="Mở bộ công cụ Chỉnh sửa / Nhận xét">
                         <span class="material-icons" style="font-size: 16px; margin-right: 4px;">edit_note</span> Chỉnh sửa / Nhận xét
                     </button>
@@ -667,6 +665,7 @@
         folderHistory = [];
     }
 
+    // [CẬP NHẬT] LUỒNG TẢI LÊN CHUẨN XÁC, MƯỢT MÀ, KHÔNG CẢNH BÁO
     function xuLyTaiLenTuKhung() {
         const fileInput = document.getElementById('preview-upload-input');
         const file = fileInput.files[0];
@@ -677,7 +676,7 @@
             const base64 = e.target.result.split(',')[1];
             const payload = {
                 action: 'uploadFile', fileName: file.name, mimeType: file.type,
-                base64: base64, url: urlXemTruocHienTai,
+                base64: base64, url: urlXemTruocHienTai, // urlXemTruocHienTai luôn bám sát vị trí hiện tại
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
             };
             
@@ -687,15 +686,22 @@
             fetch(KETNOI.WEB_APP_URL, {
                 method: 'POST', body: JSON.stringify(payload)
             }).then(r => r.json()).then(res => {
-                document.getElementById('preview-loading').style.display = 'none';
                 fileInput.value = ""; 
                 if(res.status === 'success') { 
-                    alert('Tải lên thành công!'); 
-                    if (folderHistory.length > 0 && document.getElementById('preview-custom-folder').style.display !== 'none') {
+                    // KHÔNG DÙNG ALERT - tự động tải lại bảng dữ liệu tệp ngay lập tức
+                    if (document.getElementById('preview-custom-folder').style.display !== 'none') {
                         taiDuLieuThuMucDrive(urlXemTruocHienTai);
+                    } else {
+                        document.getElementById('preview-loading').style.display = 'none';
                     }
-                } else { alert("Lỗi: " + res.message); }
-            }).catch(e => { alert("Mất kết nối mạng!"); document.getElementById('preview-loading').style.display = 'none'; });
+                } else { 
+                    document.getElementById('preview-loading').style.display = 'none';
+                    alert("Lỗi: " + res.message); 
+                }
+            }).catch(e => { 
+                document.getElementById('preview-loading').style.display = 'none';
+                alert("Mất kết nối mạng!"); 
+            });
         };
         reader.readAsDataURL(file);
     }
