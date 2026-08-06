@@ -2108,7 +2108,7 @@ function xuLySuaHoSo() {
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
     }
 
-    function ghiNhanQuyen() {
+function ghiNhanQuyen() {
         const tsa = document.getElementById('pq-tsa').value.trim(); const tsb = document.getElementById('pq-tsb').value.trim();
         if (!tsa || !tsb) { alert("Yêu cầu hệ thống: Bắt buộc điền đủ các trường định danh!"); return; }
         let roles = [];
@@ -2135,11 +2135,16 @@ function xuLySuaHoSo() {
                 if (result.status === 'success') { 
                     lamMoiBieuMauQuyen(); 
                     taiDuLieuQuyen(); 
-                    xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
+                    
+                    // [NÂNG CẤP]: Trì hoãn luồng xác thực 1.2s để tránh đụng độ luồng đọc/ghi, chống nghẽn máy chủ Google
+                    setTimeout(() => {
+                        xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
+                    }, 1200);
                 } else { 
                     alert("Cảnh báo: " + result.message); 
                 }
             } catch (jsonError) {
+                console.error("Lỗi từ backend:", text);
                 alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
             }
         });
@@ -2161,11 +2166,16 @@ function xuLySuaHoSo() {
                     if (result.status === 'success') { 
                         alert("Đã hoàn tất quá trình gỡ bỏ!"); 
                         taiDuLieuQuyen(); 
-                        xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
+                        
+                        // [NÂNG CẤP]: Trì hoãn luồng xác thực tương tự như hàm ghiNhanQuyen
+                        setTimeout(() => {
+                            xacThucPhienDangNhap(localStorage.getItem(PREFIX_MEM + 'session')); 
+                        }, 1200);
                     } else { 
                         alert("Cảnh báo: " + result.message); 
                     }
                 } catch (jsonError) {
+                    console.error("Lỗi từ backend:", text);
                     alert("Cảnh báo từ hệ thống: Backend trả về lỗi định dạng HTML. Vui lòng kiểm tra lại log hoạt động.");
                 }
             });
