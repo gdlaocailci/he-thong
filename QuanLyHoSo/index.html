@@ -378,56 +378,11 @@
         </div>
     </div>
 
-    <!-- KHỐI HIỂN THỊ THƯ MỤC CHA TRÊN DESKTOP -->
+    <!-- KHỐI HIỂN THỊ THƯ MỤC CHA TRÊN DESKTOP (Vẫn giữ nguyên để phân cấp dữ liệu trên màn hình chính) -->
     <div id="window-folder-view" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar" style="background: #2c3e50;"><div class="window-title" id="folder-view-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">folder_open</span> Đang trích xuất dữ liệu thư mục...</div><button class="window-close" style="color: #ffffff;" onclick="dongCuaSoThuMuc()">✕</button></div>
             <div class="window-content" id="folder-content-area" style="position: relative; background: rgba(30, 30, 30, 0.45); backdrop-filter: blur(20px); padding: 25px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; align-content: flex-start;"></div>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- KHU XEM TRƯỚC TÍCH HỢP TRÌNH DUYỆT FILE NỘI BỘ (ĐÃ FIX UX/UI FLEXBOX)   -->
-    <!-- ========================================================================= -->
-    <div id="window-preview" class="window-overlay">
-        <div class="window-container" style="width: 95vw; height: 95vh; max-width: 1600px; display: flex; flex-direction: column; overflow: hidden;">
-            
-            <div class="window-titlebar" style="background: #1976D2; color: white; border-bottom: none; flex-shrink: 0;">
-                <div class="window-title" id="preview-title" style="color: white; font-size: 15px;"><span class="material-icons" style="color: white;">visibility</span> Đang tải...</div>
-                
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="btn-preview-back" class="window-close" style="color: white; background: #546E7A; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 15px;" onclick="quayLaiThuMuc()">
-                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span> Quay lại
-                    </button>
-
-                    <button id="btn-preview-edit" class="window-close" style="color: white; background: #E65100; width: auto; padding: 0 10px; font-size: 13px; display: none; margin-right: 5px;" onclick="chuyenCheDoChinhSua()" title="Mở bộ công cụ Chỉnh sửa / Nhận xét">
-                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">edit_note</span> Chỉnh sửa / Nhận xét
-                    </button>
-
-                    <input type="file" id="preview-upload-input" style="display: none;" onchange="xuLyTaiLenTuKhung()">
-                    <button id="btn-preview-upload" class="window-close" style="color: white; background: #388E3C; width: auto; padding: 0 10px; font-size: 13px; display: none;" onclick="document.getElementById('preview-upload-input').click()" title="Tải tệp lên thư mục này">
-                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">upload_file</span> Tải lên
-                    </button>
-                    <button id="btn-preview-delete" class="window-close" style="color: white; background: #d32f2f; width: auto; padding: 0 10px; font-size: 13px; display: none;" onclick="xuLyXoaTepTuKhung()" title="Xóa tệp đang xem">
-                        <span class="material-icons" style="font-size: 16px; margin-right: 4px;">delete</span> Xóa tệp
-                    </button>
-                    
-                    <button class="window-close" style="color: white; width: 35px;" onclick="dongKhuXemTruoc()">✕</button>
-                </div>
-            </div>
-
-            <!-- Khối bọc nội dung (Loại bỏ khoảng trắng cứng tuyệt đối - Auto scale) -->
-            <div style="flex: 1; position: relative; display: flex; flex-direction: column; background: #fff;">
-                <div id="preview-loading" class="loading-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f9f9f9; color: #333; z-index: 5;">
-                    <span class="material-icons" style="color: #1976D2; font-size: 40px; animation: spinHT 1.2s linear infinite;">sync</span>
-                    <h3 id="preview-loading-text" style="color: #333; font-size: 14px; margin-top: 10px;">Hệ thống đang đồng bộ dữ liệu...</h3>
-                </div>
-                
-                <div id="preview-custom-folder" class="window-content" style="display: none; background: #fff; padding: 20px; overflow-y: auto; flex: 1; z-index: 2; position: relative;"></div>
-                
-                <iframe id="preview-iframe" class="window-content" src="" style="flex: 1; width: 100%; border: none; z-index: 1; position: relative; display: none;" onload="document.getElementById('preview-loading').style.display='none'"></iframe>
-            </div>
-
         </div>
     </div>
     
@@ -453,364 +408,29 @@
     let sysIconRoles = "";
 
 // ============================================================================
-// [NÂNG CẤP KIẾN TRÚC CAO CẤP] HỆ THỐNG GIAO TIẾP LÕI (CORE API GATEWAY)
+// HỆ THỐNG GIAO TIẾP LÕI (CORE API GATEWAY)
 // ============================================================================
-// Tích hợp kỹ thuật XHR thay cho Fetch để giải quyết triệt để rủi ro rớt Payload
-// khi Google chuyển hướng 302, đặc biệt khi đường truyền mạng không ổn định hoặc tệp tải lên quá lớn.
     const HT_API = {
         goiMayChu: function(payload, targetUrl = KETNOI.WEB_APP_URL) {
             return new Promise((resolve) => {
                 let xhr = new XMLHttpRequest();
                 xhr.open('POST', targetUrl, true);
-                
-                // Tiêm Header chuẩn của GAS để vượt rào CORS và chống rớt gói tin
                 xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
-                
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200 || xhr.status === 302) {
-                            try {
-                                resolve(JSON.parse(xhr.responseText));
-                            } catch (e) {
-                                resolve({status: 'error', message: 'Lỗi biên dịch phản hồi định dạng từ hệ thống máy chủ.'});
-                            }
+                            try { resolve(JSON.parse(xhr.responseText)); } 
+                            catch (e) { resolve({status: 'error', message: 'Lỗi biên dịch phản hồi định dạng từ hệ thống máy chủ.'}); }
                         } else {
                             resolve({status: 'error', message: 'Hệ thống từ chối hoặc mất phản hồi (Mã lỗi HTTP: ' + xhr.status + ').'});
                         }
                     }
                 };
-                
-                xhr.onerror = function() {
-                    resolve({status: 'error', message: 'Mất kết nối vật lý tới đường truyền mạng Google.'});
-                };
-                
+                xhr.onerror = function() { resolve({status: 'error', message: 'Mất kết nối vật lý tới đường truyền mạng Google.'}); };
                 xhr.send(JSON.stringify(payload));
             });
         }
     };
-
-    let urlXemTruocHienTai = "";
-    let folderHistory = []; 
-
-    function capNhatTrangThaiCacNut(mode, fileId = null, mimeType = "") {
-        let btnBack = document.getElementById('btn-preview-back');
-        let btnUpload = document.getElementById('btn-preview-upload');
-        let btnDelete = document.getElementById('btn-preview-delete');
-        let btnEdit = document.getElementById('btn-preview-edit');
-
-        btnBack.style.display = 'none'; 
-        btnUpload.style.display = 'none';
-        btnDelete.style.display = 'none';
-        btnEdit.style.display = 'none';
-
-        let hasTailen = false;
-        let hasNhanxet = false;
-        if (sysRoles) {
-            let rolesArr = sysRoles.split(',');
-            if (rolesArr.includes('xx') || rolesArr.includes('tailen')) hasTailen = true;
-            if (rolesArr.includes('xx') || rolesArr.includes('tailen') || rolesArr.includes('nhanxet')) hasNhanxet = true;
-        }
-        
-        btnBack.style.display = 'flex'; 
-        
-        if (mode === 'folder_root' && hasTailen) {
-            btnUpload.style.display = 'flex';
-        } 
-        else if (mode === 'file') {
-            if (hasTailen) btnDelete.style.display = 'flex';
-            
-            let mime = mimeType ? mimeType.toLowerCase() : "";
-            let isGoogleDoc = mime.includes('document') || mime.includes('word') || mime === 'application/msword' || 
-                              mime.includes('spreadsheet') || mime.includes('excel') || 
-                              mime.includes('presentation') || mime.includes('powerpoint');
-            
-            if (isGoogleDoc && hasNhanxet && fileId) {
-                btnEdit.style.display = 'flex';
-                btnEdit.setAttribute('data-id', fileId);
-                btnEdit.setAttribute('data-mime', mime);
-            }
-        }
-    }
-
-    function moKhuXemTruoc(url, title, target) {
-        folderHistory = []; 
-        let embedUrl = url;
-        
-        document.getElementById('preview-iframe').style.display = 'none';
-        document.getElementById('preview-custom-folder').style.display = 'none';
-        document.getElementById('window-preview').style.display = 'flex';
-        document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang tương tác: ${title}`;
-
-        let folderIdMatch = embedUrl.match(/folders\/([-\w]{25,})/);
-        if (!folderIdMatch) folderIdMatch = embedUrl.match(/open\?id=([-\w]{25,})/);
-        let fileIdMatch = embedUrl.match(/d\/([-\w]{25,})/);
-
-        if (folderIdMatch && !embedUrl.includes('file/d/')) {
-            let fid = folderIdMatch[1];
-            folderHistory.push({id: fid, name: title, url: embedUrl});
-            urlXemTruocHienTai = embedUrl;
-            
-            capNhatTrangThaiCacNut('folder_root');
-            taiDuLieuThuMucDrive(embedUrl);
-        } else {
-            document.getElementById('preview-iframe').style.display = 'block';
-            
-            let mimeGuess = "";
-            if (embedUrl.includes('document')) mimeGuess = "document";
-            else if (embedUrl.includes('spreadsheets')) mimeGuess = "spreadsheet";
-            else if (embedUrl.includes('presentation')) mimeGuess = "presentation";
-
-            capNhatTrangThaiCacNut('file', fileIdMatch ? fileIdMatch[1] : null, mimeGuess);
-
-            if (embedUrl.includes('drive.google.com/file/d/')) {
-                embedUrl = embedUrl.replace(/\/view.*$/, '/preview');
-            } else if (mimeGuess) {
-                embedUrl = embedUrl.replace(/\/edit.*$/, '/preview');
-            }
-
-            urlXemTruocHienTai = embedUrl;
-            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang tải dữ liệu tệp an toàn, vui lòng chờ...';
-            document.getElementById('preview-loading').style.display = 'flex'; 
-            document.getElementById('preview-iframe').src = embedUrl;
-        }
-    }
-
-    function taiDuLieuThuMucDrive(url) {
-        document.getElementById('preview-loading-text').innerText = 'Đang đồng bộ cấu trúc thư mục từ hệ thống máy chủ...';
-        document.getElementById('preview-loading').style.display = 'flex';
-        document.getElementById('preview-custom-folder').style.display = 'block';
-        document.getElementById('preview-custom-folder').innerHTML = '';
-
-        HT_API.goiMayChu({
-            action: 'getDriveFolderContents', url: url,
-            khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
-        }).then(res => {
-            document.getElementById('preview-loading').style.display = 'none';
-            if (res.status === 'success') {
-                veGiaoDienThuMucDrive(res.data);
-            } else {
-                document.getElementById('preview-custom-folder').innerHTML = '<div style="color:#d32f2f; text-align:center; padding:20px; font-weight:bold;">' + res.message + '</div>';
-            }
-        });
-    }
-
-    function veGiaoDienThuMucDrive(data) {
-        let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
-
-        let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #e0e0e0;">';
-        html += '<tr style="background: #f1f8ff; border-bottom: 2px solid #1976D2;">';
-        html += '<th style="text-align: left; padding: 12px 15px; color:#1976D2;">Tên Dữ liệu</th>';
-        html += '<th style="width: 120px; text-align: center; color:#1976D2;">Định dạng</th>';
-        if (hasTailen) html += '<th style="width: 80px; text-align: center; color:#1976D2;">Thao tác</th>';
-        html += '</tr><tbody>';
-
-        if (data.length === 0) {
-            html += `<tr class="no-data-row"><td colspan="${hasTailen ? 3 : 2}" style="text-align: center; padding: 30px; color: #777;">Thư mục hiện tại không chứa dữ liệu.</td></tr>`;
-        } else {
-            data.forEach(item => {
-                let icon = item.type === 'folder' ? '<span class="material-icons" style="color: #F57C00; vertical-align: middle; margin-right: 10px; font-size: 24px;">folder</span>' : '<span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span>';
-                let typeText = item.type === 'folder' ? 'Thư mục' : 'Tệp tin';
-
-                let actionBtn = "";
-                if (hasTailen) {
-                    if (item.type === 'file') {
-                        actionBtn = `<td style="text-align: center; padding: 12px 15px;"><span class="material-icons" style="color: #d32f2f; cursor: pointer; font-size: 20px; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="event.stopPropagation(); xuLyXoaTepTrucTiep('${item.id}', this.closest('tr'))" title="Xóa tệp này vào Thùng rác">delete</span></td>`;
-                    } else {
-                        actionBtn = `<td style="text-align: center; padding: 12px 15px;"></td>`;
-                    }
-                }
-
-                html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${item.id}', '${item.type}', '${item.name.replace(/'/g, "\\'")}', '${item.mimeType || ''}')">
-                    <td style="padding: 12px 15px; font-weight: 500; color: #333;">${icon} ${item.name}</td>
-                    <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">${typeText}</td>
-                    ${actionBtn}
-                </tr>`;
-            });
-        }
-        html += '</tbody></table>';
-        document.getElementById('preview-custom-folder').innerHTML = html;
-    }
-
-    function xuLyXoaTepTrucTiep(fileId, rowElement) {
-        if (!confirm("Cảnh báo: Thầy/Cô có chắc chắn muốn xóa tệp này vào Thùng rác Drive?")) return;
-        
-        document.getElementById('preview-loading').style.display = 'flex';
-        document.getElementById('preview-loading-text').innerText = 'Đang tiến hành xóa tệp...';
-
-        let fileUrl = 'https://drive.google.com/file/d/' + fileId + '/view';
-
-        HT_API.goiMayChu({
-            action: 'deleteDriveFile', 
-            url: fileUrl,
-            khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
-        }).then(res => {
-            document.getElementById('preview-loading').style.display = 'none';
-            if(res.status === 'success') { 
-                if(rowElement) rowElement.remove(); 
-            } else { 
-                showAlertModal("<b>Cảnh báo xóa tệp:</b><br>" + res.message); 
-            }
-        });
-    }
-
-    function xuLyTaiLenTuKhung() {
-        const fileInput = document.getElementById('preview-upload-input');
-        const file = fileInput.files[0];
-        if (!file) return;
-
-        if (file.size > 25 * 1024 * 1024) {
-            showAlertModal("<b>CẢNH BÁO DUNG LƯỢNG</b><br><br>Hệ thống chỉ hỗ trợ tải lên tệp tin tối đa <b>25MB</b> qua cổng giao tiếp trực tiếp. Vui lòng nén nhỏ tệp tin của Thầy/Cô!");
-            fileInput.value = "";
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const base64 = e.target.result.split(',')[1];
-            const payload = {
-                action: 'uploadFile', fileName: file.name, mimeType: file.type,
-                base64: base64, url: urlXemTruocHienTai, 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
-            };
-            
-            document.getElementById('preview-loading').style.display = 'flex';
-            document.getElementById('preview-loading-text').innerText = 'Đang mã hóa và đẩy tệp lên máy chủ lưu trữ...';
-
-            HT_API.goiMayChu(payload).then(res => {
-                fileInput.value = ""; 
-                if(res.status === 'success') { 
-                    document.getElementById('preview-loading').style.display = 'none';
-                    if (document.getElementById('preview-custom-folder').style.display !== 'none' && res.file) {
-                        let tableBody = document.querySelector('#preview-custom-folder table tbody');
-                        let hasTailen = (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('tailen')));
-
-                        if (tableBody) {
-                            let noDataRow = tableBody.querySelector('.no-data-row');
-                            if (noDataRow) noDataRow.remove();
-
-                            let actionBtn = hasTailen ? `<td style="text-align: center; padding: 12px 15px;"><span class="material-icons" style="color: #d32f2f; cursor: pointer; font-size: 20px; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="event.stopPropagation(); xuLyXoaTepTrucTiep('${res.file.id}', this.closest('tr'))" title="Xóa tệp này vào Thùng rác">delete</span></td>` : "";
-
-                            let newRowHTML = `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${res.file.id}', 'file', '${res.file.name.replace(/'/g, "\\'")}', '${res.file.mimeType}')">
-                                <td style="padding: 12px 15px; font-weight: 500; color: #333;"><span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span> ${res.file.name}</td>
-                                <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">Tệp tin</td>
-                                ${actionBtn}
-                            </tr>`;
-                            tableBody.insertAdjacentHTML('afterbegin', newRowHTML); 
-                        }
-                    }
-                } else { 
-                    document.getElementById('preview-loading').style.display = 'none';
-                    showAlertModal("<b>Cảnh báo tải lên:</b><br>" + res.message); 
-                }
-            });
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function moItemTuThuMuc(id, type, name, mimeType) {
-        if (type === 'folder') {
-            let newUrl = 'https://drive.google.com/drive/folders/' + id;
-            folderHistory.push({id: id, name: name, url: newUrl});
-            urlXemTruocHienTai = newUrl; 
-            
-            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${name}`;
-            capNhatTrangThaiCacNut('folder_root');
-            taiDuLieuThuMucDrive(newUrl);
-        } else {
-            document.getElementById('preview-custom-folder').style.display = 'none';
-            document.getElementById('preview-iframe').style.display = 'block';
-            document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">visibility</span> Đang xem: ${name}`;
-
-            capNhatTrangThaiCacNut('file', id, mimeType);
-
-            let fileUrl = 'https://drive.google.com/file/d/' + id + '/preview';
-            urlXemTruocHienTai = fileUrl; 
-            
-            document.getElementById('preview-loading-text').innerText = 'Hệ thống đang trích xuất nội dung tệp an toàn...';
-            document.getElementById('preview-loading').style.display = 'flex';
-            document.getElementById('preview-iframe').src = fileUrl;
-        }
-    }
-
-    function chuyenCheDoChinhSua() {
-        let id = document.getElementById('btn-preview-edit').getAttribute('data-id');
-        let mime = document.getElementById('btn-preview-edit').getAttribute('data-mime');
-        let editUrl = "";
-
-        if (mime.includes('document') || mime.includes('word') || mime === 'application/msword') {
-            editUrl = 'https://docs.google.com/document/d/' + id + '/edit?rm=minimal';
-        } else if (mime.includes('spreadsheet') || mime.includes('excel')) {
-            editUrl = 'https://docs.google.com/spreadsheets/d/' + id + '/edit?rm=minimal';
-        } else if (mime.includes('presentation') || mime.includes('powerpoint')) {
-            editUrl = 'https://docs.google.com/presentation/d/' + id + '/edit?rm=minimal';
-        } else {
-            editUrl = 'https://drive.google.com/file/d/' + id + '/edit?rm=minimal';
-        }
-
-        document.getElementById('preview-loading-text').innerText = 'Đang khởi tạo không gian Chỉnh sửa/Nhận xét độc lập...';
-        document.getElementById('preview-loading').style.display = 'flex';
-        document.getElementById('preview-iframe').src = editUrl;
-        
-        document.getElementById('btn-preview-edit').style.display = 'none';
-    }
-
-    function quayLaiThuMuc() {
-        let iframe = document.getElementById('preview-iframe');
-        let isViewingFile = iframe.style.display === 'block';
-
-        if (isViewingFile) {
-            if (folderHistory.length > 0) {
-                let currentFolder = folderHistory[folderHistory.length - 1];
-                capNhatTrangThaiCacNut('folder_root');
-                iframe.src = "";
-                iframe.style.display = 'none';
-                document.getElementById('preview-custom-folder').style.display = 'block';
-                document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${currentFolder.name}`;
-                urlXemTruocHienTai = currentFolder.url;
-            } else {
-                dongKhuXemTruoc();
-            }
-        } else {
-            folderHistory.pop(); 
-            if (folderHistory.length > 0) {
-                let parentFolder = folderHistory[folderHistory.length - 1];
-                capNhatTrangThaiCacNut('folder_root');
-                urlXemTruocHienTai = parentFolder.url;
-                document.getElementById('preview-title').innerHTML = `<span class="material-icons" style="color: white;">folder_open</span> Thư mục: ${parentFolder.name}`;
-                taiDuLieuThuMucDrive(parentFolder.url);
-            } else {
-                dongKhuXemTruoc();
-            }
-        }
-    }
-
-    function dongKhuXemTruoc() {
-        document.getElementById('window-preview').style.display = 'none';
-        document.getElementById('preview-iframe').src = ""; 
-        document.getElementById('preview-custom-folder').innerHTML = "";
-        urlXemTruocHienTai = "";
-        folderHistory = [];
-    }
-
-    function xuLyXoaTepTuKhung() {
-        if (!confirm("Cảnh báo: Thầy/Cô có chắc chắn muốn xóa tệp này vào Thùng rác Drive?")) return;
-        
-        document.getElementById('preview-loading').style.display = 'flex';
-        document.getElementById('preview-loading-text').innerText = 'Đang tiến hành xóa tệp...';
-
-        HT_API.goiMayChu({
-            action: 'deleteDriveFile', 
-            url: urlXemTruocHienTai,
-            khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
-        }).then(res => {
-            document.getElementById('preview-loading').style.display = 'none';
-            if(res.status === 'success') { 
-                quayLaiThuMuc(); 
-            } else { 
-                showAlertModal("<b>Cảnh báo xóa tệp:</b><br>" + res.message); 
-            }
-        });
-    }
 
     function getUrlAndTarget(encodedTd2) {
         let decodedStr = encodedTd2 || '';
@@ -1140,11 +760,14 @@
                 let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                 
                 if (allowed) {
-                    if (parsed.url.includes("drive.google.com") || parsed.url.includes("docs.google.com")) {
-                        moKhuXemTruoc(parsed.url, item.td1, parsed.target);
-                    } else {
-                        window.open(parsed.url, parsed.target);
+                    let finalUrl = parsed.url;
+                    // Phân tích và ép đường dẫn Google Drive thành giao diện tối giản (Minimal) khi chỉnh sửa
+                    if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
+                        if (finalUrl.match(/\/(edit|view|preview)/)) {
+                            finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+                        }
                     }
+                    window.open(finalUrl, parsed.target);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -1216,11 +839,14 @@
                     let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                     
                     if (allowed) {
-                        if (parsed.url.includes("drive.google.com") || parsed.url.includes("docs.google.com")) {
-                            moKhuXemTruoc(parsed.url, item.td1, parsed.target);
-                        } else {
-                            window.open(parsed.url, parsed.target);
+                        let finalUrl = parsed.url;
+                        // Phân tích và ép đường dẫn Google Drive thành giao diện tối giản (Minimal) khi chỉnh sửa
+                        if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
+                            if (finalUrl.match(/\/(edit|view|preview)/)) {
+                                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+                            }
                         }
+                        window.open(finalUrl, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
