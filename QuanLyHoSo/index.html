@@ -1152,7 +1152,7 @@ function getUrlAndTarget(encodedTd2) {
         }
     }
 
-    function renderIconsFromData(data) {
+function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
         capNhatDropdownThuMuc();
@@ -1174,7 +1174,26 @@ function getUrlAndTarget(encodedTd2) {
 
             div.style.animationDelay = (index * 0.04) + 's';
 
-            let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
+            // =========================================================================
+            // [THUẬT TOÁN NÂNG CẤP] CHUẨN HÓA SO KHỚP MA TRẬN QUYỀN (DESKTOP)
+            // Khử khoảng trắng thừa và chuyển tất cả về chữ thường trước khi so sánh
+            // =========================================================================
+            let coQuyenTruyCap = false;
+            if (isLoggedIn) {
+                let laQuanTri = sysRoles ? sysRoles.includes('xx') : false;
+                let coQuyenIcon = false;
+                
+                if (sysIconRoles) {
+                    let mangQuyenSanSang = sysIconRoles.split('|').map(q => q.trim().toLowerCase());
+                    let tenIconHienTai = item.td1.trim().toLowerCase();
+                    coQuyenIcon = mangQuyenSanSang.includes(tenIconHienTai);
+                }
+                
+                coQuyenTruyCap = laQuanTri || coQuyenIcon;
+            }
+            let hienCoKhoa = !item.isPublic && !coQuyenTruyCap;
+
+            let publicBadge = hienCoKhoa ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
@@ -1191,7 +1210,17 @@ function getUrlAndTarget(encodedTd2) {
                 
                 let parsed = getUrlAndTarget(item.td2);
                 
-                if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
+                // Áp dụng thuật toán so khớp mới cho cả luồng Click
+                let duocPhepMo = false;
+                if (item.isPublic || (sysRoles && sysRoles.includes('xx'))) {
+                    duocPhepMo = true;
+                } else if (sysIconRoles) {
+                    let mangQuyenClick = sysIconRoles.split('|').map(q => q.trim().toLowerCase());
+                    let tenIconClick = item.td1.trim().toLowerCase();
+                    duocPhepMo = mangQuyenClick.includes(tenIconClick);
+                }
+
+                if (duocPhepMo) {
                     window.open(parsed.url, parsed.target);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
@@ -1205,9 +1234,6 @@ function getUrlAndTarget(encodedTd2) {
         setupTooltipEvents(); 
         setupDragEvents();
         initializeLayout(); 
-
-        // [NÂNG CẤP] Kích hoạt kiểm tra Công văn mới sau khi render xong
-        if (isLoggedIn) { setTimeout(kiemTraCongVanMoi, 500); }
     }
 
     function dongCuaSoThuMuc() {
@@ -1215,7 +1241,7 @@ function getUrlAndTarget(encodedTd2) {
         document.getElementById('folder-content-area').innerHTML = '';
     }
 
-    function moCuaSoThuMuc(tenThuMuc) {
+function moCuaSoThuMuc(tenThuMuc) {
         document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
         folderArea.innerHTML = ''; 
@@ -1237,7 +1263,26 @@ function getUrlAndTarget(encodedTd2) {
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
-                let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
+                // =========================================================================
+                // [THUẬT TOÁN NÂNG CẤP] CHUẨN HÓA SO KHỚP MA TRẬN QUYỀN (TRONG THƯ MỤC)
+                // Khử khoảng trắng thừa và chuyển tất cả về chữ thường trước khi so sánh
+                // =========================================================================
+                let coQuyenTruyCapFolder = false;
+                if (isLoggedIn) {
+                    let laQuanTriFolder = sysRoles ? sysRoles.includes('xx') : false;
+                    let coQuyenIconFolder = false;
+                    
+                    if (sysIconRoles) {
+                        let mangQuyenSanSangF = sysIconRoles.split('|').map(q => q.trim().toLowerCase());
+                        let tenIconHienTaiF = item.td1.trim().toLowerCase();
+                        coQuyenIconFolder = mangQuyenSanSangF.includes(tenIconHienTaiF);
+                    }
+                    
+                    coQuyenTruyCapFolder = laQuanTriFolder || coQuyenIconFolder;
+                }
+                let hienCoKhoaFolder = !item.isPublic && !coQuyenTruyCapFolder;
+                
+                let publicBadge = hienCoKhoaFolder ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
                 
                 let moveOutBtn = "";
                 if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
@@ -1254,7 +1299,17 @@ function getUrlAndTarget(encodedTd2) {
                     
                     let parsed = getUrlAndTarget(item.td2);
                     
-                    if (item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))) {
+                    // Áp dụng thuật toán so khớp mới cho cả luồng Click trong Thư mục
+                    let duocPhepMoF = false;
+                    if (item.isPublic || (sysRoles && sysRoles.includes('xx'))) {
+                        duocPhepMoF = true;
+                    } else if (sysIconRoles) {
+                        let mangQuyenClickF = sysIconRoles.split('|').map(q => q.trim().toLowerCase());
+                        let tenIconClickF = item.td1.trim().toLowerCase();
+                        duocPhepMoF = mangQuyenClickF.includes(tenIconClickF);
+                    }
+
+                    if (duocPhepMoF) {
                         window.open(parsed.url, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
