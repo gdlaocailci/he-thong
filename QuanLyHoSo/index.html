@@ -867,8 +867,7 @@ function getUrlAndTarget(encodedTd2) {
         let parts = decodedStr.split('|||');
         let finalUrl = parts[0] ? parts[0].trim() : '';
         
-        // ĐÃ NÂNG CẤP: Ngoại trừ cờ hiệu Thư mục nội bộ khỏi logic tự động gán https://
-        if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://') && finalUrl !== '#INTERNAL_FOLDER_CONTAINER#') {
+       if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://') && finalUrl !== '#INTERNAL_FOLDER_CONTAINER#') {
             finalUrl = 'https://' + finalUrl;
         }
         
@@ -886,8 +885,6 @@ function getUrlAndTarget(encodedTd2) {
             return btoa(raw); 
         }
     }
-    // ---------------------------------------------
-
 window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
         tokenClient = google.accounts.oauth2.initTokenClient({
