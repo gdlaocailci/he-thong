@@ -999,7 +999,7 @@ function getUrlAndTarget(encodedTd2) {
         location.reload(); 
     }
 
-    function xacThucPhienDangNhap(sysSession) {
+function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -1035,7 +1035,13 @@ function getUrlAndTarget(encodedTd2) {
                 alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Vui lòng kiểm tra lại cấu hình phân quyền Web App.");
                 dangXuat();
             }
-        }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
+        }).catch(error => {
+            console.error("Lỗi đường truyền xác thực:", error);
+            // [CẬP NHẬT TỐI ƯU]: Mở khóa giao diện và thông báo nếu băng thông/máy chủ Google bị treo
+            document.getElementById('sys-name').innerText = "Lỗi kết nối!";
+            alert("Đường truyền mạng hoặc máy chủ Google đang quá tải khiến việc xác thực bị gián đoạn. Xin vui lòng tải lại trang (F5).");
+            dangXuat();
+        });
     }
 
     function apDungPhanQuyen(roles) {
