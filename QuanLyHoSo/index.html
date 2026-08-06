@@ -276,7 +276,7 @@
                         <optgroup label="Đời sống & Xã hội"><option value="yte">Y tế & Sức khỏe (Y tế)</option><option value="thethao">Thể dục Thể thao (Quả bóng)</option><option value="vanhoa">Văn hóa & Nghệ thuật (Sân khấu)</option><option value="amnhac">Âm nhạc & Giải trí (Nốt nhạc)</option><option value="nhiepanh">Nhiếp ảnh & Truyền hình (Máy ảnh)</option><option value="truyenthong">Truyền thông & Tin tức (Loa phóng thanh)</option><option value="baove">Bảo vệ & An ninh (Cảnh sát/Khiên)</option><option value="vesinh">Vệ sinh & Môi trường (Chổi)</option><option value="xeco">Phương tiện & Nhà xe (Ô tô)</option></optgroup>
                         <optgroup label="Kinh tế & Ngoại giao"><option value="doingoai">Đối ngoại & Hợp tác (Quả địa cầu)</option><option value="du_an">Dự án & Sáng kiến (Tên lửa)</option><option value="khoa_hoc">Khoa học & Nghiên cứu (Ống nghiệm)</option><option value="nongnghiep">Nông nghiệp & Sinh thái (Mầm cây)</option><option value="congnghiep">Công nghiệp & Sản xuất (Nhà máy)</option><option value="thuongmai">Thương mại & Dịch vụ (Cửa hàng)</option><option value="dulich">Du lịch & Tham quan (Máy bay)</option><option value="xaydung">Xây dựng & Quy hoạch (Kiến trúc)</option><option value="kientruc">Kiến trúc & Cảnh quan (Tòa nhà)</option><option value="giaothong">Giao thông & Vận tải (Đèn tín hiệu)</option><option value="logictics">Vận chuyển & Logistics (Xe tải)</option><option value="baohiem">Bảo hiểm & An sinh (Tấm khiên)</option><option value="thue">Thuế & Phí (Hóa đơn)</option><option value="nangluong">Năng lượng & Điện (Tia chớp)</option></optgroup>
                         <optgroup label="Giới tính & Cá nhân"><option value="nam">Giới tính Nam (Cán bộ - Ảnh trực tiếp)</option><option value="nu">Giới tính Nữ (Giáo viên - Ảnh trực tiếp)</option><option value="thuky">Nữ Thư ký (Nhân viên - Ảnh trực tiếp)</option></optgroup>
-                        <optgroup label="Khác"><option value="danso">D dân số & Xã hội (Gia đình)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
+                        <optgroup label="Khác"><option value="danso">Dân số & Xã hội (Gia định)</option><option value="tainguyen">Tài nguyên & Thiên nhiên (Rừng cây)</option><option value="phucvu">Phục vụ & Hậu cần (Dịch vụ)</option><option value="bando">Bản đồ & Địa lý (Bản đồ)</option><option value="hotro">Hỗ trợ & Chăm sóc (Tổng đài)</option><option value="khac">Dự án Khác (Biểu tượng chung)</option></optgroup>
                     </select>
                 </div>
                 <div class="form-group"><label>Hiệu ứng hiển thị:</label><select id="tm-hieuung" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"><option value="none">Mặc định (Nổi bật một lần)</option><option value="float">Lơ lửng (Float)</option><option value="pulse">Nhịp đập (Pulse)</option><option value="wobble">Lắc lư (Wobble)</option><option value="glow">Tỏa sáng (Glow)</option></select></div>
@@ -708,30 +708,7 @@
         }
     }
 
-    // HÀM MỚI: TỰ ĐỘNG ÉP GIAO DIỆN DRIVE/DOCS VỀ CHẾ ĐỘ TỐI GIẢN
-    function moLienKetToiUu(urlGoc, target) {
-        let finalUrl = urlGoc;
-        
-        // 1. Xử lý Thư mục Drive (Ẩn menu ngoài, chỉ giữ khung danh sách)
-        let folderMatch = finalUrl.match(/\/folders\/([-\w]{25,})/);
-        if (!folderMatch) folderMatch = finalUrl.match(/id=([-\w]{25,})/);
-        
-        if (finalUrl.includes('drive.google.com') && folderMatch && !finalUrl.includes('file/d/')) {
-            let folderId = folderMatch[1];
-            // Sử dụng "embeddedfolderview" để cắt bỏ viền, "#list" để hiện danh sách chi tiết
-            finalUrl = 'https://drive.google.com/embeddedfolderview?id=' + folderId + '#list';
-        } 
-        // 2. Xử lý Tệp tin Docs/Sheets/Slides (Ép cờ Minimal để ẩn Menu)
-        else if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
-            if (finalUrl.match(/\/(edit|view|preview)/)) {
-                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
-            }
-        }
-        
-        window.open(finalUrl, target);
-    }
-
-function renderIconsFromData(data) {
+    function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
         capNhatDropdownThuMuc();
@@ -783,8 +760,13 @@ function renderIconsFromData(data) {
                 let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                 
                 if (allowed) {
-                    // Kích hoạt đường dẫn tối ưu thay vì mã mở thô
-                    moLienKetToiUu(parsed.url, parsed.target);
+                    let finalUrl = parsed.url;
+                    if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
+                        if (finalUrl.match(/\/(edit|view|preview)/)) {
+                            finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+                        }
+                    }
+                    window.open(finalUrl, parsed.target);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -804,7 +786,7 @@ function renderIconsFromData(data) {
         document.getElementById('folder-content-area').innerHTML = '';
     }
 
-function moCuaSoThuMuc(tenThuMuc) {
+    function moCuaSoThuMuc(tenThuMuc) {
         document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
         folderArea.innerHTML = ''; 
@@ -856,8 +838,13 @@ function moCuaSoThuMuc(tenThuMuc) {
                     let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                     
                     if (allowed) {
-                        // Kích hoạt đường dẫn tối ưu thay vì mã mở thô
-                        moLienKetToiUu(parsed.url, parsed.target);
+                        let finalUrl = parsed.url;
+                        if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
+                            if (finalUrl.match(/\/(edit|view|preview)/)) {
+                                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+                            }
+                        }
+                        window.open(finalUrl, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
