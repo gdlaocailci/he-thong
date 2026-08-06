@@ -605,8 +605,7 @@
         document.getElementById('preview-custom-folder').innerHTML = html;
     }
 
-// 2. BỔ SUNG HÀM XÓA TRỰC TIẾP TỪ BẢNG (Xóa xong ẩn dòng ngay lập tức 0s)
-    function xuLyXoaTepTrucTiep(fileId, rowElement) {
+function xuLyXoaTepTrucTiep(fileId, rowElement) {
         if (!confirm("Cảnh báo: Thầy/Cô có chắc chắn muốn xóa tệp này vào Thùng rác Drive?")) return;
         
         document.getElementById('preview-loading').style.display = 'flex';
@@ -616,9 +615,9 @@
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ĐÃ SỬA LỖI MẤT KẾT NỐI
             body: JSON.stringify({
-                action: 'deleteDriveFile', url: fileUrl,
+                action: 'deleteDriveFile', 
+                url: fileUrl,
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
             })
         }).then(r => r.json()).then(res => {
@@ -634,14 +633,13 @@
         });
     }
 
-// 3. CẬP NHẬT HÀM TẢI LÊN (DOM Injection)
-    function xuLyTaiLenTuKhung() {
+function xuLyTaiLenTuKhung() {
         const fileInput = document.getElementById('preview-upload-input');
         const file = fileInput.files[0];
         if (!file) return;
 
         if (file.size > 25 * 1024 * 1024) {
-            showAlertModal("<b>CẢNH BÁO DUNG LƯỢNG</b><br><br>Hệ thống chỉ hỗ trợ tải lên tệp tin tối đa <b>25MB</b>. Vui lòng nén nhỏ tệp tin của Thầy/Cô!");
+            showAlertModal("<b>CẢNH BÁO DUNG LƯỢNG</b><br><br>Hệ thống chỉ hỗ trợ tải lên tệp tin tối đa <b>25MB</b> qua cổng giao tiếp trực tiếp. Vui lòng nén nhỏ tệp tin của Thầy/Cô!");
             fileInput.value = "";
             return;
         }
@@ -659,8 +657,7 @@
             document.getElementById('preview-loading-text').innerText = 'Đang mã hóa và đẩy tệp lên máy chủ lưu trữ...';
 
             fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ĐÃ SỬA LỖI MẤT KẾT NỐI
+                method: 'POST', 
                 body: JSON.stringify(payload)
             }).then(r => r.json()).then(res => {
                 fileInput.value = ""; 
@@ -783,61 +780,7 @@
         folderHistory = [];
     }
 
-// TẢI LÊN DOM INJECTION: Nhanh gọn, không vướng LockService (Đã Fix UX Alert)
-    function xuLyTaiLenTuKhung() {
-        const fileInput = document.getElementById('preview-upload-input');
-        const file = fileInput.files[0];
-        if (!file) return;
 
-        // Giới hạn file tải lên qua chuẩn Base64 của Google App Script (Tối đa 25MB)
-        if (file.size > 25 * 1024 * 1024) {
-            showAlertModal("<b>CẢNH BÁO DUNG LƯỢNG</b><br><br>Hệ thống chỉ hỗ trợ tải lên tệp tin tối đa <b>25MB</b> qua cổng giao tiếp trực tiếp. Vui lòng nén nhỏ tệp tin của Thầy/Cô!");
-            fileInput.value = "";
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const base64 = e.target.result.split(',')[1];
-            const payload = {
-                action: 'uploadFile', fileName: file.name, mimeType: file.type,
-                base64: base64, url: urlXemTruocHienTai, 
-                khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
-            };
-            
-            document.getElementById('preview-loading').style.display = 'flex';
-            document.getElementById('preview-loading-text').innerText = 'Đang mã hóa và đẩy tệp lên máy chủ lưu trữ...';
-
-            fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST', body: JSON.stringify(payload)
-            }).then(r => r.json()).then(res => {
-                fileInput.value = ""; 
-                if(res.status === 'success') { 
-                    document.getElementById('preview-loading').style.display = 'none';
-                    if (document.getElementById('preview-custom-folder').style.display !== 'none' && res.file) {
-                        let tableBody = document.querySelector('#preview-custom-folder table tbody');
-                        if (tableBody) {
-                            let noDataRow = tableBody.querySelector('.no-data-row');
-                            if (noDataRow) noDataRow.remove();
-
-                            let newRowHTML = `<tr style="border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'" onclick="moItemTuThuMuc('${res.file.id}', 'file', '${res.file.name.replace(/'/g, "\\'")}', '${res.file.mimeType}')">
-                                <td style="padding: 12px 15px; font-weight: 500; color: #333;"><span class="material-icons" style="color: #1976D2; vertical-align: middle; margin-right: 10px; font-size: 24px;">insert_drive_file</span> ${res.file.name}</td>
-                                <td style="text-align: center; padding: 12px 15px; color: #777; font-size: 13px;">Tệp tin</td>
-                            </tr>`;
-                            tableBody.insertAdjacentHTML('beforeend', newRowHTML);
-                        }
-                    }
-                } else { 
-                    document.getElementById('preview-loading').style.display = 'none';
-                    showAlertModal("<b>Cảnh báo tải lên:</b><br>" + res.message); 
-                }
-            }).catch(e => { 
-                document.getElementById('preview-loading').style.display = 'none';
-                showAlertModal("<b>Lỗi hệ thống:</b><br>Sự cố mất kết nối đường truyền mạng khi đang tải tệp lên!"); 
-            });
-        };
-        reader.readAsDataURL(file);
-    }
 
 function xuLyXoaTepTuKhung() {
         if (!confirm("Cảnh báo: Thầy/Cô có chắc chắn muốn xóa tệp này vào Thùng rác Drive?")) return;
@@ -847,16 +790,16 @@ function xuLyXoaTepTuKhung() {
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ĐÃ SỬA LỖI MẤT KẾT NỐI
             body: JSON.stringify({
-                action: 'deleteDriveFile', url: urlXemTruocHienTai,
+                action: 'deleteDriveFile', 
+                url: urlXemTruocHienTai,
                 khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
             })
         }).then(r => r.json()).then(res => {
             document.getElementById('preview-loading').style.display = 'none';
             if(res.status === 'success') { 
+                // Đã loại bỏ lệnh tải lại thư mục dư thừa, chỉ cần mượn logic của quayLaiThuMuc()
                 quayLaiThuMuc(); 
-                if (folderHistory.length > 0) taiDuLieuThuMucDrive(urlXemTruocHienTai); 
             } else { 
                 showAlertModal("<b>Cảnh báo xóa tệp:</b><br>" + res.message); 
             }
@@ -866,6 +809,7 @@ function xuLyXoaTepTuKhung() {
         });
     }
 
+    
 function getUrlAndTarget(encodedTd2) {
         let decodedStr = encodedTd2 || '';
         try {
