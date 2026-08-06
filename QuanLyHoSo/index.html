@@ -1032,7 +1032,7 @@ function getUrlAndTarget(encodedTd2) {
         }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
     }
 
-    function apDungPhanQuyen(roles) {
+function apDungPhanQuyen(roles) {
         const btnCreate = document.getElementById('btn-create-profile'); 
         const btnAssign = document.getElementById('btn-assign-profile'); 
         const btnEdit = document.getElementById('btn-edit-profile'); 
@@ -1057,6 +1057,11 @@ function getUrlAndTarget(encodedTd2) {
                 btnDelete.style.display = 'flex';
                 btnEdit.style.display = 'flex'; 
             }
+        }
+
+       
+        if (typeof globalProfiles !== 'undefined' && globalProfiles.length > 0) {
+            renderIconsFromData(globalProfiles);
         }
     }
 
