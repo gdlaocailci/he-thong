@@ -708,7 +708,30 @@
         }
     }
 
-    function renderIconsFromData(data) {
+    // HÀM MỚI: TỰ ĐỘNG ÉP GIAO DIỆN DRIVE/DOCS VỀ CHẾ ĐỘ TỐI GIẢN
+    function moLienKetToiUu(urlGoc, target) {
+        let finalUrl = urlGoc;
+        
+        // 1. Xử lý Thư mục Drive (Ẩn menu ngoài, chỉ giữ khung danh sách)
+        let folderMatch = finalUrl.match(/\/folders\/([-\w]{25,})/);
+        if (!folderMatch) folderMatch = finalUrl.match(/id=([-\w]{25,})/);
+        
+        if (finalUrl.includes('drive.google.com') && folderMatch && !finalUrl.includes('file/d/')) {
+            let folderId = folderMatch[1];
+            // Sử dụng "embeddedfolderview" để cắt bỏ viền, "#list" để hiện danh sách chi tiết
+            finalUrl = 'https://drive.google.com/embeddedfolderview?id=' + folderId + '#list';
+        } 
+        // 2. Xử lý Tệp tin Docs/Sheets/Slides (Ép cờ Minimal để ẩn Menu)
+        else if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
+            if (finalUrl.match(/\/(edit|view|preview)/)) {
+                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+            }
+        }
+        
+        window.open(finalUrl, target);
+    }
+
+function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
         capNhatDropdownThuMuc();
@@ -760,14 +783,8 @@
                 let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                 
                 if (allowed) {
-                    let finalUrl = parsed.url;
-                    // Phân tích và ép đường dẫn Google Drive thành giao diện tối giản (Minimal) khi chỉnh sửa
-                    if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
-                        if (finalUrl.match(/\/(edit|view|preview)/)) {
-                            finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
-                        }
-                    }
-                    window.open(finalUrl, parsed.target);
+                    // Kích hoạt đường dẫn tối ưu thay vì mã mở thô
+                    moLienKetToiUu(parsed.url, parsed.target);
                 } else {
                     showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
                 }
@@ -787,7 +804,7 @@
         document.getElementById('folder-content-area').innerHTML = '';
     }
 
-    function moCuaSoThuMuc(tenThuMuc) {
+function moCuaSoThuMuc(tenThuMuc) {
         document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
         folderArea.innerHTML = ''; 
@@ -839,14 +856,8 @@
                     let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                     
                     if (allowed) {
-                        let finalUrl = parsed.url;
-                        // Phân tích và ép đường dẫn Google Drive thành giao diện tối giản (Minimal) khi chỉnh sửa
-                        if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
-                            if (finalUrl.match(/\/(edit|view|preview)/)) {
-                                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
-                            }
-                        }
-                        window.open(finalUrl, parsed.target);
+                        // Kích hoạt đường dẫn tối ưu thay vì mã mở thô
+                        moLienKetToiUu(parsed.url, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
