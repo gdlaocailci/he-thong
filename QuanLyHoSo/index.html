@@ -5,6 +5,7 @@
     <link id="sys-favicon" rel="icon" href="">
     <meta charset="UTF-8">
     
+    <!-- CẬP NHẬT: GIỮ LẠI LỆNH KHÓA ZOOM ĐỂ TRÁNH LỆCH KHUNG HÌNH TRÊN ĐIỆN THOẠI -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2c3e50">
     
@@ -493,7 +494,7 @@
                             <option value="hoso">Hồ sơ & Lưu trữ (Thư mục)</option>
                             <option value="kiemtra">Kiểm tra & Giám sát (Dấu tick)</option>
                             <option value="danhgia">Đánh giá & Xếp loại (Bảng ghi)</option>
-                            <option value="baocao">Báo cáo & thống kê (Biểu đồ)</option>
+                            <option value="baocao">Báo cáo & Thống kê (Biểu đồ)</option>
                             <option value="thi">Thi cử & Khảo thí (Dấu hỏi)</option>
                             <option value="khenthuong">Khen thưởng & Thi đua (Cúp vàng)</option>
                             <option value="kyluat">Pháp chế & Kỷ luật (Cái búa)</option>
@@ -867,7 +868,8 @@ function getUrlAndTarget(encodedTd2) {
         let parts = decodedStr.split('|||');
         let finalUrl = parts[0] ? parts[0].trim() : '';
         
-       if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://') && finalUrl !== '#INTERNAL_FOLDER_CONTAINER#') {
+        // ĐÃ NÂNG CẤP: Ngoại trừ cờ hiệu Thư mục nội bộ khỏi logic tự động gán https://
+        if (finalUrl !== "" && !finalUrl.toLowerCase().startsWith('http://') && !finalUrl.toLowerCase().startsWith('https://') && finalUrl !== '#INTERNAL_FOLDER_CONTAINER#') {
             finalUrl = 'https://' + finalUrl;
         }
         
@@ -885,14 +887,17 @@ function getUrlAndTarget(encodedTd2) {
             return btoa(raw); 
         }
     }
-window.onload = function() {
+    // ---------------------------------------------
+
+    window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: KETNOI.CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
             callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
         });
-       kiemTraTrangThaiDangNhap();
-       taiBieuTuongCongKhai();
+        
+        taiBieuTuongCongKhai();
+        kiemTraTrangThaiDangNhap();
     };
 
     function taiBieuTuongCongKhai() {
@@ -948,7 +953,7 @@ window.onload = function() {
         });
     }
 
-function kiemTraTrangThaiDangNhap() {
+    function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
             isLoggedIn = false;
@@ -956,11 +961,6 @@ function kiemTraTrangThaiDangNhap() {
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('btn-google-login').style.display = 'block';
             google.accounts.id.renderButton(document.getElementById("btn-google-login"), { theme: "outline", size: "medium", type: "standard", text: "signin" });
-            
-            // [NÂNG CẤP]: Đảm bảo cập nhật lại giao diện (hiển thị khóa) nếu tài khoản vừa đăng xuất hoặc hết hạn phiên
-            if (globalProfiles && globalProfiles.length > 0) {
-                renderIconsFromData(globalProfiles);
-            }
         } else {
             document.getElementById('btn-google-login').style.display = 'none'; 
             document.getElementById('sys-name').style.display = 'block';
@@ -976,11 +976,6 @@ function kiemTraTrangThaiDangNhap() {
                 sysRoles = cachedRoles;
                 sysIconRoles = cachedIconRoles || "";
                 apDungPhanQuyen(sysRoles);
-                
-                // [NÂNG CẤP]: Vẽ lại không gian làm việc ngay khi khôi phục phiên đăng nhập từ Cache để gỡ bỏ tức thì các biểu tượng khóa
-                if (globalProfiles && globalProfiles.length > 0) {
-                    renderIconsFromData(globalProfiles);
-                }
             } else {
                 document.getElementById('sys-name').innerText = "Đang xác thực...";
                 xacThucPhienDangNhap(sysSession);
@@ -1027,10 +1022,6 @@ function kiemTraTrangThaiDangNhap() {
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
 
                     apDungPhanQuyen(sysRoles); 
-                    
-                    if (globalProfiles && globalProfiles.length > 0) {
-                        renderIconsFromData(globalProfiles);
-                    }
                 } else { 
                     alert(result.message); dangXuat(); 
                 }
@@ -1039,12 +1030,7 @@ function kiemTraTrangThaiDangNhap() {
                 alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Vui lòng kiểm tra lại cấu hình phân quyền Web App.");
                 dangXuat();
             }
-        }).catch(error => {
-            console.error("Lỗi đường truyền xác thực:", error);
-            document.getElementById('sys-name').innerText = "Lỗi kết nối!";
-            alert("Đường truyền mạng hoặc máy chủ Google đang quá tải khiến việc xác thực bị gián đoạn. Xin vui lòng tải lại trang (F5).");
-            dangXuat();
-        });
+        }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
     }
 
     function apDungPhanQuyen(roles) {
@@ -1200,9 +1186,7 @@ function kiemTraTrangThaiDangNhap() {
 
             div.style.animationDelay = (index * 0.04) + 's';
 
-            // [CẬP NHẬT TỐI ƯU HIỂN THỊ KHOÁ]: Xét duyệt cả phân quyền riêng biệt của người dùng
-            let duocPhepTruyCap = item.isPublic || (isLoggedIn && sysRoles && (sysRoles.includes('xx') || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))));
-            let publicBadge = !duocPhepTruyCap ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
+            let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
 
             div.innerHTML = `<div style="position:relative;">${publicBadge}<div class="icon-box ${bgClass}">${iconContent}</div></div><span class="icon-text">${item.td1}</span>`;
             
@@ -1262,9 +1246,7 @@ function kiemTraTrangThaiDangNhap() {
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
-                // [CẬP NHẬT TỐI ƯU HIỂN THỊ KHOÁ THƯ MỤC CON]
-                let duocPhepTruyCap = item.isPublic || (isLoggedIn && sysRoles && (sysRoles.includes('xx') || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))));
-                let publicBadge = !duocPhepTruyCap ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
+                let publicBadge = !item.isPublic ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
                 
                 let moveOutBtn = "";
                 if (sysRoles && (sysRoles.includes('xx') || sysRoles.includes('xoahoso') || sysRoles.includes('taohoso') || sysRoles.includes('ganhoso'))) {
@@ -1478,7 +1460,11 @@ function toggleTaoThuMucModal(isShow) {
     
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
-
+    
+    
+  // -------------------------------------------------------------------------
+    // CƠ CHẾ LƯỚI TỰ ĐỘNG VÀ KÉO THẢ TỐI ƯU CẢM ỨNG (MOBILE & DESKTOP)
+    // -------------------------------------------------------------------------
     function getGridConfig() {
         const isMobile = window.innerWidth <= 768;
         return {
@@ -1728,7 +1714,10 @@ function toggleTaoThuMucModal(isShow) {
         initializeLayout(); 
     }
 
-  window.addEventListener('resize', () => {
+  // -------------------------------------------------------------------------
+    // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
+    // -------------------------------------------------------------------------
+    window.addEventListener('resize', () => {
         if (typeof initializeLayout === 'function') {
             clearTimeout(window.resizeTimer);
             window.resizeTimer = setTimeout(initializeLayout, 150); // Chống giật (Debounce) khi resize
@@ -2222,7 +2211,6 @@ function changeBackgroundImage() {
         }
     });
 
-    // BỘ CHỈ ĐẢO: KHÓA TRUY CẬP CÔNG CỤ NHÀ PHÁT TRIỂN
     function khoaTruyCapMaNguon() {
         // 1. Khóa menu chuột phải
         document.addEventListener('contextmenu', function(e) {
@@ -2253,8 +2241,8 @@ function changeBackgroundImage() {
             }
         });
     }
-    khoaTruyCapMaNguon();
     
+    khoaTruyCapMaNguon();
 </script>
 </body>
 </html>
