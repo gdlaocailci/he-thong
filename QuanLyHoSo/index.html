@@ -993,7 +993,7 @@ function getUrlAndTarget(encodedTd2) {
         location.reload(); 
     }
 
-    function xacThucPhienDangNhap(sysSession) {
+function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -1015,21 +1015,34 @@ function getUrlAndTarget(encodedTd2) {
                     localStorage.setItem(PREFIX_MEM + 'sysIconRoles', sysIconRoles);
                     localStorage.setItem(PREFIX_MEM + 'sysName', accountName);
 
-                    // [NÂNG CẤP] Đồng bộ ID định danh cho các phân hệ
-                    sessionStorage.setItem("SCV_ACTIVE_ID", accountName);
-                    localStorage.setItem("SCV_ACTIVE_ID", accountName);
-
                     apDungPhanQuyen(sysRoles); 
-                    setTimeout(kiemTraCongVanMoi, 500);
-
                 } else { 
                     alert(result.message); dangXuat(); 
                 }
             } catch (jsonError) {
-                alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Vui lòng kiểm tra lại cấu hình phân quyền Web App.");
+                console.error("Cảnh báo máy chủ khi xác thực:", text);
+                
+                // [CẬP NHẬT] Đọc và phân tích trang lỗi HTML từ Google để chẩn đoán
+                let isAuthError = text.includes('accounts.google.com') || text.includes('Authorization');
+                let isHtmlContent = text.includes('<html') || text.includes('<title>');
+
+                if (isAuthError || isHtmlContent) {
+                    showAlertModal(`<div style="text-align: left; font-size: 14px; line-height: 1.6;">
+                        <b style="color:#d32f2f; font-size: 16px;">Hệ thống Google Apps Script đang chặn kết nối!</b><br><br>
+                        <b>Nguyên nhân 1:</b> Web App đang yêu cầu Thầy/Cô cấp quyền bảo mật bổ sung.<br>
+                        <b>Nguyên nhân 2:</b> Trình duyệt bị xung đột do đang đăng nhập nhiều tài khoản Gmail.<br><br>
+                        👉 <b>Cách xử lý:</b> Hãy <a href="${KETNOI.WEB_APP_URL}" target="_blank" style="color:#1976D2; font-weight:bold; text-decoration:underline;">BẤM VÀO ĐÂY</a> để mở liên kết gốc của máy chủ. Cấp quyền nếu Google yêu cầu, hoặc chọn đúng tài khoản quản trị. Sau đó tắt Tab đó đi và F5 tải lại trang này.
+                    </div>`);
+                } else {
+                    alert("Quá trình xác thực gặp sự cố từ máy chủ Google. Vui lòng kiểm tra lại cấu hình phân quyền Web App.");
+                }
                 dangXuat();
             }
-        }).catch(error => console.error("Lỗi đường truyền xác thực:", error));
+        }).catch(error => {
+            console.error("Lỗi đường truyền xác thực:", error);
+            alert("Mất kết nối Internet hoặc máy chủ từ chối phản hồi. Vui lòng thử lại!");
+            dangXuat();
+        });
     }
 
 function apDungPhanQuyen(roles) {
