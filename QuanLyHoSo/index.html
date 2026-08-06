@@ -378,7 +378,7 @@
         </div>
     </div>
 
-    <!-- KHỐI HIỂN THỊ THƯ MỤC CHA TRÊN DESKTOP (Vẫn giữ nguyên để phân cấp dữ liệu trên màn hình chính) -->
+    <!-- KHỐI HIỂN THỊ THƯ MỤC TRÊN KHUNG XEM TRƯỚC -->
     <div id="window-folder-view" class="window-overlay">
         <div class="window-container">
             <div class="window-titlebar" style="background: #2c3e50;"><div class="window-title" id="folder-view-title" style="color: #ffffff;"><span class="material-icons" style="color: #ffffff;">folder_open</span> Đang trích xuất dữ liệu thư mục...</div><button class="window-close" style="color: #ffffff;" onclick="dongCuaSoThuMuc()">✕</button></div>
@@ -708,6 +708,108 @@
         }
     }
 
+    // ============================================================================
+    // BỘ DUYỆT THƯ MỤC DRIVE NỘI BỘ VÀ XỬ LÝ ĐỊNH TUYẾN LINK
+    // ============================================================================
+    function moLienKetToiUu(urlGoc, target) {
+        let finalUrl = urlGoc;
+        if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
+            if (finalUrl.match(/\/(edit|view|preview)/)) {
+                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
+            }
+        }
+        window.open(finalUrl, target);
+    }
+
+    function duyetThuMucDrive(urlFolder, titleFolder) {
+        document.getElementById('window-folder-view').style.display = 'flex';
+        const folderArea = document.getElementById('folder-content-area');
+        
+        document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_shared</span> Dữ liệu Thư mục: ${titleFolder}`;
+        folderArea.style.background = '#f4f6f8';
+        folderArea.innerHTML = `<div class="loading-screen" style="position:relative; height: 100%; min-height: 250px; background: transparent;"><span class="material-icons" style="color: #1976D2;">sync</span><h3 style="color:#333;">Đang đồng bộ dữ liệu thư mục...</h3></div>`;
+
+        HT_API.goiMayChu({
+            action: 'getDriveFolderContents',
+            url: urlFolder,
+            khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session')
+        }).then(result => {
+            if (result.status === 'success') {
+                renderDriveContents(result.data, titleFolder, urlFolder);
+            } else {
+                folderArea.innerHTML = `<div style="color: #d32f2f; padding: 20px; font-weight: bold; text-align: center;">Phát sinh sự cố: ${result.message}</div>`;
+            }
+        });
+    }
+
+    function renderDriveContents(items, title, currentUrl) {
+        const folderArea = document.getElementById('folder-content-area');
+        folderArea.innerHTML = ''; 
+
+        let actionBar = `
+            <div style="width: 100%; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #333; font-weight: 600; font-size: 14px;"><span class="material-icons" style="font-size:16px; vertical-align: text-bottom;">list_alt</span> Danh sách Tệp & Thư mục trực thuộc</span>
+                <button class="btn-taskbar orange" onclick="window.open('${currentUrl}', '_blank')" style="font-size: 12px; padding: 5px 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <span class="material-icons" style="font-size: 14px;">cloud_upload</span> Quản lý Tệp (Tải lên / Xóa)
+                </button>
+            </div>
+        `;
+
+        if (items.length === 0) {
+            folderArea.innerHTML = actionBar + '<div style="width:100%; text-align:center; padding: 40px; color:#777; background: white; border-radius: 8px;">Thư mục này hiện đang trống.</div>';
+            return;
+        }
+
+        let tableHTML = `
+            <div style="width: 100%; background: white; border-radius: 8px; overflow-y: auto; max-height: calc(100% - 40px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e0e0e0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                    <thead style="position: sticky; top: 0; background: #e9ecef; z-index: 5; border-bottom: 2px solid #ccc;">
+                        <tr>
+                            <th style="padding: 12px 15px; color: #495057; font-weight: 600;">Tên Dữ liệu</th>
+                            <th style="padding: 12px 15px; color: #495057; font-weight: 600; width: 140px; text-align: center;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        items.forEach(item => {
+            let isFolder = item.type === 'folder';
+            let icon = isFolder ? '<span class="material-icons" style="color: #F4B400; font-size: 20px;">folder</span>' : getDriveItemIcon(item.mimeType);
+            
+            let clickAction = isFolder 
+                ? `duyetThuMucDrive('https://drive.google.com/drive/folders/${item.id}', '${item.name.replace(/'/g, "\\'")}')`
+                : `moLienKetToiUu('https://drive.google.com/file/d/${item.id}/view', '_blank')`;
+                
+            let btnAction = isFolder
+                ? `<button class="btn-taskbar blue" onclick="${clickAction}" style="padding: 4px 10px; font-size: 11px; width: 100%; justify-content: center;">Mở Thư mục</button>`
+                : `<button class="btn-taskbar green" onclick="${clickAction}" style="padding: 4px 10px; font-size: 11px; width: 100%; justify-content: center;">Chỉnh sửa File</button>`;
+
+            tableHTML += `
+                <tr style="border-bottom: 1px solid #f1f3f4; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'">
+                    <td style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; color: #202124;" onclick="${clickAction}">
+                        ${icon} <span style="font-weight: 500; word-break: break-word; line-height: 1.4;">${item.name}</span>
+                    </td>
+                    <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">
+                        ${btnAction}
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table></div>';
+        folderArea.innerHTML = actionBar + tableHTML;
+    }
+
+    function getDriveItemIcon(mimeType) {
+        if (!mimeType) return '<span class="material-icons" style="color: #546E7A; font-size: 20px;">insert_drive_file</span>';
+        if (mimeType.includes('document')) return '<span class="material-icons" style="color: #4285F4; font-size: 20px;">description</span>';
+        if (mimeType.includes('spreadsheet')) return '<span class="material-icons" style="color: #0F9D58; font-size: 20px;">table_chart</span>';
+        if (mimeType.includes('presentation')) return '<span class="material-icons" style="color: #F4B400; font-size: 20px;">slideshow</span>';
+        if (mimeType.includes('pdf')) return '<span class="material-icons" style="color: #DB4437; font-size: 20px;">picture_as_pdf</span>';
+        if (mimeType.includes('image')) return '<span class="material-icons" style="color: #DB4437; font-size: 20px;">image</span>';
+        return '<span class="material-icons" style="color: #546E7A; font-size: 20px;">insert_drive_file</span>';
+    }
+
     function renderIconsFromData(data) {
         globalProfiles = data; 
         desktopArea.innerHTML = ''; 
@@ -752,7 +854,7 @@
                     return;
                 }
                 if (!isLoggedIn && !item.isPublic) {
-                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> (Nút Đăng nhập ở góc dưới Taskbar) để có thể tương tác với cơ sở dữ liệu này!");
+                    showAlertModal("Thầy/Cô vui lòng thực hiện <b>đăng nhập hệ thống</b> để có thể tương tác với cơ sở dữ liệu này!");
                     return;
                 }
                 
@@ -760,15 +862,14 @@
                 let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                 
                 if (allowed) {
-                    let finalUrl = parsed.url;
-                    if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
-                        if (finalUrl.match(/\/(edit|view|preview)/)) {
-                            finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
-                        }
+                    let isDriveFolder = parsed.url.match(/drive\.google\.com.*(\/folders\/|id=)([-\w]{25,})/);
+                    if (isDriveFolder && !parsed.url.includes('/file/d/')) {
+                        duyetThuMucDrive(parsed.url, item.td1); 
+                    } else {
+                        moLienKetToiUu(parsed.url, parsed.target); 
                     }
-                    window.open(finalUrl, parsed.target);
                 } else {
-                    showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.<br>👉 Vui lòng liên hệ Ban Quản trị để được xét duyệt!");
+                    showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                 }
             };
 
@@ -787,8 +888,10 @@
     }
 
     function moCuaSoThuMuc(tenThuMuc) {
-        document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Thư mục phân hệ: ${tenThuMuc}`;
+        document.getElementById('folder-view-title').innerHTML = `<span class="material-icons">folder_open</span> Phân hệ: ${tenThuMuc}`;
         const folderArea = document.getElementById('folder-content-area');
+        
+        folderArea.style.background = 'rgba(30, 30, 30, 0.45)';
         folderArea.innerHTML = ''; 
 
         let childItems = globalProfiles.filter(item => item.vitri === tenThuMuc);
@@ -838,13 +941,12 @@
                     let allowed = item.isPublic || (sysRoles && sysRoles.includes('xx')) || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()));
                     
                     if (allowed) {
-                        let finalUrl = parsed.url;
-                        if (finalUrl.includes('drive.google.com') || finalUrl.includes('docs.google.com')) {
-                            if (finalUrl.match(/\/(edit|view|preview)/)) {
-                                finalUrl = finalUrl.replace(/\/(edit|view|preview).*$/, '/edit?rm=minimal');
-                            }
+                        let isDriveFolder = parsed.url.match(/drive\.google\.com.*(\/folders\/|id=)([-\w]{25,})/);
+                        if (isDriveFolder && !parsed.url.includes('/file/d/')) {
+                            duyetThuMucDrive(parsed.url, item.td1); 
+                        } else {
+                            moLienKetToiUu(parsed.url, parsed.target); 
                         }
-                        window.open(finalUrl, parsed.target);
                     } else {
                         showAlertModal("Tài khoản của Thầy/Cô chưa được cấp quyền tương tác dữ liệu <b>[" + item.td1 + "]</b>.");
                     }
@@ -1556,7 +1658,7 @@
 
     function lamMoiBieuMauQuyen() {
         document.getElementById('pq-tsa').value = ''; document.getElementById('pq-tsb').value = '';
-        document.getElementById('role-taohoso').checked = false; document.getElementById('role-ganhoso').checked = false; 
+        document.getElementById('role-taohoso').checked = false document.getElementById('role-ganhoso').checked = false; 
         document.getElementById('role-xoahoso').checked = false; document.getElementById('role-nhanxet').checked = false; 
         document.getElementById('role-tailen').checked = false; document.getElementById('role-xx').checked = false;
         document.querySelectorAll('.icon-role-cb').forEach(cb => cb.checked = false);
