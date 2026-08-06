@@ -889,18 +889,14 @@ function getUrlAndTarget(encodedTd2) {
     }
     // ---------------------------------------------
 
-    window.onload = function() {
+window.onload = function() {
         google.accounts.id.initialize({ client_id: KETNOI.CLIENT_ID, callback: xuLyDangNhapThanhCong });
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: KETNOI.CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
             callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
         });
-        
-        // [CẬP NHẬT TỐI ƯU HIỂN THỊ Ổ KHOÁ]
-        // Bắt buộc gọi kiểm tra trạng thái đăng nhập TRƯỚC để đồng bộ biến sysRoles và sysIconRoles từ LocalStorage.
-        // Sau đó mới gọi taiBieuTuongCongKhai() để khi vẽ Icon, hệ thống đã biết tài khoản nào đang thao tác và ẩn khoá ngay lập tức.
-        kiemTraTrangThaiDangNhap();
-        taiBieuTuongCongKhai();
+       kiemTraTrangThaiDangNhap();
+       taiBieuTuongCongKhai();
     };
 
     function taiBieuTuongCongKhai() {
@@ -956,7 +952,7 @@ function getUrlAndTarget(encodedTd2) {
         });
     }
 
-    function kiemTraTrangThaiDangNhap() {
+function kiemTraTrangThaiDangNhap() {
         let sysSession = localStorage.getItem(PREFIX_MEM + 'session');
         if (!sysSession) {
             isLoggedIn = false;
@@ -964,6 +960,11 @@ function getUrlAndTarget(encodedTd2) {
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('btn-google-login').style.display = 'block';
             google.accounts.id.renderButton(document.getElementById("btn-google-login"), { theme: "outline", size: "medium", type: "standard", text: "signin" });
+            
+            // [NÂNG CẤP]: Đảm bảo cập nhật lại giao diện (hiển thị khóa) nếu tài khoản vừa đăng xuất hoặc hết hạn phiên
+            if (globalProfiles && globalProfiles.length > 0) {
+                renderIconsFromData(globalProfiles);
+            }
         } else {
             document.getElementById('btn-google-login').style.display = 'none'; 
             document.getElementById('sys-name').style.display = 'block';
@@ -980,7 +981,7 @@ function getUrlAndTarget(encodedTd2) {
                 sysIconRoles = cachedIconRoles || "";
                 apDungPhanQuyen(sysRoles);
                 
-                // [CẬP NHẬT ĐỒNG BỘ MẠNH]: Buộc phải vẽ lại UI nếu cache icon đã tải xong để gỡ ổ khóa
+                // [NÂNG CẤP]: Vẽ lại không gian làm việc ngay khi khôi phục phiên đăng nhập từ Cache để gỡ bỏ tức thì các biểu tượng khóa
                 if (globalProfiles && globalProfiles.length > 0) {
                     renderIconsFromData(globalProfiles);
                 }
