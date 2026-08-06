@@ -869,7 +869,7 @@ function getUrlAndTarget(encodedTd2) {
         }
 
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ action: 'getPublicIcons' }) 
         })
         .then(response => response.text())
@@ -961,7 +961,7 @@ function getUrlAndTarget(encodedTd2) {
 
     function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
         })
         .then(response => response.text())
@@ -1278,7 +1278,7 @@ function moCuaSoThuMuc(tenThuMuc) {
         document.body.appendChild(loading);
 
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ 
                 action: 'editProfile', 
                 oldTd1: item.td1, 
@@ -1378,7 +1378,6 @@ function toggleTaoThuMucModal(isShow) {
 
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ 
                 action: 'saveProfile', 
                 td1: td1, 
@@ -1407,7 +1406,7 @@ function toggleTaoThuMucModal(isShow) {
                             let safeEncodedTd2 = buildEncodedTd2(parsed.url, parsed.target);
 
                             return fetch(KETNOI.WEB_APP_URL, {
-                                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                method: 'POST', 
                                 body: JSON.stringify({ action: 'editProfile', oldTd1: item.td1, td1: item.td1, td2: safeEncodedTd2, loaiIcon: item.iconType, vitri: td1, hieuung: item.hieuung || 'none', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
                             }).then(r => r.json()).catch(e => null);
                         });
@@ -1788,7 +1787,7 @@ function xuLySuaHoSo() {
         document.getElementById('edit-form-status').style.display = 'block';
         
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ action: 'editProfile', oldTd1: oldProfile.td1, td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
@@ -1855,7 +1854,7 @@ function xuLySuaHoSo() {
             
             try {
                 await fetch(KETNOI.WEB_APP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    method: 'POST', 
                     body: JSON.stringify({ action: 'togglePublicProfile', td1: profile.td1, newStatus: newStatus, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
                 });
             } catch (err) {}
@@ -1884,7 +1883,7 @@ function xuLySuaHoSo() {
             
             try {
                 await fetch(KETNOI.WEB_APP_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    method: 'POST', 
                     body: JSON.stringify({ action: 'deleteProfile', td1: profile.td1, td2: profile.td2, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
                 });
             } catch (err) {}
@@ -1945,7 +1944,7 @@ function xuLySuaHoSo() {
 
         document.getElementById('form-status').innerText = "Đang đồng bộ cơ sở dữ liệu..."; document.getElementById('form-status').style.display = 'block';
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ action: 'saveProfile', td1: td1, td2: td2_encoded, loaiIcon: loaiIcon, isPublic: isPublic, vitri: vitri, hieuung: hieuung, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
@@ -1986,7 +1985,7 @@ function xuLySuaHoSo() {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang thiết lập ma trận...</td></tr>';
         
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ action: 'getAccounts', khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
@@ -2071,7 +2070,7 @@ function xuLySuaHoSo() {
         document.getElementById('pq-status').style.display = 'block';
         
         fetch(KETNOI.WEB_APP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            method: 'POST', 
             body: JSON.stringify({ action: 'saveAccount', tsa: tsa, tsb: tsb, roles: roles.join(','), iconRoles: iconRolesStr, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
         })
         .then(response => response.text())
@@ -2097,7 +2096,7 @@ function xuLySuaHoSo() {
             document.getElementById('pq-status').style.display = 'block';
             
             fetch(KETNOI.WEB_APP_URL, {
-                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                method: 'POST', 
                 body: JSON.stringify({ action: 'deleteAccount', tsb: tsb, khoaBaoMat: localStorage.getItem(PREFIX_MEM + 'session') })
             })
             .then(response => response.text())
@@ -2212,7 +2211,6 @@ function xuLySuaHoSo() {
             
             fetch(gasUrl, {
                 method: 'POST',
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ func: 'SCV_getAllDataCache', args: [scvActiveId] })
             })
             .then(res => res.json())
