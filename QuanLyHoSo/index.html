@@ -1481,11 +1481,7 @@ function toggleTaoThuMucModal(isShow) {
     
     function setupTooltipEvents() { icons.forEach(icon => { icon.addEventListener('mouseenter', function(e) { if (isDragging) return; tooltip.innerText = this.getAttribute('data-desc'); tooltip.style.opacity = '1'; }); icon.addEventListener('mousemove', function(e) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; }); icon.addEventListener('mouseleave', function() { tooltip.style.opacity = '0'; }); }); }
     function updateClock() { const now = new Date(); document.getElementById('sys-clock').innerHTML = `${now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})}`; } setInterval(updateClock, 1000); updateClock();
-    
-    
-  // -------------------------------------------------------------------------
-    // CƠ CHẾ LƯỚI TỰ ĐỘNG VÀ KÉO THẢ TỐI ƯU CẢM ỨNG (MOBILE & DESKTOP)
-    // -------------------------------------------------------------------------
+
     function getGridConfig() {
         const isMobile = window.innerWidth <= 768;
         return {
@@ -1735,10 +1731,7 @@ function toggleTaoThuMucModal(isShow) {
         initializeLayout(); 
     }
 
-  // -------------------------------------------------------------------------
-    // LẮNG NGHE SỰ KIỆN CO GIÃN / XOAY MÀN HÌNH ĐIỆN THOẠI
-    // -------------------------------------------------------------------------
-    window.addEventListener('resize', () => {
+  window.addEventListener('resize', () => {
         if (typeof initializeLayout === 'function') {
             clearTimeout(window.resizeTimer);
             window.resizeTimer = setTimeout(initializeLayout, 150); // Chống giật (Debounce) khi resize
