@@ -896,8 +896,11 @@ function getUrlAndTarget(encodedTd2) {
             callback: (tokenResponse) => { pickerAccessToken = tokenResponse.access_token; hienThiGooglePicker(pickerAccessToken); }
         });
         
-        taiBieuTuongCongKhai();
+        // [CẬP NHẬT TỐI ƯU HIỂN THỊ Ổ KHOÁ]
+        // Bắt buộc gọi kiểm tra trạng thái đăng nhập TRƯỚC để đồng bộ biến sysRoles và sysIconRoles từ LocalStorage.
+        // Sau đó mới gọi taiBieuTuongCongKhai() để khi vẽ Icon, hệ thống đã biết tài khoản nào đang thao tác và ẩn khoá ngay lập tức.
         kiemTraTrangThaiDangNhap();
+        taiBieuTuongCongKhai();
     };
 
     function taiBieuTuongCongKhai() {
@@ -976,6 +979,11 @@ function getUrlAndTarget(encodedTd2) {
                 sysRoles = cachedRoles;
                 sysIconRoles = cachedIconRoles || "";
                 apDungPhanQuyen(sysRoles);
+                
+                // [CẬP NHẬT ĐỒNG BỘ MẠNH]: Buộc phải vẽ lại UI nếu cache icon đã tải xong để gỡ ổ khóa
+                if (globalProfiles && globalProfiles.length > 0) {
+                    renderIconsFromData(globalProfiles);
+                }
             } else {
                 document.getElementById('sys-name').innerText = "Đang xác thực...";
                 xacThucPhienDangNhap(sysSession);
@@ -999,7 +1007,7 @@ function getUrlAndTarget(encodedTd2) {
         location.reload(); 
     }
 
-function xacThucPhienDangNhap(sysSession) {
+    function xacThucPhienDangNhap(sysSession) {
         fetch(KETNOI.WEB_APP_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'initApp', khoaBaoMat: sysSession }) 
@@ -1023,7 +1031,6 @@ function xacThucPhienDangNhap(sysSession) {
 
                     apDungPhanQuyen(sysRoles); 
                     
-                    // [CẬP NHẬT] Đồng bộ lại không gian làm việc ngay sau khi đăng nhập để lập tức gỡ bỏ biểu tượng khoá trên các dự án được cấp quyền
                     if (globalProfiles && globalProfiles.length > 0) {
                         renderIconsFromData(globalProfiles);
                     }
@@ -1037,7 +1044,6 @@ function xacThucPhienDangNhap(sysSession) {
             }
         }).catch(error => {
             console.error("Lỗi đường truyền xác thực:", error);
-            // [CẬP NHẬT TỐI ƯU]: Mở khóa giao diện và thông báo nếu băng thông/máy chủ Google bị treo
             document.getElementById('sys-name').innerText = "Lỗi kết nối!";
             alert("Đường truyền mạng hoặc máy chủ Google đang quá tải khiến việc xác thực bị gián đoạn. Xin vui lòng tải lại trang (F5).");
             dangXuat();
@@ -1197,7 +1203,7 @@ function xacThucPhienDangNhap(sysSession) {
 
             div.style.animationDelay = (index * 0.04) + 's';
 
-            // [CẬP NHẬT] Đánh giá thẩm quyền truy cập: Public HOẶC (Đã đăng nhập VÀ (Là Admin 'xx' HOẶC Được cấp quyền cụ thể))
+            // [CẬP NHẬT TỐI ƯU HIỂN THỊ KHOÁ]: Xét duyệt cả phân quyền riêng biệt của người dùng
             let duocPhepTruyCap = item.isPublic || (isLoggedIn && sysRoles && (sysRoles.includes('xx') || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))));
             let publicBadge = !duocPhepTruyCap ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
 
@@ -1259,7 +1265,7 @@ function xacThucPhienDangNhap(sysSession) {
                 let iconContent = cfg.iconContent;
                 let bgClass = cfg.bgClass;
                 
-                // [CẬP NHẬT] Đồng bộ logic đánh giá thẩm quyền cho các hồ sơ nằm trong thư mục
+                // [CẬP NHẬT TỐI ƯU HIỂN THỊ KHOÁ THƯ MỤC CON]
                 let duocPhepTruyCap = item.isPublic || (isLoggedIn && sysRoles && (sysRoles.includes('xx') || (sysIconRoles && sysIconRoles.split('|').includes(item.td1.trim()))));
                 let publicBadge = !duocPhepTruyCap ? '<div style="position: absolute; top: -5px; right: -5px; background: #d32f2f; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2; pointer-events: none;" title="Yêu cầu Đăng nhập"><span class="material-icons" style="font-size: 12px; color: white;">lock</span></div>' : '';
                 
