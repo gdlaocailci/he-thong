@@ -314,12 +314,18 @@ function xulykqta(kq, tt, nt) {
         let returnedUrl = kq.fileUrl || kq.lkpt;
 
         if (GLOBAL_BTN_TRIGGER) {
-            const modalDg = document.getElementById('hopThoaiDg');
-            if (modalDg) {
-                const inputLink = modalDg.querySelector('.val-link');
-                if (inputLink) inputLink.value = returnedUrl;
+            // TỰ ĐỘNG NHẬN DIỆN: Tìm Modal (Cửa sổ) chứa nút vừa được bấm
+            const modalChuaNut = GLOBAL_BTN_TRIGGER.closest('.modal');
+            if (modalChuaNut) {
+                // Tìm ô nhập liệu có class 'val-link' trong chính Modal đó
+                const inputLink = modalChuaNut.querySelector('.val-link');
+                if (inputLink) {
+                    inputLink.value = returnedUrl; // Gán link tự động vào đúng ô
+                }
             }
-            if (typeof veGhimModal === 'function') {
+            
+            // Chỉ gọi hiệu ứng ghim link nếu đang thao tác ở form Cá nhân
+            if (modalChuaNut && modalChuaNut.id === 'hopThoaiDg' && typeof veGhimModal === 'function') {
                 veGhimModal(returnedUrl);
             }
         }
