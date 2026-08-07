@@ -144,13 +144,14 @@
             <div class="mb-3">
               <label class="form-label fw-bold">Đường dẫn tệp đính kèm:</label>
               <div class="input-group">
-                <!-- BỔ SUNG: Thêm thuộc tính name="mcLink" vào input để khớp với logic tìm kiếm của hệ thống -->
-                <input type="text" name="mcLink" id="linkFileHangLoat" class="form-control val-link" placeholder="Nhập hoặc tải tệp lên...">
+                <!-- Chỉ cần đúng id="linkFileHangLoat" để nhận dữ liệu trả về -->
+                <input type="text" id="linkFileHangLoat" class="form-control" placeholder="Nhập hoặc tải tệp lên...">
                 <button class="btn btn-outline-secondary" type="button" onclick="goiMinhChungHangLoat(this)" title="Tải tệp lên">
                   <i class="fas fa-upload"></i>
                 </button>
               </div>
-            </div>
+            </div
+              
         </form>
       </div>
       <div class="modal-footer py-1">
@@ -507,11 +508,13 @@ function moModalChenFileHangLoat() {
         $(".cb-nhan-su").prop('checked', $(cb).prop('checked'));
     }
 
-    function goiMinhChungHangLoat(btn) {
+function goiMinhChungHangLoat(btn) {
         try {
             let lHtai = $("#linkFileHangLoat").val();
             if (typeof window.NS_OpenUploadModal === 'function') {
-                window.NS_OpenUploadModal(btn, lHtai, "", false); 
+                // Truyền trực tiếp ID "linkFileHangLoat" vào tham số thứ 3.
+                // Module sẽ chỉ làm đúng 1 việc: Tải tệp lên và gắn link vào ô có ID này.
+                window.NS_OpenUploadModal(btn, lHtai, "linkFileHangLoat", false); 
             } else {
                 hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công!", "loi");
             }
