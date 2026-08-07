@@ -514,7 +514,7 @@ function goiMinhChungHangLoat(btn) {
             if (typeof window.NS_OpenUploadModal === 'function') {
                 // Truyền trực tiếp ID "linkFileHangLoat" vào tham số thứ 3.
                 // Module sẽ chỉ làm đúng 1 việc: Tải tệp lên và gắn link vào ô có ID này.
-                window.NS_OpenUploadModal(btn, lHtai, "linkFileHangLoat", false); 
+                window.NS_OpenUploadModal(btn, lHtai, "", false); 
             } else {
                 hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công!", "loi");
             }
