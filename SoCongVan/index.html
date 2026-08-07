@@ -184,7 +184,7 @@
       
       <div style="display: flex; align-items: center; gap: 12px;">
           <span style="font-weight: bold; color: #1e3a8a; font-size: 16px;">📄 XEM TRƯỚC TÀI LIỆU</span>
-          <a href="javascript:void(0)" id="btn_mo_the_moi_preview" onclick="moTheMoiDangXem()" style="display: none; font-size: 13px; color: #0369a1; text-decoration: none; font-style: italic; background: #e0f2fe; padding: 3px 10px; border-radius: 12px; border: 1px solid #bae6fd; transition: all 0.2s;" title="Mở tài liệu ở thẻ trình duyệt mới">🔗 Mở thẻ mới</a>
+          <a href="javascript:void(0)" id="btn_copy_link_preview" onclick="copyLinkDangXem()" style="display: none; font-size: 13px; color: #0369a1; text-decoration: none; font-style: italic; background: #e0f2fe; padding: 3px 10px; border-radius: 12px; border: 1px solid #bae6fd; transition: all 0.2s;" title="Sao chép đường dẫn tài liệu">📋 Copy Link</a>
       </div>
       
       <div style="display: flex; gap: 10px; align-items: center;">
@@ -622,7 +622,7 @@ function showTab(id, btn) {
     
     let khop_id = link_nhung.match(/(?:id=|folders\/|d\/)([-\w]{25,})/);
     let mat_na = document.getElementById('mask_che_nut_drive');
-    let nut_mo_ngoai = document.getElementById('btn_mo_the_moi_preview'); 
+    let nut_mo_ngoai = document.getElementById('btn_copy_link_preview');
     
     let tabCongVan = document.getElementById('tabCongVan');
     let tabNhapLich = document.getElementById('tabInput');
@@ -676,10 +676,15 @@ function showTab(id, btn) {
     urlTepXemTruocHienTai = ""; 
   }
 
-  function moTheMoiDangXem() {
-    if (!urlTepXemTruocHienTai) return;
-    window.open(urlTepXemTruocHienTai, '_blank');
-  }
+function copyLinkDangXem() {
+  if (!urlTepXemTruocHienTai) return;
+  
+  navigator.clipboard.writeText(urlTepXemTruocHienTai).then(function() {
+      toast("✅ Đã sao chép đường dẫn tài liệu!");
+  }).catch(function(err) {
+      toast("❌ Không thể sao chép: " + err);
+  });
+}
 
   function taiTepDangXem() {
     if (!urlTepXemTruocHienTai) return;
