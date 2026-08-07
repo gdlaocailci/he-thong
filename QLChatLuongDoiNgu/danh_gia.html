@@ -13,6 +13,8 @@
           </div>
       </div>
       <div class="col-md-5 text-end">
+          <!-- BỔ SUNG: Nút chức năng chèn minh chứng hàng loạt với hiệu ứng btn-shiny -->
+          <button class="btn btn-shiny me-1" onclick="moModalChenFileHangLoat()"><i class="fas fa-layer-group"></i> Đính kèm theo năm</button>
           <button id="nutCnNhieuDg" class="btn btn-primary" onclick="cnNhieuDg()"><i class="fas fa-save"></i> Cập nhật</button>
       </div>
   </div>
@@ -41,6 +43,7 @@
   </div>
 </div>
 
+<!-- Cửa sổ Cập nhật đánh giá (CÁ NHÂN - Giữ nguyên không thay đổi logic) -->
 <div class="modal fade" id="hopThoaiDg" data-bs-focus="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -112,6 +115,40 @@
   </div>
 </div>
 
+<!-- BẮT ĐẦU BỔ SUNG: Cửa sổ Đính kèm tệp hàng loạt (CHUNG) -->
+<div class="modal fade" id="hopThoaiChenFileNhieu" data-bs-focus="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h5 class="modal-title">Đính kèm tệp hàng loạt</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning py-2 mb-3 small">
+          <i class="fas fa-info-circle"></i> Tệp sẽ được đính kèm (ghim) vào tất cả hồ sơ thuộc năm học được chọn mà bạn có quyền thao tác cập nhật.
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Chọn năm học áp dụng:</label>
+          <select id="chonNamHocFile" class="form-select g-namhoc"></select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Đường dẫn tệp đính kèm:</label>
+          <div class="input-group">
+            <input type="text" id="linkFileHangLoat" class="form-control val-link" placeholder="Nhập hoặc tải tệp lên...">
+            <button class="btn btn-outline-secondary" type="button" onclick="goiMinhChungHangLoat(this)" title="Tải tệp lên">
+              <i class="fas fa-upload"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button type="button" class="btn btn-success" onclick="xacNhanChenFileHangLoat()">Áp dụng</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- KẾT THÚC BỔ SUNG -->
+
 <div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100000;">
   <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 8px; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
@@ -144,7 +181,6 @@ function veBangDg() {
        
        if (!dlToanc || dlToanc.length === 0) return;
        
-       // --- NÂNG CẤP: Thuật toán xác định ẩn toàn bộ cột Sửa ---
        let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
        let anCotSua = false;
        if (ndHtai) {
@@ -152,13 +188,11 @@ function veBangDg() {
            if (isKhoaHT && ndHtai.vTro !== 'qtriv') anCotSua = true;
        }
 
-       // Can thiệp DOM để ẩn/hiện thẻ <th> của cột Sửa
        if (anCotSua) {
            $("#khuBangDg thead th:first-child").hide();
        } else {
            $("#khuBangDg thead th:first-child").show();
        }
-       // ---------------------------------------------------------
 
        dlToanc.sort((a, b) => {
            if (a.cktdg && !b.cktdg) return -1;
@@ -205,9 +239,7 @@ function veBangDg() {
           let dsL = lk.split(',').map(l => l.trim()).filter(l => l !== "");
           let htiGhim = dsL.length > 0 ? `<div class="vungGhimLink mt-1" id="vungGhim_${idx}">${dsL.map((u, i) => `<a href="javascript:void(0)" onclick="moKhungXemTep('${u}')" style="margin-right: 12px; display: inline-block; text-decoration: none; font-weight: bold; border-bottom: 1px solid #0d6efd; padding-bottom: 1px;">📎${i+1}</a>`).join('')}</div>` : "";
          
-          // --- NÂNG CẤP: Lược bỏ thẻ <td> nếu cờ ẩn được bật ---
           let theTdSua = anCotSua ? '' : `<td class="text-center">${ns}</td>`;
-          // -----------------------------------------------------
 
           htmlRenderDg.push(`
             <tr class="${dlC}">
@@ -264,7 +296,6 @@ function veBangDg() {
         try {
             let lHtai = $("#mcLinkDg").val();
             if (typeof window.NS_OpenUploadModal === 'function') {
-                // Truyền chuỗi rỗng để kích hoạt tính năng tự động nhận diện từ Server
                 window.NS_OpenUploadModal(btn, lHtai, "", false); 
             } else {
                 hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công! Vui lòng F5 lại trang.", "loi");
@@ -276,7 +307,6 @@ function veBangDg() {
 
     function veGhimModal(lk) {
         let d = lk.split(',').map(l => l.trim()).filter(l => l !== "");
-        // KHÔNG ÁP DỤNG XEM TRƯỚC: Cửa sổ nhập liệu vẫn giữ thuộc tính target="_blank" để mở tab mới
         let h = d.map((u, i) => `<a href="${u}" target="_blank" class="text-danger ms-1" title="Link ${i+1}"><i class="fas fa-paperclip"></i></a>`).join('');
         $("#hthiGhimModal").html(h);
     }
@@ -309,9 +339,6 @@ function veBangDg() {
          .catch(le => { hienTbao(le, 'loi'); $("#vungTai").hide(); });
     }
 
-    /* ========================================================================== */
-    /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG DÀNH RIÊNG CHO BẢNG ĐÁNH GIÁ        */
-    /* ========================================================================== */
     let urlTepXemTruocHienTai = ""; 
 
     function moKhungXemTep(duong_dan) {
@@ -375,5 +402,83 @@ function veBangDg() {
               nutTai.classList.replace('btn-warning', 'btn-primary'); 
           }, 2500); 
       }
+    }
+
+    /* ========================================================================== */
+    /* KHỐI XỬ LÝ BỔ SUNG: CHÈN MINH CHỨNG HÀNG LOẠT THEO NĂM HỌC                 */
+    /* ========================================================================== */
+
+    function moModalChenFileHangLoat() {
+        let mangNam = layTuyc(0); 
+        let tuyChonNam = '<option value="">-- Chọn năm học --</option>' + mangNam.map(o => `<option value="${o}">${o}</option>`).join('');
+        
+        $("#chonNamHocFile").html(tuyChonNam);
+        $("#linkFileHangLoat").val(""); 
+        $("#hopThoaiChenFileNhieu").modal("show");
+    }
+
+    function goiMinhChungHangLoat(btn) {
+        try {
+            let lHtai = $("#linkFileHangLoat").val();
+            if (typeof window.NS_OpenUploadModal === 'function') {
+                window.NS_OpenUploadModal(btn, lHtai, "", false); 
+            } else {
+                hienTbao("Lỗi hệ thống: Module minh chứng chưa tải thành công!", "loi");
+            }
+        } catch (loi) {
+            hienTbao("Lỗi hiển thị cửa sổ: " + loi.message, "loi");
+        }
+    }
+
+    function xacNhanChenFileHangLoat() {
+        let namApDung = $("#chonNamHocFile").val();
+        let linkDinhKem = $("#linkFileHangLoat").val().trim();
+        
+        if (!namApDung) return hienTbao("Vui lòng chọn năm học cần áp dụng!", "loi");
+        if (!linkDinhKem) return hienTbao("Vui lòng nhập đường dẫn hoặc tải tệp lên!", "loi");
+
+        let soLuongThanhCong = 0;
+        let mcbNguoiDung = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
+        let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+
+        dlToanc.forEach((dg) => {
+            if (String(dg[0]).trim() === namApDung) {
+                
+                let coQuyenSua = false;
+                let mcbHoSo = String(dg[26] || "").trim();
+                
+                if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
+                    coQuyenSua = true;
+                } else if (ndHtai.vTro === 'ngdung' && mcbNguoiDung !== "KHONG_XAC_DINH" && mcbNguoiDung === mcbHoSo) {
+                    coQuyenSua = true;
+                }
+                if ((isKhoaHT && ndHtai.vTro !== 'qtriv') || ndHtai.vTro === 'xem') {
+                    coQuyenSua = false;
+                }
+
+                if (coQuyenSua) {
+                    let linkHienTai = dg[31] || "";
+                    
+                    if (linkHienTai) {
+                        if (!linkHienTai.includes(linkDinhKem)) {
+                            dg[31] = linkHienTai + ", " + linkDinhKem;
+                        }
+                    } else {
+                        dg[31] = linkDinhKem;
+                    }
+                    
+                    dg.cktdg = true; 
+                    soLuongThanhCong++;
+                }
+            }
+        });
+
+        if (soLuongThanhCong > 0) {
+            veBangDg(); 
+            $("#hopThoaiChenFileNhieu").modal("hide");
+            hienTbao(`Thành công! Đã chèn tệp cho ${soLuongThanhCong} hồ sơ. Nhấn nút [Cập Nhật] để ghi nhận.`, "tc");
+        } else {
+            hienTbao("Không tìm thấy hồ sơ hoặc bạn không có quyền thao tác trên năm học này!", "loi");
+        }
     }
 </script>
