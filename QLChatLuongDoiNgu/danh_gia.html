@@ -121,33 +121,37 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="alert alert-warning py-2 mb-3 small">
-          <i class="fas fa-info-circle"></i> Tệp sẽ được đính kèm (ghim) vào các hồ sơ được chọn thuộc năm học mà bạn có quyền thao tác cập nhật.
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-bold">Chọn năm học áp dụng:</label>
-          <select id="chonNamHocFile" class="form-select g-namhoc" onchange="taiDanhSachNhanSuTheoNam()"></select>
-        </div>
-        
-        <div id="vungChonNhanSu" style="display:none;" class="mb-3">
-           <label class="form-label fw-bold">Chọn nhân sự đính kèm:</label>
-           <div class="form-check mb-2 border-bottom pb-2">
-              <input class="form-check-input" type="checkbox" id="chonTatCaNs" onchange="chonTatCaNhanSu(this)">
-              <label class="form-check-label fw-bold text-primary" for="chonTatCaNs">Chọn tất cả</label>
-           </div>
-           <div id="danhSachNhanSuChenFile" style="max-height: 180px; overflow-y: auto;" class="border p-2 rounded bg-light">
-           </div>
-        </div>
+        <!-- BỔ SUNG: Bao bọc bằng thẻ form và thêm ID để tương thích trọn vẹn với Module Minh Chứng -->
+        <form id="bmChenFileNhieu" autocomplete="off" novalidate>
+            <div class="alert alert-warning py-2 mb-3 small">
+              <i class="fas fa-info-circle"></i> Tệp sẽ được đính kèm (ghim) vào các hồ sơ được chọn thuộc năm học mà bạn có quyền thao tác cập nhật.
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Chọn năm học áp dụng:</label>
+              <select id="chonNamHocFile" class="form-select g-namhoc" onchange="taiDanhSachNhanSuTheoNam()"></select>
+            </div>
+            
+            <div id="vungChonNhanSu" style="display:none;" class="mb-3">
+               <label class="form-label fw-bold">Chọn nhân sự đính kèm:</label>
+               <div class="form-check mb-2 border-bottom pb-2">
+                  <input class="form-check-input" type="checkbox" id="chonTatCaNs" onchange="chonTatCaNhanSu(this)">
+                  <label class="form-check-label fw-bold text-primary" for="chonTatCaNs">Chọn tất cả</label>
+               </div>
+               <div id="danhSachNhanSuChenFile" style="max-height: 180px; overflow-y: auto;" class="border p-2 rounded bg-light">
+               </div>
+            </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-bold">Đường dẫn tệp đính kèm:</label>
-          <div class="input-group">
-            <input type="text" id="linkFileHangLoat" class="form-control val-link" placeholder="Nhập hoặc tải tệp lên...">
-            <button class="btn btn-outline-secondary" type="button" onclick="goiMinhChungHangLoat(this)" title="Tải tệp lên">
-              <i class="fas fa-upload"></i>
-            </button>
-          </div>
-        </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Đường dẫn tệp đính kèm:</label>
+              <div class="input-group">
+                <!-- BỔ SUNG: Thêm thuộc tính name="mcLink" vào input để khớp với logic tìm kiếm của hệ thống -->
+                <input type="text" name="mcLink" id="linkFileHangLoat" class="form-control val-link" placeholder="Nhập hoặc tải tệp lên...">
+                <button class="btn btn-outline-secondary" type="button" onclick="goiMinhChungHangLoat(this)" title="Tải tệp lên">
+                  <i class="fas fa-upload"></i>
+                </button>
+              </div>
+            </div>
+        </form>
       </div>
       <div class="modal-footer py-1">
         <button type="button" class="btn btn-success" onclick="xacNhanChenFileHangLoat()">Áp dụng</button>
