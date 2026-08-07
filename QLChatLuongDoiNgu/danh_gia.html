@@ -13,8 +13,7 @@
           </div>
       </div>
       <div class="col-md-5 text-end">
-          <!-- BỔ SUNG: Nút chức năng chèn minh chứng hàng loạt với hiệu ứng btn-shiny -->
-          <button class="btn btn-shiny me-1" onclick="moModalChenFileHangLoat()"><i class="fas fa-layer-group"></i> Đính kèm theo năm</button>
+          <button id="nutChenFileHangLoat" class="btn btn-shiny me-1" onclick="moModalChenFileHangLoat()" style="display: none;"><i class="fas fa-layer-group"></i> Đính kèm theo năm</button>
           <button id="nutCnNhieuDg" class="btn btn-primary" onclick="cnNhieuDg()"><i class="fas fa-save"></i> Cập nhật</button>
       </div>
   </div>
@@ -43,7 +42,6 @@
   </div>
 </div>
 
-<!-- Cửa sổ Cập nhật đánh giá (CÁ NHÂN - Giữ nguyên không thay đổi logic) -->
 <div class="modal fade" id="hopThoaiDg" data-bs-focus="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -115,7 +113,6 @@
   </div>
 </div>
 
-<!-- BẮT ĐẦU BỔ SUNG: Cửa sổ Đính kèm tệp hàng loạt (CHUNG) -->
 <div class="modal fade" id="hopThoaiChenFileNhieu" data-bs-focus="false">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -125,12 +122,23 @@
       </div>
       <div class="modal-body">
         <div class="alert alert-warning py-2 mb-3 small">
-          <i class="fas fa-info-circle"></i> Tệp sẽ được đính kèm (ghim) vào tất cả hồ sơ thuộc năm học được chọn mà bạn có quyền thao tác cập nhật.
+          <i class="fas fa-info-circle"></i> Tệp sẽ được đính kèm (ghim) vào các hồ sơ được chọn thuộc năm học mà bạn có quyền thao tác cập nhật.
         </div>
         <div class="mb-3">
           <label class="form-label fw-bold">Chọn năm học áp dụng:</label>
-          <select id="chonNamHocFile" class="form-select g-namhoc"></select>
+          <select id="chonNamHocFile" class="form-select g-namhoc" onchange="taiDanhSachNhanSuTheoNam()"></select>
         </div>
+        
+        <div id="vungChonNhanSu" style="display:none;" class="mb-3">
+           <label class="form-label fw-bold">Chọn nhân sự đính kèm:</label>
+           <div class="form-check mb-2 border-bottom pb-2">
+              <input class="form-check-input" type="checkbox" id="chonTatCaNs" onchange="chonTatCaNhanSu(this)">
+              <label class="form-check-label fw-bold text-primary" for="chonTatCaNs">Chọn tất cả</label>
+           </div>
+           <div id="danhSachNhanSuChenFile" style="max-height: 180px; overflow-y: auto;" class="border p-2 rounded bg-light">
+           </div>
+        </div>
+
         <div class="mb-3">
           <label class="form-label fw-bold">Đường dẫn tệp đính kèm:</label>
           <div class="input-group">
@@ -147,7 +155,6 @@
     </div>
   </div>
 </div>
-<!-- KẾT THÚC BỔ SUNG -->
 
 <div id="modal_xem_tep" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100000;">
   <div style="background: white; width: 95%; height: 90vh; max-width: 1200px; border-radius: 8px; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
@@ -183,9 +190,24 @@ function veBangDg() {
        
        let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
        let anCotSua = false;
+       
+       // Xử lý phân quyền ẩn/hiện cột Sửa và nút Đính kèm theo năm
        if (ndHtai) {
+           // Phân quyền cho cột Sửa
            if (ndHtai.vTro === 'xem') anCotSua = true;
            if (isKhoaHT && ndHtai.vTro !== 'qtriv') anCotSua = true;
+           
+           // Phân quyền hiển thị nút Đính kèm theo năm
+           if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
+               $("#nutChenFileHangLoat").show();
+           } else {
+               $("#nutChenFileHangLoat").hide();
+           }
+           
+           // Khóa chức năng với tất cả (trừ quản trị cao cấp) khi hệ thống bị khóa
+           if (isKhoaHT && ndHtai.vTro !== 'qtriv') {
+               $("#nutChenFileHangLoat").hide();
+           }
        }
 
        if (anCotSua) {
@@ -275,15 +297,15 @@ function veBangDg() {
        csSua = idx; const dr = dlToanc[idx]; $("#vungNamDg").text(dr[0]); $("#vungTenDg").text(dr[1]); $("#vungMsoDg").val(dr[1]);
        const fr = document.getElementById("bmDgia"); fr.reset();
        
-       fr.elements['w'].value = dr[17]||""; // XL CM K1
-       fr.elements['x'].value = dr[18]||""; // XL CM K2
-       fr.elements['y'].value = dr[19]||""; // XL CNN
-       fr.elements['z'].value = dr[20]||""; // XL VC
-       fr.elements['ad'].value = dr[21]||""; // XL Đảng viên
-       fr.elements['aa'].value = dr[22]||""; // DH Chuyên môn
-       fr.elements['ab'].value = dr[23]||""; // DH Thi đua
-       fr.elements['ac'].value = dr[24]||""; // Hình thức khen
-       fr.elements['ae'].value = dr[25]||""; // Cấp khen
+       fr.elements['w'].value = dr[17]||""; 
+       fr.elements['x'].value = dr[18]||""; 
+       fr.elements['y'].value = dr[19]||""; 
+       fr.elements['z'].value = dr[20]||""; 
+       fr.elements['ad'].value = dr[21]||""; 
+       fr.elements['aa'].value = dr[22]||""; 
+       fr.elements['ab'].value = dr[23]||""; 
+       fr.elements['ac'].value = dr[24]||""; 
+       fr.elements['ae'].value = dr[25]||""; 
        
        let lk = dr[31] || "";
        $("#mcLinkDg").val(lk);
@@ -404,17 +426,74 @@ function veBangDg() {
       }
     }
 
-    /* ========================================================================== */
-    /* KHỐI XỬ LÝ BỔ SUNG: CHÈN MINH CHỨNG HÀNG LOẠT THEO NĂM HỌC                 */
-    /* ========================================================================== */
-
     function moModalChenFileHangLoat() {
         let mangNam = layTuyc(0); 
         let tuyChonNam = '<option value="">-- Chọn năm học --</option>' + mangNam.map(o => `<option value="${o}">${o}</option>`).join('');
         
         $("#chonNamHocFile").html(tuyChonNam);
         $("#linkFileHangLoat").val(""); 
+        $("#vungChonNhanSu").hide();
+        $("#danhSachNhanSuChenFile").empty();
+        $("#chonTatCaNs").prop('checked', false).prop('disabled', false);
+
         $("#hopThoaiChenFileNhieu").modal("show");
+    }
+
+    function taiDanhSachNhanSuTheoNam() {
+        let namApDung = $("#chonNamHocFile").val();
+        let vungDs = $("#danhSachNhanSuChenFile");
+        let vungBao = $("#vungChonNhanSu");
+        
+        vungDs.empty();
+        $("#chonTatCaNs").prop('checked', false).prop('disabled', false);
+        
+        if (!namApDung) {
+            vungBao.hide();
+            return;
+        }
+
+        let mcbNguoiDung = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
+        let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
+        let coNguoi = false;
+        
+        dlToanc.forEach((dg, idx) => {
+            if (String(dg[0]).trim() === namApDung) {
+                let coQuyenSua = false;
+                let mcbHoSo = String(dg[26] || "").trim();
+                
+                if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
+                    coQuyenSua = true;
+                } else if (ndHtai.vTro === 'ngdung' && mcbNguoiDung !== "KHONG_XAC_DINH" && mcbNguoiDung === mcbHoSo) {
+                    coQuyenSua = true;
+                }
+                if ((isKhoaHT && ndHtai.vTro !== 'qtriv') || ndHtai.vTro === 'xem') {
+                    coQuyenSua = false;
+                }
+
+                if (coQuyenSua) {
+                    coNguoi = true;
+                    let tenNs = dg[1] || "Chưa có tên";
+                    vungDs.append(`
+                        <div class="form-check">
+                            <input class="form-check-input cb-nhan-su" type="checkbox" value="${idx}" id="cbNs_${idx}">
+                            <label class="form-check-label" style="cursor:pointer;" for="cbNs_${idx}">${tenNs}</label>
+                        </div>
+                    `);
+                }
+            }
+        });
+        
+        if (coNguoi) {
+            vungBao.slideDown(200);
+        } else {
+            vungDs.html('<div class="text-danger small">Không có nhân sự nào bạn được quyền cập nhật trong năm học này.</div>');
+            vungBao.slideDown(200);
+            $("#chonTatCaNs").prop('disabled', true);
+        }
+    }
+
+    function chonTatCaNhanSu(cb) {
+        $(".cb-nhan-su").prop('checked', $(cb).prop('checked'));
     }
 
     function goiMinhChungHangLoat(btn) {
@@ -437,39 +516,30 @@ function veBangDg() {
         if (!namApDung) return hienTbao("Vui lòng chọn năm học cần áp dụng!", "loi");
         if (!linkDinhKem) return hienTbao("Vui lòng nhập đường dẫn hoặc tải tệp lên!", "loi");
 
+        let danhSachChon = [];
+        $(".cb-nhan-su:checked").each(function() {
+            danhSachChon.push($(this).val());
+        });
+
+        if (danhSachChon.length === 0) return hienTbao("Vui lòng tích chọn ít nhất một nhân sự!", "loi");
+
         let soLuongThanhCong = 0;
-        let mcbNguoiDung = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
-        let isKhoaHT = (window.dangKhoaHeThong === true || window.dangKhoaHeThong === "true");
 
-        dlToanc.forEach((dg) => {
-            if (String(dg[0]).trim() === namApDung) {
+        danhSachChon.forEach(idx => {
+            let dg = dlToanc[idx];
+            if (dg) {
+                let linkHienTai = dg[31] || "";
                 
-                let coQuyenSua = false;
-                let mcbHoSo = String(dg[26] || "").trim();
-                
-                if (ndHtai.vTro === 'qtriv' || ndHtai.vTro === 'admin_xx') {
-                    coQuyenSua = true;
-                } else if (ndHtai.vTro === 'ngdung' && mcbNguoiDung !== "KHONG_XAC_DINH" && mcbNguoiDung === mcbHoSo) {
-                    coQuyenSua = true;
-                }
-                if ((isKhoaHT && ndHtai.vTro !== 'qtriv') || ndHtai.vTro === 'xem') {
-                    coQuyenSua = false;
-                }
-
-                if (coQuyenSua) {
-                    let linkHienTai = dg[31] || "";
-                    
-                    if (linkHienTai) {
-                        if (!linkHienTai.includes(linkDinhKem)) {
-                            dg[31] = linkHienTai + ", " + linkDinhKem;
-                        }
-                    } else {
-                        dg[31] = linkDinhKem;
+                if (linkHienTai) {
+                    if (!linkHienTai.includes(linkDinhKem)) {
+                        dg[31] = linkHienTai + ", " + linkDinhKem;
                     }
-                    
-                    dg.cktdg = true; 
-                    soLuongThanhCong++;
+                } else {
+                    dg[31] = linkDinhKem;
                 }
+                
+                dg.cktdg = true; 
+                soLuongThanhCong++;
             }
         });
 
@@ -477,8 +547,6 @@ function veBangDg() {
             veBangDg(); 
             $("#hopThoaiChenFileNhieu").modal("hide");
             hienTbao(`Thành công! Đã chèn tệp cho ${soLuongThanhCong} hồ sơ. Nhấn nút [Cập Nhật] để ghi nhận.`, "tc");
-        } else {
-            hienTbao("Không tìm thấy hồ sơ hoặc bạn không có quyền thao tác trên năm học này!", "loi");
         }
     }
 </script>
