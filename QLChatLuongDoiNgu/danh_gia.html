@@ -426,7 +426,7 @@ function veBangDg() {
       }
     }
 
-    function moModalChenFileHangLoat() {
+function moModalChenFileHangLoat() {
         let mangNam = layTuyc(0); 
         let tuyChonNam = '<option value="">-- Chọn năm học --</option>' + mangNam.map(o => `<option value="${o}">${o}</option>`).join('');
         
@@ -435,6 +435,13 @@ function veBangDg() {
         $("#vungChonNhanSu").hide();
         $("#danhSachNhanSuChenFile").empty();
         $("#chonTatCaNs").prop('checked', false).prop('disabled', false);
+
+        // TỐI ƯU UX: Tự động lấy năm học đang được lọc ở bảng chính (nếu có)
+        let namDangLoc = $("#nhapLocN2").val();
+        if (namDangLoc && namDangLoc !== "") {
+            $("#chonNamHocFile").val(namDangLoc);
+            taiDanhSachNhanSuTheoNam(); // Lập tức hiển thị danh sách giáo viên có checkbox
+        }
 
         $("#hopThoaiChenFileNhieu").modal("show");
     }
