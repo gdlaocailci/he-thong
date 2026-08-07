@@ -208,7 +208,7 @@
 
   function hks_hienThiManHinhTai_fn(hks_trangThai_bol) { document.getElementById('instant-loader').style.display = hks_trangThai_bol ? 'flex' : 'none'; }
   
-  function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
+function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
       hks_hienThiManHinhTai_fn(true);
       const hks_chuoiGiaoTiep_str = hks_phanHoiGG_obj.credential;
 
@@ -225,16 +225,21 @@
           sessionStorage.setItem("sys_data_hs", JSON.stringify(hks_hoSoNguoiDungHienTai_obj));
           sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
 
+          // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC ĐỂ TRÁNH THỜI GIAN CHỜ LÂU
+          hks_doDuLieuVaoHopChon_fn();
+          hks_thietLapBoLoc_fn();
+          hks_kiemTraQuyenVaNapTabBon_fn(); 
+          document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
+          document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
+          document.getElementById('gate-overlay').style.display = 'none'; 
+          
+          let hks_ungDungChinh_el = document.getElementById('main-app');
+          hks_ungDungChinh_el.style.display = 'block'; 
+          setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
+
+          // CHẠY NGẦM VIỆC TẢI DỮ LIỆU LỚN XUỐNG BỘ NHỚ ĐỆM
           hks_capNhatBoNhoDem_fn().then(() => {
-              hks_doDuLieuVaoHopChon_fn();
-              hks_thietLapBoLoc_fn();
-              hks_kiemTraQuyenVaNapTabBon_fn(); 
-              document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
-              document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
-              document.getElementById('gate-overlay').style.display = 'none'; 
               hks_hienThiManHinhTai_fn(false);
-              let hks_ungDungChinh_el = document.getElementById('main-app');
-              hks_ungDungChinh_el.style.display = 'block'; setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
           });
       }).catch(e => { Swal.fire("Sự cố hệ thống", e.message, "warning"); hks_hienThiManHinhTai_fn(false); });
   }
@@ -258,11 +263,15 @@
                         hks_bienKhungHeThong_obj = JSON.parse(hks_cauHinhLuuTru_str);
                         hks_doDuLieuVaoHopChon_fn();
                         hks_kiemTraQuyenVaNapTabBon_fn();
+                        
+                        // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC
+                        let hks_ungDungChinh_el = document.getElementById('main-app');
+                        hks_ungDungChinh_el.style.display = 'block'; 
+                        setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
+
+                        // CHẠY NGẦM DỮ LIỆU LỚN XUỐNG BỘ NHỚ ĐỆM
                         hks_capNhatBoNhoDem_fn().then(() => {
                             hks_hienThiManHinhTai_fn(false);
-                            let hks_ungDungChinh_el = document.getElementById('main-app');
-                            hks_ungDungChinh_el.style.display = 'block'; 
-                            setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
                         });
                     } else {
                         hks_thucThiGiaoTiep_fn('hks_taiCauTrucKhung_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_duLieuTaiVe_obj => {
@@ -284,11 +293,15 @@
                             sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
                             hks_doDuLieuVaoHopChon_fn(); 
                             hks_kiemTraQuyenVaNapTabBon_fn();
+                            
+                            // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC
+                            let hks_ungDungChinh_el = document.getElementById('main-app');
+                            hks_ungDungChinh_el.style.display = 'block'; 
+                            setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
+
+                            // CHẠY NGẦM DỮ LIỆU LỚN XUỐNG BỘ NHỚ ĐỆM
                             hks_capNhatBoNhoDem_fn().then(() => {
                                 hks_hienThiManHinhTai_fn(false);
-                                let hks_ungDungChinh_el = document.getElementById('main-app');
-                                hks_ungDungChinh_el.style.display = 'block'; 
-                                setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
                             });
                         }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
                     }
