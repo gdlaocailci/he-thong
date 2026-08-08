@@ -314,19 +314,27 @@ function xulykqta(kq, tt, nt) {
         let returnedUrl = kq.fileUrl || kq.lkpt;
 
         if (GLOBAL_BTN_TRIGGER) {
-            // TỰ ĐỘNG NHẬN DIỆN: Tìm Modal (Cửa sổ) chứa nút vừa được bấm
+            // Tìm Cửa sổ (Modal) chứa nút vừa bấm để xác định chính xác đang ở form nào
             const modalChuaNut = GLOBAL_BTN_TRIGGER.closest('.modal');
-            if (modalChuaNut) {
-                // Tìm ô nhập liệu có class 'val-link' trong chính Modal đó
-                const inputLink = modalChuaNut.querySelector('.val-link');
-                if (inputLink) {
-                    inputLink.value = returnedUrl; // Gán link tự động vào đúng ô
-                }
-            }
             
-            // Chỉ gọi hiệu ứng ghim link nếu đang thao tác ở form Cá nhân
-            if (modalChuaNut && modalChuaNut.id === 'hopThoaiDg' && typeof veGhimModal === 'function') {
-                veGhimModal(returnedUrl);
+            if (modalChuaNut) {
+                if (modalChuaNut.id === 'hopThoaiChenFileNhieu') {
+                    // 1. Nếu đang ở Cửa sổ Đính kèm hàng loạt -> Đổ link vào ô linkFileHangLoat
+                    const inputHangLoat = document.getElementById('linkFileHangLoat');
+                    if (inputHangLoat) {
+                        inputHangLoat.value = returnedUrl;
+                    }
+                } 
+                else if (modalChuaNut.id === 'hopThoaiDg') {
+                    // 2. Nếu đang ở Cửa sổ Cá nhân -> Đổ link vào ô mcLinkDg và vẽ ghim
+                    const inputCaNhan = document.getElementById('mcLinkDg');
+                    if (inputCaNhan) {
+                        inputCaNhan.value = returnedUrl;
+                    }
+                    if (typeof veGhimModal === 'function') {
+                        veGhimModal(returnedUrl);
+                    }
+                }
             }
         }
         setTimeout(donghopthta, 1000); 
