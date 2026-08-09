@@ -114,7 +114,7 @@
     </div>
   </div>
 
-  <div class="d-flex align-items-center mb-2 px-2 py-1 gap-2 flex-wrap" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; min-height: 42px;">
+ <div class="d-flex align-items-center mb-2 px-2 py-1 gap-2 flex-wrap" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; min-height: 42px; position: relative; z-index: 1050;">
      <div class="d-flex align-items-center justify-content-start px-3" style="flex: 1;">
          <span class="nhanNhiemVu me-2 text-nowrap">Số ngày nghỉ:</span><input type="number" id="nhapSngayNghi" class="nhapTuyChinh text-center me-2" style="width: 45px; font-weight: bold;" placeholder="0">
          <textarea id="nhapLdoNghi" class="form-control me-3" placeholder="Nhập lý do..." style="height: 30px; min-height: 30px; font-size: 13px; border-radius: 4px; width: 300px; resize: none; overflow: hidden; white-space: pre-wrap; padding: 4px 8px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '30px')"></textarea>
@@ -1681,6 +1681,7 @@ $(document).ready(function() {
     dropdown.style.position = "absolute";
     dropdown.style.top = "100%";
     dropdown.style.right = "0";
+    dropdown.style.left = "auto"; // Tránh bị tràn lề trái
     dropdown.style.width = "280px";
     dropdown.style.maxHeight = "300px";
     dropdown.style.overflowY = "auto";
