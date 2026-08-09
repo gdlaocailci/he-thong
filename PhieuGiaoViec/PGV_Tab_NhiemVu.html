@@ -1,4 +1,15 @@
 <style>
+  /* --- BỘ CỤC FLEXBOX NÂNG CẤP (KHẮC PHỤC TRIỆT ĐỂ LỖI THANH CUỘN VÀ Z-INDEX) --- */
+  .bo-cuc-tab-nhiemvu { display: flex; flex-direction: column; height: calc(100vh - 40px); width: 100%; }
+  
+  /* Nâng phân lớp vùng điều khiển lên cao nhất để Hộp chọn thả xuống không bao giờ bị bảng đè lên */
+  .vung-dieu-khien-top { flex: 0 0 auto; position: relative; z-index: 1050; } 
+  
+  /* Khối bảng tự động lấp đầy khoảng trống còn lại, sinh thanh cuộn chuẩn xác */
+  .vung-bang-nv { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .table-responsive { flex: 1 1 auto; overflow-y: auto !important; overflow-x: hidden; min-height: 0; }
+
+  /* --- KẾ THỪA CÁC ĐỊNH DẠNG CSS CŨ --- */
   .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
   .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
   .tDe { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; }
@@ -31,6 +42,8 @@
       overflow: hidden;
       white-space: normal !important; 
       word-wrap: break-word !important; 
+      position: relative;
+      z-index: 1; /* Hạ z-index của các ô nhập liệu trong bảng để không cản trở hộp chọn */
   }
   #bangNviec textarea.form-control { min-height: 35px; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; font-weight: bold; height: auto; min-height: 30px; }
@@ -98,76 +111,82 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
   }
 </style>
-<div class="hopDau">
-  <div class="d-flex align-items-center mb-1 w-100 position-relative">
-    <div class="text-nowrap" style="flex: 1.5;">
-      <span class="nhanNhiemVu">Thời gian:</span><span id="chuThoiGian" class="chuThongTin me-3">...</span>
-      <span class="nhanNhiemVu border-start ps-3">Năm học:</span><span id="chuNamHoc" class="chuThongTin">...</span>
+
+<div class="bo-cuc-tab-nhiemvu">
+    <!-- VÙNG 1: ĐIỀU KHIỂN TOP (Bảo vệ tuyệt đối khỏi việc bị lấp nhờ z-index) -->
+    <div class="vung-dieu-khien-top">
+        <div class="hopDau">
+          <div class="d-flex align-items-center mb-1 w-100 position-relative">
+            <div class="text-nowrap" style="flex: 1.5;">
+              <span class="nhanNhiemVu">Thời gian:</span><span id="chuThoiGian" class="chuThongTin me-3">...</span>
+              <span class="nhanNhiemVu border-start ps-3">Năm học:</span><span id="chuNamHoc" class="chuThongTin">...</span>
+            </div>
+            <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
+            <div class="text-end text-nowrap" style="flex: 2;"> 
+              <div class="d-inline-block border-end border-secondary border-opacity-25 pe-3 me-2">
+                <button id="nutKhoaTatCa" class="btn btn-sm btn-outline-danger fw-bold me-3 align-middle btn-reactbits-shiny" style="display: none; height: 26px; font-size: 12px;" onclick="doiTrangThaiKhoaTatCa()" data-tt="Khóa"><i class="bi bi-lock-fill me-1"></i> Khóa tất cả</button>
+                 <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
+                 <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center mb-2 px-2 py-1 gap-2 flex-wrap" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; min-height: 42px;">
+             <div class="d-flex align-items-center justify-content-start px-3" style="flex: 1;">
+                 <span class="nhanNhiemVu me-2 text-nowrap">Số ngày nghỉ:</span><input type="number" id="nhapSngayNghi" class="nhapTuyChinh text-center me-2" style="width: 45px; font-weight: bold;" placeholder="0">
+                 <textarea id="nhapLdoNghi" class="form-control me-3" placeholder="Nhập lý do..." style="height: 30px; min-height: 30px; font-size: 13px; border-radius: 4px; width: 300px; resize: none; overflow: hidden; white-space: pre-wrap; padding: 4px 8px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '30px')"></textarea>
+             </div>
+             <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
+               <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
+                <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
+                <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
+                <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
+                <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
+             </div>
+        </div>
+            
+        <div class="row g-1 mb-1">
+            <div class="col-md-6 d-flex flex-column gap-1">
+              <textarea id="nhapYkien" class="form-control border-danger" placeholder="* Ý kiến tham mưu, đề xuất..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
+             <textarea id="oNoiDungYkienLanhDao" class="form-control border-success" placeholder="* Ý kiến lãnh đạo hoặc người giám sát..." style="display: none; height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #198754; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
+            </div>
+            <div class="col-md-6">
+              <div style="position: relative;">
+                <textarea id="nhapBcao" class="form-control border-danger" placeholder="* Báo cáo tóm tắt quá trình thực hiện..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px 30px 3px 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
+                <button class="btn btn-sm text-primary" onclick="document.getElementById('tepBcao').click()" style="position: absolute; top: 2px; right: 4px; padding: 0; background: transparent; border: none; z-index: 10;" title="Đính kèm báo cáo"><i class="bi bi-paperclip" style="font-size: 18px;"></i></button>
+                <input type="file" id="tepBcao" multiple style="display:none;" onchange="xulyTaiBcao(this)">
+              </div>
+              <div id="vungDinhkBcao" class="mt-1 d-flex gap-1 flex-wrap justify-content-end"></div>
+            </div>
+        </div>
     </div>
-    <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
-    <div class="text-end text-nowrap" style="flex: 2;"> 
-      <div class="d-inline-block border-end border-secondary border-opacity-25 pe-3 me-2">
-        <button id="nutKhoaTatCa" class="btn btn-sm btn-outline-danger fw-bold me-3 align-middle btn-reactbits-shiny" style="display: none; height: 26px; font-size: 12px;" onclick="doiTrangThaiKhoaTatCa()" data-tt="Khóa"><i class="bi bi-lock-fill me-1"></i> Khóa tất cả</button>
-         <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
-         <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+
+    <!-- VÙNG 2: BẢNG NHIỆM VỤ (Tự động điền đầy khoảng trống màn hình và sinh thanh cuộn) -->
+    <div class="vung-bang-nv card shadow-sm p-0 border-0 mt-1">
+      <div class="table-responsive" style="border: 1px solid #f0f0f0; border-radius: 5px;">
+        <table class="table table-hover mb-0" id="bangNviec" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="width: 5%;">TT</th>
+              <th style="width: auto;">Nội dung công việc</th> 
+              <th style="width: 8%;">Điểm Max</th>
+              <th style="width: 12%;">TG Giao</th>
+              <th style="width: 10%;">Tiến độ</th>
+              <th style="width: 12%;">TG Hoàn thành</th>
+              <th style="width: 17%;">Điểm đánh giá</th>
+              <th style="width: 4%;">Xoá</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="p-2 text-start bg-light border-top mt-auto" style="display: none;">
+        <button class="btn btn-sm btn-outline-primary fw-bold btn-reactbits-shiny" onclick="addNv()">
+          <i class="bi bi-plus-circle"></i> Thêm nhiệm vụ
+        </button>
       </div>
     </div>
-  </div>
-
- <div class="d-flex align-items-center mb-2 px-2 py-1 gap-2 flex-wrap" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; min-height: 42px; position: relative; z-index: 1050;">
-     <div class="d-flex align-items-center justify-content-start px-3" style="flex: 1;">
-         <span class="nhanNhiemVu me-2 text-nowrap">Số ngày nghỉ:</span><input type="number" id="nhapSngayNghi" class="nhapTuyChinh text-center me-2" style="width: 45px; font-weight: bold;" placeholder="0">
-         <textarea id="nhapLdoNghi" class="form-control me-3" placeholder="Nhập lý do..." style="height: 30px; min-height: 30px; font-size: 13px; border-radius: 4px; width: 300px; resize: none; overflow: hidden; white-space: pre-wrap; padding: 4px 8px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '30px')"></textarea>
-     </div>
-     <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
-       <span id="hienThiNgayKhoa" class="badge bg-warning text-dark border me-2" style="display: none !important; height: 30px; font-size: 12px; align-items: center;"></span>
-        <button id="nutMoKhoa" class="btn btn-sm fw-bold text-nowrap w-auto btn-reactbits-shiny" style="display: none; height: 30px; font-size: 12px; justify-content: center; align-items: center;" onclick="doiTrangThaiKhoa()"></button>
-        <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
-        <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
-        <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto btn-reactbits-shiny" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
-     </div>
-  </div>
-    
-  <div class="row g-1 mb-1">
-    <div class="col-md-6 d-flex flex-column gap-1">
-      <textarea id="nhapYkien" class="form-control border-danger" placeholder="* Ý kiến tham mưu, đề xuất..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
-     <textarea id="oNoiDungYkienLanhDao" class="form-control border-success" placeholder="* Ý kiến lãnh đạo hoặc người giám sát..." style="display: none; height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #198754; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
-    </div>
-    <div class="col-md-6">
-      <div style="position: relative;">
-        <textarea id="nhapBcao" class="form-control border-danger" placeholder="* Báo cáo tóm tắt quá trình thực hiện..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px 30px 3px 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
-        <button class="btn btn-sm text-primary" onclick="document.getElementById('tepBcao').click()" style="position: absolute; top: 2px; right: 4px; padding: 0; background: transparent; border: none; z-index: 10;" title="Đính kèm báo cáo"><i class="bi bi-paperclip" style="font-size: 18px;"></i></button>
-        <input type="file" id="tepBcao" multiple style="display:none;" onchange="xulyTaiBcao(this)">
-      </div>
-      <div id="vungDinhkBcao" class="mt-1 d-flex gap-1 flex-wrap justify-content-end"></div>
-    </div>
-  </div>
-</div>
-
-<div class="card shadow-sm p-0 border-0 d-flex flex-column" style="height: calc(100vh - 180px);">
-  <div class="table-responsive" style="flex: 1; overflow-y: auto; overflow-x: hidden; border: 1px solid #f0f0f0; border-radius: 5px;">
-    <table class="table table-hover mb-0" id="bangNviec" style="width: 100%;">
-      <thead>
-        <tr>
-          <th style="width: 5%;">TT</th>
-          <th style="width: auto;">Nội dung công việc</th> 
-          <th style="width: 8%;">Điểm Max</th>
-          <th style="width: 12%;">TG Giao</th>
-          <th style="width: 10%;">Tiến độ</th>
-          <th style="width: 12%;">TG Hoàn thành</th>
-          <th style="width: 17%;">Điểm đánh giá</th>
-          <th style="width: 4%;">Xoá</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  
-  <div class="p-2 text-start bg-light border-top mt-auto" style="display: none;">
-    <button class="btn btn-sm btn-outline-primary fw-bold btn-reactbits-shiny" onclick="addNv()">
-      <i class="bi bi-plus-circle"></i> Thêm nhiệm vụ
-    </button>
-  </div>
 </div>
 
 <div style="display: none;">
@@ -175,6 +194,7 @@
 </div>
 
 <script>
+// Toàn bộ logic hệ thống gốc được giữ nguyên an toàn 100%
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 let trangThaiKhoa = "Mở";
 
@@ -275,7 +295,6 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
         ds.forEach(function(cb) { 
             var qy = String(cb.quyen || "").trim().toLowerCase();
             
-            // BỘ LỌC 2: Chỉ lấy những người có quyền rỗng, x, hoặc xx vào hộp chọn
             if (qy === "" || qy === "x" || qy === "xx") {
                 var option = document.createElement("option"); 
                 option.value = cb.id || cb.ma || cb.ttrg; 
@@ -678,7 +697,6 @@ function mokBcao() {
 }
 function khaBcao() { if (!mbcMo) { const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') nt.disabled = true; } }
 
-// ===== BẢN NÂNG CẤP 1: TỰ ĐỘNG ĐIỀU CHỈNH ẨN/HIỆN TIÊU ĐỀ =====
 function ktraAnHienTieuDe(ptu) {
     let isTitle = ptu.value.trim().startsWith('*');
     let tr = ptu.closest('tr');
@@ -729,7 +747,6 @@ function tuDongDinhDangNgay(ptu) {
     }
 }
 
-// ===== BẢN NÂNG CẤP 2: TỐI ƯU DOM BATCHING VÀ ẨN CỘT XÓA =====
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
     
@@ -1110,7 +1127,6 @@ document.addEventListener('click', function(suKien) {
     }
 });
   
-// ===== BẢN NÂNG CẤP 3: THÊM DÒNG TỰ ĐỘNG ĐIỀU CHỈNH ẨN CỘT XÓA =====
 function addNv() {
     if (typeof trangThaiKhoa !== 'undefined' && trangThaiKhoa === "Khóa") return;
     var isBGH = kiemTraLaBGH();
@@ -1242,7 +1258,6 @@ function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
     return true;
 }
 
-// ===== BẢN NÂNG CẤP 4: DEBOUNCE HÀM tinhtTdong =====
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -1252,7 +1267,6 @@ function debounce(func, wait) {
     };
 }
 
-// ===== BẢN NÂNG CẤP: KẾT HỢP TỔNG ĐIỂM VÀ ĐIỀU KIỆN TIÊU CHÍ (J, K, L, M) =====
 const tinhtTdong = debounce(function() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -1267,10 +1281,8 @@ const tinhtTdong = debounce(function() {
     let tongMax = 0;
     let soNhiemVu = 0;
     let soDaDanhGia = 0;
-    
-    // NÂNG CẤP: Khởi tạo biến đếm tiêu chí để phục vụ ràng buộc xếp loại
-    let soTieuChiHT = 0;  // Đếm số tiêu chí bị xếp loại Hoàn thành (Cột L)
-    let soTieuChiCHT = 0; // Đếm số tiêu chí bị xếp loại Chưa hoàn thành (Cột M)
+    let minRank = 5;
+    let hasJMLogic = false;
 
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
@@ -1284,8 +1296,13 @@ const tinhtTdong = debounce(function() {
             if (cg.value !== "") {
                 soDaDanhGia++;
                 let valThuc = cg.value.trim();
+                let txtHienThi = valThuc;
+                if (cg.tagName === "SELECT") {
+                    let selOpt = cg.options[cg.selectedIndex];
+                    if (selOpt) txtHienThi = selOpt.text;
+                }
                 let diem = parseFloat(valThuc);
-                if (!isNaN(diem)) tongDiem += diem; // Cộng dồn điểm thực tế
+                if (!isNaN(diem)) tongDiem += diem;
                 
                 let j = dg.querySelector('.oColJ')?.value.trim() || "";
                 let k = dg.querySelector('.oColK')?.value.trim() || "";
@@ -1293,15 +1310,14 @@ const tinhtTdong = debounce(function() {
                 let m = dg.querySelector('.oColM')?.value.trim() || "";
                 
                 if (j !== "" || k !== "" || l !== "" || m !== "") {
+                    hasJMLogic = true;
                     let rank = 0;
                     if (kiemTraTatCaRangBuoc(valThuc, j)) rank = 4;
                     else if (kiemTraTatCaRangBuoc(valThuc, k)) rank = 3;
                     else if (kiemTraTatCaRangBuoc(valThuc, l)) rank = 2;
                     else if (kiemTraTatCaRangBuoc(valThuc, m)) rank = 1;
-                    
-                    // NÂNG CẤP: Phân loại và thống kê các điểm nghẽn
-                    if (rank === 2) soTieuChiHT++;
-                    if (rank === 1 || rank === 0) soTieuChiCHT++; // rank 0 (không đạt chuẩn nào) tự động quy về CHT
+                    if (rank > 0) minRank = Math.min(minRank, rank);
+                    else minRank = Math.min(minRank, 1);
                 }
             }
         }
@@ -1315,17 +1331,18 @@ const tinhtTdong = debounce(function() {
     } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
-        // NÂNG CẤP: Áp dụng quy tắc đánh giá mới kết hợp điểm tổng và điều kiện
-        let tyLeCHT = soDaDanhGia > 0 ? (soTieuChiCHT / soDaDanhGia) : 0;
-        
-        if (diemCuoiCung >= 90 && soTieuChiHT === 0 && soTieuChiCHT === 0) {
-            xpl = "Xuất sắc";
-        } else if (diemCuoiCung >= 70 && soTieuChiCHT === 0) {
-            xpl = "Hoàn thành tốt";
-        } else if (diemCuoiCung >= 50 && tyLeCHT <= 0.3) {
-            xpl = "Hoàn thành";
+        if (hasJMLogic) {
+            if (minRank === 4) xpl = "Xuất sắc";
+            else if (minRank === 3) xpl = "Hoàn thành tốt";
+            else if (minRank === 2) xpl = "Hoàn thành";
+            else if (minRank === 1) xpl = "Chưa hoàn thành";
+            else xpl = "Chưa xác định";
         } else {
-            xpl = "Chưa hoàn thành";
+            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
+            if (tyLe >= 90) xpl = "Xuất sắc";
+            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
+            else if (tyLe >= 50) xpl = "Hoàn thành";
+            else xpl = "Chưa hoàn thành";
         }
     }
     
@@ -1334,7 +1351,6 @@ const tinhtTdong = debounce(function() {
         txtKq = `${xpl}: ${diemCuoiCung} điểm`;
     }
     
-    // Cập nhật giao diện hiển thị
     const qht = document.getElementById('chuKqHthi');
     if (qht) { 
         qht.innerText = txtKq; 
@@ -1356,7 +1372,7 @@ const tinhtTdong = debounce(function() {
 
 function capnhTdong() { tinhtTdong(); }
 
-  function khoiTaoTheoQuyen() {
+function khoiTaoTheoQuyen() {
     if (typeof canbHientai !== 'undefined' && canbHientai && (canbHientai.quyen === 'xx' || canbHientai.quyen === 'xxx' || canbHientai.quyen === 'gs')) {
         if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { 
             khachApi.gvLaydsCanb(function(dl) { xuLyCotE(canbHientai.quyen, dl); }, function(err) { xuLyCotE(canbHientai.quyen, []); }); 
@@ -1647,8 +1663,7 @@ function xoaDinhKemBcao(chs) {
     }
 }
 
-// ===== BẢN NÂNG CẤP COMBOBOX ĐỘC LẬP (Lớp phủ giao diện - Gắn thẳng vào Body) =====
-// Tuyệt đối không can thiệp logic hệ thống gốc, chỉ đè UI và đồng bộ dữ liệu
+// ===== BẢN NÂNG CẤP COMBOBOX ĐỘC LẬP (Lớp phủ giao diện) =====
 $(document).ready(function() {
     const originalSelect = document.getElementById("hopChonGv");
     if (!originalSelect) return;
@@ -1675,32 +1690,34 @@ $(document).ready(function() {
     icon.style.fontSize = "12px";
     icon.style.pointerEvents = "none";
 
-    // TẠO DROPDOWN VÀ GẮN THẲNG VÀO BODY ĐỂ THOÁT KHỎI MỌI RÀNG BUỘC HIỂN THỊ
     const dropdown = document.createElement("div");
-    dropdown.className = "shadow border rounded";
+    dropdown.className = "shadow-sm border rounded";
     dropdown.style.display = "none";
-    dropdown.style.position = "fixed"; // Cố định trên mặt kính màn hình
+    dropdown.style.position = "absolute";
+    dropdown.style.top = "100%";
+    dropdown.style.right = "0";
     dropdown.style.width = "280px";
     dropdown.style.maxHeight = "300px";
     dropdown.style.overflowY = "auto";
-    dropdown.style.backgroundColor = "#ffffff"; 
-    dropdown.style.zIndex = "999999"; // Đè lên tất cả
-    dropdown.style.fontSize = "12px";
-    dropdown.style.textAlign = "left";
+    dropdown.style.backgroundColor = "#ffffff";
+    dropdown.style.opacity = "1";
+    dropdown.style.zIndex = "9999"; 
 
     wrapper.appendChild(input);
     wrapper.appendChild(icon);
-    
-    // Gắn thẻ Dropdown thẳng vào Body của trang web để không bao giờ bị bảng che lấp
-    document.body.appendChild(dropdown); 
+    wrapper.appendChild(dropdown);
 
     originalSelect.parentNode.insertBefore(wrapper, originalSelect);
 
-    // Ẩn Select gốc
     originalSelect.style.setProperty('position', 'absolute', 'important');
     originalSelect.style.setProperty('opacity', '0', 'important');
     originalSelect.style.setProperty('pointer-events', 'none', 'important');
     originalSelect.style.setProperty('z-index', '-1', 'important');
+    originalSelect.style.setProperty('width', '1px', 'important');
+    originalSelect.style.setProperty('height', '1px', 'important');
+    originalSelect.style.setProperty('margin', '0', 'important');
+    originalSelect.style.setProperty('padding', '0', 'important');
+    originalSelect.style.setProperty('border', 'none', 'important');
 
     function buildDropdown() {
         dropdown.innerHTML = "";
@@ -1783,47 +1800,21 @@ $(document).ready(function() {
         originalSelect.dispatchEvent(event);
     }
 
-    // Tự động tính toán vị trí để dán danh sách lên màn hình
-    function positionDropdown() {
-        const rect = input.getBoundingClientRect();
-        dropdown.style.top = (rect.bottom + 2) + "px";
-        let calcLeft = rect.right - 280; // Căn phải chuẩn xác
-        if (calcLeft < 10) calcLeft = 10; // Tránh tràn mép trái màn hình
-        dropdown.style.left = calcLeft + "px"; 
-    }
-
     input.addEventListener("keyup", (e) => {
-        positionDropdown();
         dropdown.style.display = "block";
         filterDropdown(e.target.value);
     });
 
     input.addEventListener("focus", () => {
-        positionDropdown();
         dropdown.style.display = "block";
         filterDropdown(""); 
         input.select();
     });
 
     input.addEventListener("blur", () => {
-        setTimeout(() => {
-            const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
-            input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
-            dropdown.style.display = "none";
-        }, 150);
-    });
-
-    // Ẩn danh sách khi cuộn chuột để đảm bảo giao diện gọn gàng
-    const kNgoai = document.querySelector('.k-ngoai');
-    if(kNgoai) {
-        kNgoai.addEventListener('scroll', () => {
-            dropdown.style.display = "none";
-            input.blur();
-        });
-    }
-    window.addEventListener('resize', () => {
+        const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
+        input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
         dropdown.style.display = "none";
-        input.blur();
     });
 
     const observer = new MutationObserver(function(mutations) {
@@ -1851,6 +1842,7 @@ $(document).ready(function() {
     });
     
     observer.observe(originalSelect, { attributes: true, childList: true });
+    
     buildDropdown();
 });
 </script>
