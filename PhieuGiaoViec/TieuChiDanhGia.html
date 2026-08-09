@@ -285,8 +285,8 @@ function xuLyTepExcel(event) {
             // Chuyển đổi thành mảng mảng, bỏ qua dòng tiêu đề (dòng đầu tiên)
             const jsonDuLieu = XLSX.utils.sheet_to_json(trangTinh, {header: 1, defval: ""});
             
-            if (jsonDuLieu.length > 1) {
-                const mangPhanTuDuLieu = jsonDuLieu.slice(1); // Cắt bỏ dòng tiêu đề
+            if (jsonDuLieu.length > 4) {
+                const mangPhanTuDuLieu = jsonDuLieu.slice(4); // Cắt bỏ dòng tiêu đề
                 
                 // Chuẩn hóa đảm bảo đủ 13 cột dữ liệu
                 const mangChuanHoa = mangPhanTuDuLieu.map(dong => {
