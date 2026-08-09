@@ -1,5 +1,5 @@
 /* ========================================================================== */
-var ddungApi = "https://script.google.com/macros/s/AKfycbzDZI2KsGn2RduThKSd7RT8kkUC3R8hb2q3BksVgDlZ5J9XYIs8kf9h0TCX65Z58WI5Cg/exec"; 
+var ddungApi = "https://script.google.com/macros/s/AKfycbz6t2J2H3RNA3CY9KXGv9M0_JZ2djNYeHf-fsMYfX97HGDvYDdWu0Jf7eemuiI9KmJS/exec"; 
 
 // --- CÁC BIẾN CẤU HÌNH ĐỊNH DANH HỆ THỐNG ---
 var PGV_LINK_LOGO = "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"; 
