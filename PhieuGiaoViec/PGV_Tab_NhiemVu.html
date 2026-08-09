@@ -1647,7 +1647,7 @@ function xoaDinhKemBcao(chs) {
     }
 }
 
-// ===== BẢN NÂNG CẤP COMBOBOX ĐỘC LẬP (Lớp phủ giao diện) =====
+// ===== BẢN NÂNG CẤP COMBOBOX ĐỘC LẬP (Lớp phủ giao diện - Gắn thẳng vào Body) =====
 // Tuyệt đối không can thiệp logic hệ thống gốc, chỉ đè UI và đồng bộ dữ liệu
 $(document).ready(function() {
     const originalSelect = document.getElementById("hopChonGv");
@@ -1675,38 +1675,32 @@ $(document).ready(function() {
     icon.style.fontSize = "12px";
     icon.style.pointerEvents = "none";
 
+    // TẠO DROPDOWN VÀ GẮN THẲNG VÀO BODY ĐỂ THOÁT KHỎI MỌI RÀNG BUỘC HIỂN THỊ
     const dropdown = document.createElement("div");
-    dropdown.className = "shadow-sm border rounded";
+    dropdown.className = "shadow border rounded";
     dropdown.style.display = "none";
-    dropdown.style.position = "absolute";
-    dropdown.style.top = "100%";
-    dropdown.style.right = "0";
-    dropdown.style.left = "auto"; // Tránh bị tràn lề trái
+    dropdown.style.position = "fixed"; // Cố định trên mặt kính màn hình
     dropdown.style.width = "280px";
     dropdown.style.maxHeight = "300px";
     dropdown.style.overflowY = "auto";
-    dropdown.style.backgroundColor = "#ffffff"; // Ép cứng nền trắng
-    dropdown.style.opacity = "1"; // Độ đục 100%, khử hoàn toàn trong suốt
-    dropdown.style.zIndex = "9999"; // Đẩy phân lớp lên cao nhất để đè mọi thành phần khác
+    dropdown.style.backgroundColor = "#ffffff"; 
+    dropdown.style.zIndex = "999999"; // Đè lên tất cả
     dropdown.style.fontSize = "12px";
     dropdown.style.textAlign = "left";
 
     wrapper.appendChild(input);
     wrapper.appendChild(icon);
-    wrapper.appendChild(dropdown);
+    
+    // Gắn thẻ Dropdown thẳng vào Body của trang web để không bao giờ bị bảng che lấp
+    document.body.appendChild(dropdown); 
 
     originalSelect.parentNode.insertBefore(wrapper, originalSelect);
 
-    // Ẩn Select gốc bằng style trực tiếp (Giữ nguyên thẻ select trong DOM để không vỡ logic)
+    // Ẩn Select gốc
     originalSelect.style.setProperty('position', 'absolute', 'important');
     originalSelect.style.setProperty('opacity', '0', 'important');
     originalSelect.style.setProperty('pointer-events', 'none', 'important');
     originalSelect.style.setProperty('z-index', '-1', 'important');
-    originalSelect.style.setProperty('width', '1px', 'important');
-    originalSelect.style.setProperty('height', '1px', 'important');
-    originalSelect.style.setProperty('margin', '0', 'important');
-    originalSelect.style.setProperty('padding', '0', 'important');
-    originalSelect.style.setProperty('border', 'none', 'important');
 
     function buildDropdown() {
         dropdown.innerHTML = "";
@@ -1789,21 +1783,47 @@ $(document).ready(function() {
         originalSelect.dispatchEvent(event);
     }
 
+    // Tự động tính toán vị trí để dán danh sách lên màn hình
+    function positionDropdown() {
+        const rect = input.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 2) + "px";
+        let calcLeft = rect.right - 280; // Căn phải chuẩn xác
+        if (calcLeft < 10) calcLeft = 10; // Tránh tràn mép trái màn hình
+        dropdown.style.left = calcLeft + "px"; 
+    }
+
     input.addEventListener("keyup", (e) => {
+        positionDropdown();
         dropdown.style.display = "block";
         filterDropdown(e.target.value);
     });
 
     input.addEventListener("focus", () => {
+        positionDropdown();
         dropdown.style.display = "block";
         filterDropdown(""); 
         input.select();
     });
 
     input.addEventListener("blur", () => {
-        const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
-        input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
+        setTimeout(() => {
+            const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
+            input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
+            dropdown.style.display = "none";
+        }, 150);
+    });
+
+    // Ẩn danh sách khi cuộn chuột để đảm bảo giao diện gọn gàng
+    const kNgoai = document.querySelector('.k-ngoai');
+    if(kNgoai) {
+        kNgoai.addEventListener('scroll', () => {
+            dropdown.style.display = "none";
+            input.blur();
+        });
+    }
+    window.addEventListener('resize', () => {
         dropdown.style.display = "none";
+        input.blur();
     });
 
     const observer = new MutationObserver(function(mutations) {
@@ -1831,7 +1851,6 @@ $(document).ready(function() {
     });
     
     observer.observe(originalSelect, { attributes: true, childList: true });
-    
     buildDropdown();
 });
 </script>
