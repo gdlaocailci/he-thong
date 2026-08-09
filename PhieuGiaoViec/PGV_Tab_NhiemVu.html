@@ -1252,6 +1252,7 @@ function debounce(func, wait) {
     };
 }
 
+// ===== BẢN NÂNG CẤP: KẾT HỢP TỔNG ĐIỂM VÀ ĐIỀU KIỆN TIÊU CHÍ (J, K, L, M) =====
 const tinhtTdong = debounce(function() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -1266,8 +1267,10 @@ const tinhtTdong = debounce(function() {
     let tongMax = 0;
     let soNhiemVu = 0;
     let soDaDanhGia = 0;
-    let minRank = 5;
-    let hasJMLogic = false;
+    
+    // NÂNG CẤP: Khởi tạo biến đếm tiêu chí để phục vụ ràng buộc xếp loại
+    let soTieuChiHT = 0;  // Đếm số tiêu chí bị xếp loại Hoàn thành (Cột L)
+    let soTieuChiCHT = 0; // Đếm số tiêu chí bị xếp loại Chưa hoàn thành (Cột M)
 
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
@@ -1281,13 +1284,8 @@ const tinhtTdong = debounce(function() {
             if (cg.value !== "") {
                 soDaDanhGia++;
                 let valThuc = cg.value.trim();
-                let txtHienThi = valThuc;
-                if (cg.tagName === "SELECT") {
-                    let selOpt = cg.options[cg.selectedIndex];
-                    if (selOpt) txtHienThi = selOpt.text;
-                }
                 let diem = parseFloat(valThuc);
-                if (!isNaN(diem)) tongDiem += diem;
+                if (!isNaN(diem)) tongDiem += diem; // Cộng dồn điểm thực tế
                 
                 let j = dg.querySelector('.oColJ')?.value.trim() || "";
                 let k = dg.querySelector('.oColK')?.value.trim() || "";
@@ -1295,14 +1293,15 @@ const tinhtTdong = debounce(function() {
                 let m = dg.querySelector('.oColM')?.value.trim() || "";
                 
                 if (j !== "" || k !== "" || l !== "" || m !== "") {
-                    hasJMLogic = true;
                     let rank = 0;
                     if (kiemTraTatCaRangBuoc(valThuc, j)) rank = 4;
                     else if (kiemTraTatCaRangBuoc(valThuc, k)) rank = 3;
                     else if (kiemTraTatCaRangBuoc(valThuc, l)) rank = 2;
                     else if (kiemTraTatCaRangBuoc(valThuc, m)) rank = 1;
-                    if (rank > 0) minRank = Math.min(minRank, rank);
-                    else minRank = Math.min(minRank, 1);
+                    
+                    // NÂNG CẤP: Phân loại và thống kê các điểm nghẽn
+                    if (rank === 2) soTieuChiHT++;
+                    if (rank === 1 || rank === 0) soTieuChiCHT++; // rank 0 (không đạt chuẩn nào) tự động quy về CHT
                 }
             }
         }
@@ -1316,18 +1315,17 @@ const tinhtTdong = debounce(function() {
     } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
-        if (hasJMLogic) {
-            if (minRank === 4) xpl = "Xuất sắc";
-            else if (minRank === 3) xpl = "Hoàn thành tốt";
-            else if (minRank === 2) xpl = "Hoàn thành";
-            else if (minRank === 1) xpl = "Chưa hoàn thành";
-            else xpl = "Chưa xác định";
+        // NÂNG CẤP: Áp dụng quy tắc đánh giá mới kết hợp điểm tổng và điều kiện
+        let tyLeCHT = soDaDanhGia > 0 ? (soTieuChiCHT / soDaDanhGia) : 0;
+        
+        if (diemCuoiCung >= 90 && soTieuChiHT === 0 && soTieuChiCHT === 0) {
+            xpl = "Xuất sắc";
+        } else if (diemCuoiCung >= 70 && soTieuChiCHT === 0) {
+            xpl = "Hoàn thành tốt";
+        } else if (diemCuoiCung >= 50 && tyLeCHT <= 0.3) {
+            xpl = "Hoàn thành";
         } else {
-            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
-            if (tyLe >= 90) xpl = "Xuất sắc";
-            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
-            else if (tyLe >= 50) xpl = "Hoàn thành";
-            else xpl = "Chưa hoàn thành";
+            xpl = "Chưa hoàn thành";
         }
     }
     
@@ -1336,6 +1334,7 @@ const tinhtTdong = debounce(function() {
         txtKq = `${xpl}: ${diemCuoiCung} điểm`;
     }
     
+    // Cập nhật giao diện hiển thị
     const qht = document.getElementById('chuKqHthi');
     if (qht) { 
         qht.innerText = txtKq; 
