@@ -1,3 +1,6 @@
+<!-- Cần đảm bảo thư viện SheetJS đã được tải ở đâu đó trong tệp chính -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
   #vungTieuChiQL { height: calc(100vh - 60px); display: flex; flex-direction: column; background-color: #f8f9fa; width: 100%; overflow: hidden; }
   .tDeTieuChiQL { font-weight: bold; color: #198754; font-size: 20px; text-transform: uppercase; margin: 0; padding: 15px 0; text-align: center; }
@@ -17,20 +20,42 @@
   .nutDieuKhienQL { padding: 2px 6px; font-size: 12px; margin: 1px; }
   .cotHanhDongQL { text-align: center; background-color: #f1f4f8; }
   .cotSttQL { text-align: center; font-weight: bold; background-color: #f1f4f8; }
+
+  /* Hiệu ứng và Icon (Tham khảo Reactbits & Svgrepo) */
+  .btn-hieu-ung { transition: all 0.3s ease; }
+  .btn-hieu-ung:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important; }
+  .icon-svg { width: 16px; height: 16px; margin-right: 4px; vertical-align: text-bottom; fill: currentColor; }
 </style>
 
 <div id="vungTieuChiQL">
   <div class="d-flex justify-content-between align-items-center px-3" style="background: white; border-bottom: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
   
-    <div>
-      <button class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="themDongTieuChiQL()">
-        <i class="bi bi-plus-circle"></i> Thêm dòng (Xuống dưới)
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-success btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="themDongTieuChiQL()">
+        <i class="bi bi-plus-circle"></i> Thêm dòng
       </button>
+      
+      <!-- Nút thao tác với Excel -->
+      <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="taiBieuMauExcelQL()">
+        <svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM15 18H9v-2h6v2zm0-4H9v-2h6v2z"/>
+        </svg>
+        Tải biểu mẫu Excel
+      </button>
+      
+      <button class="btn btn-outline-secondary btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="document.getElementById('nhapDuLieuExcelQL').click()">
+        <svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+        </svg>
+        Nhập từ Excel
+      </button>
+      <input type="file" id="nhapDuLieuExcelQL" accept=".xlsx, .xls" style="display: none;" onchange="xuLyTepExcelQL(event)">
     </div>
     
     <div class="tDeTieuChiQL">TIÊU CHÍ ĐÁNH GIÁ XẾP LOẠI - QUẢN LÝ</div>
+    
     <div>
-      <button class="btn btn-primary btn-sm fw-bold shadow-sm" onclick="capNhatTieuChiQL()" id="nutLuuTieuChiQL">
+      <button class="btn btn-primary btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="capNhatTieuChiQL()" id="nutLuuTieuChiQL">
         <i class="bi bi-save"></i> Cập nhật đồng bộ
       </button>
     </div>
@@ -46,14 +71,14 @@
           <th style="width: 120px;">Thang điểm tối đa (Cột C)</th>
           <th style="width: 120px;">Thời gian giao (Cột D)</th>
           <th style="width: 150px;">Tiến độ (Cột E)</th>
-          <th style="width: 130px;">Thời gian hoàn thành (Cột F)</th>
+          <th style="width: 130px;">Thời gian HT (Cột F)</th>
           <th style="width: 130px;">Người thực hiện (Cột G)</th>
           <th style="width: auto;">Điểm đánh giá (Cột H)</th>
           <th style="width: 150px;">Ghi chú (Cột I)</th>
-          <th style="width: 70px;">Xếp loại XS (J)</th>
-          <th style="width: 70px;">Xếp loại HTT (Cột K)</th>
-          <th style="width: 70px;">Xếp loại HT (Cột L)</th>
-          <th style="width: 80px;">Chưa hoàn thành (Cột M)</th>
+          <th style="width: 70px;">Loại XS (J)</th>
+          <th style="width: 70px;">Loại HTT (K)</th>
+          <th style="width: 70px;">Loại HT (L)</th>
+          <th style="width: 80px;">Chưa HT (M)</th>
         </tr>
       </thead>
       <tbody>
@@ -63,6 +88,98 @@
 </div>
 
 <script>
+// ==========================================================================
+// KHỐI MÃ NÂNG CẤP: XỬ LÝ NHẬP/XUẤT EXCEL CHO TIÊU CHÍ QUẢN LÝ
+// Nguyên tắc: Không thay đổi logic hiện tại, cắt dữ liệu từ dòng 5
+// ==========================================================================
+
+/**
+ * Tải khung biểu mẫu chuẩn (có 4 dòng đầu là tiêu đề và quy ước)
+ */
+function taiBieuMauExcelQL() {
+    const duLieuMau = [
+        // Dòng 1: Tiêu đề cột
+        ["STT (Cột A)", "Nội dung tiêu chí (Cột B)", "Thang điểm tối đa (Cột C)", "Thời gian giao (Cột D)", "Tiến độ (Cột E)", "Thời gian hoàn thành (Cột F)", "Người thực hiện (Cột G)", "Điểm đánh giá (Cột H)", "Ghi chú (Cột I)", "Xếp loại XS (Cột J)", "Xếp loại HTT (Cột K)", "Xếp loại HT (Cột L)", "Chưa hoàn thành (Cột M)"],
+        
+        // Dòng 2: Hướng dẫn nhập liệu
+        ["(Quy ước)", "Tiêu đề lớn bắt đầu bằng dấu * (VD: *Nhiệm vụ chung). Các tiêu chí con gõ bình thường.", "Nhập số (VD: 10)", "Nhập ngày (dd/mm/yyyy)", "Nhập trạng thái (VD: Đang tiến hành)", "Nhập ngày (dd/mm/yyyy)", "Cá nhân/Bộ phận/ALL", "Cú pháp: [Tên mức]|[Điểm]; (VD: Hoàn thành|10; Chưa xong|0)", "Ghi chú tự do", "VD: >=9", "VD: >=7", "VD: >=5", "VD: <5"],
+        
+        // Dòng 3, 4: Ghi chú cảnh báo để nhắc người dùng
+        ["(Lưu ý)", "Hệ thống sẽ tự động bỏ qua 4 dòng đầu tiên này khi tải lên.", "", "", "", "", "", "", "", "", "", "", ""],
+        ["(Lưu ý)", "Vui lòng BẮT ĐẦU NHẬP DỮ LIỆU TỪ DÒNG SỐ 5 TRỞ XUỐNG.", "", "", "", "", "", "", "", "", "", "", ""],
+        
+        // Dòng 5: Dữ liệu mẫu (Nhóm tiêu chí)
+        ["I", "*Thực hiện nền nếp, quy chế chuyên môn (Quản lý)", "", "", "", "", "", "", "", "", "", "", ""],
+        
+        // Dòng 6: Dữ liệu mẫu (Tiêu chí con)
+        ["1", "Đảm bảo công tác quản lý chỉ đạo", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "BGH", "Hoàn thành|10; Không HT|0", "Đánh giá hàng tháng", ">=9", ">=7", ">=5", "<5"]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(duLieuMau);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "TieuChiQL");
+    
+    ws['!cols'] = [{wch: 12}, {wch: 55}, {wch: 22}, {wch: 20}, {wch: 25}, {wch: 22}, {wch: 20}, {wch: 45}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}];
+    
+    XLSX.writeFile(wb, "BieuMau_TieuChiDanhGiaQL.xlsx");
+}
+
+/**
+ * Xử lý sự kiện khi tải tệp Excel lên, BẮT ĐẦU ĐỌC TỪ DÒNG SỐ 5 (cắt bỏ 4 dòng đầu)
+ */
+function xuLyTepExcelQL(event) {
+    const tepTin = event.target.files[0];
+    if (!tepTin) return;
+
+    if (!confirm("Đồng chí có muốn xóa toàn bộ dữ liệu đang có trên form và thay thế bằng dữ liệu từ tệp Excel này không?")) {
+        event.target.value = ""; 
+        return;
+    }
+
+    const docGia = new FileReader();
+    docGia.onload = function(e) {
+        try {
+            const duLieuNhiPhan = new Uint8Array(e.target.result);
+            const bangTinh = XLSX.read(duLieuNhiPhan, {type: 'array'});
+            
+            const tenTrangTinh = bangTinh.SheetNames[0];
+            const trangTinh = bangTinh.Sheets[tenTrangTinh];
+            
+            const jsonDuLieu = XLSX.utils.sheet_to_json(trangTinh, {header: 1, defval: ""});
+            
+            // Cắt bỏ 4 dòng đầu tiên (dòng 0 đến 3), dữ liệu bắt đầu từ dòng 5 (index 4)
+            if (jsonDuLieu.length > 4) {
+                const mangPhanTuDuLieu = jsonDuLieu.slice(4); 
+                
+                const mangChuanHoa = mangPhanTuDuLieu.map(dong => {
+                    let dongMoi = [];
+                    for(let i = 0; i < 13; i++) {
+                        dongMoi.push(dong[i] !== undefined ? dong[i] : "");
+                    }
+                    return dongMoi;
+                });
+                
+                hienThiTieuChiQL(mangChuanHoa);
+                if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã tải thành công dữ liệu từ Excel lên giao diện.');
+                else alert("Tải dữ liệu từ Excel thành công!");
+            } else {
+                alert("Tệp Excel không chứa đủ dữ liệu (yêu cầu dữ liệu bắt đầu từ dòng 5).");
+            }
+        } catch (loi) {
+            console.error(loi);
+            alert("Đã xảy ra lỗi trong quá trình phân tích tệp Excel. Chi tiết: " + loi.message);
+        }
+        
+        event.target.value = ""; 
+    };
+    
+    docGia.readAsArrayBuffer(tepTin);
+}
+
+// ==========================================================================
+// CÁC HÀM HIỂN THỊ VÀ TƯƠNG TÁC GIAO DIỆN (GIỮ NGUYÊN TỪ BẢN GỐC)
+// ==========================================================================
+
 function cdangTCQL(ptu) { 
     if(!ptu) return;
     ptu.style.height = 'auto'; 
@@ -76,9 +193,9 @@ function themDongTieuChiQL() {
     
     tr.innerHTML = `
         <td class="cotHanhDongQL align-middle text-center">
-            <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm" title="Lên" onclick="diChuyenLenQL(this)"><i class="bi bi-arrow-up"></i></button>
-            <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm" title="Xuống" onclick="diChuyenXuongQL(this)"><i class="bi bi-arrow-down"></i></button>
-            <button class="btn btn-sm btn-danger nutDieuKhienQL shadow-sm" title="Xóa" onclick="xoaDongTieuChiQL(this)"><i class="bi bi-x"></i></button>
+            <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm btn-hieu-ung" title="Lên" onclick="diChuyenLenQL(this)"><i class="bi bi-arrow-up"></i></button>
+            <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm btn-hieu-ung" title="Xuống" onclick="diChuyenXuongQL(this)"><i class="bi bi-arrow-down"></i></button>
+            <button class="btn btn-sm btn-danger nutDieuKhienQL shadow-sm btn-hieu-ung" title="Xóa" onclick="xoaDongTieuChiQL(this)"><i class="bi bi-x"></i></button>
         </td>
         <td class="cotSttQL align-middle"><input type="text" class="nhapSttTCQL text-center fw-bold" placeholder="1"></td>
         <td><textarea class="nhapNoiDungTCQL" oninput="cdangTCQL(this)" onfocus="cdangTCQL(this)" placeholder="VD: *Nhiệm vụ chung..."></textarea></td>
@@ -95,13 +212,10 @@ function themDongTieuChiQL() {
         <td><input type="text" class="nhapCHTTCQL text-center text-danger fw-bold" placeholder="<5"></td>
     `;
     
-    /* [ĐÃ SỬA] Thêm dòng mới xuống dưới cùng của bảng */
     bg.appendChild(tr);
-    
     let oNhapNoiDung = tr.querySelector('.nhapNoiDungTCQL');
     cdangTCQL(oNhapNoiDung);
     
-    /* [ĐÃ SỬA] Đẩy dòng mới lên vùng nhìn thấy (cuộn mượt) và kích hoạt con trỏ chuột vào ô Nội dung */
     setTimeout(() => {
         tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
         oNhapNoiDung.focus();
@@ -144,9 +258,9 @@ function hienThiTieuChiQL(mangDl) {
         
         tr.innerHTML = `
             <td class="cotHanhDongQL align-middle text-center">
-                <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm" title="Lên" onclick="diChuyenLenQL(this)"><i class="bi bi-arrow-up"></i></button>
-                <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm" title="Xuống" onclick="diChuyenXuongQL(this)"><i class="bi bi-arrow-down"></i></button>
-                <button class="btn btn-sm btn-danger nutDieuKhienQL shadow-sm" title="Xóa" onclick="xoaDongTieuChiQL(this)"><i class="bi bi-x"></i></button>
+                <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm btn-hieu-ung" title="Lên" onclick="diChuyenLenQL(this)"><i class="bi bi-arrow-up"></i></button>
+                <button class="btn btn-sm btn-light nutDieuKhienQL border text-success shadow-sm btn-hieu-ung" title="Xuống" onclick="diChuyenXuongQL(this)"><i class="bi bi-arrow-down"></i></button>
+                <button class="btn btn-sm btn-danger nutDieuKhienQL shadow-sm btn-hieu-ung" title="Xóa" onclick="xoaDongTieuChiQL(this)"><i class="bi bi-x"></i></button>
             </td>
             <td class="cotSttQL align-middle"><input type="text" class="nhapSttTCQL text-center fw-bold" placeholder="1" value="${es(dong[0])}"></td>
             <td><textarea class="nhapNoiDungTCQL" oninput="cdangTCQL(this)" onfocus="cdangTCQL(this)" placeholder="VD: *Nhiệm vụ chung...">${es(dong[1])}</textarea></td>
@@ -167,6 +281,10 @@ function hienThiTieuChiQL(mangDl) {
     
     setTimeout(() => { document.querySelectorAll('#bangTieuChiQL textarea').forEach(txt => cdangTCQL(txt)); }, 100);
 }
+
+// ==========================================================================
+// CÁC HÀM GHI/ĐỌC DỮ LIỆU VỚI MÁY CHỦ
+// ==========================================================================
 
 function capNhatTieuChiQL() {
     if (!confirm("Đồng chí có chắc chắn muốn ghi đè toàn bộ dữ liệu hiện tại lên trang tính hệ thống (Sheet: TieuChiQL) không?")) return;
