@@ -275,10 +275,6 @@ function hienThiTieuChiNV(mangDl) {
     setTimeout(() => { document.querySelectorAll('#bangTieuChiNV textarea').forEach(txt => cdangTCNV(txt)); }, 100);
 }
 
-// ==========================================================================
-// CÁC HÀM GHI/ĐỌC DỮ LIỆU VỚI MÁY CHỦ
-// ==========================================================================
-
 function capNhatTieuChiNV() {
     if (!confirm("Đồng chí có chắc chắn muốn ghi đè toàn bộ dữ liệu hiện tại lên trang tính hệ thống (Sheet: TieuChiNV) không?")) return;
     
@@ -286,62 +282,81 @@ function capNhatTieuChiNV() {
     if(nutLuu) nutLuu.disabled = true;
     if(typeof hienTaiDl === 'function') hienTaiDl("🚀 Đang đồng bộ dữ liệu Tiêu chí Nhân viên...");
     
-    let mangMoi = [];
-    document.querySelectorAll('#bangTieuChiNV tbody tr.dongTieuChiNV').forEach(tr => {
-        let r0 = tr.querySelector('.nhapSttTCNV').value;
-        let r1 = tr.querySelector('.nhapNoiDungTCNV').value;
-        let r2 = tr.querySelector('.nhapDiemMaxTCNV').value;
-        let r3 = tr.querySelector('.nhapTgGiaoTCNV').value;
-        let r4 = tr.querySelector('.nhapTienDoTCNV').value;
-        let r5 = tr.querySelector('.nhapTgHtTCNV').value;
-        let r6 = tr.querySelector('.nhapNguoiThTCNV').value;
-        let r7 = tr.querySelector('.nhapDiemDgTCNV').value;
-        let r8 = tr.querySelector('.nhapGhiChuTCNV').value;
-        let r9 = tr.querySelector('.nhapXSTCNV').value;
-        let r10 = tr.querySelector('.nhapHTTTCNV').value;
-        let r11 = tr.querySelector('.nhapHTTCNV').value;
-        let r12 = tr.querySelector('.nhapCHTTCNV').value;
+    try {
+        let mangMoi = [];
         
-        if(String(r1).trim() !== "") {
-            mangMoi.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
-        }
-    });
+        // Quét từng dòng dữ liệu trong bảng
+        document.querySelectorAll('#bangTieuChiNV tbody tr.dongTieuChiNV').forEach(tr => {
+            // Sử dụng ?.value để đảm bảo không bị lỗi dừng đột ngột (crash) nếu ô input vô tình bị xóa mất class
+            let r0 = tr.querySelector('.nhapSttTCNV')?.value || "";
+            let r1 = tr.querySelector('.nhapNoiDungTCNV')?.value || "";
+            let r2 = tr.querySelector('.nhapDiemMaxTCNV')?.value || "";
+            let r3 = tr.querySelector('.nhapTgGiaoTCNV')?.value || "";
+            let r4 = tr.querySelector('.nhapTienDoTCNV')?.value || "";
+            let r5 = tr.querySelector('.nhapTgHtTCNV')?.value || "";
+            let r6 = tr.querySelector('.nhapNguoiThTCNV')?.value || "";
+            let r7 = tr.querySelector('.nhapDiemDgTCNV')?.value || "";
+            let r8 = tr.querySelector('.nhapGhiChuTCNV')?.value || "";
+            let r9 = tr.querySelector('.nhapXSTCNV')?.value || "";
+            let r10 = tr.querySelector('.nhapHTTTCNV')?.value || "";
+            let r11 = tr.querySelector('.nhapHTTCNV')?.value || "";
+            let r12 = tr.querySelector('.nhapCHTTCNV')?.value || "";
+            
+            // Chỉ lấy các dòng có nội dung tiêu chí
+            if(String(r1).trim() !== "") {
+                mangMoi.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
+            }
+        });
 
-    const dlGoi = { hdong: "capnhatTieuChiNV", dlbang: mangMoi };
+        // In ra Console (F12) để kiểm tra dữ liệu trước khi gửi
+        console.log("🚀 Dữ liệu chuẩn bị gửi đi (mangMoi):", mangMoi);
 
-    const fnThanhCong = function(kqTho) {
-        if(typeof anTaiDl === 'function') anTaiDl();
-        if(nutLuu) nutLuu.disabled = false;
-        
-        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
-        let laThanhCong = (kq === true || (kq && kq.ttai === 'tcong'));
-        
-        if(laThanhCong) {
-            if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã cập nhật đồng bộ Tiêu chí Nhân viên lên máy chủ thành công!');
-            else alert("Cập nhật thành công!");
+        const dlGoi = { hdong: "capnhatTieuChiNV", dlbang: mangMoi };
+
+        const fnThanhCong = function(kqTho) {
+            if(typeof anTaiDl === 'function') anTaiDl();
+            if(nutLuu) nutLuu.disabled = false;
+            
+            let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+            let laThanhCong = (kq === true || (kq && kq.ttai === 'tcong'));
+            
+            if(laThanhCong) {
+                if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã cập nhật đồng bộ Tiêu chí Nhân viên lên máy chủ thành công!');
+                else alert("Cập nhật thành công!");
+            } else {
+                let tb = kq ? (kq.tbao || "Lỗi không xác định từ Server") : "Không có phản hồi hợp lệ.";
+                if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi cập nhật: ' + tb);
+                else alert("Lỗi: " + tb);
+            }
+        };
+
+        const fnLoi = function(loi) {
+            if(typeof anTaiDl === 'function') anTaiDl();
+            if(nutLuu) nutLuu.disabled = false;
+            
+            let loiMsg = (loi && loi.message) ? loi.message : String(loi);
+            console.error("❌ Lỗi kết nối Google Apps Script:", loiMsg);
+            
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi máy chủ: ' + loiMsg);
+            else alert("Lỗi máy chủ: " + loiMsg);
+        };
+
+        // Gửi dữ liệu tới Google Apps Script
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.withSuccessHandler(fnThanhCong).withFailureHandler(fnLoi).pgv_capnhat_tieuchi_nv(dlGoi);
+        } else if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+            khachApi.goiThuCong(dlGoi, fnThanhCong, fnLoi);
         } else {
-            let tb = kq ? (kq.tbao || "Lỗi không xác định") : "Không có phản hồi hợp lệ.";
-            if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi cập nhật: ' + tb);
-            else alert("Lỗi: " + tb);
+            if(typeof anTaiDl === 'function') anTaiDl();
+            if(nutLuu) nutLuu.disabled = false;
+            alert("Lỗi: Chưa liên kết được API ghi dữ liệu hệ thống.");
         }
-    };
-
-    const fnLoi = function(loi) {
+        
+    } catch (loiHeThong) {
+        console.error("❌ Lỗi khi quét dữ liệu từ bảng HTML:", loiHeThong);
         if(typeof anTaiDl === 'function') anTaiDl();
         if(nutLuu) nutLuu.disabled = false;
-        let loiMsg = (loi && loi.message) ? loi.message : String(loi);
-        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi máy chủ: ' + loiMsg);
-        else alert("Lỗi máy chủ: " + loiMsg);
-    };
-
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(fnThanhCong).withFailureHandler(fnLoi).pgv_capnhat_tieuchi_nv(dlGoi);
-    } else if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
-        khachApi.goiThuCong(dlGoi, fnThanhCong, fnLoi);
-    } else {
-        if(typeof anTaiDl === 'function') anTaiDl();
-        if(nutLuu) nutLuu.disabled = false;
-        alert("Lỗi: Chưa liên kết được API ghi dữ liệu hệ thống.");
+        alert("Đã xảy ra lỗi trên giao diện khi thu thập dữ liệu: " + loiHeThong.message);
     }
 }
 
