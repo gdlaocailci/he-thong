@@ -1,3 +1,5 @@
+<!-- Tải thư viện SheetJS để hỗ trợ đọc/ghi file Excel trực tiếp trên trình duyệt -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
   #vungTieuChi { height: calc(100vh - 60px); display: flex; flex-direction: column; background-color: #f8f9fa; width: 100%; overflow: hidden; }
@@ -20,20 +22,45 @@
   .nutDieuKhien { padding: 2px 6px; font-size: 12px; margin: 1px; }
   .cotHanhDong { text-align: center; background-color: #f1f4f8; }
   .cotStt { text-align: center; font-weight: bold; background-color: #f1f4f8; }
+  
+  /* Hiệu ứng tương tác cho các nút (Reactbits tham khảo) */
+  .btn-hieu-ung { transition: all 0.3s ease; }
+  .btn-hieu-ung:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important; }
+  
+  /* Căn chỉnh icon SVG (Sử dụng chuẩn từ svgrepo) */
+  .icon-svg { width: 16px; height: 16px; margin-right: 4px; vertical-align: text-bottom; fill: currentColor; }
 </style>
 
 <div id="vungTieuChi">
   <div class="d-flex justify-content-between align-items-center px-3" style="background: white; border-bottom: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
    
-    <div>
-      <button class="btn btn-outline-success btn-sm fw-bold shadow-sm" onclick="themDongTieuChi()">
-        <i class="bi bi-plus-circle"></i> Thêm dòng (Xuống dưới)
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-success btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="themDongTieuChi()">
+        <i class="bi bi-plus-circle"></i> Thêm dòng
       </button>
+      
+      <!-- Nút thao tác với Excel -->
+      <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="taiBieuMauExcel()">
+        <svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM15 18H9v-2h6v2zm0-4H9v-2h6v2z"/>
+        </svg>
+        Tải biểu mẫu Excel
+      </button>
+      
+      <button class="btn btn-outline-secondary btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="document.getElementById('nhapDuLieuExcel').click()">
+        <svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+        </svg>
+        Nhập từ Excel
+      </button>
+      <!-- Trường ẩn để tải tệp lên -->
+      <input type="file" id="nhapDuLieuExcel" accept=".xlsx, .xls" style="display: none;" onchange="xuLyTepExcel(event)">
     </div>
     
     <div class="tDeTieuChi">TIÊU CHÍ ĐÁNH GIÁ XẾP LOẠI HÀNG THÁNG</div>
+    
     <div>
-      <button class="btn btn-success btn-sm fw-bold shadow-sm" onclick="capNhatTieuChi()" id="nutLuuTieuChi">
+      <button class="btn btn-success btn-sm fw-bold shadow-sm btn-hieu-ung" onclick="capNhatTieuChi()" id="nutLuuTieuChi">
         <i class="bi bi-save"></i> Cập nhật đồng bộ
       </button>
     </div>
@@ -44,19 +71,19 @@
       <thead>
         <tr>
           <th style="width: 90px;" class="cotHanhDong">Công cụ</th>
-          <th style="width: 60px;" class="cotStt">STT (Cột A)</th>
-          <th style="width: 200px;">Nội dung tiêu chí (Cột B)</th>
-          <th style="width: 120px;">Thang điểm tối đa (Cột C)</th>
-          <th style="width: 120px;">Thời gian giao (Cột D)</th>
-          <th style="width: 150px;">Tiến độ (Cột E)</th>
-          <th style="width: 130px;">Thời gian hoàn thành (Cột F)</th>
-          <th style="width: 130px;">Người thực hiện (Cột G)</th>
-          <th style="width: auto;">Điểm đánh giá (Cột H)</th>
-          <th style="width: 150px;">Ghi chú (Cột I)</th>
-          <th style="width: 70px;">Xếp loại XS (J)</th>
-          <th style="width: 70px;">Xếp loại HTT (Cột K)</th>
-          <th style="width: 70px;">Xếp loại HT (Cột L)</th>
-          <th style="width: 80px;">Chưa hoàn thành (Cột M)</th>
+          <th style="width: 60px;" class="cotStt">STT (A)</th>
+          <th style="width: 200px;">Nội dung tiêu chí (B)</th>
+          <th style="width: 120px;">Thang điểm tối đa (C)</th>
+          <th style="width: 120px;">Thời gian giao (D)</th>
+          <th style="width: 150px;">Tiến độ (E)</th>
+          <th style="width: 130px;">Thời gian HT (F)</th>
+          <th style="width: 130px;">Người thực hiện (G)</th>
+          <th style="width: auto;">Điểm đánh giá (H)</th>
+          <th style="width: 150px;">Ghi chú (I)</th>
+          <th style="width: 70px;">Loại XS (J)</th>
+          <th style="width: 70px;">Loại HTT (K)</th>
+          <th style="width: 70px;">Loại HT (L)</th>
+          <th style="width: 80px;">Chưa HT (M)</th>
         </tr>
       </thead>
       <tbody>
@@ -67,18 +94,26 @@
 
 <script>
 // ==========================================================================
-// KỊCH BẢN XỬ LÝ GIAO DIỆN QUẢN LÝ TIÊU CHÍ (DÀNH CHO QUYỀN xxx)
+// KỊCH BẢN XỬ LÝ GIAO DIỆN QUẢN LÝ TIÊU CHÍ
+// Nguyên tắc: Mã nguồn sạch, xử lý lỗi theo khối, không tác động sai logic
 // ==========================================================================
+
+/**
+ * Tự động điều chỉnh chiều cao của ô nhập liệu (Textarea)
+ */
 function cdangTC(ptu) { 
     if(!ptu) return;
     ptu.style.height = 'auto'; 
     ptu.style.height = (ptu.scrollHeight) + 'px'; 
 }
 
+/**
+ * Thêm một dòng tiêu chí mới vào cuối bảng
+ */
 function themDongTieuChi() {
     const bg = document.querySelector('#bangTieuChi tbody');
     if (!bg) {
-        console.error("Không tìm thấy bảng #bangTieuChi");
+        console.error("Lỗi hệ thống: Không tìm thấy khung chứa bảng tiêu chí.");
         return;
     }
     
@@ -87,9 +122,9 @@ function themDongTieuChi() {
     
     tr.innerHTML = `
         <td class="cotHanhDong align-middle text-center">
-            <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm" title="Lên" onclick="diChuyenLen(this)"><i class="bi bi-arrow-up"></i></button>
-            <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm" title="Xuống" onclick="diChuyenXuong(this)"><i class="bi bi-arrow-down"></i></button>
-            <button class="btn btn-sm btn-danger nutDieuKhien shadow-sm" title="Xóa" onclick="xoaDongTieuChi(this)"><i class="bi bi-x"></i></button>
+            <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm btn-hieu-ung" title="Lên" onclick="diChuyenLen(this)"><i class="bi bi-arrow-up"></i></button>
+            <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm btn-hieu-ung" title="Xuống" onclick="diChuyenXuong(this)"><i class="bi bi-arrow-down"></i></button>
+            <button class="btn btn-sm btn-danger nutDieuKhien shadow-sm btn-hieu-ung" title="Xóa" onclick="xoaDongTieuChi(this)"><i class="bi bi-x"></i></button>
         </td>
         <td class="cotStt align-middle"><input type="text" class="nhapSttTC text-center fw-bold" placeholder="1"></td>
         <td><textarea class="nhapNoiDungTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="VD: *Nhiệm vụ chung..."></textarea></td>
@@ -97,23 +132,20 @@ function themDongTieuChi() {
         <td><input type="text" class="nhapTgGiaoTC text-center" placeholder="dd/mm/yyyy"></td>
         <td><textarea class="nhapTienDoTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Nhiệm vụ chung" rows="1"></textarea></td>
         <td><input type="text" class="nhapTgHtTC text-center" placeholder="dd/mm/yyyy"></td>
-        <td><textarea class="nhapNguoiThTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="ALL" rows="1"></textarea></td>
+        <td><textarea class="nhapNguoiThTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Toàn thể..." rows="1"></textarea></td>
         <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Hoàn thành|10; Chưa xong|0"></textarea></td>
-        <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="TOÀN TRƯỜNG"></textarea></td>
+        <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Ghi chú thêm..."></textarea></td>
         <td><input type="text" class="nhapXSTC text-center text-success fw-bold" placeholder=">=9"></td>
         <td><input type="text" class="nhapHTTTC text-center text-primary fw-bold" placeholder=">=7"></td>
         <td><input type="text" class="nhapHTTC text-center fw-bold" placeholder=">=5"></td>
         <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5"></td>
     `;
     
-    // 1. Thêm dòng vào cuối bảng
     bg.appendChild(tr);
     
-    // 2. Kích hoạt hiệu ứng chiều cao
     let oNhapNoiDung = tr.querySelector('.nhapNoiDungTC');
     cdangTC(oNhapNoiDung);
     
-    // 3. Cuộn màn hình đến dòng mới và đưa con trỏ chuột vào ô nhập
     setTimeout(() => {
         tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         oNhapNoiDung.focus();
@@ -134,6 +166,10 @@ function diChuyenXuong(btn) {
     if (tr.nextElementSibling) tr.parentNode.insertBefore(tr.nextElementSibling, tr);
 }
 
+/**
+ * Hiển thị dữ liệu tiêu chí lên bảng từ mảng cấu trúc
+ * @param {Array} mangDl - Mảng chứa các dòng dữ liệu cần hiển thị
+ */
 function hienThiTieuChi(mangDl) {
     const bg = document.querySelector('#bangTieuChi tbody');
     bg.innerHTML = "";
@@ -156,29 +192,112 @@ function hienThiTieuChi(mangDl) {
         
         tr.innerHTML = `
             <td class="cotHanhDong align-middle text-center">
-                <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm" title="Lên" onclick="diChuyenLen(this)"><i class="bi bi-arrow-up"></i></button>
-                <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm" title="Xuống" onclick="diChuyenXuong(this)"><i class="bi bi-arrow-down"></i></button>
-                <button class="btn btn-sm btn-danger nutDieuKhien shadow-sm" title="Xóa" onclick="xoaDongTieuChi(this)"><i class="bi bi-x"></i></button>
+                <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm btn-hieu-ung" title="Lên" onclick="diChuyenLen(this)"><i class="bi bi-arrow-up"></i></button>
+                <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm btn-hieu-ung" title="Xuống" onclick="diChuyenXuong(this)"><i class="bi bi-arrow-down"></i></button>
+                <button class="btn btn-sm btn-danger nutDieuKhien shadow-sm btn-hieu-ung" title="Xóa" onclick="xoaDongTieuChi(this)"><i class="bi bi-x"></i></button>
             </td>
-            <td class="cotStt align-middle"><input type="text" class="nhapSttTC text-center fw-bold" placeholder="1" value="${es(dong[0])}"></td>
-            <td><textarea class="nhapNoiDungTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="VD: *Nhiệm vụ chung...">${es(dong[1])}</textarea></td>
-            <td><input type="text" class="nhapDiemMaxTC text-center text-danger fw-bold" placeholder="10" value="${es(dong[2])}"></td>
-            <td><input type="text" class="nhapTgGiaoTC text-center" placeholder="dd/mm/yyyy" value="${es(dong[3])}"></td>
-            <td><textarea class="nhapTienDoTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Nhiệm vụ chung" rows="1">${es(dong[4])}</textarea></td>
-            <td><input type="text" class="nhapTgHtTC text-center" placeholder="dd/mm/yyyy" value="${es(dong[5])}"></td>
-            <td><textarea class="nhapNguoiThTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="ALL" rows="1">${es(dong[6])}</textarea></td>
-            <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Hoàn thành|10; Chưa xong|0">${es(dong[7])}</textarea></td>
-            <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="TOÀN TRƯỜNG">${es(dong[8])}</textarea></td>
-            <td><input type="text" class="nhapXSTC text-center text-success fw-bold" placeholder=">=9" value="${es(dong[9])}"></td>
-            <td><input type="text" class="nhapHTTTC text-center text-primary fw-bold" placeholder=">=7" value="${es(dong[10])}"></td>
-            <td><input type="text" class="nhapHTTC text-center fw-bold" placeholder=">=5" value="${es(dong[11])}"></td>
-            <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5" value="${es(dong[12])}"></td>
+            <td class="cotStt align-middle"><input type="text" class="nhapSttTC text-center fw-bold" value="${es(dong[0])}"></td>
+            <td><textarea class="nhapNoiDungTC" oninput="cdangTC(this)" onfocus="cdangTC(this)">${es(dong[1])}</textarea></td>
+            <td><input type="text" class="nhapDiemMaxTC text-center text-danger fw-bold" value="${es(dong[2])}"></td>
+            <td><input type="text" class="nhapTgGiaoTC text-center" value="${es(dong[3])}"></td>
+            <td><textarea class="nhapTienDoTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" rows="1">${es(dong[4])}</textarea></td>
+            <td><input type="text" class="nhapTgHtTC text-center" value="${es(dong[5])}"></td>
+            <td><textarea class="nhapNguoiThTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" rows="1">${es(dong[6])}</textarea></td>
+            <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)">${es(dong[7])}</textarea></td>
+            <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)">${es(dong[8])}</textarea></td>
+            <td><input type="text" class="nhapXSTC text-center text-success fw-bold" value="${es(dong[9])}"></td>
+            <td><input type="text" class="nhapHTTTC text-center text-primary fw-bold" value="${es(dong[10])}"></td>
+            <td><input type="text" class="nhapHTTC text-center fw-bold" value="${es(dong[11])}"></td>
+            <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" value="${es(dong[12])}"></td>
         `;
         bg.appendChild(tr);
     });
     
     setTimeout(() => { document.querySelectorAll('#bangTieuChi textarea').forEach(txt => cdangTC(txt)); }, 100);
 }
+
+// ==========================================================================
+// KHỐI MÃ NÂNG CẤP: XỬ LÝ NHẬP/XUẤT EXCEL 
+// ==========================================================================
+
+/**
+ * Tải khung biểu mẫu chuẩn để cán bộ điền thông tin (Sử dụng SheetJS)
+ */
+function taiBieuMauExcel() {
+    const duLieuMau = [
+        ["STT (Cột A)", "Nội dung tiêu chí (Cột B)", "Thang điểm tối đa (Cột C)", "Thời gian giao (Cột D)", "Tiến độ (Cột E)", "Thời gian hoàn thành (Cột F)", "Người thực hiện (Cột G)", "Điểm đánh giá (Cột H)", "Ghi chú (Cột I)", "Xếp loại XS (Cột J)", "Xếp loại HTT (Cột K)", "Xếp loại HT (Cột L)", "Chưa hoàn thành (Cột M)"],
+        [1, "Mẫu: Thực hiện công tác chuyên môn", "10", "01/08/2026", "Đang tiến hành", "30/08/2026", "Toàn thể CBGV", "Tốt: 10đ", "Nộp minh chứng đầy đủ", ">=9", ">=7", ">=5", "<5"]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(duLieuMau);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "TieuChi");
+    
+    // Điều chỉnh độ rộng cột cơ bản
+    ws['!cols'] = [{wch: 10}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 20}, {wch: 22}, {wch: 20}, {wch: 25}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}];
+    
+    XLSX.writeFile(wb, "BieuMau_TieuChiDanhGia.xlsx");
+}
+
+/**
+ * Xử lý sự kiện khi cán bộ chọn tệp Excel để đưa dữ liệu lên Form
+ * @param {Event} event - Sự kiện thay đổi của thẻ input file
+ */
+function xuLyTepExcel(event) {
+    const tepTin = event.target.files[0];
+    if (!tepTin) return;
+
+    if (!confirm("Đồng chí có muốn xóa toàn bộ dữ liệu đang có trên form và thay thế bằng dữ liệu từ tệp Excel này không?")) {
+        event.target.value = ""; // Đặt lại tệp để có thể chọn lại
+        return;
+    }
+
+    const docGia = new FileReader();
+    docGia.onload = function(e) {
+        try {
+            const duLieuNhiPhan = new Uint8Array(e.target.result);
+            const bangTinh = XLSX.read(duLieuNhiPhan, {type: 'array'});
+            
+            // Lấy trang tính đầu tiên
+            const tenTrangTinh = bangTinh.SheetNames[0];
+            const trangTinh = bangTinh.Sheets[tenTrangTinh];
+            
+            // Chuyển đổi thành mảng mảng, bỏ qua dòng tiêu đề (dòng đầu tiên)
+            const jsonDuLieu = XLSX.utils.sheet_to_json(trangTinh, {header: 1, defval: ""});
+            
+            if (jsonDuLieu.length > 1) {
+                const mangPhanTuDuLieu = jsonDuLieu.slice(1); // Cắt bỏ dòng tiêu đề
+                
+                // Chuẩn hóa đảm bảo đủ 13 cột dữ liệu
+                const mangChuanHoa = mangPhanTuDuLieu.map(dong => {
+                    let dongMoi = [];
+                    for(let i = 0; i < 13; i++) {
+                        dongMoi.push(dong[i] !== undefined ? dong[i] : "");
+                    }
+                    return dongMoi;
+                });
+                
+                // Gọi hàm hiển thị đã có sẵn
+                hienThiTieuChi(mangChuanHoa);
+                if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã tải thành công dữ liệu từ Excel lên giao diện.');
+                else alert("Tải dữ liệu từ Excel thành công!");
+            } else {
+                alert("Tệp Excel trống hoặc không đúng định dạng. Vui lòng kiểm tra lại biểu mẫu.");
+            }
+        } catch (loi) {
+            console.error(loi);
+            alert("Đã xảy ra lỗi trong quá trình phân tích tệp Excel. Chi tiết: " + loi.message);
+        }
+        
+        event.target.value = ""; // Dọn dẹp trường input
+    };
+    
+    docGia.readAsArrayBuffer(tepTin);
+}
+
+// ==========================================================================
+// KHỐI MÃ GHI/ĐỌC DỮ LIỆU TỚI MÁY CHỦ (Giữ nguyên cấu trúc logic cũ)
+// ==========================================================================
 
 function capNhatTieuChi() {
     if (!confirm("Đồng chí có chắc chắn muốn ghi đè toàn bộ dữ liệu hiện tại lên trang tính hệ thống (Sheet: TieuChi) không?")) return;
