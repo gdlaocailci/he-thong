@@ -216,25 +216,45 @@ function hienThiTieuChi(mangDl) {
     setTimeout(() => { document.querySelectorAll('#bangTieuChi textarea').forEach(txt => cdangTC(txt)); }, 100);
 }
 
-// ==========================================================================
-// KHỐI MÃ NÂNG CẤP: XỬ LÝ NHẬP/XUẤT EXCEL 
-// ==========================================================================
-
 /**
  * Tải khung biểu mẫu chuẩn để cán bộ điền thông tin (Sử dụng SheetJS)
+ * Đã bổ sung đầy đủ quy ước nhập liệu chuẩn xác cho thuật toán
  */
 function taiBieuMauExcel() {
     const duLieuMau = [
+        // Dòng 1: Tiêu đề cột
         ["STT (Cột A)", "Nội dung tiêu chí (Cột B)", "Thang điểm tối đa (Cột C)", "Thời gian giao (Cột D)", "Tiến độ (Cột E)", "Thời gian hoàn thành (Cột F)", "Người thực hiện (Cột G)", "Điểm đánh giá (Cột H)", "Ghi chú (Cột I)", "Xếp loại XS (Cột J)", "Xếp loại HTT (Cột K)", "Xếp loại HT (Cột L)", "Chưa hoàn thành (Cột M)"],
-        [1, "Mẫu: Thực hiện công tác chuyên môn", "10", "01/08/2026", "Đang tiến hành", "30/08/2026", "Toàn thể CBGV", "Tốt: 10đ", "Nộp minh chứng đầy đủ", ">=9", ">=7", ">=5", "<5"]
+        
+        // Dòng 2: Dòng hướng dẫn quy ước (Cán bộ có thể xóa dòng này sau khi nhập xong hoặc xóa trên Grid)
+        ["(Quy ước)", "Tiêu đề lớn bắt đầu bằng dấu * (VD: *Nhiệm vụ chung). Các tiêu chí con gõ bình thường.", "Nhập số (VD: 10)", "Nhập ngày (dd/mm/yyyy)", "Nhập trạng thái (VD: Đang tiến hành)", "Nhập ngày (dd/mm/yyyy)", "Cá nhân/Bộ phận/ALL", "Cú pháp: [Tên mức]|[Điểm]; (VD: Hoàn thành|10; Chưa xong|0)", "Ghi chú tự do", "VD: >=9", "VD: >=7", "VD: >=5", "VD: <5"],
+        
+        // Dòng 3: Mẫu Tiêu đề nhóm tiêu chí (Có dấu *)
+        ["I", "*Thực hiện nền nếp, quy chế chuyên môn", "", "", "", "", "", "", "", "", "", "", ""],
+        
+        // Dòng 4: Mẫu Tiêu chí con
+        ["1", "Đảm bảo ngày giờ công, ra vào lớp đúng quy định", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "ALL", "Hoàn thành|10; Vi phạm 1 lần|5; Không HT|0", "BCH Công đoàn theo dõi", ">=9", ">=7", ">=5", "<5"]
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(duLieuMau);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TieuChi");
     
-    // Điều chỉnh độ rộng cột cơ bản
-    ws['!cols'] = [{wch: 10}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 20}, {wch: 22}, {wch: 20}, {wch: 25}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}];
+    // Điều chỉnh độ rộng cột chuẩn hóa để hiển thị rõ quy ước
+    ws['!cols'] = [
+        {wch: 12}, // A
+        {wch: 55}, // B
+        {wch: 22}, // C
+        {wch: 20}, // D
+        {wch: 25}, // E
+        {wch: 22}, // F
+        {wch: 20}, // G
+        {wch: 45}, // H
+        {wch: 25}, // I
+        {wch: 15}, // J
+        {wch: 15}, // K
+        {wch: 15}, // L
+        {wch: 15}  // M
+    ];
     
     XLSX.writeFile(wb, "BieuMau_TieuChiDanhGia.xlsx");
 }
