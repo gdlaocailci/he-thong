@@ -1224,14 +1224,24 @@ function xoaDongNv(nt) {
 
 function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
     if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
-    let str = chuoiDieuKien.trim();
+    
+    // 1. Chuẩn hóa: Biến mọi dấu phẩy thập phân thành dấu chấm để hệ thống hiểu
+    let str = chuoiDieuKien.trim().replace(/,/g, '.'); 
+    
     let constraints = [];
-    if (str.includes(',')) constraints = str.split(',').map(s=>s.trim()).filter(s=>s);
+    
+    // 2. Thay đổi quy tắc: Dùng dấu chấm phẩy (;) hoặc khoảng trắng để ngăn cách điều kiện, KHÔNG dùng dấu phẩy (,) nữa
+    if (str.includes(';')) constraints = str.split(';').map(s=>s.trim()).filter(s=>s);
     else if (str.includes(' ')) constraints = str.split(/\s+/).filter(s=>s);
     else constraints = [str];
+    
     if (constraints.length === 0) return false;
-    let numVal = parseFloat(String(giaTriThuc).replace(/[^\d.-]/g, ''));
+    
+    // 3. Chuẩn hóa giá trị thực tế của giáo viên đạt được
+    let numVal = parseFloat(String(giaTriThuc).replace(/,/g, '.').replace(/[^\d.-]/g, ''));
     if (isNaN(numVal)) return false;
+    
+    // 4. Bắt đầu đối chiếu
     for (let cond of constraints) {
         if (cond.startsWith(">=")) {
             let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
