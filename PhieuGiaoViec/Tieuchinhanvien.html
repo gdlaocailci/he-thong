@@ -88,28 +88,47 @@
 </div>
 
 <script>
-// ==========================================================================
-// KHỐI MÃ NÂNG CẤP: XỬ LÝ NHẬP/XUẤT EXCEL CHO TIÊU CHÍ NHÂN VIÊN
-// ==========================================================================
-
+/**
+ * Tải khung biểu mẫu chuẩn kèm theo toàn bộ dữ liệu Nhân viên đang có trên giao diện (Sử dụng SheetJS)
+ */
 function taiBieuMauExcelNV() {
-    const duLieuMau = [
+    const duLieuXuat = [
         // Dòng 1: Tiêu đề cột
         ["STT (Cột A)", "Nội dung tiêu chí (Cột B)", "Thang điểm tối đa (Cột C)", "Thời gian giao (Cột D)", "Tiến độ (Cột E)", "Thời gian hoàn thành (Cột F)", "Người thực hiện (Cột G)", "Điểm đánh giá (Cột H)", "Ghi chú (Cột I)", "Xếp loại XS (Cột J)", "Xếp loại HTT (Cột K)", "Xếp loại HT (Cột L)", "Chưa hoàn thành (Cột M)"],
         
-        // Dòng 2, 3, 4: Hướng dẫn nhập liệu (Cắt bỏ khi đẩy lên form)
+        // Dòng 2, 3, 4: Hướng dẫn nhập liệu
         ["(Quy ước)", "Tiêu đề lớn bắt đầu bằng dấu * (VD: *Nhiệm vụ chung). Các tiêu chí con gõ bình thường.", "Nhập số (VD: 10)", "Nhập ngày (dd/mm/yyyy)", "Nhập trạng thái (VD: Đang tiến hành)", "Nhập ngày (dd/mm/yyyy)", "Cá nhân/Bộ phận/ALL", "Cú pháp: [Tên mức]|[Điểm]; (VD: Hoàn thành|10; Chưa xong|0)", "Ghi chú tự do", "VD: >=9", "VD: >=7", "VD: >=5", "VD: <5"],
         ["(Lưu ý)", "Hệ thống sẽ tự động bỏ qua 4 dòng đầu tiên này khi tải lên.", "", "", "", "", "", "", "", "", "", "", ""],
-        ["(Lưu ý)", "Vui lòng BẮT ĐẦU NHẬP DỮ LIỆU TỪ DÒNG SỐ 5 TRỞ XUỐNG.", "", "", "", "", "", "", "", "", "", "", ""],
-        
-        // Dòng 5: Dữ liệu mẫu (Nhóm tiêu chí)
-        ["I", "*Thực hiện nền nếp, quy chế chuyên môn (Nhân viên)", "", "", "", "", "", "", "", "", "", "", ""],
-        
-        // Dòng 6: Dữ liệu mẫu (Tiêu chí con)
-        ["1", "Đảm bảo công tác hành chính, văn thư", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "Tổ Hành chính", "Hoàn thành|10; Không HT|0", "Đánh giá hàng tháng", ">=9", ">=7", ">=5", "<5"]
+        ["(Lưu ý)", "Vui lòng BẮT ĐẦU NHẬP DỮ LIỆU TỪ DÒNG SỐ 5 TRỞ XUỐNG.", "", "", "", "", "", "", "", "", "", "", ""]
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(duLieuMau);
+    // Lấy dữ liệu hiện tại từ bảng UI
+    document.querySelectorAll('#bangTieuChiNV tbody tr.dongTieuChiNV').forEach(tr => {
+        let r0 = tr.querySelector('.nhapSttTCNV')?.value || "";
+        let r1 = tr.querySelector('.nhapNoiDungTCNV')?.value || "";
+        let r2 = tr.querySelector('.nhapDiemMaxTCNV')?.value || "";
+        let r3 = tr.querySelector('.nhapTgGiaoTCNV')?.value || "";
+        let r4 = tr.querySelector('.nhapTienDoTCNV')?.value || "";
+        let r5 = tr.querySelector('.nhapTgHtTCNV')?.value || "";
+        let r6 = tr.querySelector('.nhapNguoiThTCNV')?.value || "";
+        let r7 = tr.querySelector('.nhapDiemDgTCNV')?.value || "";
+        let r8 = tr.querySelector('.nhapGhiChuTCNV')?.value || "";
+        let r9 = tr.querySelector('.nhapXSTCNV')?.value || "";
+        let r10 = tr.querySelector('.nhapHTTTCNV')?.value || "";
+        let r11 = tr.querySelector('.nhapHTTCNV')?.value || "";
+        let r12 = tr.querySelector('.nhapCHTTCNV')?.value || "";
+        
+        if(String(r1).trim() !== "") {
+            duLieuXuat.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
+        }
+    });
+
+    if (duLieuXuat.length === 4) {
+        duLieuXuat.push(["I", "*Thực hiện nền nếp, quy chế chuyên môn (Nhân viên)", "", "", "", "", "", "", "", "", "", "", ""]);
+        duLieuXuat.push(["1", "Đảm bảo công tác hành chính, văn thư", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "Tổ Hành chính", "Hoàn thành|10; Không HT|0", "Đánh giá hàng tháng", ">=9", ">=7", ">=5", "<5"]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(duLieuXuat);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TieuChiNV");
     
