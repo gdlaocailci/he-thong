@@ -1341,19 +1341,24 @@ const tinhtTdong = debounce(function() {
     } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
+        // [NÂNG CẤP] 1. Xác định mức xếp loại hoàn toàn dựa trên TỔNG ĐIỂM TUYỆT ĐỐI
+        let mucDiem = 1; // Chưa hoàn thành (dưới 50)
+        if (diemCuoiCung >= 90) mucDiem = 4; // Xuất sắc
+        else if (diemCuoiCung >= 70) mucDiem = 3; // Hoàn thành tốt
+        else if (diemCuoiCung >= 50) mucDiem = 2; // Hoàn thành
+        
+        // [NÂNG CẤP] 2. Kết hợp đánh giá điểm liệt từ các cột J, K, L, M (nếu có cấu hình)
+        let mucCuoiCung = mucDiem;
         if (hasJMLogic) {
-            if (minRank === 4) xpl = "Xuất sắc";
-            else if (minRank === 3) xpl = "Hoàn thành tốt";
-            else if (minRank === 2) xpl = "Hoàn thành";
-            else if (minRank === 1) xpl = "Chưa hoàn thành";
-            else xpl = "Chưa xác định";
-        } else {
-            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
-            if (tyLe >= 90) xpl = "Xuất sắc";
-            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
-            else if (tyLe >= 50) xpl = "Hoàn thành";
-            else xpl = "Chưa hoàn thành";
+            // Lấy kết quả thấp nhất giữa Xếp loại theo tổng điểm và Điểm liệt của từng tiêu chí
+            mucCuoiCung = Math.min(minRank, mucDiem);
         }
+
+        // [NÂNG CẤP] 3. Chốt kết quả ra chữ hiển thị
+        if (mucCuoiCung === 4) xpl = "Xuất sắc";
+        else if (mucCuoiCung === 3) xpl = "Hoàn thành tốt";
+        else if (mucCuoiCung === 2) xpl = "Hoàn thành";
+        else xpl = "Chưa hoàn thành";
     }
     
     let txtKq = xpl;
