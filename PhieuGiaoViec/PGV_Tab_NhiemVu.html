@@ -1812,12 +1812,26 @@ $(document).ready(function() {
         }
     }
 
-    function selectOption(val, text) {
+function selectOption(val, text) {
         originalSelect.value = val;
         input.value = val === "" ? "" : text;
         dropdown.style.display = "none";
-        const event = new Event("change", { bubbles: true });
-        originalSelect.dispatchEvent(event);
+        
+        // 1. Kích hoạt sự kiện tương thích mạnh với jQuery để đánh thức các hàm bắt sự kiện .change() ở ngoài hệ thống
+        if (typeof jQuery !== 'undefined') {
+            $(originalSelect).trigger("change");
+        } else {
+            const event = new Event("change", { bubbles: true });
+            originalSelect.dispatchEvent(event);
+        }
+        
+        // 2. KHẮC PHỤC LỖI: Chủ động gọi hàm tải dữ liệu gốc khi người dùng chọn về chính mình (val === "")
+        if (val === "") {
+            if (typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải dữ liệu cá nhân...");
+            if (typeof taiDlBdau === 'function') {
+                taiDlBdau(); // Hàm tải lại dữ liệu bản thân có sẵn trong hệ thống của đồng chí
+            }
+        }
     }
 
     input.addEventListener("keyup", (e) => {
