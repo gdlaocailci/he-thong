@@ -217,44 +217,54 @@ function hienThiTieuChi(mangDl) {
 }
 
 /**
- * Tải khung biểu mẫu chuẩn để cán bộ điền thông tin (Sử dụng SheetJS)
- * Đã bổ sung đầy đủ quy ước nhập liệu chuẩn xác cho thuật toán
+ * Tải khung biểu mẫu chuẩn kèm theo toàn bộ dữ liệu đang có trên giao diện (Sử dụng SheetJS)
+ * Vẫn giữ nguyên 4 dòng đầu là quy ước để đảm bảo tính năng Nhập từ Excel hoạt động chuẩn xác
  */
 function taiBieuMauExcel() {
-    const duLieuMau = [
+    const duLieuXuat = [
         // Dòng 1: Tiêu đề cột
         ["STT (Cột A)", "Nội dung tiêu chí (Cột B)", "Thang điểm tối đa (Cột C)", "Thời gian giao (Cột D)", "Tiến độ (Cột E)", "Thời gian hoàn thành (Cột F)", "Người thực hiện (Cột G)", "Điểm đánh giá (Cột H)", "Ghi chú (Cột I)", "Xếp loại XS (Cột J)", "Xếp loại HTT (Cột K)", "Xếp loại HT (Cột L)", "Chưa hoàn thành (Cột M)"],
         
-        // Dòng 2: Dòng hướng dẫn quy ước (Cán bộ có thể xóa dòng này sau khi nhập xong hoặc xóa trên Grid)
+        // Dòng 2, 3, 4: Dòng hướng dẫn quy ước (Hệ thống sẽ bỏ qua khi nhập)
         ["(Quy ước)", "Tiêu đề lớn bắt đầu bằng dấu * (VD: *Nhiệm vụ chung). Các tiêu chí con gõ bình thường.", "Nhập số (VD: 10)", "Nhập ngày (dd/mm/yyyy)", "Nhập trạng thái (VD: Đang tiến hành)", "Nhập ngày (dd/mm/yyyy)", "Cá nhân/Bộ phận/ALL", "Cú pháp: [Tên mức]|[Điểm]; (VD: Hoàn thành|10; Chưa xong|0)", "Ghi chú tự do", "VD: >=9", "VD: >=7", "VD: >=5", "VD: <5"],
-        
-        // Dòng 3: Mẫu Tiêu đề nhóm tiêu chí (Có dấu *)
-        ["I", "*Thực hiện nền nếp, quy chế chuyên môn", "", "", "", "", "", "", "", "", "", "", ""],
-        
-        // Dòng 4: Mẫu Tiêu chí con
-        ["1", "Đảm bảo ngày giờ công, ra vào lớp đúng quy định", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "ALL", "Hoàn thành|10; Vi phạm 1 lần|5; Không HT|0", "BCH Công đoàn theo dõi", ">=9", ">=7", ">=5", "<5"]
+        ["(Lưu ý)", "Hệ thống sẽ tự động bỏ qua 4 dòng đầu tiên này khi tải lên.", "", "", "", "", "", "", "", "", "", "", ""],
+        ["(Lưu ý)", "Vui lòng BẮT ĐẦU NHẬP DỮ LIỆU TỪ DÒNG SỐ 5 TRỞ XUỐNG.", "", "", "", "", "", "", "", "", "", "", ""]
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(duLieuMau);
+    // Lấy dữ liệu hiện tại từ bảng UI để đưa vào mảng xuất Excel
+    document.querySelectorAll('#bangTieuChi tbody tr.dongTieuChi').forEach(tr => {
+        let r0 = tr.querySelector('.nhapSttTC')?.value || "";
+        let r1 = tr.querySelector('.nhapNoiDungTC')?.value || "";
+        let r2 = tr.querySelector('.nhapDiemMaxTC')?.value || "";
+        let r3 = tr.querySelector('.nhapTgGiaoTC')?.value || "";
+        let r4 = tr.querySelector('.nhapTienDoTC')?.value || "";
+        let r5 = tr.querySelector('.nhapTgHtTC')?.value || "";
+        let r6 = tr.querySelector('.nhapNguoiThTC')?.value || "";
+        let r7 = tr.querySelector('.nhapDiemDgTC')?.value || "";
+        let r8 = tr.querySelector('.nhapGhiChuTC')?.value || "";
+        let r9 = tr.querySelector('.nhapXSTC')?.value || "";
+        let r10 = tr.querySelector('.nhapHTTTC')?.value || "";
+        let r11 = tr.querySelector('.nhapHTTC')?.value || "";
+        let r12 = tr.querySelector('.nhapCHTTC')?.value || "";
+        
+        // Chỉ xuất những dòng có nội dung tiêu chí
+        if(String(r1).trim() !== "") {
+            duLieuXuat.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
+        }
+    });
+
+    // Nếu bảng trống, cung cấp 2 dòng dữ liệu mẫu cơ bản
+    if (duLieuXuat.length === 4) {
+        duLieuXuat.push(["I", "*Thực hiện nền nếp, quy chế chuyên môn", "", "", "", "", "", "", "", "", "", "", ""]);
+        duLieuXuat.push(["1", "Đảm bảo ngày giờ công, ra vào lớp đúng quy định", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "ALL", "Hoàn thành|10; Vi phạm 1 lần|5; Không HT|0", "BCH Công đoàn theo dõi", ">=9", ">=7", ">=5", "<5"]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(duLieuXuat);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TieuChi");
     
-    // Điều chỉnh độ rộng cột chuẩn hóa để hiển thị rõ quy ước
-    ws['!cols'] = [
-        {wch: 12}, // A
-        {wch: 55}, // B
-        {wch: 22}, // C
-        {wch: 20}, // D
-        {wch: 25}, // E
-        {wch: 22}, // F
-        {wch: 20}, // G
-        {wch: 45}, // H
-        {wch: 25}, // I
-        {wch: 15}, // J
-        {wch: 15}, // K
-        {wch: 15}, // L
-        {wch: 15}  // M
-    ];
+    // Điều chỉnh độ rộng cột chuẩn hóa
+    ws['!cols'] = [ {wch: 12}, {wch: 55}, {wch: 22}, {wch: 20}, {wch: 25}, {wch: 22}, {wch: 20}, {wch: 45}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15} ];
     
     XLSX.writeFile(wb, "BieuMau_TieuChiDanhGia.xlsx");
 }
