@@ -88,34 +88,47 @@
 </div>
 
 <script>
-// ==========================================================================
-// KHỐI MÃ NÂNG CẤP: XỬ LÝ NHẬP/XUẤT EXCEL CHO TIÊU CHÍ QUẢN LÝ
-// Nguyên tắc: Không thay đổi logic hiện tại, cắt dữ liệu từ dòng 5
-// ==========================================================================
-
 /**
- * Tải khung biểu mẫu chuẩn (có 4 dòng đầu là tiêu đề và quy ước)
+ * Tải khung biểu mẫu chuẩn kèm theo toàn bộ dữ liệu Quản lý đang có trên giao diện (Sử dụng SheetJS)
  */
 function taiBieuMauExcelQL() {
-    const duLieuMau = [
+    const duLieuXuat = [
         // Dòng 1: Tiêu đề cột
         ["STT (Cột A)", "Nội dung tiêu chí (Cột B)", "Thang điểm tối đa (Cột C)", "Thời gian giao (Cột D)", "Tiến độ (Cột E)", "Thời gian hoàn thành (Cột F)", "Người thực hiện (Cột G)", "Điểm đánh giá (Cột H)", "Ghi chú (Cột I)", "Xếp loại XS (Cột J)", "Xếp loại HTT (Cột K)", "Xếp loại HT (Cột L)", "Chưa hoàn thành (Cột M)"],
         
-        // Dòng 2: Hướng dẫn nhập liệu
+        // Dòng 2, 3, 4: Hướng dẫn nhập liệu
         ["(Quy ước)", "Tiêu đề lớn bắt đầu bằng dấu * (VD: *Nhiệm vụ chung). Các tiêu chí con gõ bình thường.", "Nhập số (VD: 10)", "Nhập ngày (dd/mm/yyyy)", "Nhập trạng thái (VD: Đang tiến hành)", "Nhập ngày (dd/mm/yyyy)", "Cá nhân/Bộ phận/ALL", "Cú pháp: [Tên mức]|[Điểm]; (VD: Hoàn thành|10; Chưa xong|0)", "Ghi chú tự do", "VD: >=9", "VD: >=7", "VD: >=5", "VD: <5"],
-        
-        // Dòng 3, 4: Ghi chú cảnh báo để nhắc người dùng
         ["(Lưu ý)", "Hệ thống sẽ tự động bỏ qua 4 dòng đầu tiên này khi tải lên.", "", "", "", "", "", "", "", "", "", "", ""],
-        ["(Lưu ý)", "Vui lòng BẮT ĐẦU NHẬP DỮ LIỆU TỪ DÒNG SỐ 5 TRỞ XUỐNG.", "", "", "", "", "", "", "", "", "", "", ""],
-        
-        // Dòng 5: Dữ liệu mẫu (Nhóm tiêu chí)
-        ["I", "*Thực hiện nền nếp, quy chế chuyên môn (Quản lý)", "", "", "", "", "", "", "", "", "", "", ""],
-        
-        // Dòng 6: Dữ liệu mẫu (Tiêu chí con)
-        ["1", "Đảm bảo công tác quản lý chỉ đạo", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "BGH", "Hoàn thành|10; Không HT|0", "Đánh giá hàng tháng", ">=9", ">=7", ">=5", "<5"]
+        ["(Lưu ý)", "Vui lòng BẮT ĐẦU NHẬP DỮ LIỆU TỪ DÒNG SỐ 5 TRỞ XUỐNG.", "", "", "", "", "", "", "", "", "", "", ""]
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(duLieuMau);
+    // Lấy dữ liệu hiện tại từ bảng UI
+    document.querySelectorAll('#bangTieuChiQL tbody tr.dongTieuChiQL').forEach(tr => {
+        let r0 = tr.querySelector('.nhapSttTCQL')?.value || "";
+        let r1 = tr.querySelector('.nhapNoiDungTCQL')?.value || "";
+        let r2 = tr.querySelector('.nhapDiemMaxTCQL')?.value || "";
+        let r3 = tr.querySelector('.nhapTgGiaoTCQL')?.value || "";
+        let r4 = tr.querySelector('.nhapTienDoTCQL')?.value || "";
+        let r5 = tr.querySelector('.nhapTgHtTCQL')?.value || "";
+        let r6 = tr.querySelector('.nhapNguoiThTCQL')?.value || "";
+        let r7 = tr.querySelector('.nhapDiemDgTCQL')?.value || "";
+        let r8 = tr.querySelector('.nhapGhiChuTCQL')?.value || "";
+        let r9 = tr.querySelector('.nhapXSTCQL')?.value || "";
+        let r10 = tr.querySelector('.nhapHTTTCQL')?.value || "";
+        let r11 = tr.querySelector('.nhapHTTCQL')?.value || "";
+        let r12 = tr.querySelector('.nhapCHTTCQL')?.value || "";
+        
+        if(String(r1).trim() !== "") {
+            duLieuXuat.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
+        }
+    });
+
+    if (duLieuXuat.length === 4) {
+        duLieuXuat.push(["I", "*Thực hiện nền nếp, quy chế chuyên môn (Quản lý)", "", "", "", "", "", "", "", "", "", "", ""]);
+        duLieuXuat.push(["1", "Đảm bảo công tác quản lý chỉ đạo", "10", "01/08/2026", "Đang thực hiện", "30/08/2026", "BGH", "Hoàn thành|10; Không HT|0", "Đánh giá hàng tháng", ">=9", ">=7", ">=5", "<5"]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(duLieuXuat);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TieuChiQL");
     
