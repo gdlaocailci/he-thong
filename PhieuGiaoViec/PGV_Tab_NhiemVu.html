@@ -1279,7 +1279,8 @@ function debounce(func, wait) {
 
 const tinhtTdong = debounce(function() {
     const dtc = document.getElementById('nhapDiemThuong'); 
-    let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
+    // Chuyển đổi dấu phẩy thành dấu chấm cho Điểm thưởng
+    let dc = dtc ? (parseFloat(dtc.value.replace(/,/g, '.')) || 0) : 0;
     if(dtc) { 
         dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); 
         if (dc > 0) dtc.classList.add('diemCong'); 
@@ -1300,7 +1301,8 @@ const tinhtTdong = debounce(function() {
             soNhiemVu++;
             const maxInp = dg.querySelector('.nhapDiemMax');
             if(maxInp && maxInp.value) {
-                let mVal = parseFloat(maxInp.value);
+                // Khắc phục dấu phẩy cho Điểm tối đa
+                let mVal = parseFloat(maxInp.value.replace(/,/g, '.'));
                 if(!isNaN(mVal)) tongMax += mVal;
             }
             if (cg.value !== "") {
@@ -1311,7 +1313,9 @@ const tinhtTdong = debounce(function() {
                     let selOpt = cg.options[cg.selectedIndex];
                     if (selOpt) txtHienThi = selOpt.text;
                 }
-                let diem = parseFloat(valThuc);
+                
+                // Khắc phục dấu phẩy (,) thành dấu chấm (.) để hệ thống không cắt mất phần thập phân
+                let diem = parseFloat(valThuc.replace(/,/g, '.'));
                 if (!isNaN(diem)) tongDiem += diem;
                 
                 let j = dg.querySelector('.oColJ')?.value.trim() || "";
@@ -1333,7 +1337,8 @@ const tinhtTdong = debounce(function() {
         }
     });
     
-    let diemCuoiCung = tongDiem + dc;
+    // Cộng điểm và triệt tiêu lỗi số lẻ dài của JavaScript (giữ lại tối đa 3 số thập phân)
+    let diemCuoiCung = Math.round((tongDiem + dc) * 1000) / 1000;
     let xpl = "Chưa hoàn thành";
     
     if (soNhiemVu === 0) {
@@ -1341,20 +1346,18 @@ const tinhtTdong = debounce(function() {
     } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
-        // [NÂNG CẤP] 1. Xác định mức xếp loại hoàn toàn dựa trên TỔNG ĐIỂM TUYỆT ĐỐI
-        let mucDiem = 1; // Chưa hoàn thành (dưới 50)
-        if (diemCuoiCung >= 90) mucDiem = 4; // Xuất sắc
-        else if (diemCuoiCung >= 70) mucDiem = 3; // Hoàn thành tốt
-        else if (diemCuoiCung >= 50) mucDiem = 2; // Hoàn thành
+        // Xếp loại theo mốc điểm tuyệt đối
+        let mucDiem = 1; 
+        if (diemCuoiCung >= 90) mucDiem = 4; 
+        else if (diemCuoiCung >= 70) mucDiem = 3; 
+        else if (diemCuoiCung >= 50) mucDiem = 2; 
         
-        // [NÂNG CẤP] 2. Kết hợp đánh giá điểm liệt từ các cột J, K, L, M (nếu có cấu hình)
+        // So sánh với điểm liệt (Nếu có cột J,K,L,M)
         let mucCuoiCung = mucDiem;
         if (hasJMLogic) {
-            // Lấy kết quả thấp nhất giữa Xếp loại theo tổng điểm và Điểm liệt của từng tiêu chí
             mucCuoiCung = Math.min(minRank, mucDiem);
         }
 
-        // [NÂNG CẤP] 3. Chốt kết quả ra chữ hiển thị
         if (mucCuoiCung === 4) xpl = "Xuất sắc";
         else if (mucCuoiCung === 3) xpl = "Hoàn thành tốt";
         else if (mucCuoiCung === 2) xpl = "Hoàn thành";
@@ -1363,7 +1366,9 @@ const tinhtTdong = debounce(function() {
     
     let txtKq = xpl;
     if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
-        txtKq = `${xpl}: ${diemCuoiCung} điểm`;
+        // Chuyển kết quả trở lại thành dấu phẩy khi hiển thị lên giao diện
+        let diemHienThi = String(diemCuoiCung).replace('.', ',');
+        txtKq = `${xpl}: ${diemHienThi} điểm`;
     }
     
     const qht = document.getElementById('chuKqHthi');
