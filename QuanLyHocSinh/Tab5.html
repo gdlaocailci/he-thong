@@ -1,0 +1,101 @@
+<div class="tab-pane fade" id="tab5">
+  <div class="text-center"><h4>KHO LƯU TRỮ HỌC SINH CHUYỂN TRƯỜNG</h4></div>
+  <div class="filter-box">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-2"><label>Năm học chuyển</label><select id="t5_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      <div class="col-md-2"><label>Lớp cũ</label><select id="t5_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
+      <div class="col-md-2"><label>CCCD</label><input id="t5_cccd" class="form-control form-control-sm" placeholder="Nhập mã CCCD..."></div>
+      <div class="col-md-3"><label>Họ đệm</label><input id="t5_hodem" class="form-control form-control-sm"></div>
+      <div class="col-md-2"><label>Tên</label><input id="t5_ten" class="form-control form-control-sm"></div>
+      
+      <div class="col-md-1 d-flex justify-content-end">
+        <button class="btn btn-sm btn-primary px-3 fw-bold w-100" onclick="hks_layDuLieuPhanNam_fn()"><i class="bi bi-search"></i> Lọc</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="table-container">
+    <table class="table table-bordered table-striped table-hover table-sm mb-0" id="bang5">
+      <thead>
+        <tr>
+          <th style="min-width:50px; width:50px;">STT</th>
+          <th style="min-width:100px">Năm học cũ</th><th style="min-width:60px">Lớp cũ</th><th style="min-width:110px">CCCD</th>
+          <th style="min-width:110px">Họ đệm</th><th style="min-width:60px">Tên</th>
+          <th style="min-width:100px">Ngày sinh</th><th style="min-width:60px">Nam/nữ</th><th style="min-width:95px">Nơi ở (Thôn)</th><th style="min-width:200px">Thường trú (Xã/tỉnh)</th>
+          <th style="min-width:80px">Dân tộc</th><th style="min-width:80px">C.Sách</th><th style="min-width:80px">K.Tật</th><th style="min-width:60px">Nghèo</th><th style="min-width:60px">Cận N</th><th style="min-width:60px">BHYT</th>
+          <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:100px">SĐT</th><th style="min-width:50px">Khẩu nơi khác</th>
+          <th class="bg-warning text-dark" style="min-width:250px">Thông tin chuyển (Ngày - Nơi đến)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let hks_khoDuLieuChuyen_arr = [];
+
+  function hks_taiKhoDuLieuChuyen_fn() {
+      // Chỉ tải từ server lần đầu tiên nếu kho đệm rỗng
+      if (hks_khoDuLieuChuyen_arr.length > 0) { hks_layDuLieuPhanNam_fn(); return; }
+      
+      hks_hienThiManHinhTai_fn(true);
+      hks_thucThiGiaoTiep_fn('hks_taiDuLieuChuyen_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(res => {
+          hks_hienThiManHinhTai_fn(false);
+          if(res.success) {
+              hks_khoDuLieuChuyen_arr = res.data;
+              hks_layDuLieuPhanNam_fn();
+          } else {
+              Swal.fire('Lỗi', res.message, 'error');
+          }
+      }).catch(e => { hks_hienThiManHinhTai_fn(false); });
+  }
+
+  function hks_layDuLieuPhanNam_fn() {
+      let n = document.getElementById('t5_nam').value;
+      let l = document.getElementById('t5_lop').value;
+      let c = document.getElementById('t5_cccd').value.trim().toLowerCase();
+      let h = document.getElementById('t5_hodem').value.trim().toLowerCase();
+      let t = document.getElementById('t5_ten').value.trim().toLowerCase();
+
+      let kq = hks_khoDuLieuChuyen_arr.filter(r => {
+          let matchNam = n ? String(r[0]) == n : true;
+          let matchLop = l ? String(r[1]) == l : true;
+          let matchC = c ? String(r[2]).toLowerCase().includes(c) : true;
+          let matchH = h ? String(r[3]).toLowerCase().includes(h) : true;
+          let matchT = t ? String(r[4]).toLowerCase().includes(t) : true;
+          return matchNam && matchLop && matchC && matchH && matchT;
+      });
+      
+      hks_veBangPhanNam_fn(kq);
+  }
+
+  function hks_veBangPhanNam_fn(hks_duLieuBang_arr) {
+      const hks_thanBang_el = document.querySelector('#bang5 tbody'); 
+      hks_thanBang_el.innerHTML = '';
+      
+      if (hks_duLieuBang_arr.length === 0) {
+          hks_thanBang_el.innerHTML = '<tr><td colspan="21" class="text-center text-muted fw-bold py-3">Không có dữ liệu học sinh chuyển trường khớp với bộ lọc.</td></tr>';
+          return;
+      }
+      
+      hks_duLieuBang_arr.forEach((hks_dongDuLieu_arr, index) => {
+          const hks_theDong_el = document.createElement('tr');
+          
+          let hks_chuoiHtml_str = `<td class="text-center text-muted fw-bold">${index + 1}</td>`;
+          
+          // Nạp 19 cột thông tin cơ bản (Từ Cột 0 đến 18)
+          for (let i = 0; i < 19; i++) {
+              let hks_giaTri_str = hks_dongDuLieu_arr[i] || "";
+              hks_chuoiHtml_str += `<td><div class="px-2 py-1">${hks_giaTri_str}</div></td>`;
+          }
+          
+          // Nạp cột 48 (AW) chứa thông tin chuyển
+          let hks_thongTinChuyen_str = hks_dongDuLieu_arr[48] || "<i class='text-danger'>Trống dữ liệu</i>";
+          hks_chuoiHtml_str += `<td class="fw-bold text-primary"><div class="px-2 py-1">${hks_thongTinChuyen_str}</div></td>`;
+          
+          hks_theDong_el.innerHTML = hks_chuoiHtml_str;
+          hks_thanBang_el.appendChild(hks_theDong_el);
+      });
+  }
+</script>
