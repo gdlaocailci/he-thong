@@ -466,15 +466,4 @@
   // Tự động khởi chạy lệnh kiểm tra phân quyền Excel sau khi nạp xong Tab 1 (độ trễ 500ms để đợi config tải)
   setTimeout(hks_kiemTraQuyenXuatNhapExcel_fn, 500);
 
-function hks_kiemTraQuyenXuatNhapExcel_fn() {
-      let hks_laAdmin_bol = (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin');
-      let hks_laNguoiNhapChung_bol = (hks_bienKhungHeThong_obj && hks_bienKhungHeThong_obj.hks_quyenTuyetDoi_bol === true);
-      let hks_hienThi_bol = hks_laAdmin_bol || hks_laNguoiNhapChung_bol;
-      
-      let hks_nutXuatUI_el = document.getElementById('btnExportExcel');
-      let hks_nutNhapUI_el = document.getElementById('btnImportExcel');
-
-      if (hks_nutXuatUI_el) hks_nutXuatUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
-      if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
-  }
 </script>
