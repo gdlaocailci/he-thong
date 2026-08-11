@@ -12,11 +12,21 @@
         <button class="btn btn-sm btn-danger fw-bold px-3" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
         <button class="btn btn-sm btn-warning fw-bold px-3" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
+        
         <span id="groupEdit1" class="edit-mode-btn">
           <button class="btn btn-sm btn-success px-3" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
           <button class="btn btn-sm btn-secondary px-3 ms-1" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
           <button class="btn btn-sm btn-info px-3 ms-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
         </span>
+
+        <!-- ĐẶT CÁC NÚT EXCEL Ở ĐÂY (NGOÀI THẺ SPAN groupEdit1) -->
+        <button class="btn btn-sm btn-success fw-bold px-3" id="btnExportExcel" onclick="hks_xuatDuLieuExcel_fn()" style="display:none">
+          <i class="bi bi-file-earmark-excel"></i> Tải Excel
+        </button>
+        <button class="btn btn-sm btn-info fw-bold px-3" id="btnImportExcel" onclick="document.getElementById('fileImportExcel').click()" style="display:none">
+          <i class="bi bi-upload"></i> Lên Excel
+        </button>
+        <input type="file" id="fileImportExcel" accept=".xlsx, .xls" style="display:none" onchange="hks_nhapDuLieuExcel_fn(event)">
       </div>
     </div>
   </div>
