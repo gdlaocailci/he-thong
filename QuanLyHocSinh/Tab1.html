@@ -1,14 +1,17 @@
 <div class="tab-pane fade show active" id="tab1">
   <div class="text-center"><h4>QUẢN LÝ THÔNG TIN HỌC SINH</h4></div>
   <div class="filter-box">
-    <div class="row g-2 align-items-end">
+<div class="row g-2 align-items-end">
       <div class="col-md-1"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
       <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
       <div class="col-md-2"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
-      <div class="col-md-2"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
       
-      <div class="col-md-4 d-flex flex-wrap justify-content-end align-items-center gap-2">
+      <!-- Đã thu hẹp ô Tên từ col-md-2 xuống col-md-1 -->
+      <div class="col-md-1"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
+      
+      <!-- Đã mở rộng khu vực chứa nút bấm từ col-md-4 lên col-md-5 để có thêm không gian -->
+      <div class="col-md-5 d-flex flex-wrap justify-content-end align-items-center gap-2">
         <button class="btn btn-sm btn-danger fw-bold px-3" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
         <button class="btn btn-sm btn-warning fw-bold px-3" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
@@ -19,7 +22,7 @@
           <button class="btn btn-sm btn-info px-3 ms-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
         </span>
 
-        <!-- ĐẶT CÁC NÚT EXCEL Ở ĐÂY (NGOÀI THẺ SPAN groupEdit1) -->
+        <!-- Nhóm nút Excel -->
         <button class="btn btn-sm btn-success fw-bold px-3" id="btnExportExcel" onclick="hks_xuatDuLieuExcel_fn()" style="display:none">
           <i class="bi bi-file-earmark-excel"></i> Tải Excel
         </button>
@@ -375,12 +378,15 @@
       if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
   }
 
-  // ====================================================================
-  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL ---
+// ====================================================================
+  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (CHỈ LẤY DỮ LIỆU ĐANG HIỂN THỊ TRÊN UI) ---
   // ====================================================================
   function hks_xuatDuLieuExcel_fn() {
-      if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
-          Swal.fire("Thông báo", "Không có dữ liệu để tải xuống!", "info");
+      const hks_thanBang_el = document.querySelector('#bang1 tbody');
+      
+      // Kiểm tra xem bảng có dữ liệu hiển thị hay không
+      if (!hks_thanBang_el || hks_thanBang_el.rows.length === 0) {
+          Swal.fire("Thông báo", "Không có dữ liệu trên giao diện để tải xuống!", "info");
           return;
       }
       
@@ -388,16 +394,41 @@
           ["Năm học", "Lớp", "CCCD", "Họ đệm", "Tên", "Ngày sinh", "Nam/nữ", "Nơi ở (Thôn)", "Thường trú (Xã/tỉnh)", "Dân tộc", "Chính sách", "Khuyết tật", "Nghèo", "Cận nghèo", "BHYT", "Tên bố", "Tên mẹ", "SĐT", "Khẩu nơi khác", "UUID (Không sửa)"]
       ];
       
-      hks_khoDuLieuTong_arr.forEach(hks_dong_arr => {
-          let hks_dongMoi_arr = hks_dong_arr.slice(0, 19); 
-          hks_dongMoi_arr.push(hks_dong_arr[53] || "");
+      // Quét từng dòng (tr) đang hiển thị thực tế trên bảng
+      for (let hks_theDong_el of hks_thanBang_el.rows) {
+          let hks_dongMoi_arr = [];
+          
+          // Bắt đầu từ cột 1 (bỏ qua cột 0 là cột STT/Nút xóa)
+          for (let i = 1; i < hks_theDong_el.cells.length; i++) {
+              let hks_phanTuUI_el = hks_theDong_el.cells[i].querySelector('.cell-input, input[type="checkbox"]');
+              if (hks_phanTuUI_el) {
+                  if (hks_phanTuUI_el.type === 'checkbox') {
+                      hks_dongMoi_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
+                  } else {
+                      hks_dongMoi_arr.push(hks_phanTuUI_el.value);
+                  }
+              } else {
+                  hks_dongMoi_arr.push("");
+              }
+          }
+          
+          // Trích xuất mã cá biệt (UUID) được neo ẩn tại thuộc tính data-uuid của thẻ tr
+          let hks_uuid_str = hks_theDong_el.getAttribute('data-uuid') || "";
+          hks_dongMoi_arr.push(hks_uuid_str);
+          
           hks_duLieuXuat_arr.push(hks_dongMoi_arr);
-      });
+      }
 
       let hks_tepXuat_obj = XLSX.utils.book_new();
       let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
       XLSX.utils.book_append_sheet(hks_tepXuat_obj, hks_trangXuat_obj, "DanhSachHocSinh");
-      XLSX.writeFile(hks_tepXuat_obj, "DuLieuHocSinh_" + new Date().getTime() + ".xlsx");
+      
+      // Tối ưu tên file tải xuống theo bộ lọc Năm học và Lớp hiện tại trên UI
+      let hks_tenNam_str = document.getElementById('t1_nam').value || "All";
+      let hks_tenLop_str = document.getElementById('t1_lop').value || "All";
+      let hks_tenFile_str = "HocSinh_" + hks_tenNam_str + "_" + hks_tenLop_str + "_" + new Date().getTime() + ".xlsx";
+      
+      XLSX.writeFile(hks_tepXuat_obj, hks_tenFile_str);
   }
 
   // ====================================================================
