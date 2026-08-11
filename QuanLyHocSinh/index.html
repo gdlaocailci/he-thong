@@ -226,10 +226,14 @@ function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
           sessionStorage.setItem("sys_data_hs", JSON.stringify(hks_hoSoNguoiDungHienTai_obj));
           sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
 
-          // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC ĐỂ TRÁNH THỜI GIAN CHỜ LÂU
+          // KÍCH HOẠT GIAO DIỆN VÀ PHÂN QUYỀN
           hks_doDuLieuVaoHopChon_fn();
           hks_thietLapBoLoc_fn();
           hks_kiemTraQuyenVaNapTabBon_fn(); 
+          
+          // >>> ĐIỂM SỬA LỖI: Cập nhật lại quyền hiển thị nút Excel ngay khi đăng nhập thành công <<<
+          if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
+
           document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
           document.getElementById('role-badge').innerText = hks_hoSoNguoiDungHienTai_obj.role === 'admin' ? 'Super Admin' : 'Giáo viên';
           document.getElementById('gate-overlay').style.display = 'none'; 
@@ -265,6 +269,9 @@ function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
                         hks_doDuLieuVaoHopChon_fn();
                         hks_kiemTraQuyenVaNapTabBon_fn();
                         
+                        // >>> ĐIỂM SỬA LỖI: Kiểm tra lại quyền hiển thị khi load từ Session <<<
+                        if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
+                        
                         // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC
                         let hks_ungDungChinh_el = document.getElementById('main-app');
                         hks_ungDungChinh_el.style.display = 'block'; 
@@ -294,6 +301,9 @@ function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
                             sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
                             hks_doDuLieuVaoHopChon_fn(); 
                             hks_kiemTraQuyenVaNapTabBon_fn();
+                            
+                            // >>> ĐIỂM SỬA LỖI: Kiểm tra lại quyền hiển thị khi lấy cấu hình từ Server <<<
+                            if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
                             
                             // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC
                             let hks_ungDungChinh_el = document.getElementById('main-app');
