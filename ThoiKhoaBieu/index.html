@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tra Cứu Thời Khóa Biểu - Tiểu Học Hợp Thành</title>
     <style>
-        /* =========================================================
-           KHỐI CSS: ĐỊNH DẠNG GIAO DIỆN HÀNH CHÍNH
-           ========================================================= */
+        /* KHỐI CSS GIAO DIỆN HÀNH CHÍNH */
         body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .khung-chinh { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .tieu-de-trang { text-align: center; color: #0000ff; text-transform: uppercase; font-size: 24px; margin-bottom: 20px; }
         
-        /* Hiệu ứng UI Nút bấm */
+        /* Hiệu ứng Buttons */
         .nut-bam {
             background-color: #00cc00; color: white; border: none; padding: 10px 20px; font-size: 16px; 
             border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
@@ -21,20 +19,17 @@
         .nut-bam:hover { background-color: #009900; }
         .bieu-tuong { width: 20px; height: 20px; fill: currentColor; }
 
-        /* Hiệu ứng chờ (Loading) */
         #vung-loading { display: none; text-align: center; padding: 20px; font-style: italic; color: #666; }
         
         .chan-trang { text-align: center; font-weight: bold; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; }
     </style>
 </head>
 <body>
-
     <div class="khung-chinh">
         <div class="tieu-de-trang">TRƯỜNG TIỂU HỌC HỢP THÀNH<br>THỜI KHÓA BIỂU</div>
         
         <div style="text-align: center; margin-bottom: 20px;">
             <button class="nut-bam" onclick="taiDuLieuHeThong()">
-                <!-- Biểu tượng SVG (Lấy từ svgrepo.com) -->
                 <svg class="bieu-tuong" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2.75a9.25 9.25 0 1 0 4.737 17.197l-1.062-1.664A7.25 7.25 0 1 1 19.25 12h-2l3.25 4.5L23.75 12h-2.5A9.25 9.25 0 0 0 12 2.75z"/>
                 </svg>
@@ -42,33 +37,25 @@
             </button>
         </div>
 
-        <!-- Khu vực thông báo trạng thái -->
         <div id="vung-loading">Đang kết nối máy chủ và trích xuất số liệu, vui lòng đợi...</div>
-        
-        <!-- Bảng hiển thị kết quả -->
         <div id="vung-hien-thi-tkb"></div>
     </div>
 
-    <!-- Khối nhận diện tác giả chuẩn hóa 2 dòng -->
+    <!-- KHỐI BẢN QUYỀN TÁC GIẢ -->
     <div class="chan-trang">
         Thiết kế và phát triển<br>Hoàng Ngọc Lâm
     </div>
 
-    <!-- Vùng chứa mã nhúng từ tệp KetNoi.html -->
+    <!-- Vùng tự động nhúng API -->
     <div id="vung-chua-ket-noi"></div>
 
     <script>
-        /* =========================================================
-           KHỐI JAVASCRIPT: XỬ LÝ LOGIC VÀ KẾT NỐI
-           ========================================================= */
-
-        // 1. Hàm tự động nhúng tệp KetNoi.html khi trang vừa tải xong
+        /* KHỐI JAVASCRIPT XỬ LÝ KẾT NỐI VÀ LOGIC */
         async function nhungTepKetNoi() {
             try {
                 let phanHoi = await fetch('KetNoi.html');
                 let noiDungHtml = await phanHoi.text();
                 
-                // Trích xuất thẻ <script> từ chuỗi HTML tải về và thực thi
                 let vungChua = document.createElement('div');
                 vungChua.innerHTML = noiDungHtml;
                 
@@ -83,15 +70,12 @@
             }
         }
 
-        // Kích hoạt ngay khi mở trang
         nhungTepKetNoi();
 
-        // 2. Hàm xử lý nghiệp vụ khi người dùng bấm nút
         async function taiDuLieuHeThong() {
             let vungLoading = document.getElementById('vung-loading');
             let vungHienThi = document.getElementById('vung-hien-thi-tkb');
             
-            // Kiểm tra xem đối tượng kết nối đã sẵn sàng chưa
             if (typeof KET_NOI_MAY_CHU === 'undefined') {
                 vungHienThi.innerHTML = `<p style="color: red; text-align: center;">Hệ thống đang khởi tạo kết nối, vui lòng thử lại sau vài giây.</p>`;
                 return;
@@ -100,14 +84,12 @@
             vungLoading.style.display = 'block';
             vungHienThi.innerHTML = '';
 
-            // Gọi API thông qua hàm được định nghĩa trong KetNoi.html
             let ketQua = await KET_NOI_MAY_CHU.layDuLieu("LAY_DU_LIEU_TKB");
 
             vungLoading.style.display = 'none';
 
             if (ketQua.trangThai === "ThanhCong") {
                 vungHienThi.innerHTML = `<p style="color: green; text-align: center;">Trích xuất thành công ${ketQua.duLieu.length} bản ghi thời khóa biểu từ máy chủ.</p>`;
-                console.log(ketQua.duLieu);
             } else {
                 vungHienThi.innerHTML = `<p style="color: red; text-align: center;">Lỗi xử lý: ${ketQua.thongBao}</p>`;
             }
