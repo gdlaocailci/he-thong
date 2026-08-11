@@ -358,4 +358,123 @@
         }
       });
   }
+
+  // ====================================================================
+  // --- MODULE: KIỂM TRA QUYỀN VÀ HIỂN THỊ NÚT EXCEL ---
+  // ====================================================================
+  function hks_kiemTraQuyenXuatNhapExcel_fn() {
+      let hks_laAdmin_bol = (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin');
+      let hks_laNguoiNhapChung_bol = (hks_bienKhungHeThong_obj && hks_bienKhungHeThong_obj.hks_quyenTuyetDoi_bol === true);
+      
+      let hks_hienThi_bol = hks_laAdmin_bol || hks_laNguoiNhapChung_bol;
+
+      let hks_nutXuatUI_el = document.getElementById('btnExportExcel');
+      let hks_nutNhapUI_el = document.getElementById('btnImportExcel');
+
+      if (hks_nutXuatUI_el) hks_nutXuatUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
+      if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
+  }
+
+  // ====================================================================
+  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL ---
+  // ====================================================================
+  function hks_xuatDuLieuExcel_fn() {
+      if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
+          Swal.fire("Thông báo", "Không có dữ liệu để tải xuống!", "info");
+          return;
+      }
+      
+      let hks_duLieuXuat_arr = [
+          ["Năm học", "Lớp", "CCCD", "Họ đệm", "Tên", "Ngày sinh", "Nam/nữ", "Nơi ở (Thôn)", "Thường trú (Xã/tỉnh)", "Dân tộc", "Chính sách", "Khuyết tật", "Nghèo", "Cận nghèo", "BHYT", "Tên bố", "Tên mẹ", "SĐT", "Khẩu nơi khác", "UUID (Không sửa)"]
+      ];
+      
+      hks_khoDuLieuTong_arr.forEach(hks_dong_arr => {
+          let hks_dongMoi_arr = hks_dong_arr.slice(0, 19); 
+          hks_dongMoi_arr.push(hks_dong_arr[53] || "");
+          hks_duLieuXuat_arr.push(hks_dongMoi_arr);
+      });
+
+      let hks_tepXuat_obj = XLSX.utils.book_new();
+      let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
+      XLSX.utils.book_append_sheet(hks_tepXuat_obj, hks_trangXuat_obj, "DanhSachHocSinh");
+      XLSX.writeFile(hks_tepXuat_obj, "DuLieuHocSinh_" + new Date().getTime() + ".xlsx");
+  }
+
+  // ====================================================================
+  // --- MODULE: CẬP NHẬT DỮ LIỆU TỪ EXCEL LÊN ---
+  // ====================================================================
+  function hks_nhapDuLieuExcel_fn(event) {
+      let hks_tepTaiLen_obj = event.target.files[0];
+      if (!hks_tepTaiLen_obj) return;
+
+      let hks_boDocTep_obj = new FileReader();
+      hks_boDocTep_obj.onload = function(e) {
+          let hks_duLieuTho_obj = new Uint8Array(e.target.result);
+          let hks_tepExcel_obj = XLSX.read(hks_duLieuTho_obj, {type: 'array'});
+          let hks_trangTinhDau_obj = hks_tepExcel_obj.Sheets[hks_tepExcel_obj.SheetNames[0]];
+          let hks_mangDuLieuExcel_arr = XLSX.utils.sheet_to_json(hks_trangTinhDau_obj, {header: 1});
+          
+          if (hks_mangDuLieuExcel_arr.length <= 1) {
+              Swal.fire("Lỗi", "Tệp phân lớp trống hoặc sai định dạng!", "error");
+              return;
+          }
+
+          let hks_duLieuCanLuu_arr = [];
+          for (let i = 1; i < hks_mangDuLieuExcel_arr.length; i++) {
+              let hks_dongHienTai_arr = hks_mangDuLieuExcel_arr[i];
+              if (!hks_dongHienTai_arr || hks_dongHienTai_arr.length === 0) continue; 
+              
+              let hks_dongDuLieu_arr = new Array(54).fill("");
+              
+              for(let j = 0; j < 19; j++) {
+                  hks_dongDuLieu_arr[j] = hks_dongHienTai_arr[j] !== undefined ? hks_dongHienTai_arr[j] : "";
+              }
+              
+              hks_dongDuLieu_arr[53] = hks_dongHienTai_arr[19] || "";
+              
+              if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) {
+                  hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
+              }
+          }
+
+          if (hks_duLieuCanLuu_arr.length > 0) {
+              hks_hienThiManHinhTai_fn(true);
+              hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {
+                  hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, 
+                  hks_cheDo_str: 'cap_nhat', 
+                  hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
+              }).then(hks_ketQuaAPI_obj => { 
+                  if(hks_ketQuaAPI_obj.success === false) { 
+                      Swal.fire('Từ chối', 'Lỗi phân luồng cấu trúc!', 'warning'); 
+                      hks_hienThiManHinhTai_fn(false); 
+                      return; 
+                  }
+                  hks_capNhatBoNhoDem_fn().then(() => { 
+                      Swal.fire("Hoàn tất!", "Cập nhật dữ liệu từ tệp hệ thống thành công", "success"); 
+                      hks_layDuLieuPhanMot_fn(); 
+                  });
+              }).catch(err => { 
+                  Swal.fire('Sự cố', err.message, 'warning'); 
+                  hks_hienThiManHinhTai_fn(false); 
+              });
+          }
+      };
+      hks_boDocTep_obj.readAsArrayBuffer(hks_tepTaiLen_obj);
+      event.target.value = ''; // Reset thẻ input để có thể chọn lại file cũ nếu tải lại
+  }
+
+  // Tự động khởi chạy lệnh kiểm tra phân quyền Excel sau khi nạp xong Tab 1 (độ trễ 500ms để đợi config tải)
+  setTimeout(hks_kiemTraQuyenXuatNhapExcel_fn, 500);
+
+function hks_kiemTraQuyenXuatNhapExcel_fn() {
+      let hks_laAdmin_bol = (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin');
+      let hks_laNguoiNhapChung_bol = (hks_bienKhungHeThong_obj && hks_bienKhungHeThong_obj.hks_quyenTuyetDoi_bol === true);
+      let hks_hienThi_bol = hks_laAdmin_bol || hks_laNguoiNhapChung_bol;
+      
+      let hks_nutXuatUI_el = document.getElementById('btnExportExcel');
+      let hks_nutNhapUI_el = document.getElementById('btnImportExcel');
+
+      if (hks_nutXuatUI_el) hks_nutXuatUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
+      if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
+  }
 </script>
