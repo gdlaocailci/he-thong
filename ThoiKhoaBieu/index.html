@@ -3,59 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tra Cứu Thời Khóa Biểu - Tiểu Học Hợp Thành</title>
+    <title>Thời Khóa Biểu - Trường Tiểu Học Hợp Thành</title>
     <style>
-        /* KHỐI CSS GIAO DIỆN HÀNH CHÍNH */
-        body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        .khung-chinh { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .tieu-de-trang { text-align: center; color: #0000ff; text-transform: uppercase; font-size: 24px; margin-bottom: 20px; }
+        /* =========================================================
+           KHỐI 1: ĐỊNH DẠNG GIAO DIỆN HÀNH CHÍNH & CSS BIẾN NỀN
+           ========================================================= */
+        body { font-family: 'Times New Roman', Times, serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #000; }
+        .khung-chinh { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
         
-        /* Hiệu ứng Buttons */
+        /* Tiêu đề */
+        .tieu-de-truong { color: #0000ff; text-transform: uppercase; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .tieu-de-bang { text-align: center; color: #ff0000; font-size: 28px; font-weight: bold; margin: 10px 0; text-transform: uppercase; }
+        
+        /* Thanh công cụ điều hướng */
+        .thanh-cong-cu { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .nut-bam {
-            background-color: #00cc00; color: white; border: none; padding: 10px 20px; font-size: 16px; 
-            border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-            transition: background-color 0.3s ease;
+            background-color: #00cc00; color: white; border: 2px solid #009900; padding: 8px 15px; font-size: 16px; 
+            font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+            transition: all 0.3s ease;
         }
         .nut-bam:hover { background-color: #009900; }
-        .bieu-tuong { width: 20px; height: 20px; fill: currentColor; }
+        .nut-bam-xanh { background-color: #0000ff; border-color: #0000cc; }
+        .bieu-tuong { width: 18px; height: 18px; fill: currentColor; }
 
-        #vung-loading { display: none; text-align: center; padding: 20px; font-style: italic; color: #666; }
+        /* Bảng Thời khóa biểu ma trận */
+        table { border-collapse: collapse; width: 100%; min-width: 1200px; text-align: center; font-size: 15px; }
+        th, td { border: 1px solid #000; padding: 5px; vertical-align: middle; }
+        th { background-color: #f9f9f9; font-weight: bold; }
         
-        .chan-trang { text-align: center; font-weight: bold; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; }
+        /* Trục thời gian cố định (Sticky) */
+        .cot-co-dinh { position: sticky; left: 0; background-color: #fff; z-index: 2; font-weight: bold; }
+        
+        /* Màu sắc môn học đặc thù (Sẽ được JS ghi đè nếu có dữ liệu cấu hình) */
+        .mon-am-nhac { background-color: #ff0000; color: #fff; }
+        .mon-mi-thuat { background-color: #f4b084; color: #000; }
+        .mon-gdtc { background-color: #00b0f0; color: #fff; }
+        .mon-tieng-anh { background-color: #bdd7ee; color: #000; }
+
+        /* Hiệu ứng chờ - Loading */
+        #vung-loading { display: none; text-align: center; padding: 30px; font-size: 18px; color: #555; }
+        
+        /* Nhận diện tác giả */
+        .chan-trang { text-align: center; font-weight: bold; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ccc; font-family: Arial, sans-serif; }
     </style>
 </head>
 <body>
+
     <div class="khung-chinh">
-        <div class="tieu-de-trang">TRƯỜNG TIỂU HỌC HỢP THÀNH<br>THỜI KHÓA BIỂU</div>
-        
-        <div style="text-align: center; margin-bottom: 20px;">
+        <!-- Khu vực thanh công cụ mô phỏng Macro -->
+        <div class="thanh-cong-cu">
+            <button class="nut-bam nut-bam-xanh">Đạt</button>
+            <button class="nut-bam" style="background: #fff; color: #ff0000; border-color: #00cc00;">Reset ngày</button>
             <button class="nut-bam" onclick="taiDuLieuHeThong()">
                 <svg class="bieu-tuong" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2.75a9.25 9.25 0 1 0 4.737 17.197l-1.062-1.664A7.25 7.25 0 1 1 19.25 12h-2l3.25 4.5L23.75 12h-2.5A9.25 9.25 0 0 0 12 2.75z"/>
                 </svg>
-                Tải Dữ Liệu TKB
+                Tuần mới
             </button>
         </div>
 
-        <div id="vung-loading">Đang kết nối máy chủ và trích xuất số liệu, vui lòng đợi...</div>
+        <div class="tieu-de-truong">TRƯỜNG TIỂU HỌC HỢP THÀNH</div>
+        <div class="tieu-de-bang">THỜI KHOÁ BIỂU TUẦN <span id="hien-thi-tuan">1</span></div>
+        
+        <div id="vung-loading">
+            <!-- Tích hợp logic chờ -->
+            Đang trích xuất dữ liệu ma trận từ máy chủ, vui lòng đợi...
+        </div>
+        
+        <!-- Vùng kết xuất bảng HTML -->
         <div id="vung-hien-thi-tkb"></div>
     </div>
 
-    <!-- KHỐI BẢN QUYỀN TÁC GIẢ -->
+    <!-- KHỐI 2: BẢN QUYỀN TÁC GIẢ -->
     <div class="chan-trang">
         Thiết kế và phát triển<br>Hoàng Ngọc Lâm
     </div>
 
-    <!-- Vùng tự động nhúng API -->
+    <!-- KHỐI 3: KẾT NỐI API -->
     <div id="vung-chua-ket-noi"></div>
 
     <script>
-        /* KHỐI JAVASCRIPT XỬ LÝ KẾT NỐI VÀ LOGIC */
+        /* =========================================================
+           KHỐI 4: JAVASCRIPT XỬ LÝ LOGIC HIỂN THỊ
+           ========================================================= */
+           
         async function nhungTepKetNoi() {
             try {
                 let phanHoi = await fetch('KetNoi.html');
                 let noiDungHtml = await phanHoi.text();
-                
                 let vungChua = document.createElement('div');
                 vungChua.innerHTML = noiDungHtml;
                 
@@ -66,10 +101,11 @@
                     document.body.appendChild(theScriptMoi);
                 }
             } catch (loiTep) {
-                console.error("Lỗi khi tải thư viện kết nối:", loiTep);
+                console.error("Lỗi tải thư viện kết nối:", loiTep);
             }
         }
 
+        // Tự động tải thư viện kết nối
         nhungTepKetNoi();
 
         async function taiDuLieuHeThong() {
@@ -77,22 +113,88 @@
             let vungHienThi = document.getElementById('vung-hien-thi-tkb');
             
             if (typeof KET_NOI_MAY_CHU === 'undefined') {
-                vungHienThi.innerHTML = `<p style="color: red; text-align: center;">Hệ thống đang khởi tạo kết nối, vui lòng thử lại sau vài giây.</p>`;
+                alert("Hệ thống đang thiết lập kết nối, vui lòng thử lại sau vài giây.");
                 return;
             }
 
             vungLoading.style.display = 'block';
             vungHienThi.innerHTML = '';
 
+            // Gọi API lấy dữ liệu
             let ketQua = await KET_NOI_MAY_CHU.layDuLieu("LAY_DU_LIEU_TKB");
 
             vungLoading.style.display = 'none';
 
             if (ketQua.trangThai === "ThanhCong") {
-                vungHienThi.innerHTML = `<p style="color: green; text-align: center;">Trích xuất thành công ${ketQua.duLieu.length} bản ghi thời khóa biểu từ máy chủ.</p>`;
+                // Chuyển dữ liệu phẳng thành bảng ma trận
+                veBangMaTran(ketQua.duLieu);
             } else {
-                vungHienThi.innerHTML = `<p style="color: red; text-align: center;">Lỗi xử lý: ${ketQua.thongBao}</p>`;
+                vungHienThi.innerHTML = `<p style="color: red;">Lỗi xử lý: ${ketQua.thongBao}</p>`;
             }
+        }
+
+        // Hàm dựng khung ma trận HTML
+        function veBangMaTran(mangDuLieuPhang) {
+            // Danh sách các lớp mặc định (Sẽ mở rộng dựa trên dữ liệu thực tế)
+            const danhSachLop = ['1A', '1B', '1C', '2A', '2B', '2C'];
+            let vungHienThi = document.getElementById('vung-hien-thi-tkb');
+            
+            let chuoiHtml = `<table>
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="cot-co-dinh">Thứ</th>
+                        <th rowspan="2">Buổi</th>
+                        <th rowspan="2" style="background:#8a2be2; color:white;">Kiểm tra</th>
+                        <th rowspan="2">Tuần</th>
+                        <th rowspan="2">Tháng</th>
+                        <th rowspan="2">Năm học</th>
+                        <th rowspan="2">Tiết</th>`;
+            
+            // Render Header Lớp học (Chiếm 2 cột: Môn và N dạy)
+            danhSachLop.forEach(maLop => {
+                chuoiHtml += `<th colspan="2">${maLop}</th>`;
+            });
+            
+            chuoiHtml += `</tr><tr>`;
+            
+            // Render Header Phụ (Môn / N dạy)
+            danhSachLop.forEach(() => {
+                chuoiHtml += `<th>Môn</th><th>N dạy</th>`;
+            });
+            chuoiHtml += `</tr></thead><tbody>`;
+
+            // Cấu trúc trục thời gian mẫu (Thứ 2)
+            const cauTrucTiet = [
+                { thu: 'Thứ 2', buoi: 'Sáng', tiet: 1, rowspan: 5 },
+                { thu: '', buoi: '', tiet: 2 },
+                { thu: '', buoi: '', tiet: 3 },
+                { thu: '', buoi: '', tiet: 4 },
+                { thu: '', buoi: '', tiet: 5 }
+            ];
+
+            // Render các dòng dữ liệu (Hiện tại là khung cứng, sẽ được map với dữ liệu API)
+            cauTrucTiet.forEach((dongTiet, chiSo) => {
+                chuoiHtml += `<tr>`;
+                
+                if (dongTiet.thu !== '') {
+                    chuoiHtml += `<td rowspan="${dongTiet.rowspan}" class="cot-co-dinh"><b>${dongTiet.thu}</b><br>25/05/2026</td>`;
+                    chuoiHtml += `<td rowspan="${dongTiet.rowspan}"><b>${dongTiet.buoi}</b></td>`;
+                }
+                
+                chuoiHtml += `<td style="background-color: #00ff00; font-weight: bold;">Đạt</td>`;
+                chuoiHtml += `<td>1</td><td>3</td><td>2026-2027</td><td>${dongTiet.tiet}</td>`;
+                
+                // Vòng lặp rải dữ liệu giả định cho các lớp (Sẽ thay bằng logic lọc mảng mangDuLieuPhang)
+                danhSachLop.forEach(maLop => {
+                    // Chèn logic nội suy dữ liệu tại đây dựa vào Thứ, Buổi, Tiết, Lớp
+                    chuoiHtml += `<td>HĐTNH</td><td>Bình</td>`;
+                });
+                
+                chuoiHtml += `</tr>`;
+            });
+
+            chuoiHtml += `</tbody></table>`;
+            vungHienThi.innerHTML = chuoiHtml;
         }
     </script>
 </body>
