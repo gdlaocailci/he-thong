@@ -347,7 +347,7 @@
   }
 
 // ====================================================================
-  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (CHỈ LẤY DỮ LIỆU ĐANG HIỂN THỊ) ---
+  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (ÉP KIỂU TEXT CHO TOÀN BẢNG) ---
   // ====================================================================
   function hks_xuatDuLieuExcel_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody');
@@ -370,7 +370,6 @@
                   if (hks_phanTuUI_el.type === 'checkbox') {
                       hks_dongMoi_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
                   } else {
-                      // Chủ động ép kiểu chuỗi (String) ngay từ lúc đọc dữ liệu trên giao diện
                       hks_dongMoi_arr.push(String(hks_phanTuUI_el.value));
                   }
               } else {
@@ -387,16 +386,30 @@
       let hks_tepXuat_obj = XLSX.utils.book_new();
       let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
       
-      // >>> BỔ SUNG ĐỒNG BỘ: Quét toàn bộ các ô trong tệp Excel và ép định dạng về dạng Văn bản (Text) <<<
-      for (let hks_tenO_str in hks_trangXuat_obj) {
-          // Bỏ qua các thuộc tính hệ thống mặc định của thư viện SheetJS (luôn bắt đầu bằng dấu chấm than !)
-          if (hks_tenO_str.startsWith('!')) continue; 
-          
-          if (hks_trangXuat_obj[hks_tenO_str]) {
-              // Thuộc tính 't' = 's' (Type = String): Xác định dữ liệu cốt lõi là Chuỗi
-              hks_trangXuat_obj[hks_tenO_str].t = 's'; 
-              // Thuộc tính 'z' = '@' (Format = Text): Yêu cầu Excel hiển thị ô dưới định dạng Text
-              hks_trangXuat_obj[hks_tenO_str].z = '@'; 
+      // >>> CẢI TIẾN: Mở rộng vùng dữ liệu và ép định dạng Text cho hàng loạt ô trống <<<
+      let hks_tongSoCot_num = hks_duLieuXuat_arr[0].length; // 20 cột
+      // Thiết lập tối thiểu 1000 dòng, hoặc thêm 500 dòng trống nếu danh sách hiện tại đã rất dài
+      let hks_tongSoDong_num = Math.max(hks_duLieuXuat_arr.length + 500, 1000); 
+
+      // Cập nhật lại phạm vi (Range) của trang tính cho SheetJS nhận diện
+      hks_trangXuat_obj['!ref'] = XLSX.utils.encode_range({s: {c: 0, r: 0}, e: {c: hks_tongSoCot_num - 1, r: hks_tongSoDong_num - 1}});
+
+      // Quét qua toàn bộ ma trận ô (kể cả ô trống) để ép kiểu Văn bản (@)
+      for (let r = 0; r < hks_tongSoDong_num; r++) {
+          for (let c = 0; c < hks_tongSoCot_num; c++) {
+              let hks_diaChiO_str = XLSX.utils.encode_cell({c: c, r: r});
+              
+              if (!hks_trangXuat_obj[hks_diaChiO_str]) {
+                  // Khởi tạo ô trống với định dạng Text
+                  hks_trangXuat_obj[hks_diaChiO_str] = { t: 's', v: '', z: '@' };
+              } else {
+                  // Nếu ô đã có dữ liệu, ép lại định dạng Text và chuyển giá trị thành String
+                  hks_trangXuat_obj[hks_diaChiO_str].t = 's';
+                  hks_trangXuat_obj[hks_diaChiO_str].z = '@';
+                  if (hks_trangXuat_obj[hks_diaChiO_str].v !== undefined) {
+                      hks_trangXuat_obj[hks_diaChiO_str].v = String(hks_trangXuat_obj[hks_diaChiO_str].v);
+                  }
+              }
           }
       }
 
