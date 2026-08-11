@@ -17,6 +17,7 @@
           <button class="btn btn-sm btn-success px-3" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
           <button class="btn btn-sm btn-secondary px-3 ms-1" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
           <button class="btn btn-sm btn-info px-3 ms-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
+          <button class="btn btn-sm btn-dark px-3 ms-1" id="btnChuyenTruong" onclick="hks_thucHienChuyenTruong_fn()"><i class="bi bi-box-arrow-right"></i> Chuyển trường</button>
         </span>
 
         <!-- Nhóm chức năng Excel (Hiển thị dựa theo phân quyền) -->
@@ -330,6 +331,76 @@
       });
   }
 
+// ====================================================================
+  // --- MODULE: THỰC THI GIAO DIỆN CHUYỂN TRƯỜNG ---
+  // ====================================================================
+  function hks_thucHienChuyenTruong_fn() {
+      const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
+      let hks_uuids_arr = [];
+      
+      // Quét các dòng đã được đánh dấu chỉnh sửa
+      for (let hks_theDong_el of hks_thanBang_el.rows) {
+          if (hks_theDong_el.classList.contains('hks-dong-da-sua')) {
+              let hks_uuid_str = hks_theDong_el.getAttribute('data-uuid') || "";
+              if (hks_uuid_str) hks_uuids_arr.push(hks_uuid_str);
+          }
+      }
+      
+      if(hks_uuids_arr.length === 0) { 
+          Swal.fire("Thông báo", "Vui lòng chỉnh sửa (hoặc thay đổi thông tin) ít nhất 1 học sinh để chọn chuyển trường!", "info"); 
+          return; 
+      }
+      
+      // Popup thu thập thông tin
+      Swal.fire({
+          title: 'THÔNG TIN CHUYỂN TRƯỜNG',
+          html:
+              '<label class="mt-2 text-start w-100" style="font-size:13px;">Ngày chuyển đi:</label>' +
+              '<input id="swal-input-ngay" class="swal2-input mt-1" type="date">' +
+              '<label class="mt-3 text-start w-100" style="font-size:13px;">Nơi chuyển đến (Trường, Tỉnh/Thành):</label>' +
+              '<input id="swal-input-noi" class="swal2-input mt-1" placeholder="Nhập tên trường chuyển đến...">',
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonColor: '#212529',
+          cancelButtonColor: '#dc3545',
+          confirmButtonText: '<i class="bi bi-send-check"></i> Xác nhận chuyển',
+          cancelButtonText: 'Hủy thao tác',
+          preConfirm: () => {
+              let ngay = document.getElementById('swal-input-ngay').value;
+              let noi = document.getElementById('swal-input-noi').value;
+              if (!ngay || !noi.trim()) {
+                  Swal.showValidationMessage('Vui lòng nhập đầy đủ ngày và nơi chuyển đến!');
+                  return false;
+              }
+              // Định dạng lại ngày theo chuẩn VN: dd/mm/yyyy
+              let parts = ngay.split('-');
+              let hks_ngayDinhDang_str = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : ngay;
+              return `Ngày chuyển: ${hks_ngayDinhDang_str} - Đến: ${noi.trim()}`;
+          }
+      }).then((result) => {
+          if (result.isConfirmed) {
+              hks_hienThiManHinhTai_fn(true);
+              
+              hks_thucThiGiaoTiep_fn('hks_chuyenTruongThucThe_api', {
+                  hks_uuids_arr: hks_uuids_arr, 
+                  hks_thongTinChuyen_str: result.value,
+                  hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
+              }).then(hks_ketQuaAPI_obj => { 
+                  if(hks_ketQuaAPI_obj.success === false) { 
+                      Swal.fire('Từ chối', hks_ketQuaAPI_obj.message, 'warning'); 
+                      hks_hienThiManHinhTai_fn(false); 
+                      return; 
+                  }
+                  hks_capNhatBoNhoDem_fn().then(() => { 
+                      Swal.fire("Kết quả", hks_ketQuaAPI_obj.message, "success"); 
+                      hks_khoiPhucTrangThaiGoc_fn(1); 
+                      hks_layDuLieuPhanMot_fn(); 
+                  });
+              }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
+          }
+      });
+  }
+  
   // ====================================================================
   // --- MODULE: KIỂM TRA QUYỀN VÀ HIỂN THỊ NÚT EXCEL ---
   // ====================================================================
