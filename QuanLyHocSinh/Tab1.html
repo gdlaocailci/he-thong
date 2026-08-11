@@ -346,7 +346,7 @@
       if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
   }
 
-  // ====================================================================
+// ====================================================================
   // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (CHỈ LẤY DỮ LIỆU ĐANG HIỂN THỊ) ---
   // ====================================================================
   function hks_xuatDuLieuExcel_fn() {
@@ -370,7 +370,8 @@
                   if (hks_phanTuUI_el.type === 'checkbox') {
                       hks_dongMoi_arr.push(hks_phanTuUI_el.checked ? 'x' : ''); 
                   } else {
-                      hks_dongMoi_arr.push(hks_phanTuUI_el.value);
+                      // Chủ động ép kiểu chuỗi (String) ngay từ lúc đọc dữ liệu trên giao diện
+                      hks_dongMoi_arr.push(String(hks_phanTuUI_el.value));
                   }
               } else {
                   hks_dongMoi_arr.push("");
@@ -385,6 +386,20 @@
 
       let hks_tepXuat_obj = XLSX.utils.book_new();
       let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
+      
+      // >>> BỔ SUNG ĐỒNG BỘ: Quét toàn bộ các ô trong tệp Excel và ép định dạng về dạng Văn bản (Text) <<<
+      for (let hks_tenO_str in hks_trangXuat_obj) {
+          // Bỏ qua các thuộc tính hệ thống mặc định của thư viện SheetJS (luôn bắt đầu bằng dấu chấm than !)
+          if (hks_tenO_str.startsWith('!')) continue; 
+          
+          if (hks_trangXuat_obj[hks_tenO_str]) {
+              // Thuộc tính 't' = 's' (Type = String): Xác định dữ liệu cốt lõi là Chuỗi
+              hks_trangXuat_obj[hks_tenO_str].t = 's'; 
+              // Thuộc tính 'z' = '@' (Format = Text): Yêu cầu Excel hiển thị ô dưới định dạng Text
+              hks_trangXuat_obj[hks_tenO_str].z = '@'; 
+          }
+      }
+
       XLSX.utils.book_append_sheet(hks_tepXuat_obj, hks_trangXuat_obj, "DanhSachHocSinh");
       
       let hks_tenNam_str = document.getElementById('t1_nam').value || "All";
