@@ -1,36 +1,30 @@
 <!--
  * Tệp: KetNoi.html
- * Vị trí: Lưu trữ trên GitHub (Frontend)
- * Chức năng: Quản lý liên kết API và hàm giao tiếp với máy chủ Google
- * Hướng dẫn: Nhúng tệp này vào cuối thẻ <body> của file Index.html
+ * Chức năng: Thư viện kết nối API
+ * ---------------------------------------------------------
+ * Thiết kế và phát triển
+ * Hoàng Ngọc Lâm
 -->
-
 <script>
     const KET_NOI_MAY_CHU = {
-        // Thầy dán URL Web App của Google Apps Script vào biến này
+        // Thầy dán URL Web App (Deploy) của Apps Script vào đây
         duongDanAPI: "https://script.google.com/macros/s/AKfycbz1IOFWbcOTfgPmnaSeD2uU0i7UWWsUSW3pHja87WzT3GOhtwsJz7YyNdY2eOHGU33s/exec", 
         
-        // Khóa định danh gửi kèm gói tin để máy chủ xác thực
         maDinhDanh: "TH_HOP_THANH_2025_2026",
 
-        // Khối 1: Hàm tạo gói dữ liệu chuẩn văn bản để tránh lỗi CORS
         khoiTaoGoiDuLieu: function(lenhThucThi, thongTinBoSung = {}) {
             let duLieuGoi = {
                 maDinhDanh: this.maDinhDanh,
                 lenh: lenhThucThi,
                 duLieu: thongTinBoSung
             };
-
             return {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(duLieuGoi)
             };
         },
 
-        // Khối 2: Hàm gửi yêu cầu lấy dữ liệu đa năng
         layDuLieu: async function(lenhYeuCau) {
             try {
                 let phanHoi = await fetch(this.duongDanAPI, this.khoiTaoGoiDuLieu(lenhYeuCau));
@@ -38,7 +32,7 @@
                 return ketQua;
             } catch (loiHeThong) {
                 console.error("Lỗi giao tiếp máy chủ:", loiHeThong);
-                return { trangThai: "Loi", thongBao: "Mất kết nối đến hệ thống dữ liệu trung tâm." };
+                return { trangThai: "Loi", thongBao: "Mất kết nối đến hệ thống dữ liệu." };
             }
         }
     };
