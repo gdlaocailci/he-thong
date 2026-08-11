@@ -1,28 +1,25 @@
 <div class="tab-pane fade show active" id="tab1">
   <div class="text-center"><h4>QUẢN LÝ THÔNG TIN HỌC SINH</h4></div>
   <div class="filter-box">
-<div class="row g-2 align-items-end">
+    <div class="row g-2 align-items-end">
       <div class="col-md-1"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
       <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
       <div class="col-md-2"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
       <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
-      
-      <!-- Đã thu hẹp ô Tên từ col-md-2 xuống col-md-1 -->
       <div class="col-md-1"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
       
-      <!-- Đã mở rộng khu vực chứa nút bấm từ col-md-4 lên col-md-5 để có thêm không gian -->
       <div class="col-md-5 d-flex flex-wrap justify-content-end align-items-center gap-2">
         <button class="btn btn-sm btn-danger fw-bold px-3" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
         <button class="btn btn-sm btn-warning fw-bold px-3" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
         <button class="btn btn-sm btn-primary px-3" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
         
-        <span id="groupEdit1" class="edit-mode-btn">
+        <span id="groupEdit1" class="edit-mode-btn" style="display:none;">
           <button class="btn btn-sm btn-success px-3" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
           <button class="btn btn-sm btn-secondary px-3 ms-1" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
           <button class="btn btn-sm btn-info px-3 ms-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
         </span>
 
-        <!-- Nhóm nút Excel -->
+        <!-- Nhóm chức năng Excel (Hiển thị dựa theo phân quyền) -->
         <button class="btn btn-sm btn-success fw-bold px-3" id="btnExportExcel" onclick="hks_xuatDuLieuExcel_fn()" style="display:none">
           <i class="bi bi-file-earmark-excel"></i> Tải Excel
         </button>
@@ -32,6 +29,7 @@
         <input type="file" id="fileImportExcel" accept=".xlsx, .xls" style="display:none" onchange="hks_nhapDuLieuExcel_fn(event)">
       </div>
     </div>
+  </div>
   
   <div class="table-container">
     <table class="table table-bordered table-striped table-hover table-sm mb-0" id="bang1">
@@ -51,6 +49,9 @@
 </div>
 
 <script>
+  // ====================================================================
+  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 ---
+  // ====================================================================
   function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
     let n = document.getElementById('t1_nam').value;
@@ -110,7 +111,6 @@
     const hks_thanBang_el = document.querySelector('#bang1 tbody');
     const hks_theDong_el = document.createElement('tr');
     
-    // Thu thập mã cá biệt (nếu có dữ liệu cũ tải xuống)
     let hks_uuid_str = hks_duLieuBang_arr ? (hks_duLieuBang_arr[53] || "") : "";
     hks_theDong_el.setAttribute('data-uuid', hks_uuid_str);
 
@@ -222,9 +222,7 @@
             } else hks_dongDuLieu_arr.push("");
           }
           
-          // Gắn thêm mã cá biệt vào cuối mảng (Index 53 tương ứng Cột BB)
           hks_dongDuLieu_arr[53] = hks_theDong_el.getAttribute('data-uuid') || "";
-          
           if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1] && hks_dongDuLieu_arr[3] && hks_dongDuLieu_arr[4]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
       }
     }
@@ -255,33 +253,21 @@
     });
   }
   
-  // --- TỐI ƯU HÓA: Dò tìm và tịnh tiến thông minh số Lớp học ---
   function hks_nhanBanLenLop_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
-      if (hks_thanBang_el.rows.length === 0) {
-          Swal.fire("Thông báo", "Chưa có dữ liệu học sinh nào hiển thị để lên lớp!", "info"); 
-          return;
-      }
+      if (hks_thanBang_el.rows.length === 0) { Swal.fire("Thông báo", "Chưa có dữ liệu học sinh nào hiển thị để lên lớp!", "info"); return; }
 
       let hks_namCu = document.getElementById('t1_nam').value || "";
       let hks_lopCu = document.getElementById('t1_lop').value || "";
 
-      if (!hks_namCu || !hks_lopCu) {
-          Swal.fire("Thông báo", "Vui lòng chọn cụ thể Năm học và Lớp trên bộ lọc để thực hiện nhân bản!", "warning");
-          return;
-      }
+      if (!hks_namCu || !hks_lopCu) { Swal.fire("Thông báo", "Vui lòng chọn cụ thể Năm học và Lớp trên bộ lọc để thực hiện nhân bản!", "warning"); return; }
 
       let hks_namMoi = hks_namCu;
       let namMatch = hks_namCu.match(/(\d{4})[-–_](\d{4})/);
       if (namMatch) hks_namMoi = (parseInt(namMatch[1], 10) + 1) + "-" + (parseInt(namMatch[2], 10) + 1);
 
       let hks_lopMoi = hks_lopCu;
-      if (hks_lopCu) {
-          // Bắt đúng số đầu tiên xuất hiện trong chuỗi (ví dụ: Lớp 1A -> Lớp 2A)
-          hks_lopMoi = hks_lopCu.replace(/\d+/, function(match) {
-              return parseInt(match, 10) + 1;
-          });
-      }
+      if (hks_lopCu) { hks_lopMoi = hks_lopCu.replace(/\d+/, function(match) { return parseInt(match, 10) + 1; }); }
 
       Swal.fire({
           title: 'Xác nhận Lên lớp',
@@ -290,12 +276,7 @@
                 `Năm học: <b class="text-danger">${hks_namCu}</b> <i class="bi bi-arrow-right"></i> <b class="text-success">${hks_namMoi}</b><br>` +
                 `Lớp học: <b class="text-danger">${hks_lopCu}</b> <i class="bi bi-arrow-right"></i> <b class="text-success">${hks_lopMoi}</b>` +
                 `</div>`,
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonColor: '#28a745',
-          cancelButtonColor: '#6c757d',
-          confirmButtonText: '<i class="bi bi-check-circle"></i> Đồng ý',
-          cancelButtonText: 'Hủy'
+          icon: 'question', showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#6c757d', confirmButtonText: '<i class="bi bi-check-circle"></i> Đồng ý', cancelButtonText: 'Hủy'
       }).then((result) => {
           if (result.isConfirmed) {
               let hks_duLieuCanLuu_arr = [];
@@ -308,23 +289,13 @@
                           else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
                       } else hks_dongDuLieu_arr.push("");
                   }
-                  
-                  // Áp dụng tịnh tiến
-                  hks_dongDuLieu_arr[0] = hks_namMoi;
-                  hks_dongDuLieu_arr[1] = hks_lopMoi;
-                  // Xóa UUID để cấp mã mới tại Server
-                  hks_dongDuLieu_arr[53] = ""; 
-                  
+                  hks_dongDuLieu_arr[0] = hks_namMoi; hks_dongDuLieu_arr[1] = hks_lopMoi; hks_dongDuLieu_arr[53] = ""; 
                   if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
               }
-              
               hks_hienThiManHinhTai_fn(true);
               hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeMot_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_cheDo_str: 'tao_moi', hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
                 if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Lỗi phân luồng!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
-                hks_capNhatBoNhoDem_fn().then(() => { 
-                    Swal.fire("Hoàn tất!", "Đã cập nhật lên lớp thành công! Vui lòng chọn lại Năm học và Lớp mới trên bộ lọc để xem kết quả.", "success"); 
-                    hks_layDuLieuPhanMot_fn(); 
-                });
+                hks_capNhatBoNhoDem_fn().then(() => { Swal.fire("Hoàn tất!", "Đã cập nhật lên lớp thành công! Vui lòng chọn lại Năm học và Lớp mới trên bộ lọc để xem kết quả.", "success"); hks_layDuLieuPhanMot_fn(); });
               }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
           }
       });
@@ -344,16 +315,13 @@
                     else hks_dongDuLieu_arr.push(hks_phanTuUI_el.value);
                   } else hks_dongDuLieu_arr.push("");
                 }
-                
                 hks_dongDuLieu_arr[53] = hks_theDong_el.getAttribute('data-uuid') || "";
-                
                 if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
             }
           }
           if(hks_duLieuCanLuu_arr.length === 0) { Swal.fire("Thông báo", "Vui lòng chỉnh sửa và đánh dấu ít nhất 1 học sinh để thao tác!", "info"); return; }
           
           hks_hienThiManHinhTai_fn(true);
-          
           hks_thucThiGiaoTiep_fn('hks_dieuChuyenThucThe_api', {hks_mangDuLieuDauVao_arr: hks_duLieuCanLuu_arr, hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId}).then(hks_ketQuaAPI_obj => { 
               if(hks_ketQuaAPI_obj.success === false) { Swal.fire('Từ chối', 'Mất kết nối máy chủ xác thực!', 'warning'); hks_hienThiManHinhTai_fn(false); return; }
               hks_capNhatBoNhoDem_fn().then(() => { let iconStr = hks_ketQuaAPI_obj.message.includes("thành công") ? "success" : "info"; Swal.fire("Kết quả", hks_ketQuaAPI_obj.message, iconStr); hks_khoiPhucTrangThaiGoc_fn(1); hks_layDuLieuPhanMot_fn(); });
@@ -378,13 +346,12 @@
       if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
   }
 
-// ====================================================================
-  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (CHỈ LẤY DỮ LIỆU ĐANG HIỂN THỊ TRÊN UI) ---
+  // ====================================================================
+  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (CHỈ LẤY DỮ LIỆU ĐANG HIỂN THỊ) ---
   // ====================================================================
   function hks_xuatDuLieuExcel_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody');
       
-      // Kiểm tra xem bảng có dữ liệu hiển thị hay không
       if (!hks_thanBang_el || hks_thanBang_el.rows.length === 0) {
           Swal.fire("Thông báo", "Không có dữ liệu trên giao diện để tải xuống!", "info");
           return;
@@ -394,11 +361,9 @@
           ["Năm học", "Lớp", "CCCD", "Họ đệm", "Tên", "Ngày sinh", "Nam/nữ", "Nơi ở (Thôn)", "Thường trú (Xã/tỉnh)", "Dân tộc", "Chính sách", "Khuyết tật", "Nghèo", "Cận nghèo", "BHYT", "Tên bố", "Tên mẹ", "SĐT", "Khẩu nơi khác", "UUID (Không sửa)"]
       ];
       
-      // Quét từng dòng (tr) đang hiển thị thực tế trên bảng
       for (let hks_theDong_el of hks_thanBang_el.rows) {
           let hks_dongMoi_arr = [];
           
-          // Bắt đầu từ cột 1 (bỏ qua cột 0 là cột STT/Nút xóa)
           for (let i = 1; i < hks_theDong_el.cells.length; i++) {
               let hks_phanTuUI_el = hks_theDong_el.cells[i].querySelector('.cell-input, input[type="checkbox"]');
               if (hks_phanTuUI_el) {
@@ -412,7 +377,6 @@
               }
           }
           
-          // Trích xuất mã cá biệt (UUID) được neo ẩn tại thuộc tính data-uuid của thẻ tr
           let hks_uuid_str = hks_theDong_el.getAttribute('data-uuid') || "";
           hks_dongMoi_arr.push(hks_uuid_str);
           
@@ -423,7 +387,6 @@
       let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
       XLSX.utils.book_append_sheet(hks_tepXuat_obj, hks_trangXuat_obj, "DanhSachHocSinh");
       
-      // Tối ưu tên file tải xuống theo bộ lọc Năm học và Lớp hiện tại trên UI
       let hks_tenNam_str = document.getElementById('t1_nam').value || "All";
       let hks_tenLop_str = document.getElementById('t1_lop').value || "All";
       let hks_tenFile_str = "HocSinh_" + hks_tenNam_str + "_" + hks_tenLop_str + "_" + new Date().getTime() + ".xlsx";
