@@ -16,23 +16,30 @@
  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <script>
-    async function goiMyChuHien(tenLenh, tLieu = {}) {
-        tLieu.lenh = tenLenh;
-        try {
-            const ph = await fetch((typeof QLNS_CONFIG_GAS_URL !== 'undefined' ? QLNS_CONFIG_GAS_URL : ""), {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8",
-                },
-                body: JSON.stringify(tLieu)
-            });
-            return await ph.json();
-        } catch (loi) {
-            console.error("Lỗi Fetch API:", loi);
-            throw new Error("Lỗi kết nối mạng. Vui lòng kiểm tra lại!");
-        }
-    }
-  </script>
+  // [Bản nâng cấp] Tích hợp cơ chế Retry xử lý triệt để lỗi Session Timeout
+  async function goiMyChuHien(tenLenh, tLieu = {}, soLanThu = 3) {
+      tLieu.lenh = tenLenh;
+      for (let i = 0; i < soLanThu; i++) {
+          try {
+              const ph = await fetch((typeof QLNS_CONFIG_GAS_URL !== 'undefined' ? QLNS_CONFIG_GAS_URL : ""), {
+                  method: 'POST',
+                  headers: {
+                      "Content-Type": "text/plain;charset=utf-8",
+                  },
+                  body: JSON.stringify(tLieu)
+              });
+              return await ph.json();
+          } catch (loi) {
+              console.warn(`Lần thử ${i + 1} thất bại (Session timeout):`, loi);
+              if (i === soLanThu - 1) {
+                  throw new Error("Lỗi kết nối mạng do quá hạn phiên làm việc. Vui lòng tải lại trang!");
+              }
+              // Nghỉ 1.5 giây trước khi kết nối lại để máy chủ Google kịp hoàn tất Cold Start
+              await new Promise(resolve => setTimeout(resolve, 1500));
+          }
+      }
+  }
+</script>
 
   <style>
     :root { --mauChinh: #0d6efd; --nenDau: #f8f9fa; }
@@ -332,28 +339,28 @@ $(document).ready(() => {
         });
     });
 
-// --- BẮT ĐẦU ĐOẠN THAY THẾ: HÀM kiemTraTrangThaiDangNhap ---
 function kiemTraTrangThaiDangNhap() {
-    $("#vungTai").hide(); 
+    // Không hide() màn hình chờ vội, giữ nguyên để che lấp quá trình nạp dữ liệu
     let luuPt = sessionStorage.getItem("ngdungNs");
     if(luuPt) {
         ndHtai = JSON.parse(luuPt);
-        $("#manhDn").hide(); $("#udChinh").show();
+        $("#manhDn").hide(); 
+        $("#udChinh").show();
         $("#hthiNd").text(ndHtai.tenn); 
         
-        // XÉT NHÃN QUYỀN
         let tenVt = 'Chỉ xem';
         if (ndHtai.vTro === 'qtriv') tenVt = 'Quản trị cao cấp';
         else if (ndHtai.vTro === 'admin_xx') tenVt = 'Cập nhật chung';
         else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
         
         $("#nhanVt").text(tenVt);
-        
-        // Áp dụng cấu hình phân quyền hiển thị tabs mới
         apDungPhanQuyenTabs();
 
+        // Tiến hành tải dữ liệu (hàm tải xong mới tắt màn hình chờ)
         taiDlBdau();
     } else {
+        // Chỉ tắt màn hình chờ khi thực sự chưa đăng nhập để hiện Form Login
+        $("#vungTai").hide(); 
         $("#manhDn").css("display", "flex"); 
     }
 }
@@ -414,11 +421,13 @@ function khiDnTc(pq) {
   else if (ndHtai.vTro === 'ngdung') tenVt = 'Cập nhật cá nhân';
   
   $("#nhanVt").text(tenVt);
-  
-  // Áp dụng cấu hình phân quyền hiển thị tabs mới
   apDungPhanQuyenTabs();
 
-  $("#manhDn").hide(); $("#udChinh").show(); taiDlBdau();
+  $("#manhDn").hide(); 
+  $("#udChinh").show(); 
+  
+  // Vẫn duy trì màn hình chờ để chuyển tiếp sang giai đoạn lấy dữ liệu lớn
+  taiDlBdau();
 }
 // --- KẾT THÚC ĐOẠN THAY THẾ ---
     
