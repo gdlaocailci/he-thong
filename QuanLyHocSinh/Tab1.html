@@ -50,10 +50,7 @@
 </div>
 
 <script>
-  // ====================================================================
-  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 ---
-  // ====================================================================
-  function hks_layDuLieuPhanMot_fn() {
+function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
     let n = document.getElementById('t1_nam').value;
     let l = document.getElementById('t1_lop').value;
@@ -73,11 +70,12 @@
     
     setTimeout(() => {
         let kq = hks_khoDuLieuTong_arr.filter(r => {
-            let matchNam = n ? String(r[0]) == n : true;
-            let matchLop = l ? String(r[1]) == l : true;
-            let matchC = c ? String(r[2]).toLowerCase().includes(c) : true;
-            let matchH = h ? String(r[3]).toLowerCase().includes(h) : true;
-            let matchT = t ? String(r[4]).toLowerCase().includes(t) : true;
+            // >>> ĐIỂM KHẮC PHỤC: Sử dụng .trim() để gọt sạch khoảng trắng ẩn từ Excel <<<
+            let matchNam = n ? String(r[0]).trim() === String(n).trim() : true;
+            let matchLop = l ? String(r[1]).trim() === String(l).trim() : true;
+            let matchC = c ? String(r[2]).trim().toLowerCase().includes(c) : true;
+            let matchH = h ? String(r[3]).trim().toLowerCase().includes(h) : true;
+            let matchT = t ? String(r[4]).trim().toLowerCase().includes(t) : true;
             return matchNam && matchLop && matchC && matchH && matchT;
         });
         hks_veBangPhanMot_fn(kq);
