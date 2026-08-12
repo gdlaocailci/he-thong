@@ -409,14 +409,33 @@ function veGhimModal(lk) {
 function cnNhieuDg() {
    const dc = dlToanc.filter(r => r.cktdg);
    if(dc.length===0) return hienTbao("Không có dữ liệu đánh giá mới!", 'loi');
+   
    $("#vungTai").show();
    
-   // Nâng cấp: Tích hợp fallback bảo mật Mã cá biệt đồng bộ với phân hệ Thông tin
+   // Đồng bộ fallback bảo mật mã cá biệt
    let sendMCB = ndHtai.mcb ? ndHtai.mcb : (ndHtai.cccd ? ndHtai.cccd : "");
    
    goiMyChuHien('luuNhieuDgia', {mangDl: dc, vTro: ndHtai.vTro, mcb: sendMCB})
-     .then(g => { hienTbao(g.tBao, g.tCong ? 'tc' : 'loi'); if(g.tCong) taiDlBdau(); else $("#vungTai").hide(); })
-     .catch(le => { hienTbao("Lỗi hệ thống: " + le, 'loi'); $("#vungTai").hide(); }); // Ép kiểu chuỗi an toàn
+     .then(g => { 
+         hienTbao(g.tBao, g.tCong ? 'tc' : 'loi'); 
+         
+         if(g.tCong) {
+             // GIẢI QUYẾT ĐIỂM NGHẼN: Xóa cờ bút (cktdg) trực tiếp trên Frontend
+             dc.forEach(r => delete r.cktdg);
+             
+             // Vẽ lại bảng ngay lập tức (cờ bút sẽ tự động biến mất)
+             veBangDg(); 
+             
+             // Tắt màn hình mờ và vòng quay chờ ngay và luôn
+             $("#vungTai").hide(); 
+         } else {
+             $("#vungTai").hide();
+         }
+     })
+     .catch(le => { 
+         hienTbao("Lỗi hệ thống: " + le, 'loi'); 
+         $("#vungTai").hide(); 
+     });
 }
 
     let urlTepXemTruocHienTai = ""; 
