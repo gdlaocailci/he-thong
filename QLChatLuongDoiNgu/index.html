@@ -183,6 +183,7 @@
   <li class="nav-item" id="tabThongTin"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#muc1" onclick="datTde('THÔNG TIN NHÂN SỰ')">Thông tin nhân sự</button></li>
   <li class="nav-item" id="tabDanhGia"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc2" onclick="datTde('KẾT QUẢ ĐÁNH GIÁ')">Kết quả đánh giá</button></li>
   <li class="nav-item" id="tabTongHop"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc3" onclick="datTde('THỐNG KÊ - TỔNG HỢP')">Tổng hợp</button></li>
+  <li class="nav-item" id="tabChuyenCongTac"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc5" onclick="datTde('HỒ SƠ CHUYỂN CÔNG TÁC')">Chuyển công tác</button></li>
   <li class="nav-item" id="tabPhanQuyen" style="display:none;"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc4" onclick="datTde('PHÂN QUYỀN'); taiDsPhanQuyen();">Phân quyền</button></li>
   
   <li class="nav-item ms-auto d-flex align-items-center mb-1">
@@ -443,13 +444,16 @@ function dxuat() {
     mangDuLieuTam = null;
     window.dangKhoaHeThong = false;
     
+    // Dọn dẹp sạch sẽ các bảng dữ liệu
     $("#khuBangNs tbody").empty();
     $("#khuBangDg tbody").empty();
+    $("#khuBangChuyen tbody").empty(); // Bổ sung dọn dẹp bảng chuyển công tác
     
     // Khôi phục hiển thị trạng thái mặc định của các tabs khi đăng xuất
     $("#tabThongTin").show();
     $("#tabDanhGia").show();
     $("#tabTongHop").show();
+    $("#tabChuyenCongTac").show(); // Khôi phục hiển thị
     $("#tabPhanQuyen").hide();
     
     $("#bangChonGoc button[data-bs-target='#muc1']").click();
@@ -524,6 +528,7 @@ function apDungPhanQuyenTabs() {
       $("#tabThongTin").hide();
       $("#tabDanhGia").hide();
       $("#tabTongHop").hide();
+      $("#tabChuyenCongTac").hide();
       $("#tabPhanQuyen").show();
       
       // Tự động kích hoạt tab Phân quyền và tải danh sách tài khoản liên quan
@@ -533,6 +538,7 @@ function apDungPhanQuyenTabs() {
       $("#tabThongTin").show();
       $("#tabDanhGia").show();
       $("#tabTongHop").show();
+      $("#tabChuyenCongTac").show();
       $("#tabPhanQuyen").hide();
       
       // Tự động kích hoạt tab Thông tin nhân sự làm mặc định
