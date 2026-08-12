@@ -176,6 +176,7 @@
   <li class="nav-item" id="tabThongTin"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#muc1" onclick="datTde('THÔNG TIN NHÂN SỰ')">Thông tin nhân sự</button></li>
   <li class="nav-item" id="tabDanhGia"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc2" onclick="datTde('KẾT QUẢ ĐÁNH GIÁ')">Kết quả đánh giá</button></li>
   <li class="nav-item" id="tabTongHop"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc3" onclick="datTde('THỐNG KÊ - TỔNG HỢP')">Tổng hợp</button></li>
+  <li class="nav-item" id="tabChuyenCongTac"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc5" onclick="datTde('HỒ SƠ CHUYỂN CÔNG TÁC'); taiDsChuyen();">Chuyển công tác</button></li>
   <li class="nav-item" id="tabPhanQuyen" style="display:none;"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#muc4" onclick="datTde('PHÂN QUYỀN'); taiDsPhanQuyen();">Phân quyền</button></li>
   
   <li class="nav-item ms-auto d-flex align-items-center mb-1">
@@ -441,6 +442,7 @@ function dxuat() {
     $("#tabThongTin").show();
     $("#tabDanhGia").show();
     $("#tabTongHop").show();
+    $("#tabChuyenCongTac").show(); // Hiển thị lại tab mới
     $("#tabPhanQuyen").hide();
     
     $("#bangChonGoc button[data-bs-target='#muc1']").click();
@@ -511,22 +513,20 @@ function apDungPhanQuyenTabs() {
   if (!ndHtai) return;
   
   if (ndHtai.vTro === 'qtriv') {
-      // Đối với tài khoản Quản trị cao cấp (xxx), ẩn toàn diện các tab khác, chỉ hiển thị duy nhất tab Phân quyền
       $("#tabThongTin").hide();
       $("#tabDanhGia").hide();
       $("#tabTongHop").hide();
+      $("#tabChuyenCongTac").hide(); // Ẩn tab đối với Admin Quản trị cao cấp
       $("#tabPhanQuyen").show();
       
-      // Tự động kích hoạt tab Phân quyền và tải danh sách tài khoản liên quan
       $("#bangChonGoc button[data-bs-target='#muc4']").click();
   } else {
-      // Đối với các tài khoản còn lại, hiển thị đầy đủ các phân hệ nghiệp vụ, ẩn tab Phân quyền
       $("#tabThongTin").show();
       $("#tabDanhGia").show();
       $("#tabTongHop").show();
+      $("#tabChuyenCongTac").show(); // Cho phép các tài khoản khác xem
       $("#tabPhanQuyen").hide();
       
-      // Tự động kích hoạt tab Thông tin nhân sự làm mặc định
       $("#bangChonGoc button[data-bs-target='#muc1']").click();
   }
 }
