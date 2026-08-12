@@ -50,16 +50,14 @@
 </div>
 
 <script>
-  // Hỗ trợ chuẩn hóa Tiếng Việt
-  function hks_boDauTiengViet_fn(hks_chuoiDauVao_str) {
-      if (!hks_chuoiDauVao_str) return "";
-      return String(hks_chuoiDauVao_str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+// Hàm bổ trợ: Xóa dấu Tiếng Việt để so sánh tìm kiếm
+  function hks_boDauTiengViet_fn(str) {
+      if (!str) return "";
+      return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  // Chuyển đổi thành hàm bất đồng bộ (async) để phục vụ cơ chế Fallback Server
-  async function hks_layDuLieuPhanMot_fn() {
+  function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
-    
     let n = document.getElementById('t1_nam').value.trim();
     let l = document.getElementById('t1_lop').value.trim();
     let c = document.getElementById('t1_cccd').value.trim().toLowerCase();
@@ -69,79 +67,35 @@
     let khoa = `${n}_${l}`;
     let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
     let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
-    
-    let btnEdit1 = document.getElementById('btnEdit1');
-    if (btnEdit1) btnEdit1.style.display = canEdit ? 'inline-block' : 'none';
+    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; else document.getElementById('btnEdit1').style.display = 'none';
 
     let btnLenLop = document.getElementById('btnLenLop');
     if (btnLenLop) btnLenLop.style.display = (isAll && n !== "" && l !== "") ? 'inline-block' : 'none';
 
     hks_khoiPhucTrangThaiGoc_fn(1);
     
-    // BƯỚC 1: ƯU TIÊN LỌC TRÊN BỘ NHỚ RAM (hks_khoDuLieuTong_arr)
-    let hks_ketQuaTam_arr = (hks_khoDuLieuTong_arr || []).filter(r => {
-        if (!r || r.length < 5 || (!r[0] && !r[1] && !r[4])) return false;
+    setTimeout(() => {
+        let kq = hks_khoDuLieuTong_arr.filter(r => {
+            // Loại trừ dòng dữ liệu rỗng
+            if (!r || r.length < 5 || (!r[0] && !r[1] && !r[4])) return false;
 
-        let matchNam = n ? String(r[0] || "").replace(/\s/g, '') === n.replace(/\s/g, '') : true;
-        let matchLop = l ? String(r[1] || "").replace(/\s/g, '') === l.replace(/\s/g, '') : true;
-        let matchC = c ? String(r[2] || "").toLowerCase().includes(c) : true;
-        
-        let valH = hks_boDauTiengViet_fn(r[3]);
-        let searchH = hks_boDauTiengViet_fn(h);
-        let matchH = searchH ? valH.includes(searchH) : true;
-        
-        let valT = hks_boDauTiengViet_fn(r[4]);
-        let searchT = hks_boDauTiengViet_fn(t);
-        let matchT = searchT ? valT.includes(searchT) : true;
-        
-        return matchNam && matchLop && matchC && matchH && matchT;
-    });
-
-    // BƯỚC 2: TIẾP SỨC BẰNG MÁY CHỦ NẾU RAM RỖNG
-    if (hks_ketQuaTam_arr.length === 0) {
-        try {
-            // Đóng gói tham số tiêu chuẩn để gọi hàm hks_truyXuatThucThe_fn trên máy chủ
-            let hks_boLocTieuChuan_obj = {
-                hks_chuKyHoatDong_str: n,
-                hks_phomPhanLoai_str: l,
-                hks_truongDinhTuyen_str: c,
-                hks_truongPhuTro_str: h,
-                hks_truongGiaTri_str: t
-            };
+            let matchNam = n ? String(r[0] || "").trim() === n : true;
+            let matchLop = l ? String(r[1] || "").trim() === l : true;
+            let matchC = c ? String(r[2] || "").toLowerCase().includes(c) : true;
             
-            let hks_phanHoi_obj = await hks_thucThiGiaoTiep_fn('hks_truyXuatThucThe_api', {
-                hks_boLocTieuChuan_obj: hks_boLocTieuChuan_obj,
-                hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
-            });
+            // Tìm kiếm không phân biệt dấu Tiếng Việt
+            let valH = hks_boDauTiengViet_fn(r[3]);
+            let searchH = hks_boDauTiengViet_fn(h);
+            let matchH = searchH ? valH.includes(searchH) : true;
 
-            if (hks_phanHoi_obj && hks_phanHoi_obj.success) {
-                hks_ketQuaTam_arr = hks_phanHoi_obj.data || [];
-                
-                // Đồng bộ ngược dữ liệu mới tải về vào RAM để dùng cho lần sau (tránh trùng UUID cột 54 - index 53)
-                if (hks_ketQuaTam_arr.length > 0) {
-                    let hks_uuidDaCo_set = new Set(hks_khoDuLieuTong_arr.map(r => r[53]));
-                    hks_ketQuaTam_arr.forEach(dong => {
-                        if (!hks_uuidDaCo_set.has(dong[53])) {
-                            hks_khoDuLieuTong_arr.push(dong);
-                        }
-                    });
-                }
-            }
-        } catch (e) {
-            console.error("Sự cố truy vấn máy chủ:", e);
-        }
-    }
-
-    // BƯỚC 3: KẾT XUẤT RA BẢNG GIAO DIỆN
-    hks_veBangPhanMot_fn(hks_ketQuaTam_arr);
-    
-    if (hks_ketQuaTam_arr.length === 0) {
-        Swal.fire({
-            toast: true, position: 'top-end', icon: 'info',
-            title: 'Không tìm thấy dữ liệu trên RAM lẫn Máy chủ!',
-            showConfirmButton: false, timer: 3000
+            let valT = hks_boDauTiengViet_fn(r[4]);
+            let searchT = hks_boDauTiengViet_fn(t);
+            let matchT = searchT ? valT.includes(searchT) : true;
+            
+            return matchNam && matchLop && matchC && matchH && matchT;
         });
-    }
+        hks_veBangPhanMot_fn(kq);
+    }, 10);
   }
 
   function hks_veBangPhanMot_fn(hks_duLieuBang_arr) {
