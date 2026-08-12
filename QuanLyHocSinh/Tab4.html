@@ -132,4 +132,66 @@
             if (hks_oNhapNamHoc_el) hks_oNhapNamHoc_el.focus();
         }, 100);
     }
+
+     // ====================================================================
+    // --- MODULE: GHI NHẬN CẤU HÌNH PHÂN HỆ 4 (ĐỒNG BỘ CHUẨN) ---
+    // ====================================================================
+    function hks_luuCauHinhPhanBon_fn() {
+        Swal.fire({
+            title: "Xác nhận lưu cấu hình?",
+            text: "Hệ thống sẽ tái cấu trúc ma trận phân quyền và thiết lập lại toàn bộ danh mục!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#003366",
+            cancelButtonColor: "#dc3545",
+            confirmButtonText: "Đồng ý ghi nhận",
+            cancelButtonText: "Hủy bỏ"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (typeof hks_hienThiManHinhTai_fn === 'function') hks_hienThiManHinhTai_fn(true);
+                
+                // 1. Thu thập ma trận phân quyền
+                let hks_mangPhanQuyen_arr = [];
+                document.querySelectorAll('#tbodyPhanQuyen tr').forEach(tr => {
+                    let namHoc = tr.querySelector('.hks-nam-hoc') ? tr.querySelector('.hks-nam-hoc').value.trim() : '';
+                    let lop = tr.querySelector('.hks-lop') ? tr.querySelector('.hks-lop').value.trim() : '';
+                    let kichHoat = tr.querySelector('.hks-kich-hoat') && tr.querySelector('.hks-kich-hoat').checked ? 'x' : '';
+                    let dinhDanh = tr.querySelector('.hks-dinh-danh') ? tr.querySelector('.hks-dinh-danh').value.trim() : '';
+                    
+                    if (namHoc || lop || dinhDanh) {
+                        hks_mangPhanQuyen_arr.push({ namHoc, lop, kichHoat, dinhDanh });
+                    }
+                });
+                
+                // 2. Đóng gói tham số cấu hình
+                let hks_goiCauHinh_obj = {
+                    hks_danToc_str: document.getElementById('t4_danToc') ? document.getElementById('t4_danToc').value.trim() : "",
+                    hks_xepLoai_str: document.getElementById('t4_xepLoai') ? document.getElementById('t4_xepLoai').value.trim() : "",
+                    hks_capThanhTich_str: document.getElementById('t4_capThanhTich') ? document.getElementById('t4_capThanhTich').value.trim() : "",
+                    hks_toanQuyen_str: document.getElementById('t4_toanQuyen') ? document.getElementById('t4_toanQuyen').value.trim() : "",
+                    hks_danhSachPhanQuyen_arr: hks_mangPhanQuyen_arr
+                };
+                
+                // 3. Truyền tải qua API chuẩn của hệ thống
+                hks_thucThiGiaoTiep_fn('hks_ghiNhanPhanHeBon_api', {
+                    hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId,
+                    hks_goiCauHinh_obj: hks_goiCauHinh_obj
+                }).then(res => {
+                    if (typeof hks_hienThiManHinhTai_fn === 'function') hks_hienThiManHinhTai_fn(false);
+                    if (res.success) {
+                        Swal.fire("Thành công", res.message, "success").then(() => {
+                            sessionStorage.removeItem("sys_config_hs");
+                            location.reload(); // Tải lại để nạp cấu hình mới
+                        });
+                    } else {
+                        Swal.fire("Lỗi phân quyền", res.message, "error");
+                    }
+                }).catch(e => {
+                    if (typeof hks_hienThiManHinhTai_fn === 'function') hks_hienThiManHinhTai_fn(false);
+                    Swal.fire("Sự cố", "Lỗi kết nối Server! Vui lòng kiểm tra lại đường truyền.", "warning");
+                });
+            }
+        });
+    }
+</script>
 </script>
