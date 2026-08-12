@@ -471,18 +471,34 @@ function thucThiLuuBmNs(nB, isChuyenNamMoi) {
        $("#hopThoaiHs").modal('hide'); veBangNs();
     }
     
-    function cnNhieuNs() {
-       const dtN = dlToanc.filter(r => r.ckt);
-       if(dtN.length===0) return hienTbao("Không có dữ liệu mới!", 'loi');
-       $("#vungTai").show();
-       
-       // Fallback an toàn phòng khi cache chưa cập nhật
-       let sendMCB = ndHtai.mcb ? ndHtai.mcb : (ndHtai.cccd ? ndHtai.cccd : "");
-       
-       goiMyChuHien('luuNhieuNsu', {mangDl: dtN, vTro: ndHtai.vTro, mcb: sendMCB})
-         .then(h => { hienTbao(h.tBao, h.tCong ? 'tc' : 'loi'); if(h.tCong) taiDlBdau(); else $("#vungTai").hide(); })
-         .catch(lo => { hienTbao("Lỗi: " + lo, 'loi'); $("#vungTai").hide(); });
-    }
+ function cnNhieuNs() {
+   const dtN = dlToanc.filter(r => r.ckt);
+   if(dtN.length===0) return hienTbao("Không có dữ liệu mới!", 'loi');
+   
+   $("#vungTai").show();
+   
+   let sendMCB = ndHtai.mcb ? ndHtai.mcb : (ndHtai.cccd ? ndHtai.cccd : "");
+   
+   goiMyChuHien('luuNhieuNsu', {mangDl: dtN, vTro: ndHtai.vTro, mcb: sendMCB})
+     .then(h => { 
+         hienTbao(h.tBao, h.tCong ? 'tc' : 'loi'); 
+         
+         if(h.tCong) {
+             // Xóa cờ bút cập nhật (ckt) nội bộ
+             dtN.forEach(r => delete r.ckt);
+             
+             // Render lại bảng và tắt màn hình mờ
+             veBangNs();
+             $("#vungTai").hide();
+         } else {
+             $("#vungTai").hide(); 
+         }
+     })
+     .catch(lo => { 
+         hienTbao("Lỗi: " + lo, 'loi'); 
+         $("#vungTai").hide(); 
+     });
+}
 
   // BẮT ĐẦU ĐOẠN THÊM MỚI: LOGIC CHUYỂN NĂM HỌC ĐỒNG LOẠT
 let dsNsuChuyenNam = [];
