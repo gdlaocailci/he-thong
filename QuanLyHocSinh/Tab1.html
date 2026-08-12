@@ -51,68 +51,35 @@
 
 <script>
   // ====================================================================
-  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 (ĐÃ CHUẨN HÓA TOÀN DIỆN) ---
+  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 ---
   // ====================================================================
-  async function hks_layDuLieuPhanMot_fn() {
+  function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
-    
-    // 1. Kích hoạt tải dữ liệu nếu kho đệm đang rỗng
-    if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
-        try {
-            let hks_res_obj = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
-            if (hks_res_obj && hks_res_obj.success) {
-                hks_khoDuLieuTong_arr = hks_res_obj.data || [];
-            }
-        } catch(e) { console.error("Lỗi lấy dữ liệu cục bộ: ", e); }
-    }
+    let n = document.getElementById('t1_nam').value;
+    let l = document.getElementById('t1_lop').value;
+    let c = document.getElementById('t1_cccd').value.trim().toLowerCase();
+    let h = document.getElementById('t1_hodem').value.trim().toLowerCase();
+    let t = document.getElementById('t1_ten').value.trim().toLowerCase();
 
-    // 2. Thu thập và làm sạch giá trị đầu vào
-    let n = document.getElementById('t1_nam').value || "";
-    let l = document.getElementById('t1_lop').value || "";
-    let c = document.getElementById('t1_cccd').value || "";
-    let h = document.getElementById('t1_hodem').value || "";
-    let t = document.getElementById('t1_ten').value || "";
-
-    n = String(n).trim().toLowerCase();
-    l = String(l).trim().toLowerCase();
-    c = String(c).trim().toLowerCase();
-    h = String(h).trim().toLowerCase();
-    t = String(t).trim().toLowerCase();
-
-    // 3. Xử lý quyền an toàn (Loại bỏ toán tử ?. gây lỗi)
-    let tapQuyen = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr || [];
-    let khoa = n + "_" + l;
-    let isAll = tapQuyen.includes('ALL');
-    let canEdit = isAll || tapQuyen.includes(khoa);
-    
-    let btnEdit1 = document.getElementById('btnEdit1');
-    if (btnEdit1) btnEdit1.style.display = canEdit ? 'inline-block' : 'none';
+    let khoa = `${n}_${l}`;
+    let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
+    let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
+    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; else document.getElementById('btnEdit1').style.display = 'none';
 
     let btnLenLop = document.getElementById('btnLenLop');
     if (btnLenLop) btnLenLop.style.display = (isAll && n !== "" && l !== "") ? 'inline-block' : 'none';
 
     hks_khoiPhucTrangThaiGoc_fn(1);
     
-    // 4. Lọc dữ liệu tuyệt đối an toàn
     setTimeout(() => {
-        let kq = (hks_khoDuLieuTong_arr || []).filter(function(r) {
-            if (!r) return false;
-            
-            let valN = r[0] ? String(r[0]).trim().toLowerCase() : "";
-            let valL = r[1] ? String(r[1]).trim().toLowerCase() : "";
-            let valC = r[2] ? String(r[2]).trim().toLowerCase() : "";
-            let valH = r[3] ? String(r[3]).trim().toLowerCase() : "";
-            let valT = r[4] ? String(r[4]).trim().toLowerCase() : "";
-
-            let matchNam = (n === "") ? true : (valN === n);
-            let matchLop = (l === "") ? true : (valL === l);
-            let matchC = (c === "") ? true : valC.includes(c);
-            let matchH = (h === "") ? true : valH.includes(h);
-            let matchT = (t === "") ? true : valT.includes(t);
-
+        let kq = hks_khoDuLieuTong_arr.filter(r => {
+            let matchNam = n ? String(r[0]) == n : true;
+            let matchLop = l ? String(r[1]) == l : true;
+            let matchC = c ? String(r[2]).toLowerCase().includes(c) : true;
+            let matchH = h ? String(r[3]).toLowerCase().includes(h) : true;
+            let matchT = t ? String(r[4]).toLowerCase().includes(t) : true;
             return matchNam && matchLop && matchC && matchH && matchT;
         });
-        
         hks_veBangPhanMot_fn(kq);
     }, 10);
   }
@@ -364,10 +331,14 @@
       });
   }
 
+// ====================================================================
+  // --- MODULE: THỰC THI GIAO DIỆN CHUYỂN TRƯỜNG ---
+  // ====================================================================
   function hks_thucHienChuyenTruong_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
       let hks_uuids_arr = [];
       
+      // Quét các dòng đã được đánh dấu chỉnh sửa
       for (let hks_theDong_el of hks_thanBang_el.rows) {
           if (hks_theDong_el.classList.contains('hks-dong-da-sua')) {
               let hks_uuid_str = hks_theDong_el.getAttribute('data-uuid') || "";
@@ -380,6 +351,7 @@
           return; 
       }
       
+      // Popup thu thập thông tin
       Swal.fire({
           title: 'THÔNG TIN CHUYỂN TRƯỜNG',
           html:
@@ -400,6 +372,7 @@
                   Swal.showValidationMessage('Vui lòng nhập đầy đủ ngày và nơi chuyển đến!');
                   return false;
               }
+              // Định dạng lại ngày theo chuẩn VN: dd/mm/yyyy
               let parts = ngay.split('-');
               let hks_ngayDinhDang_str = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : ngay;
               return `Ngày chuyển: ${hks_ngayDinhDang_str} - Đến: ${noi.trim()}`;
@@ -408,7 +381,7 @@
           if (result.isConfirmed) {
               hks_hienThiManHinhTai_fn(true);
               
-              hks_thucThiGiaoTiep_fn('hks_chuyenTruongThucThe_api', {
+        hks_thucThiGiaoTiep_fn('hks_chuyenTruongThucThe_api', {
                   hks_uuids_arr: hks_uuids_arr, 
                   hks_thongTinChuyen_str: result.value,
                   hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
@@ -427,10 +400,19 @@
                       }
                   });
               }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
+                  hks_capNhatBoNhoDem_fn().then(() => { 
+                      Swal.fire("Kết quả", hks_ketQuaAPI_obj.message, "success"); 
+                      hks_khoiPhucTrangThaiGoc_fn(1); 
+                      hks_layDuLieuPhanMot_fn(); 
+                  });
+              }).catch(e => { Swal.fire('Sự cố', e.message, 'warning'); hks_hienThiManHinhTai_fn(false); });
           }
       });
   }
   
+  // ====================================================================
+  // --- MODULE: KIỂM TRA QUYỀN VÀ HIỂN THỊ NÚT EXCEL ---
+  // ====================================================================
   function hks_kiemTraQuyenXuatNhapExcel_fn() {
       let hks_laAdmin_bol = (hks_hoSoNguoiDungHienTai_obj && hks_hoSoNguoiDungHienTai_obj.role === 'admin');
       let hks_laNguoiNhapChung_bol = (hks_bienKhungHeThong_obj && hks_bienKhungHeThong_obj.hks_quyenTuyetDoi_bol === true);
@@ -444,6 +426,9 @@
       if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
   }
 
+// ====================================================================
+  // --- MODULE: TẢI DỮ LIỆU XUỐNG EXCEL (ÉP KIỂU TEXT CHO TOÀN BẢNG) ---
+  // ====================================================================
   function hks_xuatDuLieuExcel_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody');
       
@@ -481,18 +466,24 @@
       let hks_tepXuat_obj = XLSX.utils.book_new();
       let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
       
-      let hks_tongSoCot_num = hks_duLieuXuat_arr[0].length; 
+      // >>> CẢI TIẾN: Mở rộng vùng dữ liệu và ép định dạng Text cho hàng loạt ô trống <<<
+      let hks_tongSoCot_num = hks_duLieuXuat_arr[0].length; // 20 cột
+      // Thiết lập tối thiểu 1000 dòng, hoặc thêm 500 dòng trống nếu danh sách hiện tại đã rất dài
       let hks_tongSoDong_num = Math.max(hks_duLieuXuat_arr.length + 500, 1000); 
 
+      // Cập nhật lại phạm vi (Range) của trang tính cho SheetJS nhận diện
       hks_trangXuat_obj['!ref'] = XLSX.utils.encode_range({s: {c: 0, r: 0}, e: {c: hks_tongSoCot_num - 1, r: hks_tongSoDong_num - 1}});
 
+      // Quét qua toàn bộ ma trận ô (kể cả ô trống) để ép kiểu Văn bản (@)
       for (let r = 0; r < hks_tongSoDong_num; r++) {
           for (let c = 0; c < hks_tongSoCot_num; c++) {
               let hks_diaChiO_str = XLSX.utils.encode_cell({c: c, r: r});
               
               if (!hks_trangXuat_obj[hks_diaChiO_str]) {
+                  // Khởi tạo ô trống với định dạng Text
                   hks_trangXuat_obj[hks_diaChiO_str] = { t: 's', v: '', z: '@' };
               } else {
+                  // Nếu ô đã có dữ liệu, ép lại định dạng Text và chuyển giá trị thành String
                   hks_trangXuat_obj[hks_diaChiO_str].t = 's';
                   hks_trangXuat_obj[hks_diaChiO_str].z = '@';
                   if (hks_trangXuat_obj[hks_diaChiO_str].v !== undefined) {
@@ -511,6 +502,9 @@
       XLSX.writeFile(hks_tepXuat_obj, hks_tenFile_str);
   }
 
+  // ====================================================================
+  // --- MODULE: CẬP NHẬT DỮ LIỆU TỪ EXCEL LÊN ---
+  // ====================================================================
   function hks_nhapDuLieuExcel_fn(event) {
       let hks_tepTaiLen_obj = event.target.files[0];
       if (!hks_tepTaiLen_obj) return;
@@ -568,9 +562,10 @@
           }
       };
       hks_boDocTep_obj.readAsArrayBuffer(hks_tepTaiLen_obj);
-      event.target.value = ''; 
+      event.target.value = ''; // Reset thẻ input để có thể chọn lại file cũ nếu tải lại
   }
 
+  // Tự động khởi chạy lệnh kiểm tra phân quyền Excel sau khi nạp xong Tab 1 (độ trễ 500ms để đợi config tải)
   setTimeout(hks_kiemTraQuyenXuatNhapExcel_fn, 500);
 
 </script>
