@@ -152,11 +152,11 @@
         <i class="bi bi-gem diamond-icon"></i>
     </div>
 
-    <ul class="nav nav-tabs mb-3" id="bangDieuKhien" role="tablist">
+<ul class="nav nav-tabs mb-3" id="bangDieuKhien" role="tablist">
       <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1" type="button" onclick="hks_khoiPhucTrangThaiGoc_fn(1)"><i class="bi bi-person-vcard"></i> 1. Thông tin học sinh</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2" type="button" onclick="hks_khoiPhucTrangThaiGoc_fn(2)"><i class="bi bi-journal-check"></i> 2. Kết quả học tập & Thành tích</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3" type="button"><i class="bi bi-bar-chart-line-fill"></i> 3. Thống kê - Tổng hợp</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab5" type="button" onclick="hks_taiKhoDuLieuChuyen_fn()"><i class="bi bi-person-dash"></i> 4. HS chuyển trường</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab5" type="button" onclick="setTimeout(() => { if(typeof hks_taiKhoDuLieuChuyen_fn === 'function') hks_taiKhoDuLieuChuyen_fn(); }, 150)"><i class="bi bi-person-dash"></i> 4. HS chuyển trường</button></li>
     </ul>
 
     <div class="tab-content" id="khung-chua-tab"></div>
@@ -387,16 +387,41 @@
     }
   }
 
-  function hks_khoiPhucTrangThaiGoc_fn(hks_chiSoThe_num) {
-    let namEl = document.getElementById(`t${hks_chiSoThe_num}_nam`); let lopEl = document.getElementById(`t${hks_chiSoThe_num}_lop`);
+function hks_khoiPhucTrangThaiGoc_fn(hks_chiSoThe_num) {
+    let namEl = document.getElementById(`t${hks_chiSoThe_num}_nam`); 
+    let lopEl = document.getElementById(`t${hks_chiSoThe_num}_lop`);
     if(!namEl || !lopEl) return;
+    
     let hks_khoaChon_str = `${namEl.value}_${lopEl.value}`;
     let tapQuyen = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr || [];
     let hks_laQuanTriCapCao_bol = tapQuyen.includes('ALL');
     let hks_coQuyenSua_bol = hks_laQuanTriCapCao_bol || tapQuyen.includes(hks_khoaChon_str);
     let hks_nutSuaUI_el = document.getElementById(`btnEdit${hks_chiSoThe_num}`);
-    if(hks_chiSoThe_num === 1) { hks_trangThaiSuaMot_bol = false; hks_nutSuaUI_el.style.display = hks_coQuyenSua_bol ? 'inline-block' : 'none'; document.getElementById('groupEdit1').style.display = 'none'; hks_dieuKhienOVuong_fn('#bang1', true); } 
-    else if(hks_chiSoThe_num === 2) { hks_trangThaiSuaHai_bol = false; hks_nutSuaUI_el.style.display = hks_coQuyenSua_bol ? 'inline-block' : 'none'; document.getElementById('groupEdit2').style.display = 'none'; hks_dieuKhienOVuong_fn('#bang2', true); }
+    
+    if(hks_chiSoThe_num === 1) { 
+        if (hks_nutSuaUI_el) hks_nutSuaUI_el.style.display = hks_coQuyenSua_bol ? 'inline-block' : 'none';
+        
+        // TỐI ƯU: Chỉ chạy lệnh quét DOM (khôi phục ô vuông) nếu đang ở trạng thái Sửa
+        if (hks_trangThaiSuaMot_bol) {
+            hks_trangThaiSuaMot_bol = false; 
+            let groupEdit = document.getElementById('groupEdit1');
+            if (groupEdit) groupEdit.style.display = 'none'; 
+            
+            // Đẩy lệnh điều khiển vào luồng ngầm định, tránh giật lag khi chuyển Tab
+            setTimeout(() => { hks_dieuKhienOVuong_fn('#bang1', true); }, 100);
+        } 
+    } 
+    else if(hks_chiSoThe_num === 2) { 
+        if (hks_nutSuaUI_el) hks_nutSuaUI_el.style.display = hks_coQuyenSua_bol ? 'inline-block' : 'none';
+        
+        if (hks_trangThaiSuaHai_bol) {
+            hks_trangThaiSuaHai_bol = false; 
+            let groupEdit = document.getElementById('groupEdit2');
+            if (groupEdit) groupEdit.style.display = 'none'; 
+            
+            setTimeout(() => { hks_dieuKhienOVuong_fn('#bang2', true); }, 100);
+        }
+    }
   }
 
  function hks_dieuKhienOVuong_fn(hks_danhDauBang_str, hks_voHieuHoa_bol) {
