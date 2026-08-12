@@ -50,10 +50,22 @@
 </div>
 
 <script>
-function hks_layDuLieuPhanMot_fn() {
+// ====================================================================
+  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 (ĐÃ NÂNG CẤP ĐỒNG BỘ ASYNC) ---
+  // ====================================================================
+  async function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
-    let n = document.getElementById('t1_nam').value;
-    let l = document.getElementById('t1_lop').value;
+    
+    // [GIẢI PHÁP 1]: Xử lý tính huống người dùng nhấn Tìm khi hệ thống chưa kịp tải bộ nhớ đệm
+    if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
+        try {
+            let hks_res_obj = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
+            if (hks_res_obj.success) hks_khoDuLieuTong_arr = hks_res_obj.data;
+        } catch(e) { console.error("Lỗi lấy dữ liệu cục bộ: ", e); }
+    }
+
+    let n = document.getElementById('t1_nam').value || "";
+    let l = document.getElementById('t1_lop').value || "";
     let c = document.getElementById('t1_cccd').value.trim().toLowerCase();
     let h = document.getElementById('t1_hodem').value.trim().toLowerCase();
     let t = document.getElementById('t1_ten').value.trim().toLowerCase();
@@ -61,23 +73,34 @@ function hks_layDuLieuPhanMot_fn() {
     let khoa = `${n}_${l}`;
     let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
     let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
-    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; else document.getElementById('btnEdit1').style.display = 'none';
+    
+    let btnEdit1 = document.getElementById('btnEdit1');
+    if (btnEdit1) btnEdit1.style.display = canEdit ? 'inline-block' : 'none';
 
     let btnLenLop = document.getElementById('btnLenLop');
     if (btnLenLop) btnLenLop.style.display = (isAll && n !== "" && l !== "") ? 'inline-block' : 'none';
 
     hks_khoiPhucTrangThaiGoc_fn(1);
     
+    // Độ trễ nhẹ để giao diện render xong các nút thao tác
     setTimeout(() => {
+        // [GIẢI PHÁP 2]: Bộ lọc cực mạnh chống null, undefined và khác biệt hoa/thường
         let kq = hks_khoDuLieuTong_arr.filter(r => {
-            // Sử dụng .trim() để loại bỏ hoàn toàn các dấu cách thừa khi đối chiếu dữ liệu
-            let matchNam = n ? String(r[0]).trim() === String(n).trim() : true;
-            let matchLop = l ? String(r[1]).trim() === String(l).trim() : true;
-            let matchC = c ? String(r[2]).trim().toLowerCase().includes(c) : true;
-            let matchH = h ? String(r[3]).trim().toLowerCase().includes(h) : true;
-            let matchT = t ? String(r[4]).trim().toLowerCase().includes(t) : true;
+            let valN = r[0] ? String(r[0]).trim().toLowerCase() : "";
+            let valL = r[1] ? String(r[1]).trim().toLowerCase() : "";
+            let valC = r[2] ? String(r[2]).trim().toLowerCase() : "";
+            let valH = r[3] ? String(r[3]).trim().toLowerCase() : "";
+            let valT = r[4] ? String(r[4]).trim().toLowerCase() : "";
+
+            let matchNam = n ? valN === String(n).trim().toLowerCase() : true;
+            let matchLop = l ? valL === String(l).trim().toLowerCase() : true;
+            let matchC = c ? valC.includes(c) : true;
+            let matchH = h ? valH.includes(h) : true;
+            let matchT = t ? valT.includes(t) : true;
+
             return matchNam && matchLop && matchC && matchH && matchT;
         });
+        
         hks_veBangPhanMot_fn(kq);
     }, 10);
   }
