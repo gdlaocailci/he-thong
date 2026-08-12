@@ -340,14 +340,36 @@ $(document).ready(function() {
   }
 
 function hks_doDuLieuVaoHopChon_fn() {
-    ['t1_nam','t1_lop','t2_nam','t2_lop','t3_nam', 't3_tunam', 't3_dennam', 't5_nam', 't5_lop'].forEach(id => {
-      let hks_phanTuUI_el = document.getElementById(id);
-      if (hks_phanTuUI_el) { 
-          hks_phanTuUI_el.innerHTML = '<option value="">--</option>';
-          let hks_loaiTruong_str = id.includes('nam') ? 'hks_chuKyHoatDong_arr' : 'hks_phomPhanLoai_arr';
-          if(hks_bienKhungHeThong_obj[hks_loaiTruong_str]) hks_bienKhungHeThong_obj[hks_loaiTruong_str].forEach(val => { let hks_tuyChonUI_el = document.createElement('option'); hks_tuyChonUI_el.value = val; hks_tuyChonUI_el.text = val; hks_phanTuUI_el.add(hks_tuyChonUI_el); });
+      // [NÂNG CẤP]: Thuật toán tìm năm học mới nhất từ cấu hình
+      let hks_namHocMoiNhat_str = "";
+      if (hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr.length > 0) {
+          // Sắp xếp chuỗi giảm dần (Ví dụ: "2026-2027" sẽ đứng trước "2025-2026")
+          let hks_mangNamSapXep_arr = [...hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr].sort((a, b) => String(b).localeCompare(String(a)));
+          hks_namHocMoiNhat_str = hks_mangNamSapXep_arr[0];
       }
-    });
+
+      ['t1_nam','t1_lop','t2_nam','t2_lop','t3_nam', 't3_tunam', 't3_dennam', 't5_nam', 't5_lop'].forEach(id => {
+          let hks_phanTuUI_el = document.getElementById(id);
+          if (hks_phanTuUI_el) { 
+              hks_phanTuUI_el.innerHTML = '<option value="">--</option>';
+              let hks_loaiTruong_str = id.includes('nam') ? 'hks_chuKyHoatDong_arr' : 'hks_phomPhanLoai_arr';
+              
+              if(hks_bienKhungHeThong_obj[hks_loaiTruong_str]) {
+                  hks_bienKhungHeThong_obj[hks_loaiTruong_str].forEach(val => { 
+                      let hks_tuyChonUI_el = document.createElement('option'); 
+                      hks_tuyChonUI_el.value = val; 
+                      hks_tuyChonUI_el.text = val; 
+                      
+                      // [NÂNG CẤP]: Nếu ô thuộc nhóm "Năm học" và giá trị khớp với năm mới nhất -> Tự động chọn
+                      if (id.includes('nam') && val === hks_namHocMoiNhat_str) {
+                          hks_tuyChonUI_el.selected = true;
+                      }
+                      
+                      hks_phanTuUI_el.add(hks_tuyChonUI_el); 
+                  });
+              }
+          }
+      });
   }
 
 function hks_thietLapBoLoc_fn() {
