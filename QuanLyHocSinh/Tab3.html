@@ -339,10 +339,7 @@
       return hks_ketQuaCuoi_arr;
   }
 
-  // ==========================================
-  // KHỐI 2: ĐIỀU HƯỚNG VÀ CÔNG CỤ HIỂN THỊ
-  // ==========================================
-  function hks_layDuLieuPhanBa_fn() {
+ function hks_layDuLieuPhanBa_fn() {
     let hks_namChon_str = document.getElementById('t3_nam').value;
     if(!hks_namChon_str) { Swal.fire("Cảnh báo!", "Giá trị trục gốc bằng null!", "warning"); return; }
     hks_hienThiManHinhTai_fn(true);
