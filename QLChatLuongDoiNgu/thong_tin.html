@@ -435,7 +435,7 @@ function guiBmNs() {
         mangDuLieuTam = null;
     }
 
-    function thucThiLuuBmNs(nB, isChuyenNamMoi) {
+function thucThiLuuBmNs(nB, isChuyenNamMoi) {
        if (isChuyenNamMoi) {
            csSua = -1; 
        }
@@ -444,7 +444,8 @@ function guiBmNs() {
        let mcb = bd.elements['c26'].value; 
 
        if(csSua !== -1) { 
-           let dgCu = dlToanc[csSua].slice(17, 34); 
+           // ĐỒNG BỘ: Bỏ chặn index 34, lấy toàn bộ phần đuôi mảng để bảo toàn chặt chẽ biến UUID ở cột 53
+           let dgCu = dlToanc[csSua].slice(17); 
            
            let backupNam = (dlToanc[csSua][34] !== undefined && dlToanc[csSua][34] !== "") ? dlToanc[csSua][34] : dlToanc[csSua][0];
            let backupMso = (dlToanc[csSua][35] !== undefined && dlToanc[csSua][35] !== "") ? dlToanc[csSua][35] : dlToanc[csSua][1];
@@ -461,7 +462,8 @@ function guiBmNs() {
 
            dlToanc[csSua].ckt=true; 
        } else { 
-           while(nB.length < 34) { nB.push(""); }
+           // ĐỒNG BỘ: Mở rộng vùng đệm lên 54 để sẵn sàng chứa UUID từ Server trả về cho hồ sơ mới
+           while(nB.length < 54) { nB.push(""); }
            nB[26] = mcb; 
            nB.ckt = true;
            dlToanc.unshift(nB); 
