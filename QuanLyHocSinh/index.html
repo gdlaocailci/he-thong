@@ -350,9 +350,42 @@ function hks_doDuLieuVaoHopChon_fn() {
     });
   }
 
-  function hks_thietLapBoLoc_fn() {
-    ['t1_nam', 't1_lop', 't1_cccd', 't1_hodem', 't1_ten'].forEach(id => { let e = document.getElementById(id); if (e) { e.addEventListener('input', () => hks_lamSachBangHienThi_fn(1)); e.addEventListener('change', () => hks_lamSachBangHienThi_fn(1)); if(e.tagName === 'INPUT') { e.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') hks_layDuLieuPhanMot_fn(); }); } } });
-    ['t2_nam', 't2_lop', 't2_cccd', 't2_hodem', 't2_ten'].forEach(id => { let e = document.getElementById(id); if (e) { e.addEventListener('input', () => hks_lamSachBangHienThi_fn(2)); e.addEventListener('change', () => hks_lamSachBangHienThi_fn(2)); if(e.tagName === 'INPUT') { e.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') hks_layDuLieuPhanHai_fn(); }); } } });
+function hks_thietLapBoLoc_fn() {
+    // 1. Bộ lọc Tab 1
+    ['t1_nam', 't1_lop', 't1_cccd', 't1_hodem', 't1_ten'].forEach(id => { 
+        let e = document.getElementById(id); 
+        if (e) { 
+            e.addEventListener('input', () => hks_lamSachBangHienThi_fn(1)); 
+            e.addEventListener('change', () => hks_lamSachBangHienThi_fn(1)); 
+            if(e.tagName === 'INPUT') { 
+                e.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') hks_layDuLieuPhanMot_fn(); }); 
+            } 
+        } 
+    });
+    
+    // 2. Bộ lọc Tab 2
+    ['t2_nam', 't2_lop', 't2_cccd', 't2_hodem', 't2_ten'].forEach(id => { 
+        let e = document.getElementById(id); 
+        if (e) { 
+            e.addEventListener('input', () => hks_lamSachBangHienThi_fn(2)); 
+            e.addEventListener('change', () => hks_lamSachBangHienThi_fn(2)); 
+            if(e.tagName === 'INPUT') { 
+                e.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') hks_layDuLieuPhanHai_fn(); }); 
+            } 
+        } 
+    });
+    
+    // 3. BỔ SUNG ĐỒNG BỘ: Bộ lọc Tab 5
+    ['t5_nam', 't5_lop', 't5_cccd', 't5_hodem', 't5_ten'].forEach(id => { 
+        let e = document.getElementById(id); 
+        if (e) { 
+            e.addEventListener('input', () => hks_lamSachBangHienThi_fn(5)); 
+            e.addEventListener('change', () => hks_lamSachBangHienThi_fn(5)); 
+            if(e.tagName === 'INPUT') { 
+                e.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') hks_layDuLieuPhanNam_fn(); }); 
+            } 
+        } 
+    });
   }
 
   function hks_lamSachBangHienThi_fn(hks_chiSoThe_num) {
