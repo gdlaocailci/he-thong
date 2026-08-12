@@ -50,21 +50,34 @@
 </div>
 
 <script>
-  // ====================================================================
+// ====================================================================
   // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 ---
   // ====================================================================
+
+  // [NÂNG CẤP]: Bổ sung hàm hỗ trợ chuẩn hóa tiếng Việt không dấu
+  function hks_boDauTiengViet_fn(hks_chuoiDauVao_str) {
+      if (!hks_chuoiDauVao_str) return "";
+      return String(hks_chuoiDauVao_str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
   function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
-    let n = document.getElementById('t1_nam').value;
-    let l = document.getElementById('t1_lop').value;
+    
+    // [SỬA LỖI]: Cắt bỏ khoảng trắng thừa ở Dropdown để so sánh an toàn
+    let n = document.getElementById('t1_nam').value.trim();
+    let l = document.getElementById('t1_lop').value.trim();
     let c = document.getElementById('t1_cccd').value.trim().toLowerCase();
-    let h = document.getElementById('t1_hodem').value.trim().toLowerCase();
-    let t = document.getElementById('t1_ten').value.trim().toLowerCase();
+    
+    // [SỬA LỖI]: Chuẩn hóa chuỗi tìm kiếm đầu vào (loại bỏ dấu tiếng Việt)
+    let h = hks_boDauTiengViet_fn(document.getElementById('t1_hodem').value);
+    let t = hks_boDauTiengViet_fn(document.getElementById('t1_ten').value);
 
     let khoa = `${n}_${l}`;
     let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
     let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
-    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; else document.getElementById('btnEdit1').style.display = 'none';
+    
+    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; 
+    else document.getElementById('btnEdit1').style.display = 'none';
 
     let btnLenLop = document.getElementById('btnLenLop');
     if (btnLenLop) btnLenLop.style.display = (isAll && n !== "" && l !== "") ? 'inline-block' : 'none';
@@ -73,11 +86,21 @@
     
     setTimeout(() => {
         let kq = hks_khoDuLieuTong_arr.filter(r => {
-            let matchNam = n ? String(r[0]) == n : true;
-            let matchLop = l ? String(r[1]) == l : true;
-            let matchC = c ? String(r[2]).toLowerCase().includes(c) : true;
-            let matchH = h ? String(r[3]).toLowerCase().includes(h) : true;
-            let matchT = t ? String(r[4]).toLowerCase().includes(t) : true;
+            // [SỬA LỖI]: Lọc bỏ các dòng dữ liệu rỗng (cột Năm học, Lớp, Tên đều trống)
+            if (!r[0] && !r[1] && !r[4]) return false;
+
+            // [SỬA LỖI]: Sử dụng .trim() 2 chiều để tránh lỗi khoảng trắng từ CSDL
+            let matchNam = n ? String(r[0] || "").trim() === n : true;
+            let matchLop = l ? String(r[1] || "").trim() === l : true;
+            let matchC = c ? String(r[2] || "").toLowerCase().includes(c) : true;
+            
+            // [SỬA LỖI]: Tìm kiếm tương đối không phân biệt chữ có dấu/không dấu
+            let valH = hks_boDauTiengViet_fn(r[3]);
+            let matchH = h ? valH.includes(h) : true;
+            
+            let valT = hks_boDauTiengViet_fn(r[4]);
+            let matchT = t ? valT.includes(t) : true;
+            
             return matchNam && matchLop && matchC && matchH && matchT;
         });
         hks_veBangPhanMot_fn(kq);
