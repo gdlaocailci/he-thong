@@ -1,5 +1,5 @@
 // --- CẤU HÌNH HỆ THỐNG GIAO TIẾP VÀ ĐỊNH DANH UI ---
-var QLNS_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbwLFjHvjGSLMFvdGLYaj6W4Cu-Da3KFsLHBOgezQKtPwSzBT65CIaJG9frfS-vM7PVsTg/exec"; 
+var QLNS_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbxXgFb7M1-Vq0dJ2kvXaMTsg7IG68gsGUr3aOHzIqS9_b7rjXSdg1bBy-GHVH7tMKOU/exec"; 
 var QLNS_HAN_DUNG = "31/12/2026"; 
 
 var QLNS_LINK_LOGO = "https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png"; 
