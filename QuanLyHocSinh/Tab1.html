@@ -70,7 +70,7 @@ function hks_layDuLieuPhanMot_fn() {
     
     setTimeout(() => {
         let kq = hks_khoDuLieuTong_arr.filter(r => {
-            // >>> ĐIỂM KHẮC PHỤC: Sử dụng .trim() để gọt sạch khoảng trắng ẩn từ Excel <<<
+            // Sử dụng .trim() để loại bỏ hoàn toàn các dấu cách thừa khi đối chiếu dữ liệu
             let matchNam = n ? String(r[0]).trim() === String(n).trim() : true;
             let matchLop = l ? String(r[1]).trim() === String(l).trim() : true;
             let matchC = c ? String(r[2]).trim().toLowerCase().includes(c) : true;
