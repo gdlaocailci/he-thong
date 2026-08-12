@@ -322,7 +322,7 @@ function veBangNs() {
         }).catch(lx => { $("#vungTai").hide(); hienTbao("Lỗi: " + lx, 'loi'); });
     }
 
-    function guiBmNs() {
+function guiBmNs() {
        const bd = document.getElementById("bmNsu"); let nB = [];
        for(let i=0; i<=16; i++) { let vc = ""; if(i===10) vc = bd.elements['c10'].checked ? "x" : ""; else vc = bd.elements['c'+i].value; nB.push(vc); }
        
@@ -355,6 +355,50 @@ function veBangNs() {
        if (biTrungMCB) {
            return hienTbao("Mã bảo mật cá nhân này đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!", 'loi');
        }
+
+       // BẮT ĐẦU ĐOẠN NÂNG CẤP: Khởi tạo luồng kiểm tra di chuyển nếu Trạng thái thay đổi thành "Chuyển công tác"
+       if (csSua !== -1) {
+           let trangThai = String(nB[4]).toLowerCase();
+           if (trangThai.includes("chuyển") || trangThai.includes("chuyen")) {
+               let xacNhan = confirm("Nhân sự này được đánh dấu 'Chuyển công tác'. Bạn có muốn di chuyển toàn bộ hồ sơ hiện tại sang danh sách chuyển đi không?");
+               if (xacNhan) {
+                   let noiDen = prompt("Vui lòng nhập nơi chuyển đến (Hệ thống sẽ tự động ghi nhận thời gian chuyển):", "");
+                   if (noiDen !== null && noiDen.trim() !== "") {
+                       let now = new Date();
+                       let thoiGian = (now.getDate() < 10 ? '0' : '') + now.getDate() + '/' + ((now.getMonth() + 1) < 10 ? '0' : '') + (now.getMonth() + 1) + '/' + now.getFullYear();
+                       let thongTinChuyen = "Thời gian chuyển: " + thoiGian + " - Nơi đến: " + noiDen.trim();
+                       
+                       $("#vungTai").show();
+                       goiMyChuHien('chuyenCongTac', {
+                           nam: dlToanc[csSua][0], 
+                           mso: dlToanc[csSua][1], 
+                           ngaysinh: dlToanc[csSua][2], 
+                           vTro: ndHtai.vTro, 
+                           thongTinChuyen: thongTinChuyen,
+                           dlForm: nB,
+                           mcb: mcb
+                       }).then(kq => {
+                           if(kq.tCong) {
+                               hienTbao(kq.tBao, 'tc');
+                               $("#hopThoaiHs").modal('hide');
+                               taiDlBdau(); 
+                           } else {
+                               hienTbao(kq.tBao, 'loi');
+                               $("#vungTai").hide();
+                           }
+                       }).catch(e => {
+                           hienTbao("Lỗi kết nối máy chủ: " + e, 'loi');
+                           $("#vungTai").hide();
+                       });
+                       return; 
+                   } else {
+                       hienTbao("Đã hủy thao tác chuyển công tác do không nhập thông tin nơi đến.", 'loi');
+                       return; 
+                   }
+               }
+           }
+       }
+       // KẾT THÚC ĐOẠN NÂNG CẤP
 
        if(csSua !== -1) {
            let hienTaiNam = String(dlToanc[csSua][0]).trim();
