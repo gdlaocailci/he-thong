@@ -17,39 +17,43 @@
   
   <script>
 async function goiMyChuHien(tenLenh, tLieu = {}) {
-    // Đồng bộ cấu trúc gửi lên Server (chuẩn hks_)
-    let hks_goiDuLieu_obj = {};
+    let hks_goiDuLieu_obj = {
+        hks_thamSoChuyenTai_obj: tLieu,
+        hks_dinhTuyenNguon_str: (typeof ndHtai !== 'undefined' && ndHtai) ? ndHtai.reqId : ""
+    };
     
     if (tenLenh === 'dangNhapHt') {
         hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_khoiDongChuongTrinh_api';
-        // Truyền trực tiếp chuỗi JWT để Server tự giải mã theo hàm hks_giaiMaDinhDanhMayChu_fn
         hks_goiDuLieu_obj.hks_chuoiDinhDanh_str = tLieu.chuoiJwt; 
         hks_goiDuLieu_obj.hks_maXacThuc_str = "";
     } else if (tenLenh === 'layTatCaDl') {
         hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_taiToanBoThucThe_api';
-        hks_goiDuLieu_obj.hks_dinhTuyenNguon_str = ndHtai ? ndHtai.reqId : "";
     } else {
-        // Cấu trúc dự phòng cho các tác vụ khác
         hks_goiDuLieu_obj.hks_lenhKichHoat_str = tenLenh;
-        hks_goiDuLieu_obj.hks_thamSoChuyenTai_obj = tLieu;
     }
 
     try {
         const ph = await fetch((typeof QLNS_CONFIG_GAS_URL !== 'undefined' ? QLNS_CONFIG_GAS_URL : ""), {
             method: 'POST',
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8",
-            },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(hks_goiDuLieu_obj)
         });
         
-        let ketQuaTraVe = await ph.json();
+        // NÂNG CẤP: Đọc dữ liệu thô để kiểm soát lỗi HTML từ Google Apps Script
+        let duLieuTho = await ph.text();
+        let ketQuaTraVe;
         
-        // Chuẩn hóa kết quả đầu ra phù hợp với logic xử lý của giao diện (tCong, tBao, dLieu)
-        let duLieuDich = {
-            tCong: ketQuaTraVe.success,
-            tBao: ketQuaTraVe.message || ""
-        };
+        try {
+            ketQuaTraVe = JSON.parse(duLieuTho);
+        } catch (loiPhanTich) {
+            console.error("Máy chủ phản hồi HTML:", duLieuTho);
+            if (duLieuTho.includes("<html")) {
+                throw new Error("Lỗi: Máy chủ trả về giao diện web. Vui lòng vào Apps Script thực hiện 'Deploy -> New version' để áp dụng mã mới!");
+            }
+            throw new Error("Dữ liệu trả về bị hỏng. Vui lòng thử lại!");
+        }
+        
+        let duLieuDich = { tCong: ketQuaTraVe.success, tBao: ketQuaTraVe.message || "" };
 
         if (tenLenh === 'dangNhapHt' && ketQuaTraVe.success) {
             let vTroChuyenDoi = 'xem';
@@ -70,12 +74,12 @@ async function goiMyChuHien(tenLenh, tLieu = {}) {
         } else {
             duLieuDich.dLieu = ketQuaTraVe.data;
         }
-
         return duLieuDich;
 
     } catch (loi) {
         console.error("Lỗi Fetch API:", loi);
-        throw new Error("Lỗi kết nối mạng hoặc sai lệch cấu trúc dữ liệu. Vui lòng kiểm tra lại!");
+        // Đẩy thông báo lỗi chi tiết ra Toast của giao diện
+        throw loi.message || loi; 
     }
 }
   </script>
