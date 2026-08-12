@@ -675,6 +675,13 @@ function thucThiChuyenNamDongLoat() {
 // Logic vận hành Bảng Chuyển công tác
 let dlChuyenToanc = [];
 
+$(document).on('shown.bs.tab', 'button[data-bs-target="#muc5"]', function (e) {
+ 
+    if (!dlChuyenToanc || dlChuyenToanc.length === 0) {
+        taiDsChuyen(); 
+    }
+});
+
 function taiDsChuyen() {
    $("#vungTai").show();
    goiMyChuHien('layDlChuyen')
@@ -703,8 +710,7 @@ function veBangChuyen() {
    let htmlRender = []; 
 
    dlChuyenToanc.forEach((dg) => {
-      // Tìm kiếm tương đối bằng Tiếng Việt không dấu
-      if(chT && !window.xoaDauVN(dg.join(" ")).includes(chT)) return;
+     if(chT && !window.xoaDauVN(dg.join(" ")).includes(chT)) return;
       
       let thongTinChuyen = dg[27] || ""; // Cột AB (index 27) chứa Thông tin ghi chú
       let trangThaiLuu = dg[4] || "Chuyển công tác";
