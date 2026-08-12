@@ -50,7 +50,11 @@
 </div>
 
 <script>
-// Hàm bổ trợ: Xóa dấu Tiếng Việt để so sánh tìm kiếm
+// ====================================================================
+  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 ---
+  // ====================================================================
+
+  // Hàm hỗ trợ: Cắt dấu Tiếng Việt để tìm kiếm tương đối
   function hks_boDauTiengViet_fn(str) {
       if (!str) return "";
       return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -67,7 +71,9 @@
     let khoa = `${n}_${l}`;
     let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
     let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
-    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; else document.getElementById('btnEdit1').style.display = 'none';
+    
+    let btnEdit1 = document.getElementById('btnEdit1');
+    if (btnEdit1) btnEdit1.style.display = canEdit ? 'inline-block' : 'none';
 
     let btnLenLop = document.getElementById('btnLenLop');
     if (btnLenLop) btnLenLop.style.display = (isAll && n !== "" && l !== "") ? 'inline-block' : 'none';
@@ -76,14 +82,14 @@
     
     setTimeout(() => {
         let kq = hks_khoDuLieuTong_arr.filter(r => {
-            // Loại trừ dòng dữ liệu rỗng
+            // NÂNG CẤP: Loại trừ các dòng dữ liệu hoàn toàn rỗng từ Google Sheets
             if (!r || r.length < 5 || (!r[0] && !r[1] && !r[4])) return false;
 
             let matchNam = n ? String(r[0] || "").trim() === n : true;
             let matchLop = l ? String(r[1] || "").trim() === l : true;
             let matchC = c ? String(r[2] || "").toLowerCase().includes(c) : true;
             
-            // Tìm kiếm không phân biệt dấu Tiếng Việt
+            // NÂNG CẤP: Đối chiếu họ và tên không phân biệt hoa thường và dấu
             let valH = hks_boDauTiengViet_fn(r[3]);
             let searchH = hks_boDauTiengViet_fn(h);
             let matchH = searchH ? valH.includes(searchH) : true;
@@ -94,6 +100,7 @@
             
             return matchNam && matchLop && matchC && matchH && matchT;
         });
+        
         hks_veBangPhanMot_fn(kq);
     }, 10);
   }
