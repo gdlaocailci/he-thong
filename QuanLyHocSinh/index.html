@@ -186,35 +186,27 @@
 
 async function hks_capNhatBoNhoDem_fn() {
       try {
-          // Tải toàn bộ dữ liệu 1 lần duy nhất để đưa vào RAM (giữ nguyên logic gốc an toàn)
+          // Tải toàn bộ dữ liệu 1 lần duy nhất để duy trì sự sống cho Tab 2 và Tab 3
           let res = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
           
           if(res.success) {
               hks_khoDuLieuTong_arr = res.data;
               
-              // --- LOGIC MỚI: TỰ ĐỘNG CHỌN NĂM GẦN NHẤT CÓ DỮ LIỆU ---
-              if (hks_khoDuLieuTong_arr.length > 0 && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr) {
-                  // Bước 1: Trích xuất danh sách các năm học thực tế đang có trong RAM
-                  let hks_cacNamTrongRam_arr = [...new Set(hks_khoDuLieuTong_arr.map(r => String(r[0]).trim()))];
+              // LOGIC MỚI: Tự động sắp xếp và hiển thị dữ liệu năm học mới nhất
+              if (hks_bienKhungHeThong_obj && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr.length > 0) {
+                  // Sắp xếp chuỗi giảm dần để đưa năm mới nhất lên đầu
+                  let hks_mangNam_arr = [...hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr].sort((a, b) => String(b).localeCompare(String(a)));
+                  let hks_namMoiNhat_str = hks_mangNam_arr[0];
                   
-                  // Bước 2: Đối chiếu với danh mục cấu hình, giữ lại những năm có dữ liệu và sắp xếp giảm dần
-                  let hks_namCoDuLieu_arr = hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr
-                      .filter(nam => hks_cacNamTrongRam_arr.includes(nam))
-                      .sort((a, b) => String(b).localeCompare(String(a)));
-
-                  // Bước 3: Nếu tìm thấy, tự động gán vào ô chọn và kích hoạt tìm kiếm Tab 1
-                  if (hks_namCoDuLieu_arr.length > 0) {
-                      let hks_namMoiNhat_str = hks_namCoDuLieu_arr[0];
-                      
-                      ['t1_nam', 't2_nam', 't3_nam', 't5_nam'].forEach(id => {
-                          let el = document.getElementById(id);
-                          if (el) el.value = hks_namMoiNhat_str;
-                      });
-
-                      // Tự động gọi hàm lọc của Tab 1 để hiển thị luôn dữ liệu ra bảng
-                      if (typeof hks_layDuLieuPhanMot_fn === 'function') {
-                          hks_layDuLieuPhanMot_fn();
-                      }
+                  // Tự động gán năm mới nhất vào các bộ lọc trên mọi Tab
+                  ['t1_nam', 't2_nam', 't3_nam', 't3_tunam', 't3_dennam', 't5_nam'].forEach(id => {
+                      let el = document.getElementById(id);
+                      if (el) el.value = hks_namMoiNhat_str;
+                  });
+                  
+                  // Tự động kích hoạt hiển thị của Tab 1 mà không cần bấm "Tìm"
+                  if (typeof hks_layDuLieuPhanMot_fn === 'function') {
+                      hks_layDuLieuPhanMot_fn();
                   }
               }
           }
