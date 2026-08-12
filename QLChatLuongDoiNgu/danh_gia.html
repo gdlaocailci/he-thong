@@ -238,7 +238,12 @@ function veBangDg() {
        let sttDg = 1; 
        let htmlRenderDg = []; 
        
-       let mcbND = ndHtai.mcb ? String(ndHtai.mcb).trim() : "KHONG_XAC_DINH";
+      let mcbND = "KHONG_XAC_DINH";
+        if (ndHtai && ndHtai.mcb) {
+            mcbND = String(ndHtai.mcb).trim();
+        } else if (ndHtai && ndHtai.cccd) { 
+            mcbND = String(ndHtai.cccd).trim();
+        }
 
        dlToanc.forEach((dg, idx) => {
           let nc = String(dg[0]).trim();
@@ -401,14 +406,18 @@ function veGhimModal(lk) {
        }
     }
     
-    function cnNhieuDg() {
-       const dc = dlToanc.filter(r => r.cktdg);
-       if(dc.length===0) return hienTbao("Không có dữ liệu đánh giá mới!", 'loi');
-       $("#vungTai").show();
-       goiMyChuHien('luuNhieuDgia', {mangDl: dc, vTro: ndHtai.vTro, mcb: ndHtai.mcb})
-         .then(g => { hienTbao(g.tBao, g.tCong ? 'tc' : 'loi'); if(g.tCong) taiDlBdau(); else $("#vungTai").hide(); })
-         .catch(le => { hienTbao(le, 'loi'); $("#vungTai").hide(); });
-    }
+function cnNhieuDg() {
+   const dc = dlToanc.filter(r => r.cktdg);
+   if(dc.length===0) return hienTbao("Không có dữ liệu đánh giá mới!", 'loi');
+   $("#vungTai").show();
+   
+   // Nâng cấp: Tích hợp fallback bảo mật Mã cá biệt đồng bộ với phân hệ Thông tin
+   let sendMCB = ndHtai.mcb ? ndHtai.mcb : (ndHtai.cccd ? ndHtai.cccd : "");
+   
+   goiMyChuHien('luuNhieuDgia', {mangDl: dc, vTro: ndHtai.vTro, mcb: sendMCB})
+     .then(g => { hienTbao(g.tBao, g.tCong ? 'tc' : 'loi'); if(g.tCong) taiDlBdau(); else $("#vungTai").hide(); })
+     .catch(le => { hienTbao("Lỗi hệ thống: " + le, 'loi'); $("#vungTai").hide(); }); // Ép kiểu chuỗi an toàn
+}
 
     let urlTepXemTruocHienTai = ""; 
 
