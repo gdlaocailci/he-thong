@@ -50,25 +50,19 @@
 </div>
 
 <script>
-// ====================================================================
-  // --- MODULE: XỬ LÝ DỮ LIỆU BẢNG 1 ---
-  // ====================================================================
 
-  // [NÂNG CẤP]: Bổ sung hàm hỗ trợ chuẩn hóa tiếng Việt không dấu
   function hks_boDauTiengViet_fn(hks_chuoiDauVao_str) {
       if (!hks_chuoiDauVao_str) return "";
       return String(hks_chuoiDauVao_str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  function hks_layDuLieuPhanMot_fn() {
+  // [NÂNG CẤP]: Chuyển đổi thành hàm bất đồng bộ (async) để xử lý độ trễ mạng
+  async function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
     
-    // [SỬA LỖI]: Cắt bỏ khoảng trắng thừa ở Dropdown để so sánh an toàn
     let n = document.getElementById('t1_nam').value.trim();
     let l = document.getElementById('t1_lop').value.trim();
     let c = document.getElementById('t1_cccd').value.trim().toLowerCase();
-    
-    // [SỬA LỖI]: Chuẩn hóa chuỗi tìm kiếm đầu vào (loại bỏ dấu tiếng Việt)
     let h = hks_boDauTiengViet_fn(document.getElementById('t1_hodem').value);
     let t = hks_boDauTiengViet_fn(document.getElementById('t1_ten').value);
 
@@ -76,25 +70,40 @@
     let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
     let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
     
-    if(canEdit) document.getElementById('btnEdit1').style.display = 'inline-block'; 
-    else document.getElementById('btnEdit1').style.display = 'none';
-
+    document.getElementById('btnEdit1').style.display = canEdit ? 'inline-block' : 'none';
     let btnLenLop = document.getElementById('btnLenLop');
     if (btnLenLop) btnLenLop.style.display = (isAll && n !== "" && l !== "") ? 'inline-block' : 'none';
 
     hks_khoiPhucTrangThaiGoc_fn(1);
     
+    // [SỬA LỖI ĐẶC BIỆT]: Kiểm tra và nạp bù dữ liệu nếu mảng đệm bị rỗng
+    if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
+        try {
+            let res = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
+            if(res && res.success) hks_khoDuLieuTong_arr = res.data;
+        } catch(e) { 
+            console.error("Lỗi nạp bù:", e); 
+            hks_hienThiManHinhTai_fn(false);
+            return;
+        }
+    }
+    
     setTimeout(() => {
-        let kq = hks_khoDuLieuTong_arr.filter(r => {
-            // [SỬA LỖI]: Lọc bỏ các dòng dữ liệu rỗng (cột Năm học, Lớp, Tên đều trống)
-            if (!r[0] && !r[1] && !r[4]) return false;
+        let kq = (hks_khoDuLieuTong_arr || []).filter(r => {
+            // Khử nhiễu các dòng dữ liệu trống
+            if (!r || r.length < 5 || (!r[0] && !r[1] && !r[4])) return false;
 
-            // [SỬA LỖI]: Sử dụng .trim() 2 chiều để tránh lỗi khoảng trắng từ CSDL
-            let matchNam = n ? String(r[0] || "").trim() === n : true;
-            let matchLop = l ? String(r[1] || "").trim() === l : true;
+            // [SỬA LỖI]: Xóa bỏ toàn bộ khoảng trắng ẩn bên trong chuỗi Năm học và Lớp
+            let rNam = String(r[0] || "").replace(/\s/g, '');
+            let nClean = n.replace(/\s/g, '');
+            let matchNam = nClean ? rNam === nClean : true;
+
+            let rLop = String(r[1] || "").replace(/\s/g, '');
+            let lClean = l.replace(/\s/g, '');
+            let matchLop = lClean ? rLop === lClean : true;
+            
             let matchC = c ? String(r[2] || "").toLowerCase().includes(c) : true;
             
-            // [SỬA LỖI]: Tìm kiếm tương đối không phân biệt chữ có dấu/không dấu
             let valH = hks_boDauTiengViet_fn(r[3]);
             let matchH = h ? valH.includes(h) : true;
             
