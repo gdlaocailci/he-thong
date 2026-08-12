@@ -16,12 +16,13 @@
  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <script>
-// --- BẮT ĐẦU KHỐI TRẠM TRUNG CHUYỂN DỮ LIỆU TỐI ƯU ---
+// --- BẮT ĐẦU KHỐI THAY THẾ: TRẠM TRUNG CHUYỂN DỮ LIỆU TỐI ƯU ---
 async function goiMyChuHien(tenLenh, tLieu = {}) {
     let hks_goiDuLieu_obj = {
         hks_dinhTuyenNguon_str: (typeof ndHtai !== 'undefined' && ndHtai) ? ndHtai.reqId : ""
     };
 
+    // --- BƯỚC 1: ĐÓNG GÓI VÀ ĐÁNH CHẶN LỆNH ĐẦU VÀO ---
     if (tenLenh === 'dangNhapHt') {
         hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_khoiDongChuongTrinh_api';
         hks_goiDuLieu_obj.hks_chuoiDinhDanh_str = tLieu.dDanh || tLieu.chuoiJwt; 
@@ -61,9 +62,20 @@ async function goiMyChuHien(tenLenh, tLieu = {}) {
         let dsPq = tLieu.mangTKhoan.map(tk => ({ dinhDanh: tk[0], namHoc: tk[1], kichHoat: tk[2], lop: tk[3] }));
         hks_goiDuLieu_obj.hks_thamSoChuyenTai_obj = { hks_goiCauHinh_obj: { hks_danhSachPhanQuyen_arr: dsPq, hks_danToc_str: "", hks_xepLoai_str: "", hks_capThanhTich_str: "", hks_toanQuyen_str: "" } };
     }
+    // ---> BỔ SUNG LÁ CHẮN: ĐÁNH CHẶN CÁC MODULE ĐANG THIẾU TRÊN SERVER <---
+    else if (['layTrangThaiKhoa', 'thayDoiTrangThaiKhoa', 'layThuMucCon', 'xoaTepLink', 'taiTepLen', 'taiThuMucLen'].includes(tenLenh)) {
+        hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'bo_qua_khong_gui';
+    }
     else {
         hks_goiDuLieu_obj.hks_lenhKichHoat_str = tenLenh;
         hks_goiDuLieu_obj.hks_thamSoChuyenTai_obj = tLieu;
+    }
+
+    // TRẢ VỀ KẾT QUẢ ẢO NẾU LỆNH BỊ ĐÁNH CHẶN
+    if (hks_goiDuLieu_obj.hks_lenhKichHoat_str === 'bo_qua_khong_gui') {
+        if (tenLenh === 'layTrangThaiKhoa') return { tCong: true, dangKhoa: false };
+        if (tenLenh === 'thayDoiTrangThaiKhoa') return { tCong: false, tBao: "Tính năng Khóa hệ thống trên máy chủ đang bảo trì!" };
+        return { tCong: false, tBao: "Tính năng Quản lý Minh chứng đang bảo trì!" };
     }
 
     try {
@@ -82,7 +94,7 @@ async function goiMyChuHien(tenLenh, tLieu = {}) {
             throw new Error("Lỗi cấu trúc phản hồi từ máy chủ.");
         }
 
-        // CHẶN ĐỨNG LỖI LOGIC
+        // --- BƯỚC 2: KIỂM DUYỆT KHẮT KHE & KHÔI PHỤC DỮ LIỆU ĐẦU RA ---
         let _tCong = (ketQuaTraVe.success === true || ketQuaTraVe.tCong === true);
         let _tBao = ketQuaTraVe.message || ketQuaTraVe.tBao || "";
         let duLieuDich = { tCong: _tCong, tBao: _tBao };
@@ -147,6 +159,7 @@ async function goiMyChuHien(tenLenh, tLieu = {}) {
         return duLieuDich;
     } catch (loi) { throw loi.message || loi; }
 }
+// --- KẾT THÚC KHỐI THAY THẾ ---
 
 function xulyPhienDn(phanho) {
   const tdtai = giaimaJwt(phanho.credential);
