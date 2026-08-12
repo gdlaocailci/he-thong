@@ -49,22 +49,32 @@
 </div>
 
 <script>
-  function hks_boDauTiengViet_fn(str) {
-      if (!str) return "";
-      return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-  }
-
-  function hks_layDuLieuPhanMot_fn() {
+  async function hks_layDuLieuPhanMot_fn() {
     hks_hienThiManHinhTai_fn(true);
-    let n = document.getElementById('t1_nam').value.trim();
-    let l = document.getElementById('t1_lop').value.trim();
-    let c = document.getElementById('t1_cccd').value.trim().toLowerCase();
-    let h = document.getElementById('t1_hodem').value.trim();
-    let t = document.getElementById('t1_ten').value.trim();
+    
+    if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
+        try {
+            let hks_res_obj = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
+            if (hks_res_obj && hks_res_obj.success) { hks_khoDuLieuTong_arr = hks_res_obj.data || []; }
+        } catch(e) { console.error("Lỗi lấy dữ liệu cục bộ: ", e); }
+    }
 
-    let khoa = `${n}_${l}`;
-    let isAll = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes('ALL');
-    let canEdit = isAll || hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr?.includes(khoa);
+    let n = document.getElementById('t1_nam').value || "";
+    let l = document.getElementById('t1_lop').value || "";
+    let c = document.getElementById('t1_cccd').value || "";
+    let h = document.getElementById('t1_hodem').value || "";
+    let t = document.getElementById('t1_ten').value || "";
+
+    n = String(n).trim().toLowerCase();
+    l = String(l).trim().toLowerCase();
+    c = String(c).trim().toLowerCase();
+    h = String(h).trim().toLowerCase();
+    t = String(t).trim().toLowerCase();
+
+    let tapQuyen = hks_bienKhungHeThong_obj.hks_tapQuyenSuDung_arr || [];
+    let khoa = n + "_" + l;
+    let isAll = tapQuyen.includes('ALL');
+    let canEdit = isAll || tapQuyen.includes(khoa);
     
     let btnEdit1 = document.getElementById('btnEdit1');
     if (btnEdit1) btnEdit1.style.display = canEdit ? 'inline-block' : 'none';
@@ -75,24 +85,21 @@
     hks_khoiPhucTrangThaiGoc_fn(1);
     
     setTimeout(() => {
-        let kq = hks_khoDuLieuTong_arr.filter(r => {
-            if (!r || r.length < 5 || (!r[0] && !r[1] && !r[4])) return false;
+        let kq = (hks_khoDuLieuTong_arr || []).filter(function(r) {
+            if (!r) return false;
+            let valN = r[0] ? String(r[0]).trim().toLowerCase() : "";
+            let valL = r[1] ? String(r[1]).trim().toLowerCase() : "";
+            let valC = r[2] ? String(r[2]).trim().toLowerCase() : "";
+            let valH = r[3] ? String(r[3]).trim().toLowerCase() : "";
+            let valT = r[4] ? String(r[4]).trim().toLowerCase() : "";
 
-            let matchNam = n ? String(r[0] || "").trim() === n : true;
-            let matchLop = l ? String(r[1] || "").trim() === l : true;
-            let matchC = c ? String(r[2] || "").toLowerCase().includes(c) : true;
-            
-            let valH = hks_boDauTiengViet_fn(r[3]);
-            let searchH = hks_boDauTiengViet_fn(h);
-            let matchH = searchH ? valH.includes(searchH) : true;
-
-            let valT = hks_boDauTiengViet_fn(r[4]);
-            let searchT = hks_boDauTiengViet_fn(t);
-            let matchT = searchT ? valT.includes(searchT) : true;
-            
+            let matchNam = (n === "") ? true : (valN === n);
+            let matchLop = (l === "") ? true : (valL === l);
+            let matchC = (c === "") ? true : valC.includes(c);
+            let matchH = (h === "") ? true : valH.includes(h);
+            let matchT = (t === "") ? true : valT.includes(t);
             return matchNam && matchLop && matchC && matchH && matchT;
         });
-        
         hks_veBangPhanMot_fn(kq);
     }, 10);
   }
@@ -149,10 +156,14 @@
 
     let hks_dienNamTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_nam').value : "";
     let hks_dienLopTruoc_str = !hks_duLieuBang_arr ? document.getElementById('t1_lop').value : "";
+    let hks_danhSachPhanLoai_arr = hks_bienKhungHeThong_obj.hks_phomPhanLoai_arr || [];
+    let hks_danhSachChuKy_arr = hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr || [];
+    let hks_danhSachChiSo_arr = hks_bienKhungHeThong_obj.hks_chiSoNhom_arr || [];
+
     const hks_cauHinhCot_arr = [
-      {k:'sel', o:hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr}, {k:'sel', o:hks_bienKhungHeThong_obj.hks_phomPhanLoai_arr}, 
+      {k:'sel', o: hks_danhSachChuKy_arr}, {k:'sel', o: hks_danhSachPhanLoai_arr}, 
       {k:'text'}, {k:'text'}, {k:'text'}, {k:'text'}, {k:'sel', o:['Nam','Nữ']},
-      {k:'text'}, {k:'text'}, {k:'sel', o:hks_bienKhungHeThong_obj.hks_chiSoNhom_arr},
+      {k:'text'}, {k:'text'}, {k:'sel', o: hks_danhSachChiSo_arr},
       {k:'text'}, {k:'text'}, {k:'num'}, {k:'num'}, {k:'num'},
       {k:'text'}, {k:'text'}, {k:'text'}, {k:'check'}
     ];
@@ -344,7 +355,6 @@
       });
   }
 
-  // --- MODULE ĐƯỢC CHỈNH SỬA: SỬA LỖI CÚ PHÁP Ở LỆNH CHUYỂN TRƯỜNG ---
   function hks_thucHienChuyenTruong_fn() {
       const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
       let hks_uuids_arr = [];
@@ -388,6 +398,7 @@
       }).then((result) => {
           if (result.isConfirmed) {
               hks_hienThiManHinhTai_fn(true);
+              
               hks_thucThiGiaoTiep_fn('hks_chuyenTruongThucThe_api', {
                   hks_uuids_arr: hks_uuids_arr, 
                   hks_thongTinChuyen_str: result.value,
@@ -461,7 +472,7 @@
       let hks_tepXuat_obj = XLSX.utils.book_new();
       let hks_trangXuat_obj = XLSX.utils.aoa_to_sheet(hks_duLieuXuat_arr);
       
-      let hks_tongSoCot_num = hks_duLieuXuat_arr[0].length;
+      let hks_tongSoCot_num = hks_duLieuXuat_arr[0].length; 
       let hks_tongSoDong_num = Math.max(hks_duLieuXuat_arr.length + 500, 1000); 
 
       hks_trangXuat_obj['!ref'] = XLSX.utils.encode_range({s: {c: 0, r: 0}, e: {c: hks_tongSoCot_num - 1, r: hks_tongSoDong_num - 1}});
@@ -548,8 +559,9 @@
           }
       };
       hks_boDocTep_obj.readAsArrayBuffer(hks_tepTaiLen_obj);
-      event.target.value = '';
+      event.target.value = ''; 
   }
 
   setTimeout(hks_kiemTraQuyenXuatNhapExcel_fn, 500);
+
 </script>
