@@ -634,3 +634,96 @@ function thucThiChuyenNamDongLoat() {
     </div>
   </div>
 </div>
+
+<!-- ========================================================= -->
+<!-- BẮT ĐẦU ĐOẠN THÊM MỚI: PHÂN HỆ GIAO DIỆN CHUYỂN CÔNG TÁC -->
+<!-- ========================================================= -->
+<div class="tab-pane fade" id="muc5">
+  <div class="row mb-2 g-1 align-items-center">
+    <div class="col-md-4">
+      <div class="input-group">
+        <input type="text" id="nhapTimKiemChuyen" class="form-control" placeholder="Tìm kiếm tên, vị trí..." autocomplete="off" onkeypress="if(event.keyCode===13) { veBangChuyen(); return false; }">
+        <button type="button" class="btn btn-outline-secondary fw-bold" onclick="veBangChuyen()"><i class="fas fa-search"></i> Lọc</button>
+      </div>
+    </div>
+    <div class="col-md-8 text-end">
+        <button class="btn btn-info text-white fw-bold shadow-sm" onclick="taiDsChuyen()"><i class="fas fa-sync-alt"></i> Tải lại danh sách</button>
+    </div>
+  </div>
+  
+  <div class="table-responsive" style="max-height: calc(100vh - 220px); overflow-y: auto;">
+   <table id="khuBangChuyen" class="table table-bordered table-striped bangTchinh table-sm" style="table-layout: fixed; border-collapse: collapse;">
+    <thead class="sticky-top">
+      <tr>
+        <th style="width: 50px; text-align: center;">STT</th>
+        <th style="width: 100px; text-align: center;">Năm học</th>
+        <th style="width: 200px; text-align: center;">Họ&#8203; và tê&#8203;n</th>
+        <th style="width: 110px; text-align: center;">Ngày sinh</th>
+        <th style="width: 80px; text-align: center;">Giới tính</th>
+        <th style="width: 140px; text-align: center;">Vị trí việc làm</th>
+        <th style="width: 120px; text-align: center;">Trạng thái</th>
+        <th style="width: 350px; text-align: center;">Thông tin chuyển <br><small>(Thời gian - Nơi đến)</small></th>
+      </tr>
+      </thead>
+    <tbody>
+      </tbody>
+  </table>
+  </div>
+</div>
+
+<script>
+// Logic vận hành Bảng Chuyển công tác
+let dlChuyenToanc = [];
+
+function taiDsChuyen() {
+   $("#vungTai").show();
+   goiMyChuHien('layDlChuyen')
+     .then(q => {
+         if(q.tCong) {
+             dlChuyenToanc = q.dLieu || [];
+             veBangChuyen();
+         } else { 
+             hienTbao(q.tBao, 'loi'); 
+         }
+         $("#vungTai").hide();
+     }).catch(lc => { hienTbao("Lỗi tải phân hệ: " + lc, 'loi'); $("#vungTai").hide(); });
+}
+
+function veBangChuyen() {
+   const chT = window.xoaDauVN($("#nhapTimKiemChuyen").val()); 
+   const tv = $("#khuBangChuyen tbody"); 
+   tv.empty();
+   
+   if (!dlChuyenToanc || dlChuyenToanc.length === 0) {
+       tv.html('<tr><td colspan="8" class="text-center text-danger fw-bold py-3"><i class="fas fa-folder-open"></i> Không có dữ liệu lưu trữ chuyển công tác</td></tr>');
+       return;
+   }
+
+   let stt = 1; 
+   let htmlRender = []; 
+
+   dlChuyenToanc.forEach((dg) => {
+      // Tìm kiếm tương đối bằng Tiếng Việt không dấu
+      if(chT && !window.xoaDauVN(dg.join(" ")).includes(chT)) return;
+      
+      let thongTinChuyen = dg[27] || ""; // Cột AB (index 27) chứa Thông tin ghi chú
+      let trangThaiLuu = dg[4] || "Chuyển công tác";
+      
+      htmlRender.push(`
+        <tr>
+           <td class="text-center fw-bold text-muted">${stt++}</td>
+           <td class="text-center fw-bold text-primary">${dg[0] || ''}</td>
+           <td style="text-align: left;" class="fw-bold">${dg[1] || ''}</td>
+           <td>${dg[2] || ''}</td>
+           <td>${dg[3] || ''}</td>
+           <td>${dg[11] || ''}</td>
+           <td><span class="badge bg-secondary">${trangThaiLuu}</span></td>
+           <td class="text-start text-danger fw-bold" style="font-size: 0.8rem;">${thongTinChuyen}</td>
+        </tr>
+      `);
+   });
+
+   tv.html(htmlRender.join(''));
+}
+</script>
+
