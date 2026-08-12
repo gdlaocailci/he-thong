@@ -16,15 +16,16 @@
  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <script>
-// --- BẮT ĐẦU KHỐI THAY THẾ 1: TRẠM TRUNG CHUYỂN DỮ LIỆU TOÀN DIỆN ---
+// --- BẮT ĐẦU KHỐI THAY THẾ: TRẠM TRUNG CHUYỂN DỮ LIỆU TỐI ƯU ---
 async function goiMyChuHien(tenLenh, tLieu = {}) {
-    let hks_goiDuLieu_obj = {};
-    hks_goiDuLieu_obj.hks_dinhTuyenNguon_str = (typeof ndHtai !== 'undefined' && ndHtai) ? ndHtai.reqId : "";
+    let hks_goiDuLieu_obj = {
+        hks_dinhTuyenNguon_str: (typeof ndHtai !== 'undefined' && ndHtai) ? ndHtai.reqId : ""
+    };
 
-    // --- BƯỚC 1: ĐÓNG GÓI LỆNH ĐẦU VÀO (REQUEST ADAPTER) ---
+    // --- BƯỚC 1: ĐÓNG GÓI LỆNH ĐẦU VÀO ---
     if (tenLenh === 'dangNhapHt') {
         hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_khoiDongChuongTrinh_api';
-        hks_goiDuLieu_obj.hks_chuoiDinhDanh_str = tLieu.dDanh; 
+        hks_goiDuLieu_obj.hks_chuoiDinhDanh_str = tLieu.dDanh || tLieu.chuoiJwt; 
         hks_goiDuLieu_obj.hks_maXacThuc_str = "";
     }
     else if (tenLenh === 'layTatCaDl') hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_taiToanBoThucThe_api';
@@ -78,70 +79,90 @@ async function goiMyChuHien(tenLenh, tLieu = {}) {
         try { 
             ketQuaTraVe = JSON.parse(duLieuTho); 
         } catch (loiPhanTich) {
-            if (duLieuTho.includes("<html")) throw new Error("Hệ thống đang bị lỗi bộ đệm. Vui lòng vào Apps Script thực hiện 'Deploy -> New version' để áp dụng lại mã nguồn mới nhất!");
+            if (duLieuTho.includes("<html")) throw new Error("Máy chủ phản hồi HTML. Vui lòng vào Apps Script thực hiện 'Deploy -> New version' để áp dụng lại mã nguồn!");
             throw new Error("Lỗi cấu trúc phản hồi từ máy chủ.");
         }
 
-        // --- BƯỚC 2: PHIÊN DỊCH VÀ KHÔI PHỤC CẤU TRÚC ĐẦU RA (RESPONSE ADAPTER) ---
-        let duLieuDich = { tCong: ketQuaTraVe.success !== false, tBao: ketQuaTraVe.message || "" };
+        // --- BƯỚC 2: KIỂM DUYỆT KHẮT KHE & KHÔI PHỤC DỮ LIỆU ĐẦU RA ---
+        
+        // CHẶN ĐỨNG LỖI LOGIC: Bắt buộc máy chủ phải trả về success = true hoặc tCong = true mới được đi tiếp
+        let _tCong = (ketQuaTraVe.success === true || ketQuaTraVe.tCong === true);
+        let _tBao = ketQuaTraVe.message || ketQuaTraVe.tBao || "";
+        let duLieuDich = { tCong: _tCong, tBao: _tBao };
 
-        if (tenLenh === 'dangNhapHt' && ketQuaTraVe.success) {
-            let vTroChuyenDoi = 'xem';
-            if (ketQuaTraVe.data.role === 'admin') vTroChuyenDoi = 'qtriv';
-            else if (ketQuaTraVe.data.role === 'staff') vTroChuyenDoi = 'ngdung';
+        // Nếu máy chủ báo lỗi (hoặc chưa cập nhật), hàm sẽ ném ra lỗi và dừng ngay tại đây, không đọc dữ liệu rỗng.
+        if (!_tCong) return duLieuDich;
 
-            let mcbNguoiDung = "";
-            let tenNguoiDung = ketQuaTraVe.data.name;
-            if (ketQuaTraVe.config && ketQuaTraVe.config.hks_rawPhanQuyen_arr) {
-                let tkInfo = ketQuaTraVe.config.hks_rawPhanQuyen_arr.find(tk => String(tk.dinhDanh).trim().toLowerCase() === String(ketQuaTraVe.data.reqId).trim().toLowerCase());
-                if (tkInfo) { mcbNguoiDung = tkInfo.lop || ""; if (tkInfo.namHoc) tenNguoiDung = tkInfo.namHoc; }
+        if (tenLenh === 'dangNhapHt') {
+            if (ketQuaTraVe.data) {
+                let vTroChuyenDoi = 'xem';
+                if (ketQuaTraVe.data.role === 'admin') vTroChuyenDoi = 'qtriv';
+                else if (ketQuaTraVe.data.role === 'staff') vTroChuyenDoi = 'ngdung';
+
+                let mcbNguoiDung = "";
+                let tenNguoiDung = ketQuaTraVe.data.name;
+                if (ketQuaTraVe.config && ketQuaTraVe.config.hks_rawPhanQuyen_arr) {
+                    let tkInfo = ketQuaTraVe.config.hks_rawPhanQuyen_arr.find(tk => String(tk.dinhDanh).trim().toLowerCase() === String(ketQuaTraVe.data.reqId).trim().toLowerCase());
+                    if (tkInfo) { 
+                        mcbNguoiDung = tkInfo.lop || ""; 
+                        if (tkInfo.namHoc) tenNguoiDung = tkInfo.namHoc; 
+                    }
+                }
+                duLieuDich.dLieu = { tenn: tenNguoiDung, vTro: vTroChuyenDoi, reqId: ketQuaTraVe.data.reqId, mcb: mcbNguoiDung };
+            } 
+            else if (ketQuaTraVe.dLieu) {
+                duLieuDich.dLieu = ketQuaTraVe.dLieu;
             }
-
-            duLieuDich.dLieu = { tenn: tenNguoiDung, vTro: vTroChuyenDoi, reqId: ketQuaTraVe.data.reqId, mcb: mcbNguoiDung };
         }
-        else if (tenLenh === 'layTatCaDl' && ketQuaTraVe.success) {
-            let chinhTuDong = [];
-            let nsuData = ketQuaTraVe.data || [];
-            // Khôi phục mảng dropdowns bị mất từ máy chủ
-            nsuData.forEach(r => {
-                let rowC = [];
-                rowC[0]=r[0]; rowC[1]=r[3]; rowC[2]=r[4]; rowC[3]=r[11]; rowC[4]=r[14]; rowC[5]=r[15]; rowC[6]=r[16];
-                rowC[7]=r[17]; rowC[8]=r[19]; rowC[9]=r[20]; rowC[10]=r[22]; rowC[11]=r[23]; rowC[12]=r[24];
-                chinhTuDong.push(rowC);
-            });
-            // Bơm sẵn các thông số cứng phòng trường hợp cơ sở dữ liệu trống
-            chinhTuDong.push(["2024-2025", "Nam", "Đang công tác", "Giáo viên", "Hạng 3", "Đại học", "Sơ cấp", "Giỏi", "Tốt", "HTXS", "Cấp Trường", "LĐTT", "Giấy khen"]);
-            chinhTuDong.push(["2025-2026", "Nữ", "Đã chuyển", "Quản lý", "Hạng 2", "Cao đẳng", "Trung cấp", "Khá", "Khá", "HTT", "Cấp Huyện/TP", "CSTĐ", "Bằng khen"]);
-            chinhTuDong.push(["2026-2027", "", "Nghỉ hưu", "Nhân viên", "Hạng 1", "Trên ĐH", "Cao cấp", "TB", "TB", "HT", "Cấp Tỉnh", "Hình thức khác", "Kỷ niệm chương"]);
-
-            duLieuDich.dLieu = { dangKhoa: false, nsu: nsuData, chinh: chinhTuDong };
+        else if (tenLenh === 'layTatCaDl') {
+            if (ketQuaTraVe.data) {
+                let chinhTuDong = [];
+                let nsuData = ketQuaTraVe.data || [];
+                nsuData.forEach(r => {
+                    let rowC = [];
+                    rowC[0]=r[0]; rowC[1]=r[3]; rowC[2]=r[4]; rowC[3]=r[11]; rowC[4]=r[14]; rowC[5]=r[15]; rowC[6]=r[16];
+                    rowC[7]=r[17]; rowC[8]=r[19]; rowC[9]=r[20]; rowC[10]=r[22]; rowC[11]=r[23]; rowC[12]=r[24];
+                    chinhTuDong.push(rowC);
+                });
+                
+                if(chinhTuDong.length === 0) {
+                    chinhTuDong.push(["2024-2025", "Nam", "Đang công tác", "Giáo viên", "Hạng 3", "Đại học", "Sơ cấp", "Giỏi", "Tốt", "HTXS", "Cấp Trường", "LĐTT", "Giấy khen"]);
+                    chinhTuDong.push(["2025-2026", "Nữ", "Đã chuyển", "Quản lý", "Hạng 2", "Cao đẳng", "Trung cấp", "Khá", "Khá", "HTT", "Cấp Huyện/TP", "CSTĐ", "Bằng khen"]);
+                    chinhTuDong.push(["2026-2027", "", "Nghỉ hưu", "Nhân viên", "Hạng 1", "Trên ĐH", "Cao cấp", "TB", "TB", "HT", "Cấp Tỉnh", "Hình thức khác", "Kỷ niệm chương"]);
+                }
+                duLieuDich.dLieu = { dangKhoa: false, nsu: nsuData, chinh: chinhTuDong };
+            } else if (ketQuaTraVe.dLieu) {
+                duLieuDich.dLieu = ketQuaTraVe.dLieu;
+            }
         }
         else if (tenLenh === 'layDsTaiKhoan') {
-            let arr = [];
-            if (ketQuaTraVe.hks_rawPhanQuyen_arr) arr = ketQuaTraVe.hks_rawPhanQuyen_arr.map(tk => [tk.dinhDanh, tk.namHoc, tk.kichHoat, tk.lop]);
-            duLieuDich.dLieu = arr;
-            duLieuDich.tCong = true;
+            if (ketQuaTraVe.config && ketQuaTraVe.config.hks_rawPhanQuyen_arr) {
+                duLieuDich.dLieu = ketQuaTraVe.config.hks_rawPhanQuyen_arr.map(tk => [tk.dinhDanh, tk.namHoc, tk.kichHoat, tk.lop]);
+            } else if (ketQuaTraVe.hks_rawPhanQuyen_arr) {
+                duLieuDich.dLieu = ketQuaTraVe.hks_rawPhanQuyen_arr.map(tk => [tk.dinhDanh, tk.namHoc, tk.kichHoat, tk.lop]);
+            } else {
+                duLieuDich.dLieu = ketQuaTraVe.dLieu || [];
+            }
         }
-        else { duLieuDich.dLieu = ketQuaTraVe.data; }
+        else { 
+            duLieuDich.dLieu = ketQuaTraVe.data !== undefined ? ketQuaTraVe.data : ketQuaTraVe.dLieu; 
+        }
 
         return duLieuDich;
     } catch (loi) { throw loi.message || loi; }
 }
-// --- KẾT THÚC KHỐI THAY THẾ 1 ---
 
-// --- BẮT ĐẦU KHỐI THAY THẾ 2: KHÔI PHỤC CƠ CHẾ KIỂM DUYỆT TẠI MÁY KHÁCH ---
 function xulyPhienDn(phanho) {
-  // Giải mã cục bộ JWT nhằm ngăn chặn lỗi parse dữ liệu tại máy chủ làm sập luồng đăng nhập
   const tdtai = giaimaJwt(phanho.credential);
   const ddTruyCap = tdtai['email']; 
   
   $("#vungTai").show();
   $("#loiDn").text(""); 
-  goiMyChuHien('dangNhapHt', { dDanh: ddTruyCap })
+  goiMyChuHien('dangNhapHt', { dDanh: ddTruyCap, chuoiJwt: phanho.credential })
     .then(khiDnTc)
     .catch(khiDnLoi);
 }
-// --- KẾT THÚC KHỐI THAY THẾ 2 ---
+// --- KẾT THÚC KHỐI THAY THẾ ---
   </script>
 
   <style>
