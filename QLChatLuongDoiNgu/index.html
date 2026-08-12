@@ -16,22 +16,68 @@
  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <script>
-    async function goiMyChuHien(tenLenh, tLieu = {}) {
-        tLieu.lenh = tenLenh;
-        try {
-            const ph = await fetch((typeof QLNS_CONFIG_GAS_URL !== 'undefined' ? QLNS_CONFIG_GAS_URL : ""), {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8",
-                },
-                body: JSON.stringify(tLieu)
-            });
-            return await ph.json();
-        } catch (loi) {
-            console.error("Lỗi Fetch API:", loi);
-            throw new Error("Lỗi kết nối mạng. Vui lòng kiểm tra lại!");
-        }
+async function goiMyChuHien(tenLenh, tLieu = {}) {
+    // Đồng bộ cấu trúc gửi lên Server (chuẩn hks_)
+    let hks_goiDuLieu_obj = {};
+    
+    if (tenLenh === 'dangNhapHt') {
+        hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_khoiDongChuongTrinh_api';
+        // Truyền trực tiếp chuỗi JWT để Server tự giải mã theo hàm hks_giaiMaDinhDanhMayChu_fn
+        hks_goiDuLieu_obj.hks_chuoiDinhDanh_str = tLieu.chuoiJwt; 
+        hks_goiDuLieu_obj.hks_maXacThuc_str = "";
+    } else if (tenLenh === 'layTatCaDl') {
+        hks_goiDuLieu_obj.hks_lenhKichHoat_str = 'hks_taiToanBoThucThe_api';
+        hks_goiDuLieu_obj.hks_dinhTuyenNguon_str = ndHtai ? ndHtai.reqId : "";
+    } else {
+        // Cấu trúc dự phòng cho các tác vụ khác
+        hks_goiDuLieu_obj.hks_lenhKichHoat_str = tenLenh;
+        hks_goiDuLieu_obj.hks_thamSoChuyenTai_obj = tLieu;
     }
+
+    try {
+        const ph = await fetch((typeof QLNS_CONFIG_GAS_URL !== 'undefined' ? QLNS_CONFIG_GAS_URL : ""), {
+            method: 'POST',
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify(hks_goiDuLieu_obj)
+        });
+        
+        let ketQuaTraVe = await ph.json();
+        
+        // Chuẩn hóa kết quả đầu ra phù hợp với logic xử lý của giao diện (tCong, tBao, dLieu)
+        let duLieuDich = {
+            tCong: ketQuaTraVe.success,
+            tBao: ketQuaTraVe.message || ""
+        };
+
+        if (tenLenh === 'dangNhapHt' && ketQuaTraVe.success) {
+            let vTroChuyenDoi = 'xem';
+            if (ketQuaTraVe.data.role === 'admin') vTroChuyenDoi = 'qtriv';
+            else if (ketQuaTraVe.data.role === 'staff') vTroChuyenDoi = 'ngdung';
+            
+            duLieuDich.dLieu = {
+                tenn: ketQuaTraVe.data.name,
+                vTro: vTroChuyenDoi,
+                reqId: ketQuaTraVe.data.reqId
+            };
+        } else if (tenLenh === 'layTatCaDl' && ketQuaTraVe.success) {
+            duLieuDich.dLieu = {
+                dangKhoa: false,
+                nsu: ketQuaTraVe.data,
+                chinh: ketQuaTraVe.config ? ketQuaTraVe.config.hks_rawPhanQuyen_arr : []
+            };
+        } else {
+            duLieuDich.dLieu = ketQuaTraVe.data;
+        }
+
+        return duLieuDich;
+
+    } catch (loi) {
+        console.error("Lỗi Fetch API:", loi);
+        throw new Error("Lỗi kết nối mạng hoặc sai lệch cấu trúc dữ liệu. Vui lòng kiểm tra lại!");
+    }
+}
   </script>
 
   <style>
@@ -385,16 +431,15 @@ function kiemTraTrangThaiDangNhap() {
       return JSON.parse(noidunjson);
     }
 
-    function xulyPhienDn(phanho) {
-      const tdtai = giaimaJwt(phanho.credential);
-      const ddTruyCap = tdtai['email']; 
-      
-      $("#vungTai").show();
-      $("#loiDn").text(""); 
-      goiMyChuHien('dangNhapHt', { dDanh: ddTruyCap })
-        .then(khiDnTc)
-        .catch(khiDnLoi);
-    }
+function xulyPhienDn(phanho) {
+  $("#vungTai").show();
+  $("#loiDn").text(""); 
+  
+  // Chuyển toàn bộ chuỗi xác thực JWT nguyên bản lên Server xử lý, thay vì tự tách ở máy khách
+  goiMyChuHien('dangNhapHt', { chuoiJwt: phanho.credential })
+    .then(khiDnTc)
+    .catch(khiDnLoi);
+}
     
 // --- BẮT ĐẦU ĐOẠN THAY THẾ: HÀM khiDnTc ---
 function khiDnTc(pq) {
