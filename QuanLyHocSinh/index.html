@@ -101,7 +101,6 @@
     .loader-text { font-family: 'Times New Roman', serif; font-weight: bold; color: #dc3545; letter-spacing: 1px; font-size: 14px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    /* Ghi đè Z-index của thư viện SweetAlert2 vượt qua màn hình đăng nhập */
     .swal2-container { z-index: 2147483647 !important; }
   </style>
 </head>
@@ -146,9 +145,9 @@
 
   <div class="container-fluid main-container">
     <div class="dev-badge d-flex align-items-center">
-        <div class="me-1">
-            <div class="dev-name ten-tac-gia-text"></div>
+        <div class="me-1 text-end">
             <div class="dev-role">Thiết kế và phát triển</div>
+            <div class="dev-name ten-tac-gia-text"></div>
         </div>
         <i class="bi bi-gem diamond-icon"></i>
     </div>
@@ -186,25 +185,20 @@
 
 async function hks_capNhatBoNhoDem_fn() {
       try {
-          // Tải toàn bộ dữ liệu 1 lần duy nhất để duy trì sự sống cho Tab 2 và Tab 3
           let res = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
           
           if(res.success) {
               hks_khoDuLieuTong_arr = res.data;
               
-              // LOGIC MỚI: Tự động sắp xếp và hiển thị dữ liệu năm học mới nhất
               if (hks_bienKhungHeThong_obj && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr.length > 0) {
-                  // Sắp xếp chuỗi giảm dần để đưa năm mới nhất lên đầu
                   let hks_mangNam_arr = [...hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr].sort((a, b) => String(b).localeCompare(String(a)));
                   let hks_namMoiNhat_str = hks_mangNam_arr[0];
                   
-                  // Tự động gán năm mới nhất vào các bộ lọc trên mọi Tab
                   ['t1_nam', 't2_nam', 't3_nam', 't3_tunam', 't3_dennam', 't5_nam'].forEach(id => {
                       let el = document.getElementById(id);
                       if (el) el.value = hks_namMoiNhat_str;
                   });
                   
-                  // Tự động kích hoạt hiển thị của Tab 1 mà không cần bấm "Tìm"
                   if (typeof hks_layDuLieuPhanMot_fn === 'function') {
                       hks_layDuLieuPhanMot_fn();
                   }
@@ -249,12 +243,10 @@ function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
           sessionStorage.setItem("sys_data_hs", JSON.stringify(hks_hoSoNguoiDungHienTai_obj));
           sessionStorage.setItem("sys_config_hs", JSON.stringify(hks_bienKhungHeThong_obj));
 
-          // KÍCH HOẠT GIAO DIỆN VÀ PHÂN QUYỀN
           hks_doDuLieuVaoHopChon_fn();
           hks_thietLapBoLoc_fn();
           hks_kiemTraQuyenVaNapTabBon_fn(); 
           
-          // >>> ĐIỂM SỬA LỖI: Cập nhật lại quyền hiển thị nút Excel ngay khi đăng nhập thành công <<<
           if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
 
           document.getElementById('profile-display').innerText = hks_hoSoNguoiDungHienTai_obj.name; 
@@ -265,7 +257,6 @@ function hks_xuLyPhanHoiDangNhap_fn(hks_phanHoiGG_obj) {
           hks_ungDungChinh_el.style.display = 'block'; 
           setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
 
-          // CHẠY NGẦM VIỆC TẢI DỮ LIỆU LỚN XUỐNG BỘ NHỚ ĐỆM
           hks_capNhatBoNhoDem_fn().then(() => {
               hks_hienThiManHinhTai_fn(false);
           });
@@ -277,8 +268,6 @@ $(document).ready(function() {
     $.get("Tab1.html", function(data1) { $("#khung-chua-tab").append(data1);
         $.get("Tab2.html", function(data2) { $("#khung-chua-tab").append(data2);
             $.get("Tab3.html", function(data3) { $("#khung-chua-tab").append(data3);
-                
-                // >>> NẠP THÊM TAB 5 VÀO HỆ THỐNG <<<
                 $.get("Tab5.html", function(data5) { $("#khung-chua-tab").append(data5);
                 
                     let hks_duLieuLuuTru_str = sessionStorage.getItem("sys_data_hs");
@@ -296,15 +285,12 @@ $(document).ready(function() {
                             hks_doDuLieuVaoHopChon_fn();
                             hks_kiemTraQuyenVaNapTabBon_fn();
                             
-                            // Kiểm tra lại quyền hiển thị Excel khi load từ Session
                             if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
                             
-                            // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC
                             let hks_ungDungChinh_el = document.getElementById('main-app');
                             hks_ungDungChinh_el.style.display = 'block'; 
                             setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
 
-                            // CHẠY NGẦM DỮ LIỆU LỚN XUỐNG BỘ NHỚ ĐỆM
                             hks_capNhatBoNhoDem_fn().then(() => {
                                 hks_hienThiManHinhTai_fn(false);
                             });
@@ -329,15 +315,12 @@ $(document).ready(function() {
                                 hks_doDuLieuVaoHopChon_fn(); 
                                 hks_kiemTraQuyenVaNapTabBon_fn();
                                 
-                                // Kiểm tra lại quyền hiển thị Excel khi lấy cấu hình từ Server
                                 if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
                                 
-                                // KÍCH HOẠT GIAO DIỆN NGAY LẬP TỨC
                                 let hks_ungDungChinh_el = document.getElementById('main-app');
                                 hks_ungDungChinh_el.style.display = 'block'; 
                                 setTimeout(() => { hks_ungDungChinh_el.style.opacity = '1'; }, 50);
 
-                                // CHẠY NGẦM DỮ LIỆU LỚN XUỐNG BỘ NHỚ ĐỆM
                                 hks_capNhatBoNhoDem_fn().then(() => {
                                     hks_hienThiManHinhTai_fn(false);
                                 });
@@ -347,7 +330,7 @@ $(document).ready(function() {
                         hks_hienThiManHinhTai_fn(false); 
                         document.getElementById('gate-overlay').style.display = 'flex'; 
                     }
-                }); // Đóng Tab 5
+                }); 
             });
         });
     });
@@ -362,10 +345,8 @@ $(document).ready(function() {
   }
 
 function hks_doDuLieuVaoHopChon_fn() {
-      // [NÂNG CẤP]: Thuật toán tìm năm học mới nhất từ cấu hình
       let hks_namHocMoiNhat_str = "";
       if (hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr && hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr.length > 0) {
-          // Sắp xếp chuỗi giảm dần (Ví dụ: "2026-2027" sẽ đứng trước "2025-2026")
           let hks_mangNamSapXep_arr = [...hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr].sort((a, b) => String(b).localeCompare(String(a)));
           hks_namHocMoiNhat_str = hks_mangNamSapXep_arr[0];
       }
@@ -382,7 +363,6 @@ function hks_doDuLieuVaoHopChon_fn() {
                       hks_tuyChonUI_el.value = val; 
                       hks_tuyChonUI_el.text = val; 
                       
-                      // [NÂNG CẤP]: Nếu ô thuộc nhóm "Năm học" và giá trị khớp với năm mới nhất -> Tự động chọn
                       if (id.includes('nam') && val === hks_namHocMoiNhat_str) {
                           hks_tuyChonUI_el.selected = true;
                       }
@@ -395,7 +375,6 @@ function hks_doDuLieuVaoHopChon_fn() {
   }
 
 function hks_thietLapBoLoc_fn() {
-    // 1. Bộ lọc Tab 1
     ['t1_nam', 't1_lop', 't1_cccd', 't1_hodem', 't1_ten'].forEach(id => { 
         let e = document.getElementById(id); 
         if (e) { 
@@ -407,7 +386,6 @@ function hks_thietLapBoLoc_fn() {
         } 
     });
     
-    // 2. Bộ lọc Tab 2
     ['t2_nam', 't2_lop', 't2_cccd', 't2_hodem', 't2_ten'].forEach(id => { 
         let e = document.getElementById(id); 
         if (e) { 
@@ -419,7 +397,6 @@ function hks_thietLapBoLoc_fn() {
         } 
     });
     
-    // 3. BỔ SUNG ĐỒNG BỘ: Bộ lọc Tab 5
     ['t5_nam', 't5_lop', 't5_cccd', 't5_hodem', 't5_ten'].forEach(id => { 
         let e = document.getElementById(id); 
         if (e) { 
@@ -480,7 +457,6 @@ function hks_thietLapBoLoc_fn() {
     if (hks_laQuanTriCapCao_bol && hks_danhDauBang_str === '#bang1') { b.querySelectorAll('.stt-label').forEach(lbl => { lbl.style.display = hks_voHieuHoa_bol ? 'inline-block' : 'none'; }); }
   }
 
-  // ===================== PHÂN QUYỀN HỆ THỐNG (TAB4) =====================
   function hks_kiemTraQuyenVaNapTabBon_fn() {
     $('#nav-li-tab4').remove();
     $('#tab4').remove();
@@ -640,30 +616,23 @@ function hks_thietLapBoLoc_fn() {
     });
   }
   function khoaTruyCapMaNguon() {
-        // 1. Khóa menu chuột phải
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
 
-        // 2. Khóa các tổ hợp phím tắt phổ biến
         document.addEventListener('keydown', function(e) {
-            // Khóa F12
             if (e.key === 'F12' || e.keyCode === 123) {
                 e.preventDefault();
             }
-            // Khóa Ctrl + Shift + I (Mở DevTools)
             if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
                 e.preventDefault();
             }
-            // Khóa Ctrl + Shift + J (Mở Console)
             if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
                 e.preventDefault();
             }
-            // Khóa Ctrl + U (Xem nguồn gốc)
             if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
                 e.preventDefault();
             }
-            // Khóa Ctrl + S (Lưu trang web)
             if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
                 e.preventDefault();
             }
@@ -673,4 +642,4 @@ function hks_thietLapBoLoc_fn() {
     khoaTruyCapMaNguon();
 </script>
 </body>
-</html
+</html>
