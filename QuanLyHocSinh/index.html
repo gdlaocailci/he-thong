@@ -184,11 +184,59 @@
       }
   }
 
+// ====================================================================
+  // --- NÂNG CẤP: TẢI ĐỆM NĂM GẦN NHẤT CÓ DỮ LIỆU ---
+  // ====================================================================
   async function hks_capNhatBoNhoDem_fn() {
       try {
-          let res = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
-          if(res.success) hks_khoDuLieuTong_arr = res.data;
-      } catch(e) { console.error("Lỗi đệm:", e); }
+          if (!hks_bienKhungHeThong_obj || !hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr) return;
+
+          // Bước 1: Sắp xếp mảng năm học giảm dần (VD: 2026-2027 đứng trước 2025-2026)
+          let hks_mangNam_arr = [...hks_bienKhungHeThong_obj.hks_chuKyHoatDong_arr].sort((a, b) => String(b).localeCompare(String(a)));
+          
+          let hks_daTaiDuLieu_bol = false;
+
+          // Bước 2: Duyệt từ năm mới nhất lùi về sau, gọi API để tìm năm đầu tiên CÓ DỮ LIỆU
+          for (let i = 0; i < hks_mangNam_arr.length; i++) {
+              let hks_namKiemTra_str = hks_mangNam_arr[i];
+              
+              // Gọi API truy xuất có chọn lọc thay vì dùng 'hks_taiToanBoThucThe_api'
+              let res = await hks_thucThiGiaoTiep_fn('hks_truyXuatThucThe_api', {
+                  hks_boLocTieuChuan_obj: { hks_chuKyHoatDong_str: hks_namKiemTra_str },
+                  hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId
+              });
+
+              if (res && res.success && res.data && res.data.length > 0) {
+                  hks_khoDuLieuTong_arr = res.data; // Lưu chính xác mảng dữ liệu này vào RAM
+                  hks_daTaiDuLieu_bol = true;
+
+                  // Tự động chốt ô chọn Năm học trên bộ lọc giao diện về năm có dữ liệu
+                  ['t1_nam', 't2_nam', 't3_nam', 't5_nam'].forEach(id => {
+                      let el = document.getElementById(id);
+                      if (el) el.value = hks_namKiemTra_str;
+                  });
+
+                  break; // Chốt chặn: Thoát ngay vòng lặp khi đã lấy được dữ liệu, tránh gọi API thừa
+              }
+          }
+
+          // Bước 3: Trường hợp Database hoàn toàn trống (Hệ thống mới tinh)
+          if (!hks_daTaiDuLieu_bol) {
+              hks_khoDuLieuTong_arr = [];
+              ['t1_nam', 't2_nam', 't3_nam', 't5_nam'].forEach(id => {
+                  let el = document.getElementById(id);
+                  if (el && hks_mangNam_arr.length > 0) el.value = hks_mangNam_arr[0]; // Set tạm năm mới nhất theo cấu hình
+              });
+          }
+
+          // Bước 4: Tự động kích hoạt hiển thị dữ liệu lên Tab 1 sau khi nạp RAM xong (Người dùng không cần bấm "Tìm")
+          if (typeof hks_layDuLieuPhanMot_fn === 'function') {
+              hks_layDuLieuPhanMot_fn();
+          }
+
+      } catch(e) { 
+          console.error("Lỗi nạp đệm RAM:", e); 
+      }
   }
 
   let hks_tooltip_timer;
