@@ -465,9 +465,12 @@ function dxuat() {
     
     function datTde(t) { $("#tdeTrang").text(t); }
 
-    function taiDlBdau() {
+function taiDlBdau() {
       $("#vungTai").show();
-      goiMyChuHien('layTatCaDl')
+      // NÂNG CẤP: Lấy vai trò và mã cá biệt từ session để gửi kèm lệnh API
+      let mcbGui = ndHtai.mcb ? String(ndHtai.mcb).trim() : (ndHtai.cccd ? String(ndHtai.cccd).trim() : "");
+      
+      goiMyChuHien('layTatCaDl', { vTro: ndHtai.vTro, mcb: mcbGui })
         .then(q => {
             if(q.tCong) veUd(q.dLieu); else { hienTbao(q.tBao, 'loi'); $("#vungTai").hide(); }
         }).catch(lc => { hienTbao(lc, 'loi'); $("#vungTai").hide(); });
