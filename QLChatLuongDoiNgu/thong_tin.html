@@ -700,7 +700,10 @@ $(document).on('shown.bs.tab', 'button[data-bs-target="#muc5"]', function (e) {
 
 function taiDsChuyen() {
    $("#vungTai").show();
-   goiMyChuHien('layDlChuyen')
+   // NÂNG CẤP: Gửi kèm vai trò và mã cá biệt khi truy vấn danh sách chuyển công tác
+   let mcbGui = ndHtai.mcb ? String(ndHtai.mcb).trim() : (ndHtai.cccd ? String(ndHtai.cccd).trim() : "");
+   
+   goiMyChuHien('layDlChuyen', { vTro: ndHtai.vTro, mcb: mcbGui })
      .then(q => {
          if(q.tCong) {
              dlChuyenToanc = q.dLieu || [];
