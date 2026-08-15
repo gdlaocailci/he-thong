@@ -6,15 +6,22 @@
     <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
+  <style>
         .reactbits-fade-in { animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; filter: blur(8px); transform: translateY(15px); }
         @keyframes fadeInBlur { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
         .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; }
         
         body { font-family: "Times New Roman", Times, serif; }
         .bang-excel { border-collapse: collapse; width: max-content; min-width: 100%; }
+        
+        /* Cấu hình viền bảng mặc định */
         .bang-excel th, .bang-excel td { border: 1px solid #718096; padding: 6px 8px; font-size: 1rem; white-space: nowrap; }
-        .bang-excel th { background-color: #f8fafc; color: #0f172a; }
+        
+        /* FIX LỖI TRÌNH DUYỆT: Ép vẽ lại viền khi cuộn Header */
+        .bang-excel th { background-color: #f8fafc; color: #0f172a; background-clip: padding-box; }
+        .bang-excel thead tr:first-child th { border-bottom: 1px solid #718096 !important; }
+
+        /* CSS CHO MENU DỌC */
         .bg-menu-main { background-color: #0b5394; }
         .bg-menu-hover { background-color: #1e70b8; }
         .text-menu-active { color: #b6d7a8; }
