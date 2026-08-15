@@ -284,3 +284,79 @@ function xuatMaTranBang(danhSachTiet) {
     });
     tbody.innerHTML = tbodyHTML;
 }
+
+// =========================================================================
+// HÀM XỬ LÝ LƯU TRỮ DỮ LIỆU VỀ CƠ SỞ DỮ LIỆU
+// =========================================================================
+async function luuMacDinh(event) {
+    const btn = event.currentTarget;
+    const textGoc = btn.innerHTML;
+    // Hiệu ứng loading nút bấm
+    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`;
+    btn.disabled = true;
+
+    try {
+        const mangLop = thongSoHocVu.DANH_SACH_LOP || [];
+        const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
+        const buoiMacDinh = ["Sáng", "Chiều"];
+        
+        let dsTietLuoi = [];
+        let tuanHT = thongSoHocVu.TUAN_HIEN_TAI || '';
+        let namHocHT = thongSoHocVu.NAM_HOC || '';
+
+        // Quét toàn bộ lưới Select trên UI
+        thuMacDinh.forEach(thu => {
+            buoiMacDinh.forEach(buoi => {
+                let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4;
+                for(let t=1; t<=soTiet; t++) {
+                    mangLop.forEach(lop => {
+                        let idMon = `mon_${thu}_${buoi}_${t}_${lop}`;
+                        let idGv = `gv_${thu}_${buoi}_${t}_${lop}`;
+                        
+                        let theSelectMon = document.getElementById(idMon);
+                        let theSelectGv = document.getElementById(idGv);
+                        
+                        // Chỉ lấy các tiết có phân công môn học
+                        if(theSelectMon && theSelectMon.value) {
+                            let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
+                            let maTietPhatSinh = `${tuanHT}_${thu}_${tienToBuoi}_${t}_${lop}`;
+                            
+                            dsTietLuoi.push({
+                                maTiet: maTietPhatSinh,
+                                namHoc: namHocHT,
+                                tuan: tuanHT,
+                                thu: thu,
+                                buoi: buoi,
+                                tiet: t,
+                                maLop: lop,
+                                monHoc: theSelectMon.value,
+                                maGv: theSelectGv ? theSelectGv.value : ""
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Gửi dữ liệu qua phương thức POST để đảm bảo an toàn cho khối lượng dữ liệu lớn
+        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
+            method: 'POST',
+            body: JSON.stringify({ thaoTac: 'luuMacDinh', duLieu: dsTietLuoi })
+        });
+        
+        const ketQua = await phanHoi.json();
+        
+        if(ketQua.trangThai === 'thanh_cong') {
+            alert("Đã lưu Thời khóa biểu thành công. Hệ thống sẽ lấy dữ liệu này làm mặc định!");
+        } else {
+            alert("Đã xảy ra sự cố từ máy chủ: " + (ketQua.thongBao || "Lỗi không xác định."));
+        }
+    } catch (loi) {
+        alert("Lỗi kết nối máy chủ khi lưu dữ liệu. Vui lòng kiểm tra mạng.");
+        console.error(loi);
+    } finally {
+        // Phục hồi trạng thái nút
+        btn.innerHTML = textGoc;
+        btn.disabled = false;
+    }
+}
