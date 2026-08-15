@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -16,14 +15,76 @@
         .bang-excel { border-collapse: collapse; width: max-content; min-width: 100%; }
         .bang-excel th, .bang-excel td { border: 1px solid #718096; padding: 6px 8px; font-size: 1rem; white-space: nowrap; }
         .bang-excel th { background-color: #f8fafc; color: #0f172a; }
+
+        /* CSS CSS CHO MENU DỌC */
+        .bg-menu-main { background-color: #0b5394; }
+        .bg-menu-hover { background-color: #1e70b8; }
+        .text-menu-active { color: #b6d7a8; }
+        .border-menu-active { border-color: #b6d7a8; }
     </style>
 </head>
 <body class="bg-gray-100 text-slate-800 min-h-screen flex overflow-hidden">
 
     <!-- ========================================================= -->
-    <!-- 1. KHỐI MENU DỌC BÊN TRÁI (NHÚNG TỪ GOOGLE APPS SCRIPT)   -->
+    <!-- 1. KHỐI MENU DỌC BÊN TRÁI                                 -->
     <!-- ========================================================= -->
-    <?!= HtmlService.createHtmlOutputFromFile('MenuDoc').getContent(); ?>
+    <div class="w-64 h-full min-h-screen bg-menu-main flex flex-col shadow-xl font-sans text-white z-10">
+        
+        <!-- Phần 1: Logo và Tên trường -->
+        <div class="flex flex-col items-center pt-8 pb-3 px-4">
+            <div class="bg-white p-1 rounded-full mb-4 shadow-lg border-2 border-blue-300">
+                <img id="logoMenuDoc" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo Hệ thống" class="w-20 h-20 rounded-full object-cover">
+            </div>
+            <h2 id="tenDonViMenu" class="text-center text-white font-bold text-base uppercase tracking-wide leading-relaxed">
+                Trường Tiểu học<br>Hợp Thành
+            </h2>
+        </div>
+
+        <!-- Đường kẻ ngang phân cách đứt đoạn -->
+        <div class="px-6 my-2">
+            <hr class="border-dashed border-blue-300 opacity-40">
+        </div>
+
+        <!-- Phần 2: Khối thông tin Năm học & Tuần học -->
+        <div class="mx-5 my-4 bg-white rounded shadow-md p-4 text-sm text-slate-800">
+            <div class="flex flex-col mb-3 border-b border-dashed border-gray-300 pb-3">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-bold">Năm học:</span>
+                    <span id="menuHienThiNamHoc" class="font-bold text-blue-600 text-right">Đang tải...</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-bold">Tuần học:</span>
+                    <span id="menuHienThiTuanHoc" class="font-bold text-blue-600 text-right">Đang tải...</span>
+                </div>
+            </div>
+            <div class="text-center">
+                <span class="font-bold">Trạng thái:</span><br>
+                <span class="font-bold text-red-600 text-base mt-1 inline-block">Hệ thống mở</span>
+            </div>
+        </div>
+
+        <!-- Phần 3: Danh sách các Tab Menu -->
+        <nav class="flex flex-col mt-4">
+            <a href="#" class="flex items-center gap-4 px-6 py-4 bg-menu-hover border-l-[5px] border-menu-active transition-all cursor-pointer border-b border-white/10">
+                <img src="https://www.svgrepo.com/show/521634/file-table.svg" class="w-5 h-5 filter invert brightness-0" alt="Toàn trường">
+                <span class="font-bold text-menu-active text-[15px]">TKB Toàn trường</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
+                <img src="https://www.svgrepo.com/show/521743/person.svg" class="w-5 h-5 filter invert brightness-0 opacity-80 group-hover:opacity-100 transition-opacity" alt="Cá nhân">
+                <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">TKB Cá nhân</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
+                <img src="https://www.svgrepo.com/show/521566/chart-pie.svg" class="w-5 h-5 filter invert brightness-0 opacity-80 group-hover:opacity-100 transition-opacity" alt="Thống kê">
+                <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Thống kê</span>
+            </a>
+        </nav>
+        
+        <!-- Phần cuối (Footer menu) -->
+        <div class="mt-auto p-4 bg-black/20 text-center">
+            <p class="text-xs text-blue-200 font-bold uppercase tracking-widest">Thiết kế và phát triển</p>
+            <p class="text-sm font-bold text-white mt-1">Hoàng Ngọc Lâm</p>
+        </div>
+    </div>
 
 
     <!-- ========================================================= -->
@@ -54,7 +115,6 @@
                         <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
                     </h2>
                     
-                    <!-- CỤM NÚT CHỨC NĂNG ĐÃ NÂNG CẤP ICON VÀ THÊM NÚT LƯU MẶC ĐỊNH -->
                     <div class="flex space-x-3 font-sans">
                         <button onclick="luuMacDinh(event)" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 text-sm shadow-md transition duration-200 flex items-center gap-2 rounded-lg">
                             <img src="https://www.svgrepo.com/show/521812/save.svg" class="w-5 h-5 filter invert brightness-0" alt="Lưu Icon">
@@ -90,14 +150,13 @@
         </main>
 
         <footer class="mt-8 text-center text-slate-500 reactbits-fade-in delay-300">
-            <p id="tieuDeTacGia" class="text-base font-bold uppercase tracking-widest">Thiết kế và phát triển</p>
-            <p id="tenTacGia" class="text-lg font-bold text-slate-800">Hoàng Ngọc Lâm</p>
+            <!-- Phần footer bên phải có thể để trống hoặc thêm thông tin phụ trợ nếu muốn, vì chữ ký đã chuyển sang Menu Dọc -->
         </footer>
 
-    </div> <!-- Kết thúc vùng hiển thị chính bên phải -->
+    </div>
 
     <!-- ========================================================= -->
-    <!-- 3. BẢNG NỔI MODAL BÁO CÁO KẾT QUẢ KIỂM TRA (GIỮ NGUYÊN)   -->
+    <!-- 3. BẢNG NỔI MODAL BÁO CÁO KẾT QUẢ KIỂM TRA                -->
     <!-- ========================================================= -->
     <div id="modalKiemTra" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-sans reactbits-fade-in">
         <div class="bg-white rounded-xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[80vh] flex flex-col overflow-hidden border border-gray-300">
@@ -114,7 +173,6 @@
         </div>
     </div>
 
-    <!-- Gọi các mã nguồn bổ trợ (Front-end JS) -->
     <script src="KetNoi.js"></script>
     <script src="app.js"></script>
 </body>
