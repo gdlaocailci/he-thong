@@ -1,7 +1,7 @@
 /**
  * TỆP: app.js
  * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
- * Nâng cấp: Chuyển đổi lưới thành Bảng tương tác (Interactive Grid) ánh xạ Dropdown.
+ * Nâng cấp: Tách tính năng Xem dữ liệu cũ và Nút Gọi xếp lịch tự động. Đọc động tham số vòng lặp.
  * Thiết kế và phát triển
  * Hoàng Ngọc Lâm
  */
@@ -29,7 +29,7 @@ async function khoiTaoGiaoDien() {
         if(thongSoHocVu.NAM_HOC) document.getElementById('hienThiNamHoc').innerText = thongSoHocVu.NAM_HOC;
         if(thongSoHocVu.TUAN_HIEN_TAI) {
             document.getElementById('hienThiTuan').innerText = thongSoHocVu.TUAN_HIEN_TAI;
-            taiDuLieuTKB(thongSoHocVu.TUAN_HIEN_TAI);
+            taiDuLieuTKB(thongSoHocVu.TUAN_HIEN_TAI); // Mặc định mở lên là tải dữ liệu đã lưu
         }
     } catch (loi) {
         document.getElementById('tenDonVi').innerText = "Lỗi kết nối máy chủ API";
@@ -37,41 +37,56 @@ async function khoiTaoGiaoDien() {
 }
 
 // =========================================================================
-// KHỐI 2: TẢI DỮ LIỆU TỪ MÁY CHỦ VÀ GỌI VẼ BẢNG
+// KHỐI 2: CÁC LỆNH GỌI DỮ LIỆU TỪ MÁY CHỦ
 // =========================================================================
+
+// Hàm 1: Đọc dữ liệu đã lưu (dùng cho tải trang mặc định hoặc nút Làm mới)
 async function taiDuLieuTKB(tuan) {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 reactbits-fade-in">Đang đồng bộ định mức và dựng Không gian làm việc...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 reactbits-fade-in">Đang tải dữ liệu lưu trữ từ hệ thống...</td></tr>`;
 
     try {
         const tuanTruyVan = tuan || thongSoHocVu.TUAN_HIEN_TAI;
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanTruyVan}`);
         const danhSachTiet = await phanHoi.json();
-        
         xuatMaTranBang(danhSachTiet);
     } catch (loi) {
         vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10">Lỗi phân tích dữ liệu từ máy chủ.</td></tr>`;
     }
 }
 
+// Hàm 2: Gọi thuật toán khởi tạo bản nháp mới (Nút Xếp Tự Động)
+async function goiThuatToanXepLich() {
+    const vungHienThi = document.getElementById('vungHienThiDuLieu');
+    vungHienThi.innerHTML = `<tr><td class="text-center text-orange-600 font-bold py-10 reactbits-fade-in text-lg">
+        <div class="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3"></div>
+        Đang chạy Động cơ phân tích Ma trận & Xếp lịch tự động...
+    </td></tr>`;
+
+    try {
+        const tuanTruyVan = thongSoHocVu.TUAN_HIEN_TAI;
+        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=xepLichTuDong&tuan=${tuanTruyVan}`);
+        const danhSachTiet = await phanHoi.json();
+        xuatMaTranBang(danhSachTiet);
+    } catch (loi) {
+        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10">Lỗi thuật toán xếp lịch tự động.</td></tr>`;
+    }
+}
+
 // =========================================================================
-// KHỐI 3: HÀM HỖ TRỢ VẼ DROPDOWN ÁNH XẠ DANH MỤC GỐC
+// KHỐI 3: HÀM HỖ TRỢ VẼ DROPDOWN ÁNH XẠ DANH MỤC
 // =========================================================================
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText) {
-    // Sử dụng appearance-none của Tailwind để giấu mũi tên mặc định, tạo cảm giác Excel sạch sẽ
     let html = `<select class="w-full h-full bg-transparent outline-none appearance-none text-center cursor-pointer py-1 ${kieuText}">`;
-    html += `<option value=""></option>`; // Tùy chọn để trống
-    
+    html += `<option value=""></option>`; 
     if (danhSach && danhSach.length > 0) {
         danhSach.forEach(muc => {
             let duocChon = (muc === giaTriMacDinh) ? 'selected' : '';
             html += `<option value="${muc}" ${duocChon}>${muc}</option>`;
         });
     } else if (giaTriMacDinh) {
-        // Fallback hiển thị nếu danh sách chưa tải kịp nhưng có dữ liệu cũ
         html += `<option value="${giaTriMacDinh}" selected>${giaTriMacDinh}</option>`;
     }
-    
     html += `</select>`;
     return html;
 }
@@ -116,6 +131,7 @@ function xuatMaTranBang(danhSachTiet) {
     theadHTML += `</tr>`;
     thead.innerHTML = theadHTML;
 
+    // Phân rã dữ liệu
     const luoiDuLieu = {};
     const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
     const boLocBuoi = {"Sáng": 1, "Chiều": 2};
@@ -124,25 +140,25 @@ function xuatMaTranBang(danhSachTiet) {
         const thu = t.thu.trim();
         const buoi = t.buoi.trim();
         const tiet = t.tiet;
-        
         if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {};
         if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {};
         if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
-        
         luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
     });
 
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
-    thuMacDinh.forEach(thu => {
-        if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {};
-    });
+    thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
+
+    // Lấy số tiết động từ Cấu Hình (mặc định Sáng 4, Chiều 3 nếu lỗi mạng)
+    const gioiHanSang = parseInt(thongSoHocVu.SO_TIET_SANG) || 4;
+    const gioiHanChieu = parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3;
 
     Object.keys(luoiDuLieu).forEach(thu => {
         if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {};
         if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
 
-        [1, 2, 3, 4].forEach(t => { if (!luoiDuLieu[thu]["Sáng"][t]) luoiDuLieu[thu]["Sáng"][t] = {}; });
-        [1, 2, 3].forEach(t => { if (!luoiDuLieu[thu]["Chiều"][t]) luoiDuLieu[thu]["Chiều"][t] = {}; });
+        for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
+        for (let j = 1; j <= gioiHanChieu; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
 
         luoiDuLieu[thu]["Sáng"]["99_du"] = {};
         luoiDuLieu[thu]["Chiều"]["99_du"] = {};
@@ -197,35 +213,29 @@ function xuatMaTranBang(danhSachTiet) {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
                     
                     if (tiet !== "99_du") {
-                        // Trích xuất dữ liệu đang có (nếu trống thì gán chuỗi rỗng)
                         let monGoc = duLieuO ? duLieuO.monHoc : "";
                         let gvGoc = duLieuO ? duLieuO.maGv : "";
 
                         let bgMon = '', textMon = 'text-slate-900 font-medium';
                         let bgGV = '', textGV = 'text-slate-900';
 
-                        // Xử lý Color Coding màu nền
                         const monSoSanh = monGoc.toLowerCase();
                         if (monSoSanh.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white font-bold'; }
                         else if (monSoSanh.includes('mĩ thuật') || monSoSanh.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
                         else if (monSoSanh.includes('gdtc')) { bgMon = 'bg-cyan-400'; }
 
-                        // Bơm Dropdown Môn và N Dạy vào ô (Loại bỏ padding mặc định của thẻ td bằng p-0 để select phủ kín)
                         let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textMon);
                         let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textGV);
 
                         tbodyHTML += `<td class="text-center p-0 align-middle ${bgMon} focus-within:ring-2 focus-within:ring-blue-400">${dropdownMon}</td>`;
                         tbodyHTML += `<td class="text-center p-0 align-middle ${bgGV} focus-within:ring-2 focus-within:ring-blue-400">${dropdownGV}</td>`;
                     } else {
-                        // Dòng trắng dự phòng dưới cùng không có dropdown để giữ giao diện thanh thoát
                         tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
                     }
                 });
-
                 tbodyHTML += `</tr>`;
             });
         });
     });
-
     tbody.innerHTML = tbodyHTML;
 }
