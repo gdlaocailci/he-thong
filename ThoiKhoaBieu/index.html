@@ -87,68 +87,80 @@
     </div>
 
 
+<!-- ========================================================= -->
+    <!-- 2. KHỐI NỘI DUNG CHÍNH BÊN PHẢI (ÁP DỤNG FLEXBOX CỐ ĐỊNH) -->
     <!-- ========================================================= -->
-    <!-- 2. KHỐI NỘI DUNG CHÍNH BÊN PHẢI                           -->
-    <!-- ========================================================= -->
-    <div class="flex-1 h-screen overflow-y-auto p-2 md:p-6 relative">
+    <div class="flex-1 h-screen flex flex-col bg-gray-100 relative overflow-hidden">
         
-        <header class="bg-white shadow-sm border border-gray-300 p-5 mb-5 flex items-center reactbits-fade-in delay-100">
-            <div class="flex items-center space-x-4">
-                <img id="logoHeThong" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo" class="w-14 h-14">
-                <div>
-                    <h1 id="tenHeThong" class="text-2xl font-bold text-blue-900 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
-                    <p id="tenDonVi" class="text-slate-600 font-semibold text-lg">Trường Tiểu học Hợp Thành</p>
-                </div>
-            </div>
-        </header>
-        
-        <main class="reactbits-fade-in delay-200">
-            <div class="bg-white shadow-md border border-gray-400 overflow-hidden">
-                <div class="p-3 bg-slate-50 border-b border-gray-400 flex flex-col md:flex-row justify-between items-center gap-3">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <img id="iconBang" src="https://www.svgrepo.com/show/521634/file-table.svg" alt="Icon Bảng" class="w-6 h-6">
-                        <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
-                    </h2>
-                    
-                    <div class="flex space-x-3 font-sans">
-                        <button onclick="luuMacDinh(event)" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 text-sm shadow-md transition duration-200 flex items-center gap-2 rounded-lg">
-                            <img src="https://www.svgrepo.com/show/521812/save.svg" class="w-5 h-5 filter invert brightness-0" alt="Lưu Icon">
-                            Lưu Mặc định
-                        </button>
-                        <button onclick="goiThuatToanXepLich()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 text-sm shadow-md transition duration-200 flex items-center gap-2 rounded-lg">
-                            <img src="https://www.svgrepo.com/show/522361/zap.svg" class="w-5 h-5 filter invert brightness-0" alt="Xếp Tự động Icon">
-                            Xếp Tự động
-                        </button>
-                        <button onclick="kiemTraDinhMuc()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 text-sm shadow-md transition duration-200 flex items-center gap-2 rounded-lg">
-                            <img src="https://www.svgrepo.com/show/521826/search.svg" class="w-5 h-5 filter invert brightness-0" alt="Kiểm tra Icon">
-                            Kiểm tra Định mức
-                        </button>
-                        <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow-md transition duration-200 flex items-center gap-2 rounded-lg">
-                            <img src="https://www.svgrepo.com/show/521815/refresh.svg" class="w-5 h-5 filter invert brightness-0" alt="Làm mới Icon">
-                            Làm mới
-                        </button>
+        <!-- KHU VỰC CỐ ĐỊNH TRÊN CÙNG (Khung Đỏ) -->
+        <div class="flex-none p-2 pb-0">
+            
+            <!-- Header (Đã thu hẹp tối đa padding và kích thước logo) -->
+            <header class="bg-white shadow-sm border border-gray-300 p-2 mb-2 flex items-center reactbits-fade-in delay-100">
+                <div class="flex items-center space-x-3">
+                    <img id="logoHeThong" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo" class="w-10 h-10">
+                    <div>
+                        <h1 id="tenHeThong" class="text-xl font-bold text-blue-900 uppercase tracking-wide leading-tight">Đang nạp dữ liệu...</h1>
+                        <p id="tenDonVi" class="text-slate-600 font-semibold text-sm">Trường Tiểu học Hợp Thành</p>
                     </div>
                 </div>
+            </header>
+
+            <!-- Thanh Công cụ (Toolbar) thu hẹp padding -->
+            <div class="bg-slate-50 border border-gray-400 p-2 flex flex-col md:flex-row justify-between items-center gap-2 reactbits-fade-in delay-200">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <img id="iconBang" src="https://www.svgrepo.com/show/521634/file-table.svg" alt="Icon Bảng" class="w-5 h-5">
+                    <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
+                </h2>
                 
-                <div class="overflow-x-auto">
-                    <table class="bang-excel">
-                        <thead id="tieuDeBang"><tr><th class="text-center text-slate-500 py-4">Đang phân tích định dạng biểu mẫu...</th></tr></thead>
-                        <tbody id="vungHienThiDuLieu">
-                            <tr><td class="px-6 py-16 text-center text-slate-500">
-                                <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
-                                <p class="font-bold text-lg">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
-                            </td></tr>
-                        </tbody>
-                    </table>
+                <div class="flex space-x-2 font-sans">
+                    <button onclick="luuMacDinh(event)" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
+                        <img src="https://www.svgrepo.com/show/521812/save.svg" class="w-4 h-4 filter invert brightness-0" alt="Lưu Icon">
+                        Lưu Mặc định
+                    </button>
+                    <button onclick="goiThuatToanXepLich()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
+                        <img src="https://www.svgrepo.com/show/522361/zap.svg" class="w-4 h-4 filter invert brightness-0" alt="Xếp Tự động Icon">
+                        Xếp Tự động
+                    </button>
+                    <button onclick="kiemTraDinhMuc()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
+                        <img src="https://www.svgrepo.com/show/521826/search.svg" class="w-4 h-4 filter invert brightness-0" alt="Kiểm tra Icon">
+                        Kiểm tra Định mức
+                    </button>
+                    <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
+                        <img src="https://www.svgrepo.com/show/521815/refresh.svg" class="w-4 h-4 filter invert brightness-0" alt="Làm mới Icon">
+                        Làm mới
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- KHU VỰC CUỘN ĐỘNG (Chứa bảng TKB) -->
+        <!-- flex-1 giúp khối này tự động chiếm toàn bộ chiều cao còn lại -->
+        <main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
+            <!-- overflow-auto nằm ở div con trực tiếp bọc bảng -->
+            <div class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
+                <table class="bang-excel relative">
+                    <!-- Làm dính (sticky) tiêu đề cột của bảng để khi cuộn không bị mất -->
+                    <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                        <tr><th class="text-center text-slate-500 py-3">Đang phân tích định dạng biểu mẫu...</th></tr>
+                    </thead>
+                    <tbody id="vungHienThiDuLieu">
+                        <tr><td class="px-6 py-10 text-center text-slate-500">
+                            <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+                            <p class="font-bold text-base">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
+                        </td></tr>
+                    </tbody>
+                </table>
             </div>
         </main>
 
-        <footer class="mt-8 text-center text-slate-500 reactbits-fade-in delay-300">
-            <!-- Phần footer bên phải có thể để trống hoặc thêm thông tin phụ trợ nếu muốn, vì chữ ký đã chuyển sang Menu Dọc -->
+        <!-- CHÂN TRANG CỐ ĐỊNH -->
+        <footer class="flex-none bg-white border-t border-gray-300 py-1 px-4 flex justify-between items-center text-xs text-slate-500 reactbits-fade-in delay-300">
+            <span class="font-bold tracking-wide">HỆ THỐNG QUẢN LÝ NHÀ TRƯỜNG</span>
+            <span>Phiên bản 1.0</span>
         </footer>
 
-    </div>
+    </div> <!-- Kết thúc vùng hiển thị chính bên phải -->
 
     <!-- ========================================================= -->
     <!-- 3. BẢNG NỔI MODAL BÁO CÁO KẾT QUẢ KIỂM TRA                -->
