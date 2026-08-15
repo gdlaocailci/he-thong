@@ -7,37 +7,18 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Hiệu ứng chuyển động mượt mà */
         .reactbits-fade-in { animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; filter: blur(8px); transform: translateY(15px); }
         @keyframes fadeInBlur { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
         .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; }
         
-        /* Ép phông chữ Times New Roman cho toàn bộ Web App */
-        body {
-            font-family: "Times New Roman", Times, serif;
-        }
-
-        /* Bảng tự động giãn cột theo chiều dài chữ */
-        .bang-excel { 
-            border-collapse: collapse; 
-            width: max-content; 
-            min-width: 100%; 
-        }
-        .bang-excel th, .bang-excel td { 
-            border: 1px solid #718096; 
-            padding: 6px 8px; 
-            font-size: 1rem; /* Chỉnh kích thước chữ to rõ ràng */
-            white-space: nowrap; /* Lệnh quan trọng: Ép ô không được bẻ dòng, tự giãn để không lấp chữ */
-        }
-        .bang-excel th { 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-        }
+        body { font-family: "Times New Roman", Times, serif; }
+        .bang-excel { border-collapse: collapse; width: max-content; min-width: 100%; }
+        .bang-excel th, .bang-excel td { border: 1px solid #718096; padding: 6px 8px; font-size: 1rem; white-space: nowrap; }
+        .bang-excel th { background-color: #f8fafc; color: #0f172a; }
     </style>
 </head>
-<body class="bg-gray-100 text-slate-800 p-2 md:p-6 min-h-screen">
+<body class="bg-gray-100 text-slate-800 p-2 md:p-6 min-h-screen relative">
 
-    <!-- HEADER THÔNG TIN HỌC VỤ -->
     <header class="bg-white shadow-sm border border-gray-300 p-5 mb-5 flex flex-col md:flex-row items-center justify-between reactbits-fade-in delay-100">
         <div class="flex items-center space-x-4 mb-4 md:mb-0">
             <img id="logoHeThong" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo" class="w-14 h-14">
@@ -53,7 +34,6 @@
         </div>
     </header>
 
-    <!-- KHU VỰC BẢNG MA TRẬN THỜI KHÓA BIỂU -->
     <main class="reactbits-fade-in delay-200">
         <div class="bg-white shadow-md border border-gray-400 overflow-hidden">
             <div class="p-3 bg-slate-50 border-b border-gray-400 flex flex-col md:flex-row justify-between items-center gap-3">
@@ -61,13 +41,16 @@
                     <img id="iconBang" src="https://www.svgrepo.com/show/521634/file-table.svg" alt="Icon Bảng" class="w-6 h-6">
                     <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
                 </h2>
-                <!-- VÙNG NÚT ĐIỀU KHIỂN -->
-                <div class="flex space-x-3 font-sans"> <!-- Giữ font-sans riêng cho các nút bấm -->
+                <!-- BỔ SUNG NÚT KIỂM TRA ĐỊNH MỨC -->
+                <div class="flex space-x-3 font-sans">
                     <button onclick="goiThuatToanXepLich()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 flex items-center gap-2 rounded">
-                        ⚡ Xếp TKB Tự động
+                        ⚡ Xếp Tự động
+                    </button>
+                    <button onclick="kiemTraDinhMuc()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 flex items-center gap-2 rounded">
+                        🔍 Kiểm tra Định mức
                     </button>
                     <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 flex items-center gap-2 rounded">
-                        Làm mới dữ liệu
+                        Làm mới
                     </button>
                 </div>
             </div>
@@ -86,11 +69,26 @@
         </div>
     </main>
 
-    <!-- FOOTER CHỮ KÝ (2 DÒNG) -->
     <footer class="mt-8 text-center text-slate-500 reactbits-fade-in delay-300">
         <p id="tieuDeTacGia" class="text-base font-bold uppercase tracking-widest">Thiết kế và phát triển</p>
         <p id="tenTacGia" class="text-lg font-bold text-slate-800">Hoàng Ngọc Lâm</p>
     </footer>
+
+    <!-- MODAL (BẢNG NỔI) BÁO CÁO KẾT QUẢ KIỂM TRA -->
+    <div id="modalKiemTra" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-sans reactbits-fade-in">
+        <div class="bg-white rounded-xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[80vh] flex flex-col overflow-hidden border border-gray-300">
+            <div class="bg-purple-600 text-white p-4 flex justify-between items-center border-b">
+                <h3 class="text-lg font-bold flex items-center gap-2">🔍 Báo cáo Đối chiếu Định mức Khung Chương trình</h3>
+                <button onclick="dongModal()" class="text-white hover:text-gray-200 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="noiDungKiemTra" class="p-6 overflow-y-auto">
+                <!-- Javascript sẽ bơm bảng chi tiết lỗi vào đây -->
+            </div>
+            <div class="bg-gray-100 p-4 border-t flex justify-end">
+                <button onclick="dongModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-2 rounded shadow transition">Đóng</button>
+            </div>
+        </div>
+    </div>
 
     <script src="KetNoi.js"></script>
     <script src="app.js"></script>
