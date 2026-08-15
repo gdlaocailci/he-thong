@@ -1,6 +1,7 @@
 /**
  * TỆP: app.js
  * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
+ * Nâng cấp: Chuyển đổi lưới thành Bảng tương tác (Interactive Grid) ánh xạ Dropdown.
  * Thiết kế và phát triển
  * Hoàng Ngọc Lâm
  */
@@ -36,11 +37,11 @@ async function khoiTaoGiaoDien() {
 }
 
 // =========================================================================
-// KHỐI 2: TẢI DỮ LIỆU TỪ MÁY CHỦ
+// KHỐI 2: TẢI DỮ LIỆU TỪ MÁY CHỦ VÀ GỌI VẼ BẢNG
 // =========================================================================
 async function taiDuLieuTKB(tuan) {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 reactbits-fade-in">Đang đồng bộ phân công, đếm số tiết và vẽ ma trận tự động...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 reactbits-fade-in">Đang đồng bộ định mức và dựng Không gian làm việc...</td></tr>`;
 
     try {
         const tuanTruyVan = tuan || thongSoHocVu.TUAN_HIEN_TAI;
@@ -54,7 +55,29 @@ async function taiDuLieuTKB(tuan) {
 }
 
 // =========================================================================
-// KHỐI 3: THUẬT TOÁN PIVOT VÀ XÂY DỰNG KHUNG SƯ PHẠM
+// KHỐI 3: HÀM HỖ TRỢ VẼ DROPDOWN ÁNH XẠ DANH MỤC GỐC
+// =========================================================================
+function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText) {
+    // Sử dụng appearance-none của Tailwind để giấu mũi tên mặc định, tạo cảm giác Excel sạch sẽ
+    let html = `<select class="w-full h-full bg-transparent outline-none appearance-none text-center cursor-pointer py-1 ${kieuText}">`;
+    html += `<option value=""></option>`; // Tùy chọn để trống
+    
+    if (danhSach && danhSach.length > 0) {
+        danhSach.forEach(muc => {
+            let duocChon = (muc === giaTriMacDinh) ? 'selected' : '';
+            html += `<option value="${muc}" ${duocChon}>${muc}</option>`;
+        });
+    } else if (giaTriMacDinh) {
+        // Fallback hiển thị nếu danh sách chưa tải kịp nhưng có dữ liệu cũ
+        html += `<option value="${giaTriMacDinh}" selected>${giaTriMacDinh}</option>`;
+    }
+    
+    html += `</select>`;
+    return html;
+}
+
+// =========================================================================
+// KHỐI 4: THUẬT TOÁN PIVOT VÀ XUẤT HTML UI TƯƠNG TÁC
 // =========================================================================
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang');
@@ -86,16 +109,13 @@ function xuatMaTranBang(danhSachTiet) {
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => {
         theadHTML += `
-            <th class="text-center font-bold bg-slate-50 text-slate-800 w-28">Môn</th>
-            <th class="text-center font-bold bg-slate-50 text-slate-800 w-24">N dạy</th>
+            <th class="text-center font-bold bg-slate-50 text-slate-800 w-28 hover:bg-blue-50 cursor-pointer">Môn</th>
+            <th class="text-center font-bold bg-slate-50 text-slate-800 w-24 hover:bg-blue-50 cursor-pointer">N dạy</th>
         `;
     });
     theadHTML += `</tr>`;
     thead.innerHTML = theadHTML;
 
-    // -------------------------------------------------------------------------
-    // BƯỚC 3: XÂY DỰNG KHUNG LƯỚI TỌA ĐỘ VÀ NẠP DỮ LIỆU THỰC TẾ
-    // -------------------------------------------------------------------------
     const luoiDuLieu = {};
     const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
     const boLocBuoi = {"Sáng": 1, "Chiều": 2};
@@ -121,21 +141,13 @@ function xuatMaTranBang(danhSachTiet) {
         if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {};
         if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
 
-        [1, 2, 3, 4].forEach(t => {
-            if (!luoiDuLieu[thu]["Sáng"][t]) luoiDuLieu[thu]["Sáng"][t] = {};
-        });
-        
-        [1, 2, 3].forEach(t => {
-            if (!luoiDuLieu[thu]["Chiều"][t]) luoiDuLieu[thu]["Chiều"][t] = {};
-        });
+        [1, 2, 3, 4].forEach(t => { if (!luoiDuLieu[thu]["Sáng"][t]) luoiDuLieu[thu]["Sáng"][t] = {}; });
+        [1, 2, 3].forEach(t => { if (!luoiDuLieu[thu]["Chiều"][t]) luoiDuLieu[thu]["Chiều"][t] = {}; });
 
         luoiDuLieu[thu]["Sáng"]["99_du"] = {};
         luoiDuLieu[thu]["Chiều"]["99_du"] = {};
     });
 
-    // -------------------------------------------------------------------------
-    // BƯỚC 4: XUẤT HTML BẢNG MA TRẬN
-    // -------------------------------------------------------------------------
     let tbodyHTML = '';
     const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
 
@@ -157,7 +169,7 @@ function xuatMaTranBang(danhSachTiet) {
             let inCotBuoi = true;
 
             danhSachTietCuaBuoi.forEach(tiet => {
-                tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150">`;
+                tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group">`;
                 
                 if (inCotThu) {
                     tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center font-extrabold align-middle text-slate-900 bg-white">${thu}</td>`;
@@ -169,7 +181,6 @@ function xuatMaTranBang(danhSachTiet) {
                 }
 
                 let hienThiTiet = (tiet === "99_du") ? "" : tiet;
-
                 let duLieuTuan = '', duLieuThang = '', duLieuNam = '';
                 if (tiet !== "99_du") {
                     duLieuTuan = thongSoHocVu.TUAN_HIEN_TAI || '';
@@ -185,18 +196,28 @@ function xuatMaTranBang(danhSachTiet) {
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
                     
-                    if (duLieuO && tiet !== "99_du") {
+                    if (tiet !== "99_du") {
+                        // Trích xuất dữ liệu đang có (nếu trống thì gán chuỗi rỗng)
+                        let monGoc = duLieuO ? duLieuO.monHoc : "";
+                        let gvGoc = duLieuO ? duLieuO.maGv : "";
+
                         let bgMon = '', textMon = 'text-slate-900 font-medium';
                         let bgGV = '', textGV = 'text-slate-900';
 
-                        const mon = duLieuO.monHoc.toLowerCase();
-                        if (mon.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white font-bold'; }
-                        else if (mon.includes('mĩ thuật') || mon.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
-                        else if (mon.includes('gdtc')) { bgMon = 'bg-cyan-400'; }
+                        // Xử lý Color Coding màu nền
+                        const monSoSanh = monGoc.toLowerCase();
+                        if (monSoSanh.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white font-bold'; }
+                        else if (monSoSanh.includes('mĩ thuật') || monSoSanh.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
+                        else if (monSoSanh.includes('gdtc')) { bgMon = 'bg-cyan-400'; }
 
-                        tbodyHTML += `<td class="text-center ${bgMon} ${textMon}">${duLieuO.monHoc}</td>`;
-                        tbodyHTML += `<td class="text-center ${bgGV} ${textGV}">${duLieuO.maGv}</td>`;
+                        // Bơm Dropdown Môn và N Dạy vào ô (Loại bỏ padding mặc định của thẻ td bằng p-0 để select phủ kín)
+                        let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textMon);
+                        let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textGV);
+
+                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgMon} focus-within:ring-2 focus-within:ring-blue-400">${dropdownMon}</td>`;
+                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgGV} focus-within:ring-2 focus-within:ring-blue-400">${dropdownGV}</td>`;
                     } else {
+                        // Dòng trắng dự phòng dưới cùng không có dropdown để giữ giao diện thanh thoát
                         tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
                     }
                 });
