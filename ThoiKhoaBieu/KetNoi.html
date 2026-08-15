@@ -1,32 +1,29 @@
-<script>
-    const KET_NOI_MAY_CHU = {
-        // Thầy dán URL Web App (Deploy) của Apps Script vào đây
-        duongDanAPI: "https://script.google.com/macros/s/AKfycbz1IOFWbcOTfgPmnaSeD2uU0i7UWWsUSW3pHja87WzT3GOhtwsJz7YyNdY2eOHGU33s/exec", 
-        
-        maDinhDanh: "TH_HOP_THANH_2025_2026",
+/**
+ * TỆP: KetNoi.js (Chạy trên GitHub Pages)
+ * Chức năng: Lưu trữ các tham số cấu hình Frontend, đường dẫn, định danh và link tài nguyên tĩnh.
+ * Nguyên tắc: Chỉ khai báo hằng số, không chứa logic xử lý.
+ * Thiết kế và phát triển:
+ * Hoàng Ngọc Lâm
+ */
 
-        khoiTaoGoiDuLieu: function(lenhThucThi, thongTinBoSung = {}) {
-            let duLieuGoi = {
-                maDinhDanh: this.maDinhDanh,
-                lenh: lenhThucThi,
-                duLieu: thongTinBoSung
-            };
-            return {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(duLieuGoi)
-            };
-        },
+const CAU_HINH_FRONTEND = {
+    // =========================================================================
+    // 1. LINK CỔNG GIAO TIẾP VỚI MÁY CHỦ GOOGLE APPS SCRIPT (Cực kỳ quan trọng)
+    // =========================================================================
+    URL_API_MAY_CHU: 'https://script.google.com/macros/s/AKfycbz1IOFWbcOTfgPmnaSeD2uU0i7UWWsUSW3pHja87WzT3GOhtwsJz7YyNdY2eOHGU33s/exec',
 
-        layDuLieu: async function(lenhYeuCau) {
-            try {
-                let phanHoi = await fetch(this.duongDanAPI, this.khoiTaoGoiDuLieu(lenhYeuCau));
-                let ketQua = await phanHoi.json();
-                return ketQua;
-            } catch (loiHeThong) {
-                console.error("Lỗi giao tiếp máy chủ:", loiHeThong);
-                return { trangThai: "Loi", thongBao: "Mất kết nối đến hệ thống dữ liệu." };
-            }
-        }
-    };
-</script>
+    // =========================================================================
+    // 2. ĐỊNH DANH NHÀ TRƯỜNG VÀ TÁC GIẢ (Frontend hiển thị dự phòng)
+    // =========================================================================
+    TEN_DU_AN: 'CỔNG TRA CỨU THỜI KHÓA BIỂU - TRƯỜNG TIỂU HỌC HỢP THÀNH',
+    TAC_GIA_THIET_KE: 'Hoàng Ngọc Lâm',
+
+    // =========================================================================
+    // 3. LINK TÀI NGUYÊN (ICONS, LOGO) - Lấy từ SvgRepo.com
+    // =========================================================================
+    LINK_LOGO_TRANG_CHU: 'https://www.svgrepo.com/show/339459/calendar.svg',
+    LINK_ICON_BANG: 'https://www.svgrepo.com/show/521634/file-table.svg',
+    LINK_ICON_DANG_TAI: 'https://www.svgrepo.com/show/295350/loading-process.svg',
+    LINK_ICON_TRONG: 'https://www.svgrepo.com/show/334002/database-search.svg',
+    LINK_ICON_LAM_MOI: 'https://www.svgrepo.com/show/521815/refresh.svg'
+};
