@@ -1,7 +1,10 @@
 /**
  * TỆP: app.js
  * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
- * Nâng cấp: Ép buộc tạo khung UI mặc định Thứ 2 -> Thứ 6. Tự động hiển thị Thứ 7 nếu có dữ liệu phát sinh.
+ * Nâng cấp: 
+ * - Tạo khung UI mặc định Thứ 2 -> Thứ 6 (tự mở rộng Thứ 7 nếu có).
+ * - Ép định mức: Sáng 4 tiết, Chiều 3 tiết.
+ * - Bổ sung 1 dòng trắng dự phòng ở cuối mỗi buổi.
  * Thiết kế và phát triển
  * Hoàng Ngọc Lâm
  */
@@ -41,7 +44,7 @@ async function khoiTaoGiaoDien() {
 // =========================================================================
 async function taiDuLieuTKB(tuan) {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 hieu-ung-mo-dan">Đang đồng bộ phân công và xoay trục ma trận...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 reactbits-fade-in">Đang đồng bộ phân công và định hình lưới ma trận...</td></tr>`;
 
     try {
         const tuanTruyVan = tuan || thongSoHocVu.TUAN_HIEN_TAI;
@@ -55,7 +58,7 @@ async function taiDuLieuTKB(tuan) {
 }
 
 // =========================================================================
-// KHỐI 3: THUẬT TOÁN PIVOT XUẤT MA TRẬN CHUẨN BIỂU MẪU
+// KHỐI 3: THUẬT TOÁN PIVOT VÀ XÂY DỰNG KHUNG SƯ PHẠM
 // =========================================================================
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang');
@@ -97,38 +100,13 @@ function xuatMaTranBang(danhSachTiet) {
     thead.innerHTML = theadHTML;
 
     // -------------------------------------------------------------------------
-    // BƯỚC QUAN TRỌNG: KHỞI TẠO KHUNG LƯỚI ẢO MẶC ĐỊNH (THỨ 2 -> THỨ 6)
+    // BƯỚC 3: XÂY DỰNG KHUNG LƯỚI TỌA ĐỘ VÀ NẠP DỮ LIỆU THỰC TẾ
     // -------------------------------------------------------------------------
     const luoiDuLieu = {};
     const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
     const boLocBuoi = {"Sáng": 1, "Chiều": 2};
 
-    // Tự động phân tích có bao nhiêu Tiết Sáng/Chiều từ dữ liệu trả về
-    let cacTietSang = new Set();
-    let cacTietChieu = new Set();
-    duLieuTiet.forEach(t => {
-        if (t.buoi === "Sáng") cacTietSang.add(t.tiet);
-        if (t.buoi === "Chiều") cacTietChieu.add(t.tiet);
-    });
-    
-    // Nếu dữ liệu trống trơn, thiết lập Khung Tiết mặc định chuẩn sư phạm
-    if (cacTietSang.size === 0) [1, 2, 3, 4].forEach(t => cacTietSang.add(t));
-    if (cacTietChieu.size === 0) [1, 2, 3].forEach(t => cacTietChieu.add(t));
-
-    cacTietSang = [...cacTietSang].sort((a,b) => parseInt(a) - parseInt(b));
-    cacTietChieu = [...cacTietChieu].sort((a,b) => parseInt(a) - parseInt(b));
-
-    // Bơm Thứ 2 đến Thứ 6 vào Lưới Ảo để ép hiển thị
-    const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
-    thuMacDinh.forEach(thu => {
-        luoiDuLieu[thu] = { "Sáng": {}, "Chiều": {} };
-        cacTietSang.forEach(tiet => luoiDuLieu[thu]["Sáng"][tiet] = {});
-        cacTietChieu.forEach(tiet => luoiDuLieu[thu]["Chiều"][tiet] = {});
-    });
-
-    // -------------------------------------------------------------------------
-    // BƯỚC NẠP DỮ LIỆU: Đổ dữ liệu thực vào khung ảo (Tự động mở rộng Thứ 7)
-    // -------------------------------------------------------------------------
+    // 3.1. Nạp dữ liệu thực vào Lưới (để ghi nhận nếu có tiết 5 hoặc Thứ 7)
     duLieuTiet.forEach(t => {
         const thu = t.thu.trim();
         const buoi = t.buoi.trim();
@@ -141,8 +119,34 @@ function xuatMaTranBang(danhSachTiet) {
         luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
     });
 
+    // 3.2. Ép Khung Ngày Mặc Định (Thứ 2 -> Thứ 6)
+    const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
+    thuMacDinh.forEach(thu => {
+        if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {};
+    });
+
+    // 3.3. Chuẩn hóa Khung Tiết (Sáng 4 tiết + dư, Chiều 3 tiết + dư)
+    Object.keys(luoiDuLieu).forEach(thu => {
+        if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {};
+        if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
+
+        // Sáng mặc định tối thiểu 4 tiết
+        [1, 2, 3, 4].forEach(t => {
+            if (!luoiDuLieu[thu]["Sáng"][t]) luoiDuLieu[thu]["Sáng"][t] = {};
+        });
+        
+        // Chiều mặc định tối thiểu 3 tiết
+        [1, 2, 3].forEach(t => {
+            if (!luoiDuLieu[thu]["Chiều"][t]) luoiDuLieu[thu]["Chiều"][t] = {};
+        });
+
+        // Chèn mã "99_du" làm dòng trắng dưới cùng của mỗi buổi
+        luoiDuLieu[thu]["Sáng"]["99_du"] = {};
+        luoiDuLieu[thu]["Chiều"]["99_du"] = {};
+    });
+
     // -------------------------------------------------------------------------
-    // BƯỚC VẼ BẢNG: Xuất ra HTML với cấu trúc đã chuẩn hóa
+    // BƯỚC 4: XUẤT HTML BẢNG MA TRẬN
     // -------------------------------------------------------------------------
     let tbodyHTML = '';
     const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
@@ -155,7 +159,13 @@ function xuatMaTranBang(danhSachTiet) {
         let inCotThu = true;
 
         danhSachBuoi.forEach(buoi => {
-            const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => parseInt(a) - parseInt(b));
+            // Sắp xếp tiết: Các số tăng dần, riêng "99_du" luôn nằm cuối cùng
+            const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => {
+                if (a === "99_du") return 1;
+                if (b === "99_du") return -1;
+                return parseInt(a) - parseInt(b);
+            });
+            
             let soDongCuaBuoi = danhSachTietCuaBuoi.length;
             let inCotBuoi = true;
 
@@ -171,30 +181,35 @@ function xuatMaTranBang(danhSachTiet) {
                     inCotBuoi = false;
                 }
 
-                // Chiết xuất thông số hành chính (Ưu tiên lấy từ biến môi trường nếu ô trống)
-                let duLieuTuan = thongSoHocVu.TUAN_HIEN_TAI || '';
-                let duLieuThang = '3'; 
-                let duLieuNam = thongSoHocVu.NAM_HOC || '';
-                
-                for(let l of mangLop) {
-                    if(luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][l] && luoiDuLieu[thu][buoi][tiet][l].namHoc) {
-                        duLieuTuan = luoiDuLieu[thu][buoi][tiet][l].tuan;
-                        duLieuThang = luoiDuLieu[thu][buoi][tiet][l].thang || '3'; 
-                        duLieuNam = luoiDuLieu[thu][buoi][tiet][l].namHoc;
-                        break;
+                // Chuyển mã "99_du" thành khoảng trắng trên giao diện
+                let hienThiTiet = (tiet === "99_du") ? "" : tiet;
+
+                // Chiết xuất thông số (Bỏ qua Tuần/Tháng/Năm đối với dòng trắng để giữ thẩm mỹ)
+                let duLieuTuan = '', duLieuThang = '', duLieuNam = '';
+                if (tiet !== "99_du") {
+                    duLieuTuan = thongSoHocVu.TUAN_HIEN_TAI || '';
+                    duLieuThang = '3'; 
+                    duLieuNam = thongSoHocVu.NAM_HOC || '';
+                    for(let l of mangLop) {
+                        if(luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][l] && luoiDuLieu[thu][buoi][tiet][l].namHoc) {
+                            duLieuTuan = luoiDuLieu[thu][buoi][tiet][l].tuan;
+                            duLieuThang = luoiDuLieu[thu][buoi][tiet][l].thang || '3'; 
+                            duLieuNam = luoiDuLieu[thu][buoi][tiet][l].namHoc;
+                            break;
+                        }
                     }
                 }
 
                 tbodyHTML += `<td class="text-center text-slate-700">${duLieuTuan}</td>`;
                 tbodyHTML += `<td class="text-center text-slate-700">${duLieuThang}</td>`;
                 tbodyHTML += `<td class="text-center text-slate-700">${duLieuNam}</td>`;
-                tbodyHTML += `<td class="text-center font-bold text-slate-800">${tiet}</td>`;
+                tbodyHTML += `<td class="text-center font-bold text-slate-800">${hienThiTiet}</td>`;
 
                 // In Ma trận nội dung Lớp
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
                     
-                    if (duLieuO) {
+                    if (duLieuO && tiet !== "99_du") {
                         let bgMon = '', textMon = 'text-slate-900 font-medium';
                         let bgGV = '', textGV = 'text-slate-900';
 
@@ -207,8 +222,8 @@ function xuatMaTranBang(danhSachTiet) {
                         tbodyHTML += `<td class="text-center ${bgMon} ${textMon}">${duLieuO.monHoc}</td>`;
                         tbodyHTML += `<td class="text-center ${bgGV} ${textGV}">${duLieuO.maGv}</td>`;
                     } else {
-                        // Nếu không có lịch, in ô trống có màu nền nhẹ
-                        tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
+                        // In ô trống mờ cho các tiết không có lịch hoặc dòng trắng dự phòng
+                        tbodyHTML += `<td class="bg-slate-50/50"></td><td class="bg-slate-50/50"></td>`;
                     }
                 });
 
