@@ -9,14 +9,12 @@ function kiemSoatGiaoDien() {
         let nut = document.getElementById(idNut);
         if (nut) {
             if (quyenSuaChua) { 
-                // KHI TRÙNG EMAIL CỘT E (CÓ QUYỀN): Xóa ẩn, bật hiển thị Flex, gỡ mờ
-                nut.classList.remove('hidden', 'opacity-50', 'cursor-not-allowed');
-                nut.classList.add('flex');
+                // Khi trùng email Cột E: Hiện nút bằng flex, mở khóa thao tác
+                nut.style.display = 'flex';
                 nut.disabled = false;
             } else { 
-                // KHI CHƯA ĐĂNG NHẬP / KHÔNG CÓ QUYỀN: Tắt Flex, ép Ẩn hoàn toàn
-                nut.classList.remove('flex');
-                nut.classList.add('hidden');
+                // Khi chưa đăng nhập hoặc không có quyền: Ẩn hoàn toàn nút khỏi giao diện
+                nut.style.display = 'none';
                 nut.disabled = true;
             }
         }
