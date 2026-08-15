@@ -7,51 +7,26 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Hiệu ứng chuyển động mượt mà từ React Bits */
-        .reactbits-fade-in {
-            animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            opacity: 0;
-            filter: blur(8px);
-            transform: translateY(15px);
-        }
-        @keyframes fadeInBlur {
-            to { opacity: 1; filter: blur(0); transform: translateY(0); }
-        }
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
+        .reactbits-fade-in { animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; filter: blur(8px); transform: translateY(15px); }
+        @keyframes fadeInBlur { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+        .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; }
         
-        /* Cấu hình bảng chuẩn Excel */
-        .bang-excel {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        .bang-excel th, .bang-excel td {
-            border: 1px solid #718096; /* Viền xám đậm chuẩn hành chính */
-            padding: 6px 8px;
-            font-size: 0.85rem;
-            white-space: normal;
-            word-wrap: break-word;
-        }
-        .bang-excel th {
-            background-color: #f8fafc;
-            color: #0f172a;
-        }
+        .bang-excel { border-collapse: collapse; width: 100%; }
+        .bang-excel th, .bang-excel td { border: 1px solid #718096; padding: 6px 8px; font-size: 0.85rem; white-space: normal; word-wrap: break-word; }
+        .bang-excel th { background-color: #f8fafc; color: #0f172a; }
     </style>
 </head>
 <body class="bg-gray-100 text-slate-800 font-sans p-2 md:p-6 min-h-screen">
 
-    <!-- KHỐI 1: HEADER THÔNG TIN HỌC VỤ -->
+    <!-- HEADER THÔNG TIN HỌC VỤ -->
     <header class="bg-white shadow-sm border border-gray-300 p-5 mb-5 flex flex-col md:flex-row items-center justify-between reactbits-fade-in delay-100">
         <div class="flex items-center space-x-4 mb-4 md:mb-0">
-            <!-- Icon lấy từ SvgRepo -->
             <img id="logoHeThong" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo" class="w-14 h-14">
             <div>
                 <h1 id="tenHeThong" class="text-xl font-bold text-blue-900 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
                 <p id="tenDonVi" class="text-slate-600 font-semibold">Trường Tiểu học Hợp Thành</p>
             </div>
         </div>
-        
         <div class="text-center md:text-right border-l-0 md:border-l-2 border-gray-200 md:pl-5">
             <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Năm học - Niên khóa</p>
             <p class="font-bold text-blue-800"><span id="hienThiNamHoc">...</span></p>
@@ -59,47 +34,45 @@
         </div>
     </header>
 
-    <!-- KHỐI 2: KHU VỰC BẢNG MA TRẬN THỜI KHÓA BIỂU -->
+    <!-- KHU VỰC BẢNG MA TRẬN THỜI KHÓA BIỂU -->
     <main class="reactbits-fade-in delay-200">
         <div class="bg-white shadow-md border border-gray-400 overflow-hidden">
-            <div class="p-3 bg-slate-50 border-b border-gray-400 flex justify-between items-center">
+            <div class="p-3 bg-slate-50 border-b border-gray-400 flex flex-col md:flex-row justify-between items-center gap-3">
                 <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
                     <img id="iconBang" src="https://www.svgrepo.com/show/521634/file-table.svg" alt="Icon Bảng" class="w-5 h-5">
-                    <span>THỜI KHÓA BIỂU TOÀN TRƯỜNG</span>
+                    <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
                 </h2>
-                <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 flex items-center gap-2 rounded">
-                    Làm mới dữ liệu
-                </button>
+                <!-- VÙNG NÚT ĐIỀU KHIỂN NÂNG CẤP -->
+                <div class="flex space-x-3">
+                    <button onclick="goiThuatToanXepLich()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 flex items-center gap-2 rounded">
+                        ⚡ Xếp TKB Tự động
+                    </button>
+                    <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 flex items-center gap-2 rounded">
+                        Làm mới dữ liệu
+                    </button>
+                </div>
             </div>
             
             <div class="overflow-x-auto">
                 <table class="bang-excel">
-                    <!-- Thẻ thead được làm trống để Javascript tự động quét Lớp và bơm Cột vào -->
-                    <thead id="tieuDeBang">
-                        <tr>
-                            <th class="text-center text-slate-500 py-4">Đang phân tích định dạng biểu mẫu...</th>
-                        </tr>
-                    </thead>
+                    <thead id="tieuDeBang"><tr><th class="text-center text-slate-500 py-4">Đang phân tích định dạng biểu mẫu...</th></tr></thead>
                     <tbody id="vungHienThiDuLieu">
-                        <tr>
-                            <td class="px-6 py-16 text-center text-slate-500">
-                                <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
-                                <p class="font-medium">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
-                            </td>
-                        </tr>
+                        <tr><td class="px-6 py-16 text-center text-slate-500">
+                            <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+                            <p class="font-medium">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- KHỐI 3: FOOTER CHỮ KÝ (2 DÒNG) -->
+    <!-- FOOTER CHỮ KÝ (2 DÒNG) -->
     <footer class="mt-8 text-center text-slate-500 reactbits-fade-in delay-300">
         <p id="tieuDeTacGia" class="text-sm font-medium uppercase tracking-widest">Thiết kế và phát triển</p>
         <p id="tenTacGia" class="text-base font-bold text-slate-800">Hoàng Ngọc Lâm</p>
     </footer>
 
-    <!-- Gọi các tệp mã lệnh -->
     <script src="KetNoi.js"></script>
     <script src="app.js"></script>
 </body>
