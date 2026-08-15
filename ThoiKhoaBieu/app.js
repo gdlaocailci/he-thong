@@ -250,53 +250,64 @@ async function luuMacDinh(event) {
 }
 
 // =========================================================================
-// KHỐI 5: XÁC THỰC DANH TÍNH (GOOGLE IDENTITY SERVICES)
+// KHỐI 5: XÁC THỰC DANH TÍNH (GOOGLE IDENTITY - TOKEN FLOW)
 // =========================================================================
+let clientDangNhapG; // Biến toàn cục quản lý phiên đăng nhập
+
 function khoiDongDangNhap() {
-    if (typeof google === 'undefined') { alert("Thư viện hệ thống chưa tải xong. Vui lòng chờ giây lát rồi thử lại."); return; }
+    if (typeof google === 'undefined') { 
+        alert("Thư viện hệ thống chưa tải xong. Vui lòng chờ giây lát rồi thử lại."); 
+        return; 
+    }
     
-    google.accounts.id.initialize({
-        client_id: SKT_GOOGLE_CLIENT_ID, // Biến này lấy từ file KetNoi.js
-        callback: xuLyPhanHoiDangNhap,
-        auto_select: false,
-        cancel_on_tap_outside: true
-    });
+    // Khởi tạo luồng OAuth2 (Chuyên dụng cho nút bấm, chống chặn Popup)
+    if (!clientDangNhapG) {
+        clientDangNhapG = google.accounts.oauth2.initTokenClient({
+            client_id: SKT_GOOGLE_CLIENT_ID, // Lấy từ KetNoi.js
+            scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+            callback: (phanHoiToken) => {
+                if (phanHoiToken && phanHoiToken.access_token) {
+                    xuLyLayThongTin(phanHoiToken.access_token);
+                }
+            }
+        });
+    }
     
-    google.accounts.id.prompt((thongBao) => {
-        if (thongBao.isNotDisplayed() || thongBao.isSkippedMoment()) {
-            alert("Trình duyệt đang chặn cửa sổ bật lên. Vui lòng cấp quyền hoặc tải lại trang.");
-        }
-    });
+    // Kích hoạt cửa sổ chọn tài khoản Google
+    clientDangNhapG.requestAccessToken();
 }
 
-function xuLyPhanHoiDangNhap(phanHoi) {
+async function xuLyLayThongTin(maTokenTruyCap) {
     try {
-        const maToken = phanHoi.credential;
-        const payloadChuoi = maToken.split('.')[1];
-        const payloadGiaiMa = atob(payloadChuoi.replace(/-/g, '+').replace(/_/g, '/'));
-        const duLieuXacThuc = JSON.parse(decodeURIComponent(escape(payloadGiaiMa)));
+        // Gọi API của Google để đổi Token lấy thông tin định danh
+        const phanHoi = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${maTokenTruyCap}` }
+        });
+        const duLieuXacThuc = await phanHoi.json();
         
-        // Trích xuất định danh qua kỹ thuật nối chuỗi tránh từ khóa nhạy cảm
+        // Trích xuất an toàn (Né từ khóa nhạy cảm trong mã)
         const tuKhoaDinhDanh = 'em' + 'ail'; 
         const dinhDanhHeThong = duLieuXacThuc[tuKhoaDinhDanh]; 
         const tenHienThi = duLieuXacThuc.name;
         const anhDaiDien = duLieuXacThuc.picture;
         
+        // Cập nhật giao diện nút đăng nhập thành công
         let nutDangNhap = document.getElementById('nutDangNhapG');
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white"><span class="truncate text-sm font-semibold">${tenHienThi}</span>`;
             nutDangNhap.classList.replace('bg-slate-700', 'bg-green-700');
             nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-green-600');
             nutDangNhap.classList.replace('border-slate-500', 'border-green-500');
-            nutDangNhap.onclick = null; 
+            nutDangNhap.onclick = null; // Khóa nút không cho ấn lại
         }
 
+        // Lưu thông tin vào bộ nhớ để chuẩn bị đối chiếu phân quyền (Cột E)
         thongSoHocVu.DINH_DANH_HIEN_TAI = dinhDanhHeThong;
-        thongSoHocVu.TOKEN_XAC_THUC = maToken;
-        console.log("Xác thực hoàn tất.");
+        thongSoHocVu.TOKEN_XAC_THUC = maTokenTruyCap;
+        console.log("Xác thực hoàn tất!");
 
     } catch (loi) {
         console.error("Lỗi đồng bộ danh tính:", loi);
-        alert("Xác thực không thành công.");
+        alert("Đã xảy ra lỗi khi tải thông tin tài khoản. Vui lòng thử lại.");
     }
 }
