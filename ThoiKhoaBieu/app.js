@@ -1,10 +1,3 @@
-/**
- * TỆP: app.js
- * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
- * Nâng cấp: Sửa lỗi tính tổng tiết, Đổ màu nền theo Danh sách Giáo viên (GVCN nền trắng).
- * Thiết kế và phát triển: Hoàng Ngọc Lâm
- */
-
 let thongSoHocVu = {};
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
