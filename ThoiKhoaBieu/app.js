@@ -8,11 +8,16 @@ function kiemSoatGiaoDien() {
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
         if (nut) {
-            // Nâng cấp: Hiển thị nếu có quyền, Ẩn đi nếu không có quyền
             if (quyenSuaChua) { 
-                nut.classList.remove('hidden'); 
+                // KHI TRÙNG EMAIL CỘT E (CÓ QUYỀN): Xóa ẩn, bật hiển thị Flex, gỡ mờ
+                nut.classList.remove('hidden', 'opacity-50', 'cursor-not-allowed');
+                nut.classList.add('flex');
+                nut.disabled = false;
             } else { 
-                nut.classList.add('hidden'); 
+                // KHI CHƯA ĐĂNG NHẬP / KHÔNG CÓ QUYỀN: Tắt Flex, ép Ẩn hoàn toàn
+                nut.classList.remove('flex');
+                nut.classList.add('hidden');
+                nut.disabled = true;
             }
         }
     });
