@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Hiệu ứng chuyển động xuất hiện mượt mà */
         .hieu-ung-mo-dan {
             animation: moDanHienThi 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
@@ -20,67 +20,69 @@
         .tre-200 { animation-delay: 200ms; }
         .tre-300 { animation-delay: 300ms; }
         
-        /* Tối ưu hóa cho bảng Ma trận siêu rộng */
-        .bang-ma-tran th, .bang-ma-tran td {
-            min-width: 110px;
+        /* Cấu hình đặc dụng cho bảng lưới giống Excel */
+        .bang-excel {
+            border-collapse: collapse;
+            width: 100%;
         }
-        .bang-ma-tran th:nth-child(1), .bang-ma-tran td:nth-child(1),
-        .bang-ma-tran th:nth-child(2), .bang-ma-tran td:nth-child(2),
-        .bang-ma-tran th:nth-child(3), .bang-ma-tran td:nth-child(3) {
-            min-width: 60px; /* Thu hẹp các cột Thứ, Buổi, Tiết */
+        .bang-excel th, .bang-excel td {
+            border: 1px solid #718096; /* Viền xám đậm chuẩn hành chính */
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        .bang-excel th {
+            background-color: #ffffff;
+            color: #000000;
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans p-4 md:p-8 min-h-screen">
+<body class="bg-gray-100 text-gray-900 font-sans p-2 md:p-6 min-h-screen">
 
-    <!-- HEADER HÀNH CHÍNH -->
-    <header class="bg-white shadow-md rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between hieu-ung-mo-dan tre-100">
-        <div class="flex items-center space-x-5 mb-4 md:mb-0">
-            <img id="logoHeThong" src="" alt="Logo" class="w-16 h-16 hidden">
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm border border-gray-300 p-4 mb-4 flex flex-col md:flex-row items-center justify-between hieu-ung-mo-dan tre-100">
+        <div class="flex items-center space-x-4 mb-4 md:mb-0">
+            <img id="logoHeThong" src="" alt="Logo" class="w-12 h-12 hidden">
             <div>
-                <h1 id="tenHeThong" class="text-2xl font-bold text-blue-800 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
-                <p id="tenDonVi" class="text-gray-500 font-medium text-lg">Hệ thống đang khởi động</p>
+                <h1 id="tenHeThong" class="text-xl font-bold text-blue-900 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
+                <p id="tenDonVi" class="text-gray-600 font-semibold">Trường Tiểu học</p>
             </div>
         </div>
         
-        <div class="text-center md:text-right border-l-0 md:border-l-2 border-blue-100 md:pl-6">
-            <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">Năm học - Niên khóa</p>
-            <p class="font-bold text-blue-700 text-lg"><span id="hienThiNamHoc">...</span></p>
-            <p class="font-medium text-gray-600 mt-1">Tuần chuyên môn: <span id="hienThiTuan" class="font-bold text-xl text-blue-700">...</span></p>
+        <div class="text-center md:text-right border-l-0 md:border-l-2 border-gray-200 md:pl-4">
+            <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Năm học - Niên khóa</p>
+            <p class="font-bold text-blue-800"><span id="hienThiNamHoc">...</span></p>
+            <p class="font-bold text-gray-700 mt-1">Tuần chuyên môn: <span id="hienThiTuan" class="text-blue-800 text-lg">...</span></p>
         </div>
     </header>
 
-    <!-- MAIN BẢNG LƯỚI MA TRẬN -->
+    <!-- MAIN BẢNG DỮ LIỆU CHUẨN FORM EXCEL -->
     <main class="hieu-ung-mo-dan tre-200">
-        <div class="bg-white shadow-md rounded-xl overflow-hidden border-t-4 border-blue-600">
-            <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-700 flex items-center gap-3">
-                    <img id="iconBang" src="" alt="Icon Bảng" class="w-6 h-6 hidden">
-                    <span>Thời Khóa Biểu Toàn Trường</span>
+        <div class="bg-white shadow-md border border-gray-400 overflow-hidden">
+            <div class="p-3 bg-gray-50 border-b border-gray-400 flex justify-between items-center">
+                <h2 class="text-base font-bold text-black flex items-center gap-2">
+                    <img id="iconBang" src="" alt="Icon Bảng" class="w-5 h-5 hidden">
+                    <span>THỜI KHÓA BIỂU TOÀN TRƯỜNG</span>
                 </h2>
-                <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow transition duration-200 flex items-center gap-2">
+                <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-2">
                     Làm mới dữ liệu
                 </button>
             </div>
             
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left border-collapse bang-ma-tran">
-                    <!-- Thẻ thead được làm trống để Javascript bơm cột Lớp vào -->
-                    <thead id="tieuDeBang" class="text-xs uppercase bg-blue-100 text-blue-800">
+                <table class="bang-excel">
+                    <!-- Javascript sẽ tự động bơm 2 dòng tiêu đề (colspan) vào đây -->
+                    <thead id="tieuDeBang">
                         <tr>
-                            <th class="px-4 py-3 border text-center">Thứ</th>
-                            <th class="px-4 py-3 border text-center">Buổi</th>
-                            <th class="px-4 py-3 border text-center">Tiết</th>
-                            <th class="px-4 py-3 border text-center text-gray-500">Đang phân tích cấu trúc lớp...</th>
+                            <th class="text-center">Đang phân tích định dạng biểu mẫu...</th>
                         </tr>
                     </thead>
-                    <tbody id="vungHienThiDuLieu" class="bg-white">
+                    <tbody id="vungHienThiDuLieu">
                         <tr>
-                            <td colspan="10" class="px-6 py-12 text-center text-gray-500 border">
-                                <div class="flex flex-col items-center justify-center">
-                                    <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-                                    <p>Đang kết nối API máy chủ đồng bộ dữ liệu...</p>
-                                </div>
+                            <td class="px-6 py-12 text-center text-gray-500">
+                                <div class="w-6 h-6 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
+                                <p>Đang kết nối API...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -89,13 +91,13 @@
         </div>
     </main>
 
-    <!-- FOOTER CHỮ KÝ 2 DÒNG -->
-    <footer class="mt-8 text-center text-gray-500 hieu-ung-mo-dan tre-300">
-        <p id="tieuDeTacGia" class="text-sm font-medium uppercase tracking-widest"></p>
-        <p id="tenTacGia" class="text-base font-bold text-gray-700"></p>
+    <!-- FOOTER -->
+    <footer class="mt-6 text-center text-gray-600 hieu-ung-mo-dan tre-300">
+        <p id="tieuDeTacGia" class="text-xs font-semibold uppercase tracking-widest"></p>
+        <p id="tenTacGia" class="text-sm font-extrabold"></p>
     </footer>
 
-    <!-- LIÊN KẾT CÁC TỆP JS -->
+    <!-- LIÊN KẾT JS -->
     <script src="KetNoi.js"></script>
     <script src="app.js"></script>
 </body>
