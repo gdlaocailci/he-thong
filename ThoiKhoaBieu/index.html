@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
-   <!-- Tailwind CSS -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- BỔ SUNG: Thư viện Google Identity Services (Phục vụ đăng nhập) -->
+    <!-- THƯ VIỆN GOOGLE IDENTITY (Phục vụ Đăng nhập) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+
     <style>
         .reactbits-fade-in { animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; filter: blur(8px); transform: translateY(15px); }
         @keyframes fadeInBlur { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
@@ -30,11 +30,11 @@
 <body class="bg-gray-100 text-slate-800 min-h-screen flex overflow-hidden">
 
     <!-- ========================================================= -->
-    <!-- 1. KHỐI MENU DỌC BÊN TRÁI                                 -->
+    <!-- KHỐI 1: MENU DỌC BÊN TRÁI (TÍCH HỢP NÚT ĐĂNG NHẬP)        -->
     <!-- ========================================================= -->
-    <div class="w-64 h-full min-h-screen bg-menu-main flex flex-col shadow-xl font-sans text-white z-10">
+    <div class="w-64 h-full min-h-screen bg-menu-main flex flex-col shadow-xl font-sans text-white z-10 flex-none">
         
-        <!-- Phần 1: Logo và Tên trường -->
+        <!-- Logo và Tên trường -->
         <div class="flex flex-col items-center pt-8 pb-3 px-4">
             <div class="bg-white p-1 rounded-full mb-4 shadow-lg border-2 border-blue-300">
                 <img id="logoMenuDoc" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo Hệ thống" class="w-20 h-20 rounded-full object-cover">
@@ -44,12 +44,9 @@
             </h2>
         </div>
 
-        <!-- Đường kẻ ngang phân cách đứt đoạn -->
-        <div class="px-6 my-2">
-            <hr class="border-dashed border-blue-300 opacity-40">
-        </div>
+        <div class="px-6 my-2"><hr class="border-dashed border-blue-300 opacity-40"></div>
 
-        <!-- Phần 2: Khối thông tin Năm học & Tuần học -->
+        <!-- Khối thông tin Năm học & Tuần học -->
         <div class="mx-2 my-2 bg-white rounded shadow-md px-3 py-2 text-sm text-slate-800">
             <div class="flex flex-col border-b border-dashed border-gray-300 pb-2 mb-1.5">
                 <div class="flex justify-between items-center mb-1">
@@ -67,7 +64,7 @@
             </div>
         </div>
 
-        <!-- Phần 3: Danh sách các Tab Menu -->
+        <!-- Danh sách các Tab Menu -->
         <nav class="flex flex-col mt-4">
             <a href="#" class="flex items-center gap-4 px-6 py-4 bg-menu-hover border-l-[5px] border-menu-active transition-all cursor-pointer border-b border-white/10">
                 <img src="https://www.svgrepo.com/show/521634/file-table.svg" class="w-5 h-5 filter invert brightness-0" alt="Toàn trường">
@@ -83,23 +80,25 @@
             </a>
         </nav>
         
-        <!-- Phần cuối (Footer menu) -->
+        <!-- Chân Menu (Chứa Nút Đăng Nhập) -->
         <div class="mt-auto p-4 bg-black/20 text-center">
+            <button id="nutDangNhapG" onclick="khoiDongDangNhap()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-2 px-4 rounded shadow-md flex items-center justify-center gap-2 transition duration-200 mb-4 group">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
+                <span class="group-hover:text-blue-300 transition-colors">Đăng nhập hệ thống</span>
+            </button>
             <p class="text-xs text-blue-200 font-bold uppercase tracking-widest">Thiết kế và phát triển</p>
             <p class="text-sm font-bold text-white mt-1">Hoàng Ngọc Lâm</p>
         </div>
     </div>
 
 
-<!-- ========================================================= -->
-    <!-- 2. KHỐI NỘI DUNG CHÍNH BÊN PHẢI (ÁP DỤNG FLEXBOX CỐ ĐỊNH) -->
+    <!-- ========================================================= -->
+    <!-- KHỐI 2: NỘI DUNG CHÍNH BÊN PHẢI (BẢNG TKB)                -->
     <!-- ========================================================= -->
     <div class="flex-1 h-screen flex flex-col bg-gray-100 relative overflow-hidden">
         
-        <!-- KHU VỰC CỐ ĐỊNH TRÊN CÙNG (Khung Đỏ) -->
+        <!-- HEADER CỐ ĐỊNH -->
         <div class="flex-none p-2 pb-0">
-            
-            <!-- Header (Đã thu hẹp tối đa padding và kích thước logo) -->
             <header class="bg-white shadow-sm border border-gray-300 p-2 mb-2 flex items-center reactbits-fade-in delay-100">
                 <div class="flex items-center space-x-3">
                     <img id="logoHeThong" src="https://www.svgrepo.com/show/339459/calendar.svg" alt="Logo" class="w-10 h-10">
@@ -110,41 +109,37 @@
                 </div>
             </header>
 
-            <!-- Thanh Công cụ (Toolbar) thu hẹp padding -->
+            <!-- THANH CÔNG CỤ -->
             <div class="bg-slate-50 border border-gray-400 p-2 flex flex-col md:flex-row justify-between items-center gap-2 reactbits-fade-in delay-200">
                 <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
                     <img id="iconBang" src="https://www.svgrepo.com/show/521634/file-table.svg" alt="Icon Bảng" class="w-5 h-5">
                     <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
                 </h2>
-                
                 <div class="flex space-x-2 font-sans">
                     <button onclick="luuMacDinh(event)" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
-                        <img src="https://www.svgrepo.com/show/521812/save.svg" class="w-4 h-4 filter invert brightness-0" alt="Lưu Icon">
+                        <img src="https://www.svgrepo.com/show/521812/save.svg" class="w-4 h-4 filter invert brightness-0" alt="Lưu">
                         Lưu Mặc định
                     </button>
                     <button onclick="goiThuatToanXepLich()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
-                        <img src="https://www.svgrepo.com/show/522361/zap.svg" class="w-4 h-4 filter invert brightness-0" alt="Xếp Tự động Icon">
+                        <img src="https://www.svgrepo.com/show/522361/zap.svg" class="w-4 h-4 filter invert brightness-0" alt="Xếp Tự động">
                         Xếp Tự động
                     </button>
                     <button onclick="kiemTraDinhMuc()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
-                        <img src="https://www.svgrepo.com/show/521826/search.svg" class="w-4 h-4 filter invert brightness-0" alt="Kiểm tra Icon">
+                        <img src="https://www.svgrepo.com/show/521826/search.svg" class="w-4 h-4 filter invert brightness-0" alt="Kiểm tra">
                         Kiểm tra Định mức
                     </button>
                     <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 flex items-center gap-1.5 rounded">
-                        <img src="https://www.svgrepo.com/show/521815/refresh.svg" class="w-4 h-4 filter invert brightness-0" alt="Làm mới Icon">
+                        <img src="https://www.svgrepo.com/show/521815/refresh.svg" class="w-4 h-4 filter invert brightness-0" alt="Làm mới">
                         Làm mới
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- KHU VỰC CUỘN ĐỘNG (Chứa bảng TKB) -->
-        <!-- flex-1 giúp khối này tự động chiếm toàn bộ chiều cao còn lại -->
+        <!-- VÙNG BẢNG CUỘN -->
         <main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
-            <!-- overflow-auto nằm ở div con trực tiếp bọc bảng -->
             <div class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
                 <table class="bang-excel relative">
-                    <!-- Làm dính (sticky) tiêu đề cột của bảng để khi cuộn không bị mất -->
                     <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
                         <tr><th class="text-center text-slate-500 py-3">Đang phân tích định dạng biểu mẫu...</th></tr>
                     </thead>
@@ -158,16 +153,15 @@
             </div>
         </main>
 
-        <!-- CHÂN TRANG CỐ ĐỊNH -->
+        <!-- CHÂN TRANG (FOOTER) -->
         <footer class="flex-none bg-white border-t border-gray-300 py-1 px-4 flex justify-between items-center text-xs text-slate-500 reactbits-fade-in delay-300">
             <span class="font-bold tracking-wide">HỆ THỐNG QUẢN LÝ NHÀ TRƯỜNG</span>
             <span>Phiên bản 1.0</span>
         </footer>
-
-    </div> <!-- Kết thúc vùng hiển thị chính bên phải -->
+    </div>
 
     <!-- ========================================================= -->
-    <!-- 3. BẢNG NỔI MODAL BÁO CÁO KẾT QUẢ KIỂM TRA                -->
+    <!-- KHỐI 3: MODAL KIỂM TRA ĐỊNH MỨC                           -->
     <!-- ========================================================= -->
     <div id="modalKiemTra" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-sans reactbits-fade-in">
         <div class="bg-white rounded-xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[80vh] flex flex-col overflow-hidden border border-gray-300">
@@ -175,9 +169,7 @@
                 <h3 class="text-lg font-bold flex items-center gap-2">🔍 Báo cáo Đối chiếu Định mức Khung Chương trình</h3>
                 <button onclick="dongModal()" class="text-white hover:text-gray-200 text-2xl leading-none">&times;</button>
             </div>
-            <div id="noiDungKiemTra" class="p-6 overflow-y-auto">
-                <!-- Javascript sẽ bơm bảng chi tiết lỗi vào đây -->
-            </div>
+            <div id="noiDungKiemTra" class="p-6 overflow-y-auto"></div>
             <div class="bg-gray-100 p-4 border-t flex justify-end">
                 <button onclick="dongModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-2 rounded shadow transition">Đóng</button>
             </div>
