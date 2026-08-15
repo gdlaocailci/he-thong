@@ -1,7 +1,9 @@
 /**
  * TỆP: app.js
  * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
- * Thiết kế và phát triển: Hoàng Ngọc Lâm
+ * Nâng cấp: Ép buộc tạo khung UI mặc định Thứ 2 -> Thứ 6. Tự động hiển thị Thứ 7 nếu có dữ liệu phát sinh.
+ * Thiết kế và phát triển
+ * Hoàng Ngọc Lâm
  */
 
 let thongSoHocVu = {};
@@ -10,6 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     khoiTaoGiaoDien();
 });
 
+// =========================================================================
+// KHỐI 1: KHỞI TẠO VÀ LẤY CẤU HÌNH API
+// =========================================================================
 async function khoiTaoGiaoDien() {
     try {
         if(typeof CAU_HINH_FRONTEND !== 'undefined') {
@@ -31,9 +36,12 @@ async function khoiTaoGiaoDien() {
     }
 }
 
+// =========================================================================
+// KHỐI 2: TẢI DỮ LIỆU TỪ MÁY CHỦ
+// =========================================================================
 async function taiDuLieuTKB(tuan) {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10">Đang đồng bộ phân công và xoay trục ma trận...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 hieu-ung-mo-dan">Đang đồng bộ phân công và xoay trục ma trận...</td></tr>`;
 
     try {
         const tuanTruyVan = tuan || thongSoHocVu.TUAN_HIEN_TAI;
@@ -46,25 +54,26 @@ async function taiDuLieuTKB(tuan) {
     }
 }
 
-/**
- * THUẬT TOÁN PIVOT XUẤT MA TRẬN CHUẨN BIỂU MẪU
- */
+// =========================================================================
+// KHỐI 3: THUẬT TOÁN PIVOT XUẤT MA TRẬN CHUẨN BIỂU MẪU
+// =========================================================================
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang');
     const tbody = document.getElementById('vungHienThiDuLieu');
+    const duLieuTiet = danhSachTiet || [];
 
-    if (!danhSachTiet || danhSachTiet.length === 0) {
+    // 1. Xác định số cột cứng dựa vào Khung Hệ Thống (DM_LOP)
+    const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0)
+        ? thongSoHocVu.DANH_SACH_LOP 
+        : [...new Set(duLieuTiet.map(t => t.maLop))].sort();
+
+    if (mangLop.length === 0) {
         thead.innerHTML = `<tr><th class="text-center py-4 bg-slate-100">Thông báo</th></tr>`;
-        tbody.innerHTML = `<tr><td class="text-center text-slate-500 py-12">Chưa có dữ liệu Thời khóa biểu lưu trữ cho tuần này.</td></tr>`;
+        tbody.innerHTML = `<tr><td class="text-center text-slate-500 py-12">Chưa thiết lập Danh mục Lớp trên hệ thống.</td></tr>`;
         return;
     }
 
-    // Xác định số cột cứng dựa vào Khung Hệ Thống
-    const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0)
-        ? thongSoHocVu.DANH_SACH_LOP 
-        : [...new Set(danhSachTiet.map(t => t.maLop))].sort();
-
-    // Dựng Khung Tiêu Đề Dòng 1 & 2
+    // 2. Dựng Khung Tiêu Đề (Header)
     let theadHTML = `
         <tr>
             <th rowspan="2" class="text-center font-bold align-middle w-20">Thứ</th>
@@ -74,12 +83,10 @@ function xuatMaTranBang(danhSachTiet) {
             <th rowspan="2" class="text-center font-bold align-middle w-24">Năm học</th>
             <th rowspan="2" class="text-center font-bold align-middle w-10">Tiết</th>
     `;
-    
     mangLop.forEach(lop => {
         theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest">${lop}</th>`;
     });
     theadHTML += `</tr><tr>`;
-    
     mangLop.forEach(() => {
         theadHTML += `
             <th class="text-center font-bold bg-slate-50 text-slate-800 w-28">Môn</th>
@@ -89,12 +96,40 @@ function xuatMaTranBang(danhSachTiet) {
     theadHTML += `</tr>`;
     thead.innerHTML = theadHTML;
 
-    // Phân rã dữ liệu vào Lưới 3 Chiều
+    // -------------------------------------------------------------------------
+    // BƯỚC QUAN TRỌNG: KHỞI TẠO KHUNG LƯỚI ẢO MẶC ĐỊNH (THỨ 2 -> THỨ 6)
+    // -------------------------------------------------------------------------
     const luoiDuLieu = {};
     const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
     const boLocBuoi = {"Sáng": 1, "Chiều": 2};
 
-    danhSachTiet.forEach(t => {
+    // Tự động phân tích có bao nhiêu Tiết Sáng/Chiều từ dữ liệu trả về
+    let cacTietSang = new Set();
+    let cacTietChieu = new Set();
+    duLieuTiet.forEach(t => {
+        if (t.buoi === "Sáng") cacTietSang.add(t.tiet);
+        if (t.buoi === "Chiều") cacTietChieu.add(t.tiet);
+    });
+    
+    // Nếu dữ liệu trống trơn, thiết lập Khung Tiết mặc định chuẩn sư phạm
+    if (cacTietSang.size === 0) [1, 2, 3, 4].forEach(t => cacTietSang.add(t));
+    if (cacTietChieu.size === 0) [1, 2, 3].forEach(t => cacTietChieu.add(t));
+
+    cacTietSang = [...cacTietSang].sort((a,b) => parseInt(a) - parseInt(b));
+    cacTietChieu = [...cacTietChieu].sort((a,b) => parseInt(a) - parseInt(b));
+
+    // Bơm Thứ 2 đến Thứ 6 vào Lưới Ảo để ép hiển thị
+    const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
+    thuMacDinh.forEach(thu => {
+        luoiDuLieu[thu] = { "Sáng": {}, "Chiều": {} };
+        cacTietSang.forEach(tiet => luoiDuLieu[thu]["Sáng"][tiet] = {});
+        cacTietChieu.forEach(tiet => luoiDuLieu[thu]["Chiều"][tiet] = {});
+    });
+
+    // -------------------------------------------------------------------------
+    // BƯỚC NẠP DỮ LIỆU: Đổ dữ liệu thực vào khung ảo (Tự động mở rộng Thứ 7)
+    // -------------------------------------------------------------------------
+    duLieuTiet.forEach(t => {
         const thu = t.thu.trim();
         const buoi = t.buoi.trim();
         const tiet = t.tiet;
@@ -106,7 +141,9 @@ function xuatMaTranBang(danhSachTiet) {
         luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
     });
 
-    // In Thân Bảng và Cấu hình đổ màu (Color Coding)
+    // -------------------------------------------------------------------------
+    // BƯỚC VẼ BẢNG: Xuất ra HTML với cấu trúc đã chuẩn hóa
+    // -------------------------------------------------------------------------
     let tbodyHTML = '';
     const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
 
@@ -134,13 +171,16 @@ function xuatMaTranBang(danhSachTiet) {
                     inCotBuoi = false;
                 }
 
-                // Chiết xuất thông số hành chính
-                let duLieuTuan = '', duLieuThang = '3', duLieuNam = '';
+                // Chiết xuất thông số hành chính (Ưu tiên lấy từ biến môi trường nếu ô trống)
+                let duLieuTuan = thongSoHocVu.TUAN_HIEN_TAI || '';
+                let duLieuThang = '3'; 
+                let duLieuNam = thongSoHocVu.NAM_HOC || '';
+                
                 for(let l of mangLop) {
-                    if(luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][l]) {
-                        duLieuTuan = luoiDuLieu[thu][buoi][tiet][l].tuan || thongSoHocVu.TUAN_HIEN_TAI || '';
+                    if(luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][l] && luoiDuLieu[thu][buoi][tiet][l].namHoc) {
+                        duLieuTuan = luoiDuLieu[thu][buoi][tiet][l].tuan;
                         duLieuThang = luoiDuLieu[thu][buoi][tiet][l].thang || '3'; 
-                        duLieuNam = luoiDuLieu[thu][buoi][tiet][l].namHoc || thongSoHocVu.NAM_HOC || '';
+                        duLieuNam = luoiDuLieu[thu][buoi][tiet][l].namHoc;
                         break;
                     }
                 }
@@ -158,7 +198,7 @@ function xuatMaTranBang(danhSachTiet) {
                         let bgMon = '', textMon = 'text-slate-900 font-medium';
                         let bgGV = '', textGV = 'text-slate-900';
 
-                        // Khớp chính xác định dạng CSS màu "Âm nhạc" (Đỏ) và các môn khác
+                        // Thuật toán Color Coding (Tự động tô màu môn đặc thù)
                         const mon = duLieuO.monHoc.toLowerCase();
                         if (mon.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white font-bold'; }
                         else if (mon.includes('mĩ thuật') || mon.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
@@ -167,7 +207,8 @@ function xuatMaTranBang(danhSachTiet) {
                         tbodyHTML += `<td class="text-center ${bgMon} ${textMon}">${duLieuO.monHoc}</td>`;
                         tbodyHTML += `<td class="text-center ${bgGV} ${textGV}">${duLieuO.maGv}</td>`;
                     } else {
-                        tbodyHTML += `<td class="bg-slate-50/50"></td><td class="bg-slate-50/50"></td>`;
+                        // Nếu không có lịch, in ô trống có màu nền nhẹ
+                        tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
                     }
                 });
 
