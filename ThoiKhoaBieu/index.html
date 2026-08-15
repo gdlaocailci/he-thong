@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Hiệu ứng chuyển động xuất hiện mượt mà */
         .hieu-ung-mo-dan {
             animation: moDanHienThi 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
@@ -19,17 +19,27 @@
         .tre-100 { animation-delay: 100ms; }
         .tre-200 { animation-delay: 200ms; }
         .tre-300 { animation-delay: 300ms; }
+        
+        /* Tối ưu hóa cho bảng Ma trận siêu rộng */
+        .bang-ma-tran th, .bang-ma-tran td {
+            min-width: 110px;
+        }
+        .bang-ma-tran th:nth-child(1), .bang-ma-tran td:nth-child(1),
+        .bang-ma-tran th:nth-child(2), .bang-ma-tran td:nth-child(2),
+        .bang-ma-tran th:nth-child(3), .bang-ma-tran td:nth-child(3) {
+            min-width: 60px; /* Thu hẹp các cột Thứ, Buổi, Tiết */
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans p-4 md:p-8 min-h-screen">
 
-    <!-- HEADER -->
+    <!-- HEADER HÀNH CHÍNH -->
     <header class="bg-white shadow-md rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between hieu-ung-mo-dan tre-100">
         <div class="flex items-center space-x-5 mb-4 md:mb-0">
             <img id="logoHeThong" src="" alt="Logo" class="w-16 h-16 hidden">
             <div>
                 <h1 id="tenHeThong" class="text-2xl font-bold text-blue-800 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
-                <p id="tenDonVi" class="text-gray-500 font-medium text-lg">Trường Tiểu học Hợp Thành</p>
+                <p id="tenDonVi" class="text-gray-500 font-medium text-lg">Hệ thống đang khởi động</p>
             </div>
         </div>
         
@@ -40,13 +50,13 @@
         </div>
     </header>
 
-    <!-- MAIN BẢNG DỮ LIỆU -->
+    <!-- MAIN BẢNG LƯỚI MA TRẬN -->
     <main class="hieu-ung-mo-dan tre-200">
         <div class="bg-white shadow-md rounded-xl overflow-hidden border-t-4 border-blue-600">
             <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-lg font-bold text-gray-700 flex items-center gap-3">
                     <img id="iconBang" src="" alt="Icon Bảng" class="w-6 h-6 hidden">
-                    <span>Ma Trận Phân Công Chuyên Môn</span>
+                    <span>Thời Khóa Biểu Toàn Trường</span>
                 </h2>
                 <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow transition duration-200 flex items-center gap-2">
                     Làm mới dữ liệu
@@ -54,21 +64,19 @@
             </div>
             
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b-2 border-blue-100">
+                <table class="w-full text-sm text-left border-collapse bang-ma-tran">
+                    <!-- Thẻ thead được làm trống để Javascript bơm cột Lớp vào -->
+                    <thead id="tieuDeBang" class="text-xs uppercase bg-blue-100 text-blue-800">
                         <tr>
-                            <th class="px-6 py-4 font-bold">Thứ</th>
-                            <th class="px-6 py-4 font-bold">Buổi</th>
-                            <th class="px-6 py-4 font-bold text-center">Tiết</th>
-                            <th class="px-6 py-4 font-bold">Lớp</th>
-                            <th class="px-6 py-4 font-bold">Môn học</th>
-                            <th class="px-6 py-4 font-bold">Cán bộ - Giáo viên</th>
-                            <th class="px-6 py-4 font-bold text-center">Trạng thái</th>
+                            <th class="px-4 py-3 border text-center">Thứ</th>
+                            <th class="px-4 py-3 border text-center">Buổi</th>
+                            <th class="px-4 py-3 border text-center">Tiết</th>
+                            <th class="px-4 py-3 border text-center text-gray-500">Đang phân tích cấu trúc lớp...</th>
                         </tr>
                     </thead>
-                    <tbody id="vungHienThiDuLieu" class="divide-y divide-gray-100">
+                    <tbody id="vungHienThiDuLieu" class="bg-white">
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="10" class="px-6 py-12 text-center text-gray-500 border">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
                                     <p>Đang kết nối API máy chủ đồng bộ dữ liệu...</p>
