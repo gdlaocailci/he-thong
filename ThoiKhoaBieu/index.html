@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
-    <!-- Tích hợp Tailwind CSS phục vụ giao diện hành chính -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* HIỆU ỨNG CHUYỂN ĐỘNG (React Bits Style) - Mượt mà, không giật lag */
         .hieu-ung-mo-dan {
             animation: moDanHienThi 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
@@ -15,11 +14,7 @@
             transform: translateY(15px);
         }
         @keyframes moDanHienThi {
-            to {
-                opacity: 1;
-                filter: blur(0);
-                transform: translateY(0);
-            }
+            to { opacity: 1; filter: blur(0); transform: translateY(0); }
         }
         .tre-100 { animation-delay: 100ms; }
         .tre-200 { animation-delay: 200ms; }
@@ -28,44 +23,36 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans p-4 md:p-8 min-h-screen">
 
-    <!-- KHỐI 1: HEADER (Hiển thị Định danh và Thông số học vụ) -->
+    <!-- HEADER -->
     <header class="bg-white shadow-md rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between hieu-ung-mo-dan tre-100">
         <div class="flex items-center space-x-5 mb-4 md:mb-0">
-            <!-- Ảnh Logo chờ nạp từ KetNoi.js -->
             <img id="logoHeThong" src="" alt="Logo" class="w-16 h-16 hidden">
             <div>
-                <!-- Tên hệ thống và Tên đơn vị chờ nạp từ KetNoi.js -->
                 <h1 id="tenHeThong" class="text-2xl font-bold text-blue-800 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
-                <p id="tenDonVi" class="text-gray-500 font-medium text-lg">Hệ thống đang khởi động</p>
+                <p id="tenDonVi" class="text-gray-500 font-medium text-lg">Trường Tiểu học Hợp Thành</p>
             </div>
         </div>
         
         <div class="text-center md:text-right border-l-0 md:border-l-2 border-blue-100 md:pl-6">
             <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">Năm học - Niên khóa</p>
-            <!-- Tham số Năm học nạp từ CAI_DAT (Code.gs) -->
             <p class="font-bold text-blue-700 text-lg"><span id="hienThiNamHoc">...</span></p>
-            <!-- Tham số Tuần nạp từ CAI_DAT (Code.gs) -->
             <p class="font-medium text-gray-600 mt-1">Tuần chuyên môn: <span id="hienThiTuan" class="font-bold text-xl text-blue-700">...</span></p>
         </div>
     </header>
 
-    <!-- KHỐI 2: KHUNG BẢNG LƯỚI THỜI KHÓA BIỂU -->
+    <!-- MAIN BẢNG DỮ LIỆU -->
     <main class="hieu-ung-mo-dan tre-200">
         <div class="bg-white shadow-md rounded-xl overflow-hidden border-t-4 border-blue-600">
-            <!-- Thanh công cụ -->
             <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-lg font-bold text-gray-700 flex items-center gap-3">
-                    <!-- Icon bảng chờ nạp từ KetNoi.js -->
                     <img id="iconBang" src="" alt="Icon Bảng" class="w-6 h-6 hidden">
                     <span>Ma Trận Phân Công Chuyên Môn</span>
                 </h2>
-                <!-- Nút làm mới dữ liệu gọi hàm từ app.js -->
                 <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow transition duration-200 flex items-center gap-2">
                     Làm mới dữ liệu
                 </button>
             </div>
             
-            <!-- Vùng bảng dữ liệu -->
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b-2 border-blue-100">
@@ -80,7 +67,6 @@
                         </tr>
                     </thead>
                     <tbody id="vungHienThiDuLieu" class="divide-y divide-gray-100">
-                        <!-- Trạng thái chờ tải dữ liệu TKB ban đầu -->
                         <tr>
                             <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                 <div class="flex flex-col items-center justify-center">
@@ -95,18 +81,14 @@
         </div>
     </main>
 
-    <!-- KHỐI 3: CHỮ KÝ TÁC GIẢ -->
+    <!-- FOOTER CHỮ KÝ 2 DÒNG -->
     <footer class="mt-8 text-center text-gray-500 hieu-ung-mo-dan tre-300">
-        <!-- Dữ liệu 2 dòng chữ ký sẽ được app.js nạp từ KetNoi.js vào đây -->
         <p id="tieuDeTacGia" class="text-sm font-medium uppercase tracking-widest"></p>
         <p id="tenTacGia" class="text-base font-bold text-gray-700"></p>
     </footer>
 
-    <!-- KHỐI 4: GỌI MÃ LỆNH ĐIỀU KHIỂN (Thứ tự gọi rất quan trọng) -->
-    <!-- Bước 1: Gọi cấu hình tĩnh (Link, ID, Định danh) -->
+    <!-- LIÊN KẾT CÁC TỆP JS -->
     <script src="KetNoi.js"></script>
-    
-    <!-- Bước 2: Gọi luồng logic xử lý giao diện -->
     <script src="app.js"></script>
 </body>
 </html>
