@@ -1,8 +1,3 @@
-/**
- * TỆP: app.js
- * Chức năng: Điều khiển logic giao diện, gọi API và xuất Ma Trận Chuẩn Biểu Mẫu Hành Chính.
- */
-
 let thongSoHocVu = {};
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function khoiTaoGiaoDien() {
     try {
+        // Nạp biến tĩnh
         document.getElementById('tenHeThong').innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
         if(CAU_HINH_FRONTEND.TIEU_DE_TAC_GIA) document.getElementById('tieuDeTacGia').innerText = CAU_HINH_FRONTEND.TIEU_DE_TAC_GIA;
         if(CAU_HINH_FRONTEND.TAC_GIA_THIET_KE) document.getElementById('tenTacGia').innerText = CAU_HINH_FRONTEND.TAC_GIA_THIET_KE;
@@ -23,6 +19,7 @@ async function khoiTaoGiaoDien() {
         iconBang.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
         iconBang.classList.remove('hidden');
 
+        // Lấy thông số học vụ và Danh sách Lớp nền tảng
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         thongSoHocVu = await phanHoi.json();
         
@@ -52,7 +49,7 @@ async function taiDuLieuTKB(tuan) {
 }
 
 /**
- * THUẬT TOÁN PIVOT: Xuất bảng chuẩn biểu mẫu gồm 2 dòng Header và tách cột Môn / N dạy
+ * THUẬT TOÁN PIVOT: Xuất bảng chuẩn biểu mẫu với số cột cố định từ DM_LOP
  */
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang');
@@ -64,11 +61,16 @@ function xuatMaTranBang(danhSachTiet) {
         return;
     }
 
-    // Lọc danh sách Lớp duy nhất
-    const mangLop = [...new Set(danhSachTiet.map(t => t.maLop))].sort();
+    // -------------------------------------------------------------------------
+    // BƯỚC 1: XÁC ĐỊNH SỐ CỘT (ƯU TIÊN DANH SÁCH LỚP TỪ DM_LOP)
+    // Cấu trúc dự phòng (Fix this breaks that): Nếu DM_LOP rỗng, tự quét dữ liệu.
+    // -------------------------------------------------------------------------
+    const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0)
+        ? thongSoHocVu.DANH_SACH_LOP 
+        : [...new Set(danhSachTiet.map(t => t.maLop))].sort();
 
     // -------------------------------------------------------------------------
-    // BƯỚC 1: XÂY DỰNG 2 DÒNG TIÊU ĐỀ (HEADER)
+    // BƯỚC 2: XÂY DỰNG 2 DÒNG TIÊU ĐỀ (HEADER)
     // -------------------------------------------------------------------------
     let theadHTML = `
         <tr>
@@ -79,12 +81,12 @@ function xuatMaTranBang(danhSachTiet) {
             <th rowspan="2" class="text-center font-bold align-middle w-24">Năm học</th>
             <th rowspan="2" class="text-center font-bold align-middle w-10">Tiết</th>
     `;
-    // Dòng 1: In tên Lớp (Colspan=2)
+    
     mangLop.forEach(lop => {
         theadHTML += `<th colspan="2" class="text-center font-extrabold bg-gray-50 text-black tracking-wider">${lop}</th>`;
     });
     theadHTML += `</tr><tr>`;
-    // Dòng 2: In tiêu đề con (Môn / N dạy)
+    
     mangLop.forEach(() => {
         theadHTML += `
             <th class="text-center font-bold bg-gray-50 text-black w-28">Môn</th>
@@ -95,7 +97,7 @@ function xuatMaTranBang(danhSachTiet) {
     thead.innerHTML = theadHTML;
 
     // -------------------------------------------------------------------------
-    // BƯỚC 2: PHÂN RÃ DỮ LIỆU LƯỚI
+    // BƯỚC 3: PHÂN RÃ DỮ LIỆU LƯỚI
     // -------------------------------------------------------------------------
     const luoiDuLieu = {};
     const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
@@ -114,7 +116,7 @@ function xuatMaTranBang(danhSachTiet) {
     });
 
     // -------------------------------------------------------------------------
-    // BƯỚC 3: IN THÂN BẢNG & TÔ MÀU NHẬN DIỆN (COLOR CODING)
+    // BƯỚC 4: IN THÂN BẢNG & TÔ MÀU NHẬN DIỆN
     // -------------------------------------------------------------------------
     let tbodyHTML = '';
     const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
@@ -137,43 +139,39 @@ function xuatMaTranBang(danhSachTiet) {
             danhSachTietCuaBuoi.forEach(tiet => {
                 tbodyHTML += `<tr class="bg-white">`;
                 
-                // In cột Thứ (gộp ô, xử lý text phụ ngày tháng nếu có)
                 if (inCotThu) {
                     tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center font-bold align-middle bg-white">${thu}</td>`;
                     inCotThu = false;
                 }
                 
-                // In cột Buổi (gộp ô)
                 if (inCotBuoi) {
                     tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle bg-white">${buoi}</td>`;
                     inCotBuoi = false;
                 }
 
-                // Dò tìm thông số chung (Tuần, Tháng, Năm) từ tiết đầu tiên khả dụng
                 let duLieuTuan = '', duLieuThang = '3', duLieuNam = '';
                 for(let l of mangLop) {
-                    if(luoiDuLieu[thu][buoi][tiet][l]) {
+                    if(luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][l]) {
                         duLieuTuan = luoiDuLieu[thu][buoi][tiet][l].tuan || '';
-                        duLieuThang = luoiDuLieu[thu][buoi][tiet][l].thang || '3'; // Gán mặc định theo ảnh mẫu nếu trống
+                        duLieuThang = luoiDuLieu[thu][buoi][tiet][l].thang || '3'; 
                         duLieuNam = luoiDuLieu[thu][buoi][tiet][l].namHoc || '';
                         break;
                     }
                 }
 
-                // In lặp lại các cột Thông số theo từng dòng (Không gộp)
                 tbodyHTML += `<td class="text-center">${duLieuTuan}</td>`;
                 tbodyHTML += `<td class="text-center">${duLieuThang}</td>`;
                 tbodyHTML += `<td class="text-center">${duLieuNam}</td>`;
                 tbodyHTML += `<td class="text-center">${tiet}</td>`;
 
-                // In Dữ liệu các Lớp
                 mangLop.forEach(lop => {
-                    const duLieuO = luoiDuLieu[thu][buoi][tiet][lop];
+                    // Tránh lỗi undefined nếu tiết này không có lớp nào học nhưng vẫn phải in ô trống
+                    const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
+                    
                     if (duLieuO) {
                         let bgMon = '', textMon = 'text-black';
                         let bgGV = '', textGV = 'text-black';
 
-                        // Logic đổ màu theo môn học & giáo viên
                         const mon = duLieuO.monHoc.toLowerCase();
                         if (mon.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white font-bold'; }
                         else if (mon.includes('mĩ thuật') || mon.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
@@ -186,7 +184,6 @@ function xuatMaTranBang(danhSachTiet) {
                         tbodyHTML += `<td class="text-center ${bgMon} ${textMon}">${duLieuO.monHoc}</td>`;
                         tbodyHTML += `<td class="text-center ${bgGV} ${textGV}">${duLieuO.maGv}</td>`;
                     } else {
-                        // In 2 ô trống nếu lớp không học
                         tbodyHTML += `<td></td><td></td>`;
                     }
                 });
