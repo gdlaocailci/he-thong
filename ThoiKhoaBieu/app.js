@@ -1,6 +1,19 @@
 let thongSoHocVu = {};
+let quyenSuaChua = false; // Biến toàn cục kiểm soát phân quyền hệ thống
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
+
+function kiemSoatGiaoDien() {
+    const dsNut = ['btnLuuMacDinh', 'btnXepTuDong', 'btnKiemTra', 'btnLamMoi'];
+    dsNut.forEach(idNut => {
+        let nut = document.getElementById(idNut);
+        if (nut) {
+            nut.disabled = !quyenSuaChua;
+            if (quyenSuaChua) { nut.classList.remove('opacity-50', 'cursor-not-allowed'); } 
+            else { nut.classList.add('opacity-50', 'cursor-not-allowed'); }
+        }
+    });
+}
 
 // =========================================================================
 // KHỐI 1: KHỞI TẠO VÀ TẢI DỮ LIỆU CƠ BẢN
@@ -10,19 +23,18 @@ async function khoiTaoGiaoDien() {
         if(typeof CAU_HINH_FRONTEND !== 'undefined') {
             let tieuDeHeThong = document.getElementById('tenHeThong');
             if (tieuDeHeThong) tieuDeHeThong.innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
-            
             let logoHT = document.getElementById('logoHeThong');
             if (logoHT) logoHT.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
-            
             let iconB = document.getElementById('iconBang');
             if (iconB) iconB.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
-
             let logoMenu = document.getElementById('logoMenuDoc');
             if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
         }
 
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         thongSoHocVu = await phanHoi.json();
+        
+        kiemSoatGiaoDien(); // NÂNG CẤP: Áp dụng khóa giao diện mặc định ngay khi tải xong
         
         if(thongSoHocVu.NAM_HOC) {
             let menuNam = document.getElementById('menuHienThiNamHoc');
@@ -35,9 +47,9 @@ async function khoiTaoGiaoDien() {
             taiDuLieuTKB();
         }
     } catch (loi) { 
-        console.error("Lỗi khởi tạo giao diện:", loi);
+        console.error("Lỗi khởi tạo:", loi);
         let tenDonVi = document.getElementById('tenDonVi');
-        if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API. Vui lòng kiểm tra đường truyền."; 
+        if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API."; 
     }
 }
 
@@ -47,7 +59,7 @@ async function taiDuLieuTKB(tuan) {
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuan || thongSoHocVu.TUAN_HIEN_TAI}`);
         const dsTiet = await phanHoi.json(); xuatMaTranBang(dsTiet);
-    } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi phân tích dữ liệu từ máy chủ.</td></tr>`; }
+    } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi phân tích dữ liệu.</td></tr>`; }
 }
 
 async function goiThuatToanXepLich() {
@@ -59,9 +71,12 @@ async function goiThuatToanXepLich() {
     } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi thuật toán xếp lịch tự động.</td></tr>`; }
 }
 
+// NÂNG CẤP: Nhúng trạng thái khóa từ biến quyenSuaChua
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu) {
     let idThocTinh = idPhanTu ? `id="${idPhanTu}"` : '';
-    let html = `<select ${idThocTinh} class="w-full h-full bg-transparent outline-none appearance-none text-center cursor-pointer py-1 font-bold ${kieuText}"><option value=""></option>`; 
+    let thuocTinhKhoa = quyenSuaChua ? '' : 'disabled'; 
+    let cssKhoa = quyenSuaChua ? 'cursor-pointer' : 'cursor-not-allowed opacity-80';
+    let html = `<select ${idThocTinh} ${thuocTinhKhoa} class="w-full h-full bg-transparent outline-none appearance-none text-center ${cssKhoa} py-1 font-bold ${kieuText}"><option value=""></option>`; 
     if (danhSach && danhSach.length > 0) {
         danhSach.forEach(muc => { html += `<option value="${muc}" ${(muc === giaTriMacDinh) ? 'selected' : ''}>${muc}</option>`; });
     } else if (giaTriMacDinh) { html += `<option value="${giaTriMacDinh}" selected>${giaTriMacDinh}</option>`; }
@@ -72,11 +87,9 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu) {
 // KHỐI 2: ĐỐI CHIẾU ĐỊNH MỨC VÀ KIỂM TRA
 // =========================================================================
 function kiemTraDinhMuc() {
-    const mangLop = thongSoHocVu.DANH_SACH_LOP || [];
-    const khungCT = thongSoHocVu.KHUNG_CHUONG_TRINH || {};
+    const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const khungCT = thongSoHocVu.KHUNG_CHUONG_TRINH || {};
     let thongKeUI = {}; mangLop.forEach(lop => { thongKeUI[lop] = {}; });
-    const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
-    const buoiMacDinh = ["Sáng", "Chiều"];
+    const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"]; const buoiMacDinh = ["Sáng", "Chiều"];
     
     thuMacDinh.forEach(thu => {
         buoiMacDinh.forEach(buoi => {
@@ -86,8 +99,7 @@ function kiemTraDinhMuc() {
                     let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
                     if(theSelectMon && theSelectMon.value) {
                         let tenMon = theSelectMon.value;
-                        if(!thongKeUI[lop][tenMon]) thongKeUI[lop][tenMon] = 0;
-                        thongKeUI[lop][tenMon]++;
+                        if(!thongKeUI[lop][tenMon]) thongKeUI[lop][tenMon] = 0; thongKeUI[lop][tenMon]++;
                     }
                 });
             }
@@ -115,10 +127,8 @@ function kiemTraDinhMuc() {
         });
     });
     htmlKetQua += `<tr class="bg-gray-200 text-gray-900 font-extrabold border-t-2 border-gray-500"><td colspan="5" class="border-r border-gray-400 p-3 text-right">TỔNG SỐ TIẾT TOÀN TRƯỜNG TRONG TUẦN:</td><td class="p-3 text-green-900 text-2xl">${tongTatCaTietToanTruong}</td></tr></tbody></table></div>`;
-    document.getElementById('noiDungKiemTra').innerHTML = htmlKetQua;
-    document.getElementById('modalKiemTra').classList.remove('hidden');
+    document.getElementById('noiDungKiemTra').innerHTML = htmlKetQua; document.getElementById('modalKiemTra').classList.remove('hidden');
 }
-
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
@@ -185,9 +195,7 @@ function xuatMaTranBang(danhSachTiet) {
                 if (inCotBuoi) { tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle text-slate-800 bg-white">${buoi}</td>`; inCotBuoi = false; }
 
                 let hienThiTiet = (tiet === "99_du") ? "" : tiet;
-                let duLieuTuan = (tiet !== "99_du") ? (thongSoHocVu.TUAN_HIEN_TAI || '') : '';
-                let duLieuThang = (tiet !== "99_du") ? '3' : '';
-                let duLieuNam = (tiet !== "99_du") ? (thongSoHocVu.NAM_HOC || '') : '';
+                let duLieuTuan = (tiet !== "99_du") ? (thongSoHocVu.TUAN_HIEN_TAI || '') : ''; let duLieuThang = (tiet !== "99_du") ? '3' : ''; let duLieuNam = (tiet !== "99_du") ? (thongSoHocVu.NAM_HOC || '') : '';
                 tbodyHTML += `<td class="text-center text-slate-700">${duLieuTuan}</td><td class="text-center text-slate-700">${duLieuThang}</td><td class="text-center text-slate-700">${duLieuNam}</td><td class="text-center font-bold text-slate-800">${hienThiTiet}</td>`;
 
                 mangLop.forEach(lop => {
@@ -217,13 +225,12 @@ function xuatMaTranBang(danhSachTiet) {
 // KHỐI 4: LƯU MẶC ĐỊNH LÊN CSDL
 // =========================================================================
 async function luuMacDinh(event) {
+    if (!quyenSuaChua) return;
     const btn = event.currentTarget; const textGoc = btn.innerHTML;
     btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`; btn.disabled = true;
 
     try {
-        const mangLop = thongSoHocVu.DANH_SACH_LOP || [];
-        const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
-        const buoiMacDinh = ["Sáng", "Chiều"];
+        const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"]; const buoiMacDinh = ["Sáng", "Chiều"];
         let dsTietLuoi = []; let tuanHT = thongSoHocVu.TUAN_HIEN_TAI || ''; let namHocHT = thongSoHocVu.NAM_HOC || '';
 
         thuMacDinh.forEach(thu => {
@@ -244,70 +251,55 @@ async function luuMacDinh(event) {
 
         const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify({ thaoTac: 'luuMacDinh', duLieu: dsTietLuoi }) });
         const ketQua = await phanHoi.json();
-        if(ketQua.trangThai === 'thanh_cong') alert("Đã lưu Thời khóa biểu thành công!"); else alert("Sự cố máy chủ: " + (ketQua.thongBao || "Lỗi."));
-    } catch (loi) { alert("Lỗi kết nối máy chủ. Vui lòng kiểm tra mạng."); console.error(loi); } 
+        if(ketQua.trangThai === 'thanh_cong') alert("Đã lưu Thời khóa biểu thành công!"); else alert("Sự cố máy chủ.");
+    } catch (loi) { alert("Lỗi kết nối."); console.error(loi); } 
     finally { btn.innerHTML = textGoc; btn.disabled = false; }
 }
 
 // =========================================================================
 // KHỐI 5: XÁC THỰC DANH TÍNH (GOOGLE IDENTITY - TOKEN FLOW)
 // =========================================================================
-let clientDangNhapG; // Biến toàn cục quản lý phiên đăng nhập
+let clientDangNhapG;
 
 function khoiDongDangNhap() {
-    if (typeof google === 'undefined') { 
-        alert("Thư viện hệ thống chưa tải xong. Vui lòng chờ giây lát rồi thử lại."); 
-        return; 
-    }
-    
-    // Khởi tạo luồng OAuth2 (Chuyên dụng cho nút bấm, chống chặn Popup)
+    if (typeof google === 'undefined') { alert("Thư viện hệ thống chưa tải xong. Vui lòng chờ giây lát rồi thử lại."); return; }
     if (!clientDangNhapG) {
         clientDangNhapG = google.accounts.oauth2.initTokenClient({
-            client_id: SKT_GOOGLE_CLIENT_ID, // Lấy từ KetNoi.js
+            client_id: SKT_GOOGLE_CLIENT_ID,
             scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-            callback: (phanHoiToken) => {
-                if (phanHoiToken && phanHoiToken.access_token) {
-                    xuLyLayThongTin(phanHoiToken.access_token);
-                }
-            }
+            callback: (phanHoiToken) => { if (phanHoiToken && phanHoiToken.access_token) xuLyLayThongTin(phanHoiToken.access_token); }
         });
     }
-    
-    // Kích hoạt cửa sổ chọn tài khoản Google
     clientDangNhapG.requestAccessToken();
 }
 
 async function xuLyLayThongTin(maTokenTruyCap) {
     try {
-        // Gọi API của Google để đổi Token lấy thông tin định danh
-        const phanHoi = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${maTokenTruyCap}` }
-        });
+        const phanHoi = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${maTokenTruyCap}` } });
         const duLieuXacThuc = await phanHoi.json();
         
-        // Trích xuất an toàn (Né từ khóa nhạy cảm trong mã)
         const tuKhoaDinhDanh = 'em' + 'ail'; 
         const dinhDanhHeThong = duLieuXacThuc[tuKhoaDinhDanh]; 
-        const tenHienThi = duLieuXacThuc.name;
-        const anhDaiDien = duLieuXacThuc.picture;
+        const tenHienThi = duLieuXacThuc.name; const anhDaiDien = duLieuXacThuc.picture;
         
-        // Cập nhật giao diện nút đăng nhập thành công
         let nutDangNhap = document.getElementById('nutDangNhapG');
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white"><span class="truncate text-sm font-semibold">${tenHienThi}</span>`;
-            nutDangNhap.classList.replace('bg-slate-700', 'bg-green-700');
-            nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-green-600');
-            nutDangNhap.classList.replace('border-slate-500', 'border-green-500');
-            nutDangNhap.onclick = null; // Khóa nút không cho ấn lại
+            nutDangNhap.classList.replace('bg-slate-700', 'bg-green-700'); nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-green-600');
+            nutDangNhap.classList.replace('border-slate-500', 'border-green-500'); nutDangNhap.onclick = null; 
         }
 
-        // Lưu thông tin vào bộ nhớ để chuẩn bị đối chiếu phân quyền (Cột E)
-        thongSoHocVu.DINH_DANH_HIEN_TAI = dinhDanhHeThong;
-        thongSoHocVu.TOKEN_XAC_THUC = maTokenTruyCap;
-        console.log("Xác thực hoàn tất!");
-
-    } catch (loi) {
-        console.error("Lỗi đồng bộ danh tính:", loi);
-        alert("Đã xảy ra lỗi khi tải thông tin tài khoản. Vui lòng thử lại.");
-    }
+        // NÂNG CẤP: ĐỐI CHIẾU PHÂN QUYỀN
+        const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
+        if (dsQuanTri.includes(dinhDanhHeThong)) {
+            quyenSuaChua = true;
+            alert(`Xin chào ${tenHienThi}. Bạn đã được cấp quyền quản trị hệ thống.`);
+        } else {
+            quyenSuaChua = false;
+            alert(`Xin chào ${tenHienThi}. Tài khoản của bạn chỉ có quyền xem, không thể chỉnh sửa hệ thống.`);
+        }
+        
+        kiemSoatGiaoDien(); // Mở khóa các nút nếu là Quản trị
+        if (thongSoHocVu.TUAN_HIEN_TAI) taiDuLieuTKB(); // Vẽ lại lưới để mở khóa thẻ select
+    } catch (loi) { alert("Xác thực không thành công."); }
 }
