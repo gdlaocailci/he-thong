@@ -1,3 +1,10 @@
+/**
+ * TỆP: app.js
+ * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
+ * Nâng cấp: Sửa lỗi tính tổng tiết, Đổ màu nền theo Danh sách Giáo viên (GVCN nền trắng).
+ * Thiết kế và phát triển: Hoàng Ngọc Lâm
+ */
+
 let thongSoHocVu = {};
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
@@ -56,7 +63,6 @@ function kiemTraDinhMuc() {
     const khungCT = thongSoHocVu.KHUNG_CHUONG_TRINH || {};
     const mangMonHoc = thongSoHocVu.DANH_SACH_MON_HOC || [];
     
-    // Khởi tạo bảng thống kê số tiết trên giao diện UI theo từng lớp
     let thongKeUI = {};
     mangLop.forEach(lop => { thongKeUI[lop] = {}; });
 
@@ -79,7 +85,6 @@ function kiemTraDinhMuc() {
         });
     });
 
-    // Xây dựng giao diện Bảng Báo Cáo chi tiết
     let htmlKetQua = `<div class="overflow-x-auto"><table class="w-full text-sm text-center border-collapse border border-gray-400">
         <thead class="bg-purple-100 text-purple-900 font-bold">
             <tr>
@@ -101,12 +106,16 @@ function kiemTraDinhMuc() {
         let danhSachMonCuaLop = new Set([...Object.keys(dmKhoi), ...Object.keys(thongKeUI[lop])]);
         let dsMonArr = Array.from(danhSachMonCuaLop);
         
+        // --- SỬA LỖI: Bắt buộc tính tổng trọn vẹn số tiết của lớp trước khi in ---
         let tongTietCuaLopNay = 0;
+        dsMonArr.forEach(mon => {
+            tongTietCuaLopNay += (thongKeUI[lop][mon] || 0);
+        });
+        // -------------------------------------------------------------------------
 
         dsMonArr.forEach((mon, index) => {
             let chuan = dmKhoi[mon] || 0;
             let ui = thongKeUI[lop][mon] || 0;
-            tongTietCuaLopNay += ui;
             tongTatCaTietToanTruong += ui;
 
             let trangThai = `<span class="text-green-700 font-bold">✔ Khớp</span>`;
@@ -121,7 +130,6 @@ function kiemTraDinhMuc() {
 
             htmlKetQua += `<tr class="${cssRow} hover:bg-gray-50 border-b border-gray-300">`;
             
-            // Gộp ô tên Lớp cho gọn gàng
             if (index === 0) {
                 htmlKetQua += `<td rowspan="${dsMonArr.length}" class="border-r border-gray-400 p-2 font-extrabold bg-gray-50 align-middle">${lop}</td>`;
             }
@@ -131,19 +139,18 @@ function kiemTraDinhMuc() {
                            <td class="border-r border-gray-300 p-2 font-extrabold text-blue-700 text-lg">${ui}</td>
                            <td class="border-r border-gray-300 p-2">${trangThai}</td>`;
 
-            // Gộp ô Tổng tiết tuần của lớp ở dòng đầu tiên
             if (index === 0) {
-                htmlKetQua += `<td rowspan="${dsMonArr.length}" class="p-2 font-extrabold text-green-900 bg-green-50 align-middle text-lg">${tongTietCuaLopNay}</td>`;
+                // In biến tổng đã được cộng dồn trọn vẹn ở trên
+                htmlKetQua += `<td rowspan="${dsMonArr.length}" class="p-2 font-extrabold text-green-900 bg-green-50 align-middle text-2xl">${tongTietCuaLopNay}</td>`;
             }
 
             htmlKetQua += `</tr>`;
         });
     });
 
-    // DÒNG TỔNG KẾT TOÀN TRƯỜNG
     htmlKetQua += `<tr class="bg-gray-200 text-gray-900 font-extrabold border-t-2 border-gray-500">
         <td colspan="5" class="border-r border-gray-400 p-3 text-right">TỔNG SỐ TIẾT TOÀN TRƯỜNG TRONG TUẦN:</td>
-        <td class="p-3 text-green-900 text-xl">${tongTatCaTietToanTruong}</td>
+        <td class="p-3 text-green-900 text-2xl">${tongTatCaTietToanTruong}</td>
     </tr></tbody></table></div>`;
 
     document.getElementById('noiDungKiemTra').innerHTML = htmlKetQua;
@@ -153,10 +160,11 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// KHỐI 4: PIVOT XUẤT MA TRẬN CHÍNH 
+// KHỐI 4: PIVOT XUẤT MA TRẬN CHÍNH & TÔ MÀU NHẬN DIỆN GIÁO VIÊN
 // =========================================================================
 function xuatMaTranBang(danhSachTiet) {
-    const thead = document.getElementById('tieuDeBang'); const tbody = document.getElementById('vungHienThiDuLieu');
+    const thead = document.getElementById('tieuDeBang'); 
+    const tbody = document.getElementById('vungHienThiDuLieu');
     const duLieuTiet = danhSachTiet || [];
     const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) ? thongSoHocVu.DANH_SACH_LOP : [...new Set(duLieuTiet.map(t => t.maLop))].sort();
     if (mangLop.length === 0) return;
@@ -173,8 +181,11 @@ function xuatMaTranBang(danhSachTiet) {
     mangLop.forEach(() => { theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px]">Môn</th><th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px]">N dạy</th>`; });
     theadHTML += `</tr>`; thead.innerHTML = theadHTML;
 
-    const luoiDuLieu = {}; const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; const boLocBuoi = {"Sáng": 1, "Chiều": 2};
+    const luoiDuLieu = {}; 
+    const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; 
+    const boLocBuoi = {"Sáng": 1, "Chiều": 2};
 
+    // Đổ dữ liệu vào lưới 3 chiều
     duLieuTiet.forEach(t => {
         const thu = t.thu.trim(); const buoi = t.buoi.trim(); const tiet = t.tiet;
         if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {}; if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
@@ -192,7 +203,37 @@ function xuatMaTranBang(danhSachTiet) {
         luoiDuLieu[thu]["Sáng"]["99_du"] = {}; luoiDuLieu[thu]["Chiều"]["99_du"] = {};
     });
 
-    let tbodyHTML = ''; const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
+    // BƯỚC CHUẨN BỊ: Khởi tạo Bảng màu Pastel cố định cho từng Giáo viên
+    const bangMauGV = [
+        'bg-red-200', 'bg-blue-200', 'bg-green-200', 'bg-yellow-200', 
+        'bg-purple-200', 'bg-pink-200', 'bg-teal-200', 'bg-orange-200', 
+        'bg-cyan-200', 'bg-lime-200', 'bg-fuchsia-200', 'bg-rose-200'
+    ];
+    let mauGiaoVien = {};
+    if (thongSoHocVu.DANH_SACH_GIAO_VIEN) {
+        thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach((gv, idx) => {
+            mauGiaoVien[gv] = bangMauGV[idx % bangMauGV.length];
+        });
+    }
+
+    // Tự động phân tích tìm GVCN cho từng lớp (Giáo viên có nhiều tiết nhất trong lớp)
+    let gvcnLop = {};
+    mangLop.forEach(lop => {
+        let demTietGV = {};
+        duLieuTiet.forEach(t => {
+            if (t.maLop === lop && t.maGv) {
+                demTietGV[t.maGv] = (demTietGV[t.maGv] || 0) + 1;
+            }
+        });
+        let maxTiet = 0, gvcn = "";
+        for (let gv in demTietGV) {
+            if (demTietGV[gv] > maxTiet) { maxTiet = demTietGV[gv]; gvcn = gv; }
+        }
+        gvcnLop[lop] = gvcn;
+    });
+
+    let tbodyHTML = ''; 
+    const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
 
     danhSachThu.forEach(thu => {
         const danhSachBuoi = Object.keys(luoiDuLieu[thu]).sort((a, b) => (boLocBuoi[a] || 99) - (boLocBuoi[b] || 99));
@@ -217,19 +258,29 @@ function xuatMaTranBang(danhSachTiet) {
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
                     if (tiet !== "99_du") {
-                        let monGoc = duLieuO ? duLieuO.monHoc : ""; let gvGoc = duLieuO ? duLieuO.maGv : "";
-                        let bgMon = '', textMon = 'text-slate-900'; let bgGV = '', textGV = 'text-slate-900';
-                        const monSoSanh = monGoc.toLowerCase();
-                        if (monSoSanh.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white'; }
-                        else if (monSoSanh.includes('mĩ thuật') || monSoSanh.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
-                        else if (monSoSanh.includes('gdtc')) { bgMon = 'bg-cyan-400'; }
+                        let monGoc = duLieuO ? duLieuO.monHoc : ""; 
+                        let gvGoc = duLieuO ? duLieuO.maGv : "";
 
-                        let idMon = `mon_${thu}_${buoi}_${tiet}_${lop}`; let idGv = `gv_${thu}_${buoi}_${tiet}_${lop}`;
-                        let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textMon, idMon);
-                        let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textGV, idGv);
+                        // Thiết lập màu sắc: Trắng nếu là GVCN, có màu nếu là Giáo viên khác
+                        let bgLop = 'bg-white'; 
+                        let textClass = 'text-slate-900';
 
-                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgMon} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300">${dropdownMon}</td>`;
-                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgGV} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300">${dropdownGV}</td>`;
+                        if (monGoc.includes('CẤN LỊCH')) { 
+                            bgLop = 'bg-yellow-400'; 
+                            textClass = 'text-red-700 font-extrabold'; 
+                        } else if (gvGoc && gvGoc !== gvcnLop[lop]) {
+                            // Cấp phát màu cố định cho GV không phải GVCN của lớp này
+                            bgLop = mauGiaoVien[gvGoc] || 'bg-gray-200';
+                            textClass = 'text-slate-900 font-semibold';
+                        }
+
+                        let idMon = `mon_${thu}_${buoi}_${tiet}_${lop}`; 
+                        let idGv = `gv_${thu}_${buoi}_${tiet}_${lop}`;
+                        let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textClass, idMon);
+                        let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textClass, idGv);
+
+                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300">${dropdownMon}</td>`;
+                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300">${dropdownGV}</td>`;
                     } else {
                         tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
                     }
