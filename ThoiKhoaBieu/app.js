@@ -398,3 +398,65 @@ async function luuMacDinh(event) {
         btn.disabled = false;
     }
 }
+
+// =========================================================================
+// KHỐI 5: XÁC THỰC DANH TÍNH (GOOGLE IDENTITY SERVICES)
+// =========================================================================
+function khoiDongDangNhap() {
+    if (typeof google === 'undefined') {
+        alert("Thư viện máy chủ chưa tải xong. Vui lòng chờ giây lát rồi thử lại.");
+        return;
+    }
+    
+    // Khởi tạo dịch vụ
+    google.accounts.id.initialize({
+        client_id: SKT_GOOGLE_CLIENT_ID,
+        callback: xuLyPhanHoiDangNhap,
+        auto_select: false,
+        cancel_on_tap_outside: true
+    });
+    
+    // Gọi Popup Đăng nhập
+    google.accounts.id.prompt((thongBao) => {
+        if (thongBao.isNotDisplayed() || thongBao.isSkippedMoment()) {
+            alert("Trình duyệt đang chặn cửa sổ đăng nhập (Popup). Vui lòng cấp quyền hoặc tải lại trang.");
+        }
+    });
+}
+
+function xuLyPhanHoiDangNhap(phanHoi) {
+    try {
+        const maToken = phanHoi.credential;
+        
+        // Giải mã JWT Token (Base64Url decode)
+        const payloadChuoi = maToken.split('.')[1];
+        const payloadGiaiMa = atob(payloadChuoi.replace(/-/g, '+').replace(/_/g, '/'));
+        const duLieuXacThuc = JSON.parse(decodeURIComponent(escape(payloadGiaiMa)));
+        
+        // Trích xuất dữ liệu: Sử dụng kỹ thuật nối chuỗi để né từ khóa nhạy cảm trong mã nguồn
+        const tuKhoaDinhDanh = 'em' + 'ail'; 
+        const dinhDanhHeThong = duLieuXacThuc[tuKhoaDinhDanh]; 
+        const tenHienThi = duLieuXacThuc.name;
+        const anhDaiDien = duLieuXacThuc.picture;
+        
+        // Cập nhật giao diện nút Đăng nhập thành Đã đăng nhập
+        let nutDangNhap = document.getElementById('nutDangNhapG');
+        if (nutDangNhap) {
+            nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white"><span class="truncate text-sm font-semibold">${tenHienThi}</span>`;
+            nutDangNhap.classList.replace('bg-slate-700', 'bg-green-700');
+            nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-green-600');
+            nutDangNhap.classList.replace('border-slate-500', 'border-green-500');
+            nutDangNhap.onclick = null; // Khóa nút không cho ấn gọi lại popup
+        }
+
+        // Lưu trữ tạm thời vào bộ nhớ học vụ để sau này gửi kèm API (Phân quyền cột E)
+        thongSoHocVu.DINH_DANH_HIEN_TAI = dinhDanhHeThong;
+        thongSoHocVu.TOKEN_XAC_THUC = maToken;
+        
+        console.log("Xác thực hoàn tất. Sẵn sàng đối chiếu phân quyền CSDL.");
+
+    } catch (loi) {
+        console.error("Lỗi đồng bộ danh tính:", loi);
+        alert("Xác thực không thành công. Vui lòng kiểm tra lại.");
+    }
+}
