@@ -1,7 +1,7 @@
 /**
  * TỆP: app.js
  * Chức năng: Điều khiển logic giao diện, xử lý Pivot Lưới Ma Trận.
- * Nâng cấp: Tách tính năng Xem dữ liệu cũ và Nút Gọi xếp lịch tự động. Đọc động tham số vòng lặp.
+ * Nâng cấp: Xóa khóa chiều rộng (width cứng), kích hoạt giãn cột tự động chống cắt chữ.
  * Thiết kế và phát triển
  * Hoàng Ngọc Lâm
  */
@@ -29,7 +29,7 @@ async function khoiTaoGiaoDien() {
         if(thongSoHocVu.NAM_HOC) document.getElementById('hienThiNamHoc').innerText = thongSoHocVu.NAM_HOC;
         if(thongSoHocVu.TUAN_HIEN_TAI) {
             document.getElementById('hienThiTuan').innerText = thongSoHocVu.TUAN_HIEN_TAI;
-            taiDuLieuTKB(thongSoHocVu.TUAN_HIEN_TAI); // Mặc định mở lên là tải dữ liệu đã lưu
+            taiDuLieuTKB(thongSoHocVu.TUAN_HIEN_TAI);
         }
     } catch (loi) {
         document.getElementById('tenDonVi').innerText = "Lỗi kết nối máy chủ API";
@@ -39,11 +39,9 @@ async function khoiTaoGiaoDien() {
 // =========================================================================
 // KHỐI 2: CÁC LỆNH GỌI DỮ LIỆU TỪ MÁY CHỦ
 // =========================================================================
-
-// Hàm 1: Đọc dữ liệu đã lưu (dùng cho tải trang mặc định hoặc nút Làm mới)
 async function taiDuLieuTKB(tuan) {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-medium py-10 reactbits-fade-in">Đang tải dữ liệu lưu trữ từ hệ thống...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg">Đang tải dữ liệu lưu trữ từ hệ thống...</td></tr>`;
 
     try {
         const tuanTruyVan = tuan || thongSoHocVu.TUAN_HIEN_TAI;
@@ -51,11 +49,10 @@ async function taiDuLieuTKB(tuan) {
         const danhSachTiet = await phanHoi.json();
         xuatMaTranBang(danhSachTiet);
     } catch (loi) {
-        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10">Lỗi phân tích dữ liệu từ máy chủ.</td></tr>`;
+        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi phân tích dữ liệu từ máy chủ.</td></tr>`;
     }
 }
 
-// Hàm 2: Gọi thuật toán khởi tạo bản nháp mới (Nút Xếp Tự Động)
 async function goiThuatToanXepLich() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
     vungHienThi.innerHTML = `<tr><td class="text-center text-orange-600 font-bold py-10 reactbits-fade-in text-lg">
@@ -69,7 +66,7 @@ async function goiThuatToanXepLich() {
         const danhSachTiet = await phanHoi.json();
         xuatMaTranBang(danhSachTiet);
     } catch (loi) {
-        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10">Lỗi thuật toán xếp lịch tự động.</td></tr>`;
+        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi thuật toán xếp lịch tự động.</td></tr>`;
     }
 }
 
@@ -77,7 +74,7 @@ async function goiThuatToanXepLich() {
 // KHỐI 3: HÀM HỖ TRỢ VẼ DROPDOWN ÁNH XẠ DANH MỤC
 // =========================================================================
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText) {
-    let html = `<select class="w-full h-full bg-transparent outline-none appearance-none text-center cursor-pointer py-1 ${kieuText}">`;
+    let html = `<select class="w-full h-full bg-transparent outline-none appearance-none text-center cursor-pointer py-1 font-bold ${kieuText}">`;
     html += `<option value=""></option>`; 
     if (danhSach && danhSach.length > 0) {
         danhSach.forEach(muc => {
@@ -109,14 +106,15 @@ function xuatMaTranBang(danhSachTiet) {
         return;
     }
 
+    // Thiết lập độ rộng tối thiểu an toàn (min-w) thay vì khóa cứng (w-...)
     let theadHTML = `
         <tr>
-            <th rowspan="2" class="text-center font-bold align-middle w-20">Thứ</th>
-            <th rowspan="2" class="text-center font-bold align-middle w-16">Buổi</th>
-            <th rowspan="2" class="text-center font-bold align-middle w-12">Tuần</th>
-            <th rowspan="2" class="text-center font-bold align-middle w-12">Tháng</th>
-            <th rowspan="2" class="text-center font-bold align-middle w-24">Năm học</th>
-            <th rowspan="2" class="text-center font-bold align-middle w-10">Tiết</th>
+            <th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Thứ</th>
+            <th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th>
+            <th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tuần</th>
+            <th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tháng</th>
+            <th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th>
+            <th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>
     `;
     mangLop.forEach(lop => {
         theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest">${lop}</th>`;
@@ -124,8 +122,8 @@ function xuatMaTranBang(danhSachTiet) {
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => {
         theadHTML += `
-            <th class="text-center font-bold bg-slate-50 text-slate-800 w-28 hover:bg-blue-50 cursor-pointer">Môn</th>
-            <th class="text-center font-bold bg-slate-50 text-slate-800 w-24 hover:bg-blue-50 cursor-pointer">N dạy</th>
+            <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] hover:bg-blue-50 cursor-pointer">Môn</th>
+            <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] hover:bg-blue-50 cursor-pointer">N dạy</th>
         `;
     });
     theadHTML += `</tr>`;
@@ -149,7 +147,6 @@ function xuatMaTranBang(danhSachTiet) {
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
     thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
 
-    // Lấy số tiết động từ Cấu Hình (mặc định Sáng 4, Chiều 3 nếu lỗi mạng)
     const gioiHanSang = parseInt(thongSoHocVu.SO_TIET_SANG) || 4;
     const gioiHanChieu = parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3;
 
@@ -216,11 +213,11 @@ function xuatMaTranBang(danhSachTiet) {
                         let monGoc = duLieuO ? duLieuO.monHoc : "";
                         let gvGoc = duLieuO ? duLieuO.maGv : "";
 
-                        let bgMon = '', textMon = 'text-slate-900 font-medium';
+                        let bgMon = '', textMon = 'text-slate-900';
                         let bgGV = '', textGV = 'text-slate-900';
 
                         const monSoSanh = monGoc.toLowerCase();
-                        if (monSoSanh.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white font-bold'; }
+                        if (monSoSanh.includes('âm nhạc')) { bgMon = 'bg-red-600'; textMon = 'text-white'; }
                         else if (monSoSanh.includes('mĩ thuật') || monSoSanh.includes('mỹ thuật')) { bgMon = 'bg-orange-300'; }
                         else if (monSoSanh.includes('gdtc')) { bgMon = 'bg-cyan-400'; }
 
