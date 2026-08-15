@@ -3,199 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thời Khóa Biểu - Trường Tiểu Học Hợp Thành</title>
+    <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
+    <!-- Tích hợp Tailwind CSS phục vụ giao diện hành chính -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* =========================================================
-           KHỐI 1: ĐỊNH DẠNG GIAO DIỆN HÀNH CHÍNH & CSS BIẾN NỀN
-           ========================================================= */
-        body { font-family: 'Times New Roman', Times, serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #000; }
-        .khung-chinh { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
-        
-        /* Tiêu đề */
-        .tieu-de-truong { color: #0000ff; text-transform: uppercase; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
-        .tieu-de-bang { text-align: center; color: #ff0000; font-size: 28px; font-weight: bold; margin: 10px 0; text-transform: uppercase; }
-        
-        /* Thanh công cụ điều hướng */
-        .thanh-cong-cu { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
-        .nut-bam {
-            background-color: #00cc00; color: white; border: 2px solid #009900; padding: 8px 15px; font-size: 16px; 
-            font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
-            transition: all 0.3s ease;
+        /* HIỆU ỨNG CHUYỂN ĐỘNG (React Bits Style) - Mượt mà, không giật lag */
+        .hieu-ung-mo-dan {
+            animation: moDanHienThi 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            filter: blur(8px);
+            transform: translateY(15px);
         }
-        .nut-bam:hover { background-color: #009900; }
-        .nut-bam-xanh { background-color: #0000ff; border-color: #0000cc; }
-        .bieu-tuong { width: 18px; height: 18px; fill: currentColor; }
-
-        /* Bảng Thời khóa biểu ma trận */
-        table { border-collapse: collapse; width: 100%; min-width: 1200px; text-align: center; font-size: 15px; }
-        th, td { border: 1px solid #000; padding: 5px; vertical-align: middle; }
-        th { background-color: #f9f9f9; font-weight: bold; }
-        
-        /* Trục thời gian cố định (Sticky) */
-        .cot-co-dinh { position: sticky; left: 0; background-color: #fff; z-index: 2; font-weight: bold; }
-        
-        /* Màu sắc môn học đặc thù (Sẽ được JS ghi đè nếu có dữ liệu cấu hình) */
-        .mon-am-nhac { background-color: #ff0000; color: #fff; }
-        .mon-mi-thuat { background-color: #f4b084; color: #000; }
-        .mon-gdtc { background-color: #00b0f0; color: #fff; }
-        .mon-tieng-anh { background-color: #bdd7ee; color: #000; }
-
-        /* Hiệu ứng chờ - Loading */
-        #vung-loading { display: none; text-align: center; padding: 30px; font-size: 18px; color: #555; }
-        
-        /* Nhận diện tác giả */
-        .chan-trang { text-align: center; font-weight: bold; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ccc; font-family: Arial, sans-serif; }
+        @keyframes moDanHienThi {
+            to {
+                opacity: 1;
+                filter: blur(0);
+                transform: translateY(0);
+            }
+        }
+        .tre-100 { animation-delay: 100ms; }
+        .tre-200 { animation-delay: 200ms; }
+        .tre-300 { animation-delay: 300ms; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-sans p-4 md:p-8 min-h-screen">
 
-    <div class="khung-chinh">
-        <!-- Khu vực thanh công cụ mô phỏng Macro -->
-        <div class="thanh-cong-cu">
-            <button class="nut-bam nut-bam-xanh">Đạt</button>
-            <button class="nut-bam" style="background: #fff; color: #ff0000; border-color: #00cc00;">Reset ngày</button>
-            <button class="nut-bam" onclick="taiDuLieuHeThong()">
-                <svg class="bieu-tuong" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.75a9.25 9.25 0 1 0 4.737 17.197l-1.062-1.664A7.25 7.25 0 1 1 19.25 12h-2l3.25 4.5L23.75 12h-2.5A9.25 9.25 0 0 0 12 2.75z"/>
-                </svg>
-                Tuần mới
-            </button>
-        </div>
-
-        <div class="tieu-de-truong">TRƯỜNG TIỂU HỌC HỢP THÀNH</div>
-        <div class="tieu-de-bang">THỜI KHOÁ BIỂU TUẦN <span id="hien-thi-tuan">1</span></div>
-        
-        <div id="vung-loading">
-            <!-- Tích hợp logic chờ -->
-            Đang trích xuất dữ liệu ma trận từ máy chủ, vui lòng đợi...
+    <!-- KHỐI 1: HEADER (Hiển thị Định danh và Thông số học vụ) -->
+    <header class="bg-white shadow-md rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between hieu-ung-mo-dan tre-100">
+        <div class="flex items-center space-x-5 mb-4 md:mb-0">
+            <!-- Ảnh Logo chờ nạp từ KetNoi.js -->
+            <img id="logoHeThong" src="" alt="Logo" class="w-16 h-16 hidden">
+            <div>
+                <!-- Tên hệ thống và Tên đơn vị chờ nạp từ KetNoi.js -->
+                <h1 id="tenHeThong" class="text-2xl font-bold text-blue-800 uppercase tracking-wide">Đang nạp dữ liệu...</h1>
+                <p id="tenDonVi" class="text-gray-500 font-medium text-lg">Hệ thống đang khởi động</p>
+            </div>
         </div>
         
-        <!-- Vùng kết xuất bảng HTML -->
-        <div id="vung-hien-thi-tkb"></div>
-    </div>
+        <div class="text-center md:text-right border-l-0 md:border-l-2 border-blue-100 md:pl-6">
+            <p class="text-sm text-gray-500 uppercase tracking-wider mb-1">Năm học - Niên khóa</p>
+            <!-- Tham số Năm học nạp từ CAI_DAT (Code.gs) -->
+            <p class="font-bold text-blue-700 text-lg"><span id="hienThiNamHoc">...</span></p>
+            <!-- Tham số Tuần nạp từ CAI_DAT (Code.gs) -->
+            <p class="font-medium text-gray-600 mt-1">Tuần chuyên môn: <span id="hienThiTuan" class="font-bold text-xl text-blue-700">...</span></p>
+        </div>
+    </header>
 
-    <!-- KHỐI 2: BẢN QUYỀN TÁC GIẢ -->
-    <div class="chan-trang">
-        Thiết kế và phát triển<br>Hoàng Ngọc Lâm
-    </div>
-
-    <!-- KHỐI 3: KẾT NỐI API -->
-    <div id="vung-chua-ket-noi"></div>
-
-    <script>
-        /* =========================================================
-           KHỐI 4: JAVASCRIPT XỬ LÝ LOGIC HIỂN THỊ
-           ========================================================= */
-           
-        async function nhungTepKetNoi() {
-            try {
-                let phanHoi = await fetch('KetNoi.html');
-                let noiDungHtml = await phanHoi.text();
-                let vungChua = document.createElement('div');
-                vungChua.innerHTML = noiDungHtml;
-                
-                let theScriptCu = vungChua.querySelector('script');
-                if (theScriptCu) {
-                    let theScriptMoi = document.createElement('script');
-                    theScriptMoi.textContent = theScriptCu.textContent;
-                    document.body.appendChild(theScriptMoi);
-                }
-            } catch (loiTep) {
-                console.error("Lỗi tải thư viện kết nối:", loiTep);
-            }
-        }
-
-        // Tự động tải thư viện kết nối
-        nhungTepKetNoi();
-
-        async function taiDuLieuHeThong() {
-            let vungLoading = document.getElementById('vung-loading');
-            let vungHienThi = document.getElementById('vung-hien-thi-tkb');
+    <!-- KHỐI 2: KHUNG BẢNG LƯỚI THỜI KHÓA BIỂU -->
+    <main class="hieu-ung-mo-dan tre-200">
+        <div class="bg-white shadow-md rounded-xl overflow-hidden border-t-4 border-blue-600">
+            <!-- Thanh công cụ -->
+            <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-700 flex items-center gap-3">
+                    <!-- Icon bảng chờ nạp từ KetNoi.js -->
+                    <img id="iconBang" src="" alt="Icon Bảng" class="w-6 h-6 hidden">
+                    <span>Ma Trận Phân Công Chuyên Môn</span>
+                </h2>
+                <!-- Nút làm mới dữ liệu gọi hàm từ app.js -->
+                <button onclick="taiDuLieuTKB()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow transition duration-200 flex items-center gap-2">
+                    Làm mới dữ liệu
+                </button>
+            </div>
             
-            if (typeof KET_NOI_MAY_CHU === 'undefined') {
-                alert("Hệ thống đang thiết lập kết nối, vui lòng thử lại sau vài giây.");
-                return;
-            }
+            <!-- Vùng bảng dữ liệu -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b-2 border-blue-100">
+                        <tr>
+                            <th class="px-6 py-4 font-bold">Thứ</th>
+                            <th class="px-6 py-4 font-bold">Buổi</th>
+                            <th class="px-6 py-4 font-bold text-center">Tiết</th>
+                            <th class="px-6 py-4 font-bold">Lớp</th>
+                            <th class="px-6 py-4 font-bold">Môn học</th>
+                            <th class="px-6 py-4 font-bold">Cán bộ - Giáo viên</th>
+                            <th class="px-6 py-4 font-bold text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vungHienThiDuLieu" class="divide-y divide-gray-100">
+                        <!-- Trạng thái chờ tải dữ liệu TKB ban đầu -->
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+                                    <p>Đang kết nối API máy chủ đồng bộ dữ liệu...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
-            vungLoading.style.display = 'block';
-            vungHienThi.innerHTML = '';
+    <!-- KHỐI 3: CHỮ KÝ TÁC GIẢ -->
+    <footer class="mt-8 text-center text-gray-500 hieu-ung-mo-dan tre-300">
+        <!-- Dữ liệu 2 dòng chữ ký sẽ được app.js nạp từ KetNoi.js vào đây -->
+        <p id="tieuDeTacGia" class="text-sm font-medium uppercase tracking-widest"></p>
+        <p id="tenTacGia" class="text-base font-bold text-gray-700"></p>
+    </footer>
 
-            // Gọi API lấy dữ liệu
-            let ketQua = await KET_NOI_MAY_CHU.layDuLieu("LAY_DU_LIEU_TKB");
-
-            vungLoading.style.display = 'none';
-
-            if (ketQua.trangThai === "ThanhCong") {
-                // Chuyển dữ liệu phẳng thành bảng ma trận
-                veBangMaTran(ketQua.duLieu);
-            } else {
-                vungHienThi.innerHTML = `<p style="color: red;">Lỗi xử lý: ${ketQua.thongBao}</p>`;
-            }
-        }
-
-        // Hàm dựng khung ma trận HTML
-        function veBangMaTran(mangDuLieuPhang) {
-            // Danh sách các lớp mặc định (Sẽ mở rộng dựa trên dữ liệu thực tế)
-            const danhSachLop = ['1A', '1B', '1C', '2A', '2B', '2C'];
-            let vungHienThi = document.getElementById('vung-hien-thi-tkb');
-            
-            let chuoiHtml = `<table>
-                <thead>
-                    <tr>
-                        <th rowspan="2" class="cot-co-dinh">Thứ</th>
-                        <th rowspan="2">Buổi</th>
-                        <th rowspan="2" style="background:#8a2be2; color:white;">Kiểm tra</th>
-                        <th rowspan="2">Tuần</th>
-                        <th rowspan="2">Tháng</th>
-                        <th rowspan="2">Năm học</th>
-                        <th rowspan="2">Tiết</th>`;
-            
-            // Render Header Lớp học (Chiếm 2 cột: Môn và N dạy)
-            danhSachLop.forEach(maLop => {
-                chuoiHtml += `<th colspan="2">${maLop}</th>`;
-            });
-            
-            chuoiHtml += `</tr><tr>`;
-            
-            // Render Header Phụ (Môn / N dạy)
-            danhSachLop.forEach(() => {
-                chuoiHtml += `<th>Môn</th><th>N dạy</th>`;
-            });
-            chuoiHtml += `</tr></thead><tbody>`;
-
-            // Cấu trúc trục thời gian mẫu (Thứ 2)
-            const cauTrucTiet = [
-                { thu: 'Thứ 2', buoi: 'Sáng', tiet: 1, rowspan: 5 },
-                { thu: '', buoi: '', tiet: 2 },
-                { thu: '', buoi: '', tiet: 3 },
-                { thu: '', buoi: '', tiet: 4 },
-                { thu: '', buoi: '', tiet: 5 }
-            ];
-
-            // Render các dòng dữ liệu (Hiện tại là khung cứng, sẽ được map với dữ liệu API)
-            cauTrucTiet.forEach((dongTiet, chiSo) => {
-                chuoiHtml += `<tr>`;
-                
-                if (dongTiet.thu !== '') {
-                    chuoiHtml += `<td rowspan="${dongTiet.rowspan}" class="cot-co-dinh"><b>${dongTiet.thu}</b><br>25/05/2026</td>`;
-                    chuoiHtml += `<td rowspan="${dongTiet.rowspan}"><b>${dongTiet.buoi}</b></td>`;
-                }
-                
-                chuoiHtml += `<td style="background-color: #00ff00; font-weight: bold;">Đạt</td>`;
-                chuoiHtml += `<td>1</td><td>3</td><td>2026-2027</td><td>${dongTiet.tiet}</td>`;
-                
-                // Vòng lặp rải dữ liệu giả định cho các lớp (Sẽ thay bằng logic lọc mảng mangDuLieuPhang)
-                danhSachLop.forEach(maLop => {
-                    // Chèn logic nội suy dữ liệu tại đây dựa vào Thứ, Buổi, Tiết, Lớp
-                    chuoiHtml += `<td>HĐTNH</td><td>Bình</td>`;
-                });
-                
-                chuoiHtml += `</tr>`;
-            });
-
-            chuoiHtml += `</tbody></table>`;
-            vungHienThi.innerHTML = chuoiHtml;
-        }
-    </script>
+    <!-- KHỐI 4: GỌI MÃ LỆNH ĐIỀU KHIỂN (Thứ tự gọi rất quan trọng) -->
+    <!-- Bước 1: Gọi cấu hình tĩnh (Link, ID, Định danh) -->
+    <script src="KetNoi.js"></script>
+    
+    <!-- Bước 2: Gọi luồng logic xử lý giao diện -->
+    <script src="app.js"></script>
 </body>
 </html>
