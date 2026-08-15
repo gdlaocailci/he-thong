@@ -8,9 +8,12 @@ function kiemSoatGiaoDien() {
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
         if (nut) {
-            nut.disabled = !quyenSuaChua;
-            if (quyenSuaChua) { nut.classList.remove('opacity-50', 'cursor-not-allowed'); } 
-            else { nut.classList.add('opacity-50', 'cursor-not-allowed'); }
+            // Nâng cấp: Hiển thị nếu có quyền, Ẩn đi nếu không có quyền
+            if (quyenSuaChua) { 
+                nut.classList.remove('hidden'); 
+            } else { 
+                nut.classList.add('hidden'); 
+            }
         }
     });
 }
