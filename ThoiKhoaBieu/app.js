@@ -2,21 +2,59 @@ let thongSoHocVu = {};
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
+// =========================================================================
+// HÀM KHỞI TẠO GIAO DIỆN & ĐỒNG BỘ DỮ LIỆU SANG MENU DỌC
+// =========================================================================
 async function khoiTaoGiaoDien() {
     try {
+        // 1. Nạp cấu hình từ KetNoi.js (Frontend)
         if(typeof CAU_HINH_FRONTEND !== 'undefined') {
-            document.getElementById('tenHeThong').innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
-            document.getElementById('logoHeThong').src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
-            document.getElementById('iconBang').src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
+            // Cập nhật không gian chính
+            let tieuDeHeThong = document.getElementById('tenHeThong');
+            if (tieuDeHeThong) tieuDeHeThong.innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
+            
+            let logoHT = document.getElementById('logoHeThong');
+            if (logoHT) logoHT.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
+            
+            let iconB = document.getElementById('iconBang');
+            if (iconB) iconB.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
+
+            // Cập nhật Logo cho Menu dọc 
+            let logoMenu = document.getElementById('logoMenuDoc');
+            if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
         }
+
+        // 2. Gọi API lấy dữ liệu cấu hình học vụ từ máy chủ
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         thongSoHocVu = await phanHoi.json();
-        if(thongSoHocVu.NAM_HOC) document.getElementById('hienThiNamHoc').innerText = thongSoHocVu.NAM_HOC;
+        
+        // 3. Đổ dữ liệu Năm học ra giao diện chính và Menu dọc
+        if(thongSoHocVu.NAM_HOC) {
+            let hienThiNam = document.getElementById('hienThiNamHoc');
+            if (hienThiNam) hienThiNam.innerText = thongSoHocVu.NAM_HOC;
+            
+            // Đẩy dữ liệu sang Menu dọc
+            let menuNam = document.getElementById('menuHienThiNamHoc');
+            if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC;
+        }
+        
+        // 4. Đổ dữ liệu Tuần học ra giao diện chính và Menu dọc, sau đó tải TKB
         if(thongSoHocVu.TUAN_HIEN_TAI) {
-            document.getElementById('hienThiTuan').innerText = thongSoHocVu.TUAN_HIEN_TAI;
+            let hienThiTuan = document.getElementById('hienThiTuan');
+            if (hienThiTuan) hienThiTuan.innerText = thongSoHocVu.TUAN_HIEN_TAI;
+            
+            // Đẩy dữ liệu sang Menu dọc
+            let menuTuan = document.getElementById('menuHienThiTuanHoc');
+            if (menuTuan) menuTuan.innerText = thongSoHocVu.TUAN_HIEN_TAI;
+            
+            // Gọi hàm tải dữ liệu lưới Thời khóa biểu
             taiDuLieuTKB();
         }
-    } catch (loi) { document.getElementById('tenDonVi').innerText = "Lỗi kết nối máy chủ API"; }
+    } catch (loi) { 
+        console.error("Lỗi khởi tạo giao diện:", loi);
+        let tenDonVi = document.getElementById('tenDonVi');
+        if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API. Vui lòng kiểm tra đường truyền."; 
+    }
 }
 
 async function taiDuLieuTKB(tuan) {
