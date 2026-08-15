@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Thời Khóa Biểu Trực Tuyến</title>
-    <!-- Tailwind CSS -->
+   <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- BỔ SUNG: Thư viện Google Identity Services (Phục vụ đăng nhập) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <style>
         .reactbits-fade-in { animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; filter: blur(8px); transform: translateY(15px); }
         @keyframes fadeInBlur { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
