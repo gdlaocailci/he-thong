@@ -31,15 +31,35 @@ function chuyenTuan(buocNhay) {
 // =========================================================================
 async function khoiTaoGiaoDien() {
     try {
+        // 1. Nạp giao diện tĩnh từ cấu hình
         if(typeof CAU_HINH_FRONTEND !== 'undefined') {
-            let tieuDeHeThong = document.getElementById('tenHeThong'); if (tieuDeHeThong) tieuDeHeThong.innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
-            let logoHT = document.getElementById('logoHeThong'); if (logoHT) logoHT.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
+            let tieuDeHeThong = document.getElementById('tenHeThong'); 
+            if (tieuDeHeThong) tieuDeHeThong.innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
+            
+            let logoHT = document.getElementById('logoHeThong'); 
+            if (logoHT) logoHT.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
+            
+            // KHÔI PHỤC: Nạp Logo Menu dọc và Icon Bảng bị thiếu
+            let logoMenu = document.getElementById('logoMenuDoc'); 
+            if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
+            
+            let iconB = document.getElementById('iconBang'); 
+            if (iconB) iconB.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
         }
 
+        // 2. Nạp dữ liệu động từ Máy chủ
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         thongSoHocVu = await phanHoi.json();
+        
         kiemSoatGiaoDien(); 
         
+        // KHÔI PHỤC: Hiển thị biến Năm học ra Menu dọc
+        if(thongSoHocVu.NAM_HOC) { 
+            let menuNam = document.getElementById('menuHienThiNamHoc'); 
+            if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
+        }
+        
+        // Nạp danh sách giáo viên vào ô lọc
         if(thongSoHocVu.DANH_SACH_GIAO_VIEN) {
             let theDataList = document.getElementById('danhSachGvList');
             if(theDataList) {
@@ -49,12 +69,18 @@ async function khoiTaoGiaoDien() {
             }
         }
 
+        // Nạp thông tin tuần và kích hoạt vẽ dữ liệu TKB
         if(thongSoHocVu.TUAN_HIEN_TAI) {
             tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
-            document.getElementById('hienThiTuanHienTai').innerText = `Tuần ${tuanDangXem}`;
+            let hienThiTuan = document.getElementById('hienThiTuanHienTai');
+            if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
             taiDuLieuTKB();
         }
-    } catch (loi) { console.error("Lỗi khởi tạo:", loi); }
+    } catch (loi) { 
+        console.error("Lỗi khởi tạo:", loi); 
+        let tenDonVi = document.getElementById('tenDonVi');
+        if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API.";
+    }
 }
 
 async function taiDuLieuTKB() {
