@@ -265,7 +265,7 @@ function xuatMaTranBang(danhSachTiet) {
     let theadHTML = `<tr>
         <th rowspan="2" class="sticky left-0 z-20 bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
         <th rowspan="2" class="sticky left-[85px] z-20 bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
-        <th rowspan="2" class="sticky left-[145px] z-20 bg-slate-100 text-center font-bold align-middle w-[55px] min-w-[55px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
+        <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
         <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
         <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
         <th rowspan="2" class="sticky left-[200px] z-20 bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border border-slate-400 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
