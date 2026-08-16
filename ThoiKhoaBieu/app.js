@@ -261,13 +261,15 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
+    // NÂNG CẤP: Đóng băng tiêu đề cột (Sticky Left) và ẩn cột Tháng, Năm học
     let theadHTML = `<tr>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[50px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[50px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[90px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[50px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
+        <th rowspan="2" class="sticky left-0 z-20 bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
+        <th rowspan="2" class="sticky left-[85px] z-20 bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
+        <th rowspan="2" class="sticky left-[145px] z-20 bg-slate-100 text-center font-bold align-middle w-[55px] min-w-[55px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
+        <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
+        <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
+        <th rowspan="2" class="sticky left-[200px] z-20 bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border border-slate-400 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
+    
     mangLop.forEach(lop => { 
         theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
     });
@@ -293,7 +295,6 @@ function xuatMaTranBang(danhSachTiet) {
     const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
     const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
 
-    // XÓA BỎ HOÀN TOÀN TẠO DÒNG RỖNG "99_du" DƯỚI ĐÁY
     Object.keys(luoiDuLieu).forEach(thu => {
         if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
         for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
@@ -319,22 +320,25 @@ function xuatMaTranBang(danhSachTiet) {
         let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
         danhSachBuoi.forEach(buoi => {
-            // Tối ưu thuật toán sắp xếp, loại bỏ logic quét "99_du"
             const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => parseInt(a) - parseInt(b));
             let soDongCuaBuoi = danhSachTietCuaBuoi.length; let inCotBuoi = true;
 
             danhSachTietCuaBuoi.forEach(tiet => {
                 tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group" style="font-family:'Times New Roman',Times,serif;">`;
                 
+                // NÂNG CẤP: Ghim cột bằng sticky và thiết lập z-index để không bị đè chữ khi cuộn ngang
                 if (inCotThu) { 
-                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center align-middle bg-white border border-slate-300">
+                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="sticky left-0 z-10 bg-white text-center align-middle border border-slate-300">
                                     <div class="font-extrabold text-slate-900">${thu}</div>
                                     <div class="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 mt-1 inline-block">${thongTinNgay.hienThi}</div>
                                   </td>`; 
                     inCotThu = false; 
                 }
                 
-                if (inCotBuoi) { tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle text-slate-800 bg-white border border-slate-300">${buoi}</td>`; inCotBuoi = false; }
+                if (inCotBuoi) { 
+                    tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="sticky left-[85px] z-10 bg-white text-center font-bold align-middle text-slate-800 border border-slate-300">${buoi}</td>`; 
+                    inCotBuoi = false; 
+                }
 
                 let duLieuDong = null;
                 for (let l = 0; l < mangLop.length; l++) {
@@ -347,11 +351,11 @@ function xuatMaTranBang(danhSachTiet) {
                 let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
-                // Loại bỏ hoàn toàn khối rẽ nhánh in dữ liệu rỗng
-                tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
-                tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
-                tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
-                tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${tiet}</td>`;
+                // Cột Tuần và Tiết được ghim, Cột Tháng và Năm học bị ẩn (class hidden)
+                tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="sticky left-[145px] z-10 bg-white text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+                tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
+                tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
+                tbodyHTML += `<td class="sticky left-[200px] z-10 bg-white text-center font-bold text-slate-800 align-middle border border-slate-300 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]">${tiet}</td>`;
 
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
