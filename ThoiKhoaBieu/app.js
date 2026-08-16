@@ -73,8 +73,9 @@ async function goiThuatToanXepLich() {
     } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi thuật toán xếp lịch tự động.</td></tr>`; }
 }
 
-// NÂNG CẤP: Hàm kích hoạt vẽ lại ma trận dựa trên ô nhập
-function locTheoGiaoVien() { xuatMaTranBang(duLieuTkbHienTai); }
+function locTheoGiaoVien() { 
+    xuatMaTranBang(duLieuTkbHienTai); 
+}
 
 // NÂNG CẤP: Thêm tham số isTarget để quyết định hiển thị/ẩn thẻ select
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = true) {
