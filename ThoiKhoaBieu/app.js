@@ -290,15 +290,14 @@ function xuatMaTranBang(danhSachTiet) {
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
     thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
     
-    // NÂNG CẤP: Ép khung hiển thị tối thiểu phải là 5 tiết Sáng và 4 tiết Chiều để dự phòng
     const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
     const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
 
+    // XÓA BỎ HOÀN TOÀN TẠO DÒNG RỖNG "99_du" DƯỚI ĐÁY
     Object.keys(luoiDuLieu).forEach(thu => {
         if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
         for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
         for (let j = 1; j <= gioiHanChieu; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
-        luoiDuLieu[thu]["Sáng"]["99_du"] = {}; luoiDuLieu[thu]["Chiều"]["99_du"] = {};
     });
 
     const bangMauGV = ['bg-red-200', 'bg-blue-200', 'bg-green-200', 'bg-yellow-200', 'bg-purple-200', 'bg-pink-200', 'bg-teal-200', 'bg-orange-200', 'bg-cyan-200', 'bg-lime-200', 'bg-fuchsia-200', 'bg-rose-200'];
@@ -320,7 +319,8 @@ function xuatMaTranBang(danhSachTiet) {
         let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
         danhSachBuoi.forEach(buoi => {
-            const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => { if (a === "99_du") return 1; if (b === "99_du") return -1; return parseInt(a) - parseInt(b); });
+            // Tối ưu thuật toán sắp xếp, loại bỏ logic quét "99_du"
+            const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => parseInt(a) - parseInt(b));
             let soDongCuaBuoi = danhSachTietCuaBuoi.length; let inCotBuoi = true;
 
             danhSachTietCuaBuoi.forEach(tiet => {
@@ -343,39 +343,34 @@ function xuatMaTranBang(danhSachTiet) {
                     }
                 }
 
-                let hienThiTiet = (tiet === "99_du") ? "" : tiet;
                 let valTuan = duLieuDong ? duLieuDong.tuan : tuanDangXem;
                 let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
-                if (tiet !== "99_du") {
-                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
-                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
-                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
-                    tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
-                } else {
-                    tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
-                }
+                // Loại bỏ hoàn toàn khối rẽ nhánh in dữ liệu rỗng
+                tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+                tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
+                tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
+                tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${tiet}</td>`;
 
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
-                    if (tiet !== "99_du") {
-                        let monGoc = duLieuO ? duLieuO.monHoc : ""; let gvGoc = duLieuO ? duLieuO.maGv : "";
-                        let isTarget = true; if (gvLoc !== "" && gvLoc !== "Toàn trường" && gvGoc !== gvLoc) { isTarget = false; }
+                    
+                    let monGoc = duLieuO ? duLieuO.monHoc : ""; let gvGoc = duLieuO ? duLieuO.maGv : "";
+                    let isTarget = true; if (gvLoc !== "" && gvLoc !== "Toàn trường" && gvGoc !== gvLoc) { isTarget = false; }
 
-                        let bgLop = 'bg-white'; let textClass = 'text-slate-900';
-                        if (isTarget) {
-                            if (monGoc.includes('CẤN LỊCH')) { bgLop = 'bg-yellow-400'; textClass = 'text-red-700 font-extrabold'; } 
-                            else if (gvGoc && gvGoc !== gvcnLop[lop]) { bgLop = mauGiaoVien[gvGoc] || 'bg-gray-200'; textClass = 'text-slate-900 font-semibold'; }
-                        } else { bgLop = 'bg-gray-100/50'; }
+                    let bgLop = 'bg-white'; let textClass = 'text-slate-900';
+                    if (isTarget) {
+                        if (monGoc.includes('CẤN LỊCH')) { bgLop = 'bg-yellow-400'; textClass = 'text-red-700 font-extrabold'; } 
+                        else if (gvGoc && gvGoc !== gvcnLop[lop]) { bgLop = mauGiaoVien[gvGoc] || 'bg-gray-200'; textClass = 'text-slate-900 font-semibold'; }
+                    } else { bgLop = 'bg-gray-100/50'; }
 
-                        let idMon = `mon_${thu}_${buoi}_${tiet}_${lop}`; let idGv = `gv_${thu}_${buoi}_${tiet}_${lop}`;
-                        let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textClass, idMon, isTarget);
-                        let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textClass, idGv, isTarget);
+                    let idMon = `mon_${thu}_${buoi}_${tiet}_${lop}`; let idGv = `gv_${thu}_${buoi}_${tiet}_${lop}`;
+                    let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textClass, idMon, isTarget);
+                    let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textClass, idGv, isTarget);
 
-                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300 transition-all duration-300">${dropdownMon}</td>`;
-                        tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300 transition-all duration-300">${dropdownGV}</td>`;
-                    } else { tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`; }
+                    tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300 transition-all duration-300">${dropdownMon}</td>`;
+                    tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} focus-within:ring-2 focus-within:ring-blue-400 border border-slate-300 transition-all duration-300">${dropdownGV}</td>`;
                 });
                 tbodyHTML += `</tr>`;
             });
