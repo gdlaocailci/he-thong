@@ -9,11 +9,11 @@ function kiemSoatGiaoDien() {
         let nut = document.getElementById(idNut);
         if (nut) {
             if (quyenSuaChua) { 
-                // Khi trùng email Cột E: Hiện nút bằng flex, mở khóa thao tác
+                // KHI TRÙNG ĐỊNH DANH CỘT E: Mở khóa và hiển thị nút (Dùng flex để căn chỉnh icon)
                 nut.style.display = 'flex';
                 nut.disabled = false;
             } else { 
-                // Khi chưa đăng nhập hoặc không có quyền: Ẩn hoàn toàn nút khỏi giao diện
+                // MẶC ĐỊNH & KHÔNG CÓ QUYỀN: Ép ẩn hoàn toàn
                 nut.style.display = 'none';
                 nut.disabled = true;
             }
