@@ -504,3 +504,138 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         await taiDuLieuTKB(); 
     } catch (loi) { console.error("Xác thực không thành công.", loi); }
 }
+// =========================================================================
+// HÀM BỔ SUNG: XUẤT DỮ LIỆU EXCEL TỪ GIAO DIỆN HIỂN THỊ THỰC TẾ
+// =========================================================================
+function xuatExcel() {
+    let mangLop = thongSoHocVu.DANH_SACH_LOP || [];
+    if (mangLop.length === 0 && duLieuTkbHienTai.length > 0) {
+        mangLop = [...new Set(duLieuTkbHienTai.map(t => t.maLop))].sort();
+    }
+    if (mangLop.length === 0) { alert("Không có dữ liệu để xuất."); return; }
+
+    // Lấy bộ lọc giáo viên hiện tại trên giao diện
+    let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
+
+    // Khởi tạo bảng HTML ẩn để chuẩn bị xuất
+    let tableHTML = `<table border="1" style="border-collapse:collapse; font-family:'Times New Roman',Times,serif; text-align:center;">`;
+    
+    // Header Dòng 1 (Bỏ Tuần, Tháng, Năm)
+    tableHTML += `<tr>
+        <th rowspan="2" style="background-color:#f1f5f9; font-weight:bold; padding: 5px;">Thứ / Ngày</th>
+        <th rowspan="2" style="background-color:#f1f5f9; font-weight:bold; padding: 5px;">Buổi</th>
+        <th rowspan="2" style="background-color:#f1f5f9; font-weight:bold; padding: 5px;">Tiết</th>`;
+    mangLop.forEach(lop => {
+        tableHTML += `<th colspan="2" style="background-color:#e2e8f0; font-weight:bold; padding: 5px;">${lop}</th>`;
+    });
+    tableHTML += `</tr><tr>`;
+    
+    // Header Dòng 2
+    mangLop.forEach(() => {
+        tableHTML += `<th style="background-color:#f8fafc; font-weight:bold; padding: 5px;">Môn</th>
+                      <th style="background-color:#f8fafc; font-weight:bold; padding: 5px;">N dạy</th>`;
+    });
+    tableHTML += `</tr>`;
+
+    // Chuẩn bị ma trận giống hệt UI
+    const luoiDuLieu = {}; 
+    const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; 
+    const boLocBuoi = {"Sáng": 1, "Chiều": 2};
+
+    duLieuTkbHienTai.forEach(t => {
+        const thu = t.thu.trim(); const buoi = t.buoi.trim(); const tiet = t.tiet;
+        if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; 
+        if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {}; 
+        if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
+        luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
+    });
+
+    const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
+    
+    const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
+    const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
+
+    Object.keys(luoiDuLieu).forEach(thu => {
+        if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; 
+        if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
+        for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
+        for (let j = 1; j <= gioiHanChieu; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
+    });
+
+    const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
+
+    // Quét trực tiếp các thẻ DOM để lấy dữ liệu thực tế
+    danhSachThu.forEach(thu => {
+        const danhSachBuoi = Object.keys(luoiDuLieu[thu]).sort((a, b) => (boLocBuoi[a] || 99) - (boLocBuoi[b] || 99));
+        let soDongCuaThu = 0; 
+        danhSachBuoi.forEach(buoi => { soDongCuaThu += Object.keys(luoiDuLieu[thu][buoi]).length; });
+        let inCotThu = true;
+
+        let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+
+        danhSachBuoi.forEach(buoi => {
+            const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => parseInt(a) - parseInt(b));
+            let soDongCuaBuoi = danhSachTietCuaBuoi.length; 
+            let inCotBuoi = true;
+
+            danhSachTietCuaBuoi.forEach(tiet => {
+                tableHTML += `<tr>`;
+                
+                if (inCotThu) { 
+                    tableHTML += `<td rowspan="${soDongCuaThu}" style="vertical-align:middle; font-weight:bold;">${thu}<br>(${thongTinNgay.hienThi})</td>`; 
+                    inCotThu = false; 
+                }
+                
+                if (inCotBuoi) { 
+                    tableHTML += `<td rowspan="${soDongCuaBuoi}" style="vertical-align:middle; font-weight:bold;">${buoi}</td>`; 
+                    inCotBuoi = false; 
+                }
+                
+                tableHTML += `<td style="font-weight:bold;">${tiet}</td>`;
+
+                mangLop.forEach(lop => {
+                    // Trích xuất trực tiếp giá trị thực tế đang có trên Giao diện
+                    let selectMon = document.getElementById(`mon_${thu}_${buoi}_${tiet}_${lop}`);
+                    let selectGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
+                    
+                    let valMon = selectMon ? selectMon.value.trim() : "";
+                    let valGv = selectGv ? selectGv.value.trim() : "";
+
+                    // Nếu có bộ lọc GV, các tiết không liên quan sẽ bị loại trừ
+                    let isTarget = true;
+                    if (gvLoc !== "" && gvLoc !== "Toàn trường" && valGv !== gvLoc) {
+                        isTarget = false;
+                    }
+
+                    // Không lấy giá trị rỗng hoặc các ô bị ẩn bởi bộ lọc
+                    if (!isTarget || valMon === "") {
+                        tableHTML += `<td></td><td></td>`;
+                    } else {
+                        tableHTML += `<td>${valMon}</td><td>${valGv}</td>`;
+                    }
+                });
+                tableHTML += `</tr>`;
+            });
+        });
+    });
+
+    tableHTML += `</table>`;
+
+    // Cấu trúc Wrapper Excel đảm bảo hiển thị đúng định dạng font và tiếng Việt
+    let template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>TKB</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>' + tableHTML + '</body></html>';
+    
+    // Gói dữ liệu và tạo lệnh tải về (Download)
+    let blob = new Blob([template], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    let url = URL.createObjectURL(blob);
+    
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `TKB_Tuan_${tuanDangXem}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Xóa thẻ sau khi hoàn tất để làm sạch DOM
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
