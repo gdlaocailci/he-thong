@@ -76,15 +76,21 @@
                 </div>
             </header>
 
-            <!-- NÂNG CẤP THANH CÔNG CỤ: BỘ CHUYỂN TUẦN VÀ 3 NÚT LƯU -->
+            <!-- THANH CÔNG CỤ -->
             <div class="bg-slate-50 border border-gray-400 p-2 flex flex-col xl:flex-row justify-between items-center gap-3 reactbits-fade-in delay-200">
                 
-                <div class="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+                <div class="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto font-sans">
                     <!-- BỘ CHUYỂN TUẦN -->
                     <div class="flex items-center bg-white border border-gray-400 rounded shadow-sm px-2 py-1 gap-2 mr-2">
                         <button onclick="chuyenTuan(-1)" class="p-1 hover:bg-gray-200 rounded text-slate-600 font-bold text-lg leading-none" title="Tuần trước">◀</button>
                         <span id="hienThiTuanHienTai" class="px-2 font-extrabold text-blue-900 whitespace-nowrap text-base">Tuần --</span>
                         <button onclick="chuyenTuan(1)" class="p-1 hover:bg-gray-200 rounded text-slate-600 font-bold text-lg leading-none" title="Tuần tiếp">▶</button>
+                    </div>
+
+                    <!-- NÂNG CẤP: BỘ CHỌN NGÀY ĐẦU TUẦN -->
+                    <div class="flex items-center bg-white border border-gray-400 rounded shadow-sm px-2 py-1 gap-2 mr-2" title="Cài đặt mốc ngày cho Thứ 2 của tuần này">
+                        <span class="text-sm font-bold text-slate-600">Từ ngày:</span>
+                        <input type="date" id="chonNgayDauTuan" onchange="capNhatNgayDauTuan()" class="text-sm font-bold text-blue-900 outline-none cursor-pointer bg-transparent">
                     </div>
                     
                     <div class="relative w-full md:w-56">
