@@ -1,7 +1,8 @@
 let thongSoHocVu = {};
 let quyenSuaChua = false; 
 let duLieuTkbHienTai = []; 
-let tuanDangXem = 1;
+let tuanDangXem = 1; 
+let ngayDauTuanUI = ''; // Mốc thời gian độc lập của tuần
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
@@ -16,13 +17,37 @@ function kiemSoatGiaoDien() {
     });
 }
 
+// NÂNG CẤP: Thuật toán tịnh tiến liên tục (Cộng/trừ 7 ngày từ mốc hiển thị)
 function chuyenTuan(buocNhay) {
     let tuanMoi = parseInt(tuanDangXem) + buocNhay;
     if (tuanMoi < 1) tuanMoi = 1; 
     if (tuanMoi > 52) tuanMoi = 52;
+    
+    if (ngayDauTuanUI && tuanMoi !== tuanDangXem) {
+        let parts = ngayDauTuanUI.split('-');
+        if (parts.length === 3) {
+            let d = new Date(parts[0], parts[1] - 1, parts[2]);
+            d.setDate(d.getDate() + (buocNhay * 7)); // Tịnh tiến số ngày
+            let yy = d.getFullYear();
+            let mm = (d.getMonth() + 1).toString().padStart(2, '0');
+            let dd = d.getDate().toString().padStart(2, '0');
+            ngayDauTuanUI = `${yy}-${mm}-${dd}`;
+            let dateInput = document.getElementById('chonNgayDauTuan');
+            if (dateInput) dateInput.value = ngayDauTuanUI;
+        }
+    }
+    
     tuanDangXem = tuanMoi;
     document.getElementById('hienThiTuanHienTai').innerText = `Tuần ${tuanDangXem}`;
     taiDuLieuTKB(); 
+}
+
+function capNhatNgayDauTuan() {
+    let el = document.getElementById('chonNgayDauTuan');
+    if (el && el.value) {
+        ngayDauTuanUI = el.value;
+        xuatMaTranBang(duLieuTkbHienTai); 
+    }
 }
 
 // =========================================================================
@@ -67,6 +92,22 @@ async function khoiTaoGiaoDien() {
             tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
             let hienThiTuan = document.getElementById('hienThiTuanHienTai');
             if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
+            
+            // NÂNG CẤP: Tự động tính tịnh tiến từ ngày gốc CSDL lúc khởi động web
+            if (thongSoHocVu.NGAY_AP_DUNG) {
+                let p = thongSoHocVu.NGAY_AP_DUNG.split('/');
+                if (p.length === 3) {
+                    let d = new Date(p[2], p[1] - 1, p[0]);
+                    d.setDate(d.getDate() + (tuanDangXem - 1) * 7);
+                    let yy = d.getFullYear(); 
+                    let mm = (d.getMonth() + 1).toString().padStart(2, '0'); 
+                    let dd = d.getDate().toString().padStart(2, '0');
+                    ngayDauTuanUI = `${yy}-${mm}-${dd}`;
+                    let dateInput = document.getElementById('chonNgayDauTuan');
+                    if (dateInput) dateInput.value = ngayDauTuanUI;
+                }
+            }
+            
             taiDuLieuTKB();
         }
     } catch (loi) { 
@@ -157,29 +198,24 @@ function dongModal() { document.getElementById('modalKiemTra').classList.add('hi
 // =========================================================================
 // KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
 // =========================================================================
-function tinhNgayTuDong(chuoiNgayGoc, tuanHienTai, tenThu) {
-    let ngayGoc = new Date();
-    if (chuoiNgayGoc) {
-        let phanTach = chuoiNgayGoc.split('/');
-        if (phanTach.length === 3) {
-            ngayGoc = new Date(phanTach[2], phanTach[1] - 1, phanTach[0]);
-        } else {
-            ngayGoc = new Date(chuoiNgayGoc);
-        }
-    }
-    if (isNaN(ngayGoc.getTime())) ngayGoc = new Date(); 
+function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
+    if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
+    let parts = ngayDauTuanStr.split('-');
+    if (parts.length !== 3) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
+    
+    let ngayGoc = new Date(parts[0], parts[1] - 1, parts[2]);
     const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
     let soNgayLech = doLechThu[tenThu] || 0;
     
     let ngayDich = new Date(ngayGoc.getTime());
-    ngayDich.setDate(ngayGoc.getDate() + (parseInt(tuanHienTai) - 1) * 7 + soNgayLech);
+    ngayDich.setDate(ngayGoc.getDate() + soNgayLech);
     
     let d = ngayDich.getDate().toString().padStart(2, '0');
     let m = (ngayDich.getMonth() + 1).toString().padStart(2, '0');
     let y = ngayDich.getFullYear();
     
-    return { hienThi: `${d}/${m}/${y}`, thang: m, nam: y.toString() };
+    return { hienThi: `${d}/${m}/${y}`, thang: m, nam: y.toString(), ngayDayDu: `${d}/${m}/${y}` };
 }
 
 function xuatMaTranBang(danhSachTiet) {
@@ -189,9 +225,21 @@ function xuatMaTranBang(danhSachTiet) {
     if (mangLop.length === 0) return;
 
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
-    let chuoiNgayApDung = thongSoHocVu.NGAY_AP_DUNG || ''; 
+    let dateInput = document.getElementById('chonNgayDauTuan');
+    
+    // NÂNG CẤP: Ưu tiên lấy ngày từ CSDL (nếu tuần này đã từng được lưu và có mốc ngày)
+    if (duLieuTiet && duLieuTiet.length > 0) {
+        let thu2Data = duLieuTiet.find(t => t.thu === "Thứ 2" && t.ngay);
+        if (thu2Data && thu2Data.ngay) {
+            let p = thu2Data.ngay.split('/'); 
+            if (p.length === 3) {
+                ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`; 
+                if (dateInput) dateInput.value = ngayDauTuanUI;
+            }
+        }
+    }
 
-    let theadHTML = `<tr><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Thứ / Ngày</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Tuần</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Tháng</th><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>`;
+    let theadHTML = `<tr><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Thứ / Ngày</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tuần</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tháng</th><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>`;
     mangLop.forEach(lop => { theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest">${lop}</th>`; });
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => { theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px]">Môn</th><th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px]">N dạy</th>`; });
@@ -232,7 +280,7 @@ function xuatMaTranBang(danhSachTiet) {
         let soDongCuaThu = 0; danhSachBuoi.forEach(buoi => { soDongCuaThu += Object.keys(luoiDuLieu[thu][buoi]).length; });
         let inCotThu = true;
 
-        let thongTinNgay = tinhNgayTuDong(chuoiNgayApDung, tuanDangXem, thu);
+        let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
         danhSachBuoi.forEach(buoi => {
             const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => { if (a === "99_du") return 1; if (b === "99_du") return -1; return parseInt(a) - parseInt(b); });
@@ -251,17 +299,22 @@ function xuatMaTranBang(danhSachTiet) {
                 
                 if (inCotBuoi) { tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle text-slate-800 bg-white border border-slate-300">${buoi}</td>`; inCotBuoi = false; }
 
-                let hienThiTiet = (tiet === "99_du") ? "" : tiet;
-                let valTuan = tuanDangXem;
-                let valThang = thongTinNgay.thang;
-                let valNam = thongSoHocVu.NAM_HOC || thongTinNgay.nam;
+                let duLieuDong = null;
+                for (let l = 0; l < mangLop.length; l++) {
+                    if (luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][mangLop[l]]) {
+                        duLieuDong = luoiDuLieu[thu][buoi][tiet][mangLop[l]]; break;
+                    }
+                }
 
-                let cssInput = "w-full text-center bg-transparent outline-none font-bold text-slate-700 py-1 cursor-default pointer-events-none";
+                let hienThiTiet = (tiet === "99_du") ? "" : tiet;
+                let valTuan = duLieuDong ? duLieuDong.tuan : tuanDangXem;
+                let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
+                let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
                 if (tiet !== "99_du") {
-                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiTuan_${thu}_${buoi}_${tiet}" value="${valTuan}" class="${cssInput}" readonly></td>`;
-                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiThang_${thu}_${buoi}_${tiet}" value="${valThang}" class="${cssInput}" readonly></td>`;
-                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiNam_${thu}_${buoi}_${tiet}" value="${valNam}" class="${cssInput}" readonly></td>`;
+                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-semibold text-slate-700 align-middle border border-slate-300">${valTuan}</td>`;
+                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-semibold text-slate-700 align-middle border border-slate-300">${valThang}</td>`;
+                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-semibold text-slate-700 align-middle border border-slate-300">${valNam}</td>`;
                     tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
                 } else {
                     tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
@@ -320,9 +373,10 @@ async function luuDuLieu(event, loaiLuu) {
                         let inThang = document.getElementById(`uiThang_${thu}_${buoi}_${t}`);
                         let inNam = document.getElementById(`uiNam_${thu}_${buoi}_${t}`);
                         
-                        let vTuan = inTuan ? inTuan.value.trim() : tuanDangXem;
-                        let vThang = inThang ? inThang.value.trim() : '';
-                        let vNam = inNam ? inNam.value.trim() : (thongSoHocVu.NAM_HOC || '');
+                        let vTuan = inTuan ? inTuan.innerText.trim() : tuanDangXem;
+                        let vThang = inThang ? inThang.innerText.trim() : '';
+                        let vNgay = inThang ? inThang.getAttribute('data-ngay') : ''; 
+                        let vNam = inNam ? inNam.innerText.trim() : (thongSoHocVu.NAM_HOC || '');
 
                         mangLop.forEach(lop => {
                             let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
@@ -331,7 +385,7 @@ async function luuDuLieu(event, loaiLuu) {
                                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                                 dsTietLuoi.push({ 
                                     maTiet: `${vTuan}_${thu}_${tienToBuoi}_${t}_${lop}`, 
-                                    namHoc: vNam, thang: vThang, tuan: vTuan, 
+                                    namHoc: vNam, thang: vThang, ngay: vNgay, tuan: vTuan, 
                                     thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value, maGv: theSelectGv ? theSelectGv.value : "" 
                                 });
                             }
