@@ -388,7 +388,6 @@ async function luuDuLieu(event, loaiLuu) {
     
     if (loaiLuu === 'codinh') { if (!confirm("CẢNH BÁO: Thao tác này sẽ ghi đè toàn bộ TKB hiện tại làm TKB Gốc Cố Định cho toàn trường. Bấm OK để tiếp tục.")) return; }
     
-    // NÂNG CẤP: Thay đổi câu thông báo, xác nhận chu trình lưu kho và tịnh tiến tuần
     if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem} vào kho DATA_TKB, sau đó khôi phục lại dữ liệu Gốc và tự động chuyển sang tuần tiếp theo?`)) return; }
 
     const btn = event.currentTarget; const textGoc = btn.innerHTML;
@@ -397,8 +396,6 @@ async function luuDuLieu(event, loaiLuu) {
     try {
         let dsTietLuoi = []; 
         
-        // NÂNG CẤP: Gỡ bỏ điều kiện if (loaiLuu !== 'khoiphuc') để hệ thống LUÔN quét dữ liệu trên lưới 
-        // nhằm phục vụ cho việc ghi toàn vẹn dữ liệu tuần vào DATA_TKB
         const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
         
         thuMacDinh.forEach(thu => {
@@ -416,12 +413,14 @@ async function luuDuLieu(event, loaiLuu) {
                     mangLop.forEach(lop => {
                         let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
                         let theSelectGv = document.getElementById(`gv_${thu}_${buoi}_${t}_${lop}`);
-                        if(theSelectMon && theSelectMon.value) {
+                        
+                        // NÂNG CẤP: Lọc chặt chẽ, loại bỏ hoàn toàn các ô không có dữ liệu môn học
+                        if(theSelectMon && theSelectMon.value && theSelectMon.value.trim() !== "") {
                             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                             dsTietLuoi.push({ 
                                 maTiet: `${vTuan}_${thu}_${tienToBuoi}_${t}_${lop}`, 
                                 namHoc: vNam, thang: vThang, ngay: vNgay, tuan: vTuan, 
-                                thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value, maGv: theSelectGv ? theSelectGv.value : "" 
+                                thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value.trim(), maGv: theSelectGv ? theSelectGv.value.trim() : "" 
                             });
                         }
                     });
@@ -435,7 +434,6 @@ async function luuDuLieu(event, loaiLuu) {
         if(ketQua.trangThai !== 'thanh_cong') { 
             console.error("Sự cố máy chủ."); 
         } else { 
-            // NÂNG CẤP: Lệnh tịnh tiến tuần sau khi Khôi phục & Lưu kho thành công
             if (loaiLuu === 'khoiphuc') {
                 chuyenTuan(1); 
             } else {
