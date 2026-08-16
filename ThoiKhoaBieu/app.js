@@ -95,25 +95,10 @@ async function khoiTaoGiaoDien() {
             tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
             let hienThiTuan = document.getElementById('hienThiTuanHienTai');
             if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
-            
-            if (thongSoHocVu.NGAY_AP_DUNG) {
-                let p = thongSoHocVu.NGAY_AP_DUNG.split('/');
-                if (p.length === 3) {
-                    let d = new Date(p[2], p[1] - 1, p[0]);
-                    d.setDate(d.getDate() + (tuanDangXem - 1) * 7);
-                    let yy = d.getFullYear(); 
-                    let mm = (d.getMonth() + 1).toString().padStart(2, '0'); 
-                    let dd = d.getDate().toString().padStart(2, '0');
-                    ngayDauTuanUI = `${yy}-${mm}-${dd}`;
-                    let dateInput = document.getElementById('chonNgayDauTuan');
-                    if (dateInput) dateInput.value = ngayDauTuanUI;
-                }
-            }
-            
             taiDuLieuTKB();
         }
     } catch (loi) { 
-        console.error("Lỗi khởi tạo:", loi); 
+        console.error("Lỗi khởiตั้ง:", loi); 
         let tenDonVi = document.getElementById('tenDonVi');
         if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API.";
     }
@@ -121,20 +106,18 @@ async function khoiTaoGiaoDien() {
 
 async function taiDuLieuTKB() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg">Đang tải TKB Tuần ${tuanDangXem}...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;">Đang tải TKB Tuần ${tuanDangXem}...</td></tr>`;
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
         duLieuTkbHienTai = await phanHoi.json(); 
         
-        // NÂNG CẤP TỐI THƯỢNG: Gắp mốc thời gian từ ô K2 (Dòng dữ liệu đầu tiên) của CSDL
+        // NÂNG CẤP TỐI THƯỢNG: Trích xuất chính xác ngày từ CSDL (Cột Ngày) đưa lên ô "Từ ngày"
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
-            let row2Data = duLieuTkbHienTai[0]; // Tương ứng chính xác với dòng 2 (Cột K) trên Google Sheets
+            let row2Data = duLieuTkbHienTai[0]; 
             if (row2Data && row2Data.ngay) {
                 let p = row2Data.ngay.split('/'); 
                 if (p.length === 3) {
                     let d = new Date(p[2], p[1] - 1, p[0]);
-                    
-                    // Lùi về đúng mốc Thứ 2 phòng trường hợp ô K2 là một thứ khác (như Thứ 3, Thứ 4...)
                     const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
                     let lech = doLechThu[row2Data.thu ? row2Data.thu.trim() : "Thứ 2"] || 0;
                     d.setDate(d.getDate() - lech);
@@ -152,18 +135,18 @@ async function taiDuLieuTKB() {
         
         xuatMaTranBang(duLieuTkbHienTai);
     } catch (loi) { 
-        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi phân tích dữ liệu.</td></tr>`; 
+        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">Lỗi phân tích dữ liệu.</td></tr>`; 
     }
 }
 
 async function goiThuatToanXepLich() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
-    vungHienThi.innerHTML = `<tr><td class="text-center text-orange-600 font-bold py-10 reactbits-fade-in text-lg"><div class="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3"></div>Đang chạy Động cơ phân bổ cho Tuần ${tuanDangXem}...</td></tr>`;
+    vungHienThi.innerHTML = `<tr><td class="text-center text-orange-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;"><div class="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3"></div>Đang chạy Động cơ phân bổ cho Tuần ${tuanDangXem}...</td></tr>`;
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=xepLichTuDong&tuan=${tuanDangXem}`);
         duLieuTkbHienTai = await phanHoi.json(); 
         xuatMaTranBang(duLieuTkbHienTai);
-    } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg">Lỗi thuật toán xếp lịch tự động.</td></tr>`; }
+    } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">Lỗi thuật toán xếp lịch tự động.</td></tr>`; }
 }
 
 function locTheoGiaoVien() { xuatMaTranBang(duLieuTkbHienTai); }
@@ -173,7 +156,7 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
     let thuocTinhKhoa = quyenSuaChua ? '' : 'disabled'; 
     let cssKhoa = quyenSuaChua ? 'cursor-pointer' : 'cursor-not-allowed opacity-80';
     let cssAn = !isTarget ? 'opacity-0 pointer-events-none select-none' : ''; 
-    let html = `<select ${idThocTinh} ${thuocTinhKhoa} class="w-full h-full bg-transparent outline-none appearance-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}"><option value=""></option>`; 
+    let html = `<select ${idThocTinh} ${thuocTinhKhoa} class="w-full h-full bg-transparent outline-none appearance-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;"><option value=""></option>`; 
     if (danhSach && danhSach.length > 0) {
         danhSach.forEach(muc => { html += `<option value="${muc}" ${(muc === giaTriMacDinh) ? 'selected' : ''}>${muc}</option>`; });
     } else if (giaTriMacDinh) { html += `<option value="${giaTriMacDinh}" selected>${giaTriMacDinh}</option>`; }
@@ -201,7 +184,7 @@ function kiemTraDinhMuc() {
             }
         });
     });
-    let htmlKetQua = `<div class="overflow-x-auto"><table class="w-full text-sm text-center border-collapse border border-gray-400"><thead class="bg-purple-100 text-purple-900 font-bold"><tr><th class="border border-gray-400 p-2 min-w-[60px]">Lớp</th><th class="border border-gray-400 p-2 min-w-[140px]">Môn học</th><th class="border border-gray-400 p-2 min-w-[100px]">Khung chuẩn</th><th class="border border-gray-400 p-2 min-w-[100px]">Đang xếp (UI)</th><th class="border border-gray-400 p-2 min-w-[140px]">Trạng thái</th><th class="border border-gray-400 p-2 min-w-[100px] bg-green-100 text-green-900">Tổng Tiết Tuần</th></tr></thead><tbody>`;
+    let htmlKetQua = `<div class="overflow-x-auto"><table class="w-full text-sm text-center border-collapse border border-gray-400" style="font-family:'Times New Roman',Times,serif;"><thead class="bg-purple-100 text-purple-900 font-bold"><tr><th class="border border-gray-400 p-2 min-w-[60px]">Lớp</th><th class="border border-gray-400 p-2 min-w-[140px]">Môn học</th><th class="border border-gray-400 p-2 min-w-[100px]">Khung chuẩn</th><th class="border border-gray-400 p-2 min-w-[100px]">Đang xếp (UI)</th><th class="border border-gray-400 p-2 min-w-[140px]">Trạng thái</th><th class="border border-gray-400 p-2 min-w-[100px] bg-green-100 text-green-900">Tổng Tiết Tuần</th></tr></thead><tbody>`;
     let tongTatCaTietToanTruong = 0;
     mangLop.forEach(lop => {
         let khoiHT = "Khoi" + lop.charAt(0); let dmKhoi = khungCT[khoiHT] || {};
@@ -225,7 +208,7 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
+// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN (Chuẩn phong cách Times New Roman)
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
@@ -255,20 +238,21 @@ function xuatMaTranBang(danhSachTiet) {
 
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
 
+    // NÂNG CẤP GIAO DIỆN: Nới rộng cột Tuần lên min-w-[130px] và ép font Times New Roman
     let theadHTML = `<tr>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400">Thứ / Ngày</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400">Buổi</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[90px] border border-slate-400">Tuần</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400">Tháng</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[100px] border border-slate-400">Năm học</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400">Tiết</th>`;
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[130px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[110px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
     mangLop.forEach(lop => { 
-        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400">${lop}</th>`; 
+        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
     });
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => { 
-        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400">Môn</th>
-                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400">N dạy</th>`; 
+        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Môn</th>
+                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
     });
     theadHTML += `</tr>`; 
     thead.innerHTML = theadHTML;
@@ -315,7 +299,7 @@ function xuatMaTranBang(danhSachTiet) {
             let soDongCuaBuoi = danhSachTietCuaBuoi.length; let inCotBuoi = true;
 
             danhSachTietCuaBuoi.forEach(tiet => {
-                tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group">`;
+                tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group" style="font-family:'Times New Roman',Times,serif;">`;
                 
                 if (inCotThu) { 
                     tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center align-middle bg-white border border-slate-300">
@@ -340,9 +324,9 @@ function xuatMaTranBang(danhSachTiet) {
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
                 if (tiet !== "99_du") {
-                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
-                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
-                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
                     tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
                 } else {
                     tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
@@ -393,7 +377,6 @@ async function luuDuLieu(event, loaiLuu) {
             const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
             
             thuMacDinh.forEach(thu => {
-                // NÂNG CẤP TUYỆT ĐỐI: Tính toán Ngày, Tháng, Năm bằng hàm chuẩn xác 100%, không phụ thuộc vào HTML
                 let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
                 buoiMacDinh.forEach(buoi => {
