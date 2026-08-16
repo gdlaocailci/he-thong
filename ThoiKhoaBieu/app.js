@@ -387,49 +387,61 @@ async function luuDuLieu(event, loaiLuu) {
     if (!quyenSuaChua) return;
     
     if (loaiLuu === 'codinh') { if (!confirm("CẢNH BÁO: Thao tác này sẽ ghi đè toàn bộ TKB hiện tại làm TKB Gốc Cố Định cho toàn trường. Bấm OK để tiếp tục.")) return; }
-    if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận xóa bỏ mọi chỉnh sửa của Tuần ${tuanDangXem} và khôi phục lại dữ liệu Gốc Cố Định?`)) return; }
+    
+    // NÂNG CẤP: Thay đổi câu thông báo, xác nhận chu trình lưu kho và tịnh tiến tuần
+    if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem} vào kho DATA_TKB, sau đó khôi phục lại dữ liệu Gốc và tự động chuyển sang tuần tiếp theo?`)) return; }
 
     const btn = event.currentTarget; const textGoc = btn.innerHTML;
     btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`; btn.disabled = true;
 
     try {
         let dsTietLuoi = []; 
-        if (loaiLuu !== 'khoiphuc') {
-            const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
-            
-            thuMacDinh.forEach(thu => {
-                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+        
+        // NÂNG CẤP: Gỡ bỏ điều kiện if (loaiLuu !== 'khoiphuc') để hệ thống LUÔN quét dữ liệu trên lưới 
+        // nhằm phục vụ cho việc ghi toàn vẹn dữ liệu tuần vào DATA_TKB
+        const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
+        
+        thuMacDinh.forEach(thu => {
+            let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
-                buoiMacDinh.forEach(buoi => {
-                    let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4;
-                    for(let t=1; t<=soTiet; t++) {
-                        
-                        let vTuan = tuanDangXem;
-                        let vThang = thongTinNgay.thang;
-                        let vNgay = thongTinNgay.ngayDayDu;
-                        let vNam = thongSoHocVu.NAM_HOC || thongTinNgay.nam;
+            buoiMacDinh.forEach(buoi => {
+                let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4;
+                for(let t=1; t<=soTiet; t++) {
+                    
+                    let vTuan = tuanDangXem;
+                    let vThang = thongTinNgay.thang;
+                    let vNgay = thongTinNgay.ngayDayDu;
+                    let vNam = thongSoHocVu.NAM_HOC || thongTinNgay.nam;
 
-                        mangLop.forEach(lop => {
-                            let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
-                            let theSelectGv = document.getElementById(`gv_${thu}_${buoi}_${t}_${lop}`);
-                            if(theSelectMon && theSelectMon.value) {
-                                let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
-                                dsTietLuoi.push({ 
-                                    maTiet: `${vTuan}_${thu}_${tienToBuoi}_${t}_${lop}`, 
-                                    namHoc: vNam, thang: vThang, ngay: vNgay, tuan: vTuan, 
-                                    thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value, maGv: theSelectGv ? theSelectGv.value : "" 
-                                });
-                            }
-                        });
-                    }
-                });
+                    mangLop.forEach(lop => {
+                        let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
+                        let theSelectGv = document.getElementById(`gv_${thu}_${buoi}_${t}_${lop}`);
+                        if(theSelectMon && theSelectMon.value) {
+                            let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
+                            dsTietLuoi.push({ 
+                                maTiet: `${vTuan}_${thu}_${tienToBuoi}_${t}_${lop}`, 
+                                namHoc: vNam, thang: vThang, ngay: vNgay, tuan: vTuan, 
+                                thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value, maGv: theSelectGv ? theSelectGv.value : "" 
+                            });
+                        }
+                    });
+                }
             });
-        }
+        });
 
         const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify({ thaoTac: 'luuDuLieu', loaiLuu: loaiLuu, tuan: tuanDangXem, duLieu: dsTietLuoi }) });
         const ketQua = await phanHoi.json();
-        if(ketQua.trangThai !== 'thanh_cong') { console.error("Sự cố máy chủ."); } 
-        else { if (loaiLuu === 'khoiphuc') taiDuLieuTKB(); }
+        
+        if(ketQua.trangThai !== 'thanh_cong') { 
+            console.error("Sự cố máy chủ."); 
+        } else { 
+            // NÂNG CẤP: Lệnh tịnh tiến tuần sau khi Khôi phục & Lưu kho thành công
+            if (loaiLuu === 'khoiphuc') {
+                chuyenTuan(1); 
+            } else {
+                taiDuLieuTKB();
+            }
+        }
     } catch (loi) { console.error("Lỗi kết nối.", loi); } 
     finally { btn.innerHTML = textGoc; btn.disabled = false; }
 }
