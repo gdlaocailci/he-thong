@@ -246,14 +246,27 @@ function xuatMaTranBang(danhSachTiet) {
     if (mangLop.length === 0) return;
 
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
+    let dateInput = document.getElementById('chonNgayDauTuan');
+    
+    if (duLieuTiet && duLieuTiet.length > 0) {
+        let thu2Data = duLieuTiet.find(t => t.thu === "Thứ 2" && t.ngay);
+        if (thu2Data && thu2Data.ngay) {
+            let p = thu2Data.ngay.split('/'); 
+            if (p.length === 3) {
+                ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`; 
+                if (dateInput) dateInput.value = ngayDauTuanUI;
+            }
+        }
+    }
 
+    // NÂNG CẤP: Thu gọn tối đa min-w của Tuần, Tháng, Năm học và Tiết để tiết kiệm không gian
     let theadHTML = `<tr>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[130px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[110px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
-        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[50px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[50px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[90px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[50px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
     mangLop.forEach(lop => { 
         theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
     });
