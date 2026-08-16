@@ -36,10 +36,14 @@ async function khoiTaoGiaoDien() {
         
         if(thongSoHocVu.NAM_HOC) { let menuNam = document.getElementById('menuHienThiNamHoc'); if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; }
         
-        // NÂNG CẤP: Nạp dữ liệu vào danh sách xổ xuống của ô Lọc Giáo Viên
+        // NÂNG CẤP: Chèn "Toàn trường" làm mặc định trên cùng của danh sách gợi ý
         if(thongSoHocVu.DANH_SACH_GIAO_VIEN) {
             let theDataList = document.getElementById('danhSachGvList');
-            if(theDataList) theDataList.innerHTML = thongSoHocVu.DANH_SACH_GIAO_VIEN.map(gv => `<option value="${gv}">`).join('');
+            if(theDataList) {
+                let htmlList = `<option value="Toàn trường">`;
+                htmlList += thongSoHocVu.DANH_SACH_GIAO_VIEN.map(gv => `<option value="${gv}">`).join('');
+                theDataList.innerHTML = htmlList;
+            }
         }
 
         if(thongSoHocVu.TUAN_HIEN_TAI) {
@@ -138,7 +142,6 @@ function xuatMaTranBang(danhSachTiet) {
     const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) ? thongSoHocVu.DANH_SACH_LOP : [...new Set(duLieuTiet.map(t => t.maLop))].sort();
     if (mangLop.length === 0) return;
 
-    // NÂNG CẤP: Lấy giá trị đang lọc
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
 
     let theadHTML = `<tr><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Thứ</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tuần</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tháng</th><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>`;
@@ -205,9 +208,11 @@ function xuatMaTranBang(danhSachTiet) {
                     if (tiet !== "99_du") {
                         let monGoc = duLieuO ? duLieuO.monHoc : ""; let gvGoc = duLieuO ? duLieuO.maGv : "";
                         
-                        // NÂNG CẤP LỌC: Kiểm tra xem ô này có thuộc về giáo viên đang được lọc không
+                        // NÂNG CẤP LỌC: Bổ sung điều kiện "Toàn trường"
                         let isTarget = true;
-                        if (gvLoc !== "" && gvGoc !== gvLoc) isTarget = false;
+                        if (gvLoc !== "" && gvLoc !== "Toàn trường" && gvGoc !== gvLoc) {
+                            isTarget = false;
+                        }
 
                         let bgLop = 'bg-white'; let textClass = 'text-slate-900';
                         
@@ -215,7 +220,6 @@ function xuatMaTranBang(danhSachTiet) {
                             if (monGoc.includes('CẤN LỊCH')) { bgLop = 'bg-yellow-400'; textClass = 'text-red-700 font-extrabold'; } 
                             else if (gvGoc && gvGoc !== gvcnLop[lop]) { bgLop = mauGiaoVien[gvGoc] || 'bg-gray-200'; textClass = 'text-slate-900 font-semibold'; }
                         } else {
-                            // Nếu không phải ô của giáo viên đang lọc, làm mờ đi
                             bgLop = 'bg-gray-100/50';
                         }
 
