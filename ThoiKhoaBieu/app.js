@@ -41,7 +41,6 @@ function chuyenTuan(buocNhay) {
     taiDuLieuTKB(); 
 }
 
-// NÂNG CẤP: Chống lag khi chọn/nhập ngày bằng bộ đếm trễ (Debounce)
 let timerCapNhatNgay;
 function capNhatNgayDauTuan() {
     clearTimeout(timerCapNhatNgay);
@@ -51,7 +50,7 @@ function capNhatNgayDauTuan() {
             ngayDauTuanUI = el.value;
             xuatMaTranBang(duLieuTkbHienTai); 
         }
-    }, 500); // Chờ 0.5s sau khi hoàn tất nhập mới vẽ lại lưới TKB
+    }, 500); 
 }
 
 // =========================================================================
@@ -221,7 +220,6 @@ function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     return { hienThi: `${d}/${m}/${y}`, thang: m, nam: y.toString(), ngayDayDu: `${d}/${m}/${y}` };
 }
 
-// Thay thế trong KHỐI 3:
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang'); const tbody = document.getElementById('vungHienThiDuLieu');
     const duLieuTiet = danhSachTiet || [];
@@ -327,10 +325,9 @@ function xuatMaTranBang(danhSachTiet) {
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
                 if (tiet !== "99_du") {
-                    // NÂNG CẤP: Chuyển dữ liệu sang chữ in đậm màu đỏ (text-red-600 font-bold)
-                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
-                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
-                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
                     tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
                 } else {
                     tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
@@ -381,18 +378,17 @@ async function luuDuLieu(event, loaiLuu) {
             const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
             
             thuMacDinh.forEach(thu => {
+                // NÂNG CẤP TUYỆT ĐỐI: Tính toán Ngày, Tháng, Năm bằng hàm chuẩn xác 100%, không phụ thuộc vào HTML
+                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+
                 buoiMacDinh.forEach(buoi => {
                     let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4;
                     for(let t=1; t<=soTiet; t++) {
                         
-                        let inTuan = document.getElementById(`uiTuan_${thu}_${buoi}_${t}`);
-                        let inThang = document.getElementById(`uiThang_${thu}_${buoi}_${t}`);
-                        let inNam = document.getElementById(`uiNam_${thu}_${buoi}_${t}`);
-                        
-                        // NÂNG CẤP: Dùng textContent lấy chuỗi gốc 100% không bị sót do trình duyệt
-                        let vTuan = inTuan ? inTuan.textContent.trim() : tuanDangXem;
-                        let vThang = inThang ? inThang.textContent.trim() : '';
-                        let vNam = inNam ? inNam.textContent.trim() : (thongSoHocVu.NAM_HOC || '');
+                        let vTuan = tuanDangXem;
+                        let vThang = thongTinNgay.thang;
+                        let vNgay = thongTinNgay.ngayDayDu;
+                        let vNam = thongSoHocVu.NAM_HOC || thongTinNgay.nam;
 
                         mangLop.forEach(lop => {
                             let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
@@ -401,7 +397,7 @@ async function luuDuLieu(event, loaiLuu) {
                                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                                 dsTietLuoi.push({ 
                                     maTiet: `${vTuan}_${thu}_${tienToBuoi}_${t}_${lop}`, 
-                                    namHoc: vNam, thang: vThang, tuan: vTuan, 
+                                    namHoc: vNam, thang: vThang, ngay: vNgay, tuan: vTuan, 
                                     thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value, maGv: theSelectGv ? theSelectGv.value : "" 
                                 });
                             }
