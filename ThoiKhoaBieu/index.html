@@ -96,14 +96,26 @@
                 </div>
             </header>
 
-<!-- THANH CÔNG CỤ (NÂNG CẤP ẨN MẶC ĐỊNH) -->
-            <div class="bg-slate-50 border border-gray-400 p-2 flex flex-col md:flex-row justify-between items-center gap-2 reactbits-fade-in delay-200">
-                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <img id="iconBang" src="" alt="Icon Bảng" class="w-5 h-5 object-contain">
-                    <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
-                </h2>
-                    <!-- THANH CÔNG CỤ -->
-                <div class="flex space-x-2 font-sans">
+<!-- THANH CÔNG CỤ CÓ CHỨA BỘ LỌC -->
+            <div class="bg-slate-50 border border-gray-400 p-2 flex flex-col xl:flex-row justify-between items-center gap-3 reactbits-fade-in delay-200">
+                
+                <!-- NHÓM TIÊU ĐỀ VÀ BỘ LỌC CÁ NHÂN -->
+                <div class="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2 whitespace-nowrap">
+                        <img id="iconBang" src="" alt="Icon Bảng" class="w-5 h-5 object-contain">
+                        <span>KHÔNG GIAN XẾP LỊCH CHUYÊN MÔN</span>
+                    </h2>
+                    
+                    <!-- Nâng cấp: Ô lọc TKB cá nhân -->
+                    <div class="relative w-full md:w-64">
+                        <input type="text" id="locGiaoVien" list="danhSachGvList" oninput="locTheoGiaoVien()" placeholder="Chọn TKB cá nhân..." class="w-full pl-8 pr-3 py-1.5 border border-blue-400 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm font-bold text-blue-900 bg-white placeholder-blue-500 transition-all">
+                        <img src="https://www.svgrepo.com/show/521826/search.svg" class="w-4 h-4 absolute left-2.5 top-2 opacity-40" alt="Lọc">
+                        <datalist id="danhSachGvList"></datalist>
+                    </div>
+                </div>
+
+                <!-- CÁC NÚT THAO TÁC -->
+                <div class="flex space-x-2 font-sans w-full xl:w-auto justify-end">
                     <button id="btnLuuMacDinh" onclick="luuMacDinh(event)" style="display: none;" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg">
                         <img src="https://www.svgrepo.com/show/521812/save.svg" class="w-4 h-4 filter invert brightness-0" alt="Lưu">
                         Lưu Mặc định
