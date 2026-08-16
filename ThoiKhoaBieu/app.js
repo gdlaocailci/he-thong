@@ -261,14 +261,14 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-    // NÂNG CẤP: Đóng băng tiêu đề cột (Sticky Left) và ẩn cột Tuần, Tháng, Năm học
+// NÂNG CẤP: Phân lớp z-index bậc thang (30 -> 20 -> 10) và thêm outline để chống thủng viền
     let theadHTML = `<tr>
-        <th rowspan="2" class="sticky left-0 z-20 bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
-        <th rowspan="2" class="sticky left-[85px] z-20 bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
+        <th rowspan="2" class="sticky left-0 z-30 bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
+        <th rowspan="2" class="sticky left-[85px] z-20 bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
         <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tuần</th>
         <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Tháng</th>
         <th rowspan="2" class="hidden text-center font-bold align-middle border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Năm học</th>
-        <th rowspan="2" class="sticky left-[145px] z-20 bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border border-slate-400 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
+        <th rowspan="2" class="sticky left-[145px] z-10 bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border border-slate-400 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)] outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
     
     mangLop.forEach(lop => { 
         theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
@@ -326,9 +326,8 @@ function xuatMaTranBang(danhSachTiet) {
             danhSachTietCuaBuoi.forEach(tiet => {
                 tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group" style="font-family:'Times New Roman',Times,serif;">`;
                 
-                // NÂNG CẤP: Ghim cột bằng sticky và thiết lập z-index để không bị đè chữ khi cuộn ngang
-                if (inCotThu) { 
-                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="sticky left-0 z-10 bg-white text-center align-middle border border-slate-300">
+               if (inCotThu) { 
+                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="sticky left-0 z-30 bg-white text-center align-middle border border-slate-300 outline outline-1 outline-slate-300">
                                     <div class="font-extrabold text-slate-900">${thu}</div>
                                     <div class="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 mt-1 inline-block">${thongTinNgay.hienThi}</div>
                                   </td>`; 
@@ -336,7 +335,7 @@ function xuatMaTranBang(danhSachTiet) {
                 }
                 
                 if (inCotBuoi) { 
-                    tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="sticky left-[85px] z-10 bg-white text-center font-bold align-middle text-slate-800 border border-slate-300">${buoi}</td>`; 
+                    tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="sticky left-[85px] z-20 bg-white text-center font-bold align-middle text-slate-800 border border-slate-300 outline outline-1 outline-slate-300">${buoi}</td>`; 
                     inCotBuoi = false; 
                 }
 
@@ -351,12 +350,11 @@ function xuatMaTranBang(danhSachTiet) {
                 let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
-               // Cột Tuần, Tháng và Năm học bị ẩn (class hidden). Cột Tiết kéo dịch left lại 145px
                 tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
                 tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
                 tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
-                tbodyHTML += `<td class="sticky left-[145px] z-10 bg-white text-center font-bold text-slate-800 align-middle border border-slate-300 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]">${tiet}</td>`;
-
+                tbodyHTML += `<td class="sticky left-[145px] z-10 bg-white text-center font-bold text-slate-800 align-middle border border-slate-300 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)] outline outline-1 outline-slate-300">${tiet}</td>`;
+               
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
                     
