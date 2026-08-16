@@ -351,11 +351,11 @@ function xuatMaTranBang(danhSachTiet) {
                 let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
-                // Cột Tuần và Tiết được ghim, Cột Tháng và Năm học bị ẩn (class hidden)
-                tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="sticky left-[145px] z-10 bg-white text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+               // Cột Tuần, Tháng và Năm học bị ẩn (class hidden). Cột Tiết kéo dịch left lại 145px
+                tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
                 tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
                 tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
-                tbodyHTML += `<td class="sticky left-[200px] z-10 bg-white text-center font-bold text-slate-800 align-middle border border-slate-300 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]">${tiet}</td>`;
+                tbodyHTML += `<td class="sticky left-[145px] z-10 bg-white text-center font-bold text-slate-800 align-middle border border-slate-300 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]">${tiet}</td>`;
 
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
