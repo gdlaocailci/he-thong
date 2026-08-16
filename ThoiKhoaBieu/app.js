@@ -1,7 +1,7 @@
 let thongSoHocVu = {};
 let quyenSuaChua = false; 
 let duLieuTkbHienTai = []; 
-let tuanDangXem = 1; // NÂNG CẤP: Biến toàn cục theo dõi tuần đang hiển thị
+let tuanDangXem = 1;
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
@@ -16,7 +16,6 @@ function kiemSoatGiaoDien() {
     });
 }
 
-// NÂNG CẤP: Hàm điều hướng Tuần
 function chuyenTuan(buocNhay) {
     let tuanMoi = parseInt(tuanDangXem) + buocNhay;
     if (tuanMoi < 1) tuanMoi = 1; 
@@ -31,7 +30,6 @@ function chuyenTuan(buocNhay) {
 // =========================================================================
 async function khoiTaoGiaoDien() {
     try {
-        // 1. Nạp giao diện tĩnh từ cấu hình
         if(typeof CAU_HINH_FRONTEND !== 'undefined') {
             let tieuDeHeThong = document.getElementById('tenHeThong'); 
             if (tieuDeHeThong) tieuDeHeThong.innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
@@ -39,7 +37,6 @@ async function khoiTaoGiaoDien() {
             let logoHT = document.getElementById('logoHeThong'); 
             if (logoHT) logoHT.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
             
-            // KHÔI PHỤC: Nạp Logo Menu dọc và Icon Bảng bị thiếu
             let logoMenu = document.getElementById('logoMenuDoc'); 
             if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
             
@@ -47,19 +44,16 @@ async function khoiTaoGiaoDien() {
             if (iconB) iconB.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
         }
 
-        // 2. Nạp dữ liệu động từ Máy chủ
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         thongSoHocVu = await phanHoi.json();
         
         kiemSoatGiaoDien(); 
         
-        // KHÔI PHỤC: Hiển thị biến Năm học ra Menu dọc
         if(thongSoHocVu.NAM_HOC) { 
             let menuNam = document.getElementById('menuHienThiNamHoc'); 
             if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
         }
         
-        // Nạp danh sách giáo viên vào ô lọc
         if(thongSoHocVu.DANH_SACH_GIAO_VIEN) {
             let theDataList = document.getElementById('danhSachGvList');
             if(theDataList) {
@@ -69,7 +63,6 @@ async function khoiTaoGiaoDien() {
             }
         }
 
-        // Nạp thông tin tuần và kích hoạt vẽ dữ liệu TKB
         if(thongSoHocVu.TUAN_HIEN_TAI) {
             tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
             let hienThiTuan = document.getElementById('hienThiTuanHienTai');
@@ -118,7 +111,7 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
 }
 
 // =========================================================================
-// KHỐI 2: ĐỐI CHIẾU ĐỊNH MỨC VÀ KIỂM TRA (GIỮ NGUYÊN)
+// KHỐI 2: ĐỐI CHIẾU ĐỊNH MỨC VÀ KIỂM TRA
 // =========================================================================
 function kiemTraDinhMuc() {
     const mangLop = thongSoHocVu.DANH_SACH_LOP || []; const khungCT = thongSoHocVu.KHUNG_CHUONG_TRINH || {};
@@ -164,6 +157,31 @@ function dongModal() { document.getElementById('modalKiemTra').classList.add('hi
 // =========================================================================
 // KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
 // =========================================================================
+function tinhNgayTuDong(chuoiNgayGoc, tuanHienTai, tenThu) {
+    let ngayGoc = new Date();
+    if (chuoiNgayGoc) {
+        let phanTach = chuoiNgayGoc.split('/');
+        if (phanTach.length === 3) {
+            ngayGoc = new Date(phanTach[2], phanTach[1] - 1, phanTach[0]);
+        } else {
+            ngayGoc = new Date(chuoiNgayGoc);
+        }
+    }
+    if (isNaN(ngayGoc.getTime())) ngayGoc = new Date(); 
+    
+    const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
+    let soNgayLech = doLechThu[tenThu] || 0;
+    
+    let ngayDich = new Date(ngayGoc.getTime());
+    ngayDich.setDate(ngayGoc.getDate() + (parseInt(tuanHienTai) - 1) * 7 + soNgayLech);
+    
+    let d = ngayDich.getDate().toString().padStart(2, '0');
+    let m = (ngayDich.getMonth() + 1).toString().padStart(2, '0');
+    let y = ngayDich.getFullYear();
+    
+    return { hienThi: `${d}/${m}/${y}`, thang: m, nam: y.toString() };
+}
+
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang'); const tbody = document.getElementById('vungHienThiDuLieu');
     const duLieuTiet = danhSachTiet || [];
@@ -171,8 +189,9 @@ function xuatMaTranBang(danhSachTiet) {
     if (mangLop.length === 0) return;
 
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
+    let chuoiNgayApDung = thongSoHocVu.NGAY_AP_DUNG || ''; 
 
-    let theadHTML = `<tr><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Thứ</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Tuần</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Tháng</th><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>`;
+    let theadHTML = `<tr><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Thứ / Ngày</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Tuần</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Tháng</th><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>`;
     mangLop.forEach(lop => { theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest">${lop}</th>`; });
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => { theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px]">Môn</th><th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px]">N dạy</th>`; });
@@ -199,7 +218,6 @@ function xuatMaTranBang(danhSachTiet) {
 
     const bangMauGV = ['bg-red-200', 'bg-blue-200', 'bg-green-200', 'bg-yellow-200', 'bg-purple-200', 'bg-pink-200', 'bg-teal-200', 'bg-orange-200', 'bg-cyan-200', 'bg-lime-200', 'bg-fuchsia-200', 'bg-rose-200'];
     let mauGiaoVien = {}; if (thongSoHocVu.DANH_SACH_GIAO_VIEN) { thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach((gv, idx) => { mauGiaoVien[gv] = bangMauGV[idx % bangMauGV.length]; }); }
-
     let gvcnLop = {};
     mangLop.forEach(lop => {
         let demTietGV = {};
@@ -214,36 +232,37 @@ function xuatMaTranBang(danhSachTiet) {
         let soDongCuaThu = 0; danhSachBuoi.forEach(buoi => { soDongCuaThu += Object.keys(luoiDuLieu[thu][buoi]).length; });
         let inCotThu = true;
 
+        let thongTinNgay = tinhNgayTuDong(chuoiNgayApDung, tuanDangXem, thu);
+
         danhSachBuoi.forEach(buoi => {
             const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => { if (a === "99_du") return 1; if (b === "99_du") return -1; return parseInt(a) - parseInt(b); });
             let soDongCuaBuoi = danhSachTietCuaBuoi.length; let inCotBuoi = true;
 
             danhSachTietCuaBuoi.forEach(tiet => {
                 tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group">`;
-                if (inCotThu) { tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center font-extrabold align-middle text-slate-900 bg-white">${thu}</td>`; inCotThu = false; }
-                if (inCotBuoi) { tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle text-slate-800 bg-white">${buoi}</td>`; inCotBuoi = false; }
-
-                // NÂNG CẤP: Quét tìm dữ liệu của dòng để ưu tiên load từ UI thay vì mặc định
-                let duLieuDong = null;
-                for (let l = 0; l < mangLop.length; l++) {
-                    if (luoiDuLieu[thu][buoi][tiet] && luoiDuLieu[thu][buoi][tiet][mangLop[l]]) {
-                        duLieuDong = luoiDuLieu[thu][buoi][tiet][mangLop[l]]; break;
-                    }
+                
+                if (inCotThu) { 
+                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center align-middle bg-white border border-slate-300">
+                                    <div class="font-extrabold text-slate-900">${thu}</div>
+                                    <div class="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 mt-1 inline-block">${thongTinNgay.hienThi}</div>
+                                  </td>`; 
+                    inCotThu = false; 
                 }
+                
+                if (inCotBuoi) { tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle text-slate-800 bg-white border border-slate-300">${buoi}</td>`; inCotBuoi = false; }
 
                 let hienThiTiet = (tiet === "99_du") ? "" : tiet;
-                let valTuan = duLieuDong ? duLieuDong.tuan : tuanDangXem;
-                let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : '';
-                let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || '');
+                let valTuan = tuanDangXem;
+                let valThang = thongTinNgay.thang;
+                let valNam = thongSoHocVu.NAM_HOC || thongTinNgay.nam;
 
-                let readOnlyAttr = quyenSuaChua ? "" : "readonly";
-                let cssInput = quyenSuaChua ? "cursor-text focus:bg-blue-50 focus:ring-1 focus:ring-blue-400" : "cursor-not-allowed opacity-80";
+                let cssInput = "w-full text-center bg-transparent outline-none font-bold text-slate-700 py-1 cursor-default pointer-events-none";
 
                 if (tiet !== "99_du") {
-                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiTuan_${thu}_${buoi}_${tiet}" value="${valTuan}" class="w-full text-center bg-transparent outline-none font-bold text-slate-700 py-1 ${cssInput}" ${readOnlyAttr}></td>`;
-                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiThang_${thu}_${buoi}_${tiet}" value="${valThang}" class="w-full text-center bg-transparent outline-none font-bold text-slate-700 py-1 ${cssInput}" ${readOnlyAttr}></td>`;
-                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiNam_${thu}_${buoi}_${tiet}" value="${valNam}" class="w-full text-center bg-transparent outline-none font-bold text-slate-700 py-1 ${cssInput}" ${readOnlyAttr}></td>`;
-                    tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle">${hienThiTiet}</td>`;
+                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiTuan_${thu}_${buoi}_${tiet}" value="${valTuan}" class="${cssInput}" readonly></td>`;
+                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiThang_${thu}_${buoi}_${tiet}" value="${valThang}" class="${cssInput}" readonly></td>`;
+                    tbodyHTML += `<td class="p-0 border border-slate-300 align-middle"><input type="text" id="uiNam_${thu}_${buoi}_${tiet}" value="${valNam}" class="${cssInput}" readonly></td>`;
+                    tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
                 } else {
                     tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
                 }
@@ -297,7 +316,6 @@ async function luuDuLieu(event, loaiLuu) {
                     let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4;
                     for(let t=1; t<=soTiet; t++) {
                         
-                        // NÂNG CẤP: Quét lấy dữ liệu Tuần, Tháng, Năm trực tiếp từ các ô nhập (UI)
                         let inTuan = document.getElementById(`uiTuan_${thu}_${buoi}_${t}`);
                         let inThang = document.getElementById(`uiThang_${thu}_${buoi}_${t}`);
                         let inNam = document.getElementById(`uiNam_${thu}_${buoi}_${t}`);
@@ -371,6 +389,6 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         else { quyenSuaChua = false; }
         
         kiemSoatGiaoDien(); 
-        taiDuLieuTKB(); // Load lại lưới để áp dụng quyền
+        taiDuLieuTKB(); 
     } catch (loi) { console.error("Xác thực không thành công.", loi); }
 }
