@@ -2,7 +2,7 @@ let thongSoHocVu = {};
 let quyenSuaChua = false; 
 let duLieuTkbHienTai = []; 
 let tuanDangXem = 1; 
-let ngayDauTuanUI = ''; // Mốc thời gian độc lập của tuần
+let ngayDauTuanUI = ''; 
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
@@ -17,7 +17,6 @@ function kiemSoatGiaoDien() {
     });
 }
 
-// NÂNG CẤP: Thuật toán tịnh tiến liên tục (Cộng/trừ 7 ngày từ mốc hiển thị)
 function chuyenTuan(buocNhay) {
     let tuanMoi = parseInt(tuanDangXem) + buocNhay;
     if (tuanMoi < 1) tuanMoi = 1; 
@@ -27,7 +26,7 @@ function chuyenTuan(buocNhay) {
         let parts = ngayDauTuanUI.split('-');
         if (parts.length === 3) {
             let d = new Date(parts[0], parts[1] - 1, parts[2]);
-            d.setDate(d.getDate() + (buocNhay * 7)); // Tịnh tiến số ngày
+            d.setDate(d.getDate() + (buocNhay * 7));
             let yy = d.getFullYear();
             let mm = (d.getMonth() + 1).toString().padStart(2, '0');
             let dd = d.getDate().toString().padStart(2, '0');
@@ -42,12 +41,17 @@ function chuyenTuan(buocNhay) {
     taiDuLieuTKB(); 
 }
 
+// NÂNG CẤP: Chống lag khi chọn/nhập ngày bằng bộ đếm trễ (Debounce)
+let timerCapNhatNgay;
 function capNhatNgayDauTuan() {
-    let el = document.getElementById('chonNgayDauTuan');
-    if (el && el.value) {
-        ngayDauTuanUI = el.value;
-        xuatMaTranBang(duLieuTkbHienTai); 
-    }
+    clearTimeout(timerCapNhatNgay);
+    timerCapNhatNgay = setTimeout(() => {
+        let el = document.getElementById('chonNgayDauTuan');
+        if (el && el.value !== ngayDauTuanUI) {
+            ngayDauTuanUI = el.value;
+            xuatMaTranBang(duLieuTkbHienTai); 
+        }
+    }, 500); // Chờ 0.5s sau khi hoàn tất nhập mới vẽ lại lưới TKB
 }
 
 // =========================================================================
@@ -93,7 +97,6 @@ async function khoiTaoGiaoDien() {
             let hienThiTuan = document.getElementById('hienThiTuanHienTai');
             if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
             
-            // NÂNG CẤP: Tự động tính tịnh tiến từ ngày gốc CSDL lúc khởi động web
             if (thongSoHocVu.NGAY_AP_DUNG) {
                 let p = thongSoHocVu.NGAY_AP_DUNG.split('/');
                 if (p.length === 3) {
@@ -227,7 +230,6 @@ function xuatMaTranBang(danhSachTiet) {
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
     let dateInput = document.getElementById('chonNgayDauTuan');
     
-    // NÂNG CẤP: Ưu tiên lấy ngày từ CSDL (nếu tuần này đã từng được lưu và có mốc ngày)
     if (duLieuTiet && duLieuTiet.length > 0) {
         let thu2Data = duLieuTiet.find(t => t.thu === "Thứ 2" && t.ngay);
         if (thu2Data && thu2Data.ngay) {
@@ -239,11 +241,24 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-    let theadHTML = `<tr><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Thứ / Ngày</th><th rowspan="2" class="text-center font-bold align-middle min-w-[70px]">Buổi</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tuần</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tháng</th><th rowspan="2" class="text-center font-bold align-middle min-w-[100px]">Năm học</th><th rowspan="2" class="text-center font-bold align-middle min-w-[60px]">Tiết</th>`;
-    mangLop.forEach(lop => { theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest">${lop}</th>`; });
+    // NÂNG CẤP KẺ BẢNG: Ép cứng viền (border-slate-400) cho thẻ th & Nới rộng cột Tuần lên min-w-[90px]
+    let theadHTML = `<tr>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400">Thứ / Ngày</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400">Buổi</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[90px] border border-slate-400">Tuần</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400">Tháng</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[100px] border border-slate-400">Năm học</th>
+        <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400">Tiết</th>`;
+    mangLop.forEach(lop => { 
+        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400">${lop}</th>`; 
+    });
     theadHTML += `</tr><tr>`;
-    mangLop.forEach(() => { theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px]">Môn</th><th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px]">N dạy</th>`; });
-    theadHTML += `</tr>`; thead.innerHTML = theadHTML;
+    mangLop.forEach(() => { 
+        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400">Môn</th>
+                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400">N dạy</th>`; 
+    });
+    theadHTML += `</tr>`; 
+    thead.innerHTML = theadHTML;
 
     const luoiDuLieu = {}; const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; const boLocBuoi = {"Sáng": 1, "Chiều": 2};
 
