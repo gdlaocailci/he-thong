@@ -221,6 +221,7 @@ function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     return { hienThi: `${d}/${m}/${y}`, thang: m, nam: y.toString(), ngayDayDu: `${d}/${m}/${y}` };
 }
 
+// Thay thế trong KHỐI 3:
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang'); const tbody = document.getElementById('vungHienThiDuLieu');
     const duLieuTiet = danhSachTiet || [];
@@ -241,7 +242,6 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-    // NÂNG CẤP KẺ BẢNG: Ép cứng viền (border-slate-400) cho thẻ th & Nới rộng cột Tuần lên min-w-[90px]
     let theadHTML = `<tr>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400">Thứ / Ngày</th>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400">Buổi</th>
@@ -327,9 +327,10 @@ function xuatMaTranBang(danhSachTiet) {
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
                 if (tiet !== "99_du") {
-                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-semibold text-slate-700 align-middle border border-slate-300">${valTuan}</td>`;
-                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-semibold text-slate-700 align-middle border border-slate-300">${valThang}</td>`;
-                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-semibold text-slate-700 align-middle border border-slate-300">${valNam}</td>`;
+                    // NÂNG CẤP: Chuyển dữ liệu sang chữ in đậm màu đỏ (text-red-600 font-bold)
+                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
+                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
                     tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
                 } else {
                     tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
@@ -388,10 +389,10 @@ async function luuDuLieu(event, loaiLuu) {
                         let inThang = document.getElementById(`uiThang_${thu}_${buoi}_${t}`);
                         let inNam = document.getElementById(`uiNam_${thu}_${buoi}_${t}`);
                         
-                        let vTuan = inTuan ? inTuan.innerText.trim() : tuanDangXem;
-                        let vThang = inThang ? inThang.innerText.trim() : '';
-                        let vNgay = inThang ? inThang.getAttribute('data-ngay') : ''; 
-                        let vNam = inNam ? inNam.innerText.trim() : (thongSoHocVu.NAM_HOC || '');
+                        // NÂNG CẤP: Dùng textContent lấy chuỗi gốc 100% không bị sót do trình duyệt
+                        let vTuan = inTuan ? inTuan.textContent.trim() : tuanDangXem;
+                        let vThang = inThang ? inThang.textContent.trim() : '';
+                        let vNam = inNam ? inNam.textContent.trim() : (thongSoHocVu.NAM_HOC || '');
 
                         mangLop.forEach(lop => {
                             let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
@@ -400,7 +401,7 @@ async function luuDuLieu(event, loaiLuu) {
                                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                                 dsTietLuoi.push({ 
                                     maTiet: `${vTuan}_${thu}_${tienToBuoi}_${t}_${lop}`, 
-                                    namHoc: vNam, thang: vThang, ngay: vNgay, tuan: vTuan, 
+                                    namHoc: vNam, thang: vThang, tuan: vTuan, 
                                     thu: thu, buoi: buoi, tiet: t, maLop: lop, monHoc: theSelectMon.value, maGv: theSelectGv ? theSelectGv.value : "" 
                                 });
                             }
