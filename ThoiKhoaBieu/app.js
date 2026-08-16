@@ -17,7 +17,8 @@ function kiemSoatGiaoDien() {
     });
 }
 
-function chuyenTuan(buocNhay) {
+// NÂNG CẤP: Chuyển sang async/await để đồng bộ nhịp nạp UI trước khi tự động Lưu Tuần
+async function chuyenTuan(buocNhay) {
     let tuanMoi = parseInt(tuanDangXem) + buocNhay;
     if (tuanMoi < 1) tuanMoi = 1; 
     if (tuanMoi > 52) tuanMoi = 52;
@@ -38,7 +39,7 @@ function chuyenTuan(buocNhay) {
     
     tuanDangXem = tuanMoi;
     document.getElementById('hienThiTuanHienTai').innerText = `Tuần ${tuanDangXem}`;
-    taiDuLieuTKB(); 
+    await taiDuLieuTKB(); 
 }
 
 let timerCapNhatNgay;
@@ -96,7 +97,6 @@ async function khoiTaoGiaoDien() {
             let hienThiTuan = document.getElementById('hienThiTuanHienTai');
             if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
             
-            // NÂNG CẤP: Chuyên biệt hóa nạp Ngày từ K2
             if (thongSoHocVu.NGAY_K2) {
                 let p = thongSoHocVu.NGAY_K2.split('/');
                 if (p.length === 3) {
@@ -127,7 +127,7 @@ async function khoiTaoGiaoDien() {
                 }
             }
             
-            taiDuLieuTKB();
+            await taiDuLieuTKB();
         }
     } catch (loi) { 
         console.error("Lỗi khởi tạo:", loi); 
@@ -181,7 +181,9 @@ function kiemTraDinhMuc() {
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
     thuMacDinh.forEach(thu => {
         buoiMacDinh.forEach(buoi => {
-            let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng")?"SO_TIET_SANG":"SO_TIET_CHIEU"]) || 4;
+            // NÂNG CẤP: Chỉnh lại giới hạn kiểm tra tối thiểu là 5 sáng và 4 chiều
+            let soTietToiThieu = (buoi === "Sáng") ? 5 : 4;
+            let soTiet = Math.max(parseInt(thongSoHocVu[(buoi==="Sáng")?"SO_TIET_SANG":"SO_TIET_CHIEU"]) || 4, soTietToiThieu);
             for(let t=1; t<=soTiet; t++) {
                 mangLop.forEach(lop => {
                     let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
@@ -259,7 +261,6 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-    // NÂNG CẤP: Thu gọn tối đa min-w của Tuần, Tháng, Năm học và Tiết để tiết kiệm không gian
     let theadHTML = `<tr>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[60px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
@@ -288,7 +289,10 @@ function xuatMaTranBang(danhSachTiet) {
 
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
     thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
-    const gioiHanSang = parseInt(thongSoHocVu.SO_TIET_SANG) || 4; const gioiHanChieu = parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3;
+    
+    // NÂNG CẤP: Ép khung hiển thị tối thiểu phải là 5 tiết Sáng và 4 tiết Chiều để dự phòng
+    const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
+    const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
 
     Object.keys(luoiDuLieu).forEach(thu => {
         if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
@@ -391,7 +395,9 @@ async function luuDuLieu(event, loaiLuu) {
     if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem} vào kho DATA_TKB, sau đó khôi phục lại dữ liệu Gốc và tự động chuyển sang tuần tiếp theo?`)) return; }
 
     const btn = event.currentTarget; const textGoc = btn.innerHTML;
-    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`; btn.disabled = true;
+    if(btn.disabled === undefined) { /* Bỏ qua cho auto trigger */ } else {
+        btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`; btn.disabled = true;
+    }
 
     try {
         let dsTietLuoi = []; 
@@ -402,9 +408,11 @@ async function luuDuLieu(event, loaiLuu) {
             let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
             buoiMacDinh.forEach(buoi => {
-                let soTiet = parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4;
+                // NÂNG CẤP: Quét và thu thập dữ liệu lưu lên tới tiết 5 sáng và tiết 4 chiều (kể cả có tăng cường mới)
+                let soTietToiThieu = (buoi === "Sáng") ? 5 : 4;
+                let soTiet = Math.max(parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4, soTietToiThieu);
+                
                 for(let t=1; t<=soTiet; t++) {
-                    
                     let vTuan = tuanDangXem;
                     let vThang = thongTinNgay.thang;
                     let vNgay = thongTinNgay.ngayDayDu;
@@ -414,7 +422,7 @@ async function luuDuLieu(event, loaiLuu) {
                         let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
                         let theSelectGv = document.getElementById(`gv_${thu}_${buoi}_${t}_${lop}`);
                         
-                        // NÂNG CẤP: Lọc chặt chẽ, loại bỏ hoàn toàn các ô không có dữ liệu môn học
+                        // Loại bỏ các ô rỗng trống để không làm rác CSDL
                         if(theSelectMon && theSelectMon.value && theSelectMon.value.trim() !== "") {
                             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                             dsTietLuoi.push({ 
@@ -435,13 +443,22 @@ async function luuDuLieu(event, loaiLuu) {
             console.error("Sự cố máy chủ."); 
         } else { 
             if (loaiLuu === 'khoiphuc') {
-                chuyenTuan(1); 
+                // Chờ giao diện render xong tuần mới
+                await chuyenTuan(1); 
+                
+                // NÂNG CẤP: Sau khi lên UI xong, tự động kích hoạt tính năng chạy nút lưu tuần ẩn
+                console.log("Kích hoạt Lưu Tuần tự động để neo lại mốc thời gian...");
+                let btnAn = document.createElement('button');
+                btnAn.innerHTML = "Auto Save";
+                await luuDuLieu({ currentTarget: btnAn }, 'tuan');
             } else {
-                taiDuLieuTKB();
+                await taiDuLieuTKB();
             }
         }
     } catch (loi) { console.error("Lỗi kết nối.", loi); } 
-    finally { btn.innerHTML = textGoc; btn.disabled = false; }
+    finally { 
+        if(btn.disabled !== undefined) { btn.innerHTML = textGoc; btn.disabled = false; }
+    }
 }
 
 // =========================================================================
@@ -484,6 +501,6 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         else { quyenSuaChua = false; }
         
         kiemSoatGiaoDien(); 
-        taiDuLieuTKB(); 
+        await taiDuLieuTKB(); 
     } catch (loi) { console.error("Xác thực không thành công.", loi); }
 }
