@@ -261,7 +261,7 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-// NÂNG CẤP: Phân lớp z-index bậc thang (30 -> 20 -> 10) và thêm outline để chống thủng viền
+// NÂNG CẤP: Phân lớp z-index bậc thang và thêm outline toàn bộ Header để chống thủng viền dọc/ngang
     let theadHTML = `<tr>
         <th rowspan="2" class="sticky left-0 z-30 bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
         <th rowspan="2" class="sticky left-[85px] z-20 bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
@@ -271,12 +271,14 @@ function xuatMaTranBang(danhSachTiet) {
         <th rowspan="2" class="sticky left-[145px] z-10 bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border border-slate-400 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)] outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
     
     mangLop.forEach(lop => { 
-        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
+        // Bổ sung outline vào ô Tên Lớp
+        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
     });
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => { 
-        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Môn</th>
-                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
+        // Bổ sung outline vào ô Môn và N dạy
+        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">Môn</th>
+                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400 outline outline-1 outline-slate-300" style="font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
     });
     theadHTML += `</tr>`; 
     thead.innerHTML = theadHTML;
