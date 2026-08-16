@@ -95,10 +95,42 @@ async function khoiTaoGiaoDien() {
             tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
             let hienThiTuan = document.getElementById('hienThiTuanHienTai');
             if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
+            
+            // NÂNG CẤP: Chuyên biệt hóa nạp Ngày từ K2
+            if (thongSoHocVu.NGAY_K2) {
+                let p = thongSoHocVu.NGAY_K2.split('/');
+                if (p.length === 3) {
+                    let d = new Date(p[2], p[1] - 1, p[0]);
+                    const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
+                    let lech = doLechThu[thongSoHocVu.THU_K2 || "Thứ 2"] || 0;
+                    d.setDate(d.getDate() - lech);
+
+                    let yy = d.getFullYear();
+                    let mm = (d.getMonth() + 1).toString().padStart(2, '0');
+                    let dd = d.getDate().toString().padStart(2, '0');
+
+                    ngayDauTuanUI = `${yy}-${mm}-${dd}`;
+                    let dateInput = document.getElementById('chonNgayDauTuan');
+                    if (dateInput) dateInput.value = ngayDauTuanUI;
+                }
+            } else if (thongSoHocVu.NGAY_AP_DUNG) {
+                let p = thongSoHocVu.NGAY_AP_DUNG.split('/');
+                if (p.length === 3) {
+                    let d = new Date(p[2], p[1] - 1, p[0]);
+                    d.setDate(d.getDate() + (tuanDangXem - 1) * 7);
+                    let yy = d.getFullYear(); 
+                    let mm = (d.getMonth() + 1).toString().padStart(2, '0'); 
+                    let dd = d.getDate().toString().padStart(2, '0');
+                    ngayDauTuanUI = `${yy}-${mm}-${dd}`;
+                    let dateInput = document.getElementById('chonNgayDauTuan');
+                    if (dateInput) dateInput.value = ngayDauTuanUI;
+                }
+            }
+            
             taiDuLieuTKB();
         }
     } catch (loi) { 
-        console.error("Lỗi khởiตั้ง:", loi); 
+        console.error("Lỗi khởi tạo:", loi); 
         let tenDonVi = document.getElementById('tenDonVi');
         if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API.";
     }
@@ -110,29 +142,6 @@ async function taiDuLieuTKB() {
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
         duLieuTkbHienTai = await phanHoi.json(); 
-        
-        // NÂNG CẤP TỐI THƯỢNG: Trích xuất chính xác ngày từ CSDL (Cột Ngày) đưa lên ô "Từ ngày"
-        if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
-            let row2Data = duLieuTkbHienTai[0]; 
-            if (row2Data && row2Data.ngay) {
-                let p = row2Data.ngay.split('/'); 
-                if (p.length === 3) {
-                    let d = new Date(p[2], p[1] - 1, p[0]);
-                    const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
-                    let lech = doLechThu[row2Data.thu ? row2Data.thu.trim() : "Thứ 2"] || 0;
-                    d.setDate(d.getDate() - lech);
-                    
-                    let yy = d.getFullYear();
-                    let mm = (d.getMonth() + 1).toString().padStart(2, '0');
-                    let dd = d.getDate().toString().padStart(2, '0');
-                    
-                    ngayDauTuanUI = `${yy}-${mm}-${dd}`;
-                    let dateInput = document.getElementById('chonNgayDauTuan');
-                    if (dateInput) dateInput.value = ngayDauTuanUI;
-                }
-            }
-        }
-        
         xuatMaTranBang(duLieuTkbHienTai);
     } catch (loi) { 
         vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">Lỗi phân tích dữ liệu.</td></tr>`; 
@@ -208,7 +217,7 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN (Chuẩn phong cách Times New Roman)
+// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
@@ -238,7 +247,6 @@ function xuatMaTranBang(danhSachTiet) {
 
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
 
-    // NÂNG CẤP GIAO DIỆN: Nới rộng cột Tuần lên min-w-[130px] và ép font Times New Roman
     let theadHTML = `<tr>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
         <th rowspan="2" class="text-center font-bold align-middle min-w-[70px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
@@ -324,9 +332,9 @@ function xuatMaTranBang(danhSachTiet) {
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
                 if (tiet !== "99_du") {
-                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
-                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
-                    tbodyHTML += `<td class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
+                    tbodyHTML += `<td id="uiTuan_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valTuan}</td>`;
+                    tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valThang}</td>`;
+                    tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="text-center font-bold text-red-600 align-middle border border-slate-300">${valNam}</td>`;
                     tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border border-slate-300">${hienThiTiet}</td>`;
                 } else {
                     tbodyHTML += `<td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td><td class="bg-slate-50/50 border border-slate-300"></td>`;
