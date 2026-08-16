@@ -308,14 +308,20 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         }
 
         const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
-        // NÂNG CẤP: Chặn toàn bộ thông báo phân quyền hiển thị lên màn hình người dùng
-        if (dsQuanTri.includes(dinhDanhHeThong)) {
+        
+        // NÂNG CẤP: Khai báo tài khoản mặc định (Super Admin)
+        const dinhDanhGoc = 'tulieuhopthanh@gmail.com';
+
+        // Kiểm tra 2 lớp: Có trong Cột E HOẶC là tài khoản mặc định
+        if (dsQuanTri.includes(dinhDanhHeThong) || dinhDanhHeThong === dinhDanhGoc) {
             quyenSuaChua = true;
         } else {
             quyenSuaChua = false;
         }
         
-        kiemSoatGiaoDien(); 
-        if (thongSoHocVu.TUAN_HIEN_TAI) taiDuLieuTKB(); 
-    } catch (loi) { console.error("Xác thực không thành công."); }
+        kiemSoatGiaoDien(); // Mở khóa các nút nếu hợp lệ
+        if (thongSoHocVu.TUAN_HIEN_TAI) taiDuLieuTKB(); // Mở khóa các ô chọn trong bảng
+    } catch (loi) { 
+        console.error("Xác thực không thành công.", loi); 
+    }
 }
