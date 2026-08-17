@@ -33,7 +33,6 @@
         <div class="px-6 my-2"><hr class="border-dashed border-blue-300 opacity-40"></div>
         <div class="mx-2 my-2 bg-white rounded shadow-md px-3 py-2 text-sm text-slate-800">
             <div class="flex flex-col border-b border-dashed border-gray-300 pb-2 mb-1.5">
-                <!-- SỬA LỖI: Chuyển justify-between thành justify-center và thêm khoảng cách gap-2 -->
                 <div class="flex justify-center items-center gap-2 mb-1">
                     <span class="font-bold">Năm học:</span>
                     <span id="menuHienThiNamHoc" class="font-bold text-blue-600 text-center">Đang tải...</span>
@@ -44,7 +43,7 @@
             </div>
         </div>
 
-           <nav class="flex flex-col mt-4">
+        <nav class="flex flex-col mt-4">
             <!-- NÚT TKB TOÀN TRƯỜNG -->
             <a id="menuTKB" href="javascript:void(0)" onclick="dongTabThongKe()" class="block px-6 py-4 bg-menu-hover border-l-[5px] border-menu-active transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-menu-active group-hover:text-menu-active transition-colors text-[15px]">TKB Toàn trường</span>
@@ -53,6 +52,11 @@
             <!-- NÚT BÁO CÁO THỐNG KÊ -->
             <a id="menuThongKe" href="javascript:void(0)" onclick="moTabThongKe()" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Báo cáo Thống kê</span>
+            </a>
+
+            <!-- MỚI: NÚT PHÂN CÔNG CHUYÊN MÔN -->
+            <a id="menuPhanCong" href="javascript:void(0)" onclick="moTabPhanCong()" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
+                <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Phân công chuyên môn</span>
             </a>
         </nav>
         
@@ -83,20 +87,17 @@
             <div class="bg-slate-50 border border-gray-400 p-2 flex flex-col xl:flex-row justify-between items-center gap-3 reactbits-fade-in delay-200">
                 
                 <div class="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto font-sans">
-                    <!-- BỘ CHUYỂN TUẦN -->
                     <div class="flex items-center bg-white border border-gray-400 rounded shadow-sm px-2 py-1 gap-2 mr-2">
                         <button onclick="chuyenTuan(-1)" class="p-1 hover:bg-gray-200 rounded text-slate-600 font-bold text-lg leading-none" title="Tuần trước">◀</button>
                         <span id="hienThiTuanHienTai" class="px-2 font-extrabold text-blue-900 whitespace-nowrap text-base">Tuần --</span>
                         <button onclick="chuyenTuan(1)" class="p-1 hover:bg-gray-200 rounded text-slate-600 font-bold text-lg leading-none" title="Tuần tiếp">▶</button>
                     </div>
 
-                    <!-- NÂNG CẤP: BỘ CHỌN NGÀY ĐẦU TUẦN -->
                     <div class="flex items-center bg-white border border-gray-400 rounded shadow-sm px-2 py-1 gap-2 mr-2" title="Cài đặt mốc ngày cho Thứ 2 của tuần này">
                         <span class="text-sm font-bold text-slate-600">Từ ngày:</span>
                         <input type="date" id="chonNgayDauTuan" onchange="capNhatNgayDauTuan()" class="text-sm font-bold text-blue-900 outline-none cursor-pointer bg-transparent">
                     </div>
                     
-                    <!-- BỘ LỌC VÀ NÚT EXCEL -->
                     <div class="flex items-center gap-2 w-full md:w-auto">
                         <div class="relative w-full md:w-56">
                             <input type="text" id="locGiaoVien" list="danhSachGvList" onchange="locTheoGiaoVien()" placeholder="Lọc TKB giáo viên..." class="w-full pl-8 pr-3 py-1.5 border border-blue-400 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm font-bold text-blue-900 bg-white placeholder-blue-500 transition-all">
@@ -104,14 +105,12 @@
                             <datalist id="danhSachGvList"></datalist>
                         </div>
                         
-                        <!-- NÚT XUẤT EXCEL: Không kiểm soát quyền, ai cũng xem và xuất được -->
                         <button onclick="xuatExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded flex whitespace-nowrap">
                             Xuất Excel
                         </button>
                     </div>
                 </div>
 
-                <!-- CÁC NÚT THAO TÁC QUẢN TRỊ -->
                 <div class="flex flex-wrap space-x-2 font-sans justify-end gap-y-2">
                     <button id="btnLuuTuan" onclick="luuDuLieu(event, 'tuan')" style="display: none;" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg">
                        Lưu TKB Tuần
@@ -133,7 +132,8 @@
         </div>
 
         <main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
-            <div class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
+            <!-- Khu vực này có thể được dùng chung hoặc render đè nội dung Phân công vào đây khi click tab -->
+            <div id="vungHienThiChinh" class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
                 <table class="bang-excel relative">
                     <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
                         <tr><th class="text-center text-slate-500 py-3">Đang phân tích định dạng biểu mẫu...</th></tr>
@@ -141,7 +141,7 @@
                     <tbody id="vungHienThiDuLieu">
                         <tr><td class="px-6 py-10 text-center text-slate-500">
                             <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
-                            <p class="font-bold text-base">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
+                            <p class="font-bold text-base">Đang kết nối hệ thống...</p>
                         </td></tr>
                     </tbody>
                 </table>
@@ -171,5 +171,9 @@
     <script src="KetNoi.js"></script>
     <script src="app.js"></script>
     <script src="ThongKe.js"></script>
+    
+    <!-- MỚI: Liên kết tệp xử lý logic Phân công -->
+    <script src="PhanCong.js"></script>
+    
 </body>
 </html>
