@@ -143,14 +143,29 @@ function tinhToanTietDay() {
   // Đổ dữ liệu vào bảng
   let tbodyThongKe = '';
   for (const [ten, soLieu] of Object.entries(thongKe)) {
-    let textClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'text-red-600 font-extrabold' : 'text-blue-700 font-bold';
-    let bgClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'bg-red-50' : 'bg-white';
+    // NÂNG CẤP: Phân loại 3 mức màu tương ứng với trạng thái (Thiếu / Đủ / Thừa)
+    let bgClass = 'bg-white';
+    let textClass = 'text-blue-700 font-bold';
+
+    if (soLieu.thucTe > soLieu.dinhMuc) {
+        // Vượt định mức (Thừa): Nền đỏ tươi nhạt, chữ đỏ
+        bgClass = 'bg-red-100'; 
+        textClass = 'text-red-600 font-extrabold';
+    } else if (soLieu.thucTe === soLieu.dinhMuc && soLieu.dinhMuc > 0) {
+        // Đạt định mức (Đủ): Nền xanh lá cây nhạt, chữ xanh lá
+        bgClass = 'bg-green-100'; 
+        textClass = 'text-green-700 font-extrabold';
+    } else {
+        // Dưới định mức (Chưa đủ): Nền trắng, chữ xanh dương
+        bgClass = 'bg-white'; 
+        textClass = 'text-blue-700 font-bold';
+    }
     
     // Nối các thẻ chi tiết thành chuỗi HTML, nếu rỗng thì hiển thị thông báo
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
     
     tbodyThongKe += `
-      <tr class="${bgClass} border-b border-gray-300 hover:bg-gray-50 transition-colors">
+      <tr class="${bgClass} border-b border-gray-300 transition-colors">
         <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300 whitespace-nowrap">${ten}</td>
         <td class="py-1 px-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
         <td class="py-1 px-2 ${textClass} text-base border-r border-gray-300">${soLieu.thucTe}</td>
