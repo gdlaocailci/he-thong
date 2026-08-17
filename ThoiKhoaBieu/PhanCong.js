@@ -1,13 +1,12 @@
 let duLieuTongTien = {}; 
 let danhSachGV = [];
-let khungChuongTrinhToanTruong = {};
+let khungChuongTrinhToanTruong = {}; // Khởi tạo biến lưu trữ định mức Khung Chương Trình
 
 // =========================================================================
 // KHỐI 1: GIAO TIẾP MÁY CHỦ (API FETCH)
 // =========================================================================
 async function taiDuLieuPhanCongTuMayChu() {
     try {
-        // Cập nhật giao diện loading đồng bộ với hệ thống
         const tbody = document.getElementById('duLieuLopHoc');
         if (tbody) {
             tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-slate-500 font-bold">
@@ -16,7 +15,6 @@ async function taiDuLieuPhanCongTuMayChu() {
             </td></tr>`;
         }
 
-        // Thay thế google.script.run bằng fetch chuẩn
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
         const duLieuSever = await phanHoi.json();
         
@@ -33,7 +31,7 @@ async function taiDuLieuPhanCongTuMayChu() {
 // =========================================================================
 function khoiTaoGiaoDienPhanCong(duLieuSever) {
   danhSachGV = duLieuSever.giaoVien || [];
-  khungChuongTrinhToanTruong = duLieuSever.khungChuongTrinh || {}; // Nạp dữ liệu Khung CT
+  khungChuongTrinhToanTruong = duLieuSever.khungChuongTrinh || {}; // Nạp cấu hình số tiết
   
   // 1. Render Header Bảng Phân công
   let headerHtml = '<tr><th class="p-2 border border-gray-400 bg-slate-200 sticky left-0 z-30 min-w-[80px]">Mã Lớp</th>';
@@ -77,7 +75,7 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
           let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
           let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
           
-          // NÂNG CẤP: Gắn tọa độ (data-lop, data-mon) vào từng thẻ select
+          // Gắn bộ đệm dữ liệu (data-lop, data-mon) để tra cứu Khung Chương Trình khi tính số tiết
           bodyHtml += `<td class="p-0 border border-gray-400 transition-all duration-300 bg-white group-hover:bg-slate-50">
                           <select data-lop="${maLop}" data-mon="${tenMon}" onchange="tinhToanTietDay()" class="w-full h-full min-h-[35px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
                               ${selectedOptions}
@@ -90,7 +88,7 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   
   document.getElementById('duLieuLopHoc').innerHTML = bodyHtml;
   
-  // Tính toán định mức sau khi đã render xong lưới
+  // Tính toán định mức ngay sau khi render xong
   tinhToanTietDay();
 }
 
@@ -105,20 +103,16 @@ function tinhToanTietDay() {
   cacTheSelect.forEach(sl => {
     let tenGV = sl.value;
     if (tenGV && thongKe[tenGV]) {
-      // 1. Trích xuất mã lớp và tên môn học từ thuộc tính của thẻ select
+      // Nhận diện không gian lưu trữ: Lớp nào, Môn nào
       let tenLop = sl.getAttribute('data-lop');
       let tenMon = sl.getAttribute('data-mon');
-      
-      // 2. Chuyển đổi mã lớp (ví dụ "1A") thành mã Khối (ví dụ "Khoi1")
       let tenKhoi = "Khoi" + tenLop.charAt(0);
       
-      // 3. Tra cứu số tiết thực tế trong Khung chương trình chuẩn
+      // Tra cứu số tiết thực tế trong Khung chương trình thay vì cộng 1
       let soTiet = 0;
       if (khungChuongTrinhToanTruong[tenKhoi] && khungChuongTrinhToanTruong[tenKhoi][tenMon]) {
           soTiet = parseInt(khungChuongTrinhToanTruong[tenKhoi][tenMon]) || 0;
       }
-      
-      // 4. Cộng dồn chính xác số tiết thay vì cộng 1
       thongKe[tenGV].thucTe += soTiet; 
     }
   });
@@ -138,8 +132,71 @@ function tinhToanTietDay() {
   }
   document.getElementById('duLieuThongKe').innerHTML = tbodyThongKe;
 }
+
 // =========================================================================
-// KHỐI 4: ĐIỀU HƯỚNG MÀN HÌNH (GẮN KẾT VỚI INDEX.HTML)
+// KHỐI 4: LƯU TRỮ DỮ LIỆU ĐA TẦNG VÀO GOOGLE SHEETS
+// =========================================================================
+async function xuLyLuuTru() {
+  const btnLuu = document.querySelector('#khungPhanCong button[onclick="xuLyLuuTru()"]');
+  let textGoc = btnLuu ? btnLuu.innerHTML : 'Lưu Phân Công';
+  
+  if (btnLuu) {
+      btnLuu.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`;
+      btnLuu.disabled = true;
+  }
+  
+  try {
+    let mangGhi = [];
+    
+    // 1. Quét dòng Tiêu đề (Mã Lớp + Các Môn học)
+    let thead = document.querySelectorAll('#tieuDeMonHoc th');
+    let dongTieuDe = [];
+    thead.forEach(th => dongTieuDe.push(th.innerText.trim()));
+    mangGhi.push(dongTieuDe);
+    
+    // 2. Quét dữ liệu dọc theo từng lớp
+    let cacDongLop = document.querySelectorAll('#duLieuLopHoc tr');
+    cacDongLop.forEach(tr => {
+        let dongDuLieu = [];
+        
+        let tdLop = tr.querySelector('td:first-child');
+        if (tdLop) {
+            dongDuLieu.push(tdLop.innerText.trim());
+            
+            let cacSelect = tr.querySelectorAll('select');
+            cacSelect.forEach(sl => {
+                dongDuLieu.push(sl.value.trim());
+            });
+            mangGhi.push(dongDuLieu);
+        }
+    });
+    
+    // 3. Gửi lệnh lưu về Máy chủ
+    const payload = { thaoTac: 'luuDuLieuPhanCong', duLieu: mangGhi };
+    const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { 
+        method: 'POST', 
+        body: JSON.stringify(payload) 
+    });
+    const ketQua = await phanHoi.json();
+    
+    if (ketQua.trangThai === 'Thành công') {
+        alert("Đã lưu bảng Phân công chuyên môn vào hệ thống thành công!");
+    } else {
+        alert("Lỗi từ máy chủ: " + ketQua.thongBao);
+    }
+  } catch(loi) {
+    console.error("Lỗi khi lưu phân công:", loi);
+    alert("Lỗi kết nối mạng hoặc máy chủ không phản hồi.");
+  } finally {
+    if (btnLuu) {
+        btnLuu.innerHTML = textGoc;
+        btnLuu.disabled = false;
+    }
+  }
+}
+
+// =========================================================================
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH (GẮN KẾT VỚI INDEX.HTML)
 // =========================================================================
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
@@ -153,7 +210,6 @@ function moTabPhanCong() {
     let khungTK = document.getElementById('khungThongKe');
     if (khungTK) khungTK.classList.replace('block', 'hidden');
 
-    // Tự động tải dữ liệu khi giáo viên mở tab lần đầu
     if (danhSachGV.length === 0) {
         taiDuLieuPhanCongTuMayChu();
     }
