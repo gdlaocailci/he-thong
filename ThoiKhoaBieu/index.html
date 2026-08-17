@@ -54,8 +54,8 @@
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Báo cáo Thống kê</span>
             </a>
 
-            <!-- MỚI: NÚT PHÂN CÔNG CHUYÊN MÔN -->
-            <a id="menuPhanCong" href="javascript:void(0)" onclick="moTabPhanCong()" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
+            <!-- NÚT PHÂN CÔNG CHUYÊN MÔN (Mặc định ẩn) -->
+            <a id="menuPhanCong" href="javascript:void(0)" onclick="moTabPhanCong()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Phân công chuyên môn</span>
             </a>
         </nav>
@@ -66,7 +66,7 @@
                 <span class="group-hover:text-blue-300 transition-colors">Đăng nhập</span>
             </button>
             <p class="text-xs text-blue-200 font-bold uppercase tracking-widest">Thiết kế và phát triển</p>
-            <p class="text-sm font-bold text-white mt-1">Hoàng Ngọc Lâm</p>
+            <p class="text-sm font-bold text-white mt-1">Hoàng Ngọc Lâm (2 dòng)</p>
         </div>
     </div>
 
@@ -132,7 +132,7 @@
         </div>
 
         <main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
-            <!-- Khu vực này có thể được dùng chung hoặc render đè nội dung Phân công vào đây khi click tab -->
+            <!-- Khu vực hiển thị bảng chính -->
             <div id="vungHienThiChinh" class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
                 <table class="bang-excel relative">
                     <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
@@ -168,10 +168,11 @@
         </div>
     </div>
 
-    <script src="KetNoi.js"></script>
-    <script src="app.js"></script>
-    <script src="ThongKe.js"></script>
-    <script src="PhanCong.js"></script>
+    <!-- ĐỔI SANG CHUẨN KẾT NỐI HTML SERVICE CỦA GOOGLE APPS SCRIPT -->
+    <?!= include('KetNoi.js'); ?>
+    <?!= include('app.js'); ?>
+    <?!= include('ThongKe.js'); ?>
+    <?!= include('PhanCong.js'); ?>
     
 </body>
 </html>
