@@ -1,12 +1,13 @@
 let duLieuTongTien = {}; 
 let danhSachGV = [];
 
-// Tải dữ liệu ngay khi mở ứng dụng
+// Đổi tên hàm để tránh ghi đè sự kiện của app.js
 window.onload = function() {
-  google.script.run.withSuccessHandler(khoiTaoGiaoDien).layDuLieuKhoiTao();
+  google.script.run.withSuccessHandler(khoiTaoGiaoDienPhanCong).layDuLieuKhoiTao();
 };
 
-function khoiTaoGiaoDien(duLieuSever) {
+// Đổi tên hàm thành khoiTaoGiaoDienPhanCong
+function khoiTaoGiaoDienPhanCong(duLieuSever) {
   danhSachGV = duLieuSever.giaoVien;
   
   // 1. Render Header Bảng Phân công (Mã Lớp + Các Môn học dọc thành ngang)
@@ -59,40 +60,4 @@ function khoiTaoGiaoDien(duLieuSever) {
 
   // Lần đầu chạy hàm thống kê hiển thị số tiết
   tinhToanTietDay();
-}
-
-// Hàm tính toán số tiết realtime khi thay đổi dropdown
-function tinhToanTietDay() {
-  // Reset số tiết hiện tại về 0
-  let thongKe = {};
-  danhSachGV.forEach(gv => { thongKe[gv.hoTen] = { dinhMuc: gv.dinhMuc, thucTe: 0 }; });
-
-  // Đếm số lần xuất hiện trong các thẻ select
-  const cacTheSelect = document.querySelectorAll('#bangChinh select');
-  cacTheSelect.forEach(sl => {
-    let tenGV = sl.value;
-    if (tenGV && thongKe[tenGV]) {
-      // CHÚ Ý: Mặc định ở đây tính 1 ô = 1 tiết. Cần nhân hệ số môn nếu có.
-      thongKe[tenGV].thucTe += 1; 
-    }
-  });
-
-  // Render lại bảng thống kê
-  let tbodyThongKe = '';
-  for (const [ten, soLieu] of Object.entries(thongKe)) {
-    let lopCanhBao = (soLieu.thucTe > soLieu.dinhMuc) ? 'vuot-dinh-muc' : '';
-    tbodyThongKe += `
-      <tr>
-        <td>${ten}</td>
-        <td>${soLieu.dinhMuc}</td>
-        <td class="${lopCanhBao}">${soLieu.thucTe}</td>
-      </tr>
-    `;
-  }
-  document.getElementById('duLieuThongKe').innerHTML = tbodyThongKe;
-}
-
-function xuLyLuuTru() {
-  // Code duyệt qua HTML Table đóng gói thành Mảng 2 chiều và gọi google.script.run.luuDuLieuPhanCong()
-  alert('Chức năng thu thập mảng và lưu trữ sẵn sàng tích hợp.');
 }
