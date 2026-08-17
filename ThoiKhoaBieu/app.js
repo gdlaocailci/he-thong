@@ -261,7 +261,7 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-// NÂNG CẤP: Dùng ring-inset và bg-clip-padding để viền ăn sâu vào trong, chống xuyên thấu khi cuộn
+// NÂNG CẤP: Gỡ bỏ ring-inset ở các ô tiêu đề Lớp/Môn để tránh hiệu ứng viền kép (double border)
     let theadHTML = `<tr>
         <th rowspan="2" class="sticky left-0 z-30 bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border border-slate-400 ring-1 ring-inset ring-slate-400 bg-clip-padding" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
         <th rowspan="2" class="sticky left-[85px] z-20 bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border border-slate-400 ring-1 ring-inset ring-slate-400 bg-clip-padding" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
@@ -271,12 +271,14 @@ function xuatMaTranBang(danhSachTiet) {
         <th rowspan="2" class="sticky left-[145px] z-10 bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border border-slate-400 border-r-2 border-r-slate-500 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-slate-400 bg-clip-padding" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
     
     mangLop.forEach(lop => { 
-        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400 ring-1 ring-inset ring-slate-400 bg-clip-padding" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
+        // TRẢ VỀ VIỀN CHUẨN (Bỏ ring-inset)
+        theadHTML += `<th colspan="2" class="text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
     });
     theadHTML += `</tr><tr>`;
     mangLop.forEach(() => { 
-        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400 ring-1 ring-inset ring-slate-400 bg-clip-padding" style="font-family:'Times New Roman',Times,serif;">Môn</th>
-                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400 ring-1 ring-inset ring-slate-400 bg-clip-padding" style="font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
+        // TRẢ VỀ VIỀN CHUẨN (Bỏ ring-inset)
+        theadHTML += `<th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">Môn</th>
+                      <th class="text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border border-slate-400" style="font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
     });
     theadHTML += `</tr>`; 
     thead.innerHTML = theadHTML;
