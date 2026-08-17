@@ -136,21 +136,64 @@
             </div>
         </div>
 
-        <main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
-            <div id="vungHienThiChinh" class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
-                <table class="bang-excel relative">
-                    <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
-                        <tr><th class="text-center text-slate-500 py-3">Đang phân tích định dạng biểu mẫu...</th></tr>
-                    </thead>
-                    <tbody id="vungHienThiDuLieu">
-                        <tr><td class="px-6 py-10 text-center text-slate-500">
-                            <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
-                            <p class="font-bold text-base">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
-                        </td></tr>
-                    </tbody>
-                </table>
+<main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
+    <div id="vungHienThiChinh" class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
+        
+        <!-- KHUNG 1: TKB HIỆN TẠI -->
+        <div id="khungTKB" class="block w-full h-full">
+            <table class="bang-excel relative">
+                <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                    <tr><th class="text-center text-slate-500 py-3">Đang phân tích định dạng biểu mẫu...</th></tr>
+                </thead>
+                <tbody id="vungHienThiDuLieu">
+                    <tr><td class="px-6 py-10 text-center text-slate-500">
+                        <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+                        <p class="font-bold text-base">Đang kết nối Cổng API máy chủ đồng bộ dữ liệu...</p>
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- KHUNG 2: PHÂN CÔNG CHUYÊN MÔN (THÊM MỚI) -->
+        <div id="khungPhanCong" class="hidden p-4 w-full h-full flex-col font-sans">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-extrabold text-blue-900 uppercase">Bảng Phân Công Chuyên Môn</h2>
+                <button onclick="xuLyLuuTru()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition duration-200">
+                    Lưu Phân Công
+                </button>
             </div>
-        </main>
+            
+            <div class="flex gap-4 h-full overflow-hidden">
+                <!-- Bảng danh sách phân công -->
+                <div class="flex-1 overflow-auto border border-gray-400 shadow-sm bg-white relative">
+                    <table id="bangChinh" class="bang-excel w-full text-center">
+                        <thead class="sticky top-0 z-20 bg-slate-200 text-slate-900 shadow-sm" id="tieuDeMonHoc">
+                            <tr><th class="py-2">Đang tải cấu hình môn học...</th></tr>
+                        </thead>
+                        <tbody id="duLieuLopHoc">
+                            <tr><td class="text-center py-10 text-slate-500 font-bold">Đang lấy dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bảng thống kê định mức -->
+                <div class="w-80 overflow-auto border border-gray-400 shadow-sm bg-white flex-none relative">
+                    <table class="bang-excel w-full text-center">
+                        <thead class="sticky top-0 z-20 bg-purple-100 text-purple-900 shadow-sm">
+                            <tr>
+                                <th class="p-2 border border-gray-400">Giáo viên</th>
+                                <th class="p-2 border border-gray-400">Định mức</th>
+                                <th class="p-2 border border-gray-400">Thực tế</th>
+                            </tr>
+                        </thead>
+                        <tbody id="duLieuThongKe"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
 
         <footer class="flex-none bg-white border-t border-gray-300 py-1 px-4 flex justify-between items-center text-xs text-slate-500 reactbits-fade-in delay-300">
             <span class="font-bold tracking-wide">HỆ THỐNG QUẢN LÝ NHÀ TRƯỜNG</span>
