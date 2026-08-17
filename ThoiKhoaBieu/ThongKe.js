@@ -270,16 +270,17 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     document.getElementById('vungKetQuaThongKe').innerHTML = html;
 }
 
-// Giao diện Ma trận Tần suất Cá nhân (Đã xóa bỏ khoảng đệm phía trên)
+// Giao diện Ma trận Tần suất Cá nhân (Đã thu hẹp tối đa vùng đệm tiêu đề)
 function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
     let tDe = `Lịch Trình Giảng Dạy: <span class="text-red-600">${gv}</span>`;
     
-    let html = `<div class="flex-none p-4 bg-white z-30 relative shadow-sm border-b border-gray-300">
-                    <h2 class="text-xl font-bold text-center text-blue-900 mb-4 uppercase tracking-wide">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
+    // NÂNG CẤP: Giảm tối đa các chỉ số đệm (py, mb), ép khoảng cách dòng (leading)
+    let html = `<div class="flex-none py-1.5 px-4 bg-white z-30 relative shadow-sm border-b border-gray-300">
+                    <h2 class="text-xl font-bold text-center text-blue-900 mb-1.5 uppercase tracking-wide leading-tight">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
                     <div class="flex justify-center">
-                        <div class="bg-blue-50 border border-blue-200 rounded shadow-sm px-8 py-3 text-center">
-                            <p class="text-sm font-bold text-blue-700">TỔNG SỐ TIẾT ĐÃ DẠY</p>
-                            <p class="text-3xl font-extrabold text-blue-900">${duLieu.length}</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded shadow-sm px-6 py-1 text-center">
+                            <p class="text-xs font-bold text-blue-700">TỔNG SỐ TIẾT ĐÃ DẠY</p>
+                            <p class="text-2xl font-extrabold text-blue-900 leading-none">${duLieu.length}</p>
                         </div>
                     </div>
                 </div>`;
@@ -297,7 +298,6 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
         }
     });
 
-    // SỬA LỖI: Thay p-4 thành "px-4 pb-4 pt-0" tương tự bảng Toàn trường
     html += `<div class="flex-1 overflow-y-auto px-4 pb-4 pt-0 bg-gray-50 relative">
                 <table class="w-full text-center border-collapse border border-gray-400 bg-white">
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
@@ -327,7 +327,7 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
                         let soLan = thongTinTiet[khoa];
                         html += `<div class="inline-block bg-white border border-gray-300 rounded px-2 py-1 text-sm font-semibold shadow-sm mr-1 mb-1">
                                     <span class="text-blue-800">${khoa}</span> 
-                                    <span class="text-xs bg-red-100 text-red-700 px-1 rounded ml-1" title="Số tiết dạy môn này tại tiết này">${soLan} tiết</span>
+                                    <span class="text-xs bg-red-100 text-red-700 px-1 rounded ml-1" title="Số lần dạy môn này tại tiết này">${soLan} lần</span>
                                  </div>`;
                     }
                     html += `</td></tr>`;
