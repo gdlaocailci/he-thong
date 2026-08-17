@@ -94,7 +94,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
 function tinhToanTietDay() {
   let thongKe = {};
   
-  // Khởi tạo thêm mảng chiTiet để lưu trữ thông tin lớp/môn giảng dạy
   danhSachGV.forEach(gv => { thongKe[gv.hoTen] = { dinhMuc: gv.dinhMuc, thucTe: 0, chiTiet: [] }; });
 
   const cacTheSelect = document.querySelectorAll('#bangChinh select');
@@ -110,63 +109,55 @@ function tinhToanTietDay() {
           soTiet = parseInt(khungChuongTrinhToanTruong[tenKhoi][tenMon]) || 0;
       }
       
-      // Cộng dồn định mức
       thongKe[tenGV].thucTe += soTiet; 
       
-      // Bổ sung chi tiết hiển thị vào mảng nếu có số tiết
       if (soTiet > 0) {
           thongKe[tenGV].chiTiet.push(`<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 rounded px-1.5 py-0.5 m-0.5 text-[11px] whitespace-nowrap shadow-sm">${tenMon} ${tenLop} (${soTiet})</span>`);
       }
     }
   });
 
-  // Tự động mở rộng không gian bảng và vẽ thêm cột Tiêu đề nếu chưa có
+  // Tự động cấu trúc lại bảng thống kê, thêm vị trí relative cho khung chứa để cột cố định bám vào đúng ranh giới
+  let parentDiv = document.getElementById('duLieuThongKe').closest('.w-80');
+  if (parentDiv) {
+      parentDiv.classList.remove('w-80');
+      parentDiv.classList.add('w-[500px]', 'overflow-auto', 'relative');
+  }
+
   const theadThongKe = document.querySelector('#duLieuThongKe').previousElementSibling;
-  if (theadThongKe && !theadThongKe.innerHTML.includes('Chi tiết giảng dạy')) {
+  if (theadThongKe) {
       theadThongKe.innerHTML = `
         <tr>
-            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[20%]">Giáo viên</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-200 text-slate-900 font-bold sticky left-0 z-30 shadow-[1px_0_0_0_#9ca3af]">Giáo viên</th>
             <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%]">Định mức</th>
             <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%]">Thực tế</th>
             <th class="py-1 px-2 border border-gray-400 bg-purple-100 text-left w-auto">Chi tiết giảng dạy</th>
         </tr>
       `;
   }
-  
-  // Nới rộng container từ w-80 sang w-[500px] để đủ không gian hiển thị cột chi tiết
-  let parentDiv = document.getElementById('duLieuThongKe').closest('.w-80');
-  if (parentDiv) {
-      parentDiv.classList.remove('w-80');
-      parentDiv.classList.add('w-[500px]');
-  }
 
-  // Đổ dữ liệu vào bảng
   let tbodyThongKe = '';
   for (const [ten, soLieu] of Object.entries(thongKe)) {
-    // NÂNG CẤP: Phân loại 3 mức màu tương ứng với trạng thái (Thiếu / Đủ / Thừa)
     let bgClass = 'bg-white';
     let textClass = 'text-blue-700 font-bold';
 
     if (soLieu.thucTe > soLieu.dinhMuc) {
-        // Vượt định mức (Thừa): Nền đỏ tươi nhạt, chữ đỏ
         bgClass = 'bg-red-100'; 
         textClass = 'text-red-600 font-extrabold';
     } else if (soLieu.thucTe === soLieu.dinhMuc && soLieu.dinhMuc > 0) {
-        // Đạt định mức (Đủ): Nền xanh lá cây nhạt, chữ xanh lá
         bgClass = 'bg-green-100'; 
         textClass = 'text-green-700 font-extrabold';
     } else {
-        // Dưới định mức (Chưa đủ): Nền trắng, chữ xanh dương
         bgClass = 'bg-white'; 
         textClass = 'text-blue-700 font-bold';
     }
     
-    // Nối các thẻ chi tiết thành chuỗi HTML, nếu rỗng thì hiển thị thông báo
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
     
+    // NÂNG CẤP: Thêm thuộc tính sticky left-0 z-20 và đường kẻ bóng mờ cho cột tên giáo viên
     tbodyThongKe += `
       <tr class="${bgClass} border-b border-gray-300 transition-colors">
-        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300 whitespace-nowrap">${ten}</td>
+        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300 whitespace-nowrap sticky left-0 z-20 bg-inherit shadow-[1px_0_0_0_#d1d5db]">${ten}</td>
         <td class="py-1 px-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
         <td class="py-1 px-2 ${textClass} text-base border-r border-gray-300">${soLieu.thucTe}</td>
         <td class="py-1 px-2 text-left leading-tight whitespace-normal">${chiTietHienThi}</td>
