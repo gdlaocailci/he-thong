@@ -239,7 +239,7 @@ async function goiTraCuuThongKe() {
     }
 }
 
-// Giao diện Tổng hợp Toàn trường (Cố định đầu bảng & Ép sát dòng tối đa)
+// Giao diện Tổng hợp Toàn trường (Đã xóa bỏ khoảng đệm phía trên)
 function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
@@ -249,8 +249,8 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
                     <h2 class="text-xl font-bold text-center text-blue-900 uppercase tracking-wide">${tDe}</h2>
                 </div>`;
     
-    // NÂNG CẤP 1: Bổ sung class 'h-fit' vào table để ngăn bảng tự giãn chiều cao lấp đầy màn hình
-    html += `<div class="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
+    // SỬA LỖI: Thay p-4 thành "px-4 pb-4 pt-0" (xóa đệm trên) để khi cuộn dữ liệu không bị trồi lên trên tiêu đề
+    html += `<div class="flex-1 overflow-y-auto px-4 pb-4 pt-0 bg-gray-50 relative">
                 <table class="w-full h-fit text-sm border-collapse border border-gray-400 bg-white">
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
                         <tr>
@@ -273,8 +273,6 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let dsGv = Object.keys(tongHopGv).sort();
     dsGv.forEach(gv => {
         let th = tongHopGv[gv];
-        
-        // NÂNG CẤP 2: Thay thế p-2 bằng py-0.5 px-2 (giảm đệm dọc xuống gần bằng 0)
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
@@ -286,11 +284,10 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     document.getElementById('vungKetQuaThongKe').innerHTML = html;
 }
 
-// Giao diện Ma trận Tần suất Cá nhân (Cố định & Thu hẹp tối đa)
+// Giao diện Ma trận Tần suất Cá nhân (Đã xóa bỏ khoảng đệm phía trên)
 function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
     let tDe = `Lịch Trình Giảng Dạy: <span class="text-red-600">${gv}</span>`;
     
-    // Tách riêng khối tiêu đề và Thẻ Tổng số tiết (Không cuộn)
     let html = `<div class="flex-none p-4 bg-white z-30 relative shadow-sm border-b border-gray-300">
                     <h2 class="text-xl font-bold text-center text-blue-900 mb-4 uppercase tracking-wide">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
                     <div class="flex justify-center">
@@ -314,8 +311,8 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
         }
     });
 
-    // Khối Bảng (Có thanh cuộn riêng, Tiêu đề Sticky, Các cột ép kích thước w-[1%])
-    html += `<div class="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
+    // SỬA LỖI: Thay p-4 thành "px-4 pb-4 pt-0" tương tự bảng Toàn trường
+    html += `<div class="flex-1 overflow-y-auto px-4 pb-4 pt-0 bg-gray-50 relative">
                 <table class="w-full text-center border-collapse border border-gray-400 bg-white">
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
                         <tr>
@@ -336,8 +333,8 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
                     if (index === 0 && buoi === "Sáng") html += `<td rowspan="${Object.keys(luoi[thu]["Sáng"]).length + Object.keys(luoi[thu]["Chiều"]).length}" class="border border-gray-400 font-extrabold bg-slate-50 w-[1%] whitespace-nowrap px-4">${thu}</td>`;
                     if (index === 0) html += `<td rowspan="${dsTiet.length}" class="border border-gray-400 font-bold w-[1%] whitespace-nowrap px-4">${buoi}</td>`;
                     
-                    html += `<td class="border border-gray-400 p-2 font-bold text-slate-800 w-[1%] whitespace-nowrap px-4">${tiet}</td>
-                             <td class="border border-gray-400 p-2 text-left space-y-1">`;
+                    html += `<td class="border border-gray-400 py-1 px-4 font-bold text-slate-800 w-[1%] whitespace-nowrap">${tiet}</td>
+                             <td class="border border-gray-400 py-1 px-2 text-left space-y-1">`;
                     
                     let thongTinTiet = luoi[thu][buoi][tiet];
                     for (let khoa in thongTinTiet) {
