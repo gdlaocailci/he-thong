@@ -89,11 +89,13 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
 }
 
 // =========================================================================
-// KHỐI 3: THỐNG KÊ ĐỊNH MỨC VÀ KIỂM SOÁT
+// KHỐI 3: THỐNG KÊ ĐỊNH MỨC VÀ KIỂM SOÁT TỔNG HỢP CHI TIẾT
 // =========================================================================
 function tinhToanTietDay() {
   let thongKe = {};
-  danhSachGV.forEach(gv => { thongKe[gv.hoTen] = { dinhMuc: gv.dinhMuc, thucTe: 0 }; });
+  
+  // Khởi tạo thêm mảng chiTiet để lưu trữ thông tin lớp/môn giảng dạy
+  danhSachGV.forEach(gv => { thongKe[gv.hoTen] = { dinhMuc: gv.dinhMuc, thucTe: 0, chiTiet: [] }; });
 
   const cacTheSelect = document.querySelectorAll('#bangChinh select');
   cacTheSelect.forEach(sl => {
@@ -107,21 +109,52 @@ function tinhToanTietDay() {
       if (khungChuongTrinhToanTruong[tenKhoi] && khungChuongTrinhToanTruong[tenKhoi][tenMon]) {
           soTiet = parseInt(khungChuongTrinhToanTruong[tenKhoi][tenMon]) || 0;
       }
+      
+      // Cộng dồn định mức
       thongKe[tenGV].thucTe += soTiet; 
+      
+      // Bổ sung chi tiết hiển thị vào mảng nếu có số tiết
+      if (soTiet > 0) {
+          thongKe[tenGV].chiTiet.push(`<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 rounded px-1.5 py-0.5 m-0.5 text-[11px] whitespace-nowrap shadow-sm">${tenMon} ${tenLop} (${soTiet})</span>`);
+      }
     }
   });
 
+  // Tự động mở rộng không gian bảng và vẽ thêm cột Tiêu đề nếu chưa có
+  const theadThongKe = document.querySelector('#duLieuThongKe').previousElementSibling;
+  if (theadThongKe && !theadThongKe.innerHTML.includes('Chi tiết giảng dạy')) {
+      theadThongKe.innerHTML = `
+        <tr>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[20%]">Giáo viên</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%]">Định mức</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%]">Thực tế</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 text-left w-auto">Chi tiết giảng dạy</th>
+        </tr>
+      `;
+  }
+  
+  // Nới rộng container từ w-80 sang w-[500px] để đủ không gian hiển thị cột chi tiết
+  let parentDiv = document.getElementById('duLieuThongKe').closest('.w-80');
+  if (parentDiv) {
+      parentDiv.classList.remove('w-80');
+      parentDiv.classList.add('w-[500px]');
+  }
+
+  // Đổ dữ liệu vào bảng
   let tbodyThongKe = '';
   for (const [ten, soLieu] of Object.entries(thongKe)) {
     let textClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'text-red-600 font-extrabold' : 'text-blue-700 font-bold';
     let bgClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'bg-red-50' : 'bg-white';
     
-    // NÂNG CẤP: Đổi p-2 thành py-1 px-2 và điều chỉnh text-lg thành text-base ở cột thực tế
+    // Nối các thẻ chi tiết thành chuỗi HTML, nếu rỗng thì hiển thị thông báo
+    let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
+    
     tbodyThongKe += `
       <tr class="${bgClass} border-b border-gray-300 hover:bg-gray-50 transition-colors">
-        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300">${ten}</td>
+        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300 whitespace-nowrap">${ten}</td>
         <td class="py-1 px-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
-        <td class="py-1 px-2 ${textClass} text-base">${soLieu.thucTe}</td>
+        <td class="py-1 px-2 ${textClass} text-base border-r border-gray-300">${soLieu.thucTe}</td>
+        <td class="py-1 px-2 text-left leading-tight whitespace-normal">${chiTietHienThi}</td>
       </tr>
     `;
   }
