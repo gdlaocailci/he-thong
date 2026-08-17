@@ -4,7 +4,6 @@
 let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
-// Hàm khởi tạo Giao diện Thống kê (Chèn động vào DOM để không phá vỡ HTML cũ)
 function dungGiaoDienThongKe() {
     let container = document.createElement('div');
     container.id = 'tabThongKe';
@@ -14,8 +13,7 @@ function dungGiaoDienThongKe() {
         <div class="flex-none p-2 pb-0">
             <!-- THANH CÔNG CỤ THỐNG KÊ -->
             <div class="bg-white shadow-sm border border-gray-400 p-3 flex flex-wrap items-center gap-4 reactbits-fade-in delay-100">
-                <div class="flex items-center gap-2 font-bold text-blue-900">
-                    <img src="https://www.svgrepo.com/show/521782/pie-chart.svg" class="w-6 h-6">
+                <div class="flex items-center font-bold text-blue-900">
                     <span class="text-lg uppercase tracking-wide">Bộ Lọc Tra Cứu</span>
                 </div>
                 
@@ -53,7 +51,7 @@ function dungGiaoDienThongKe() {
 
                 <div class="ml-auto flex items-center gap-2 mt-2 md:mt-0">
                     <button onclick="goiTraCuuThongKe()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-2">
-                        <img src="https://www.svgrepo.com/show/521826/search.svg" class="w-4 h-4 filter invert brightness-0"> Tra cứu
+                        Tra cứu
                     </button>
                     <button onclick="dongTabThongKe()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-3 py-2 text-sm shadow transition duration-200 rounded">Đóng</button>
                 </div>
@@ -64,14 +62,12 @@ function dungGiaoDienThongKe() {
         <main class="flex-1 overflow-hidden px-2 pb-2 mt-2 flex flex-col reactbits-fade-in delay-200">
             <div id="vungKetQuaThongKe" class="bg-white shadow-inner border border-gray-400 flex-1 overflow-auto p-4 flex flex-col relative">
                 <div class="text-center text-slate-400 mt-20 font-bold">
-                    <img src="https://www.svgrepo.com/show/521782/pie-chart.svg" class="w-16 h-16 opacity-30 mx-auto mb-4">
                     Vui lòng chọn bộ lọc và bấm "Tra cứu" để hiển thị dữ liệu thống kê.
                 </div>
             </div>
         </main>
     `;
     
-    // Gắn vào vùng làm việc chính
     let phanPhai = document.querySelector('.flex-1.h-screen.flex.flex-col');
     if (phanPhai) {
         phanPhai.style.position = 'relative';
@@ -79,7 +75,6 @@ function dungGiaoDienThongKe() {
     }
 }
 
-// Gọi dựng UI ngay khi file được nạp
 document.addEventListener('DOMContentLoaded', () => { dungGiaoDienThongKe(); });
 
 // =========================================================================
@@ -90,51 +85,45 @@ function moTabThongKe() {
     if (tabTk) {
         tabTk.classList.remove('hidden');
         tabTk.classList.add('flex');
-        // Nếu cây thư mục trống thì tải dữ liệu
         if (Object.keys(cayDanhMucThongKe).length === 0) {
             taiCayDanhMucThongKe();
         }
     }
     
-    // Bật màu xanh cho tab Thống Kê, tắt màu tab TKB
     let mnuTKB = document.getElementById('menuTKB');
     let mnuTK = document.getElementById('menuThongKe');
     if (mnuTKB) {
         mnuTKB.classList.replace('bg-menu-hover', 'hover:bg-menu-hover');
         mnuTKB.classList.replace('border-menu-active', 'border-transparent');
         mnuTKB.querySelector('span').classList.replace('text-menu-active', 'text-white');
-        mnuTKB.querySelector('img').classList.add('opacity-80');
+        // Đã gỡ bỏ lệnh gọi ảnh
     }
     if (mnuTK) {
         mnuTK.classList.replace('hover:bg-menu-hover', 'bg-menu-hover');
         mnuTK.classList.replace('border-transparent', 'border-menu-active');
         mnuTK.querySelector('span').classList.replace('text-white', 'text-menu-active');
-        mnuTK.querySelector('img').classList.remove('opacity-80');
+        // Đã gỡ bỏ lệnh gọi ảnh
     }
 }
 
 function dongTabThongKe() {
     let tabTk = document.getElementById('tabThongKe');
     if (tabTk) {
-        // Ẩn phân hệ thống kê, hiện lại TKB
         tabTk.classList.add('hidden');
         tabTk.classList.remove('flex');
     }
     
-    // Bật lại màu xanh cho tab TKB, tắt màu tab Thống kê
     let mnuTKB = document.getElementById('menuTKB');
     let mnuTK = document.getElementById('menuThongKe');
     if (mnuTKB) {
         mnuTKB.classList.replace('hover:bg-menu-hover', 'bg-menu-hover');
         mnuTKB.classList.replace('border-transparent', 'border-menu-active');
         mnuTKB.querySelector('span').classList.replace('text-white', 'text-menu-active');
-        mnuTKB.querySelector('img').classList.remove('opacity-80');
     }
     if (mnuTK) {
         mnuTK.classList.replace('bg-menu-hover', 'hover:bg-menu-hover');
         mnuTK.classList.replace('border-menu-active', 'border-transparent');
         mnuTK.querySelector('span').classList.replace('text-menu-active', 'text-white');
-        mnuTK.querySelector('img').classList.add('opacity-80');
     }
 }
 
@@ -152,13 +141,13 @@ async function taiCayDanhMucThongKe() {
         let dsNam = Object.keys(cayDanhMucThongKe);
         if (dsNam.length > 0) {
             document.getElementById('dlNamHocTk').innerHTML = dsNam.map(n => `<option value="${n}">`).join('');
-            document.getElementById('inputNamHocTk').value = dsNam[dsNam.length - 1]; // Chọn năm mới nhất
+            document.getElementById('inputNamHocTk').value = dsNam[dsNam.length - 1];
             xuLyDoiNamHocTk();
         }
     } catch (loi) {
         console.error("Lỗi tải cây danh mục:", loi);
     } finally {
-        if (btn) btn.innerHTML = `<img src="https://www.svgrepo.com/show/521826/search.svg" class="w-4 h-4 filter invert brightness-0"> Tra cứu`;
+        if (btn) btn.innerHTML = `Tra cứu`; // Đã gỡ bỏ biểu tượng kính lúp
     }
 }
 
@@ -167,13 +156,11 @@ function xuLyDoiNamHocTk() {
     let duLieuNam = cayDanhMucThongKe[nam];
     if (!duLieuNam) return;
 
-    // Cập nhật Tháng
     let htmlThang = `<option value="Cả năm">`;
     htmlThang += duLieuNam.danhSachThang.map(th => `<option value="Tháng ${th}">`).join('');
     document.getElementById('dlThangTk').innerHTML = htmlThang;
     document.getElementById('inputThangTk').value = "Cả năm";
 
-    // Cập nhật Giáo viên
     let htmlGv = `<option value="Toàn trường">`;
     htmlGv += duLieuNam.danhSachGiaoVien.map(gv => `<option value="${gv}">`).join('');
     document.getElementById('dlGiaoVienTk').innerHTML = htmlGv;
@@ -202,7 +189,6 @@ function xuLyDoiThangTk() {
     document.getElementById('dlTuanTk').innerHTML = htmlTuan;
     document.getElementById('inputTuanTk').value = "Tất cả các tuần";
 }
-
 // =========================================================================
 // KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (CỐ ĐỊNH & THU HẸP TỐI ĐA)
 // =========================================================================
