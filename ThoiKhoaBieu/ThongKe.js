@@ -1,131 +1,84 @@
 // =========================================================================
-// KHỐI 1: KHỞI TẠO GIAO DIỆN VÀ ĐIỀU HƯỚNG TAB
+// KHỐI 1: KHỞI TẠO GIAO DIỆN VÀ GẮN VÀO KHUNG CÓ SẴN
 // =========================================================================
 let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
 function dungGiaoDienThongKe() {
-    let container = document.createElement('div');
-    container.id = 'tabThongKe';
-    container.className = 'hidden flex-col flex-1 h-full bg-gray-100 absolute inset-0 z-20 overflow-hidden';
+    // Tìm đúng khung hiển thị đã được định nghĩa bên index.html
+    let container = document.getElementById('khungThongKe');
+    if (!container) return;
     
+    // Bơm trực tiếp giao diện Thống kê vào khung
     container.innerHTML = `
-        <div class="flex-none p-2 pb-0">
-            <!-- THANH CÔNG CỤ THỐNG KÊ -->
-            <div class="bg-white shadow-sm border border-gray-400 p-3 flex flex-wrap items-center gap-4 reactbits-fade-in delay-100">
-                <div class="flex items-center font-bold text-blue-900">
-                    <span class="text-lg uppercase tracking-wide">Bộ Lọc Tra Cứu</span>
-                </div>
-                
-                <div class="h-6 w-px bg-gray-300 hidden md:block"></div>
+        <div class="flex justify-between items-center mb-4 flex-none">
+            <h2 class="text-xl font-extrabold text-blue-900 uppercase">Tra cứu Thống kê Giảng dạy</h2>
+        </div>
+        
+        <!-- THANH CÔNG CỤ THỐNG KÊ -->
+        <div class="bg-white shadow-sm border border-gray-400 p-3 flex flex-wrap items-center gap-4 mb-3 flex-none">
+            <div class="flex items-center font-bold text-blue-900">
+                <span class="text-lg uppercase tracking-wide">Bộ Lọc Tra Cứu</span>
+            </div>
+            
+            <div class="h-6 w-px bg-gray-300 hidden md:block"></div>
 
-                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto text-sm font-semibold text-slate-800">
-                    <!-- NĂM HỌC -->
-                    <div class="flex flex-col">
-                        <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Năm học</label>
-                        <input type="text" id="inputNamHocTk" list="dlNamHocTk" onchange="xuLyDoiNamHocTk()" class="w-32 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
-                        <datalist id="dlNamHocTk"></datalist>
-                    </div>
-
-                    <!-- THÁNG -->
-                    <div class="flex flex-col">
-                        <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Tháng</label>
-                        <input type="text" id="inputThangTk" list="dlThangTk" onchange="xuLyDoiThangTk()" class="w-32 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
-                        <datalist id="dlThangTk"></datalist>
-                    </div>
-
-                    <!-- TUẦN -->
-                    <div class="flex flex-col">
-                        <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Tuần</label>
-                        <input type="text" id="inputTuanTk" list="dlTuanTk" class="w-36 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
-                        <datalist id="dlTuanTk"></datalist>
-                    </div>
-
-                    <!-- GIÁO VIÊN -->
-                    <div class="flex flex-col">
-                        <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Giáo viên</label>
-                        <input type="text" id="inputGiaoVienTk" list="dlGiaoVienTk" class="w-40 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
-                        <datalist id="dlGiaoVienTk"></datalist>
-                    </div>
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto text-sm font-semibold text-slate-800">
+                <!-- NĂM HỌC -->
+                <div class="flex flex-col">
+                    <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Năm học</label>
+                    <input type="text" id="inputNamHocTk" list="dlNamHocTk" onchange="xuLyDoiNamHocTk()" class="w-32 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
+                    <datalist id="dlNamHocTk"></datalist>
                 </div>
 
-                <div class="ml-auto flex items-center gap-2 mt-2 md:mt-0">
-                    <button onclick="goiTraCuuThongKe()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-2">
-                        Tra cứu
-                    </button>
-                    <button onclick="dongTabThongKe()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-3 py-2 text-sm shadow transition duration-200 rounded">Đóng</button>
+                <!-- THÁNG -->
+                <div class="flex flex-col">
+                    <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Tháng</label>
+                    <input type="text" id="inputThangTk" list="dlThangTk" onchange="xuLyDoiThangTk()" class="w-32 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
+                    <datalist id="dlThangTk"></datalist>
                 </div>
+
+                <!-- TUẦN -->
+                <div class="flex flex-col">
+                    <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Tuần</label>
+                    <input type="text" id="inputTuanTk" list="dlTuanTk" class="w-36 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
+                    <datalist id="dlTuanTk"></datalist>
+                </div>
+
+                <!-- GIÁO VIÊN -->
+                <div class="flex flex-col">
+                    <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Giáo viên</label>
+                    <input type="text" id="inputGiaoVienTk" list="dlGiaoVienTk" class="w-40 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
+                    <datalist id="dlGiaoVienTk"></datalist>
+                </div>
+            </div>
+
+            <div class="ml-auto flex items-center gap-2 mt-2 md:mt-0">
+                <button onclick="goiTraCuuThongKe()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-2">
+                    Tra cứu
+                </button>
             </div>
         </div>
 
         <!-- VÙNG HIỂN THỊ KẾT QUẢ -->
-        <main class="flex-1 overflow-hidden px-2 pb-2 mt-2 flex flex-col reactbits-fade-in delay-200">
-            <div id="vungKetQuaThongKe" class="bg-white shadow-inner border border-gray-400 flex-1 overflow-auto p-4 flex flex-col relative">
-                <div class="text-center text-slate-400 mt-20 font-bold">
-                    Vui lòng chọn bộ lọc và bấm "Tra cứu" để hiển thị dữ liệu thống kê.
-                </div>
+        <div id="vungKetQuaThongKe" class="bg-white shadow-inner border border-gray-400 flex-1 overflow-auto flex flex-col relative">
+            <div class="text-center text-slate-400 mt-20 font-bold">
+                Vui lòng chọn bộ lọc và bấm "Tra cứu" để hiển thị dữ liệu thống kê.
             </div>
-        </main>
+        </div>
     `;
-    
-    let phanPhai = document.querySelector('.flex-1.h-screen.flex.flex-col');
-    if (phanPhai) {
-        phanPhai.style.position = 'relative';
-        phanPhai.appendChild(container);
-    }
 }
 
-document.addEventListener('DOMContentLoaded', () => { dungGiaoDienThongKe(); });
+// Tự động dựng giao diện và nạp dữ liệu bộ lọc khi trang vừa load xong
+document.addEventListener('DOMContentLoaded', () => { 
+    dungGiaoDienThongKe();
+    taiCayDanhMucThongKe();
+});
 
 // =========================================================================
-// KHỐI 2: ĐIỀU KHIỂN LOGIC TAB VÀ CHUYỂN ĐỔI MÀU MENU
+// KHỐI 2: ĐIỀU HƯỚNG TAB ĐÃ ĐƯỢC LƯỢC BỎ 
+// (Logic tắt/mở hiện tại do PhanCong.js quản lý hoàn toàn để tránh xung đột)
 // =========================================================================
-function moTabThongKe() {
-    let tabTk = document.getElementById('tabThongKe');
-    if (tabTk) {
-        tabTk.classList.remove('hidden');
-        tabTk.classList.add('flex');
-        if (Object.keys(cayDanhMucThongKe).length === 0) {
-            taiCayDanhMucThongKe();
-        }
-    }
-    
-    let mnuTKB = document.getElementById('menuTKB');
-    let mnuTK = document.getElementById('menuThongKe');
-    if (mnuTKB) {
-        mnuTKB.classList.replace('bg-menu-hover', 'hover:bg-menu-hover');
-        mnuTKB.classList.replace('border-menu-active', 'border-transparent');
-        mnuTKB.querySelector('span').classList.replace('text-menu-active', 'text-white');
-        // Đã gỡ bỏ lệnh gọi ảnh
-    }
-    if (mnuTK) {
-        mnuTK.classList.replace('hover:bg-menu-hover', 'bg-menu-hover');
-        mnuTK.classList.replace('border-transparent', 'border-menu-active');
-        mnuTK.querySelector('span').classList.replace('text-white', 'text-menu-active');
-        // Đã gỡ bỏ lệnh gọi ảnh
-    }
-}
-
-function dongTabThongKe() {
-    let tabTk = document.getElementById('tabThongKe');
-    if (tabTk) {
-        tabTk.classList.add('hidden');
-        tabTk.classList.remove('flex');
-    }
-    
-    let mnuTKB = document.getElementById('menuTKB');
-    let mnuTK = document.getElementById('menuThongKe');
-    if (mnuTKB) {
-        mnuTKB.classList.replace('hover:bg-menu-hover', 'bg-menu-hover');
-        mnuTKB.classList.replace('border-transparent', 'border-menu-active');
-        mnuTKB.querySelector('span').classList.replace('text-white', 'text-menu-active');
-    }
-    if (mnuTK) {
-        mnuTK.classList.replace('bg-menu-hover', 'hover:bg-menu-hover');
-        mnuTK.classList.replace('border-menu-active', 'border-transparent');
-        mnuTK.querySelector('span').classList.replace('text-menu-active', 'text-white');
-    }
-}
 
 // =========================================================================
 // KHỐI 3: GIAO TIẾP MÁY CHỦ VÀ LOGIC DROPDOWN LIÊN HOÀN
@@ -147,7 +100,7 @@ async function taiCayDanhMucThongKe() {
     } catch (loi) {
         console.error("Lỗi tải cây danh mục:", loi);
     } finally {
-        if (btn) btn.innerHTML = `Tra cứu`; // Đã gỡ bỏ biểu tượng kính lúp
+        if (btn) btn.innerHTML = `Tra cứu`; 
     }
 }
 
@@ -189,8 +142,9 @@ function xuLyDoiThangTk() {
     document.getElementById('dlTuanTk').innerHTML = htmlTuan;
     document.getElementById('inputTuanTk').value = "Tất cả các tuần";
 }
+
 // =========================================================================
-// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (CỐ ĐỊNH & THU HẸP TỐI ĐA)
+// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
 // =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
@@ -198,7 +152,7 @@ async function goiTraCuuThongKe() {
     let tuan = document.getElementById('inputTuanTk').value.replace('Tuần ', '').trim();
     let giaoVien = document.getElementById('inputGiaoVienTk').value.trim();
 
-    // BẪY LỖI: Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
+    // Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
     if (thang === "Cả năm") thang = "";
     if (tuan === "Tất cả các tuần") tuan = "";
     if (giaoVien === "Toàn trường") giaoVien = ""; 
@@ -225,7 +179,6 @@ async function goiTraCuuThongKe() {
     }
 }
 
-// Giao diện Tổng hợp Toàn trường (Đã xóa bỏ khoảng đệm phía trên)
 function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
@@ -235,7 +188,6 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
                     <h2 class="text-xl font-bold text-center text-blue-900 uppercase tracking-wide">${tDe}</h2>
                 </div>`;
     
-    // SỬA LỖI: Thay p-4 thành "px-4 pb-4 pt-0" (xóa đệm trên) để khi cuộn dữ liệu không bị trồi lên trên tiêu đề
     html += `<div class="flex-1 overflow-y-auto px-4 pb-4 pt-0 bg-gray-50 relative">
                 <table class="w-full h-fit text-sm border-collapse border border-gray-400 bg-white">
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
@@ -270,11 +222,9 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     document.getElementById('vungKetQuaThongKe').innerHTML = html;
 }
 
-// Giao diện Ma trận Tần suất Cá nhân (Đã thu hẹp tối đa vùng đệm tiêu đề)
 function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
     let tDe = `Lịch Trình Giảng Dạy: <span class="text-red-600">${gv}</span>`;
     
-    // NÂNG CẤP: Giảm tối đa các chỉ số đệm (py, mb), ép khoảng cách dòng (leading)
     let html = `<div class="flex-none py-1.5 px-4 bg-white z-30 relative shadow-sm border-b border-gray-300">
                     <h2 class="text-xl font-bold text-center text-blue-900 mb-1.5 uppercase tracking-wide leading-tight">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
                     <div class="flex justify-center">
