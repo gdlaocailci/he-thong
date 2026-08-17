@@ -1,34 +1,58 @@
 let duLieuTongTien = {}; 
 let danhSachGV = [];
 
-// Đổi tên hàm để tránh ghi đè sự kiện của app.js
-window.onload = function() {
-  google.script.run.withSuccessHandler(khoiTaoGiaoDienPhanCong).layDuLieuKhoiTao();
-};
+// =========================================================================
+// KHỐI 1: GIAO TIẾP MÁY CHỦ (API FETCH)
+// =========================================================================
+async function taiDuLieuPhanCongTuMayChu() {
+    try {
+        // Cập nhật giao diện loading đồng bộ với hệ thống
+        const tbody = document.getElementById('duLieuLopHoc');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-slate-500 font-bold">
+                <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+                Đang kết nối Cổng API máy chủ để lấy Cấu hình Môn học...
+            </td></tr>`;
+        }
 
-// Đổi tên hàm thành khoiTaoGiaoDienPhanCong
+        // Thay thế google.script.run bằng fetch chuẩn
+        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
+        const duLieuSever = await phanHoi.json();
+        
+        khoiTaoGiaoDienPhanCong(duLieuSever);
+    } catch (loi) {
+        console.error("Lỗi kết nối khi tải dữ liệu phân công:", loi);
+        const tbody = document.getElementById('duLieuLopHoc');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-red-600 font-bold text-lg">Lỗi kết nối hoặc máy chủ từ chối truy cập. Vui lòng thử lại.</td></tr>`;
+    }
+}
+
+// =========================================================================
+// KHỐI 2: KHỞI TẠO VÀ XỬ LÝ LƯỚI GIAO DIỆN PHÂN CÔNG
+// =========================================================================
 function khoiTaoGiaoDienPhanCong(duLieuSever) {
-  danhSachGV = duLieuSever.giaoVien;
+  danhSachGV = duLieuSever.giaoVien || [];
   
-  // 1. Render Header Bảng Phân công (Mã Lớp + Các Môn học dọc thành ngang)
-  let headerHtml = '<tr><th>Mã Lớp</th>';
-  duLieuSever.monHoc.forEach(mon => {
-    headerHtml += `<th>${mon}</th>`;
-  });
+  // 1. Render Header Bảng Phân công
+  let headerHtml = '<tr><th class="p-2 border border-gray-400 bg-slate-200 sticky left-0 z-30 min-w-[80px]">Mã Lớp</th>';
+  if (duLieuSever.monHoc) {
+      duLieuSever.monHoc.forEach(mon => {
+        headerHtml += `<th class="p-2 border border-gray-400 min-w-[120px]">${mon}</th>`;
+      });
+  }
   headerHtml += '</tr>';
   document.getElementById('tieuDeMonHoc').innerHTML = headerHtml;
 
   // 2. Chuẩn bị Options cho Dropdown Giáo viên
   let bodyHtml = '';
-  let optionsGV = `<option value="">-- Chọn --</option>`;
+  let optionsGV = `<option value=""></option>`;
   danhSachGV.forEach(gv => {
     optionsGV += `<option value="${gv.hoTen}">${gv.hoTen}</option>`;
   });
 
-  // 3. Nâng cấp: Tạo object tra cứu nhanh dữ liệu phân công đã lưu theo Mã Lớp
+  // 3. Tạo object tra cứu nhanh dữ liệu phân công đã lưu theo Mã Lớp
   let mapPhanCongDaLuu = {};
   if (duLieuSever.phanCong && duLieuSever.phanCong.length > 0) {
-    // Bỏ qua dòng tiêu đề (index 0)
     for (let i = 1; i < duLieuSever.phanCong.length; i++) {
       let rowData = duLieuSever.phanCong[i];
       let tenLop = rowData[0];
@@ -38,65 +62,105 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
     }
   }
 
-  // 4. Render Grid lấy danh sách Mã Lớp từ DM_LOP làm trục (Rows)
-  duLieuSever.maLop.forEach(maLop => {
-    bodyHtml += `<tr><td><strong>${maLop}</strong></td>`;
-    
-    // Lấy dòng dữ liệu phân công cũ của lớp này ra (nếu đã từng lưu)
-    let duLieuCuCuaLop = mapPhanCongDaLuu[maLop] || [];
+  // 4. Render Grid lấy danh sách Mã Lớp
+  if (duLieuSever.maLop) {
+      duLieuSever.maLop.forEach(maLop => {
+        bodyHtml += `<tr class="hover:bg-slate-50 transition-colors duration-150 group">
+                        <td class="p-2 border border-gray-400 font-extrabold text-slate-900 bg-white sticky left-0 z-10 group-hover:bg-slate-50">${maLop}</td>`;
+        
+        let duLieuCuCuaLop = mapPhanCongDaLuu[maLop] || [];
 
-    // Render dropdown cho từng môn học ngang theo cột
-    for (let j = 0; j < duLieuSever.monHoc.length; j++) {
-      // j+1 do cột đầu tiên (index 0) của dữ liệu cũ là Mã lớp
-      let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
-      
-      let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
-      bodyHtml += `<td><select onchange="tinhToanTietDay()">${selectedOptions}</select></td>`;
-    }
-    bodyHtml += '</tr>';
-  });
+        for (let j = 0; j < duLieuSever.monHoc.length; j++) {
+          let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
+          let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
+          
+          bodyHtml += `<td class="p-0 border border-gray-400 transition-all duration-300 bg-white group-hover:bg-slate-50">
+                          <select onchange="tinhToanTietDay()" class="w-full h-full min-h-[35px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
+                              ${selectedOptions}
+                          </select>
+                       </td>`;
+        }
+        bodyHtml += '</tr>';
+      });
+  }
   
   document.getElementById('duLieuLopHoc').innerHTML = bodyHtml;
-
-  // Lần đầu chạy hàm thống kê hiển thị số tiết
+  
+  // Tính toán định mức sau khi đã render xong lưới
   tinhToanTietDay();
 }
 
 // =========================================================================
-// KHỐI GIAO DIỆN: CHUYỂN TAB VÀ ĐIỀU HƯỚNG MÀN HÌNH
+// KHỐI 3: THỐNG KÊ ĐỊNH MỨC VÀ KIỂM SOÁT
 // =========================================================================
+function tinhToanTietDay() {
+  let thongKe = {};
+  danhSachGV.forEach(gv => { thongKe[gv.hoTen] = { dinhMuc: gv.dinhMuc, thucTe: 0 }; });
 
+  const cacTheSelect = document.querySelectorAll('#bangChinh select');
+  cacTheSelect.forEach(sl => {
+    let tenGV = sl.value;
+    if (tenGV && thongKe[tenGV]) {
+      thongKe[tenGV].thucTe += 1; 
+    }
+  });
+
+  let tbodyThongKe = '';
+  for (const [ten, soLieu] of Object.entries(thongKe)) {
+    // Điều chỉnh CSS tự động cảnh báo khi vượt định mức
+    let textClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'text-red-600 font-extrabold' : 'text-blue-700 font-bold';
+    let bgClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'bg-red-50' : 'bg-white';
+    
+    tbodyThongKe += `
+      <tr class="${bgClass} border-b border-gray-300 hover:bg-gray-50 transition-colors">
+        <td class="p-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300">${ten}</td>
+        <td class="p-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
+        <td class="p-2 ${textClass} text-lg">${soLieu.thucTe}</td>
+      </tr>
+    `;
+  }
+  document.getElementById('duLieuThongKe').innerHTML = tbodyThongKe;
+}
+
+function xuLyLuuTru() {
+  // Logic quét mảng lưu trữ đang trong giai đoạn phát triển
+  alert('Chức năng thu thập mảng và lưu trữ đang sẵn sàng để tích hợp mã xử lý.');
+}
+
+// =========================================================================
+// KHỐI 4: ĐIỀU HƯỚNG MÀN HÌNH (GẮN KẾT VỚI INDEX.HTML)
+// =========================================================================
 function moTabPhanCong() {
-    // 1. Chuyển đổi trạng thái Active của thanh Menu
     thietLapMenuActive('menuPhanCong');
     
-    // 2. Chuyển đổi Khung hiển thị
-    document.getElementById('khungTKB').classList.replace('block', 'hidden');
-    document.getElementById('khungPhanCong').classList.replace('hidden', 'flex');
+    let khungTKB = document.getElementById('khungTKB');
+    if (khungTKB) khungTKB.classList.replace('block', 'hidden');
     
-    // Ẩn tab Thống kê (nếu đang bật)
+    let khungPC = document.getElementById('khungPhanCong');
+    if (khungPC) khungPC.classList.replace('hidden', 'flex');
+    
     let khungTK = document.getElementById('khungThongKe');
     if (khungTK) khungTK.classList.replace('block', 'hidden');
 
-    // 3. Tải lại dữ liệu nếu danh sách đang rỗng (đề phòng lỗi nạp lần đầu)
-    if (danhSachGV.length === 0 && typeof google !== 'undefined') {
-        google.script.run.withSuccessHandler(khoiTaoGiaoDienPhanCong).layDuLieuKhoiTao();
+    // Tự động tải dữ liệu khi giáo viên mở tab lần đầu
+    if (danhSachGV.length === 0) {
+        taiDuLieuPhanCongTuMayChu();
     }
 }
 
 function moTabTKB() {
-    // 1. Chuyển đổi trạng thái Active về Menu TKB
     thietLapMenuActive('menuTKB');
     
-    // 2. Tắt các khung khác, mở lại khung TKB
-    document.getElementById('khungPhanCong').classList.replace('flex', 'hidden');
+    let khungPC = document.getElementById('khungPhanCong');
+    if (khungPC) khungPC.classList.replace('flex', 'hidden');
+    
     let khungTK = document.getElementById('khungThongKe');
     if (khungTK) khungTK.classList.replace('block', 'hidden');
     
-    document.getElementById('khungTKB').classList.replace('hidden', 'block');
+    let khungTKB = document.getElementById('khungTKB');
+    if (khungTKB) khungTKB.classList.replace('hidden', 'block');
 }
 
-// Hàm hỗ trợ đổi CSS cho Menu
 function thietLapMenuActive(idKichHoat) {
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong'];
     cacMenu.forEach(id => {
