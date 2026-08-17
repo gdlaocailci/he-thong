@@ -16,6 +16,13 @@ function kiemSoatGiaoDien() {
         }
     });
 
+    // BỔ SUNG: Xử lý hiển thị Menu Phân công chuyên môn
+    let menuPC = document.getElementById('menuPhanCong');
+    if (menuPC) {
+        if (quyenSuaChua) { menuPC.style.display = 'block'; }
+        else { menuPC.style.display = 'none'; }
+    }
+
     // NÂNG CẤP: Khóa cụm nút Chuyển Tuần và Chọn Ngày đối với người không có quyền
     let btnTuanTruoc = document.querySelector('button[onclick="chuyenTuan(-1)"]');
     let btnTuanTiep = document.querySelector('button[onclick="chuyenTuan(1)"]');
