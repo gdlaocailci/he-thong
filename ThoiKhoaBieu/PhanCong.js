@@ -117,21 +117,25 @@ function tinhToanTietDay() {
     }
   });
 
-  // Tự động cấu trúc lại bảng thống kê, thêm vị trí relative cho khung chứa để cột cố định bám vào đúng ranh giới
-  let parentDiv = document.getElementById('duLieuThongKe').closest('.w-80');
-  if (parentDiv) {
-      parentDiv.classList.remove('w-80');
-      parentDiv.classList.add('w-[500px]', 'overflow-auto', 'relative');
+  // Tự động cấu trúc lại bảng thống kê, làm sạch class container
+  let containerThongKe = document.getElementById('duLieuThongKe').parentElement.parentElement;
+  if (containerThongKe) {
+      containerThongKe.className = 'w-[500px] overflow-auto border border-gray-400 shadow-sm bg-white flex-none relative';
   }
 
+  // NÂNG CẤP: Chuyển quyền quản lý Sticky từ thead xuống trực tiếp các thẻ th
   const theadThongKe = document.querySelector('#duLieuThongKe').previousElementSibling;
   if (theadThongKe) {
+      // Xóa sticky chung để chống lỗi dính mảng
+      theadThongKe.className = 'bg-purple-100 text-purple-900 shadow-sm';
+      
+      // Khóa giao điểm top-0 và left-0 cho ô Giáo viên (z-30)
       theadThongKe.innerHTML = `
         <tr>
-            <th class="py-1 px-2 border border-gray-400 bg-purple-200 text-slate-900 font-bold sticky left-0 z-30 shadow-[1px_0_0_0_#9ca3af]">Giáo viên</th>
-            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%]">Định mức</th>
-            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%]">Thực tế</th>
-            <th class="py-1 px-2 border border-gray-400 bg-purple-100 text-left w-auto">Chi tiết giảng dạy</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-200 text-slate-900 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#9ca3af]">Giáo viên</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%] sticky top-0 z-20 shadow-[0_1px_0_0_#9ca3af]">Định mức</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 w-[12%] sticky top-0 z-20 shadow-[0_1px_0_0_#9ca3af]">Thực tế</th>
+            <th class="py-1 px-2 border border-gray-400 bg-purple-100 text-left w-auto sticky top-0 z-20 shadow-[0_1px_0_0_#9ca3af]">Chi tiết giảng dạy</th>
         </tr>
       `;
   }
@@ -154,13 +158,13 @@ function tinhToanTietDay() {
     
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
     
-    // NÂNG CẤP: Thêm thuộc tính sticky left-0 z-20 và đường kẻ bóng mờ cho cột tên giáo viên
+    // Đảm bảo các ô ở tbody dùng border-b và border-r thủ công để kết hợp hoàn hảo với sticky
     tbodyThongKe += `
-      <tr class="${bgClass} border-b border-gray-300 transition-colors">
-        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300 whitespace-nowrap sticky left-0 z-20 bg-inherit shadow-[1px_0_0_0_#d1d5db]">${ten}</td>
-        <td class="py-1 px-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
-        <td class="py-1 px-2 ${textClass} text-base border-r border-gray-300">${soLieu.thucTe}</td>
-        <td class="py-1 px-2 text-left leading-tight whitespace-normal">${chiTietHienThi}</td>
+      <tr class="${bgClass} hover:bg-gray-50 transition-colors">
+        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-b border-r border-gray-300 whitespace-nowrap sticky left-0 z-10 bg-inherit shadow-[1px_0_0_0_#d1d5db]">${ten}</td>
+        <td class="py-1 px-2 font-bold text-slate-600 border-b border-r border-gray-300 text-center">${soLieu.dinhMuc}</td>
+        <td class="py-1 px-2 ${textClass} text-base border-b border-r border-gray-300 text-center">${soLieu.thucTe}</td>
+        <td class="py-1 px-2 text-left leading-tight whitespace-normal border-b border-gray-300">${chiTietHienThi}</td>
       </tr>
     `;
   }
