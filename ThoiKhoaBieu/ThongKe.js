@@ -271,7 +271,7 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
                         let soLan = thongTinTiet[khoa];
                         html += `<div class="inline-block bg-white border border-gray-300 rounded px-2 py-1 text-sm font-semibold shadow-sm mr-1 mb-1">
                                     <span class="text-blue-800">${khoa}</span> 
-                                    <span class="text-xs bg-red-100 text-red-700 px-1 rounded ml-1" title="Số lần dạy môn này tại tiết này">${soLan} lần</span>
+                                    <span class="text-xs bg-red-100 text-red-700 px-1 rounded ml-1" title="Số tiết dạy môn này tại tiết này">${soLan} tiết</span>
                                  </div>`;
                     }
                     html += `</td></tr>`;
