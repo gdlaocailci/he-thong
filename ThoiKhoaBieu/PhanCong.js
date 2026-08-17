@@ -61,3 +61,65 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   // Lần đầu chạy hàm thống kê hiển thị số tiết
   tinhToanTietDay();
 }
+
+// =========================================================================
+// KHỐI GIAO DIỆN: CHUYỂN TAB VÀ ĐIỀU HƯỚNG MÀN HÌNH
+// =========================================================================
+
+function moTabPhanCong() {
+    // 1. Chuyển đổi trạng thái Active của thanh Menu
+    thietLapMenuActive('menuPhanCong');
+    
+    // 2. Chuyển đổi Khung hiển thị
+    document.getElementById('khungTKB').classList.replace('block', 'hidden');
+    document.getElementById('khungPhanCong').classList.replace('hidden', 'flex');
+    
+    // Ẩn tab Thống kê (nếu đang bật)
+    let khungTK = document.getElementById('khungThongKe');
+    if (khungTK) khungTK.classList.replace('block', 'hidden');
+
+    // 3. Tải lại dữ liệu nếu danh sách đang rỗng (đề phòng lỗi nạp lần đầu)
+    if (danhSachGV.length === 0 && typeof google !== 'undefined') {
+        google.script.run.withSuccessHandler(khoiTaoGiaoDienPhanCong).layDuLieuKhoiTao();
+    }
+}
+
+function moTabTKB() {
+    // 1. Chuyển đổi trạng thái Active về Menu TKB
+    thietLapMenuActive('menuTKB');
+    
+    // 2. Tắt các khung khác, mở lại khung TKB
+    document.getElementById('khungPhanCong').classList.replace('flex', 'hidden');
+    let khungTK = document.getElementById('khungThongKe');
+    if (khungTK) khungTK.classList.replace('block', 'hidden');
+    
+    document.getElementById('khungTKB').classList.replace('hidden', 'block');
+}
+
+// Hàm hỗ trợ đổi CSS cho Menu
+function thietLapMenuActive(idKichHoat) {
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong'];
+    cacMenu.forEach(id => {
+        let m = document.getElementById(id);
+        if (m) {
+            m.classList.remove('bg-menu-hover', 'border-menu-active');
+            m.classList.add('border-transparent');
+            let span = m.querySelector('span');
+            if (span) {
+                span.classList.remove('text-menu-active');
+                span.classList.add('text-white');
+            }
+        }
+    });
+    
+    let mActive = document.getElementById(idKichHoat);
+    if (mActive) {
+        mActive.classList.remove('border-transparent');
+        mActive.classList.add('bg-menu-hover', 'border-menu-active');
+        let spanActive = mActive.querySelector('span');
+        if (spanActive) { 
+            spanActive.classList.remove('text-white'); 
+            spanActive.classList.add('text-menu-active'); 
+        }
+    }
+}
