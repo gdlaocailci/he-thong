@@ -219,7 +219,7 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN (KIẾN TRÚC BORDER-SEPARATE HIỆN ĐẠI)
+// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN (KIẾN TRÚC INLINE-STICKY TỐI THƯỢNG)
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
@@ -245,7 +245,9 @@ function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang'); 
     const tbody = document.getElementById('vungHienThiDuLieu');
     
-    // NÂNG CẤP CỐT LÕI: Chuyển bảng sang chế độ separate để lưới viền dính chặt vào ô, chống rách/thủng
+    // Xóa bỏ class cấu hình cũ của HTML để giải phóng không gian z-index
+    if(thead) thead.className = ''; 
+
     const tableEl = document.querySelector('.bang-excel');
     if (tableEl) {
         tableEl.style.borderCollapse = 'separate';
@@ -270,22 +272,22 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-    // XÂY DỰNG HEADER VỚI Z-INDEX CHUẨN VÀ ĐIỀU HƯỚNG BORDER
+    // NÂNG CẤP: Dùng Inline Style (CSS trực tiếp) để ép cứng tọa độ và phân lớp không gian
     let theadHTML = `<tr style="height: 45px;">
-        <th rowspan="2" class="sticky top-0 left-0 z-[60] bg-slate-100 text-center font-bold align-middle w-[85px] min-w-[85px] border-t border-b border-l border-r border-slate-400" style="font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
-        <th rowspan="2" class="sticky top-0 left-[85px] z-[60] bg-slate-100 text-center font-bold align-middle w-[60px] min-w-[60px] border-t border-b border-r border-slate-400" style="font-family:'Times New Roman',Times,serif;">Buổi</th>
+        <th rowspan="2" class="text-center font-bold align-middle border-t border-b border-l border-r border-slate-400" style="position: sticky; top: 0; left: 0; z-index: 60; background-color: #f1f5f9; width: 85px; min-width: 85px; font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
+        <th rowspan="2" class="text-center font-bold align-middle border-t border-b border-r border-slate-400" style="position: sticky; top: 0; left: 85px; z-index: 60; background-color: #f1f5f9; width: 60px; min-width: 60px; font-family:'Times New Roman',Times,serif;">Buổi</th>
         <th rowspan="2" class="hidden">Tuần</th>
         <th rowspan="2" class="hidden">Tháng</th>
         <th rowspan="2" class="hidden">Năm học</th>
-        <th rowspan="2" class="sticky top-0 left-[145px] z-[60] bg-slate-100 text-center font-bold align-middle w-[50px] min-w-[50px] border-t border-b border-r border-slate-400 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]" style="font-family:'Times New Roman',Times,serif;">Tiết</th>`;
+        <th rowspan="2" class="text-center font-bold align-middle border-t border-b border-r border-slate-400" style="position: sticky; top: 0; left: 145px; z-index: 60; background-color: #f1f5f9; width: 50px; min-width: 50px; box-shadow: 3px 0 5px -2px rgba(0,0,0,0.15); font-family:'Times New Roman',Times,serif;">Tiết</th>`;
     
     mangLop.forEach(lop => { 
-        theadHTML += `<th colspan="2" class="sticky top-0 z-[50] text-center font-extrabold bg-slate-100 text-slate-900 tracking-widest border-t border-b border-r border-slate-400" style="font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
+        theadHTML += `<th colspan="2" class="text-center font-extrabold text-slate-900 tracking-widest border-t border-b border-r border-slate-400" style="position: sticky; top: 0; z-index: 50; background-color: #f1f5f9; font-family:'Times New Roman',Times,serif;">${lop}</th>`; 
     });
     theadHTML += `</tr><tr style="height: 40px;">`;
     mangLop.forEach(() => { 
-        theadHTML += `<th class="sticky z-[50] text-center font-bold bg-slate-50 text-slate-800 min-w-[120px] border-b border-r border-slate-400" style="top: 45px; font-family:'Times New Roman',Times,serif;">Môn</th>
-                      <th class="sticky z-[50] text-center font-bold bg-slate-50 text-slate-800 min-w-[105px] border-b border-r border-slate-400" style="top: 45px; font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
+        theadHTML += `<th class="text-center font-bold text-slate-800 border-b border-r border-slate-400" style="position: sticky; top: 45px; z-index: 50; background-color: #f8fafc; min-width: 120px; font-family:'Times New Roman',Times,serif;">Môn</th>
+                      <th class="text-center font-bold text-slate-800 border-b border-r border-slate-400" style="position: sticky; top: 45px; z-index: 50; background-color: #f8fafc; min-width: 105px; font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
     });
     theadHTML += `</tr>`; 
     thead.innerHTML = theadHTML;
@@ -335,8 +337,9 @@ function xuatMaTranBang(danhSachTiet) {
             danhSachTietCuaBuoi.forEach(tiet => {
                 tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group" style="font-family:'Times New Roman',Times,serif;">`;
                 
+                // NÂNG CẤP: Inline style cho các cột dọc
                 if (inCotThu) { 
-                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="sticky left-0 z-[40] bg-white text-center align-middle border-b border-l border-r border-slate-300">
+                    tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center align-middle border-b border-l border-r border-slate-300" style="position: sticky; left: 0; z-index: 40; background-color: #ffffff;">
                                     <div class="font-extrabold text-slate-900">${thu}</div>
                                     <div class="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 mt-1 inline-block">${thongTinNgay.hienThi}</div>
                                   </td>`; 
@@ -344,7 +347,7 @@ function xuatMaTranBang(danhSachTiet) {
                 }
                 
                 if (inCotBuoi) { 
-                    tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="sticky left-[85px] z-[40] bg-white text-center font-bold align-middle text-slate-800 border-b border-r border-slate-300">${buoi}</td>`; 
+                    tbodyHTML += `<td rowspan="${soDongCuaBuoi}" class="text-center font-bold align-middle text-slate-800 border-b border-r border-slate-300" style="position: sticky; left: 85px; z-index: 40; background-color: #ffffff;">${buoi}</td>`; 
                     inCotBuoi = false; 
                 }
 
@@ -363,7 +366,7 @@ function xuatMaTranBang(danhSachTiet) {
                 tbodyHTML += `<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="hidden text-center font-bold text-red-600 align-middle">${valThang}</td>`;
                 tbodyHTML += `<td id="uiNam_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle">${valNam}</td>`;
                 
-                tbodyHTML += `<td class="sticky left-[145px] z-[40] bg-white text-center font-bold text-slate-800 align-middle border-b border-r border-slate-300 shadow-[3px_0_5px_-2px_rgba(0,0,0,0.15)]">${tiet}</td>`;
+                tbodyHTML += `<td class="text-center font-bold text-slate-800 align-middle border-b border-r border-slate-300" style="position: sticky; left: 145px; z-index: 40; background-color: #ffffff; box-shadow: 3px 0 5px -2px rgba(0,0,0,0.15);">${tiet}</td>`;
 
                 mangLop.forEach(lop => {
                     const duLieuO = luoiDuLieu[thu][buoi][tiet] ? luoiDuLieu[thu][buoi][tiet][lop] : null;
@@ -381,7 +384,6 @@ function xuatMaTranBang(danhSachTiet) {
                     let dropdownMon = taoTuyChonDong(thongSoHocVu.DANH_SACH_MON_HOC, monGoc, textClass, idMon, isTarget);
                     let dropdownGV = taoTuyChonDong(thongSoHocVu.DANH_SACH_GIAO_VIEN, gvGoc, textClass, idGv, isTarget);
 
-                    // Xóa class mờ ám, trả về các thuộc tính border tiêu chuẩn
                     tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} border-b border-r border-slate-300 transition-all duration-300">${dropdownMon}</td>`;
                     tbodyHTML += `<td class="text-center p-0 align-middle ${bgLop} border-b border-r border-slate-300 transition-all duration-300">${dropdownGV}</td>`;
                 });
