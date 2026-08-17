@@ -202,6 +202,10 @@ async function xuLyLuuTru() {
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
     
+    // Ẩn thanh công cụ của TKB
+    let thanhCongCu = document.getElementById('thanhCongCuTKB');
+    if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
+    
     let khungTKB = document.getElementById('khungTKB');
     if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
     
@@ -217,6 +221,10 @@ function moTabPhanCong() {
 function moTabTKB() {
     thietLapMenuActive('menuTKB');
     
+    // Hiện lại thanh công cụ của TKB
+    let thanhCongCu = document.getElementById('thanhCongCuTKB');
+    if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
+    
     let khungPC = document.getElementById('khungPhanCong');
     if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
     
@@ -227,30 +235,30 @@ function moTabTKB() {
     if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
 }
 
-// NÂNG CẤP 1: Ghi đè trực tiếp hàm mở tab Thống kê của ThongKe.js 
 window.moTabThongKe = function() {
     thietLapMenuActive('menuThongKe');
+    
+    // Ẩn thanh công cụ của TKB
+    let thanhCongCu = document.getElementById('thanhCongCuTKB');
+    if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
     
     let khungTKB = document.getElementById('khungTKB');
     if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
     
     let khungPC = document.getElementById('khungPhanCong');
-    if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); } // Ép tắt tab phân công
+    if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
     
     let khungTK = document.getElementById('khungThongKe');
     if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
 };
 
-// NÂNG CẤP 2: Chuyển hướng dự phòng cho nút TKB nếu file index.html vẫn giữ lệnh cũ
 window.dongTabThongKe = moTabTKB;
 
-// NÂNG CẤP 3: Quét và làm sạch class mạnh mẽ hơn, dùng remove/add thay vì replace để tránh kẹt trạng thái
 function thietLapMenuActive(idKichHoat) {
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
-            // Xóa sạch các màu đang sáng
             m.classList.remove('bg-menu-hover', 'border-menu-active');
             m.classList.add('border-transparent');
             let span = m.querySelector('span');
@@ -261,7 +269,6 @@ function thietLapMenuActive(idKichHoat) {
         }
     });
     
-    // Chỉ bật sáng duy nhất tab được chọn
     let mActive = document.getElementById(idKichHoat);
     if (mActive) {
         mActive.classList.remove('border-transparent');
