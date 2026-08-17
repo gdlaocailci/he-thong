@@ -196,60 +196,65 @@ async function xuLyLuuTru() {
 }
 
 // =========================================================================
-// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC (GHI ĐÈ CÁC HÀM CŨ ĐỂ ĐỒNG BỘ 3 TAB)
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC (TỐI ƯU HÓA CHỐNG GIẬT LAG)
 // =========================================================================
 
 function moTabPhanCong() {
+    // 1. Thay đổi UI thanh menu ngay lập tức để tạo cảm giác phản hồi mượt mà
     thietLapMenuActive('menuPhanCong');
     
-    // Ẩn thanh công cụ của TKB
-    let thanhCongCu = document.getElementById('thanhCongCuTKB');
-    if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
-    
-    let khungTKB = document.getElementById('khungTKB');
-    if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
-    
-    let khungTK = document.getElementById('khungThongKe');
-    if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
-    
-    let khungPC = document.getElementById('khungPhanCong');
-    if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
+    // 2. Đẩy các tác vụ nặng (render hàng nghìn thẻ DOM) vào hàng đợi để không khóa trình duyệt
+    setTimeout(() => {
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
+        
+        let khungTKB = document.getElementById('khungTKB');
+        if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
+        
+        let khungTK = document.getElementById('khungThongKe');
+        if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
+        
+        let khungPC = document.getElementById('khungPhanCong');
+        if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
 
-    if (danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
+        if (danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
+    }, 15); // Độ trễ 15ms đủ để trình duyệt vẽ xong màu Menu
 }
 
 function moTabTKB() {
     thietLapMenuActive('menuTKB');
     
-    // Hiện lại thanh công cụ của TKB
-    let thanhCongCu = document.getElementById('thanhCongCuTKB');
-    if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
-    
-    let khungPC = document.getElementById('khungPhanCong');
-    if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
-    
-    let khungTK = document.getElementById('khungThongKe');
-    if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
-    
-    let khungTKB = document.getElementById('khungTKB');
-    if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
+    setTimeout(() => {
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
+        
+        let khungPC = document.getElementById('khungPhanCong');
+        if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
+        
+        let khungTK = document.getElementById('khungThongKe');
+        if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
+        
+        let khungTKB = document.getElementById('khungTKB');
+        if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
+    }, 15);
 }
 
 window.moTabThongKe = function() {
     thietLapMenuActive('menuThongKe');
     
-    // Ẩn thanh công cụ của TKB
-    let thanhCongCu = document.getElementById('thanhCongCuTKB');
-    if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
-    
-    let khungTKB = document.getElementById('khungTKB');
-    if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
-    
-    let khungPC = document.getElementById('khungPhanCong');
-    if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
-    
-    let khungTK = document.getElementById('khungThongKe');
-    if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
+    setTimeout(() => {
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
+        
+        let khungTKB = document.getElementById('khungTKB');
+        if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
+        
+        let khungPC = document.getElementById('khungPhanCong');
+        if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
+        
+        let khungTK = document.getElementById('khungThongKe');
+        if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
+    }, 15);
 };
 
 window.dongTabThongKe = moTabTKB;
