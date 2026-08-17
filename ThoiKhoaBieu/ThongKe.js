@@ -239,26 +239,25 @@ async function goiTraCuuThongKe() {
     }
 }
 
-// Giao diện Tổng hợp Toàn trường (Cố định đầu bảng)
+// Giao diện Tổng hợp Toàn trường (Cố định đầu bảng & Ép sát dòng tối đa)
 function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
 
-    // Tách riêng khối tiêu đề (Không cuộn)
     let html = `<div class="flex-none p-4 pb-2 bg-white z-30 relative shadow-sm border-b border-gray-300">
                     <h2 class="text-xl font-bold text-center text-blue-900 uppercase tracking-wide">${tDe}</h2>
                 </div>`;
     
-    // Khối Bảng (Có thanh cuộn riêng và Tiêu đề bảng ghim cố định)
+    // NÂNG CẤP 1: Bổ sung class 'h-fit' vào table để ngăn bảng tự giãn chiều cao lấp đầy màn hình
     html += `<div class="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
-                <table class="w-full text-sm border-collapse border border-gray-400 bg-white">
+                <table class="w-full h-fit text-sm border-collapse border border-gray-400 bg-white">
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
                         <tr>
-                            <th class="border border-gray-400 p-2 bg-slate-200 text-center">Giáo viên</th>
-                            <th class="border border-gray-400 p-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
-                            <th class="border border-gray-400 p-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
-                            <th class="border border-gray-400 p-2 bg-green-100 text-green-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng số tiết</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center">Giáo viên</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-green-100 text-green-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng số tiết</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -274,11 +273,13 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let dsGv = Object.keys(tongHopGv).sort();
     dsGv.forEach(gv => {
         let th = tongHopGv[gv];
+        
+        // NÂNG CẤP 2: Thay thế p-2 bằng py-0.5 px-2 (giảm đệm dọc xuống gần bằng 0)
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
-                    <td class="border border-gray-400 p-2 font-bold text-slate-800">${gv}</td>
-                    <td class="border border-gray-400 p-2 w-[1%] whitespace-nowrap">${th.sang}</td>
-                    <td class="border border-gray-400 p-2 w-[1%] whitespace-nowrap">${th.chieu}</td>
-                    <td class="border border-gray-400 p-2 font-extrabold text-green-700 text-base w-[1%] whitespace-nowrap">${th.tong}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 font-extrabold text-green-700 text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
                  </tr>`;
     });
     html += `</tbody></table></div>`;
