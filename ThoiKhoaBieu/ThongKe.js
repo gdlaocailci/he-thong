@@ -83,24 +83,58 @@ function dungGiaoDienThongKe() {
 document.addEventListener('DOMContentLoaded', () => { dungGiaoDienThongKe(); });
 
 // =========================================================================
-// KHỐI 2: ĐIỀU KHIỂN LOGIC TAB VÀ MENU
+// KHỐI 2: ĐIỀU KHIỂN LOGIC TAB VÀ CHUYỂN ĐỔI MÀU MENU
 // =========================================================================
 function moTabThongKe() {
     let tabTk = document.getElementById('tabThongKe');
     if (tabTk) {
         tabTk.classList.remove('hidden');
         tabTk.classList.add('flex');
+        // Nếu cây thư mục trống thì tải dữ liệu
         if (Object.keys(cayDanhMucThongKe).length === 0) {
             taiCayDanhMucThongKe();
         }
+    }
+    
+    // Bật màu xanh cho tab Thống Kê, tắt màu tab TKB
+    let mnuTKB = document.getElementById('menuTKB');
+    let mnuTK = document.getElementById('menuThongKe');
+    if (mnuTKB) {
+        mnuTKB.classList.replace('bg-menu-hover', 'hover:bg-menu-hover');
+        mnuTKB.classList.replace('border-menu-active', 'border-transparent');
+        mnuTKB.querySelector('span').classList.replace('text-menu-active', 'text-white');
+        mnuTKB.querySelector('img').classList.add('opacity-80');
+    }
+    if (mnuTK) {
+        mnuTK.classList.replace('hover:bg-menu-hover', 'bg-menu-hover');
+        mnuTK.classList.replace('border-transparent', 'border-menu-active');
+        mnuTK.querySelector('span').classList.replace('text-white', 'text-menu-active');
+        mnuTK.querySelector('img').classList.remove('opacity-80');
     }
 }
 
 function dongTabThongKe() {
     let tabTk = document.getElementById('tabThongKe');
     if (tabTk) {
+        // Ẩn phân hệ thống kê, hiện lại TKB
         tabTk.classList.add('hidden');
         tabTk.classList.remove('flex');
+    }
+    
+    // Bật lại màu xanh cho tab TKB, tắt màu tab Thống kê
+    let mnuTKB = document.getElementById('menuTKB');
+    let mnuTK = document.getElementById('menuThongKe');
+    if (mnuTKB) {
+        mnuTKB.classList.replace('hover:bg-menu-hover', 'bg-menu-hover');
+        mnuTKB.classList.replace('border-transparent', 'border-menu-active');
+        mnuTKB.querySelector('span').classList.replace('text-white', 'text-menu-active');
+        mnuTKB.querySelector('img').classList.remove('opacity-80');
+    }
+    if (mnuTK) {
+        mnuTK.classList.replace('bg-menu-hover', 'hover:bg-menu-hover');
+        mnuTK.classList.replace('border-menu-active', 'border-transparent');
+        mnuTK.querySelector('span').classList.replace('text-menu-active', 'text-white');
+        mnuTK.querySelector('img').classList.add('opacity-80');
     }
 }
 
