@@ -170,7 +170,7 @@ function xuLyDoiThangTk() {
 }
 
 // =========================================================================
-// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
+// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (BẢN SỬA LỖI LỌC TOÀN TRƯỜNG)
 // =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
@@ -178,8 +178,10 @@ async function goiTraCuuThongKe() {
     let tuan = document.getElementById('inputTuanTk').value.replace('Tuần ', '').trim();
     let giaoVien = document.getElementById('inputGiaoVienTk').value.trim();
 
+    // BẪY LỖI QUAN TRỌNG: Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
     if (thang === "Cả năm") thang = "";
     if (tuan === "Tất cả các tuần") tuan = "";
+    if (giaoVien === "Toàn trường") giaoVien = ""; // <-- Lệnh sửa lỗi ở đây
 
     const vungKetQua = document.getElementById('vungKetQuaThongKe');
     vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
@@ -188,10 +190,12 @@ async function goiTraCuuThongKe() {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
         let ketQua = await phanHoi.json();
         
-        if (giaoVien === "Toàn trường" || giaoVien === "") {
+        // Lấy lại giá trị gốc trên giao diện để quyết định hàm vẽ biểu đồ
+        let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
+        if (kieuGv === "Toàn trường" || kieuGv === "") {
             veBangThongKeToanTruong(ketQua, namHoc, thang, tuan);
         } else {
-            veMaTranThongKeCaNhan(ketQua, giaoVien, namHoc, thang, tuan);
+            veMaTranThongKeCaNhan(ketQua, kieuGv, namHoc, thang, tuan);
         }
     } catch (loi) {
         vungKetQua.innerHTML = `<div class="mt-20 text-center text-red-500 font-bold">Lỗi kết nối máy chủ dữ liệu.</div>`;
