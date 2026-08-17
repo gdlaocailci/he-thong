@@ -196,43 +196,61 @@ async function xuLyLuuTru() {
 }
 
 // =========================================================================
-// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH (GẮN KẾT VỚI INDEX.HTML)
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC (GHI ĐÈ CÁC HÀM CŨ ĐỂ ĐỒNG BỘ 3 TAB)
 // =========================================================================
+
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
     
     let khungTKB = document.getElementById('khungTKB');
-    if (khungTKB) khungTKB.classList.replace('block', 'hidden');
-    
-    let khungPC = document.getElementById('khungPhanCong');
-    if (khungPC) khungPC.classList.replace('hidden', 'flex');
+    if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
     
     let khungTK = document.getElementById('khungThongKe');
-    if (khungTK) khungTK.classList.replace('block', 'hidden');
+    if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
+    
+    let khungPC = document.getElementById('khungPhanCong');
+    if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
 
-    if (danhSachGV.length === 0) {
-        taiDuLieuPhanCongTuMayChu();
-    }
+    if (danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
 }
 
 function moTabTKB() {
     thietLapMenuActive('menuTKB');
     
     let khungPC = document.getElementById('khungPhanCong');
-    if (khungPC) khungPC.classList.replace('flex', 'hidden');
+    if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
     
     let khungTK = document.getElementById('khungThongKe');
-    if (khungTK) khungTK.classList.replace('block', 'hidden');
+    if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
     
     let khungTKB = document.getElementById('khungTKB');
-    if (khungTKB) khungTKB.classList.replace('hidden', 'block');
+    if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
 }
 
+// NÂNG CẤP 1: Ghi đè trực tiếp hàm mở tab Thống kê của ThongKe.js 
+window.moTabThongKe = function() {
+    thietLapMenuActive('menuThongKe');
+    
+    let khungTKB = document.getElementById('khungTKB');
+    if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
+    
+    let khungPC = document.getElementById('khungPhanCong');
+    if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); } // Ép tắt tab phân công
+    
+    let khungTK = document.getElementById('khungThongKe');
+    if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
+};
+
+// NÂNG CẤP 2: Chuyển hướng dự phòng cho nút TKB nếu file index.html vẫn giữ lệnh cũ
+window.dongTabThongKe = moTabTKB;
+
+// NÂNG CẤP 3: Quét và làm sạch class mạnh mẽ hơn, dùng remove/add thay vì replace để tránh kẹt trạng thái
 function thietLapMenuActive(idKichHoat) {
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
+            // Xóa sạch các màu đang sáng
             m.classList.remove('bg-menu-hover', 'border-menu-active');
             m.classList.add('border-transparent');
             let span = m.querySelector('span');
@@ -243,6 +261,7 @@ function thietLapMenuActive(idKichHoat) {
         }
     });
     
+    // Chỉ bật sáng duy nhất tab được chọn
     let mActive = document.getElementById(idKichHoat);
     if (mActive) {
         mActive.classList.remove('border-transparent');
