@@ -31,26 +31,24 @@ async function taiDuLieuPhanCongTuMayChu() {
 // =========================================================================
 function khoiTaoGiaoDienPhanCong(duLieuSever) {
   danhSachGV = duLieuSever.giaoVien || [];
-  khungChuongTrinhToanTruong = duLieuSever.khungChuongTrinh || {}; // Nạp cấu hình số tiết
+  khungChuongTrinhToanTruong = duLieuSever.khungChuongTrinh || {}; 
   
-  // 1. Render Header Bảng Phân công
-  let headerHtml = '<tr><th class="p-2 border border-gray-400 bg-slate-200 sticky left-0 z-30 min-w-[80px]">Mã Lớp</th>';
+  // NÂNG CẤP: Đổi p-2 thành py-1 px-2 để giảm chiều cao tiêu đề bảng
+  let headerHtml = '<tr><th class="py-1 px-2 border border-gray-400 bg-slate-200 sticky left-0 z-30 min-w-[80px]">Mã Lớp</th>';
   if (duLieuSever.monHoc) {
       duLieuSever.monHoc.forEach(mon => {
-        headerHtml += `<th class="p-2 border border-gray-400 min-w-[120px]">${mon}</th>`;
+        headerHtml += `<th class="py-1 px-2 border border-gray-400 min-w-[120px]">${mon}</th>`;
       });
   }
   headerHtml += '</tr>';
   document.getElementById('tieuDeMonHoc').innerHTML = headerHtml;
 
-  // 2. Chuẩn bị Options cho Dropdown Giáo viên
   let bodyHtml = '';
   let optionsGV = `<option value=""></option>`;
   danhSachGV.forEach(gv => {
     optionsGV += `<option value="${gv.hoTen}">${gv.hoTen}</option>`;
   });
 
-  // 3. Tạo object tra cứu nhanh dữ liệu phân công đã lưu theo Mã Lớp
   let mapPhanCongDaLuu = {};
   if (duLieuSever.phanCong && duLieuSever.phanCong.length > 0) {
     for (let i = 1; i < duLieuSever.phanCong.length; i++) {
@@ -62,11 +60,11 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
     }
   }
 
-  // 4. Render Grid lấy danh sách Mã Lớp
   if (duLieuSever.maLop) {
       duLieuSever.maLop.forEach(maLop => {
+        // NÂNG CẤP: Đổi p-2 thành py-1 px-2 ở cột Mã lớp
         bodyHtml += `<tr class="hover:bg-slate-50 transition-colors duration-150 group">
-                        <td class="p-2 border border-gray-400 font-extrabold text-slate-900 bg-white sticky left-0 z-10 group-hover:bg-slate-50">${maLop}</td>`;
+                        <td class="py-1 px-2 border border-gray-400 font-extrabold text-slate-900 bg-white sticky left-0 z-10 group-hover:bg-slate-50">${maLop}</td>`;
         
         let duLieuCuCuaLop = mapPhanCongDaLuu[maLop] || [];
 
@@ -75,9 +73,9 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
           let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
           let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
           
-          // Gắn bộ đệm dữ liệu (data-lop, data-mon) để tra cứu Khung Chương Trình khi tính số tiết
+          // NÂNG CẤP: Giảm min-h-[35px] xuống min-h-[26px] để thu hẹp thẻ select
           bodyHtml += `<td class="p-0 border border-gray-400 transition-all duration-300 bg-white group-hover:bg-slate-50">
-                          <select data-lop="${maLop}" data-mon="${tenMon}" onchange="tinhToanTietDay()" class="w-full h-full min-h-[35px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
+                          <select data-lop="${maLop}" data-mon="${tenMon}" onchange="tinhToanTietDay()" class="w-full h-full min-h-[26px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
                               ${selectedOptions}
                           </select>
                        </td>`;
@@ -87,8 +85,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   }
   
   document.getElementById('duLieuLopHoc').innerHTML = bodyHtml;
-  
-  // Tính toán định mức ngay sau khi render xong
   tinhToanTietDay();
 }
 
@@ -103,12 +99,10 @@ function tinhToanTietDay() {
   cacTheSelect.forEach(sl => {
     let tenGV = sl.value;
     if (tenGV && thongKe[tenGV]) {
-      // Nhận diện không gian lưu trữ: Lớp nào, Môn nào
       let tenLop = sl.getAttribute('data-lop');
       let tenMon = sl.getAttribute('data-mon');
       let tenKhoi = "Khoi" + tenLop.charAt(0);
       
-      // Tra cứu số tiết thực tế trong Khung chương trình thay vì cộng 1
       let soTiet = 0;
       if (khungChuongTrinhToanTruong[tenKhoi] && khungChuongTrinhToanTruong[tenKhoi][tenMon]) {
           soTiet = parseInt(khungChuongTrinhToanTruong[tenKhoi][tenMon]) || 0;
@@ -122,11 +116,12 @@ function tinhToanTietDay() {
     let textClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'text-red-600 font-extrabold' : 'text-blue-700 font-bold';
     let bgClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'bg-red-50' : 'bg-white';
     
+    // NÂNG CẤP: Đổi p-2 thành py-1 px-2 và điều chỉnh text-lg thành text-base ở cột thực tế
     tbodyThongKe += `
       <tr class="${bgClass} border-b border-gray-300 hover:bg-gray-50 transition-colors">
-        <td class="p-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300">${ten}</td>
-        <td class="p-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
-        <td class="p-2 ${textClass} text-lg">${soLieu.thucTe}</td>
+        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-r border-gray-300">${ten}</td>
+        <td class="py-1 px-2 font-bold text-slate-600 border-r border-gray-300">${soLieu.dinhMuc}</td>
+        <td class="py-1 px-2 ${textClass} text-base">${soLieu.thucTe}</td>
       </tr>
     `;
   }
