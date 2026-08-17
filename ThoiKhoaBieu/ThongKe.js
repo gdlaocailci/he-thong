@@ -204,7 +204,7 @@ function xuLyDoiThangTk() {
 }
 
 // =========================================================================
-// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (BẢN SỬA LỖI LỌC TOÀN TRƯỜNG)
+// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (CỐ ĐỊNH & THU HẸP TỐI ĐA)
 // =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
@@ -212,19 +212,22 @@ async function goiTraCuuThongKe() {
     let tuan = document.getElementById('inputTuanTk').value.replace('Tuần ', '').trim();
     let giaoVien = document.getElementById('inputGiaoVienTk').value.trim();
 
-    // BẪY LỖI QUAN TRỌNG: Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
+    // BẪY LỖI: Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
     if (thang === "Cả năm") thang = "";
     if (tuan === "Tất cả các tuần") tuan = "";
-    if (giaoVien === "Toàn trường") giaoVien = ""; // <-- Lệnh sửa lỗi ở đây
+    if (giaoVien === "Toàn trường") giaoVien = ""; 
 
     const vungKetQua = document.getElementById('vungKetQuaThongKe');
-    vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
+    
+    // Tinh chỉnh CSS của container cha để hỗ trợ thanh cuộn độc lập cho bảng
+    vungKetQua.classList.remove('p-4', 'overflow-auto');
+    vungKetQua.classList.add('p-0', 'overflow-hidden');
+    vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
 
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
         let ketQua = await phanHoi.json();
         
-        // Lấy lại giá trị gốc trên giao diện để quyết định hàm vẽ biểu đồ
         let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
         if (kieuGv === "Toàn trường" || kieuGv === "") {
             veBangThongKeToanTruong(ketQua, namHoc, thang, tuan);
@@ -232,20 +235,34 @@ async function goiTraCuuThongKe() {
             veMaTranThongKeCaNhan(ketQua, kieuGv, namHoc, thang, tuan);
         }
     } catch (loi) {
-        vungKetQua.innerHTML = `<div class="mt-20 text-center text-red-500 font-bold">Lỗi kết nối máy chủ dữ liệu.</div>`;
+        vungKetQua.innerHTML = `<div class="mt-20 text-center text-red-500 font-bold w-full">Lỗi kết nối máy chủ dữ liệu.</div>`;
     }
 }
 
-// Giao diện Tổng hợp Toàn trường
+// Giao diện Tổng hợp Toàn trường (Cố định đầu bảng)
 function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
 
-    let html = `<h2 class="text-xl font-bold text-center text-blue-900 mb-4 uppercase tracking-wide">${tDe}</h2>`;
-    html += `<table class="w-full text-sm border-collapse border border-gray-400"><thead class="bg-slate-200"><tr><th class="border border-gray-400 p-2">Giáo viên</th><th class="border border-gray-400 p-2">Số tiết Sáng</th><th class="border border-gray-400 p-2">Số tiết Chiều</th><th class="border border-gray-400 p-2 bg-green-100 text-green-900 font-extrabold text-base">Tổng số tiết</th></tr></thead><tbody>`;
+    // Tách riêng khối tiêu đề (Không cuộn)
+    let html = `<div class="flex-none p-4 pb-2 bg-white z-30 relative shadow-sm border-b border-gray-300">
+                    <h2 class="text-xl font-bold text-center text-blue-900 uppercase tracking-wide">${tDe}</h2>
+                </div>`;
     
-    // Gom nhóm dữ liệu theo Giáo viên
+    // Khối Bảng (Có thanh cuộn riêng và Tiêu đề bảng ghim cố định)
+    html += `<div class="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
+                <table class="w-full text-sm border-collapse border border-gray-400 bg-white">
+                    <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
+                        <tr>
+                            <th class="border border-gray-400 p-2 bg-slate-200 text-center">Giáo viên</th>
+                            <th class="border border-gray-400 p-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
+                            <th class="border border-gray-400 p-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
+                            <th class="border border-gray-400 p-2 bg-green-100 text-green-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng số tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+    
     let tongHopGv = {};
     duLieu.forEach(t => {
         if (!tongHopGv[t.maGv]) tongHopGv[t.maGv] = { sang: 0, chieu: 0, tong: 0 };
@@ -257,26 +274,36 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let dsGv = Object.keys(tongHopGv).sort();
     dsGv.forEach(gv => {
         let th = tongHopGv[gv];
-        html += `<tr class="hover:bg-slate-50 text-center"><td class="border border-gray-400 p-2 font-bold text-slate-800">${gv}</td><td class="border border-gray-400 p-2">${th.sang}</td><td class="border border-gray-400 p-2">${th.chieu}</td><td class="border border-gray-400 p-2 font-extrabold text-green-700 text-base">${th.tong}</td></tr>`;
+        html += `<tr class="hover:bg-slate-50 text-center transition-colors">
+                    <td class="border border-gray-400 p-2 font-bold text-slate-800">${gv}</td>
+                    <td class="border border-gray-400 p-2 w-[1%] whitespace-nowrap">${th.sang}</td>
+                    <td class="border border-gray-400 p-2 w-[1%] whitespace-nowrap">${th.chieu}</td>
+                    <td class="border border-gray-400 p-2 font-extrabold text-green-700 text-base w-[1%] whitespace-nowrap">${th.tong}</td>
+                 </tr>`;
     });
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
     document.getElementById('vungKetQuaThongKe').innerHTML = html;
 }
 
-// Giao diện Ma trận Tần suất Cá nhân
+// Giao diện Ma trận Tần suất Cá nhân (Cố định & Thu hẹp tối đa)
 function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
     let tDe = `Lịch Trình Giảng Dạy: <span class="text-red-600">${gv}</span>`;
-    let html = `<h2 class="text-xl font-bold text-center text-blue-900 mb-4 uppercase tracking-wide">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>`;
+    
+    // Tách riêng khối tiêu đề và Thẻ Tổng số tiết (Không cuộn)
+    let html = `<div class="flex-none p-4 bg-white z-30 relative shadow-sm border-b border-gray-300">
+                    <h2 class="text-xl font-bold text-center text-blue-900 mb-4 uppercase tracking-wide">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
+                    <div class="flex justify-center">
+                        <div class="bg-blue-50 border border-blue-200 rounded shadow-sm px-8 py-3 text-center">
+                            <p class="text-sm font-bold text-blue-700">TỔNG SỐ TIẾT ĐÃ DẠY</p>
+                            <p class="text-3xl font-extrabold text-blue-900">${duLieu.length}</p>
+                        </div>
+                    </div>
+                </div>`;
 
-    let tongSoTiet = duLieu.length;
-    html += `<div class="flex justify-center mb-6"><div class="bg-blue-50 border border-blue-200 rounded shadow-sm px-6 py-3 text-center"><p class="text-sm font-bold text-blue-700">TỔNG SỐ TIẾT ĐÃ DẠY</p><p class="text-3xl font-extrabold text-blue-900">${tongSoTiet}</p></div></div>`;
-
-    // Cấu trúc lưới ma trận
     let luoi = {};
     let thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
     thuMacDinh.forEach(thu => { luoi[thu] = { "Sáng": {}, "Chiều": {} }; });
 
-    // Nhồi dữ liệu và gộp (đếm tần suất)
     duLieu.forEach(t => {
         let thu = t.thu; let buoi = t.buoi; let tiet = t.tiet;
         if (luoi[thu] && luoi[thu][buoi]) {
@@ -286,26 +313,31 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
         }
     });
 
-    // NÂNG CẤP: Ép cứng độ rộng 3 cột đầu, nhường toàn bộ không gian cho cột Chi tiết
-    html += `<div class="overflow-x-auto"><table class="w-full text-center border-collapse border border-gray-400"><thead class="bg-slate-200"><tr>
-                <th class="border border-gray-400 p-2 w-24 min-w-[80px]">Thứ</th>
-                <th class="border border-gray-400 p-2 w-24 min-w-[80px]">Buổi</th>
-                <th class="border border-gray-400 p-2 w-16 min-w-[60px]">Tiết</th>
-                <th class="border border-gray-400 p-2 w-auto">Chi tiết Lên Lớp (Môn - Lớp)</th>
-            </tr></thead><tbody>`;
+    // Khối Bảng (Có thanh cuộn riêng, Tiêu đề Sticky, Các cột ép kích thước w-[1%])
+    html += `<div class="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
+                <table class="w-full text-center border-collapse border border-gray-400 bg-white">
+                    <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
+                        <tr>
+                            <th class="border border-gray-400 px-4 py-2 bg-slate-200 w-[1%] whitespace-nowrap">Thứ</th>
+                            <th class="border border-gray-400 px-4 py-2 bg-slate-200 w-[1%] whitespace-nowrap">Buổi</th>
+                            <th class="border border-gray-400 px-4 py-2 bg-slate-200 w-[1%] whitespace-nowrap">Tiết</th>
+                            <th class="border border-gray-400 p-2 bg-slate-200 w-auto">Chi tiết Lên Lớp (Môn - Lớp)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
     thuMacDinh.forEach(thu => {
         ["Sáng", "Chiều"].forEach(buoi => {
             let dsTiet = Object.keys(luoi[thu][buoi]).sort((a, b) => a - b);
             if (dsTiet.length > 0) {
                 dsTiet.forEach((tiet, index) => {
-                    html += `<tr class="hover:bg-slate-50">`;
-                    if (index === 0 && buoi === "Sáng") html += `<td rowspan="${Object.keys(luoi[thu]["Sáng"]).length + Object.keys(luoi[thu]["Chiều"]).length}" class="border border-gray-400 font-extrabold bg-slate-50">${thu}</td>`;
-                    if (index === 0) html += `<td rowspan="${dsTiet.length}" class="border border-gray-400 font-bold">${buoi}</td>`;
+                    html += `<tr class="hover:bg-slate-50 transition-colors">`;
+                    if (index === 0 && buoi === "Sáng") html += `<td rowspan="${Object.keys(luoi[thu]["Sáng"]).length + Object.keys(luoi[thu]["Chiều"]).length}" class="border border-gray-400 font-extrabold bg-slate-50 w-[1%] whitespace-nowrap px-4">${thu}</td>`;
+                    if (index === 0) html += `<td rowspan="${dsTiet.length}" class="border border-gray-400 font-bold w-[1%] whitespace-nowrap px-4">${buoi}</td>`;
                     
-                    html += `<td class="border border-gray-400 p-2 font-bold">${tiet}</td><td class="border border-gray-400 p-2 text-left space-y-1">`;
+                    html += `<td class="border border-gray-400 p-2 font-bold text-slate-800 w-[1%] whitespace-nowrap px-4">${tiet}</td>
+                             <td class="border border-gray-400 p-2 text-left space-y-1">`;
                     
-                    // Render danh sách gộp
                     let thongTinTiet = luoi[thu][buoi][tiet];
                     for (let khoa in thongTinTiet) {
                         let soLan = thongTinTiet[khoa];
