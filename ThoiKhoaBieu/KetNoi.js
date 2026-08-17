@@ -1,6 +1,6 @@
 const CAU_HINH_FRONTEND = {
     URL_API_MAY_CHU: 'https://script.google.com/macros/s/AKfycbz1IOFWbcOTfgPmnaSeD2uU0i7UWWsUSW3pHja87WzT3GOhtwsJz7YyNdY2eOHGU33s/exec',
-    TEN_DU_AN: 'THỜI KHÓA BIỂU - TRƯỜNG TIỂU HỌC HỢP THÀNH',
+    TEN_DU_AN: 'THỜI KHÓA BIỂU',
     
     // Cấu hình chữ ký Footer hiển thị 2 dòng
     TIEU_DE_TAC_GIA: 'Thiết kế và phát triển',
