@@ -252,7 +252,13 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
         }
     });
 
-    html += `<div class="overflow-x-auto"><table class="w-full text-center border-collapse border border-gray-400"><thead class="bg-slate-200"><tr><th class="border border-gray-400 p-2">Thứ</th><th class="border border-gray-400 p-2">Buổi</th><th class="border border-gray-400 p-2">Tiết</th><th class="border border-gray-400 p-2 w-1/2">Chi tiết Lên Lớp (Môn - Lớp)</th></tr></thead><tbody>`;
+    // NÂNG CẤP: Ép cứng độ rộng 3 cột đầu, nhường toàn bộ không gian cho cột Chi tiết
+    html += `<div class="overflow-x-auto"><table class="w-full text-center border-collapse border border-gray-400"><thead class="bg-slate-200"><tr>
+                <th class="border border-gray-400 p-2 w-24 min-w-[80px]">Thứ</th>
+                <th class="border border-gray-400 p-2 w-24 min-w-[80px]">Buổi</th>
+                <th class="border border-gray-400 p-2 w-16 min-w-[60px]">Tiết</th>
+                <th class="border border-gray-400 p-2 w-auto">Chi tiết Lên Lớp (Môn - Lớp)</th>
+            </tr></thead><tbody>`;
 
     thuMacDinh.forEach(thu => {
         ["Sáng", "Chiều"].forEach(buoi => {
@@ -271,7 +277,7 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
                         let soLan = thongTinTiet[khoa];
                         html += `<div class="inline-block bg-white border border-gray-300 rounded px-2 py-1 text-sm font-semibold shadow-sm mr-1 mb-1">
                                     <span class="text-blue-800">${khoa}</span> 
-                                    <span class="text-xs bg-red-100 text-red-700 px-1 rounded ml-1" title="Số tiết dạy môn này tại tiết này">${soLan} tiết</span>
+                                    <span class="text-xs bg-red-100 text-red-700 px-1 rounded ml-1" title="Số lần dạy môn này tại tiết này">${soLan} lần</span>
                                  </div>`;
                     }
                     html += `</td></tr>`;
