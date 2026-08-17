@@ -200,7 +200,28 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
 // KHỐI 2: ĐỐI CHIẾU ĐỊNH MỨC VÀ KIỂM TRA
 // =========================================================================
 function kiemTraDinhMuc() {
-    const mangLop = thongSoHocVu.DANH_SACH_LOP || []; 
+    // NÂNG CẤP: Lọc bỏ các "lớp ảo" trong CSDL, chỉ quét các lớp thực sự có trên lưới TKB
+    let mangLop = [];
+    const mangLopGoc = thongSoHocVu.DANH_SACH_LOP || [];
+    
+    mangLopGoc.forEach(lop => {
+        // Chỉ lấy những lớp có tồn tại ô select trên màn hình
+        if (document.querySelector(`select[id$="_${lop}"]`)) {
+            mangLop.push(lop);
+        }
+    });
+
+    // Fallback an toàn nếu danh sách gốc bị rỗng
+    if (mangLop.length === 0) {
+        const cacSelect = document.querySelectorAll('select[id^="mon_"]');
+        let setLop = new Set();
+        cacSelect.forEach(sl => {
+            let parts = sl.id.split('_');
+            if (parts.length > 1) setLop.add(parts[parts.length - 1]);
+        });
+        mangLop = Array.from(setLop).sort();
+    }
+
     const khungCT = thongSoHocVu.KHUNG_CHUONG_TRINH || {};
     let thongKeUI = {}; mangLop.forEach(lop => { thongKeUI[lop] = {}; });
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
@@ -224,7 +245,6 @@ function kiemTraDinhMuc() {
 
     let htmlKetQua = `<div class="overflow-x-auto"><table class="w-full text-sm text-center border-collapse border border-gray-400" style="font-family:'Times New Roman',Times,serif;"><thead class="bg-purple-100 text-purple-900 font-bold"><tr><th class="border border-gray-400 p-2 min-w-[60px]">Lớp</th><th class="border border-gray-400 p-2 min-w-[140px]">Môn học</th><th class="border border-gray-400 p-2 min-w-[100px]">Khung chuẩn</th><th class="border border-gray-400 p-2 min-w-[100px]">Đang xếp (UI)</th><th class="border border-gray-400 p-2 min-w-[140px]">Trạng thái</th><th class="border border-gray-400 p-2 min-w-[120px] bg-green-100 text-green-900">Tổng Tiết / Lớp</th></tr></thead><tbody>`;
     
-    // NÂNG CẤP: Tách bạch biến tổng số tiết Chuẩn và tổng số tiết Thực tế (UI)
     let tongTatCaTietChuan = 0;
     let tongTatCaTietUI = 0;
 
@@ -235,13 +255,12 @@ function kiemTraDinhMuc() {
         let tongChuanLopNay = 0;
         let tongUiLopNay = 0; 
         
-        // Tính tổng chuẩn và tổng thực tế của lớp hiện tại một cách độc lập
         dsMonArr.forEach(mon => { 
             tongChuanLopNay += (parseInt(dmKhoi[mon]) || 0);
             tongUiLopNay += (thongKeUI[lop][mon] || 0); 
         });
 
-        // Cộng dồn vào tổng toàn trường
+        // Cộng dồn chuẩn xác vào tổng toàn trường
         tongTatCaTietChuan += tongChuanLopNay;
         tongTatCaTietUI += tongUiLopNay;
 
@@ -261,7 +280,6 @@ function kiemTraDinhMuc() {
                            <td class="border-r border-gray-300 p-2 font-extrabold text-blue-700 text-lg">${ui}</td>
                            <td class="border-r border-gray-300 p-2">${trangThai}</td>`;
             
-            // Hiển thị độc lập cả 2 chỉ số ở cấp Lớp
             if (index === 0) htmlKetQua += `<td rowspan="${dsMonArr.length}" class="p-2 font-extrabold text-green-900 bg-green-50 align-middle leading-tight whitespace-nowrap">
                 <div class="text-xs text-gray-600 font-semibold mb-1.5">Chuẩn: <span class="text-blue-700 text-lg font-bold ml-1">${tongChuanLopNay}</span></div>
                 <div class="text-xs text-gray-600 font-semibold">Đã xếp: <span class="text-red-600 text-lg font-bold ml-1">${tongUiLopNay}</span></div>
@@ -270,7 +288,6 @@ function kiemTraDinhMuc() {
         });
     });
     
-    // Hiển thị độc lập cả 2 chỉ số ở cấp Toàn trường (Sẽ hiện chuẩn 480 tiết)
     htmlKetQua += `<tr class="bg-gray-200 text-gray-900 font-extrabold border-t-2 border-gray-500">
         <td colspan="5" class="border-r border-gray-400 p-3 text-right uppercase">Tổng số tiết toàn trường trong tuần:</td>
         <td class="p-3 leading-tight whitespace-nowrap text-left pl-4">
@@ -283,8 +300,9 @@ function kiemTraDinhMuc() {
     document.getElementById('modalKiemTra').classList.remove('hidden');
 }
 
-function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
-
+function dongModal() { 
+    document.getElementById('modalKiemTra').classList.add('hidden'); 
+}
 // =========================================================================
 // KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN (KIẾN TRÚC INLINE-STICKY TỐI THƯỢNG)
 // =========================================================================
