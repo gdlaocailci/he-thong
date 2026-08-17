@@ -76,18 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================================================
-// KHỐI 2: ĐIỀU HƯỚNG TAB ĐÃ ĐƯỢC LƯỢC BỎ 
-// (Logic tắt/mở hiện tại do PhanCong.js quản lý hoàn toàn để tránh xung đột)
-// =========================================================================
-
-// =========================================================================
-// KHỐI 3: GIAO TIẾP MÁY CHỦ VÀ LOGIC DROPDOWN LIÊN HOÀN
+// KHỐI 2: GIAO TIẾP MÁY CHỦ VÀ LOGIC DROPDOWN LIÊN HOÀN
 // =========================================================================
 async function taiCayDanhMucThongKe() {
     const btn = document.querySelector('button[onclick="goiTraCuuThongKe()"]');
     if (btn) btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang tải...`;
     
     try {
+        //[cite: 6]
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCayQuanHeThongKe`);
         cayDanhMucThongKe = await phanHoi.json();
         
@@ -144,7 +140,7 @@ function xuLyDoiThangTk() {
 }
 
 // =========================================================================
-// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
+// KHỐI 3: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
 // =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
@@ -152,7 +148,7 @@ async function goiTraCuuThongKe() {
     let tuan = document.getElementById('inputTuanTk').value.replace('Tuần ', '').trim();
     let giaoVien = document.getElementById('inputGiaoVienTk').value.trim();
 
-    // Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
+    // BẪY LỖI: Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
     if (thang === "Cả năm") thang = "";
     if (tuan === "Tất cả các tuần") tuan = "";
     if (giaoVien === "Toàn trường") giaoVien = ""; 
@@ -165,6 +161,7 @@ async function goiTraCuuThongKe() {
     vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
 
     try {
+        //[cite: 6]
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
         let ketQua = await phanHoi.json();
         
@@ -179,6 +176,7 @@ async function goiTraCuuThongKe() {
     }
 }
 
+// Giao diện Tổng hợp Toàn trường
 function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
@@ -222,6 +220,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     document.getElementById('vungKetQuaThongKe').innerHTML = html;
 }
 
+// Giao diện Ma trận Tần suất Cá nhân
 function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
     let tDe = `Lịch Trình Giảng Dạy: <span class="text-red-600">${gv}</span>`;
     
