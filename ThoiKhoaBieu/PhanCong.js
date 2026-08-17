@@ -1,5 +1,6 @@
 let duLieuTongTien = {}; 
 let danhSachGV = [];
+let khungChuongTrinhToanTruong = {};
 
 // =========================================================================
 // KHỐI 1: GIAO TIẾP MÁY CHỦ (API FETCH)
@@ -32,6 +33,7 @@ async function taiDuLieuPhanCongTuMayChu() {
 // =========================================================================
 function khoiTaoGiaoDienPhanCong(duLieuSever) {
   danhSachGV = duLieuSever.giaoVien || [];
+  khungChuongTrinhToanTruong = duLieuSever.khungChuongTrinh || {}; // Nạp dữ liệu Khung CT
   
   // 1. Render Header Bảng Phân công
   let headerHtml = '<tr><th class="p-2 border border-gray-400 bg-slate-200 sticky left-0 z-30 min-w-[80px]">Mã Lớp</th>';
@@ -71,11 +73,13 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
         let duLieuCuCuaLop = mapPhanCongDaLuu[maLop] || [];
 
         for (let j = 0; j < duLieuSever.monHoc.length; j++) {
+          let tenMon = duLieuSever.monHoc[j];
           let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
           let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
           
+          // NÂNG CẤP: Gắn tọa độ (data-lop, data-mon) vào từng thẻ select
           bodyHtml += `<td class="p-0 border border-gray-400 transition-all duration-300 bg-white group-hover:bg-slate-50">
-                          <select onchange="tinhToanTietDay()" class="w-full h-full min-h-[35px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
+                          <select data-lop="${maLop}" data-mon="${tenMon}" onchange="tinhToanTietDay()" class="w-full h-full min-h-[35px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
                               ${selectedOptions}
                           </select>
                        </td>`;
@@ -101,13 +105,26 @@ function tinhToanTietDay() {
   cacTheSelect.forEach(sl => {
     let tenGV = sl.value;
     if (tenGV && thongKe[tenGV]) {
-      thongKe[tenGV].thucTe += 1; 
+      // 1. Trích xuất mã lớp và tên môn học từ thuộc tính của thẻ select
+      let tenLop = sl.getAttribute('data-lop');
+      let tenMon = sl.getAttribute('data-mon');
+      
+      // 2. Chuyển đổi mã lớp (ví dụ "1A") thành mã Khối (ví dụ "Khoi1")
+      let tenKhoi = "Khoi" + tenLop.charAt(0);
+      
+      // 3. Tra cứu số tiết thực tế trong Khung chương trình chuẩn
+      let soTiet = 0;
+      if (khungChuongTrinhToanTruong[tenKhoi] && khungChuongTrinhToanTruong[tenKhoi][tenMon]) {
+          soTiet = parseInt(khungChuongTrinhToanTruong[tenKhoi][tenMon]) || 0;
+      }
+      
+      // 4. Cộng dồn chính xác số tiết thay vì cộng 1
+      thongKe[tenGV].thucTe += soTiet; 
     }
   });
 
   let tbodyThongKe = '';
   for (const [ten, soLieu] of Object.entries(thongKe)) {
-    // Điều chỉnh CSS tự động cảnh báo khi vượt định mức
     let textClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'text-red-600 font-extrabold' : 'text-blue-700 font-bold';
     let bgClass = (soLieu.thucTe > soLieu.dinhMuc) ? 'bg-red-50' : 'bg-white';
     
@@ -121,12 +138,6 @@ function tinhToanTietDay() {
   }
   document.getElementById('duLieuThongKe').innerHTML = tbodyThongKe;
 }
-
-function xuLyLuuTru() {
-  // Logic quét mảng lưu trữ đang trong giai đoạn phát triển
-  alert('Chức năng thu thập mảng và lưu trữ đang sẵn sàng để tích hợp mã xử lý.');
-}
-
 // =========================================================================
 // KHỐI 4: ĐIỀU HƯỚNG MÀN HÌNH (GẮN KẾT VỚI INDEX.HTML)
 // =========================================================================
