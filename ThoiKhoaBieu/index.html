@@ -45,15 +45,15 @@
 
             <nav class="flex flex-col mt-4 px-3 gap-1">
             <!-- NÚT TKB TOÀN TRƯỜNG -->
-            <a id="menuTKB" href="javascript:void(0)" onclick="dongTabThongKe()" class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-300 hover:translate-x-1 group">
-                <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span class="font-bold text-white/90 group-hover:text-white transition-colors text-[14px]">TKB Toàn trường</span>
+            <a id="menuTKB" onclick="kichHoatTab('menuTKB', 'khungTKB', true)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px]">TKB Toàn trường</span>
             </a>
             
             <!-- NÚT BÁO CÁO THỐNG KÊ -->
-            <a id="menuThongKe" href="javascript:void(0)" onclick="moTabThongKe()" class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-300 hover:translate-x-1 group">
-                <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                <span class="font-bold text-white/90 group-hover:text-white transition-colors text-[14px]">Báo cáo Thống kê</span>
+            <a id="menuThongKe" onclick="kichHoatTab('menuThongKe', 'khungThongKe', false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px]">Báo cáo Thống kê</span>
             </a>
 
             <!-- NHÃN PHÂN CỤM: HỆ THỐNG -->
@@ -64,24 +64,24 @@
             </div>
 
             <!-- CÁC NÚT QUẢN TRỊ -->
-            <a id="menuCaiDat" href="javascript:void(0)" onclick="moTabCaiDat()" style="display: none;" class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-300 hover:translate-x-1 group">
-                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                <span class="font-bold text-white/90 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 1: Cài đặt Hệ thống</span>
+            <a id="menuCaiDat" onclick="kichHoatTab('menuCaiDat', 'khungCaiDat', false)" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 1: Cài đặt Hệ thống</span>
             </a>
             
-            <a id="menuDanhMucGV" href="javascript:void(0)" onclick="moTabDanhMucGV()" style="display: none;" class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-300 hover:translate-x-1 group">
-                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                <span class="font-bold text-white/90 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 2: Danh mục Giáo viên</span>
+            <a id="menuDanhMucGV" onclick="kichHoatTab('menuDanhMucGV', 'khungDanhMucGV', false)" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 2: Danh mục Giáo viên</span>
             </a>
 
-            <a id="menuKhungChuongTrinh" href="javascript:void(0)" onclick="moTabKhungChuongTrinh()" style="display: none;" class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-300 hover:translate-x-1 group">
-                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                <span class="font-bold text-white/90 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 3: Khung chương trình (PA)</span>
+            <a id="menuKhungChuongTrinh" onclick="kichHoatTab('menuKhungChuongTrinh', 'khungKhungChuongTrinh', false)" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 3: Khung chương trình (PA)</span>
             </a>
             
-            <a id="menuPhanCong" href="javascript:void(0)" onclick="moTabPhanCong()" style="display: none;" class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-300 hover:translate-x-1 group">
-                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M9 10h6"></path><path d="M9 18h6"></path></svg>
-                <span class="font-bold text-white/90 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 4: Phân công chuyên môn</span>
+            <a id="menuPhanCong" onclick="kichHoatTab('menuPhanCong', 'khungPhanCong', false)" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M9 10h6"></path><path d="M9 18h6"></path></svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">Bước 4: Phân công chuyên môn</span>
             </a>
         </nav>
         
