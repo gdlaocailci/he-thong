@@ -156,8 +156,7 @@ function tinhToanTietDay() {
     
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
     
-    // Tối ưu hiển thị bảng báo cáo: Hiện Tên GV to, và Mã GV nhỏ ở dưới
-    let hienThiTen = (soLieu.hoTen && soLieu.hoTen !== ma) ? `${soLieu.hoTen} <br><span class="text-[13px] text-gray-500 font-normal italic">(${ma})</span>` : ma;
+    let hienThiTen = (soLieu.hoTen && soLieu.hoTen !== ma) ? `${soLieu.hoTen} <br><span class="text-[13px] text-gray-500 font-bold italic">(${ma})</span>` : ma;
 
     tbodyThongKe += `
       <tr class="${bgClass} hover:bg-gray-50 transition-colors">
