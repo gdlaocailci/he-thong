@@ -232,10 +232,8 @@ async function xuLyLuuTru() {
 // =========================================================================
 
 function moTabPhanCong() {
-    // 1. Thay đổi UI thanh menu ngay lập tức để tạo cảm giác phản hồi mượt mà
     thietLapMenuActive('menuPhanCong');
     
-    // 2. Đẩy các tác vụ nặng (render hàng nghìn thẻ DOM) vào hàng đợi để không khóa trình duyệt
     setTimeout(() => {
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
@@ -245,12 +243,16 @@ function moTabPhanCong() {
         
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
+
+        // BỔ SUNG: Ẩn giao diện Khung chương trình
+        let khungKCT = document.getElementById('khungKhungChuongTrinh');
+        if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
         
         let khungPC = document.getElementById('khungPhanCong');
         if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
 
         if (danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
-    }, 15); // Độ trễ 15ms đủ để trình duyệt vẽ xong màu Menu
+    }, 15); 
 }
 
 function moTabTKB() {
@@ -265,6 +267,10 @@ function moTabTKB() {
         
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
+
+        // BỔ SUNG: Ẩn giao diện Khung chương trình
+        let khungKCT = document.getElementById('khungKhungChuongTrinh');
+        if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
         
         let khungTKB = document.getElementById('khungTKB');
         if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
@@ -283,6 +289,10 @@ window.moTabThongKe = function() {
         
         let khungPC = document.getElementById('khungPhanCong');
         if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
+
+        // BỔ SUNG: Ẩn giao diện Khung chương trình
+        let khungKCT = document.getElementById('khungKhungChuongTrinh');
+        if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
         
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
@@ -292,7 +302,8 @@ window.moTabThongKe = function() {
 window.dongTabThongKe = moTabTKB;
 
 function thietLapMenuActive(idKichHoat) {
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong'];
+    // NÂNG CẤP: Bổ sung 'menuKhungChuongTrinh' vào danh sách quét để tắt màu khi chuyển tab
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
