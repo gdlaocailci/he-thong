@@ -1,9 +1,3 @@
-/**
- * Tên file: ThongKe.js
- * Chức năng: Tra cứu Thống kê Giảng dạy toàn trường và cá nhân (Định mức = Số ngày dạy / 5 * Định mức tuần).
- * Tác giả: Hoàng Ngọc Lâm
- */
-
 let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
@@ -273,7 +267,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             }
         }
 
-        let hiểnThịDinhMuc = tongDinhMuc > 0 ? (Number.isInteger(tongDinhMuc) ? tongDinhMuc : tongDinhMuc.toFixed(3)) : 0;
+        let hiểnThịDinhMuc = tongDinhMuc > 0 ? (Number.isInteger(tongDinhMuc) ? tongDinhMuc : tongDinhMuc.toFixed(1)) : 0;
 
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
