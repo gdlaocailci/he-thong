@@ -149,13 +149,19 @@ function veBangKhungChuongTrinh() {
     if (!thead || !tbody) return;
 
     let chuoiThead = '<tr>';
-    const cssChotVien = "p-2 border border-gray-400 !border-b-[2px] !border-b-slate-600 !shadow-[0_2px_0_0_#475569]";
-    chuoiThead += `<th class="w-28 ${cssChotVien} bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>`;
-    chuoiThead += `<th class="w-48 ${cssChotVien} bg-slate-200 sticky left-[112px] z-30">Môn học</th>`;
-    chuoiThead += `<th class="w-24 ${cssChotVien} bg-slate-200">Ưu tiên</th>`;
+    
+    // Khai báo CSS chốt viền dưới cho tiêu đề
+    const cssChotVien = "p-2 border border-gray-400 !border-b-[2px] !border-b-slate-600";
+    const shadowBottom = "!shadow-[0_2px_0_0_#475569]"; // Bóng đổ viền dưới
+    const shadowBottomRight = "!shadow-[1px_2px_0_0_#475569]"; // Bóng đổ viền dưới + viền phải cho cột chốt cuối cùng
+    
+    // Mở rộng khối cố định sang cả 3 cột (Bổ sung min-w để chống co ép khi tràn ngang)
+    chuoiThead += `<th class="w-28 min-w-[112px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>`;
+    chuoiThead += `<th class="w-48 min-w-[192px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-[112px] z-30">Môn học</th>`;
+    chuoiThead += `<th class="w-24 min-w-[96px] ${cssChotVien} ${shadowBottomRight} bg-slate-200 sticky left-[304px] z-30">Ưu tiên</th>`;
     
     danhSachLopKCT.forEach(lop => {
-        chuoiThead += `<th class="w-16 ${cssChotVien} bg-blue-100">${lop}</th>`;
+        chuoiThead += `<th class="w-16 min-w-[64px] ${cssChotVien} ${shadowBottom} bg-blue-100">${lop}</th>`;
     });
     chuoiThead += '</tr>';
     thead.innerHTML = chuoiThead;
@@ -170,8 +176,9 @@ function veBangKhungChuongTrinh() {
         let tr = document.createElement('tr');
         tr.className = 'hover:bg-yellow-50 transition-colors group';
         
+        // Cột 1: Điều chỉnh (Cố định ở tọa độ 0px)
         let cotThaoTac = `
-            <td class="p-1.5 border border-gray-400 text-center bg-white sticky left-0 z-10 group-hover:bg-yellow-50 shadow-[1px_0_0_0_#9ca3af]">
+            <td class="p-1.5 border border-gray-400 text-center bg-white sticky left-0 z-10 group-hover:bg-yellow-50">
                 <div class="flex justify-center items-center gap-1.5">
                     <button onclick="diChuyenDongKCT(${indexDong}, -1)" class="p-1 bg-slate-100 hover:bg-blue-200 rounded border border-gray-300 shadow-sm text-slate-700" title="Lên trên">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
@@ -186,8 +193,11 @@ function veBangKhungChuongTrinh() {
             </td>
         `;
 
-        let cotMonHoc = `<td class="p-0 border border-gray-400 bg-white sticky left-[112px] z-10 group-hover:bg-yellow-50 shadow-[1px_0_0_0_#9ca3af]"><input type="text" class="w-full h-full px-3 py-2 outline-none focus:bg-blue-50 text-left font-semibold text-slate-800 bg-transparent" value="${dong.monHoc || ''}" onchange="capNhatGiaTriKCT(${indexDong}, 'monHoc', this.value)"></td>`;
-        let cotUuTien = `<td class="p-0 border border-gray-400"><input type="number" class="w-full h-full px-2 py-2 outline-none text-center focus:bg-blue-50 font-semibold text-slate-800 bg-transparent" value="${dong.uuTien || ''}" onchange="capNhatGiaTriKCT(${indexDong}, 'uuTien', this.value)"></td>`;
+        // Cột 2: Môn học (Cố định ở tọa độ 112px = chiều rộng của cột 1)
+        let cotMonHoc = `<td class="p-0 border border-gray-400 bg-white sticky left-[112px] z-10 group-hover:bg-yellow-50"><input type="text" class="w-full h-full px-3 py-2 outline-none focus:bg-blue-50 text-left font-semibold text-slate-800 bg-transparent" value="${dong.monHoc || ''}" onchange="capNhatGiaTriKCT(${indexDong}, 'monHoc', this.value)"></td>`;
+        
+        // Cột 3: Ưu tiên (Cố định ở tọa độ 304px = 112px + 192px. Thêm bóng đổ cạnh phải để ngăn cách với vùng cuộn ngang)
+        let cotUuTien = `<td class="p-0 border border-gray-400 bg-white sticky left-[304px] z-10 group-hover:bg-yellow-50 shadow-[1px_0_0_0_#9ca3af]"><input type="number" class="w-full h-full px-2 py-2 outline-none text-center focus:bg-blue-50 font-semibold text-slate-800 bg-transparent" value="${dong.uuTien || ''}" onchange="capNhatGiaTriKCT(${indexDong}, 'uuTien', this.value)"></td>`;
 
         let cotCacLop = '';
         danhSachLopKCT.forEach((lop, indexCot) => {
