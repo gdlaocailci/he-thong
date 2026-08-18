@@ -186,9 +186,28 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
 
+    // NÂNG CẤP THUẬT TOÁN ĐẾM NGÀY: Khắc phục lỗi đọc chuỗi ký tự ngày thiếu số 0 (ví dụ: "1/10/2026")
     let tapHopNgay = new Set();
-    duLieu.forEach(t => { if (t.ngay) tapHopNgay.add(t.ngay.trim()); });
-    let soNgayThucTe = tapHopNgay.size;
+    duLieu.forEach(t => { 
+        if (t.ngay && t.ngay.trim() !== "") {
+            tapHopNgay.add(t.ngay.trim()); 
+        }
+    });
+    
+    let soNgayThucTe = 0;
+    tapHopNgay.forEach(nStr => {
+        let p = nStr.split('/');
+        if (p.length === 3) {
+            let ngay = parseInt(p[0], 10);
+            let thg = parseInt(p[1], 10);
+            let nm = parseInt(p[2], 10);
+            let d = new Date(nm, thg - 1, ngay);
+            // Kiểm tra tính hợp lệ và loại bỏ ngày Chủ Nhật nếu có dữ liệu lỗi lọt vào
+            if (!isNaN(d.getTime()) && d.getDay() !== 0) {
+                soNgayThucTe++;
+            }
+        }
+    });
 
     let hienThiGhiChuDm = "";
     if (soNgayThucTe > 0) {
@@ -228,6 +247,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
         let th = tongHopGv[gv];
         let dinhMuc1Tuan = mangDinhMucChuan[gv] || 0;
         
+        // Thực hiện tính tỷ trọng ngày chặt chẽ
         let tongDinhMuc = 0;
         if (dinhMuc1Tuan > 0) {
             if (soNgayThucTe > 0) {
@@ -270,8 +290,8 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
 function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
     let tDe = `Lịch Trình Giảng Dạy: <span class="text-red-600">${gv}</span>`;
     
-    let html = `<div class="flex-none py-1.5 px-4 bg-white z-30 relative shadow-sm border-b border-gray-300">
-                    <h2 class="text-xl font-bold text-center text-blue-900 mb-1.5 uppercase tracking-wide leading-tight">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
+    let html = `<div class="flex-none py-1.5 px-4 bg-white z-30 relative shadow-sm border-b border-gray-300 text-center">
+                    <h2 class="text-xl font-bold text-blue-900 mb-1.5 uppercase tracking-wide leading-tight">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
                     <div class="flex justify-center">
                         <div class="bg-blue-50 border border-blue-200 rounded shadow-sm px-6 py-1 text-center">
                             <p class="text-xs font-bold text-blue-700">TỔNG SỐ TIẾT ĐÃ DẠY</p>
