@@ -385,6 +385,10 @@ function moTabPhanCong() {
 
         let khungKCT = document.getElementById('khungKhungChuongTrinh');
         if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
+
+        // BỔ SUNG: Ẩn khung Danh mục Giáo viên
+        let khungDmgv = document.getElementById('khungDanhMucGV');
+        if (khungDmgv) { khungDmgv.classList.remove('flex', 'block'); khungDmgv.classList.add('hidden'); }
         
         let khungPC = document.getElementById('khungPhanCong');
         if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
@@ -408,6 +412,10 @@ function moTabTKB() {
 
         let khungKCT = document.getElementById('khungKhungChuongTrinh');
         if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
+
+        // BỔ SUNG: Ẩn khung Danh mục Giáo viên
+        let khungDmgv = document.getElementById('khungDanhMucGV');
+        if (khungDmgv) { khungDmgv.classList.remove('flex', 'block'); khungDmgv.classList.add('hidden'); }
         
         let khungTKB = document.getElementById('khungTKB');
         if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
@@ -429,6 +437,10 @@ window.moTabThongKe = function() {
 
         let khungKCT = document.getElementById('khungKhungChuongTrinh');
         if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
+
+        // BỔ SUNG: Ẩn khung Danh mục Giáo viên
+        let khungDmgv = document.getElementById('khungDanhMucGV');
+        if (khungDmgv) { khungDmgv.classList.remove('flex', 'block'); khungDmgv.classList.add('hidden'); }
         
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
@@ -438,7 +450,9 @@ window.moTabThongKe = function() {
 window.dongTabThongKe = moTabTKB;
 
 function thietLapMenuActive(idKichHoat) {
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh'];
+    // ĐIỀU CHỈNH: Thêm 'menuDanhMucGV' vào mảng để hệ thống quét và tắt màu
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV'];
+    
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
