@@ -158,10 +158,10 @@ function veBangKhungChuongTrinh() {
     const shadowBottom = "!shadow-[0_2px_0_0_#475569]"; 
     const shadowBottomRight = "!shadow-[1px_2px_0_0_#475569]"; 
     
-    // Cố định dọc bên trái đến hết cột Ưu tiên và có min-w tràn khung ngang chống co ép
+    // Cố định dọc bên trái đến hết cột Ưu tiên. Đã thu hẹp cột Ưu tiên thành w-20 min-w-[80px]
     chuoiThead += `<th class="w-28 min-w-[112px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>`;
     chuoiThead += `<th class="w-48 min-w-[192px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-[112px] z-30">Môn học</th>`;
-    chuoiThead += `<th class="w-24 min-w-[96px] ${cssChotVien} ${shadowBottomRight} bg-slate-200 sticky left-[304px] z-30">Ưu tiên</th>`;
+    chuoiThead += `<th class="w-20 min-w-[80px] ${cssChotVien} ${shadowBottomRight} bg-slate-200 sticky left-[304px] z-30">Ưu tiên</th>`;
     
     danhSachLopKCT.forEach(lop => {
         chuoiThead += `<th class="w-16 min-w-[64px] ${cssChotVien} ${shadowBottom} bg-blue-100">${lop}</th>`;
@@ -175,7 +175,7 @@ function veBangKhungChuongTrinh() {
         let chuoiTfoot = `<tr>`;
         chuoiTfoot += `<td class="w-28 min-w-[112px] ${cssChotVienTfoot} sticky left-0 z-30 bg-yellow-200"></td>`;
         chuoiTfoot += `<td class="w-48 min-w-[192px] ${cssChotVienTfoot} sticky left-[112px] z-30 bg-yellow-200 text-right uppercase text-blue-900 font-extrabold pr-4 text-xs">Tổng tiết / tuần:</td>`;
-        chuoiTfoot += `<td class="w-24 min-w-[96px] ${cssChotVienTfoot} !shadow-[1px_0_0_0_#9ca3af] sticky left-[304px] z-30 bg-yellow-200"></td>`;
+        chuoiTfoot += `<td class="w-20 min-w-[80px] ${cssChotVienTfoot} !shadow-[1px_0_0_0_#9ca3af] sticky left-[304px] z-30 bg-yellow-200"></td>`;
         
         danhSachLopKCT.forEach((lop, indexCot) => {
             chuoiTfoot += `<td id="tongTiet_KCT_${indexCot}" class="w-16 min-w-[64px] ${cssChotVienTfoot} text-center text-red-600 text-sm font-extrabold bg-yellow-50">0</td>`;
