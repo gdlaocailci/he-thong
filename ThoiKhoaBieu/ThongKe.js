@@ -132,6 +132,7 @@ function xuLyDoiThangTk() {
 // =========================================================================
 // KHỐI 3: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (ĐÃ TÍNH ĐỊNH MỨC & MÀU SẮC)
 // =========================================================================
+
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
     let thang = document.getElementById('inputThangTk').value.replace('Tháng ', '').trim();
@@ -164,12 +165,24 @@ async function goiTraCuuThongKe() {
     vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
 
     try {
+        // NÂNG CẤP: Tải độc lập Định mức Giáo viên (Cột D) để tránh lỗi cache
+        let mangDinhMucChuan = {};
+        try {
+            const resDM = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
+            const dataDM = await resDM.json();
+            if (dataDM && dataDM.giaoVien) {
+                dataDM.giaoVien.forEach(g => { mangDinhMucChuan[g.hoTen] = parseInt(g.dinhMuc) || 0; });
+            }
+        } catch(e) { console.warn("Lỗi tải định mức phụ:", e); }
+
+        // Tải dữ liệu Thống kê Giảng dạy
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
         let ketQua = await phanHoi.json();
         
         let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
         if (kieuGv === "Toàn trường" || kieuGv === "") {
-            veBangThongKeToanTruong(ketQua, namHoc, thang, tuan, soTuanTraCuu);
+            // Truyền mảng Định mức chuẩn vào hàm vẽ biểu đồ
+            veBangThongKeToanTruong(ketQua, namHoc, thang, tuan, soTuanTraCuu, mangDinhMucChuan);
         } else {
             veMaTranThongKeCaNhan(ketQua, kieuGv, namHoc, thang, tuan);
         }
@@ -178,7 +191,7 @@ async function goiTraCuuThongKe() {
     }
 }
 
-function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu) {
+function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDinhMucChuan) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
@@ -212,7 +225,8 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu) {
     dsGv.forEach(gv => {
         let th = tongHopGv[gv];
         
-        let dinhMuc1Tuan = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DINH_MUC_GIAO_VIEN && thongSoHocVu.DINH_MUC_GIAO_VIEN[gv]) ? parseInt(thongSoHocVu.DINH_MUC_GIAO_VIEN[gv]) : 0;
+        // NÂNG CẤP: Áp dụng mảng định mức độc lập vừa tải từ Server
+        let dinhMuc1Tuan = mangDinhMucChuan[gv] || 0;
         let tongDinhMuc = dinhMuc1Tuan * soTuanTraCuu;
         
         let bgClassTong = 'bg-white';
