@@ -102,11 +102,11 @@ function tinhToanTietDay() {
     if (tenGV && thongKe[tenGV]) {
       let tenLop = sl.getAttribute('data-lop');
       let tenMon = sl.getAttribute('data-mon');
-      let tenKhoi = "Khoi" + tenLop.charAt(0);
       
+      // NÂNG CẤP: Bỏ logic tạo "tenKhoi", tra cứu trực tiếp theo "tenLop"
       let soTiet = 0;
-      if (khungChuongTrinhToanTruong[tenKhoi] && khungChuongTrinhToanTruong[tenKhoi][tenMon]) {
-          soTiet = parseInt(khungChuongTrinhToanTruong[tenKhoi][tenMon]) || 0;
+      if (khungChuongTrinhToanTruong[tenLop] && khungChuongTrinhToanTruong[tenLop][tenMon]) {
+          soTiet = parseInt(khungChuongTrinhToanTruong[tenLop][tenMon]) || 0;
       }
       
       thongKe[tenGV].thucTe += soTiet; 
@@ -117,19 +117,14 @@ function tinhToanTietDay() {
     }
   });
 
-  // Tự động cấu trúc lại bảng thống kê, làm sạch class container
   let containerThongKe = document.getElementById('duLieuThongKe').parentElement.parentElement;
   if (containerThongKe) {
       containerThongKe.className = 'w-[500px] overflow-auto border border-gray-400 shadow-sm bg-white flex-none relative';
   }
 
-  // NÂNG CẤP: Chuyển quyền quản lý Sticky từ thead xuống trực tiếp các thẻ th
   const theadThongKe = document.querySelector('#duLieuThongKe').previousElementSibling;
   if (theadThongKe) {
-      // Xóa sticky chung để chống lỗi dính mảng
       theadThongKe.className = 'bg-purple-100 text-purple-900 shadow-sm';
-      
-      // Khóa giao điểm top-0 và left-0 cho ô Giáo viên (z-30)
       theadThongKe.innerHTML = `
         <tr>
             <th class="py-1 px-2 border border-gray-400 bg-purple-200 text-slate-900 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#9ca3af]">Giáo viên</th>
@@ -158,7 +153,6 @@ function tinhToanTietDay() {
     
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
     
-    // Đảm bảo các ô ở tbody dùng border-b và border-r thủ công để kết hợp hoàn hảo với sticky
     tbodyThongKe += `
       <tr class="${bgClass} hover:bg-gray-50 transition-colors">
         <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-b border-r border-gray-300 whitespace-nowrap sticky left-0 z-10 bg-inherit shadow-[1px_0_0_0_#d1d5db]">${ten}</td>
