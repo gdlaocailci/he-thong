@@ -1,20 +1,14 @@
-/**
- * Tên file: DanhMucGV.js
- * Chức năng: Quản lý danh mục giáo viên (Đồng bộ sh DM_GIAOVIEN)
- * Tác giả: Hoàng Ngọc Lâm
- */
-
 let duLieuDanhMucGV = [];
 const TIEU_DE_DM_GV = ['MaGV', 'HoTen', 'ToChuyenMon', 'DinhMucTuan', 'TrangThai'];
 
 // Kích hoạt menu khi kiểm soát giao diện
 document.addEventListener('DOMContentLoaded', () => {
-    // Lắng nghe thay đổi biến quyenSuaChua từ app.js thông qua interval nhỏ để an toàn
-    let checkQuyen = setInterval(() => {
+      let checkQuyen = setInterval(() => {
         if (typeof quyenSuaChua !== 'undefined') {
             let menuDM = document.getElementById('menuDanhMucGV');
+            // Thay đổi 'block' thành 'flex'
             if (menuDM) {
-                menuDM.style.display = quyenSuaChua ? 'block' : 'none';
+                menuDM.style.display = quyenSuaChua ? 'flex' : 'none';
             }
         }
     }, 1000);
