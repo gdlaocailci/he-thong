@@ -368,28 +368,24 @@ function xuLyTaiLenExcelPhanCong(e) {
     reader.readAsArrayBuffer(file);
 }
 // =========================================================================
-// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC (ĐÃ TÍCH HỢP TẤT CẢ CÁC TAB)
 // =========================================================================
+
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
     
     setTimeout(() => {
+        // Ẩn thanh công cụ TKB
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
         
-        let khungTKB = document.getElementById('khungTKB');
-        if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
+        // Dùng vòng lặp ẩn tất cả các khung không liên quan (Đã thêm khungCaiDat)
+        ['khungTKB', 'khungThongKe', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) { el.classList.remove('block', 'flex'); el.classList.add('hidden'); }
+        });
         
-        let khungTK = document.getElementById('khungThongKe');
-        if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
-
-        let khungKCT = document.getElementById('khungKhungChuongTrinh');
-        if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
-
-        // BỔ SUNG: Ẩn khung Danh mục Giáo viên
-        let khungDmgv = document.getElementById('khungDanhMucGV');
-        if (khungDmgv) { khungDmgv.classList.remove('flex', 'block'); khungDmgv.classList.add('hidden'); }
-        
+        // Hiện khung Phân Công
         let khungPC = document.getElementById('khungPhanCong');
         if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
 
@@ -401,22 +397,17 @@ function moTabTKB() {
     thietLapMenuActive('menuTKB');
     
     setTimeout(() => {
+        // Hiện thanh công cụ TKB
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
         
-        let khungPC = document.getElementById('khungPhanCong');
-        if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
+        // Ẩn tất cả các khung không liên quan
+        ['khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) { el.classList.remove('block', 'flex'); el.classList.add('hidden'); }
+        });
         
-        let khungTK = document.getElementById('khungThongKe');
-        if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
-
-        let khungKCT = document.getElementById('khungKhungChuongTrinh');
-        if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
-
-        // BỔ SUNG: Ẩn khung Danh mục Giáo viên
-        let khungDmgv = document.getElementById('khungDanhMucGV');
-        if (khungDmgv) { khungDmgv.classList.remove('flex', 'block'); khungDmgv.classList.add('hidden'); }
-        
+        // Hiện khung TKB
         let khungTKB = document.getElementById('khungTKB');
         if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
     }, 15);
@@ -429,19 +420,13 @@ window.moTabThongKe = function() {
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
         
-        let khungTKB = document.getElementById('khungTKB');
-        if (khungTKB) { khungTKB.classList.remove('block'); khungTKB.classList.add('hidden'); }
+        // Ẩn tất cả các khung không liên quan
+        ['khungTKB', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) { el.classList.remove('block', 'flex'); el.classList.add('hidden'); }
+        });
         
-        let khungPC = document.getElementById('khungPhanCong');
-        if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
-
-        let khungKCT = document.getElementById('khungKhungChuongTrinh');
-        if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
-
-        // BỔ SUNG: Ẩn khung Danh mục Giáo viên
-        let khungDmgv = document.getElementById('khungDanhMucGV');
-        if (khungDmgv) { khungDmgv.classList.remove('flex', 'block'); khungDmgv.classList.add('hidden'); }
-        
+        // Hiện khung Thống kê
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
     }, 15);
@@ -450,8 +435,8 @@ window.moTabThongKe = function() {
 window.dongTabThongKe = moTabTKB;
 
 function thietLapMenuActive(idKichHoat) {
-    // ĐIỀU CHỈNH: Thêm 'menuDanhMucGV' vào mảng để hệ thống quét và tắt màu
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV'];
+    // ĐIỀU CHỈNH: Đã thêm 'menuCaiDat' vào mảng để hệ thống quét và tắt màu
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat'];
     
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
