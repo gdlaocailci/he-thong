@@ -40,11 +40,11 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-extrabold text-blue-900 uppercase">Khung Chương Trình Môn Học</h2>
                 <div class="flex gap-2">
-                    <button onclick="themDongKhungChuongTrinh()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition duration-200">
-                        <img src="https://www.svgrepo.com/show/500463/add.svg" class="w-5 h-5 filter invert" alt="Thêm"> Thêm dòng
+                    <button onclick="themDongKhungChuongTrinh()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition duration-200">
+                        Thêm dòng
                     </button>
-                    <button onclick="luuDuLieuKhungChuongTrinh(event)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition duration-200">
-                        <img src="https://www.svgrepo.com/show/502824/save.svg" class="w-5 h-5 filter invert" alt="Lưu"> Lưu Khung CT
+                    <button onclick="luuDuLieuKhungChuongTrinh(event)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition duration-200">
+                        Lưu Khung CT
                     </button>
                 </div>
             </div>
@@ -67,15 +67,25 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
 // 2. CHUYỂN ĐỔI TAB VÀ TẢI DỮ LIỆU BẰNG FETCH
 // ==========================================
 function moTabKhungChuongTrinh() {
+    // Ẩn các khung dữ liệu không liên quan
     const cacKhung = ['khungTKB', 'khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh'];
     cacKhung.forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.classList.add('hidden'); el.classList.remove('flex', 'block'); }
     });
 
+    // Ẩn thanh công cụ UI của Thời khóa biểu
+    let thanhCongCu = document.getElementById('thanhCongCuTKB');
+    if (thanhCongCu) { 
+        thanhCongCu.classList.remove('flex'); 
+        thanhCongCu.classList.add('hidden'); 
+    }
+
+    // Hiển thị khung Chương trình
     const khungKCT = document.getElementById('khungKhungChuongTrinh');
     if (khungKCT) { khungKCT.classList.remove('hidden'); khungKCT.classList.add('flex'); }
 
+    // Cập nhật CSS cho thanh menu bên trái
     document.querySelectorAll('nav a').forEach(a => {
         a.classList.remove('border-menu-active', 'bg-menu-hover');
         a.classList.add('border-transparent');
@@ -91,6 +101,7 @@ function moTabKhungChuongTrinh() {
         if(span) { span.classList.add('text-menu-active'); span.classList.remove('text-white'); }
     }
 
+    // Gọi dữ liệu từ máy chủ
     taiDuLieuKhungChuongTrinhTuMayChu();
 }
 
@@ -141,17 +152,18 @@ function veBangKhungChuongTrinh() {
         let tr = document.createElement('tr');
         tr.className = 'hover:bg-yellow-50 transition-colors group';
         
+        // Sử dụng mã SVG thuần thay cho thẻ img để đảm bảo icon luôn hiển thị
         let cotThaoTac = `
             <td class="p-1.5 border border-gray-400 text-center bg-white sticky left-0 z-10 group-hover:bg-yellow-50 shadow-[1px_0_0_0_#9ca3af]">
-                <div class="flex justify-center items-center gap-1">
-                    <button onclick="diChuyenDongKCT(${indexDong}, -1)" class="p-1 bg-slate-100 hover:bg-blue-200 rounded border border-gray-300 shadow-sm" title="Lên trên">
-                        <img src="https://www.svgrepo.com/show/520556/up-arrow.svg" class="w-4 h-4" alt="Up">
+                <div class="flex justify-center items-center gap-1.5">
+                    <button onclick="diChuyenDongKCT(${indexDong}, -1)" class="p-1 bg-slate-100 hover:bg-blue-200 rounded border border-gray-300 shadow-sm text-slate-700" title="Lên trên">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
                     </button>
-                    <button onclick="diChuyenDongKCT(${indexDong}, 1)" class="p-1 bg-slate-100 hover:bg-blue-200 rounded border border-gray-300 shadow-sm" title="Xuống dưới">
-                        <img src="https://www.svgrepo.com/show/520551/down-arrow.svg" class="w-4 h-4" alt="Down">
+                    <button onclick="diChuyenDongKCT(${indexDong}, 1)" class="p-1 bg-slate-100 hover:bg-blue-200 rounded border border-gray-300 shadow-sm text-slate-700" title="Xuống dưới">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                     </button>
-                    <button onclick="xoaDongKhungChuongTrinh(${indexDong})" class="p-1 bg-slate-100 hover:bg-red-200 rounded border border-gray-300 shadow-sm" title="Xóa môn">
-                        <img src="https://www.svgrepo.com/show/499881/delete.svg" class="w-4 h-4" alt="Del">
+                    <button onclick="xoaDongKhungChuongTrinh(${indexDong})" class="p-1 bg-slate-100 hover:bg-red-200 rounded border border-gray-300 shadow-sm text-red-600" title="Xóa môn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 </div>
             </td>
