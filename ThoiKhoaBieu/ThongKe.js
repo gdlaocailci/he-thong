@@ -1,9 +1,9 @@
-// =========================================================================
-// KHỐI 1: KHỞI TẠO GIAO DIỆN VÀ GẮN VÀO KHUNG CÓ SẴN
-// =========================================================================
 let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
+// =========================================================================
+// KHỐI 1: KHỞI TẠO GIAO DIỆN VÀ GẮN VÀO KHUNG CÓ SẴN
+// =========================================================================
 function dungGiaoDienThongKe() {
     let container = document.getElementById('khungThongKe');
     if (!container) return;
@@ -130,29 +130,53 @@ function xuLyDoiThangTk() {
 }
 
 // =========================================================================
-// KHỐI 3: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (ĐÃ TÍNH ĐỊNH MỨC & MÀU SẮC)
+// KHỐI 3: HÀM HỖ TRỢ THUẬT TOÁN 1 - TÍNH ĐỊNH MỨC THÁNG THEO TỶ TRỌNG NGÀY 
 // =========================================================================
+function tinhSoNgayLamViecThucTe(duLieuTiet) {
+    // Thu thập tất cả các mốc ngày (dd/mm/yyyy) xuất hiện thực tế trong tập dữ liệu tra cứu
+    let tapHopNgay = new Set();
+    duLieu.forEach(t => {
+        if (t.ngay) tapHopNgay.add(t.ngay.trim());
+    });
+    
+    // Nếu có dữ liệu ngày thực tế, đếm số ngày không phải Chủ Nhật
+    if (tapHopNgay.size > 0) {
+        let soNgayHoatDong = 0;
+        tapHopNgay.forEach(ngayStr => {
+            let parts = ngayStr.split('/');
+            if (parts.length === 3) {
+                let d = new Date(parts[2], parts[1] - 1, parts[0]);
+                if (d.getDay() !== 0) { // Khác Chủ nhật
+                    soNgayHoatDong++;
+                }
+            }
+        });
+        if (soNgayHoatDong > 0) return soNgayHoatDong;
+    }
+    return 0;
+}
 
+// =========================================================================
+// KHỐI 4: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
+// =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
     let thang = document.getElementById('inputThangTk').value.replace('Tháng ', '').trim();
     let tuan = document.getElementById('inputTuanTk').value.replace('Tuần ', '').trim();
     let giaoVien = document.getElementById('inputGiaoVienTk').value.trim();
 
-    // 1. TÍNH TOÁN HỆ SỐ THỜI GIAN (SỐ TUẦN TRA CỨU)
+    // Xác định số tuần cơ học để fallback dự phòng
     let soTuanTraCuu = 1;
-    if (tuan === "Tất cả các tuần" || tuan === "") {
-        let duLieuNam = cayDanhMucThongKe[namHoc];
+    let duLieuNam = cayDanhMucThongKe[namHoc];
+    if (duLieuNam && (tuan === "Tất cả các tuần" || tuan === "")) {
         let dsTuan = [];
-        if (duLieuNam) {
-            if (thang === "Cả năm" || thang === "") {
-                for (let th in duLieuNam.soDoThoiGian) { dsTuan = dsTuan.concat(duLieuNam.soDoThoiGian[th]); }
-            } else {
-                dsTuan = duLieuNam.soDoThoiGian[thang] || [];
-            }
-            dsTuan = [...new Set(dsTuan)]; 
-            soTuanTraCuu = dsTuan.length > 0 ? dsTuan.length : 1;
+        if (thang === "Cả năm" || thang === "") {
+            for (let th in duLieuNam.soDoThoiGian) { dsTuan = dsTuan.concat(duLieuNam.soDoThoiGian[th]); }
+        } else {
+            dsTuan = duLieuNam.soDoThoiGian[thang] || [];
         }
+        dsTuan = [...new Set(dsTuan)];
+        soTuanTraCuu = dsTuan.length > 0 ? dsTuan.length : 1;
     }
 
     if (thang === "Cả năm") thang = "";
@@ -165,7 +189,6 @@ async function goiTraCuuThongKe() {
     vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
 
     try {
-        // NÂNG CẤP: Tải độc lập Định mức Giáo viên (Cột D) để tránh lỗi cache
         let mangDinhMucChuan = {};
         try {
             const resDM = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
@@ -175,16 +198,14 @@ async function goiTraCuuThongKe() {
             }
         } catch(e) { console.warn("Lỗi tải định mức phụ:", e); }
 
-        // Tải dữ liệu Thống kê Giảng dạy
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
-        let ketQua = await phanHoi.json();
+        duLieuThongKeHienTai = await phanHoi.json();
         
         let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
         if (kieuGv === "Toàn trường" || kieuGv === "") {
-            // Truyền mảng Định mức chuẩn vào hàm vẽ biểu đồ
-            veBangThongKeToanTruong(ketQua, namHoc, thang, tuan, soTuanTraCuu, mangDinhMucChuan);
+            veBangThongKeToanTruong(duLieuThongKeHienTai, namHoc, thang, tuan, soTuanTraCuu, mangDinhMucChuan);
         } else {
-            veMaTranThongKeCaNhan(ketQua, kieuGv, namHoc, thang, tuan);
+            veMaTranThongKeCaNhan(duLieuThongKeHienTai, kieuGv, namHoc, thang, tuan);
         }
     } catch (loi) {
         vungKetQua.innerHTML = `<div class="mt-20 text-center text-red-500 font-bold w-full">Lỗi kết nối máy chủ dữ liệu.</div>`;
@@ -196,8 +217,32 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
 
-    let html = `<div class="flex-none p-4 pb-2 bg-white z-30 relative shadow-sm border-b border-gray-300">
-                    <h2 class="text-xl font-bold text-center text-blue-900 uppercase tracking-wide">${tDe}</h2>
+    // THUẬT TOÁN 1: Đếm số ngày làm việc thực tế (trừ Chủ nhật) trong tập dữ liệu trả về
+    let tapHopNgay = new Set();
+    duLieu.forEach(t => { if (t.ngay) tapHopNgay.add(t.ngay.trim()); });
+    let soNgayThucTe = 0;
+    tapHopNgay.forEach(nStr => {
+        let p = nStr.split('/');
+        if (p.length === 3) {
+            let d = new Date(p[2], p[1]-1, p[0]);
+            if (d.getDay() !== 0) soNgayThucTe++; // Bỏ qua Chủ nhật
+        }
+    });
+
+    // Xác định xem có học Thứ 7 hay không bằng cách kiểm tra sự xuất hiện của "Thứ 7" trên lưới dữ liệu
+    let coHocThu7 = duLieu.some(t => t.thu && t.thu.trim() === "Thứ 7");
+    let quyMoTuan = coHocThu7 ? 6 : 5; // Định mức chia 5 ngày hoặc 6 ngày một tuần
+
+    let hienThiGhiChuDm = "";
+    if (soNgayThucTe > 0) {
+        hienThiGhiChuDm = `Tính theo tỷ trọng: ${soNgayThucTe} ngày dạy thực tế / quy mô ${quyMoTuan} ngày/tuần`;
+    } else {
+        hienThiGhiChuDm = `Dựa trên mốc ${soTuanTraCuu} tuần giảng dạy`;
+    }
+
+    let html = `<div class="flex-none p-4 pb-2 bg-white z-30 relative shadow-sm border-b border-gray-300 text-center">
+                    <h2 class="text-xl font-bold text-blue-900 uppercase tracking-wide">${tDe}</h2>
+                    <p class="text-xs text-slate-500 font-semibold italic mt-0.5">${hienThiGhiChuDm}</p>
                 </div>`;
     
     html += `<div class="flex-1 overflow-y-auto px-4 pb-4 pt-0 bg-gray-50 relative">
@@ -205,7 +250,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
                         <tr>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center">Giáo viên</th>
-                            <th class="border border-gray-400 py-1.5 px-2 bg-purple-100 text-purple-900 text-center w-[1%] whitespace-nowrap px-6" title="Định mức 1 tuần x ${soTuanTraCuu} tuần">Định mức <br><span class="text-xs font-normal">(${soTuanTraCuu} tuần)</span></th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-purple-100 text-purple-900 text-center w-[1%] whitespace-nowrap px-6">Định mức quy đổi <br><span class="text-xs font-normal">(Số thập phân)</span></th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-slate-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng đã dạy</th>
@@ -224,15 +269,23 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
     let dsGv = Object.keys(tongHopGv).sort();
     dsGv.forEach(gv => {
         let th = tongHopGv[gv];
-        
-        // NÂNG CẤP: Áp dụng mảng định mức độc lập vừa tải từ Server
         let dinhMuc1Tuan = mangDinhMucChuan[gv] || 0;
-        let tongDinhMuc = dinhMuc1Tuan * soTuanTraCuu;
+        
+        // THUẬT TOÁN 1 LOGIC LÕI: Định mức tỷ trọng ngày làm việc = (Định mức tuần / Quy mô ngày tuần) * Số ngày thực tế
+        let tongDinhMuc = 0;
+        if (dinhMuc1Tuan > 0) {
+            if (soNgayThucTe > 0) {
+                tongDinhMuc = (dinhMuc1Tuan / quyMoTuan) * soNgayThucTe;
+            } else {
+                tongDinhMuc = dinhMuc1Tuan * soTuanTraCuu;
+            }
+        }
         
         let bgClassTong = 'bg-white';
         let textClassTong = 'text-blue-700 font-bold';
 
         if (tongDinhMuc > 0) {
+            // Giữ nguyên số thập phân để so sánh trực tiếp
             if (th.tong > tongDinhMuc) { 
                 bgClassTong = 'bg-red-100'; 
                 textClassTong = 'text-red-600 font-extrabold'; 
@@ -245,9 +298,12 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             }
         }
 
+        // Render ra ngoài màn hình: Để nguyên số thập phân không làm tròn
+        let hiểnThịDinhMuc = tongDinhMuc > 0 ? (Number.isInteger(tongDinhMuc) ? tongDinhMuc : tongDinhMuc.toFixed(3)) : 0;
+
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight">${tongDinhMuc}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight text-base">${hiểnThịDinhMuc}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
                     <td class="border border-gray-400 py-0.5 px-2 ${textClassTong} ${bgClassTong} text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
@@ -265,7 +321,7 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
                     <h2 class="text-xl font-bold text-center text-blue-900 mb-1.5 uppercase tracking-wide leading-tight">${tDe} <br><span class="text-sm text-slate-600 normal-case">(Năm học ${nam} ${thang ? '- Tháng ' + thang : ''} ${tuan ? '- Tuần ' + tuan : ''})</span></h2>
                     <div class="flex justify-center">
                         <div class="bg-blue-50 border border-blue-200 rounded shadow-sm px-6 py-1 text-center">
-                            <p class="text-xs font-bold text-blue-700">TỔNG SỐ TIẾT ĐÃ DẠY</p>
+                            <p class="text-xs font-bold text-blue-700">TỔNG SỐ TIẾT ĐA DẠY</p>
                             <p class="text-2xl font-extrabold text-blue-900 leading-none">${duLieu.length}</p>
                         </div>
                     </div>
