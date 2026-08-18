@@ -1,9 +1,3 @@
-/**
- * Tên file: CaiDat.js
- * Chức năng: Quản lý cài đặt hệ thống và phân quyền quản trị
- * Tác giả: Hoàng Ngọc Lâm
- */
-
 let dsThamSo = [];
 let dsQuanTri = [];
 const TIEU_DE_CAI_DAT = ['MaThamSo', 'GiaTri', 'GhiChu', '', 'Quyền Admin'];
@@ -12,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let checkQuyenCD = setInterval(() => {
         if (typeof quyenSuaChua !== 'undefined') {
             let menuCD = document.getElementById('menuCaiDat');
-            if (menuCD) { menuCD.style.display = quyenSuaChua ? 'block' : 'none'; }
+            // Thay đổi 'block' thành 'flex'
+            if (menuCD) { menuCD.style.display = quyenSuaChua ? 'flex' : 'none'; }
         }
     }, 1000);
 });
