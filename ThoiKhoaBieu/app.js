@@ -16,33 +16,28 @@ function kiemSoatGiaoDien() {
         }
     });
 
-    // BỔ SUNG: Xử lý hiển thị Menu Phân công chuyên môn
-    let menuPC = document.getElementById('menuPhanCong');
-    if (menuPC) {
-        if (quyenSuaChua) { menuPC.style.display = 'block'; }
-        else { menuPC.style.display = 'none'; }
-    }
+    // NÂNG CẤP: Quản lý tập trung toàn bộ Nhãn và Menu Quản Trị
+    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuPhanCong', 'menuKhungChuongTrinh'];
+    dsMenuQuanTri.forEach(idMenu => {
+        let menu = document.getElementById(idMenu);
+        if (menu) {
+            menu.style.display = quyenSuaChua ? 'block' : 'none';
+        }
+    });
 
-    // NÂNG CẤP: Khóa cụm nút Chuyển Tuần và Chọn Ngày đối với người không có quyền
+    // Khóa/Mở cụm nút Chuyển Tuần và Chọn Ngày
     let btnTuanTruoc = document.querySelector('button[onclick="chuyenTuan(-1)"]');
     let btnTuanTiep = document.querySelector('button[onclick="chuyenTuan(1)"]');
     let inputNgay = document.getElementById('chonNgayDauTuan');
 
     if (quyenSuaChua) {
-        // Mở khóa
         if (btnTuanTruoc) { btnTuanTruoc.disabled = false; btnTuanTruoc.classList.remove('opacity-50', 'cursor-not-allowed'); }
         if (btnTuanTiep) { btnTuanTiep.disabled = false; btnTuanTiep.classList.remove('opacity-50', 'cursor-not-allowed'); }
         if (inputNgay) { inputNgay.disabled = false; inputNgay.classList.remove('cursor-not-allowed', 'opacity-80'); }
     } else {
-        // Khóa chặt và làm mờ đi
         if (btnTuanTruoc) { btnTuanTruoc.disabled = true; btnTuanTruoc.classList.add('opacity-50', 'cursor-not-allowed'); }
         if (btnTuanTiep) { btnTuanTiep.disabled = true; btnTuanTiep.classList.add('opacity-50', 'cursor-not-allowed'); }
         if (inputNgay) { inputNgay.disabled = true; inputNgay.classList.add('cursor-not-allowed', 'opacity-80'); }
-    }
-
-    // BỔ SUNG: Xử lý hiển thị Menu Khung chương trình thông qua hàm ngoại vi
-    if (typeof capNhatQuyenMenuKhungChuongTrinh === 'function') {
-        capNhatQuyenMenuKhungChuongTrinh(quyenSuaChua);
     }
 }
 
