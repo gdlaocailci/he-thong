@@ -5,17 +5,14 @@ let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
 function dungGiaoDienThongKe() {
-    // Tìm đúng khung hiển thị đã được định nghĩa bên index.html
     let container = document.getElementById('khungThongKe');
     if (!container) return;
     
-    // Bơm trực tiếp giao diện Thống kê vào khung
     container.innerHTML = `
         <div class="flex justify-between items-center mb-4 flex-none">
             <h2 class="text-xl font-extrabold text-blue-900 uppercase">Tra cứu Thống kê Giảng dạy</h2>
         </div>
         
-        <!-- THANH CÔNG CỤ THỐNG KÊ -->
         <div class="bg-white shadow-sm border border-gray-400 p-3 flex flex-wrap items-center gap-4 mb-3 flex-none">
             <div class="flex items-center font-bold text-blue-900">
                 <span class="text-lg uppercase tracking-wide">Bộ Lọc Tra Cứu</span>
@@ -24,28 +21,24 @@ function dungGiaoDienThongKe() {
             <div class="h-6 w-px bg-gray-300 hidden md:block"></div>
 
             <div class="flex flex-wrap items-center gap-3 w-full md:w-auto text-sm font-semibold text-slate-800">
-                <!-- NĂM HỌC -->
                 <div class="flex flex-col">
                     <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Năm học</label>
                     <input type="text" id="inputNamHocTk" list="dlNamHocTk" onchange="xuLyDoiNamHocTk()" class="w-32 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
                     <datalist id="dlNamHocTk"></datalist>
                 </div>
 
-                <!-- THÁNG -->
                 <div class="flex flex-col">
                     <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Tháng</label>
                     <input type="text" id="inputThangTk" list="dlThangTk" onchange="xuLyDoiThangTk()" class="w-32 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
                     <datalist id="dlThangTk"></datalist>
                 </div>
 
-                <!-- TUẦN -->
                 <div class="flex flex-col">
                     <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Tuần</label>
                     <input type="text" id="inputTuanTk" list="dlTuanTk" class="w-36 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
                     <datalist id="dlTuanTk"></datalist>
                 </div>
 
-                <!-- GIÁO VIÊN -->
                 <div class="flex flex-col">
                     <label class="text-[11px] text-gray-500 uppercase tracking-widest mb-0.5">Giáo viên</label>
                     <input type="text" id="inputGiaoVienTk" list="dlGiaoVienTk" class="w-40 px-2 py-1.5 border border-gray-400 rounded outline-none focus:border-blue-500 bg-slate-50">
@@ -60,7 +53,6 @@ function dungGiaoDienThongKe() {
             </div>
         </div>
 
-        <!-- VÙNG HIỂN THỊ KẾT QUẢ -->
         <div id="vungKetQuaThongKe" class="bg-white shadow-inner border border-gray-400 flex-1 overflow-auto flex flex-col relative">
             <div class="text-center text-slate-400 mt-20 font-bold">
                 Vui lòng chọn bộ lọc và bấm "Tra cứu" để hiển thị dữ liệu thống kê.
@@ -69,7 +61,6 @@ function dungGiaoDienThongKe() {
     `;
 }
 
-// Tự động dựng giao diện và nạp dữ liệu bộ lọc khi trang vừa load xong
 document.addEventListener('DOMContentLoaded', () => { 
     dungGiaoDienThongKe();
     taiCayDanhMucThongKe();
@@ -83,7 +74,6 @@ async function taiCayDanhMucThongKe() {
     if (btn) btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang tải...`;
     
     try {
-        //[cite: 6]
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCayQuanHeThongKe`);
         cayDanhMucThongKe = await phanHoi.json();
         
@@ -140,7 +130,7 @@ function xuLyDoiThangTk() {
 }
 
 // =========================================================================
-// KHỐI 3: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
+// KHỐI 3: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ (ĐÃ TÍNH ĐỊNH MỨC & MÀU SẮC)
 // =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
@@ -148,26 +138,38 @@ async function goiTraCuuThongKe() {
     let tuan = document.getElementById('inputTuanTk').value.replace('Tuần ', '').trim();
     let giaoVien = document.getElementById('inputGiaoVienTk').value.trim();
 
-    // BẪY LỖI: Xóa các từ khóa đại diện để máy chủ hiểu là "lấy tất cả"
+    // 1. TÍNH TOÁN HỆ SỐ THỜI GIAN (SỐ TUẦN TRA CỨU)
+    let soTuanTraCuu = 1;
+    if (tuan === "Tất cả các tuần" || tuan === "") {
+        let duLieuNam = cayDanhMucThongKe[namHoc];
+        let dsTuan = [];
+        if (duLieuNam) {
+            if (thang === "Cả năm" || thang === "") {
+                for (let th in duLieuNam.soDoThoiGian) { dsTuan = dsTuan.concat(duLieuNam.soDoThoiGian[th]); }
+            } else {
+                dsTuan = duLieuNam.soDoThoiGian[thang] || [];
+            }
+            dsTuan = [...new Set(dsTuan)]; 
+            soTuanTraCuu = dsTuan.length > 0 ? dsTuan.length : 1;
+        }
+    }
+
     if (thang === "Cả năm") thang = "";
     if (tuan === "Tất cả các tuần") tuan = "";
     if (giaoVien === "Toàn trường") giaoVien = ""; 
 
     const vungKetQua = document.getElementById('vungKetQuaThongKe');
-    
-    // Tinh chỉnh CSS của container cha để hỗ trợ thanh cuộn độc lập cho bảng
     vungKetQua.classList.remove('p-4', 'overflow-auto');
     vungKetQua.classList.add('p-0', 'overflow-hidden');
     vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
 
     try {
-        //[cite: 6]
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
         let ketQua = await phanHoi.json();
         
         let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
         if (kieuGv === "Toàn trường" || kieuGv === "") {
-            veBangThongKeToanTruong(ketQua, namHoc, thang, tuan);
+            veBangThongKeToanTruong(ketQua, namHoc, thang, tuan, soTuanTraCuu);
         } else {
             veMaTranThongKeCaNhan(ketQua, kieuGv, namHoc, thang, tuan);
         }
@@ -176,8 +178,7 @@ async function goiTraCuuThongKe() {
     }
 }
 
-// Giao diện Tổng hợp Toàn trường
-function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
+function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
@@ -191,9 +192,10 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
                         <tr>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center">Giáo viên</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-purple-100 text-purple-900 text-center w-[1%] whitespace-nowrap px-6" title="Định mức 1 tuần x ${soTuanTraCuu} tuần">Định mức <br><span class="text-xs font-normal">(${soTuanTraCuu} tuần)</span></th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
-                            <th class="border border-gray-400 py-1.5 px-2 bg-green-100 text-green-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng số tiết</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-slate-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng đã dạy</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -209,11 +211,32 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan) {
     let dsGv = Object.keys(tongHopGv).sort();
     dsGv.forEach(gv => {
         let th = tongHopGv[gv];
+        
+        let dinhMuc1Tuan = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DINH_MUC_GIAO_VIEN && thongSoHocVu.DINH_MUC_GIAO_VIEN[gv]) ? parseInt(thongSoHocVu.DINH_MUC_GIAO_VIEN[gv]) : 0;
+        let tongDinhMuc = dinhMuc1Tuan * soTuanTraCuu;
+        
+        let bgClassTong = 'bg-white';
+        let textClassTong = 'text-blue-700 font-bold';
+
+        if (tongDinhMuc > 0) {
+            if (th.tong > tongDinhMuc) { 
+                bgClassTong = 'bg-red-100'; 
+                textClassTong = 'text-red-600 font-extrabold'; 
+            } else if (th.tong === tongDinhMuc) { 
+                bgClassTong = 'bg-green-100'; 
+                textClassTong = 'text-green-700 font-extrabold'; 
+            } else { 
+                bgClassTong = 'bg-white'; 
+                textClassTong = 'text-blue-700 font-bold'; 
+            }
+        }
+
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight">${tongDinhMuc}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 font-extrabold text-green-700 text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 ${textClassTong} ${bgClassTong} text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
                  </tr>`;
     });
     html += `</tbody></table></div>`;
