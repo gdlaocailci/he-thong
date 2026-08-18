@@ -58,6 +58,11 @@
             <a id="menuPhanCong" href="javascript:void(0)" onclick="moTabPhanCong()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Phân công chuyên môn</span>
             </a>
+
+            <a id="menuDanhMucGV" href="javascript:void(0)" onclick="moTabDanhMucGV()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
+                <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Danh mục Giáo viên</span>
+            </a>
+            
         </nav>
         
         <div class="mt-auto p-4 bg-black/20 text-center">
@@ -136,7 +141,7 @@
             </div>
         </div>
 
-<main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
+        <main class="flex-1 overflow-hidden px-2 pb-2 flex flex-col reactbits-fade-in delay-200">
     <div id="vungHienThiChinh" class="bg-white shadow-inner border border-gray-400 border-t-0 flex-1 overflow-auto relative">
         
         <!-- KHUNG 1: TKB HIỆN TẠI -->
@@ -206,7 +211,7 @@
             </div>
         </div>
 
-        <!-- KHUNG 3: BÁO CÁO THỐNG KÊ (BỔ SUNG MỚI) -->
+<!-- KHUNG 3: BÁO CÁO THỐNG KÊ (BỔ SUNG MỚI) -->
         <div id="khungThongKe" class="hidden p-4 w-full h-full flex-col font-sans">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-extrabold text-blue-900 uppercase">Tra cứu Thống kê Giảng dạy</h2>
@@ -220,7 +225,55 @@
             </div>
         </div>
 
-    </div>
+        <!-- KHUNG 4: DANH MỤC GIÁO VIÊN -->
+        <div id="khungDanhMucGV" class="hidden p-4 w-full h-full flex-col font-sans">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-extrabold text-blue-900 uppercase">QUẢN LÝ DANH MỤC GIÁO VIÊN</h2>
+                
+                <div class="flex items-center gap-2">
+                    <input type="file" id="tepExcelDanhMucGV" accept=".xlsx, .xls" class="hidden" onchange="nhapExcelDanhMucGV(event)">
+                    
+                    <button onclick="document.getElementById('tepExcelDanhMucGV').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Nhập Excel
+                    </button>
+
+                    <button onclick="xuatExcelDanhMucGV()" class="bg-green-700 hover:bg-green-800 text-white font-bold px-3 py-1.5 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Xuất Excel
+                    </button>
+
+                    <button onclick="themDongGiaoVienMoi()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-1.5 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
+                        + Thêm Giáo Viên
+                    </button>
+
+                    <button onclick="luuDuLieuDanhMucGVSangMayChu()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-1.5 text-xs shadow transition duration-200 rounded flex items-center gap-1.5 ml-2">
+                        Lưu Hệ Thống
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-auto border border-gray-400 shadow-sm bg-white relative">
+                <table class="bang-excel w-full text-center">
+                    <thead class="sticky top-0 z-20 bg-slate-200 text-slate-900 shadow-sm">
+                        <tr>
+                            <th class="py-2 w-16">STT</th>
+                            <th class="py-2 w-32">Mã GV</th>
+                            <th class="py-2">Họ và Tên</th>
+                            <th class="py-2">Tổ Chuyên Môn</th>
+                            <th class="py-2 w-32">Định Mức Tuần</th>
+                            <th class="py-2 w-40">Trạng Thái</th>
+                            <th class="py-2 w-32">Điều Chỉnh</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vungDuLieuDanhMucGV">
+                        <tr><td colspan="7" class="text-center py-10 text-slate-500 font-bold">Vui lòng chờ, đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div> <!-- THẺ ĐÓNG NÀY PHẢI NẰM DƯỚI CÙNG ĐỂ BAO TRỌN KHUNG 4 -->
 </main>
 
         <footer class="flex-none bg-white border-t border-gray-300 py-1 px-4 flex justify-between items-center text-xs text-slate-500 reactbits-fade-in delay-300">
@@ -250,5 +303,6 @@
     <script src="PhanCong.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="KhungChuongChinh.js"></script>
+    <script src="DanhMucGV.js"></script>
 </body>
 </html>
