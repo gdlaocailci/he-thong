@@ -149,12 +149,13 @@ function veBangKhungChuongTrinh() {
     if (!thead || !tbody) return;
 
     let chuoiThead = '<tr>';
-    chuoiThead += '<th class="w-28 p-2 border border-gray-400 bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>';
-    chuoiThead += '<th class="w-48 p-2 border border-gray-400 bg-slate-200 sticky left-[112px] z-30">Môn học</th>';
-    chuoiThead += '<th class="w-24 p-2 border border-gray-400 bg-slate-200">Ưu tiên</th>';
+    const cssChotVien = "p-2 border border-gray-400 !border-b-[2px] !border-b-slate-600 !shadow-[0_2px_0_0_#475569]";
+    chuoiThead += `<th class="w-28 ${cssChotVien} bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>`;
+    chuoiThead += `<th class="w-48 ${cssChotVien} bg-slate-200 sticky left-[112px] z-30">Môn học</th>`;
+    chuoiThead += `<th class="w-24 ${cssChotVien} bg-slate-200">Ưu tiên</th>`;
     
     danhSachLopKCT.forEach(lop => {
-        chuoiThead += `<th class="w-16 p-2 border border-gray-400 bg-blue-100">${lop}</th>`;
+        chuoiThead += `<th class="w-16 ${cssChotVien} bg-blue-100">${lop}</th>`;
     });
     chuoiThead += '</tr>';
     thead.innerHTML = chuoiThead;
