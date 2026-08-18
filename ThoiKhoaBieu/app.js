@@ -564,96 +564,73 @@ async function luuDuLieu(event, loaiLuu) {
 }
 
 // =========================================================================
-// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC
+// KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER)
 // =========================================================================
-function thietLapMenuActive(idKichHoat) {
+window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
+    // 1. Phủ màu Menu mượt mà không độ trễ
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat'];
-    
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
-            m.classList.remove('bg-white/10', 'border-white/20', 'shadow-md', 'backdrop-blur-sm');
-            m.classList.add('border-transparent');
-            
+            m.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group";
             let span = m.querySelector('span');
-            if (span) {
-                span.classList.remove('text-menu-active');
-                span.classList.add('text-white/90');
-            }
-            
+            if (span) span.className = "font-bold text-white/80 group-hover:text-white transition-colors text-[14px]";
             let svg = m.querySelector('svg');
-            if (svg) {
-                svg.classList.remove('text-menu-active', 'opacity-100');
-                svg.classList.add('opacity-70');
-            }
+            if (svg) svg.className = "w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white";
         }
     });
-    
-    let mActive = document.getElementById(idKichHoat);
-    if (mActive) {
-        mActive.classList.remove('border-transparent');
-        mActive.classList.add('bg-white/10', 'border-white/20', 'shadow-md', 'backdrop-blur-sm');
-        
-        let spanActive = mActive.querySelector('span');
-        if (spanActive) { 
-            spanActive.classList.remove('text-white/90'); 
-            spanActive.classList.add('text-menu-active'); 
-        }
-        
-        let svgActive = mActive.querySelector('svg');
-        if (svgActive) {
-            svgActive.classList.remove('opacity-70');
-            svgActive.classList.add('text-menu-active', 'opacity-100');
-        }
-    }
-}
 
-function anTatCaKhungTru(idKhungHien) {
+    // Bật sáng Menu đang chọn
+    let mActive = document.getElementById(idMenu);
+    if (mActive) {
+        mActive.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 shadow-md backdrop-blur-sm cursor-pointer group";
+        let spanActive = mActive.querySelector('span');
+        if (spanActive) spanActive.className = "font-bold text-menu-active text-[14px]";
+        let svgActive = mActive.querySelector('svg');
+        if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
+    }
+
+    // 2. Chuyển đổi khung màn hình tức thì bằng CSS
     const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
         if (el) {
-            if (id === idKhungHien) {
+            if (id === idKhung) {
                 el.classList.remove('hidden');
                 el.classList.add(id === 'khungTKB' || id === 'khungThongKe' ? 'block' : 'flex');
             } else {
-                el.classList.remove('block', 'flex');
                 el.classList.add('hidden');
+                el.classList.remove('block', 'flex');
             }
         }
     });
-}
 
-function moTabTKB() {
-    thietLapMenuActive('menuTKB');
-    setTimeout(() => {
-        let thanhCongCu = document.getElementById('thanhCongCuTKB');
-        if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
-        anTatCaKhungTru('khungTKB');
-    }, 15);
-}
+    // 3. Tắt/Bật thanh công cụ riêng của TKB
+    let thanhCongCu = document.getElementById('thanhCongCuTKB');
+    if (thanhCongCu) {
+        if (hienThanhCongCuTKB) {
+            thanhCongCu.classList.remove('hidden');
+            thanhCongCu.classList.add('flex');
+        } else {
+            thanhCongCu.classList.remove('flex');
+            thanhCongCu.classList.add('hidden');
+        }
+    }
 
-window.moTabThongKe = function() {
-    thietLapMenuActive('menuThongKe');
-    setTimeout(() => {
-        let thanhCongCu = document.getElementById('thanhCongCuTKB');
-        if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
-        anTatCaKhungTru('khungThongKe');
-    }, 15);
+    // 4. Kích hoạt tải dữ liệu thông minh (Chỉ tải khi Khung trống)
+    if (idKhung === 'khungPhanCong' && typeof taiDuLieuPhanCongTuMayChu === 'function' && typeof danhSachGV !== 'undefined' && danhSachGV.length === 0) {
+        taiDuLieuPhanCongTuMayChu();
+    }
+    if (idKhung === 'khungDanhMucGV' && typeof taiDuLieuDanhMucGV === 'function' && typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length === 0) {
+        taiDuLieuDanhMucGV();
+    }
+    if (idKhung === 'khungKhungChuongTrinh' && typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && typeof duLieuBangKCT !== 'undefined' && duLieuBangKCT.length === 0) {
+        taiDuLieuKhungChuongTrinhTuMayChu();
+    }
+    if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
+        taiDuLieuCaiDatHeThong();
+    }
 };
-window.dongTabThongKe = moTabTKB;
-
-// Các hàm moTabDanhMucGV và moTabCaiDat đã được cấu trúc gọn trong file js riêng của chúng.
-// Nhưng để chắc chắn chúng hoạt động mượt mà, tôi đặt một hàm hook ngắn ở đây:
-function moTabPhanCong() {
-    thietLapMenuActive('menuPhanCong');
-    setTimeout(() => {
-        let thanhCongCu = document.getElementById('thanhCongCuTKB');
-        if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
-        anTatCaKhungTru('khungPhanCong');
-        if (danhSachGV && danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
-    }, 15); 
-}
 
 // =========================================================================
 // KHỐI 6: XÁC THỰC DANH TÍNH
