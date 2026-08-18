@@ -39,6 +39,11 @@ function kiemSoatGiaoDien() {
         if (btnTuanTiep) { btnTuanTiep.disabled = true; btnTuanTiep.classList.add('opacity-50', 'cursor-not-allowed'); }
         if (inputNgay) { inputNgay.disabled = true; inputNgay.classList.add('cursor-not-allowed', 'opacity-80'); }
     }
+
+    // BỔ SUNG: Xử lý hiển thị Menu Khung chương trình thông qua hàm ngoại vi
+    if (typeof capNhatQuyenMenuKhungChuongTrinh === 'function') {
+        capNhatQuyenMenuKhungChuongTrinh(quyenSuaChua);
+    }
 }
 
 // NÂNG CẤP: Chuyển sang async/await để đồng bộ nhịp nạp UI trước khi tự động Lưu Tuần
