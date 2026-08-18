@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <nav class="flex flex-col mt-4">
+<nav class="flex flex-col mt-4">
             <!-- NÚT TKB TOÀN TRƯỜNG -->
             <a id="menuTKB" href="javascript:void(0)" onclick="dongTabThongKe()" class="block px-6 py-4 bg-menu-hover border-l-[5px] border-menu-active transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-menu-active group-hover:text-menu-active transition-colors text-[15px]">TKB Toàn trường</span>
@@ -54,7 +54,14 @@
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Báo cáo Thống kê</span>
             </a>
 
-            <!-- NÚT PHÂN CÔNG CHUYÊN MÔN (Mặc định ẩn) -->
+            <!-- ========================================== -->
+            <!-- NHÃN PHÂN CỤM: HỆ THỐNG (Chỉ hiện khi là Admin) -->
+            <!-- ========================================== -->
+            <div id="nhanHeThong" style="display: none;" class="px-6 pt-6 pb-2">
+                <span class="text-[11px] font-black text-blue-200 uppercase tracking-widest opacity-80">Hệ thống</span>
+            </div>
+
+            <!-- CÁC NÚT QUẢN TRỊ (Mặc định ẩn) -->
             <a id="menuCaiDat" href="javascript:void(0)" onclick="moTabCaiDat()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Cài đặt Hệ thống</span>
             </a>
@@ -62,12 +69,16 @@
             <a id="menuDanhMucGV" href="javascript:void(0)" onclick="moTabDanhMucGV()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Danh mục Giáo viên</span>
             </a>
-            
+
+            <a id="menuKhungChuongTrinh" href="javascript:void(0)" onclick="moTabKhungChuongTrinh()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
+                <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Khung chương trình (PA)</span>
+            </a>
+    
             <a id="menuPhanCong" href="javascript:void(0)" onclick="moTabPhanCong()" style="display: none;" class="block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group">
                 <span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Phân công chuyên môn</span>
             </a>
-                  
-        </nav>
+
+         </nav>
         
         <div class="mt-auto p-4 bg-black/20 text-center">
             <button id="nutDangNhapG" onclick="khoiDongDangNhap()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-2 px-4 rounded shadow-md flex items-center justify-center gap-2 transition duration-200 mb-4 group">
