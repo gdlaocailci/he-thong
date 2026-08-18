@@ -1,6 +1,6 @@
 let duLieuTongTien = {}; 
 let danhSachGV = [];
-let khungChuongTrinhToanTruong = {}; // Khởi tạo biến lưu trữ định mức Khung Chương Trình
+let khungChuongTrinhToanTruong = {}; 
 
 // =========================================================================
 // KHỐI 1: GIAO TIẾP MÁY CHỦ (API FETCH)
@@ -33,7 +33,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   danhSachGV = duLieuSever.giaoVien || [];
   khungChuongTrinhToanTruong = duLieuSever.khungChuongTrinh || {}; 
   
-  // NÂNG CẤP: Đổi p-2 thành py-1 px-2 để giảm chiều cao tiêu đề bảng
   let headerHtml = '<tr><th class="py-1 px-2 border border-gray-400 bg-slate-200 sticky left-0 z-30 min-w-[80px]">Mã Lớp</th>';
   if (duLieuSever.monHoc) {
       duLieuSever.monHoc.forEach(mon => {
@@ -46,7 +45,9 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   let bodyHtml = '';
   let optionsGV = `<option value=""></option>`;
   danhSachGV.forEach(gv => {
-    optionsGV += `<option value="${gv.hoTen}">${gv.hoTen}</option>`;
+    // ĐIỀU CHỈNH CỐT LÕI: Sử dụng mã GV (maGv) cho cả value và text để đồng bộ CSDL
+    let ma = gv.maGv || gv.hoTen;
+    optionsGV += `<option value="${ma}">${ma}</option>`;
   });
 
   let mapPhanCongDaLuu = {};
@@ -62,7 +63,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
 
   if (duLieuSever.maLop) {
       duLieuSever.maLop.forEach(maLop => {
-        // NÂNG CẤP: Đổi p-2 thành py-1 px-2 ở cột Mã lớp
         bodyHtml += `<tr class="hover:bg-slate-50 transition-colors duration-150 group">
                         <td class="py-1 px-2 border border-gray-400 font-extrabold text-slate-900 bg-white sticky left-0 z-10 group-hover:bg-slate-50">${maLop}</td>`;
         
@@ -73,7 +73,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
           let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
           let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
           
-          // NÂNG CẤP: Giảm min-h-[35px] xuống min-h-[26px] để thu hẹp thẻ select
           bodyHtml += `<td class="p-0 border border-gray-400 transition-all duration-300 bg-white group-hover:bg-slate-50">
                           <select data-lop="${maLop}" data-mon="${tenMon}" onchange="tinhToanTietDay()" class="w-full h-full min-h-[26px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
                               ${selectedOptions}
@@ -94,25 +93,29 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
 function tinhToanTietDay() {
   let thongKe = {};
   
-  danhSachGV.forEach(gv => { thongKe[gv.hoTen] = { dinhMuc: gv.dinhMuc, thucTe: 0, chiTiet: [] }; });
+  // NÂNG CẤP: Lấy Mã GV làm key để gom nhóm, nhưng lưu trữ thêm Tên để in ra báo cáo
+  danhSachGV.forEach(gv => { 
+      let ma = gv.maGv || gv.hoTen;
+      let ten = gv.hoTen || ma;
+      thongKe[ma] = { hoTen: ten, dinhMuc: gv.dinhMuc, thucTe: 0, chiTiet: [] }; 
+  });
 
   const cacTheSelect = document.querySelectorAll('#bangChinh select');
   cacTheSelect.forEach(sl => {
-    let tenGV = sl.value;
-    if (tenGV && thongKe[tenGV]) {
+    let maGV = sl.value;
+    if (maGV && thongKe[maGV]) {
       let tenLop = sl.getAttribute('data-lop');
       let tenMon = sl.getAttribute('data-mon');
       
-      // NÂNG CẤP: Bỏ logic tạo "tenKhoi", tra cứu trực tiếp theo "tenLop"
       let soTiet = 0;
       if (khungChuongTrinhToanTruong[tenLop] && khungChuongTrinhToanTruong[tenLop][tenMon]) {
           soTiet = parseInt(khungChuongTrinhToanTruong[tenLop][tenMon]) || 0;
       }
       
-      thongKe[tenGV].thucTe += soTiet; 
+      thongKe[maGV].thucTe += soTiet; 
       
       if (soTiet > 0) {
-          thongKe[tenGV].chiTiet.push(`<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 rounded px-1.5 py-0.5 m-0.5 text-[11px] whitespace-nowrap shadow-sm">${tenMon} ${tenLop} (${soTiet})</span>`);
+          thongKe[maGV].chiTiet.push(`<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 rounded px-1.5 py-0.5 m-0.5 text-[11px] whitespace-nowrap shadow-sm">${tenMon} ${tenLop} (${soTiet})</span>`);
       }
     }
   });
@@ -136,7 +139,7 @@ function tinhToanTietDay() {
   }
 
   let tbodyThongKe = '';
-  for (const [ten, soLieu] of Object.entries(thongKe)) {
+  for (const [ma, soLieu] of Object.entries(thongKe)) {
     let bgClass = 'bg-white';
     let textClass = 'text-blue-700 font-bold';
 
@@ -153,9 +156,12 @@ function tinhToanTietDay() {
     
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
     
+    // Tối ưu hiển thị bảng báo cáo: Hiện Tên GV to, và Mã GV nhỏ ở dưới
+    let hienThiTen = (soLieu.hoTen && soLieu.hoTen !== ma) ? `${soLieu.hoTen} <br><span class="text-[10px] text-gray-500 font-normal italic">(${ma})</span>` : ma;
+
     tbodyThongKe += `
       <tr class="${bgClass} hover:bg-gray-50 transition-colors">
-        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-4 border-b border-r border-gray-300 whitespace-nowrap sticky left-0 z-10 bg-inherit shadow-[1px_0_0_0_#d1d5db]">${ten}</td>
+        <td class="py-1 px-2 font-semibold text-slate-800 text-left pl-3 border-b border-r border-gray-300 whitespace-nowrap sticky left-0 z-10 bg-inherit shadow-[1px_0_0_0_#d1d5db]">${hienThiTen}</td>
         <td class="py-1 px-2 font-bold text-slate-600 border-b border-r border-gray-300 text-center">${soLieu.dinhMuc}</td>
         <td class="py-1 px-2 ${textClass} text-base border-b border-r border-gray-300 text-center">${soLieu.thucTe}</td>
         <td class="py-1 px-2 text-left leading-tight whitespace-normal border-b border-gray-300">${chiTietHienThi}</td>
@@ -180,13 +186,11 @@ async function xuLyLuuTru() {
   try {
     let mangGhi = [];
     
-    // 1. Quét dòng Tiêu đề (Mã Lớp + Các Môn học)
     let thead = document.querySelectorAll('#tieuDeMonHoc th');
     let dongTieuDe = [];
     thead.forEach(th => dongTieuDe.push(th.innerText.trim()));
     mangGhi.push(dongTieuDe);
     
-    // 2. Quét dữ liệu dọc theo từng lớp
     let cacDongLop = document.querySelectorAll('#duLieuLopHoc tr');
     cacDongLop.forEach(tr => {
         let dongDuLieu = [];
@@ -197,13 +201,12 @@ async function xuLyLuuTru() {
             
             let cacSelect = tr.querySelectorAll('select');
             cacSelect.forEach(sl => {
-                dongDuLieu.push(sl.value.trim());
+                dongDuLieu.push(sl.value.trim()); // Lưu MÃ GIÁO VIÊN xuống DB
             });
             mangGhi.push(dongDuLieu);
         }
     });
     
-    // 3. Gửi lệnh lưu về Máy chủ
     const payload = { thaoTac: 'luuDuLieuPhanCong', duLieu: mangGhi };
     const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { 
         method: 'POST', 
@@ -244,7 +247,6 @@ function moTabPhanCong() {
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
 
-        // BỔ SUNG: Ẩn giao diện Khung chương trình
         let khungKCT = document.getElementById('khungKhungChuongTrinh');
         if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
         
@@ -268,7 +270,6 @@ function moTabTKB() {
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('block'); khungTK.classList.add('hidden'); }
 
-        // BỔ SUNG: Ẩn giao diện Khung chương trình
         let khungKCT = document.getElementById('khungKhungChuongTrinh');
         if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
         
@@ -290,7 +291,6 @@ window.moTabThongKe = function() {
         let khungPC = document.getElementById('khungPhanCong');
         if (khungPC) { khungPC.classList.remove('flex'); khungPC.classList.add('hidden'); }
 
-        // BỔ SUNG: Ẩn giao diện Khung chương trình
         let khungKCT = document.getElementById('khungKhungChuongTrinh');
         if (khungKCT) { khungKCT.classList.remove('flex'); khungKCT.classList.add('hidden'); }
         
@@ -302,7 +302,6 @@ window.moTabThongKe = function() {
 window.dongTabThongKe = moTabTKB;
 
 function thietLapMenuActive(idKichHoat) {
-    // NÂNG CẤP: Bổ sung 'menuKhungChuongTrinh' vào danh sách quét để tắt màu khi chuyển tab
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
