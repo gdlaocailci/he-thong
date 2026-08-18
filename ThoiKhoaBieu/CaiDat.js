@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let checkQuyenCD = setInterval(() => {
         if (typeof quyenSuaChua !== 'undefined') {
             let menuCD = document.getElementById('menuCaiDat');
-            // Thay đổi 'block' thành 'flex'
+            // Đã sửa 'block' thành 'flex' để chống vỡ cấu trúc giao diện
             if (menuCD) { menuCD.style.display = quyenSuaChua ? 'flex' : 'none'; }
         }
     }, 1000);
@@ -70,13 +70,41 @@ function veGiaoDienQuanTri() {
     tbody.innerHTML = html;
 }
 
+// =========================================================================
+// KHỐI ĐỒNG BỘ & THAO TÁC CÀI ĐẶT (ĐÃ NÂNG CẤP KIÊN CỐ)
+// =========================================================================
+
+// Quét trực tiếp dữ liệu từ DOM (Giao diện) để đảm bảo không thất thoát dữ liệu 
+// do trạng thái (State) bất đồng bộ (Ví dụ: sự kiện onchange không kịp kích hoạt khi ấn lưu ngay).
+function dongBoDomSangState() {
+    dsThamSo = [];
+    document.querySelectorAll('#vungThamSo tr').forEach(tr => {
+        let cacInput = tr.querySelectorAll('input');
+        if (cacInput && cacInput.length === 3) {
+            dsThamSo.push({ 
+                maThamSo: cacInput[0].value, 
+                giaTri: cacInput[1].value, 
+                ghiChu: cacInput[2].value 
+            });
+        }
+    });
+    
+    dsQuanTri = [];
+    document.querySelectorAll('#vungQuanTri tr').forEach(tr => {
+        let input = tr.querySelector('input');
+        if (input) {
+            dsQuanTri.push(input.value);
+        }
+    });
+}
+
 function capNhatThamSo(idx, truong, giaTri) { dsThamSo[idx][truong] = giaTri; }
-function themDongThamSo() { dsThamSo.push({ maThamSo: '', giaTri: '', ghiChu: '' }); veGiaoDienThamSo(); }
-function xoaThamSo(idx) { if(confirm("Đồng chí chắc chắn muốn xoá Tham số này?")) { dsThamSo.splice(idx, 1); veGiaoDienThamSo(); } }
+function themDongThamSo() { dongBoDomSangState(); dsThamSo.push({ maThamSo: '', giaTri: '', ghiChu: '' }); veGiaoDienThamSo(); }
+function xoaThamSo(idx) { if(confirm("Đồng chí chắc chắn muốn xoá Tham số này?")) { dongBoDomSangState(); dsThamSo.splice(idx, 1); veGiaoDienThamSo(); } }
 
 function capNhatQuanTri(idx, giaTri) { dsQuanTri[idx] = giaTri; }
-function themDongQuanTri() { dsQuanTri.push(''); veGiaoDienQuanTri(); }
-function xoaQuanTri(idx) { if(confirm("Hủy quyền Admin của tài khoản này?")) { dsQuanTri.splice(idx, 1); veGiaoDienQuanTri(); } }
+function themDongQuanTri() { dongBoDomSangState(); dsQuanTri.push(''); veGiaoDienQuanTri(); }
+function xoaQuanTri(idx) { if(confirm("Hủy quyền Admin của tài khoản này?")) { dongBoDomSangState(); dsQuanTri.splice(idx, 1); veGiaoDienQuanTri(); } }
 
 async function luuCaiDatSangMayChu() {
     const btn = document.querySelector('#khungCaiDat button[onclick="luuCaiDatSangMayChu()"]');
@@ -84,15 +112,19 @@ async function luuCaiDatSangMayChu() {
     btn.innerHTML = `Đang lưu...`; btn.disabled = true;
 
     try {
-        let mangGhi = [TIEU_DE_CAI_DAT];
+        // Chốt hạ dữ liệu từ giao diện vào mảng trước khi chuẩn bị Payload gửi đi
+        dongBoDomSangState();
+
+        let mangGhi = [TIEU_DE_CAI_DAT]; // ['MaThamSo', 'GiaTri', 'GhiChu', '', 'Quyền Admin']
         let soDongMax = Math.max(dsThamSo.length, dsQuanTri.length);
 
         for (let i = 0; i < soDongMax; i++) {
             let ts = dsThamSo[i] || { maThamSo: '', giaTri: '', ghiChu: '' };
             let qt = dsQuanTri[i] || '';
             
+            // Ép kiểu trim() làm sạch khoảng trắng thừa
             if(ts.maThamSo.trim() !== '' || qt.trim() !== '') {
-                mangGhi.push([ts.maThamSo, ts.giaTri, ts.ghiChu, '', qt]);
+                mangGhi.push([ts.maThamSo.trim(), ts.giaTri.trim(), ts.ghiChu.trim(), '', qt.trim()]);
             }
         }
 
@@ -101,7 +133,7 @@ async function luuCaiDatSangMayChu() {
         const ketQua = await phanHoi.json();
         
         if (ketQua.trangThai === 'Thành công') { 
-            alert("Đã lưu Cấu hình hệ thống! Vui lòng tải lại trang (F5) để các thông số mới có hiệu lực."); 
+            alert("Đã lưu Cấu hình hệ thống thành công! Vui lòng tải lại trang (F5) để các thông số mới có hiệu lực."); 
         } else { alert("Lỗi từ máy chủ: " + ketQua.thongBao); }
     } catch(loi) { alert("Lỗi kết nối mạng."); } 
     finally { btn.innerHTML = textGoc; btn.disabled = false; }
