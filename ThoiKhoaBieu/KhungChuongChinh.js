@@ -350,7 +350,12 @@ async function luuDuLieuKhungChuongTrinh(event) {
     const nutBam = event.currentTarget;
     const noiDungGoc = nutBam.innerHTML;
     
-    nutBam.innerHTML = '<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang đồng bộ...';
+    // NÂNG CẤP: Bọc nội dung trong thẻ div flex + whitespace-nowrap để ép luôn nằm trên 1 dòng
+    // Đồng thời giảm kích thước vòng xoay (w-4 h-4) để không làm phình chiều cao của nút
+    nutBam.innerHTML = `<div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Đang đồng bộ...</span>
+                        </div>`;
     nutBam.disabled = true;
     nutBam.classList.replace('bg-blue-600', 'bg-slate-500');
 
