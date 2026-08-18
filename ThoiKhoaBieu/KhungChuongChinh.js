@@ -16,7 +16,7 @@ function khoiTaoMenuKhungChuongTrinh() {
         menuKCT.id = 'menuKhungChuongTrinh';
         menuKCT.href = 'javascript:void(0)';
         menuKCT.onclick = moTabKhungChuongTrinh;
-        menuKCT.style.display = 'none'; // Ẩn mặc định, chờ cấp quyền từ app.js
+        menuKCT.style.display = 'none'; // Ẩn mặc định
         menuKCT.className = 'block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group';
         menuKCT.innerHTML = `<span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Khung chương trình (PA)</span>`;
         nav.appendChild(menuKCT);
@@ -37,13 +37,22 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
         khungKCT.id = 'khungKhungChuongTrinh';
         khungKCT.className = 'hidden p-4 w-full h-full flex-col font-sans bg-white reactbits-fade-in';
         khungKCT.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
                 <h2 class="text-xl font-extrabold text-blue-900 uppercase">Khung Chương Trình Môn Học</h2>
-                <div class="flex gap-2">
-                    <button onclick="themDongKhungChuongTrinh()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition duration-200">
+                <div class="flex flex-wrap gap-2">
+                    <input type="file" id="fileNhapKCT" accept=".xls,.html,.htm" style="display: none;" onchange="nhapExcelKCT(event)">
+                    <button onclick="document.getElementById('fileNhapKCT').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Tải lên
+                    </button>
+                    <button onclick="xuatExcelKCT()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Tải xuống
+                    </button>
+                    <button onclick="themDongKhungChuongTrinh()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 text-sm">
                         Thêm dòng
                     </button>
-                    <button onclick="luuDuLieuKhungChuongTrinh(event)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition duration-200">
+                    <button onclick="luuDuLieuKhungChuongTrinh(event)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 text-sm">
                         Lưu Khung CT
                     </button>
                 </div>
@@ -67,25 +76,21 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
 // 2. CHUYỂN ĐỔI TAB VÀ TẢI DỮ LIỆU BẰNG FETCH
 // ==========================================
 function moTabKhungChuongTrinh() {
-    // Ẩn các khung dữ liệu không liên quan
     const cacKhung = ['khungTKB', 'khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh'];
     cacKhung.forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.classList.add('hidden'); el.classList.remove('flex', 'block'); }
     });
 
-    // Ẩn thanh công cụ UI của Thời khóa biểu
     let thanhCongCu = document.getElementById('thanhCongCuTKB');
     if (thanhCongCu) { 
         thanhCongCu.classList.remove('flex'); 
         thanhCongCu.classList.add('hidden'); 
     }
 
-    // Hiển thị khung Chương trình
     const khungKCT = document.getElementById('khungKhungChuongTrinh');
     if (khungKCT) { khungKCT.classList.remove('hidden'); khungKCT.classList.add('flex'); }
 
-    // Cập nhật CSS cho thanh menu bên trái
     document.querySelectorAll('nav a').forEach(a => {
         a.classList.remove('border-menu-active', 'bg-menu-hover');
         a.classList.add('border-transparent');
@@ -101,7 +106,6 @@ function moTabKhungChuongTrinh() {
         if(span) { span.classList.add('text-menu-active'); span.classList.remove('text-white'); }
     }
 
-    // Gọi dữ liệu từ máy chủ
     taiDuLieuKhungChuongTrinhTuMayChu();
 }
 
@@ -115,8 +119,21 @@ async function taiDuLieuKhungChuongTrinhTuMayChu() {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layBanGhiKhungChuongTrinh`);
         const response = await phanHoi.json();
         
-        danhSachLopKCT = response.classes || [];
-        duLieuBangKCT = response.data || [];
+        // Đồng bộ dữ liệu Lớp từ sheet DM_LOP (thông qua biến thongSoHocVu của hệ thống)
+        const classTuDM = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) 
+                          ? thongSoHocVu.DANH_SACH_LOP 
+                          : (response.classes || []);
+        
+        const classMap = response.classes || [];
+        duLieuBangKCT = (response.data || []).map(row => {
+            const newSoTiet = classTuDM.map(lop => {
+                const oldIndex = classMap.indexOf(lop);
+                return oldIndex !== -1 ? row.soTiet[oldIndex] : '';
+            });
+            return { monHoc: row.monHoc, uuTien: row.uuTien, soTiet: newSoTiet };
+        });
+        
+        danhSachLopKCT = classTuDM;
         veBangKhungChuongTrinh();
     } catch (loi) {
         if (tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-center py-10 text-red-500 font-bold">Đã xảy ra lỗi kết nối: ${loi}</td></tr>`;
@@ -144,7 +161,7 @@ function veBangKhungChuongTrinh() {
 
     tbody.innerHTML = '';
     if (duLieuBangKCT.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${3 + danhSachLopKCT.length}" class="text-center py-6 text-slate-500">Chưa có dữ liệu. Vui lòng thêm dòng.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${3 + danhSachLopKCT.length}" class="text-center py-6 text-slate-500">Chưa có dữ liệu. Vui lòng thêm dòng hoặc tải lên từ Excel.</td></tr>`;
         return;
     }
 
@@ -152,7 +169,6 @@ function veBangKhungChuongTrinh() {
         let tr = document.createElement('tr');
         tr.className = 'hover:bg-yellow-50 transition-colors group';
         
-        // Sử dụng mã SVG thuần thay cho thẻ img để đảm bảo icon luôn hiển thị
         let cotThaoTac = `
             <td class="p-1.5 border border-gray-400 text-center bg-white sticky left-0 z-10 group-hover:bg-yellow-50 shadow-[1px_0_0_0_#9ca3af]">
                 <div class="flex justify-center items-center gap-1.5">
@@ -195,8 +211,7 @@ function capNhatSoTietKCT(indexDong, indexCot, giaTri) {
 
 function themDongKhungChuongTrinh() {
     if (danhSachLopKCT.length === 0) {
-        // Nạp danh sách lớp mặc định nếu chưa có
-        danhSachLopKCT = ['1A','1B','1C','2A','2B','2C','3A','3B','3C','4A','4B','4C','5A','5B','5C'];
+        danhSachLopKCT = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_LOP) ? thongSoHocVu.DANH_SACH_LOP : ['1A','1B','1C','2A','2B','2C','3A','3B','3C','4A','4B','4C','5A','5B','5C'];
     }
     duLieuBangKCT.push({ monHoc: '', uuTien: '', soTiet: new Array(danhSachLopKCT.length).fill('') });
     veBangKhungChuongTrinh();
@@ -233,7 +248,106 @@ function diChuyenDongKCT(indexDong, huong) {
 }
 
 // ==========================================
-// 5. ĐỒNG BỘ DỮ LIỆU LÊN MÁY CHỦ BẰNG POST FETCH
+// 5. CHỨC NĂNG TẢI EXCEL (XUẤT / NHẬP)
+// ==========================================
+function xuatExcelKCT() {
+    if (duLieuBangKCT.length === 0) { alert("Không có dữ liệu để xuất."); return; }
+    
+    let tableHTML = `<table border="1" style="border-collapse:collapse; font-family:'Times New Roman',Times,serif; text-align:center;">`;
+    tableHTML += `<tr>
+        <th style="background-color:#f1f5f9; font-weight:bold; padding:5px;">Môn học</th>
+        <th style="background-color:#f1f5f9; font-weight:bold; padding:5px;">Ưu tiên</th>`;
+    
+    danhSachLopKCT.forEach(lop => {
+        tableHTML += `<th style="background-color:#e2e8f0; font-weight:bold; padding:5px;">${lop}</th>`;
+    });
+    tableHTML += `</tr>`;
+    
+    duLieuBangKCT.forEach(dong => {
+        tableHTML += `<tr>
+            <td style="padding:4px;">${dong.monHoc || ''}</td>
+            <td style="padding:4px;">${dong.uuTien || ''}</td>`;
+        danhSachLopKCT.forEach((lop, index) => {
+            let gt = dong.soTiet[index] !== undefined ? dong.soTiet[index] : '';
+            tableHTML += `<td style="padding:4px;">${gt}</td>`;
+        });
+        tableHTML += `</tr>`;
+    });
+    tableHTML += `</table>`;
+    
+    let template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>KhungChuongTrinh</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>' + tableHTML + '</body></html>';
+    
+    let blob = new Blob([template], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `KhungChuongTrinh_KCT.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function nhapExcelKCT(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const doc = new DOMParser().parseFromString(text, 'text/html');
+            const table = doc.querySelector('table');
+            
+            if (!table) { alert("File không hợp lệ hoặc không phải file Excel (.xls) được xuất từ hệ thống."); return; }
+            
+            const rows = table.querySelectorAll('tr');
+            if (rows.length < 2) { alert("Bảng Excel trống hoặc không có dữ liệu môn học."); return; }
+            
+            // Phân tích Header
+            const headerCells = rows[0].querySelectorAll('th, td');
+            let fileClasses = [];
+            for (let i = 2; i < headerCells.length; i++) {
+                fileClasses.push(headerCells[i].innerText.trim());
+            }
+            
+            // Phân tích Nội dung
+            let newData = [];
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].querySelectorAll('td, th');
+                if (cells.length < 2) continue;
+                
+                let monHoc = cells[0].innerText.trim();
+                let uuTien = cells[1].innerText.trim();
+                if (!monHoc) continue;
+                
+                let soTietFile = fileClasses.map((lop, index) => {
+                    return cells[index + 2] ? cells[index + 2].innerText.trim() : '';
+                });
+                
+                // Căn chỉnh số tiết theo danh sách lớp hiện hành (DM_LOP)
+                let mappedSoTiet = danhSachLopKCT.map(lop => {
+                    let idx = fileClasses.indexOf(lop);
+                    return idx !== -1 ? soTietFile[idx] : '';
+                });
+                
+                newData.push({ monHoc: monHoc, uuTien: uuTien, soTiet: mappedSoTiet });
+            }
+            
+            duLieuBangKCT = newData;
+            veBangKhungChuongTrinh();
+            alert("Đã tải dữ liệu thành công từ file Excel. Vui lòng kiểm tra lại trên lưới và bấm 'Lưu Khung CT' để lưu vào máy chủ.");
+        } catch (loi) {
+            alert("Lỗi khi đọc file: " + loi.message);
+        } finally {
+            event.target.value = ''; // Reset file input
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ==========================================
+// 6. ĐỒNG BỘ DỮ LIỆU LÊN MÁY CHỦ
 // ==========================================
 async function luuDuLieuKhungChuongTrinh(event) {
     const nutBam = event.currentTarget;
