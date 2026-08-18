@@ -1,9 +1,3 @@
-/**
- * Tên file: ThongKe.js
- * Chức năng: Tra cứu Thống kê Giảng dạy toàn trường và cá nhân (Hiển thị Tên thay Mã GV, tính Thừa/Thiếu).
- * Tác giả: Hoàng Ngọc Lâm
- */
-
 let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
@@ -240,6 +234,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
                 <table class="w-full h-fit text-sm border-collapse border border-gray-400 bg-white">
                     <thead class="sticky top-0 z-20 shadow-sm ring-1 ring-gray-400">
                         <tr>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap">STT</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center">Giáo viên</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-purple-100 text-purple-900 text-center w-[1%] whitespace-nowrap px-6">Định mức quy đổi <br><span class="text-xs font-normal">(Số thập phân)</span></th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
@@ -259,11 +254,10 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
     });
 
     let dsGv = Object.keys(tongHopGv).sort();
-    dsGv.forEach(gv => {
+    // BỔ SUNG index vào vòng lặp để đánh số thứ tự
+    dsGv.forEach((gv, index) => {
         let th = tongHopGv[gv];
         let dinhMuc1Tuan = mangDinhMucChuan[gv] || 0;
-        
-        // BỔ SUNG: Dịch Mã -> Tên từ bộ từ điển
         let tenHienThi = mapTenGiaoVien[gv] ? mapTenGiaoVien[gv] : gv;
         
         let tongDinhMuc = 0;
@@ -316,6 +310,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
         }
 
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
+                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-500 leading-tight w-[1%] whitespace-nowrap">${index + 1}</td>
                     <td class="border border-gray-400 py-0.5 px-3 font-bold text-slate-800 leading-tight text-left">${tenHienThi}</td>
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight text-base">${hiểnThịDinhMuc}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
