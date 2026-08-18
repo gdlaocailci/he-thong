@@ -84,8 +84,28 @@ function veBangDanhMucGV() {
     tbody.innerHTML = html;
 }
 
-// Logic thao tác dòng
-function capNhatGv(index, truong, giaTri) { duLieuDanhMucGV[index][truong] = giaTri; }
+// Logic thao tác dòng (Đã tích hợp kiểm soát chống trùng Mã GV)
+function capNhatGv(index, truong, giaTri) { 
+    if (truong === 'maGv') {
+        let maMoi = giaTri.trim();
+        
+        if (maMoi !== '') {
+            // Kiểm tra xem mã mới có trùng với bất kỳ giáo viên nào khác trong danh sách không
+            let biTrung = duLieuDanhMucGV.some((gv, idx) => idx !== index && gv.maGv.trim().toLowerCase() === maMoi.toLowerCase());
+            
+            if (biTrung) {
+                alert(`⚠️ LỖI DỮ LIỆU:\nMã giáo viên "${maMoi}" đã tồn tại trong hệ thống. Vui lòng nhập một mã khác để tránh xung đột thuật toán xếp lịch!`);
+                veBangDanhMucGV(); // Cập nhật lại giao diện để khôi phục giá trị cũ hợp lệ
+                return; // Ngừng thực thi, không cho phép ghi đè
+            }
+        }
+        
+        // Nếu không trùng thì mới cho phép cập nhật vào bộ nhớ
+        duLieuDanhMucGV[index][truong] = maMoi; 
+    } else {
+        duLieuDanhMucGV[index][truong] = giaTri; 
+    }
+}
 function themDongGiaoVienMoi() { duLieuDanhMucGV.push({ maGv: '', hoTen: '', toChuyenMon: 'Tiểu học', dinhMuc: '', trangThai: 'Đang công tác' }); veBangDanhMucGV(); }
 function xoaGv(index) { if (confirm("Đồng chí có chắc chắn muốn xoá giáo viên này khỏi danh mục?")) { duLieuDanhMucGV.splice(index, 1); veBangDanhMucGV(); } }
 function dichChuyenGv(index, huong) {
