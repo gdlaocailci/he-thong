@@ -1,6 +1,15 @@
+/**
+ * Tên file: ThongKe.js
+ * Chức năng: Tra cứu Thống kê Giảng dạy toàn trường và cá nhân (Hiển thị Tên thay Mã GV, tính Thừa/Thiếu).
+ * Tác giả: Hoàng Ngọc Lâm
+ */
+
 let cayDanhMucThongKe = {};
 let duLieuThongKeHienTai = [];
 
+// =========================================================================
+// KHỐI 1: KHỞI TẠO GIAO DIỆN VÀ GẮN VÀO KHUNG CÓ SẴN
+// =========================================================================
 function dungGiaoDienThongKe() {
     let container = document.getElementById('khungThongKe');
     if (!container) return;
@@ -63,6 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
     taiCayDanhMucThongKe();
 });
 
+// =========================================================================
+// KHỐI 2: GIAO TIẾP MÁY CHỦ VÀ LOGIC DROPDOWN LIÊN HOÀN
+// =========================================================================
 async function taiCayDanhMucThongKe() {
     const btn = document.querySelector('button[onclick="goiTraCuuThongKe()"]');
     if (btn) btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang tải...`;
@@ -123,6 +135,9 @@ function xuLyDoiThangTk() {
     document.getElementById('inputTuanTk').value = "Tất cả các tuần";
 }
 
+// =========================================================================
+// KHỐI 3: GỌI TRA CỨU VÀ VẼ GIAO DIỆN KẾT QUẢ
+// =========================================================================
 async function goiTraCuuThongKe() {
     let namHoc = document.getElementById('inputNamHocTk').value.trim();
     let thang = document.getElementById('inputThangTk').value.replace('Tháng ', '').trim();
@@ -153,11 +168,19 @@ async function goiTraCuuThongKe() {
 
     try {
         let mangDinhMucChuan = {};
+        let mapTenGiaoVien = {}; // BỔ SUNG: Bộ từ điển ánh xạ Mã -> Tên
         try {
             const resDM = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
             const dataDM = await resDM.json();
             if (dataDM && dataDM.giaoVien) {
-                dataDM.giaoVien.forEach(g => { mangDinhMucChuan[g.hoTen] = parseInt(g.dinhMuc) || 0; });
+                dataDM.giaoVien.forEach(g => { 
+                    // Linh hoạt nhận diện: mã (Cột A) và tên hiển thị (Cột B) từ máy chủ
+                    let ma = g.maGv || g.hoTen; 
+                    let ten = g.hoTen || ma;
+                    
+                    mangDinhMucChuan[ma] = parseInt(g.dinhMuc) || 0; 
+                    mapTenGiaoVien[ma] = ten; // Ghi nhớ tên vào từ điển
+                });
             }
         } catch(e) { console.warn("Lỗi tải định mức phụ:", e); }
 
@@ -166,7 +189,7 @@ async function goiTraCuuThongKe() {
         
         let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
         if (kieuGv === "Toàn trường" || kieuGv === "") {
-            veBangThongKeToanTruong(duLieuThongKeHienTai, namHoc, thang, tuan, soTuanTraCuu, mangDinhMucChuan);
+            veBangThongKeToanTruong(duLieuThongKeHienTai, namHoc, thang, tuan, soTuanTraCuu, mangDinhMucChuan, mapTenGiaoVien);
         } else {
             veMaTranThongKeCaNhan(duLieuThongKeHienTai, kieuGv, namHoc, thang, tuan);
         }
@@ -175,12 +198,11 @@ async function goiTraCuuThongKe() {
     }
 }
 
-function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDinhMucChuan) {
+function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDinhMucChuan, mapTenGiaoVien) {
     let tDe = `Thống kê Toàn trường - Năm học ${nam}`;
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
 
-    // NÂNG CẤP THUẬT TOÁN ĐẾM NGÀY: Khắc phục lỗi đọc chuỗi ký tự ngày thiếu số 0
     let tapHopNgay = new Set();
     duLieu.forEach(t => { 
         if (t.ngay && t.ngay.trim() !== "") {
@@ -196,7 +218,6 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             let thg = parseInt(p[1], 10);
             let nm = parseInt(p[2], 10);
             let d = new Date(nm, thg - 1, ngay);
-            // Kiểm tra tính hợp lệ và loại bỏ ngày Chủ Nhật
             if (!isNaN(d.getTime()) && d.getDay() !== 0) {
                 soNgayThucTe++;
             }
@@ -224,7 +245,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-slate-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng đã dạy</th>
-                            <th class="border border-gray-400 py-1.5 px-2 bg-yellow-100 text-yellow-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-6">Thừa/Thiếu</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-yellow-100 text-yellow-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-6">Thừa / Thiếu</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -242,7 +263,9 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
         let th = tongHopGv[gv];
         let dinhMuc1Tuan = mangDinhMucChuan[gv] || 0;
         
-        // Thực hiện tính tỷ trọng ngày chặt chẽ
+        // BỔ SUNG: Dịch Mã -> Tên từ bộ từ điển
+        let tenHienThi = mapTenGiaoVien[gv] ? mapTenGiaoVien[gv] : gv;
+        
         let tongDinhMuc = 0;
         if (dinhMuc1Tuan > 0) {
             if (soNgayThucTe > 0) {
@@ -268,15 +291,12 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             }
         }
 
-        // Làm tròn 1 chữ số thập phân cho hiển thị định mức
         let hiểnThịDinhMuc = tongDinhMuc > 0 ? (Number.isInteger(tongDinhMuc) ? tongDinhMuc : tongDinhMuc.toFixed(1)) : 0;
 
-        // BỔ SUNG LÕI THUẬT TOÁN: Tính chênh lệch thừa/thiếu
         let classChenhLech = "bg-white";
         let hienThiChenhLech = "";
         
         if (tongDinhMuc > 0) {
-            // Khử sai số phẩy động nhị phân của Javascript (VD: 1.200000000002) bằng Math.round
             let chenhLechRaw = th.tong - tongDinhMuc;
             let chenhLech = Math.round(chenhLechRaw * 10) / 10;
             
@@ -296,7 +316,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
         }
 
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
-                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
+                    <td class="border border-gray-400 py-0.5 px-3 font-bold text-slate-800 leading-tight text-left">${tenHienThi}</td>
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight text-base">${hiểnThịDinhMuc}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
