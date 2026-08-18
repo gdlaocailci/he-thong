@@ -78,6 +78,11 @@ function capNhatNgayDauTuan() {
         let el = document.getElementById('chonNgayDauTuan');
         if (el && el.value !== ngayDauTuanUI) {
             ngayDauTuanUI = el.value;
+          
+            if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
+                duLieuTkbHienTai.forEach(t => t.ngay = ''); 
+            }
+            
             xuatMaTranBang(duLieuTkbHienTai); 
         }
     }, 500); 
