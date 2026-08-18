@@ -622,14 +622,9 @@ async function xuLyLayThongTin(maTokenTruyCap) {
 }
 
 // =========================================================================
-// HÀM BỔ SUNG: XUẤT DỮ LIỆU EXCEL TỪ GIAO DIỆN HIỂN THỊ THỰC TẾ
+// HÀM BỔ SUNG: XUẤT DỮ LIỆU EXCEL TỪ GIAO DIỆN HIỂN THỊ THỰC TẾ (ĐỊNH DẠNG .XLSX CÓ DROPDOWN)
 // =========================================================================
-function xuatExcel() {
-    if (typeof XLSX === 'undefined') {
-        alert("Thư viện Excel (SheetJS) chưa được tải xong, vui lòng chờ trong giây lát.");
-        return;
-    }
-
+async function xuatExcel() {
     let mangLop = thongSoHocVu.DANH_SACH_LOP || [];
     if (mangLop.length === 0 && duLieuTkbHienTai.length > 0) {
         mangLop = [...new Set(duLieuTkbHienTai.map(t => t.maLop))].sort();
@@ -640,129 +635,201 @@ function xuatExcel() {
     let textGoc = btn ? btn.innerHTML : 'Xuất Excel';
     if (btn) btn.innerHTML = 'Đang xử lý...';
 
-    setTimeout(() => {
-        try {
-            let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
-            
-            // Khởi tạo bảng HTML ảo để bắt chính xác giá trị của các ô Select
-            let tableHTML = `<table border="1">`;
-            
-            tableHTML += `<tr>
-                <th rowspan="2">Thứ / Ngày</th>
-                <th rowspan="2">Buổi</th>
-                <th rowspan="2">Tiết</th>`;
-            mangLop.forEach(lop => {
-                tableHTML += `<th colspan="2">${lop}</th>`;
+    try {
+        // 1. Tự động tải siêu thư viện ExcelJS (Tạo XLSX chuẩn và Dropdown)
+        if (typeof ExcelJS === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
             });
-            tableHTML += `</tr><tr>`;
-            
-            mangLop.forEach(() => {
-                tableHTML += `<th>Môn</th><th>N dạy</th>`;
-            });
-            tableHTML += `</tr>`;
-
-            const luoiDuLieu = {}; 
-            const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; 
-            const boLocBuoi = {"Sáng": 1, "Chiều": 2};
-
-            duLieuTkbHienTai.forEach(t => {
-                const thu = t.thu.trim(); const buoi = t.buoi.trim(); const tiet = t.tiet;
-                if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; 
-                if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {}; 
-                if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
-                luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
-            });
-
-            const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-            thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
-            
-            const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
-            const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
-
-            Object.keys(luoiDuLieu).forEach(thu => {
-                if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; 
-                if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
-                for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
-                for (let j = 1; j <= gioiHanChieu; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
-            });
-
-            const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
-
-            danhSachThu.forEach(thu => {
-                const danhSachBuoi = Object.keys(luoiDuLieu[thu]).sort((a, b) => (boLocBuoi[a] || 99) - (boLocBuoi[b] || 99));
-                let soDongCuaThu = 0; 
-                danhSachBuoi.forEach(buoi => { soDongCuaThu += Object.keys(luoiDuLieu[thu][buoi]).length; });
-                let inCotThu = true;
-
-                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
-
-                danhSachBuoi.forEach(buoi => {
-                    const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => parseInt(a) - parseInt(b));
-                    let soDongCuaBuoi = danhSachTietCuaBuoi.length; 
-                    let inCotBuoi = true;
-
-                    danhSachTietCuaBuoi.forEach(tiet => {
-                        tableHTML += `<tr>`;
-                        
-                        if (inCotThu) { 
-                            tableHTML += `<td rowspan="${soDongCuaThu}">${thu} (${thongTinNgay.hienThi})</td>`; 
-                            inCotThu = false; 
-                        }
-                        
-                        if (inCotBuoi) { 
-                            tableHTML += `<td rowspan="${soDongCuaBuoi}">${buoi}</td>`; 
-                            inCotBuoi = false; 
-                        }
-                        
-                        tableHTML += `<td>${tiet}</td>`;
-
-                        mangLop.forEach(lop => {
-                            let selectMon = document.getElementById(`mon_${thu}_${buoi}_${tiet}_${lop}`);
-                            let selectGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
-                            
-                            let valMon = selectMon ? selectMon.value.trim() : "";
-                            let valGv = selectGv ? selectGv.value.trim() : "";
-
-                            let isTarget = true;
-                            if (gvLoc !== "" && gvLoc !== "Toàn trường" && valGv !== gvLoc) {
-                                isTarget = false;
-                            }
-
-                            if (!isTarget || valMon === "") {
-                                tableHTML += `<td></td><td></td>`;
-                            } else {
-                                tableHTML += `<td>${valMon}</td><td>${valGv}</td>`;
-                            }
-                        });
-                        tableHTML += `</tr>`;
-                    });
-                });
-            });
-
-            tableHTML += `</table>`;
-
-            // Chuyển chuỗi HTML thành phần tử DOM tạm thời
-            let tempDiv = document.createElement('div');
-            tempDiv.innerHTML = tableHTML;
-            
-            // Dùng SheetJS để đọc bảng HTML này thành Workbook (Hỗ trợ chuẩn xlsx mới nhất)
-            let wb = XLSX.utils.table_to_book(tempDiv.firstChild, {sheet: "ThoiKhoaBieu"});
-
-            // Đặt tên file xuất theo tuần hiện tại
-            let tenTuan = "ThoiKhoaBieu";
-            let spanTuan = document.getElementById('hienThiTuanHienTai');
-            if (spanTuan && spanTuan.innerText) {
-                tenTuan = `TKB_${spanTuan.innerText.trim().replace(/\s+/g, '_')}`;
-            }
-
-            // Tải xuống file chuẩn định dạng .xlsx
-            XLSX.writeFile(wb, `${tenTuan}.xlsx`);
-            
-        } catch (loi) {
-            console.error("Lỗi xuất Excel:", loi);
-            alert("Có lỗi xảy ra trong quá trình tạo file Excel.");
-        } finally {
-            if (btn) btn.innerHTML = textGoc;
         }
-    }, 100);
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('TKB');
+        const wsData = workbook.addWorksheet('DANH_MUC'); 
+        
+        // 2. Điền dữ liệu nguồn Dropdown vào sheet Danh Mục (Ẩn)
+        let dsMon = thongSoHocVu.DANH_SACH_MON_HOC || [''];
+        let dsGV = thongSoHocVu.DANH_SACH_GIAO_VIEN || [''];
+        if(dsMon.length === 0) dsMon = [''];
+        if(dsGV.length === 0) dsGV = [''];
+
+        dsMon.forEach((mon, idx) => { wsData.getCell(`A${idx + 1}`).value = mon; });
+        dsGV.forEach((gv, idx) => { wsData.getCell(`B${idx + 1}`).value = gv; });
+        wsData.state = 'hidden';
+
+        // 3. Xây dựng Header TKB
+        let header1 = ['Thứ / Ngày', 'Buổi', 'Tiết'];
+        mangLop.forEach(lop => {
+            header1.push(lop);
+            header1.push(''); // Ô trống để gộp
+        });
+        worksheet.addRow(header1);
+
+        let header2 = ['', '', ''];
+        mangLop.forEach(() => {
+            header2.push('Môn');
+            header2.push('N dạy');
+        });
+        worksheet.addRow(header2);
+
+        // Gộp ô Header
+        worksheet.mergeCells('A1:A2');
+        worksheet.mergeCells('B1:B2');
+        worksheet.mergeCells('C1:C2');
+        let cotHienTai = 4;
+        mangLop.forEach(() => {
+            worksheet.mergeCells(1, cotHienTai, 1, cotHienTai + 1);
+            cotHienTai += 2;
+        });
+
+        // 4. Lấy dữ liệu và Gắn Dropdown
+        let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
+
+        const luoiDuLieu = {}; 
+        const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; 
+        const boLocBuoi = {"Sáng": 1, "Chiều": 2};
+
+        duLieuTkbHienTai.forEach(t => {
+            const thu = t.thu.trim(); const buoi = t.buoi.trim(); const tiet = t.tiet;
+            if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; 
+            if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {}; 
+            if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
+            luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
+        });
+
+        const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+        thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
+        
+        const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
+        const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
+
+        Object.keys(luoiDuLieu).forEach(thu => {
+            if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; 
+            if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
+            for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
+            for (let j = 1; j <= gioiHanChieu; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
+        });
+
+        const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
+        
+        let currentRow = 3;
+
+        danhSachThu.forEach(thu => {
+            const danhSachBuoi = Object.keys(luoiDuLieu[thu]).sort((a, b) => (boLocBuoi[a] || 99) - (boLocBuoi[b] || 99));
+            let startRowThu = currentRow;
+            let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+
+            danhSachBuoi.forEach(buoi => {
+                const danhSachTietCuaBuoi = Object.keys(luoiDuLieu[thu][buoi]).sort((a, b) => parseInt(a) - parseInt(b));
+                let startRowBuoi = currentRow;
+
+                danhSachTietCuaBuoi.forEach(tiet => {
+                    let rowData = [];
+                    rowData.push(`${thu}\n(${thongTinNgay.hienThi})`);
+                    rowData.push(buoi);
+                    rowData.push(tiet);
+
+                    mangLop.forEach(lop => {
+                        let selectMon = document.getElementById(`mon_${thu}_${buoi}_${tiet}_${lop}`);
+                        let selectGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
+                        
+                        let valMon = selectMon ? selectMon.value.trim() : "";
+                        let valGv = selectGv ? selectGv.value.trim() : "";
+
+                        let isTarget = true;
+                        if (gvLoc !== "" && gvLoc !== "Toàn trường" && valGv !== gvLoc) {
+                            isTarget = false;
+                        }
+
+                        if (!isTarget || valMon === "") {
+                            rowData.push(""); rowData.push("");
+                        } else {
+                            rowData.push(valMon); rowData.push(valGv);
+                        }
+                    });
+                    
+                    worksheet.addRow(rowData);
+
+                    // Gắn tính năng Data Validation (Hộp thả xuống) cho các ô Môn/GV
+                    let colIdx = 4;
+                    mangLop.forEach(() => {
+                        worksheet.getCell(currentRow, colIdx).dataValidation = {
+                            type: 'list', allowBlank: true, showErrorMessage: false,
+                            formulae: [`DANH_MUC!$A$1:$A$${dsMon.length}`]
+                        };
+                        worksheet.getCell(currentRow, colIdx + 1).dataValidation = {
+                            type: 'list', allowBlank: true, showErrorMessage: false,
+                            formulae: [`DANH_MUC!$B$1:$B$${dsGV.length}`]
+                        };
+                        colIdx += 2;
+                    });
+
+                    currentRow++;
+                });
+                
+                // Gộp ô cột Buổi
+                if (currentRow - 1 > startRowBuoi) {
+                    worksheet.mergeCells(startRowBuoi, 2, currentRow - 1, 2);
+                }
+            });
+            
+            // Gộp ô cột Thứ
+            if (currentRow - 1 > startRowThu) {
+                worksheet.mergeCells(startRowThu, 1, currentRow - 1, 1);
+            }
+        });
+
+        // 5. Trang trí bảng biểu cho đẹp mắt
+        worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+            row.eachCell({ includeEmpty: true }, function(cell) {
+                cell.border = {
+                    top: {style:'thin', color: {argb:'FF718096'}}, 
+                    left: {style:'thin', color: {argb:'FF718096'}}, 
+                    bottom: {style:'thin', color: {argb:'FF718096'}}, 
+                    right: {style:'thin', color: {argb:'FF718096'}}
+                };
+                cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                cell.font = { name: 'Times New Roman', size: 12 };
+                
+                if (rowNumber <= 2) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    cell.font = { name: 'Times New Roman', size: 12, bold: true, color: {argb:'FF0F172A'} };
+                }
+            });
+        });
+
+        // Căn chỉnh độ rộng cột
+        worksheet.getColumn(1).width = 14;
+        worksheet.getColumn(2).width = 10;
+        worksheet.getColumn(3).width = 6;
+        for(let i = 4; i < 4 + mangLop.length * 2; i++) {
+            worksheet.getColumn(i).width = 15;
+        }
+
+        // 6. Kết xuất file và Tải về
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        
+        let tenTuan = "ThoiKhoaBieu";
+        let spanTuan = document.getElementById('hienThiTuanHienTai');
+        if (spanTuan && spanTuan.innerText) {
+            tenTuan = `TKB_${spanTuan.innerText.trim().replace(/\s+/g, '_')}`;
+        }
+        
+        link.download = `${tenTuan}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        
+    } catch (loi) {
+        console.error("Lỗi xuất Excel:", loi);
+        alert("Có lỗi xảy ra trong quá trình tạo file Excel. Hãy kiểm tra kết nối mạng.");
+    } finally {
+        if (btn) btn.innerHTML = textGoc;
+    }
 }
