@@ -162,21 +162,23 @@ async function goiTraCuuThongKe() {
 
     try {
         let mangDinhMucChuan = {};
-        let mapTenGiaoVien = {}; // BỔ SUNG: Bộ từ điển ánh xạ Mã -> Tên
-        try {
-            const resDM = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
-            const dataDM = await resDM.json();
-            if (dataDM && dataDM.giaoVien) {
-                dataDM.giaoVien.forEach(g => { 
-                    // Linh hoạt nhận diện: mã (Cột A) và tên hiển thị (Cột B) từ máy chủ
-                    let ma = g.maGv || g.hoTen; 
-                    let ten = g.hoTen || ma;
-                    
-                    mangDinhMucChuan[ma] = parseInt(g.dinhMuc) || 0; 
-                    mapTenGiaoVien[ma] = ten; // Ghi nhớ tên vào từ điển
-                });
-            }
-        } catch(e) { console.warn("Lỗi tải định mức phụ:", e); }
+        let mapTenGiaoVien = {}; 
+        
+        // NÂNG CẤP: Không gọi API phụ nữa, dùng trực tiếp duLieuDanhMucGV đã load từ Tab Danh Mục
+        // Nếu chưa load, lấy tạm từ thongSoHocVu của app.js
+        if (typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length > 0) {
+            duLieuDanhMucGV.forEach(g => {
+                let ma = g.maGv || g.hoTen;
+                mangDinhMucChuan[ma] = parseInt(g.dinhMuc) || 0;
+                mapTenGiaoVien[ma] = g.hoTen || ma;
+            });
+        } else if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_GIAO_VIEN) {
+             // Fallback nếu chưa từng mở tab Danh mục
+             thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach(gv => {
+                 mangDinhMucChuan[gv] = 0; // Chưa có định mức chi tiết
+                 mapTenGiaoVien[gv] = gv;
+             });
+        }
 
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
         duLieuThongKeHienTai = await phanHoi.json();
@@ -188,6 +190,7 @@ async function goiTraCuuThongKe() {
             veMaTranThongKeCaNhan(duLieuThongKeHienTai, kieuGv, namHoc, thang, tuan);
         }
     } catch (loi) {
+        console.error("Lỗi Tra cứu:", loi);
         vungKetQua.innerHTML = `<div class="mt-20 text-center text-red-500 font-bold w-full">Lỗi kết nối máy chủ dữ liệu.</div>`;
     }
 }
