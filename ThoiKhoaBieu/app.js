@@ -46,21 +46,30 @@ function kiemSoatGiaoDien() {
     }
 }
 
-// NÂNG CẤP: Chuyển sang async/await để đồng bộ nhịp nạp UI trước khi tự động Lưu Tuần
+// NÂNG CẤP: Đảm bảo khi chuyển tuần, ô thời gian luôn tịnh tiến chuẩn xác chẵn 7 ngày
 async function chuyenTuan(buocNhay) {
     let tuanMoi = parseInt(tuanDangXem) + buocNhay;
     if (tuanMoi < 1) tuanMoi = 1; 
     if (tuanMoi > 52) tuanMoi = 52;
     
+    // Nếu tuần thực sự thay đổi và ô ngày đang có dữ liệu
     if (ngayDauTuanUI && tuanMoi !== tuanDangXem) {
         let parts = ngayDauTuanUI.split('-');
         if (parts.length === 3) {
-            let d = new Date(parts[0], parts[1] - 1, parts[2]);
+            let yy = parseInt(parts[0], 10);
+            let mm = parseInt(parts[1], 10);
+            let dd = parseInt(parts[2], 10);
+            
+            // Khởi tạo Date và tịnh tiến chính xác theo bước nhảy tuần (7 ngày)
+            let d = new Date(yy, mm - 1, dd);
             d.setDate(d.getDate() + (buocNhay * 7));
-            let yy = d.getFullYear();
-            let mm = (d.getMonth() + 1).toString().padStart(2, '0');
-            let dd = d.getDate().toString().padStart(2, '0');
-            ngayDauTuanUI = `${yy}-${mm}-${dd}`;
+            
+            let newYy = d.getFullYear();
+            let newMm = (d.getMonth() + 1).toString().padStart(2, '0');
+            let newDd = d.getDate().toString().padStart(2, '0');
+            
+            // Cập nhật lại mốc ngày UI mới
+            ngayDauTuanUI = `${newYy}-${newMm}-${newDd}`;
             let dateInput = document.getElementById('chonNgayDauTuan');
             if (dateInput) dateInput.value = ngayDauTuanUI;
         }
@@ -68,6 +77,12 @@ async function chuyenTuan(buocNhay) {
     
     tuanDangXem = tuanMoi;
     document.getElementById('hienThiTuanHienTai').innerText = `Tuần ${tuanDangXem}`;
+    
+    // Trước khi tải dữ liệu tuần mới, dọn sạch mảng tạm để tránh hàm xuatMaTranBang lấy ngày cũ đè ngược
+    if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
+        duLieuTkbHienTai = [];
+    }
+    
     await taiDuLieuTKB(); 
 }
 
