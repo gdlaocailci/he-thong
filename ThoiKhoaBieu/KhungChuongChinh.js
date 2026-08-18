@@ -17,7 +17,7 @@ function khoiTaoMenuKhungChuongTrinh() {
         menuKCT.id = 'menuKhungChuongTrinh';
         menuKCT.href = 'javascript:void(0)';
         menuKCT.onclick = moTabKhungChuongTrinh;
-        menuKCT.style.display = 'none'; // Ẩn mặc định
+        menuKCT.style.display = 'none'; // Ẩn mặc định, chờ cấp quyền từ app.js
         menuKCT.className = 'block px-6 py-4 hover:bg-menu-hover border-l-[5px] border-transparent transition-all cursor-pointer border-b border-white/10 group';
         menuKCT.innerHTML = `<span class="font-bold text-white group-hover:text-menu-active transition-colors text-[15px]">Khung chương trình (PA)</span>`;
         nav.appendChild(menuKCT);
@@ -60,12 +60,14 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
             </div>
             <div class="flex-1 overflow-auto border border-gray-400 shadow-sm bg-white relative">
                 <table id="bangKhungChuongTrinh" class="bang-excel w-full text-center">
-                    <thead class="sticky top-0 z-20 bg-slate-200 text-slate-900 shadow-sm" id="tieuDeBangKCT">
+                    <thead class="sticky top-0 z-40 bg-slate-200 text-slate-900 shadow-sm" id="tieuDeBangKCT">
                         <tr><th class="py-2">Đang thiết lập bảng dữ liệu...</th></tr>
                     </thead>
                     <tbody id="duLieuBangKCT">
                         <tr><td class="text-center py-10 text-slate-500 font-bold">Chưa tải dữ liệu...</td></tr>
                     </tbody>
+                    <tfoot id="tongCongBangKCT" class="sticky bottom-0 z-40 shadow-[0_-2px_4px_rgba(0,0,0,0.1)]">
+                    </tfoot>
                 </table>
             </div>
         `;
@@ -146,16 +148,17 @@ async function taiDuLieuKhungChuongTrinhTuMayChu() {
 function veBangKhungChuongTrinh() {
     const thead = document.getElementById('tieuDeBangKCT');
     const tbody = document.getElementById('duLieuBangKCT');
+    const tfoot = document.getElementById('tongCongBangKCT');
     if (!thead || !tbody) return;
 
     let chuoiThead = '<tr>';
     
-    // Khai báo CSS chốt viền dưới cho tiêu đề
+    // Khai báo CSS chốt viền dưới sắc nét cho tiêu đề
     const cssChotVien = "p-2 border border-gray-400 !border-b-[2px] !border-b-slate-600";
-    const shadowBottom = "!shadow-[0_2px_0_0_#475569]"; // Bóng đổ viền dưới
-    const shadowBottomRight = "!shadow-[1px_2px_0_0_#475569]"; // Bóng đổ viền dưới + viền phải cho cột chốt cuối cùng
+    const shadowBottom = "!shadow-[0_2px_0_0_#475569]"; 
+    const shadowBottomRight = "!shadow-[1px_2px_0_0_#475569]"; 
     
-    // Mở rộng khối cố định sang cả 3 cột (Bổ sung min-w để chống co ép khi tràn ngang)
+    // Cố định dọc bên trái đến hết cột Ưu tiên và có min-w tràn khung ngang chống co ép
     chuoiThead += `<th class="w-28 min-w-[112px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>`;
     chuoiThead += `<th class="w-48 min-w-[192px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-[112px] z-30">Môn học</th>`;
     chuoiThead += `<th class="w-24 min-w-[96px] ${cssChotVien} ${shadowBottomRight} bg-slate-200 sticky left-[304px] z-30">Ưu tiên</th>`;
@@ -166,9 +169,25 @@ function veBangKhungChuongTrinh() {
     chuoiThead += '</tr>';
     thead.innerHTML = chuoiThead;
 
+    // NÂNG CẤP: Dựng dòng tổng tiết cố định khớp chuẩn tọa độ sticky với tbody
+    if (tfoot) {
+        const cssChotVienTfoot = "p-2 border border-gray-400 !border-t-[2px] !border-t-slate-600";
+        let chuoiTfoot = `<tr>`;
+        chuoiTfoot += `<td class="w-28 min-w-[112px] ${cssChotVienTfoot} sticky left-0 z-30 bg-yellow-200"></td>`;
+        chuoiTfoot += `<td class="w-48 min-w-[192px] ${cssChotVienTfoot} sticky left-[112px] z-30 bg-yellow-200 text-right uppercase text-blue-900 font-extrabold pr-4 text-xs">Tổng tiết / tuần:</td>`;
+        chuoiTfoot += `<td class="w-24 min-w-[96px] ${cssChotVienTfoot} !shadow-[1px_0_0_0_#9ca3af] sticky left-[304px] z-30 bg-yellow-200"></td>`;
+        
+        danhSachLopKCT.forEach((lop, indexCot) => {
+            chuoiTfoot += `<td id="tongTiet_KCT_${indexCot}" class="w-16 min-w-[64px] ${cssChotVienTfoot} text-center text-red-600 text-sm font-extrabold bg-yellow-50">0</td>`;
+        });
+        chuoiTfoot += `</tr>`;
+        tfoot.innerHTML = chuoiTfoot;
+    }
+
     tbody.innerHTML = '';
     if (duLieuBangKCT.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${3 + danhSachLopKCT.length}" class="text-center py-6 text-slate-500">Chưa có dữ liệu. Vui lòng thêm dòng hoặc tải lên từ Excel.</td></tr>`;
+        if (tfoot) tfoot.innerHTML = '';
         return;
     }
 
@@ -176,7 +195,6 @@ function veBangKhungChuongTrinh() {
         let tr = document.createElement('tr');
         tr.className = 'hover:bg-yellow-50 transition-colors group';
         
-        // Cột 1: Điều chỉnh (Cố định ở tọa độ 0px)
         let cotThaoTac = `
             <td class="p-1.5 border border-gray-400 text-center bg-white sticky left-0 z-10 group-hover:bg-yellow-50">
                 <div class="flex justify-center items-center gap-1.5">
@@ -193,10 +211,7 @@ function veBangKhungChuongTrinh() {
             </td>
         `;
 
-        // Cột 2: Môn học (Cố định ở tọa độ 112px = chiều rộng của cột 1)
         let cotMonHoc = `<td class="p-0 border border-gray-400 bg-white sticky left-[112px] z-10 group-hover:bg-yellow-50"><input type="text" class="w-full h-full px-3 py-2 outline-none focus:bg-blue-50 text-left font-semibold text-slate-800 bg-transparent" value="${dong.monHoc || ''}" onchange="capNhatGiaTriKCT(${indexDong}, 'monHoc', this.value)"></td>`;
-        
-        // Cột 3: Ưu tiên (Cố định ở tọa độ 304px = 112px + 192px. Thêm bóng đổ cạnh phải để ngăn cách với vùng cuộn ngang)
         let cotUuTien = `<td class="p-0 border border-gray-400 bg-white sticky left-[304px] z-10 group-hover:bg-yellow-50 shadow-[1px_0_0_0_#9ca3af]"><input type="number" class="w-full h-full px-2 py-2 outline-none text-center focus:bg-blue-50 font-semibold text-slate-800 bg-transparent" value="${dong.uuTien || ''}" onchange="capNhatGiaTriKCT(${indexDong}, 'uuTien', this.value)"></td>`;
 
         let cotCacLop = '';
@@ -208,6 +223,8 @@ function veBangKhungChuongTrinh() {
         tr.innerHTML = cotThaoTac + cotMonHoc + cotUuTien + cotCacLop;
         tbody.appendChild(tr);
     });
+
+    tinhTongTietKCT(); // Tự động tính tổng tiết ngay sau khi nạp cấu trúc lưới
 }
 
 // ==========================================
@@ -218,6 +235,29 @@ function capNhatGiaTriKCT(indexDong, truong, giaTri) { duLieuBangKCT[indexDong][
 function capNhatSoTietKCT(indexDong, indexCot, giaTri) {
     let soTiet = parseInt(giaTri, 10);
     duLieuBangKCT[indexDong].soTiet[indexCot] = isNaN(soTiet) ? '' : soTiet;
+    tinhTongTietKCT(); // Tính lại tổng tiết thời gian thực khi ô số liệu thay đổi
+}
+
+function tinhTongTietKCT() {
+    if (danhSachLopKCT.length === 0 || duLieuBangKCT.length === 0) return;
+    
+    let tongCot = new Array(danhSachLopKCT.length).fill(0);
+    
+    duLieuBangKCT.forEach(dong => {
+        dong.soTiet.forEach((tiet, idx) => {
+            let gt = parseInt(tiet, 10);
+            if (!isNaN(gt)) {
+                tongCot[idx] += gt;
+            }
+        });
+    });
+    
+    danhSachLopKCT.forEach((lop, idx) => {
+        let cell = document.getElementById(`tongTiet_KCT_${idx}`);
+        if (cell) {
+            cell.innerText = tongCot[idx];
+        }
+    });
 }
 
 function themDongKhungChuongTrinh() {
@@ -265,7 +305,6 @@ function xuatExcelKCT() {
     if (duLieuBangKCT.length === 0) { alert("Không có dữ liệu để xuất."); return; }
     if (typeof XLSX === 'undefined') { alert("Hệ thống chưa nạp xong thư viện Excel, vui lòng đợi vài giây."); return; }
     
-    // Tạo cấu trúc mảng 2 chiều cho SheetJS
     let header = ["Môn học", "Ưu tiên"].concat(danhSachLopKCT);
     let rowsArr = [header];
     
@@ -277,7 +316,6 @@ function xuatExcelKCT() {
         rowsArr.push(row);
     });
     
-    // Thực hiện xuất file bằng SheetJS
     let wb = XLSX.utils.book_new();
     let ws = XLSX.utils.aoa_to_sheet(rowsArr);
     XLSX.utils.book_append_sheet(wb, ws, "KhungChuongTrinh");
@@ -297,11 +335,9 @@ function nhapExcelKCT(event) {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             
-            // Chuyển worksheet thành mảng 2 chiều
             const rowsArr = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             if (rowsArr.length < 2) { alert("Bảng Excel trống hoặc thiếu dữ liệu tiêu đề."); return; }
             
-            // Phân tích danh sách lớp từ file tải lên
             let fileClasses = [];
             let firstRow = rowsArr[0];
             for (let i = 2; i < firstRow.length; i++) {
@@ -317,12 +353,10 @@ function nhapExcelKCT(event) {
                 let uuTien = cells[1] !== undefined ? cells[1].toString().trim() : '';
                 if (!monHoc) continue;
                 
-                // Trích xuất số tiết theo thứ tự lớp của file
                 let soTietFile = fileClasses.map((lop, index) => {
                     return cells[index + 2] !== undefined ? cells[index + 2].toString().trim() : '';
                 });
                 
-                // Quy đổi đồng bộ bám sát theo danh sách lớp hiện hành (DM_LOP)
                 let mappedSoTiet = danhSachLopKCT.map(lop => {
                     let idx = fileClasses.indexOf(lop);
                     return idx !== -1 ? soTietFile[idx] : '';
@@ -350,8 +384,6 @@ async function luuDuLieuKhungChuongTrinh(event) {
     const nutBam = event.currentTarget;
     const noiDungGoc = nutBam.innerHTML;
     
-    // NÂNG CẤP: Bọc nội dung trong thẻ div flex + whitespace-nowrap để ép luôn nằm trên 1 dòng
-    // Đồng thời giảm kích thước vòng xoay (w-4 h-4) để không làm phình chiều cao của nút
     nutBam.innerHTML = `<div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
                             <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             <span>Đang đồng bộ...</span>
