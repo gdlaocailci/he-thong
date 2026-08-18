@@ -45,7 +45,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   let bodyHtml = '';
   let optionsGV = `<option value=""></option>`;
   danhSachGV.forEach(gv => {
-    // ĐIỀU CHỈNH CỐT LÕI: Sử dụng mã GV (maGv) cho cả value và text để đồng bộ CSDL
     let ma = gv.maGv || gv.hoTen;
     optionsGV += `<option value="${ma}">${ma}</option>`;
   });
@@ -93,7 +92,6 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
 function tinhToanTietDay() {
   let thongKe = {};
   
-  // NÂNG CẤP: Lấy Mã GV làm key để gom nhóm, nhưng lưu trữ thêm Tên để in ra báo cáo
   danhSachGV.forEach(gv => { 
       let ma = gv.maGv || gv.hoTen;
       let ten = gv.hoTen || ma;
@@ -155,7 +153,6 @@ function tinhToanTietDay() {
     }
     
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : '<span class="text-gray-400 italic text-[11px]">Chưa phân công</span>';
-    
     let hienThiTen = (soLieu.hoTen && soLieu.hoTen !== ma) ? `${soLieu.hoTen} <br><span class="text-[13px] text-gray-500 font-bold italic">(${ma})</span>` : ma;
 
     tbodyThongKe += `
@@ -171,7 +168,7 @@ function tinhToanTietDay() {
 }
 
 // =========================================================================
-// KHỐI 4: LƯU TRỮ DỮ LIỆU ĐA TẦNG VÀO GOOGLE SHEETS
+// KHỐI 4: LƯU TRỮ VÀ XỬ LÝ NHẬP/XUẤT EXCEL TỐC ĐỘ CAO
 // =========================================================================
 async function xuLyLuuTru() {
   const btnLuu = document.querySelector('#khungPhanCong button[onclick="xuLyLuuTru()"]');
@@ -193,14 +190,12 @@ async function xuLyLuuTru() {
     let cacDongLop = document.querySelectorAll('#duLieuLopHoc tr');
     cacDongLop.forEach(tr => {
         let dongDuLieu = [];
-        
         let tdLop = tr.querySelector('td:first-child');
         if (tdLop) {
             dongDuLieu.push(tdLop.innerText.trim());
-            
             let cacSelect = tr.querySelectorAll('select');
             cacSelect.forEach(sl => {
-                dongDuLieu.push(sl.value.trim()); // Lưu MÃ GIÁO VIÊN xuống DB
+                dongDuLieu.push(sl.value.trim());
             });
             mangGhi.push(dongDuLieu);
         }
@@ -229,10 +224,152 @@ async function xuLyLuuTru() {
   }
 }
 
-// =========================================================================
-// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC (TỐI ƯU HÓA CHỐNG GIẬT LAG)
-// =========================================================================
+// BỔ SUNG 1: HÀM XUẤT DỮ LIỆU PHÂN CÔNG RA FILE EXCEL (CÓ KÈM DROPDOWN LIST)
+async function xuatExcelPhanCong() {
+    const btn = document.querySelector('button[onclick="xuatExcelPhanCong()"]');
+    let textGoc = btn ? btn.innerHTML : 'Xuất Excel';
+    if (btn) btn.innerHTML = `Đang tạo file...`;
+    
+    try {
+        // Tự động tải thư viện ExcelJS chuyên dụng để vẽ Dropdown (không cần sửa file HTML)
+        if (typeof ExcelJS === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
 
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('PHAN_CONG');
+        const wsData = workbook.addWorksheet('DM_GV'); 
+        
+        // 1. Tạo danh sách Nguồn (Data Source) ở Sheet ẩn
+        let dsMaGV = danhSachGV.map(gv => gv.maGv || gv.hoTen);
+        dsMaGV.forEach((ma, idx) => {
+            wsData.getCell(`A${idx + 1}`).value = ma;
+        });
+        wsData.state = 'hidden'; // Ẩn sheet danh mục đi cho chuyên nghiệp
+
+        // 2. Quét dòng Tiêu đề
+        let thead = document.querySelectorAll('#tieuDeMonHoc th');
+        let dongTieuDe = [];
+        thead.forEach(th => dongTieuDe.push(th.innerText.trim()));
+        worksheet.addRow(dongTieuDe);
+        
+        // 3. Quét dữ liệu và gắn tính năng Dropdown (Data Validation)
+        let cacDongLop = document.querySelectorAll('#duLieuLopHoc tr');
+        let rowCount = 2;
+        cacDongLop.forEach(tr => {
+            let dong = [];
+            let tdLop = tr.querySelector('td:first-child');
+            if (tdLop) {
+                dong.push(tdLop.innerText.trim());
+                let cacSelect = tr.querySelectorAll('select');
+                cacSelect.forEach(sl => dong.push(sl.value.trim()));
+                worksheet.addRow(dong);
+
+                // Thiết lập danh sách thả xuống cho từng ô môn học
+                for (let c = 2; c <= dongTieuDe.length; c++) {
+                    worksheet.getCell(rowCount, c).dataValidation = {
+                        type: 'list',
+                        allowBlank: true,
+                        showErrorMessage: false, // Tắt cảnh báo để có thể copy/paste tự do nếu cần
+                        formulae: [`DM_GV!$A$1:$A$${dsMaGV.length}`]
+                    };
+                }
+                rowCount++;
+            }
+        });
+
+        // Định dạng tiêu đề và độ rộng cột
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.columns.forEach((col, i) => { col.width = i === 0 ? 12 : 18; });
+
+        // 4. Đóng gói và Xuất file về máy tính
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'PhanCongChuyenMon.xlsx';
+        link.click();
+    } catch(loi) {
+        console.error(loi);
+        alert("Có lỗi xảy ra khi tạo file Excel!");
+    } finally {
+        if (btn) btn.innerHTML = textGoc;
+    }
+}
+
+// BỔ SUNG 2: HÀM NHẬP DỮ LIỆU TỪ FILE EXCEL (.XLSX) VÀO LƯỚI GIAO DIỆN
+function xuLyTaiLenExcelPhanCong(e) {
+    if (typeof XLSX === 'undefined') {
+        alert("Thư viện hệ thống chưa sẵn sàng, vui lòng thử lại sau vài giây.");
+        return;
+    }
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const duLieuExcel = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            if (duLieuExcel.length < 2) {
+                alert("Tệp Excel không chứa dữ liệu phân công hợp lệ.");
+                return;
+            }
+
+            let headerExcel = duLieuExcel[0];
+            let mapExcel = {};
+
+            for (let i = 1; i < duLieuExcel.length; i++) {
+                let row = duLieuExcel[i];
+                let tenLop = row[0] ? String(row[0]).trim() : '';
+                if (tenLop) {
+                    mapExcel[tenLop] = {};
+                    for (let j = 1; j < headerExcel.length; j++) {
+                        let tenMon = headerExcel[j] ? String(headerExcel[j]).trim() : '';
+                        let maGV = row[j] ? String(row[j]).trim() : '';
+                        if (tenMon) mapExcel[tenLop][tenMon] = maGV;
+                    }
+                }
+            }
+
+            // Gán dữ liệu vào lưới select hiện tại
+            let cacTheSelect = document.querySelectorAll('#duLieuLopHoc select');
+
+            cacTheSelect.forEach(sl => {
+                let lop = sl.getAttribute('data-lop');
+                let mon = sl.getAttribute('data-mon');
+
+                if (mapExcel[lop] && mapExcel[lop][mon] !== undefined) {
+                    sl.value = mapExcel[lop][mon];
+                }
+            });
+
+            tinhToanTietDay();
+            alert(`Đã nạp thành công dữ liệu từ file Excel! Vui lòng kiểm tra lại bảng và bấm "Lưu Phân Công".`);
+        } catch (loiDoc) {
+            console.error("Lỗi khi đọc file Excel:", loiDoc);
+            alert("Không thể đọc tệp Excel. Vui lòng kiểm tra lại định dạng tệp.");
+        } finally {
+            e.target.value = ''; // Reset lại nút chọn file
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+// =========================================================================
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC
+// =========================================================================
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
     
