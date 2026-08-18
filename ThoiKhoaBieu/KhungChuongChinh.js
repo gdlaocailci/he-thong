@@ -75,11 +75,9 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
     }
 }
 
-// ==========================================
-// 2. CHUYỂN ĐỔI TAB VÀ TẢI DỮ LIỆU BẰNG FETCH
-// ==========================================
 function moTabKhungChuongTrinh() {
-    const cacKhung = ['khungTKB', 'khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh'];
+    // ĐIỀU CHỈNH: Bổ sung 'khungDanhMucGV' và 'khungCaiDat' vào mảng để hệ thống dọn dẹp màn hình
+    const cacKhung = ['khungTKB', 'khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'];
     cacKhung.forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.classList.add('hidden'); el.classList.remove('flex', 'block'); }
