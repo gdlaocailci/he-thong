@@ -200,18 +200,15 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
 // KHỐI 2: ĐỐI CHIẾU ĐỊNH MỨC VÀ KIỂM TRA
 // =========================================================================
 function kiemTraDinhMuc() {
-    // NÂNG CẤP: Lọc bỏ các "lớp ảo" trong CSDL, chỉ quét các lớp thực sự có trên lưới TKB
     let mangLop = [];
     const mangLopGoc = thongSoHocVu.DANH_SACH_LOP || [];
     
     mangLopGoc.forEach(lop => {
-        // Chỉ lấy những lớp có tồn tại ô select trên màn hình
         if (document.querySelector(`select[id$="_${lop}"]`)) {
             mangLop.push(lop);
         }
     });
 
-    // Fallback an toàn nếu danh sách gốc bị rỗng
     if (mangLop.length === 0) {
         const cacSelect = document.querySelectorAll('select[id^="mon_"]');
         let setLop = new Set();
@@ -226,7 +223,6 @@ function kiemTraDinhMuc() {
     let thongKeUI = {}; mangLop.forEach(lop => { thongKeUI[lop] = {}; });
     const thuMacDinh = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; const buoiMacDinh = ["Sáng", "Chiều"];
     
-    // Quét toàn bộ dữ liệu đang có trên giao diện (UI)
     thuMacDinh.forEach(thu => {
         buoiMacDinh.forEach(buoi => {
             let soTietToiThieu = (buoi === "Sáng") ? 5 : 4;
@@ -249,7 +245,8 @@ function kiemTraDinhMuc() {
     let tongTatCaTietUI = 0;
 
     mangLop.forEach(lop => {
-        let khoiHT = "Khoi" + lop.charAt(0); let dmKhoi = khungCT[khoiHT] || {};
+        // NÂNG CẤP: Lấy đối chiếu Khung Chương Trình theo tên Lớp
+        let dmKhoi = khungCT[lop] || {};
         let dsMonArr = Array.from(new Set([...Object.keys(dmKhoi), ...Object.keys(thongKeUI[lop])]));
         
         let tongChuanLopNay = 0;
@@ -260,7 +257,6 @@ function kiemTraDinhMuc() {
             tongUiLopNay += (thongKeUI[lop][mon] || 0); 
         });
 
-        // Cộng dồn chuẩn xác vào tổng toàn trường
         tongTatCaTietChuan += tongChuanLopNay;
         tongTatCaTietUI += tongUiLopNay;
 
