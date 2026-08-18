@@ -6,7 +6,11 @@ let ngayDauTuanUI = '';
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
+// =========================================================================
+// KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM
+// =========================================================================
 function kiemSoatGiaoDien() {
+    // 1. Quản lý cụm nút lưu trữ
     const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra'];
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
@@ -16,16 +20,16 @@ function kiemSoatGiaoDien() {
         }
     });
 
-    // NÂNG CẤP: Quản lý tập trung toàn bộ Nhãn và Menu Quản Trị
+    // 2. Quản lý tập trung toàn bộ Nhãn và Menu Quản Trị
     const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuPhanCong', 'menuKhungChuongTrinh'];
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
-            menu.style.display = quyenSuaChua ? 'block' : 'none';
+            menu.style.display = quyenSuaChua ? 'flex' : 'none'; // Dùng 'flex' để giữ cấu trúc của menu bo góc
         }
     });
 
-    // Khóa/Mở cụm nút Chuyển Tuần và Chọn Ngày
+    // 3. Khóa/Mở cụm nút Chuyển Tuần và Chọn Ngày
     let btnTuanTruoc = document.querySelector('button[onclick="chuyenTuan(-1)"]');
     let btnTuanTiep = document.querySelector('button[onclick="chuyenTuan(1)"]');
     let inputNgay = document.getElementById('chonNgayDauTuan');
@@ -41,13 +45,15 @@ function kiemSoatGiaoDien() {
     }
 }
 
-// NÂNG CẤP: Đảm bảo khi chuyển tuần, ô thời gian luôn tịnh tiến chuẩn xác chẵn 7 ngày
+// =========================================================================
+// KHỐI XỬ LÝ CHUYỂN TUẦN VÀ NGÀY THÁNG
+// =========================================================================
 async function chuyenTuan(buocNhay) {
     let tuanMoi = parseInt(tuanDangXem) + buocNhay;
     if (tuanMoi < 1) tuanMoi = 1; 
     if (tuanMoi > 52) tuanMoi = 52;
     
-    // Nếu tuần thực sự thay đổi và ô ngày đang có dữ liệu
+    // Tịnh tiến chuẩn xác chẵn 7 ngày
     if (ngayDauTuanUI && tuanMoi !== tuanDangXem) {
         let parts = ngayDauTuanUI.split('-');
         if (parts.length === 3) {
@@ -55,7 +61,6 @@ async function chuyenTuan(buocNhay) {
             let mm = parseInt(parts[1], 10);
             let dd = parseInt(parts[2], 10);
             
-            // Khởi tạo Date và tịnh tiến chính xác theo bước nhảy tuần (7 ngày)
             let d = new Date(yy, mm - 1, dd);
             d.setDate(d.getDate() + (buocNhay * 7));
             
@@ -63,7 +68,6 @@ async function chuyenTuan(buocNhay) {
             let newMm = (d.getMonth() + 1).toString().padStart(2, '0');
             let newDd = d.getDate().toString().padStart(2, '0');
             
-            // Cập nhật lại mốc ngày UI mới
             ngayDauTuanUI = `${newYy}-${newMm}-${newDd}`;
             let dateInput = document.getElementById('chonNgayDauTuan');
             if (dateInput) dateInput.value = ngayDauTuanUI;
@@ -73,11 +77,7 @@ async function chuyenTuan(buocNhay) {
     tuanDangXem = tuanMoi;
     document.getElementById('hienThiTuanHienTai').innerText = `Tuần ${tuanDangXem}`;
     
-    // Trước khi tải dữ liệu tuần mới, dọn sạch mảng tạm để tránh hàm xuatMaTranBang lấy ngày cũ đè ngược
-    if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
-        duLieuTkbHienTai = [];
-    }
-    
+    if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) { duLieuTkbHienTai = []; }
     await taiDuLieuTKB(); 
 }
 
@@ -88,11 +88,9 @@ function capNhatNgayDauTuan() {
         let el = document.getElementById('chonNgayDauTuan');
         if (el && el.value !== ngayDauTuanUI) {
             ngayDauTuanUI = el.value;
-          
             if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
                 duLieuTkbHienTai.forEach(t => t.ngay = ''); 
             }
-            
             xuatMaTranBang(duLieuTkbHienTai); 
         }
     }, 500); 
@@ -265,7 +263,6 @@ function kiemTraDinhMuc() {
     let tongTatCaTietUI = 0;
 
     mangLop.forEach(lop => {
-        // NÂNG CẤP: Lấy đối chiếu Khung Chương Trình theo tên Lớp
         let dmKhoi = khungCT[lop] || {};
         let dsMonArr = Array.from(new Set([...Object.keys(dmKhoi), ...Object.keys(thongKeUI[lop])]));
         
@@ -319,8 +316,9 @@ function kiemTraDinhMuc() {
 function dongModal() { 
     document.getElementById('modalKiemTra').classList.add('hidden'); 
 }
+
 // =========================================================================
-// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN (KIẾN TRÚC INLINE-STICKY TỐI THƯỢNG)
+// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
@@ -345,8 +343,6 @@ function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
 function xuatMaTranBang(danhSachTiet) {
     const thead = document.getElementById('tieuDeBang'); 
     const tbody = document.getElementById('vungHienThiDuLieu');
-    
-    // Xóa bỏ class cấu hình cũ của HTML để giải phóng không gian z-index
     if(thead) thead.className = ''; 
 
     const tableEl = document.querySelector('.bang-excel');
@@ -373,7 +369,6 @@ function xuatMaTranBang(danhSachTiet) {
         }
     }
 
-    // NÂNG CẤP: Dùng Inline Style (CSS trực tiếp) để ép cứng tọa độ và phân lớp không gian
     let theadHTML = `<tr style="height: 45px;">
         <th rowspan="2" class="text-center font-bold align-middle border-t border-b border-l border-r border-slate-400" style="position: sticky; top: 0; left: 0; z-index: 60; background-color: #f1f5f9; width: 85px; min-width: 85px; font-family:'Times New Roman',Times,serif;">Thứ / Ngày</th>
         <th rowspan="2" class="text-center font-bold align-middle border-t border-b border-r border-slate-400" style="position: sticky; top: 0; left: 85px; z-index: 60; background-color: #f1f5f9; width: 60px; min-width: 60px; font-family:'Times New Roman',Times,serif;">Buổi</th>
@@ -438,7 +433,6 @@ function xuatMaTranBang(danhSachTiet) {
             danhSachTietCuaBuoi.forEach(tiet => {
                 tbodyHTML += `<tr class="bg-white hover:bg-slate-50 transition-colors duration-150 group" style="font-family:'Times New Roman',Times,serif;">`;
                 
-                // NÂNG CẤP: Inline style cho các cột dọc
                 if (inCotThu) { 
                     tbodyHTML += `<td rowspan="${soDongCuaThu}" class="text-center align-middle border-b border-l border-r border-slate-300" style="position: sticky; left: 0; z-index: 40; background-color: #ffffff;">
                                     <div class="font-extrabold text-slate-900">${thu}</div>
@@ -506,7 +500,7 @@ async function luuDuLieu(event, loaiLuu) {
     if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem}, tự động chuyển sang tuần tiếp theo?`)) return; }
 
     const btn = event.currentTarget; const textGoc = btn.innerHTML;
-    if(btn.disabled === undefined) { /* Bỏ qua cho auto trigger */ } else {
+    if(btn.disabled === undefined) { } else {
         btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xử lý...`; btn.disabled = true;
     }
 
@@ -519,7 +513,6 @@ async function luuDuLieu(event, loaiLuu) {
             let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
             buoiMacDinh.forEach(buoi => {
-                // NÂNG CẤP: Quét và thu thập dữ liệu lưu lên tới tiết 5 sáng và tiết 4 chiều (kể cả có tăng cường mới)
                 let soTietToiThieu = (buoi === "Sáng") ? 5 : 4;
                 let soTiet = Math.max(parseInt(thongSoHocVu[(buoi==="Sáng") ? "SO_TIET_SANG" : "SO_TIET_CHIEU"]) || 4, soTietToiThieu);
                 
@@ -533,7 +526,6 @@ async function luuDuLieu(event, loaiLuu) {
                         let theSelectMon = document.getElementById(`mon_${thu}_${buoi}_${t}_${lop}`);
                         let theSelectGv = document.getElementById(`gv_${thu}_${buoi}_${t}_${lop}`);
                         
-                        // Loại bỏ các ô rỗng trống để không làm rác CSDL
                         if(theSelectMon && theSelectMon.value && theSelectMon.value.trim() !== "") {
                             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                             dsTietLuoi.push({ 
@@ -554,10 +546,7 @@ async function luuDuLieu(event, loaiLuu) {
             console.error("Sự cố máy chủ."); 
         } else { 
             if (loaiLuu === 'khoiphuc') {
-                // Chờ giao diện render xong tuần mới
                 await chuyenTuan(1); 
-                
-                // NÂNG CẤP: Sau khi lên UI xong, tự động kích hoạt tính năng chạy nút lưu tuần ẩn
                 console.log("Kích hoạt Lưu Tuần tự động để neo lại mốc thời gian...");
                 let btnAn = document.createElement('button');
                 btnAn.innerHTML = "Auto Save";
@@ -573,7 +562,99 @@ async function luuDuLieu(event, loaiLuu) {
 }
 
 // =========================================================================
-// KHỐI 5: XÁC THỰC DANH TÍNH
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC
+// =========================================================================
+function thietLapMenuActive(idKichHoat) {
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat'];
+    
+    cacMenu.forEach(id => {
+        let m = document.getElementById(id);
+        if (m) {
+            m.classList.remove('bg-white/10', 'border-white/20', 'shadow-md', 'backdrop-blur-sm');
+            m.classList.add('border-transparent');
+            
+            let span = m.querySelector('span');
+            if (span) {
+                span.classList.remove('text-menu-active');
+                span.classList.add('text-white/90');
+            }
+            
+            let svg = m.querySelector('svg');
+            if (svg) {
+                svg.classList.remove('text-menu-active', 'opacity-100');
+                svg.classList.add('opacity-70');
+            }
+        }
+    });
+    
+    let mActive = document.getElementById(idKichHoat);
+    if (mActive) {
+        mActive.classList.remove('border-transparent');
+        mActive.classList.add('bg-white/10', 'border-white/20', 'shadow-md', 'backdrop-blur-sm');
+        
+        let spanActive = mActive.querySelector('span');
+        if (spanActive) { 
+            spanActive.classList.remove('text-white/90'); 
+            spanActive.classList.add('text-menu-active'); 
+        }
+        
+        let svgActive = mActive.querySelector('svg');
+        if (svgActive) {
+            svgActive.classList.remove('opacity-70');
+            svgActive.classList.add('text-menu-active', 'opacity-100');
+        }
+    }
+}
+
+function anTatCaKhungTru(idKhungHien) {
+    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'];
+    tatCaKhung.forEach(id => {
+        let el = document.getElementById(id);
+        if (el) {
+            if (id === idKhungHien) {
+                el.classList.remove('hidden');
+                el.classList.add(id === 'khungTKB' || id === 'khungThongKe' ? 'block' : 'flex');
+            } else {
+                el.classList.remove('block', 'flex');
+                el.classList.add('hidden');
+            }
+        }
+    });
+}
+
+function moTabTKB() {
+    thietLapMenuActive('menuTKB');
+    setTimeout(() => {
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
+        anTatCaKhungTru('khungTKB');
+    }, 15);
+}
+
+window.moTabThongKe = function() {
+    thietLapMenuActive('menuThongKe');
+    setTimeout(() => {
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
+        anTatCaKhungTru('khungThongKe');
+    }, 15);
+};
+window.dongTabThongKe = moTabTKB;
+
+// Các hàm moTabDanhMucGV và moTabCaiDat đã được cấu trúc gọn trong file js riêng của chúng.
+// Nhưng để chắc chắn chúng hoạt động mượt mà, tôi đặt một hàm hook ngắn ở đây:
+function moTabPhanCong() {
+    thietLapMenuActive('menuPhanCong');
+    setTimeout(() => {
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
+        anTatCaKhungTru('khungPhanCong');
+        if (danhSachGV && danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
+    }, 15); 
+}
+
+// =========================================================================
+// KHỐI 6: XÁC THỰC DANH TÍNH
 // =========================================================================
 let clientDangNhapG;
 
@@ -617,7 +698,7 @@ async function xuLyLayThongTin(maTokenTruyCap) {
 }
 
 // =========================================================================
-// HÀM BỔ SUNG: XUẤT DỮ LIỆU EXCEL TỪ GIAO DIỆN HIỂN THỊ THỰC TẾ (ĐỊNH DẠNG .XLSX CÓ DROPDOWN)
+// HÀM BỔ SUNG: XUẤT DỮ LIỆU EXCEL TỪ GIAO DIỆN HIỂN THỊ THỰC TẾ
 // =========================================================================
 async function xuatExcel() {
     let mangLop = thongSoHocVu.DANH_SACH_LOP || [];
@@ -631,7 +712,6 @@ async function xuatExcel() {
     if (btn) btn.innerHTML = 'Đang xử lý...';
 
     try {
-        // 1. Tự động tải siêu thư viện ExcelJS (Tạo XLSX chuẩn và Dropdown)
         if (typeof ExcelJS === 'undefined') {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -646,7 +726,6 @@ async function xuatExcel() {
         const worksheet = workbook.addWorksheet('TKB');
         const wsData = workbook.addWorksheet('DANH_MUC'); 
         
-        // 2. Điền dữ liệu nguồn Dropdown vào sheet Danh Mục (Ẩn)
         let dsMon = thongSoHocVu.DANH_SACH_MON_HOC || [''];
         let dsGV = thongSoHocVu.DANH_SACH_GIAO_VIEN || [''];
         if(dsMon.length === 0) dsMon = [''];
@@ -656,11 +735,10 @@ async function xuatExcel() {
         dsGV.forEach((gv, idx) => { wsData.getCell(`B${idx + 1}`).value = gv; });
         wsData.state = 'hidden';
 
-        // 3. Xây dựng Header TKB
         let header1 = ['Thứ / Ngày', 'Buổi', 'Tiết'];
         mangLop.forEach(lop => {
             header1.push(lop);
-            header1.push(''); // Ô trống để gộp
+            header1.push(''); 
         });
         worksheet.addRow(header1);
 
@@ -671,7 +749,6 @@ async function xuatExcel() {
         });
         worksheet.addRow(header2);
 
-        // Gộp ô Header
         worksheet.mergeCells('A1:A2');
         worksheet.mergeCells('B1:B2');
         worksheet.mergeCells('C1:C2');
@@ -681,9 +758,7 @@ async function xuatExcel() {
             cotHienTai += 2;
         });
 
-        // 4. Lấy dữ liệu và Gắn Dropdown
         let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
-
         const luoiDuLieu = {}; 
         const boLocThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8}; 
         const boLocBuoi = {"Sáng": 1, "Chiều": 2};
@@ -710,7 +785,6 @@ async function xuatExcel() {
         });
 
         const danhSachThu = Object.keys(luoiDuLieu).sort((a, b) => (boLocThu[a] || 99) - (boLocThu[b] || 99));
-        
         let currentRow = 3;
 
         danhSachThu.forEach(thu => {
@@ -734,8 +808,8 @@ async function xuatExcel() {
                         
                         let valMon = selectMon ? selectMon.value.trim() : "";
                         let valGv = selectGv ? selectGv.value.trim() : "";
-
                         let isTarget = true;
+                        
                         if (gvLoc !== "" && gvLoc !== "Toàn trường" && valGv !== gvLoc) {
                             isTarget = false;
                         }
@@ -749,7 +823,6 @@ async function xuatExcel() {
                     
                     worksheet.addRow(rowData);
 
-                    // Gắn tính năng Data Validation (Hộp thả xuống) cho các ô Môn/GV
                     let colIdx = 4;
                     mangLop.forEach(() => {
                         worksheet.getCell(currentRow, colIdx).dataValidation = {
@@ -762,23 +835,14 @@ async function xuatExcel() {
                         };
                         colIdx += 2;
                     });
-
                     currentRow++;
                 });
                 
-                // Gộp ô cột Buổi
-                if (currentRow - 1 > startRowBuoi) {
-                    worksheet.mergeCells(startRowBuoi, 2, currentRow - 1, 2);
-                }
+                if (currentRow - 1 > startRowBuoi) { worksheet.mergeCells(startRowBuoi, 2, currentRow - 1, 2); }
             });
-            
-            // Gộp ô cột Thứ
-            if (currentRow - 1 > startRowThu) {
-                worksheet.mergeCells(startRowThu, 1, currentRow - 1, 1);
-            }
+            if (currentRow - 1 > startRowThu) { worksheet.mergeCells(startRowThu, 1, currentRow - 1, 1); }
         });
 
-        // 5. Trang trí bảng biểu cho đẹp mắt
         worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
             row.eachCell({ includeEmpty: true }, function(cell) {
                 cell.border = {
@@ -797,15 +861,11 @@ async function xuatExcel() {
             });
         });
 
-        // Căn chỉnh độ rộng cột
         worksheet.getColumn(1).width = 14;
         worksheet.getColumn(2).width = 10;
         worksheet.getColumn(3).width = 6;
-        for(let i = 4; i < 4 + mangLop.length * 2; i++) {
-            worksheet.getColumn(i).width = 15;
-        }
+        for(let i = 4; i < 4 + mangLop.length * 2; i++) { worksheet.getColumn(i).width = 15; }
 
-        // 6. Kết xuất file và Tải về
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const link = document.createElement('a');
