@@ -180,7 +180,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
     if (thang) tDe += ` | Tháng ${thang}`;
     if (tuan) tDe += ` | Tuần ${tuan}`;
 
-    // NÂNG CẤP THUẬT TOÁN ĐẾM NGÀY: Khắc phục lỗi đọc chuỗi ký tự ngày thiếu số 0 (ví dụ: "1/10/2026")
+    // NÂNG CẤP THUẬT TOÁN ĐẾM NGÀY: Khắc phục lỗi đọc chuỗi ký tự ngày thiếu số 0
     let tapHopNgay = new Set();
     duLieu.forEach(t => { 
         if (t.ngay && t.ngay.trim() !== "") {
@@ -196,7 +196,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             let thg = parseInt(p[1], 10);
             let nm = parseInt(p[2], 10);
             let d = new Date(nm, thg - 1, ngay);
-            // Kiểm tra tính hợp lệ và loại bỏ ngày Chủ Nhật nếu có dữ liệu lỗi lọt vào
+            // Kiểm tra tính hợp lệ và loại bỏ ngày Chủ Nhật
             if (!isNaN(d.getTime()) && d.getDay() !== 0) {
                 soNgayThucTe++;
             }
@@ -224,6 +224,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Sáng</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-center w-[1%] whitespace-nowrap px-6">Số tiết Chiều</th>
                             <th class="border border-gray-400 py-1.5 px-2 bg-slate-200 text-slate-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-8">Tổng đã dạy</th>
+                            <th class="border border-gray-400 py-1.5 px-2 bg-yellow-100 text-yellow-900 font-extrabold text-base text-center w-[1%] whitespace-nowrap px-6">Thừa/Thiếu</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -267,7 +268,32 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             }
         }
 
+        // Làm tròn 1 chữ số thập phân cho hiển thị định mức
         let hiểnThịDinhMuc = tongDinhMuc > 0 ? (Number.isInteger(tongDinhMuc) ? tongDinhMuc : tongDinhMuc.toFixed(1)) : 0;
+
+        // BỔ SUNG LÕI THUẬT TOÁN: Tính chênh lệch thừa/thiếu
+        let classChenhLech = "bg-white";
+        let hienThiChenhLech = "";
+        
+        if (tongDinhMuc > 0) {
+            // Khử sai số phẩy động nhị phân của Javascript (VD: 1.200000000002) bằng Math.round
+            let chenhLechRaw = th.tong - tongDinhMuc;
+            let chenhLech = Math.round(chenhLechRaw * 10) / 10;
+            
+            if (chenhLech > 0) {
+                classChenhLech = "text-red-600 font-extrabold bg-red-50";
+                hienThiChenhLech = "+" + (Number.isInteger(chenhLech) ? chenhLech : chenhLech.toFixed(1));
+            } else if (chenhLech < 0) {
+                classChenhLech = "text-blue-600 font-extrabold bg-blue-50";
+                hienThiChenhLech = (Number.isInteger(chenhLech) ? chenhLech : chenhLech.toFixed(1));
+            } else {
+                classChenhLech = "text-green-700 font-bold bg-green-50";
+                hienThiChenhLech = "Đủ";
+            }
+        } else {
+            classChenhLech = "text-gray-400 font-normal";
+            hienThiChenhLech = "-";
+        }
 
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
                     <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-800 leading-tight">${gv}</td>
@@ -275,6 +301,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
                     <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
                     <td class="border border-gray-400 py-0.5 px-2 ${textClassTong} ${bgClassTong} text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
+                    <td class="border border-gray-400 py-0.5 px-2 ${classChenhLech} text-base w-[1%] whitespace-nowrap leading-tight">${hienThiChenhLech}</td>
                  </tr>`;
     });
     html += `</tbody></table></div>`;
