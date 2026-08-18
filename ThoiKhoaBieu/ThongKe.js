@@ -164,20 +164,31 @@ async function goiTraCuuThongKe() {
         let mangDinhMucChuan = {};
         let mapTenGiaoVien = {}; 
         
-        // NÂNG CẤP: Không gọi API phụ nữa, dùng trực tiếp duLieuDanhMucGV đã load từ Tab Danh Mục
-        // Nếu chưa load, lấy tạm từ thongSoHocVu của app.js
+        // NÂNG CẤP: Chuyển toàn bộ Mã GV về chữ thường (toLowerCase) để triệt tiêu lỗi gõ sai Hoa/Thường
         if (typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length > 0) {
             duLieuDanhMucGV.forEach(g => {
-                let ma = g.maGv || g.hoTen;
-                mangDinhMucChuan[ma] = parseInt(g.dinhMuc) || 0;
-                mapTenGiaoVien[ma] = g.hoTen || ma;
+                let ma = (g.maGv || g.hoTen || '').toString().trim();
+                let maKey = ma.toLowerCase(); 
+                mangDinhMucChuan[maKey] = parseInt(g.dinhMuc) || 0;
+                mapTenGiaoVien[maKey] = (g.hoTen || ma).toString().trim();
             });
-        } else if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_GIAO_VIEN) {
-             // Fallback nếu chưa từng mở tab Danh mục
-             thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach(gv => {
-                 mangDinhMucChuan[gv] = 0; // Chưa có định mức chi tiết
-                 mapTenGiaoVien[gv] = gv;
-             });
+        } else {
+            try {
+                const resDM = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucGV`);
+                const dataDM = await resDM.json();
+                if (dataDM && dataDM.length > 1) {
+                    for (let i = 1; i < dataDM.length; i++) {
+                        let ma = (dataDM[i][0] || '').toString().trim();
+                        let maKey = ma.toLowerCase();
+                        let ten = (dataDM[i][1] || ma).toString().trim();
+                        let dinhMuc = dataDM[i][3];
+                        if (maKey !== '') {
+                            mangDinhMucChuan[maKey] = parseInt(dinhMuc) || 0;
+                            mapTenGiaoVien[maKey] = ten;
+                        }
+                    }
+                }
+            } catch(e) { console.warn("Lỗi tải định mức:", e); }
         }
 
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
@@ -256,12 +267,18 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
         tongHopGv[t.maGv].tong++;
     });
 
-    let dsGv = Object.keys(tongHopGv).sort();
-    // BỔ SUNG index vào vòng lặp để đánh số thứ tự
+let dsGv = Object.keys(tongHopGv).sort();
     dsGv.forEach((gv, index) => {
         let th = tongHopGv[gv];
-        let dinhMuc1Tuan = mangDinhMucChuan[gv] || 0;
-        let tenHienThi = mapTenGiaoVien[gv] ? mapTenGiaoVien[gv] : gv;
+        let gvKey = gv.toLowerCase(); // Đưa chìa khóa tìm kiếm về chữ thường
+        
+        let dinhMuc1Tuan = mangDinhMucChuan[gvKey] || 0;
+        
+        // XỬ LÝ TÊN GIAO DIỆN: Tên thật ở trên, Mã ID in nghiêng ở dưới
+        let tenThuc = mapTenGiaoVien[gvKey] ? mapTenGiaoVien[gvKey] : gv;
+        let tenHienThi = (tenThuc.toLowerCase() !== gv.toLowerCase()) 
+                         ? `${tenThuc} <br><span class="text-[12px] text-gray-500 font-bold italic">(${gv})</span>` 
+                         : tenThuc;
         
         let tongDinhMuc = 0;
         if (dinhMuc1Tuan > 0) {
@@ -312,16 +329,18 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
             hienThiChenhLech = "-";
         }
 
+        // Tăng padding trục Y (py-1.5) để tối ưu không gian hiển thị Tên và Mã
         html += `<tr class="hover:bg-slate-50 text-center transition-colors">
-                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-slate-500 leading-tight w-[1%] whitespace-nowrap">${index + 1}</td>
-                    <td class="border border-gray-400 py-0.5 px-3 font-bold text-slate-800 leading-tight text-left">${tenHienThi}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight text-base">${hiểnThịDinhMuc}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 ${textClassTong} ${bgClassTong} text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
-                    <td class="border border-gray-400 py-0.5 px-2 ${classChenhLech} text-base w-[1%] whitespace-nowrap leading-tight">${hienThiChenhLech}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 font-bold text-slate-500 leading-tight w-[1%] whitespace-nowrap">${index + 1}</td>
+                    <td class="border border-gray-400 py-1.5 px-3 font-bold text-slate-800 leading-tight text-left">${tenHienThi}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 font-bold text-purple-700 bg-purple-50/30 w-[1%] whitespace-nowrap leading-tight text-base">${hiểnThịDinhMuc}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.sang}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 w-[1%] whitespace-nowrap leading-tight">${th.chieu}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 ${textClassTong} ${bgClassTong} text-base w-[1%] whitespace-nowrap leading-tight">${th.tong}</td>
+                    <td class="border border-gray-400 py-1.5 px-2 ${classChenhLech} text-base w-[1%] whitespace-nowrap leading-tight">${hienThiChenhLech}</td>
                  </tr>`;
     });
+    
     html += `</tbody></table></div>`;
     document.getElementById('vungKetQuaThongKe').innerHTML = html;
 }
