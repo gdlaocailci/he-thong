@@ -1,3 +1,4 @@
+// Biến toàn cục lưu trữ dữ liệu Khung chương trình
 let danhSachLopKCT = [];
 let duLieuBangKCT = [];
 
@@ -40,14 +41,14 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
                 <h2 class="text-xl font-extrabold text-blue-900 uppercase">Khung Chương Trình Môn Học</h2>
                 <div class="flex flex-wrap gap-2">
-                    <input type="file" id="fileNhapKCT" accept=".xls,.html,.htm" style="display: none;" onchange="nhapExcelKCT(event)">
+                    <input type="file" id="fileNhapKCT" accept=".xlsx, .xls" style="display: none;" onchange="nhapExcelKCT(event)">
                     <button onclick="document.getElementById('fileNhapKCT').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        Tải lên
+                        Tải lên (.xlsx)
                     </button>
                     <button onclick="xuatExcelKCT()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Tải xuống
+                        Tải xuống (.xlsx)
                     </button>
                     <button onclick="themDongKhungChuongTrinh()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 text-sm">
                         Thêm dòng
@@ -119,7 +120,6 @@ async function taiDuLieuKhungChuongTrinhTuMayChu() {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layBanGhiKhungChuongTrinh`);
         const response = await phanHoi.json();
         
-        // Đồng bộ dữ liệu Lớp từ sheet DM_LOP (thông qua biến thongSoHocVu của hệ thống)
         const classTuDM = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) 
                           ? thongSoHocVu.DANH_SACH_LOP 
                           : (response.classes || []);
@@ -248,84 +248,70 @@ function diChuyenDongKCT(indexDong, huong) {
 }
 
 // ==========================================
-// 5. CHỨC NĂNG TẢI EXCEL (XUẤT / NHẬP)
+// 5. CHỨC NĂNG TẢI EXCEL (.XLSX) QUA SHEETJS
 // ==========================================
 function xuatExcelKCT() {
     if (duLieuBangKCT.length === 0) { alert("Không có dữ liệu để xuất."); return; }
+    if (typeof XLSX === 'undefined') { alert("Hệ thống chưa nạp xong thư viện Excel, vui lòng đợi vài giây."); return; }
     
-    let tableHTML = `<table border="1" style="border-collapse:collapse; font-family:'Times New Roman',Times,serif; text-align:center;">`;
-    tableHTML += `<tr>
-        <th style="background-color:#f1f5f9; font-weight:bold; padding:5px;">Môn học</th>
-        <th style="background-color:#f1f5f9; font-weight:bold; padding:5px;">Ưu tiên</th>`;
-    
-    danhSachLopKCT.forEach(lop => {
-        tableHTML += `<th style="background-color:#e2e8f0; font-weight:bold; padding:5px;">${lop}</th>`;
-    });
-    tableHTML += `</tr>`;
+    // Tạo cấu trúc mảng 2 chiều cho SheetJS
+    let header = ["Môn học", "Ưu tiên"].concat(danhSachLopKCT);
+    let rowsArr = [header];
     
     duLieuBangKCT.forEach(dong => {
-        tableHTML += `<tr>
-            <td style="padding:4px;">${dong.monHoc || ''}</td>
-            <td style="padding:4px;">${dong.uuTien || ''}</td>`;
-        danhSachLopKCT.forEach((lop, index) => {
-            let gt = dong.soTiet[index] !== undefined ? dong.soTiet[index] : '';
-            tableHTML += `<td style="padding:4px;">${gt}</td>`;
+        let row = [dong.monHoc || '', dong.uuTien || ''];
+        danhSachLopKCT.forEach((lop, idx) => {
+            row.push(dong.soTiet[idx] !== undefined ? dong.soTiet[idx] : '');
         });
-        tableHTML += `</tr>`;
+        rowsArr.push(row);
     });
-    tableHTML += `</table>`;
     
-    let template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>KhungChuongTrinh</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>' + tableHTML + '</body></html>';
-    
-    let blob = new Blob([template], { type: 'application/vnd.ms-excel;charset=utf-8' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
-    a.download = `KhungChuongTrinh_KCT.xls`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Thực hiện xuất file bằng SheetJS
+    let wb = XLSX.utils.book_new();
+    let ws = XLSX.utils.aoa_to_sheet(rowsArr);
+    XLSX.utils.book_append_sheet(wb, ws, "KhungChuongTrinh");
+    XLSX.writeFile(wb, `KhungChuongTrinh_KCT.xlsx`);
 }
 
 function nhapExcelKCT(event) {
     const file = event.target.files[0];
     if (!file) return;
+    if (typeof XLSX === 'undefined') { alert("Thư viện giải mã Excel chưa sẵn sàng."); return; }
     
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const text = e.target.result;
-            const doc = new DOMParser().parseFromString(text, 'text/html');
-            const table = doc.querySelector('table');
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
             
-            if (!table) { alert("File không hợp lệ hoặc không phải file Excel (.xls) được xuất từ hệ thống."); return; }
+            // Chuyển worksheet thành mảng 2 chiều
+            const rowsArr = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            if (rowsArr.length < 2) { alert("Bảng Excel trống hoặc thiếu dữ liệu tiêu đề."); return; }
             
-            const rows = table.querySelectorAll('tr');
-            if (rows.length < 2) { alert("Bảng Excel trống hoặc không có dữ liệu môn học."); return; }
-            
-            // Phân tích Header
-            const headerCells = rows[0].querySelectorAll('th, td');
+            // Phân tích danh sách lớp từ file tải lên
             let fileClasses = [];
-            for (let i = 2; i < headerCells.length; i++) {
-                fileClasses.push(headerCells[i].innerText.trim());
+            let firstRow = rowsArr[0];
+            for (let i = 2; i < firstRow.length; i++) {
+                if (firstRow[i]) fileClasses.push(firstRow[i].toString().trim());
             }
             
-            // Phân tích Nội dung
             let newData = [];
-            for (let i = 1; i < rows.length; i++) {
-                const cells = rows[i].querySelectorAll('td, th');
-                if (cells.length < 2) continue;
+            for (let i = 1; i < rowsArr.length; i++) {
+                let cells = rowsArr[i];
+                if (!cells || cells.length < 1) continue;
                 
-                let monHoc = cells[0].innerText.trim();
-                let uuTien = cells[1].innerText.trim();
+                let monHoc = cells[0] !== undefined ? cells[0].toString().trim() : '';
+                let uuTien = cells[1] !== undefined ? cells[1].toString().trim() : '';
                 if (!monHoc) continue;
                 
+                // Trích xuất số tiết theo thứ tự lớp của file
                 let soTietFile = fileClasses.map((lop, index) => {
-                    return cells[index + 2] ? cells[index + 2].innerText.trim() : '';
+                    return cells[index + 2] !== undefined ? cells[index + 2].toString().trim() : '';
                 });
                 
-                // Căn chỉnh số tiết theo danh sách lớp hiện hành (DM_LOP)
+                // Quy đổi đồng bộ bám sát theo danh sách lớp hiện hành (DM_LOP)
                 let mappedSoTiet = danhSachLopKCT.map(lop => {
                     let idx = fileClasses.indexOf(lop);
                     return idx !== -1 ? soTietFile[idx] : '';
@@ -336,18 +322,18 @@ function nhapExcelKCT(event) {
             
             duLieuBangKCT = newData;
             veBangKhungChuongTrinh();
-            alert("Đã tải dữ liệu thành công từ file Excel. Vui lòng kiểm tra lại trên lưới và bấm 'Lưu Khung CT' để lưu vào máy chủ.");
+            alert("Đã phân tích cấu trúc file .xlsx thành công! Vui lòng kiểm tra lại dữ liệu và nhấn nút 'Lưu Khung CT' để gửi lên máy chủ.");
         } catch (loi) {
-            alert("Lỗi khi đọc file: " + loi.message);
+            alert("Lỗi đọc dữ liệu tệp XLSX: " + loi.message);
         } finally {
-            event.target.value = ''; // Reset file input
+            event.target.value = ''; // Xóa trạng thái input file
         }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
 }
 
 // ==========================================
-// 6. ĐỒNG BỘ DỮ LIỆU LÊN MÁY CHỦ
+// 6. ĐỒNG BỘ DỮ LIỆU LÊN MÁY CHỦ BẰNG POST FETCH
 // ==========================================
 async function luuDuLieuKhungChuongTrinh(event) {
     const nutBam = event.currentTarget;
