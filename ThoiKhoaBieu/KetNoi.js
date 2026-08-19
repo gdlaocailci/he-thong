@@ -1,5 +1,5 @@
 const CAU_HINH_FRONTEND = {
-    URL_API_MAY_CHU: 'https://script.google.com/macros/s/AKfycbz1IOFWbcOTfgPmnaSeD2uU0i7UWWsUSW3pHja87WzT3GOhtwsJz7YyNdY2eOHGU33s/exec',
+    URL_API_MAY_CHU: 'https://script.google.com/macros/s/AKfycbykvMMgmGPVB7Ch_xaZx1YmDWzpJkNMa9brYVTvRhVlzzt2WJekTm-GGGRSs7zres-o/exec',
     TEN_DU_AN: 'THỜI KHÓA BIỂU',
     
     // Cấu hình chữ ký Footer hiển thị 2 dòng
