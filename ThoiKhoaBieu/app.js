@@ -7,10 +7,27 @@ let ngayDauTuanUI = '';
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
 // =========================================================================
+// [BẢN NÂNG CẤP]: HÀM TIỆN ÍCH FETCH VỚI CƠ CHẾ LÙI BƯỚC (EXPONENTIAL BACKOFF)
+// Giải quyết triệt để lỗi 404 ngắt quãng do Google Rate Limiting
+// =========================================================================
+async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3) {
+    for (let i = 0; i < soLanThu; i++) {
+        try {
+            const phanHoi = await fetch(url, tuyChon);
+            if (!phanHoi.ok) throw new Error(`Máy chủ từ chối kết nối (Mã lỗi HTTP: ${phanHoi.status})`);
+            return phanHoi;
+        } catch (loi) {
+            if (i === soLanThu - 1) throw loi; // Ném lỗi nếu đã thử hết giới hạn
+            console.warn(`Kết nối API bị gián đoạn, đang thử lại lần ${i + 1}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Tự động lùi bước 1s, 2s
+        }
+    }
+}
+
+// =========================================================================
 // KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM
 // =========================================================================
 function kiemSoatGiaoDien() {
-    // 1. Quản lý cụm nút lưu trữ
     const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra'];
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
@@ -20,16 +37,14 @@ function kiemSoatGiaoDien() {
         }
     });
 
-    // 2. Quản lý tập trung toàn bộ Nhãn và Menu Quản Trị
     const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh'];
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
-            menu.style.display = quyenSuaChua ? 'flex' : 'none'; // Dùng 'flex' để giữ cấu trúc của menu bo góc
+            menu.style.display = quyenSuaChua ? 'flex' : 'none'; 
         }
     });
 
-    // 3. Khóa/Mở cụm nút Chuyển Tuần và Chọn Ngày
     let btnTuanTruoc = document.querySelector('button[onclick="chuyenTuan(-1)"]');
     let btnTuanTiep = document.querySelector('button[onclick="chuyenTuan(1)"]');
     let inputNgay = document.getElementById('chonNgayDauTuan');
@@ -53,7 +68,6 @@ async function chuyenTuan(buocNhay) {
     if (tuanMoi < 1) tuanMoi = 1; 
     if (tuanMoi > 52) tuanMoi = 52;
     
-    // Tịnh tiến chuẩn xác chẵn 7 ngày
     if (ngayDauTuanUI && tuanMoi !== tuanDangXem) {
         let parts = ngayDauTuanUI.split('-');
         if (parts.length === 3) {
@@ -78,6 +92,8 @@ async function chuyenTuan(buocNhay) {
     document.getElementById('hienThiTuanHienTai').innerText = `Tuần ${tuanDangXem}`;
     
     if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) { duLieuTkbHienTai = []; }
+    
+    // Khi chuyển tuần thủ công, bắt buộc gọi API lấy TKB mới
     await taiDuLieuTKB(); 
 }
 
@@ -115,10 +131,10 @@ async function khoiTaoGiaoDien() {
             if (iconB) iconB.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
         }
 
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
-        if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối (Mã: " + phanHoi.status + ")");
-        
+        // Tích hợp Hàm Fetch chống 404 (Exponential Backoff)
+        const phanHoi = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         thongSoHocVu = await phanHoi.json();
+        
         if (thongSoHocVu.trangThai === 'loi_he_thong') throw new Error(thongSoHocVu.thongBao);
         
         kiemSoatGiaoDien(); 
@@ -171,19 +187,25 @@ async function khoiTaoGiaoDien() {
             }
         }
         
-        await taiDuLieuTKB(); 
+        // [NÂNG CẤP TỐI ƯU]: Xử lý dữ liệu TKB gộp trực tiếp từ payload "layCauHinh", không cần bắn thêm API Request gây nghẽn máy chủ
+        if (thongSoHocVu.TKB_TUAN && thongSoHocVu.TKB_TUAN.length > 0) {
+            duLieuTkbHienTai = thongSoHocVu.TKB_TUAN;
+            xuatMaTranBang(duLieuTkbHienTai);
+        } else {
+            // Rơi vào trường hợp khởi tạo trắng hoàn toàn thì mới gọi fallback
+            await taiDuLieuTKB(); 
+        }
         
     } catch (loi) { 
         console.error("Lỗi khởi tạo:", loi); 
         let tenDonVi = document.getElementById('tenDonVi');
         if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API.";
 
-        // KHẮC PHỤC UI: Xóa biểu tượng xoay và báo lỗi thẳng ra bảng
         let vungHienThi = document.getElementById('vungHienThiDuLieu');
         if (vungHienThi) {
             vungHienThi.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-600 font-bold text-lg" style="font-family:'Times New Roman',Times,serif;">
                 ⚠️ Lỗi khởi động: ${loi.message}<br>
-                <span class="text-sm font-normal text-slate-600">Gợi ý: Cập nhật "New Version" cho Google Apps Script hoặc kiểm tra lại file cấu hình.</span>
+                <span class="text-sm font-normal text-slate-600">Máy chủ Google Apps Script đang bảo trì hoặc bị nghẽn mạng. Vui lòng bấm F5 (Tải lại trang).</span>
             </td></tr>`;
         }
     }
@@ -194,14 +216,9 @@ async function taiDuLieuTKB() {
     vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;">Đang tải TKB Tuần ${tuanDangXem}...</td></tr>`;
     
     try {
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
+        // Tích hợp Hàm Fetch chống 404
+        const phanHoi = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
         
-        // Bắt lỗi HTTP (Ví dụ 500 Internal Server Error)
-        if (!phanHoi.ok) {
-            throw new Error(`Google Apps Script từ chối kết nối (Mã lỗi: ${phanHoi.status}). Bạn đã quên Deploy "New Version" chăng?`);
-        }
-
-        // Nhận dữ liệu thô để kiểm soát lỗi JSON Parse
         const textPhanHoi = await phanHoi.text();
         let duLieu;
 
@@ -209,14 +226,13 @@ async function taiDuLieuTKB() {
             duLieu = JSON.parse(textPhanHoi);
         } catch (loiParse) {
             console.error("Payload lỗi từ máy chủ:", textPhanHoi);
-            throw new Error("Máy chủ trả về trang HTML lỗi thay vì dữ liệu JSON. Hãy kiểm tra lại mã nguồn CODE.html.");
+            throw new Error("Máy chủ trả về dữ liệu hỏng. Hãy kiểm tra lại mã nguồn CODE.gs.");
         }
 
         if (duLieu.trangThai === 'loi_he_thong') {
             throw new Error(duLieu.thongBao);
         }
 
-        // Vẽ mảng
         if (Array.isArray(duLieu)) {
             duLieuTkbHienTai = duLieu;
             xuatMaTranBang(duLieuTkbHienTai);
@@ -235,7 +251,7 @@ async function goiThuatToanXepLich() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
     vungHienThi.innerHTML = `<tr><td class="text-center text-orange-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;"><div class="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3"></div>Đang chạy Động cơ phân bổ cho Tuần ${tuanDangXem}...</td></tr>`;
     try {
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=xepLichTuDong&tuan=${tuanDangXem}`);
+        const phanHoi = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=xepLichTuDong&tuan=${tuanDangXem}`);
         duLieuTkbHienTai = await phanHoi.json(); 
         xuatMaTranBang(duLieuTkbHienTai);
     } catch (loi) { vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">Lỗi thuật toán xếp lịch tự động.</td></tr>`; }
@@ -395,7 +411,6 @@ function xuatMaTranBang(danhSachTiet) {
     const duLieuTiet = danhSachTiet || [];
     const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) ? thongSoHocVu.DANH_SACH_LOP : [...new Set(duLieuTiet.map(t => t.maLop))].sort();
     
-    // KHẮC PHỤC 1: Bẫy lỗi mảng rỗng gây treo màn hình
     if (mangLop.length === 0) {
         thead.innerHTML = '<tr><th class="text-center text-slate-500 py-3 font-bold" style="font-family:\'Times New Roman\',Times,serif;">Chưa có dữ liệu Lớp học</th></tr>';
         tbody.innerHTML = `<tr><td class="text-center py-10" style="font-family:\'Times New Roman\',Times,serif;">
@@ -589,7 +604,8 @@ async function luuDuLieu(event, loaiLuu) {
             });
         });
 
-        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify({ thaoTac: 'luuDuLieu', loaiLuu: loaiLuu, tuan: tuanDangXem, duLieu: dsTietLuoi }) });
+        // Sử dụng hàm fetch cải tiến
+        const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify({ thaoTac: 'luuDuLieu', loaiLuu: loaiLuu, tuan: tuanDangXem, duLieu: dsTietLuoi }) });
         const ketQua = await phanHoi.json();
         
         if(ketQua.trangThai !== 'thanh_cong') { 
@@ -615,7 +631,6 @@ async function luuDuLieu(event, loaiLuu) {
 // KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER)
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
-    // 1. Phủ màu Menu mượt mà không độ trễ (Đã cập nhật thêm menuDanhMucLop)
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
@@ -628,7 +643,6 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     });
 
-    // Bật sáng Menu đang chọn
     let mActive = document.getElementById(idMenu);
     if (mActive) {
         mActive.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 shadow-md backdrop-blur-sm cursor-pointer group";
@@ -638,7 +652,6 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
     }
 
-    // 2. Chuyển đổi khung màn hình tức thì bằng CSS (Đã cập nhật thêm khungDanhMucLop)
     const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
@@ -653,7 +666,6 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     });
 
-    // 3. Tắt/Bật thanh công cụ riêng của TKB
     let thanhCongCu = document.getElementById('thanhCongCuTKB');
     if (thanhCongCu) {
         if (hienThanhCongCuTKB) {
@@ -665,7 +677,6 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     }
 
-    // 4. KÍCH HOẠT TẢI DỮ LIỆU THÔNG MINH (Chỉ tải khi người dùng lần đầu bấm vào tab)
     if (idKhung === 'khungThongKe' && typeof taiCayDanhMucThongKe === 'function' && Object.keys(cayDanhMucThongKe).length === 0) {
         taiCayDanhMucThongKe();
     }
@@ -681,7 +692,6 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
         taiDuLieuCaiDatHeThong();
     }
-    // Ghi chú: Nếu có hàm tải cho Danh Mục Lớp, có thể bổ sung thêm if vào đây
 };
 
 // =========================================================================
