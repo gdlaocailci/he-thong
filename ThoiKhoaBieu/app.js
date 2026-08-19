@@ -120,21 +120,16 @@ async function khoiTaoGiaoDien() {
         if(typeof CAU_HINH_FRONTEND !== 'undefined') {
             let tieuDeHeThong = document.getElementById('tenHeThong'); 
             if (tieuDeHeThong) tieuDeHeThong.innerText = CAU_HINH_FRONTEND.TEN_DU_AN;
-            
             let logoHT = document.getElementById('logoHeThong'); 
             if (logoHT) logoHT.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
-            
             let logoMenu = document.getElementById('logoMenuDoc'); 
             if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
-            
-            let iconB = document.getElementById('iconBang'); 
-            if (iconB) iconB.src = CAU_HINH_FRONTEND.LINK_ICON_BANG;
         }
 
-        // Tích hợp Hàm Fetch chống 404 (Exponential Backoff)
-        const phanHoi = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
-        thongSoHocVu = await phanHoi.json();
+        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
+        if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối");
         
+        thongSoHocVu = await phanHoi.json();
         if (thongSoHocVu.trangThai === 'loi_he_thong') throw new Error(thongSoHocVu.thongBao);
         
         kiemSoatGiaoDien(); 
@@ -144,68 +139,25 @@ async function khoiTaoGiaoDien() {
             if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
         }
         
-        if(thongSoHocVu.DANH_SACH_GIAO_VIEN && Array.isArray(thongSoHocVu.DANH_SACH_GIAO_VIEN)) {
-            let theDataList = document.getElementById('danhSachGvList');
-            if(theDataList) {
-                let htmlList = `<option value="Toàn trường"></option>`;
-                htmlList += thongSoHocVu.DANH_SACH_GIAO_VIEN.map(gv => `<option value="${gv}"></option>`).join('');
-                theDataList.innerHTML = htmlList;
-            }
-        }
-
         tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
         let hienThiTuan = document.getElementById('hienThiTuanHienTai');
         if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
         
-        if (thongSoHocVu.NGAY_K2) {
-            let p = String(thongSoHocVu.NGAY_K2).split('/');
-            if (p.length === 3) {
-                let d = new Date(p[2], p[1] - 1, p[0]);
-                const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
-                let lech = doLechThu[thongSoHocVu.THU_K2 || "Thứ 2"] || 0;
-                d.setDate(d.getDate() - lech);
-
-                let yy = d.getFullYear();
-                let mm = (d.getMonth() + 1).toString().padStart(2, '0');
-                let dd = d.getDate().toString().padStart(2, '0');
-
-                ngayDauTuanUI = `${yy}-${mm}-${dd}`;
-                let dateInput = document.getElementById('chonNgayDauTuan');
-                if (dateInput) dateInput.value = ngayDauTuanUI;
-            }
-        } else if (thongSoHocVu.NGAY_AP_DUNG) {
-            let p = String(thongSoHocVu.NGAY_AP_DUNG).split('/');
-            if (p.length === 3) {
-                let d = new Date(p[2], p[1] - 1, p[0]);
-                d.setDate(d.getDate() + (tuanDangXem - 1) * 7);
-                let yy = d.getFullYear(); 
-                let mm = (d.getMonth() + 1).toString().padStart(2, '0'); 
-                let dd = d.getDate().toString().padStart(2, '0');
-                ngayDauTuanUI = `${yy}-${mm}-${dd}`;
-                let dateInput = document.getElementById('chonNgayDauTuan');
-                if (dateInput) dateInput.value = ngayDauTuanUI;
-            }
-        }
-        
-        // [NÂNG CẤP TỐI ƯU]: Xử lý dữ liệu TKB gộp trực tiếp từ payload "layCauHinh", không cần bắn thêm API Request gây nghẽn máy chủ
+        // [KHẮC PHỤC KHỞI ĐỘNG CHẬM]: Kế thừa TKB từ biến cấu hình, chặn gọi thêm API layTKB
         if (thongSoHocVu.TKB_TUAN && thongSoHocVu.TKB_TUAN.length > 0) {
             duLieuTkbHienTai = thongSoHocVu.TKB_TUAN;
             xuatMaTranBang(duLieuTkbHienTai);
         } else {
-            // Rơi vào trường hợp khởi tạo trắng hoàn toàn thì mới gọi fallback
+            // Chỉ gọi API độc lập khi Cấu hình không gắn kèm TKB (dự phòng)
             await taiDuLieuTKB(); 
         }
         
     } catch (loi) { 
         console.error("Lỗi khởi tạo:", loi); 
-        let tenDonVi = document.getElementById('tenDonVi');
-        if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API.";
-
         let vungHienThi = document.getElementById('vungHienThiDuLieu');
         if (vungHienThi) {
-            vungHienThi.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-600 font-bold text-lg" style="font-family:'Times New Roman',Times,serif;">
-                ⚠️ Lỗi khởi động: ${loi.message}<br>
-                <span class="text-sm font-normal text-slate-600">Máy chủ Google Apps Script đang bảo trì hoặc bị nghẽn mạng. Vui lòng bấm F5 (Tải lại trang).</span>
+            vungHienThi.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-600 font-bold text-lg">
+                ⚠️ Lỗi khởi động: ${loi.message}
             </td></tr>`;
         }
     }
