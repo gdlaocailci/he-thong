@@ -6,11 +6,11 @@ const CAU_HINH_FRONTEND = {
     TIEU_DE_TAC_GIA: 'Thiết kế và phát triển',
     TAC_GIA_THIET_KE: 'Hoàng Ngọc Lâm',
 
-    LINK_LOGO_TRANG_CHU: 'https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png',
-    LINK_ICON_BANG: 'https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png',
-    LINK_ICON_DANG_TAI: 'https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png',
-    LINK_ICON_TRONG: 'https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png',
-    LINK_ICON_LAM_MOI: 'https://i.postimg.cc/Hn7bdGg5/Logo-truong-Photoroom.png'
+    LINK_LOGO_TRANG_CHU: 'https://i.postimg.cc/xjzpvXCm/Logo-HL.png',
+    LINK_ICON_BANG: 'https://i.postimg.cc/xjzpvXCm/Logo-HL.png',
+    LINK_ICON_DANG_TAI: 'https://i.postimg.cc/xjzpvXCm/Logo-HL.png',
+    LINK_ICON_TRONG: 'https://i.postimg.cc/xjzpvXCm/Logo-HL.png',
+    LINK_ICON_LAM_MOI: 'https://i.postimg.cc/xjzpvXCm/Logo-HL.png'
 };
 
 // =========================================================================
