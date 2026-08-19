@@ -4,6 +4,30 @@ let duLieuTkbHienTai = [];
 let tuanDangXem = 1; 
 let ngayDauTuanUI = ''; 
 
+// =========================================================================
+// ĐỘNG CƠ KẾT NỐI API CÓ CƠ CHẾ TỰ ĐỘNG PHỤC HỒI (EXPONENTIAL BACKOFF)
+// =========================================================================
+async function fetchVoiCoCheRetry(url, options = {}, soLanThu = 3) {
+    let doTre = 1000; // Khởi điểm chờ 1 giây nếu máy chủ Google từ chối
+    for (let i = 0; i < soLanThu; i++) {
+        try {
+            // Thêm cache: 'no-store' để chống trình duyệt đọc lại bộ đệm báo lỗi 404 cũ
+            const opt = { ...options, cache: 'no-store' };
+            const phanHoi = await fetch(url, opt);
+            
+            // Nếu Google trả về lỗi (404, 429, 500...), ném ra lỗi để chui vào khối catch
+            if (!phanHoi.ok) throw new Error(`Mã lỗi HTTP: ${phanHoi.status}`);
+            
+            return phanHoi; // Kết nối thành công, trả về dữ liệu ngay lập tức
+        } catch (loi) {
+            console.warn(`[Hệ thống] Kết nối thất bại lần ${i + 1}/${soLanThu}: ${loi.message}. Đang thử lại sau ${doTre}ms...`);
+            if (i === soLanThu - 1) throw loi; // Nếu đã thử hết số lần cho phép mà vẫn lỗi thì chấp nhận văng lỗi thật
+            await new Promise(resolve => setTimeout(resolve, doTre));
+            doTre *= 2; // Thời gian chờ tăng gấp đôi (1s -> 2s) để tránh làm nghẽn máy chủ Google
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
 // =========================================================================
