@@ -631,6 +631,7 @@ async function luuDuLieu(event, loaiLuu) {
 // KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER)
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
+    // 1. Phủ màu Menu mượt mà không độ trễ
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
@@ -643,6 +644,7 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     });
 
+    // Bật sáng Menu đang chọn
     let mActive = document.getElementById(idMenu);
     if (mActive) {
         mActive.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 shadow-md backdrop-blur-sm cursor-pointer group";
@@ -652,6 +654,7 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
     }
 
+    // 2. Chuyển đổi khung màn hình tức thì bằng CSS
     const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
@@ -666,6 +669,7 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     });
 
+    // 3. Tắt/Bật thanh công cụ riêng của TKB
     let thanhCongCu = document.getElementById('thanhCongCuTKB');
     if (thanhCongCu) {
         if (hienThanhCongCuTKB) {
@@ -677,6 +681,7 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     }
 
+    // 4. KÍCH HOẠT TẢI DỮ LIỆU THÔNG MINH (Chỉ tải khi người dùng lần đầu bấm vào tab)
     if (idKhung === 'khungThongKe' && typeof taiCayDanhMucThongKe === 'function' && Object.keys(cayDanhMucThongKe).length === 0) {
         taiCayDanhMucThongKe();
     }
@@ -691,6 +696,10 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     }
     if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
         taiDuLieuCaiDatHeThong();
+    }
+    // [NÂNG CẤP]: Bổ sung lệnh đánh thức hàm tải cho Danh mục Lớp
+    if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
+        taiDuLieuDanhMucLop();
     }
 };
 
