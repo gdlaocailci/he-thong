@@ -116,7 +116,10 @@ async function khoiTaoGiaoDien() {
         }
 
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
+        if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối (Mã: " + phanHoi.status + ")");
+        
         thongSoHocVu = await phanHoi.json();
+        if (thongSoHocVu.trangThai === 'loi_he_thong') throw new Error(thongSoHocVu.thongBao);
         
         kiemSoatGiaoDien(); 
         
@@ -134,12 +137,10 @@ async function khoiTaoGiaoDien() {
             }
         }
 
-        // NÂNG CẤP KIÊN CỐ: Luôn gán tuần mặc định là 1 nếu cấu hình bị lỗi/trống
         tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
         let hienThiTuan = document.getElementById('hienThiTuanHienTai');
         if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
         
-        // NÂNG CẤP KIÊN CỐ: Ép kiểu String để tránh lỗi khi gặp chuỗi thời gian lạ
         if (thongSoHocVu.NGAY_K2) {
             let p = String(thongSoHocVu.NGAY_K2).split('/');
             if (p.length === 3) {
@@ -170,46 +171,36 @@ async function khoiTaoGiaoDien() {
             }
         }
         
-        // LUÔN LUÔN kích hoạt tải dữ liệu thời khóa biểu dù có tham số hay không
         await taiDuLieuTKB(); 
         
     } catch (loi) { 
         console.error("Lỗi khởi tạo:", loi); 
         let tenDonVi = document.getElementById('tenDonVi');
         if (tenDonVi) tenDonVi.innerText = "Lỗi kết nối máy chủ API.";
+
+        // KHẮC PHỤC UI: Xóa biểu tượng xoay và báo lỗi thẳng ra bảng
+        let vungHienThi = document.getElementById('vungHienThiDuLieu');
+        if (vungHienThi) {
+            vungHienThi.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-600 font-bold text-lg" style="font-family:'Times New Roman',Times,serif;">
+                ⚠️ Lỗi khởi động: ${loi.message}<br>
+                <span class="text-sm font-normal text-slate-600">Gợi ý: Cập nhật "New Version" cho Google Apps Script hoặc kiểm tra lại file cấu hình.</span>
+            </td></tr>`;
+        }
     }
 }
 
 async function taiDuLieuTKB() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
     vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;">Đang tải TKB Tuần ${tuanDangXem}...</td></tr>`;
-    
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
-        
-        // Kiểm tra xem phản hồi có phải là văn bản thuần/HTML không (bắt lỗi sập GAS)
-        const textPhanHoi = await phanHoi.text();
-        
-        let duLieu;
-        try {
-            duLieu = JSON.parse(textPhanHoi);
-        } catch (parseError) {
-            console.error("Dữ liệu trả về không phải JSON:", textPhanHoi);
-            throw new Error("Máy chủ Google Apps Script đang bị lỗi hoặc chưa cấp quyền. Vui lòng kiểm tra Console (F12).");
-        }
-
-        // Kiểm tra an toàn định dạng mảng
-        if (Array.isArray(duLieu)) {
-            duLieuTkbHienTai = duLieu;
-            xuatMaTranBang(duLieuTkbHienTai);
-        } else {
-            vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">
-                ⚠️ Lỗi logic từ máy chủ: ${duLieu.thongBao || 'Dữ liệu không đúng định dạng.'}
-            </td></tr>`;
-        }
+        if (!phanHoi.ok) throw new Error("Máy chủ API văng lỗi");
+        duLieuTkbHienTai = await phanHoi.json(); 
+        if (duLieuTkbHienTai.trangThai === 'loi_he_thong') throw new Error(duLieuTkbHienTai.thongBao);
+        xuatMaTranBang(duLieuTkbHienTai);
     } catch (loi) { 
         vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">
-            Lỗi phân tích dữ liệu: ${loi.message}
+            Lỗi nạp dữ liệu TKB: ${loi.message}
         </td></tr>`; 
     }
 }
@@ -377,7 +368,16 @@ function xuatMaTranBang(danhSachTiet) {
 
     const duLieuTiet = danhSachTiet || [];
     const mangLop = (thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) ? thongSoHocVu.DANH_SACH_LOP : [...new Set(duLieuTiet.map(t => t.maLop))].sort();
-    if (mangLop.length === 0) return;
+    
+    // KHẮC PHỤC 1: Bẫy lỗi mảng rỗng gây treo màn hình
+    if (mangLop.length === 0) {
+        thead.innerHTML = '<tr><th class="text-center text-slate-500 py-3 font-bold" style="font-family:\'Times New Roman\',Times,serif;">Chưa có dữ liệu Lớp học</th></tr>';
+        tbody.innerHTML = `<tr><td class="text-center py-10" style="font-family:\'Times New Roman\',Times,serif;">
+            <p class="text-red-500 font-bold text-lg mb-2">Hệ thống chưa tìm thấy dữ liệu Danh mục Lớp.</p>
+            <p class="text-sm font-normal text-slate-600">Vui lòng chọn tab <b>"Danh mục Lớp"</b> để thêm lớp, sau đó bấm <b>"Lưu Hệ Thống"</b> và nhấn F5 tải lại trang.</p>
+        </td></tr>`;
+        return;
+    }
 
     let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
     let dateInput = document.getElementById('chonNgayDauTuan');
