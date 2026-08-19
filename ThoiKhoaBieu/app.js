@@ -183,12 +183,34 @@ async function khoiTaoGiaoDien() {
 async function taiDuLieuTKB() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
     vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;">Đang tải TKB Tuần ${tuanDangXem}...</td></tr>`;
+    
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
-        duLieuTkbHienTai = await phanHoi.json(); 
-        xuatMaTranBang(duLieuTkbHienTai);
+        
+        // Kiểm tra xem phản hồi có phải là văn bản thuần/HTML không (bắt lỗi sập GAS)
+        const textPhanHoi = await phanHoi.text();
+        
+        let duLieu;
+        try {
+            duLieu = JSON.parse(textPhanHoi);
+        } catch (parseError) {
+            console.error("Dữ liệu trả về không phải JSON:", textPhanHoi);
+            throw new Error("Máy chủ Google Apps Script đang bị lỗi hoặc chưa cấp quyền. Vui lòng kiểm tra Console (F12).");
+        }
+
+        // Kiểm tra an toàn định dạng mảng
+        if (Array.isArray(duLieu)) {
+            duLieuTkbHienTai = duLieu;
+            xuatMaTranBang(duLieuTkbHienTai);
+        } else {
+            vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">
+                ⚠️ Lỗi logic từ máy chủ: ${duLieu.thongBao || 'Dữ liệu không đúng định dạng.'}
+            </td></tr>`;
+        }
     } catch (loi) { 
-        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">Lỗi phân tích dữ liệu.</td></tr>`; 
+        vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">
+            Lỗi phân tích dữ liệu: ${loi.message}
+        </td></tr>`; 
     }
 }
 
