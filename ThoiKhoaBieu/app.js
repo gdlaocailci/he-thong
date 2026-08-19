@@ -414,8 +414,9 @@ function xuatMaTranBang(danhSachTiet) {
     });
     theadHTML += `</tr><tr style="height: 40px;">`;
     mangLop.forEach(() => { 
-        theadHTML += `<th class="text-center font-bold text-slate-800 border-b border-r border-slate-400" style="position: sticky; top: 45px; z-index: 50; background-color: #f8fafc; min-width: 120px; font-family:'Times New Roman',Times,serif;">Môn</th>
-                      <th class="text-center font-bold text-slate-800 border-b border-r border-slate-400" style="position: sticky; top: 45px; z-index: 50; background-color: #f8fafc; min-width: 105px; font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
+        // Đã giảm min-width từ 120px -> 90px (Cột Môn) và 105px -> 85px (Cột N dạy)
+        theadHTML += `<th class="text-center font-bold text-slate-800 border-b border-r border-slate-400" style="position: sticky; top: 45px; z-index: 50; background-color: #f8fafc; min-width: 90px; font-family:'Times New Roman',Times,serif;">Môn</th>
+                      <th class="text-center font-bold text-slate-800 border-b border-r border-slate-400" style="position: sticky; top: 45px; z-index: 50; background-color: #f8fafc; min-width: 85px; font-family:'Times New Roman',Times,serif;">N dạy</th>`; 
     });
     theadHTML += `</tr>`; 
     thead.innerHTML = theadHTML;
