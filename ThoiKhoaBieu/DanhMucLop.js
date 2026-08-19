@@ -119,7 +119,6 @@ async function luuDuLieuDanhMucLopSangMayChu() {
         });
 
         const payload = { thaoTac: 'luuDanhMucLop', duLieu: mangGhi };
-        
         const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? 
             fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) }) : 
             fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) })
@@ -130,6 +129,16 @@ async function luuDuLieuDanhMucLopSangMayChu() {
         
         if (ketQua.trangThai === 'Thành công') { 
             alert("Đã lưu Danh mục Lớp lên hệ thống an toàn!"); 
+            
+            // [KHẮC PHỤC KẾ THỪA]: Bơm danh sách Lớp mới vào biến toàn cục
+            if (typeof thongSoHocVu !== 'undefined') {
+                thongSoHocVu.DANH_SACH_LOP = duLieuDanhMucLop.map(lop => lop.maLop.trim()).filter(String);
+            }
+            // Xóa Cache các phân hệ phụ thuộc để ép chúng tái tạo cấu trúc khi bấm sang
+            if (typeof duLieuBangKCT !== 'undefined') duLieuBangKCT = []; 
+            if (typeof danhSachGV !== 'undefined') danhSachGV = []; 
+            if (typeof duLieuTkbHienTai !== 'undefined') duLieuTkbHienTai = []; 
+            
         } else { 
             alert("Lỗi từ máy chủ: " + ketQua.thongBao); 
         }
