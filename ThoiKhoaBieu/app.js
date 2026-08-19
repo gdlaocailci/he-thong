@@ -192,16 +192,42 @@ async function khoiTaoGiaoDien() {
 async function taiDuLieuTKB() {
     const vungHienThi = document.getElementById('vungHienThiDuLieu');
     vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;">Đang tải TKB Tuần ${tuanDangXem}...</td></tr>`;
+    
     try {
         const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}`);
-        if (!phanHoi.ok) throw new Error("Máy chủ API văng lỗi");
-        duLieuTkbHienTai = await phanHoi.json(); 
-        if (duLieuTkbHienTai.trangThai === 'loi_he_thong') throw new Error(duLieuTkbHienTai.thongBao);
-        xuatMaTranBang(duLieuTkbHienTai);
-    } catch (loi) { 
+        
+        // Bắt lỗi HTTP (Ví dụ 500 Internal Server Error)
+        if (!phanHoi.ok) {
+            throw new Error(`Google Apps Script từ chối kết nối (Mã lỗi: ${phanHoi.status}). Bạn đã quên Deploy "New Version" chăng?`);
+        }
+
+        // Nhận dữ liệu thô để kiểm soát lỗi JSON Parse
+        const textPhanHoi = await phanHoi.text();
+        let duLieu;
+
+        try {
+            duLieu = JSON.parse(textPhanHoi);
+        } catch (loiParse) {
+            console.error("Payload lỗi từ máy chủ:", textPhanHoi);
+            throw new Error("Máy chủ trả về trang HTML lỗi thay vì dữ liệu JSON. Hãy kiểm tra lại mã nguồn CODE.html.");
+        }
+
+        if (duLieu.trangThai === 'loi_he_thong') {
+            throw new Error(duLieu.thongBao);
+        }
+
+        // Vẽ mảng
+        if (Array.isArray(duLieu)) {
+            duLieuTkbHienTai = duLieu;
+            xuatMaTranBang(duLieuTkbHienTai);
+        } else {
+            throw new Error("Dữ liệu nhận được không đúng cấu trúc mảng.");
+        }
+
+    } catch (loi) {
         vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">
-            Lỗi nạp dữ liệu TKB: ${loi.message}
-        </td></tr>`; 
+            ⚠️ Lỗi nạp dữ liệu TKB:<br><span class="text-base text-slate-700 font-normal mt-2 inline-block">${loi.message}</span>
+        </td></tr>`;
     }
 }
 
