@@ -568,13 +568,14 @@ async function luuDuLieu(event, loaiLuu) {
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     // 1. Phủ màu Menu mượt mà không độ trễ
+    // BỔ SUNG: 'menuDanhMucLop'
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuDanhMucLop', 'menuCaiDat'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
             m.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group";
             let span = m.querySelector('span');
-            if (span) span.className = "font-bold text-white/80 group-hover:text-white transition-colors text-[14px]";
+            if (span) span.className = "font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap";
             let svg = m.querySelector('svg');
             if (svg) svg.className = "w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white";
         }
@@ -585,12 +586,13 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     if (mActive) {
         mActive.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 shadow-md backdrop-blur-sm cursor-pointer group";
         let spanActive = mActive.querySelector('span');
-        if (spanActive) spanActive.className = "font-bold text-menu-active text-[14px]";
+        if (spanActive) spanActive.className = "font-bold text-menu-active text-[14px] whitespace-nowrap";
         let svgActive = mActive.querySelector('svg');
         if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
     }
 
     // 2. Chuyển đổi khung màn hình tức thì bằng CSS
+    // BỔ SUNG: 'khungDanhMucLop'
     const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungDanhMucLop', 'khungCaiDat'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
@@ -624,15 +626,15 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     if (idKhung === 'khungDanhMucGV' && typeof taiDuLieuDanhMucGV === 'function' && typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length === 0) {
         taiDuLieuDanhMucGV();
     }
+    // LUỒNG TẢI THÔNG MINH CHO DANH MỤC LỚP
+    if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
+        taiDuLieuDanhMucLop();
+    }
     if (idKhung === 'khungKhungChuongTrinh' && typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && typeof duLieuBangKCT !== 'undefined' && duLieuBangKCT.length === 0) {
         taiDuLieuKhungChuongTrinhTuMayChu();
     }
     if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
         taiDuLieuCaiDatHeThong();
-    }
-
-    if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
-        taiDuLieuDanhMucLop();
     }
 };
 
