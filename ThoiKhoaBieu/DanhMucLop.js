@@ -1,31 +1,14 @@
-/**
- * Tên file: DanhMucLop.js
- * Chức năng: Quản lý danh mục lớp (Đồng bộ sh DM_LOP)
- * Tác giả: Hoàng Ngọc Lâm
- * Nâng cấp: Tích hợp Exponential Backoff chống nghẽn cổ chai tải dữ liệu
- */
-
 let duLieuDanhMucLop = [];
 const TIEU_DE_DM_LOP = ['MaLop', 'TenLop'];
 
-// Kích hoạt menu khi kiểm soát giao diện
-document.addEventListener('DOMContentLoaded', () => {
-    let checkQuyenLop = setInterval(() => {
-        if (typeof quyenSuaChua !== 'undefined') {
-            let menuDMLop = document.getElementById('menuDanhMucLop');
-            if (menuDMLop) {
-                menuDMLop.style.display = quyenSuaChua ? 'flex' : 'none';
-            }
-        }
-    }, 1000);
-});
+// Đã loại bỏ vòng lặp DOMContentLoaded kiểm tra menu thủ công. 
+// Giao diện đã được quản lý chuẩn mực tại kiemSoatGiaoDien() trong app.js.
 
 async function taiDuLieuDanhMucLop() {
     const tbody = document.getElementById('vungDuLieuDanhMucLop');
     tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-slate-500 font-bold"><div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang tải Danh mục Lớp...</td></tr>`;
     
     try {
-        // [NÂNG CẤP]: Sử dụng hàm fetchVoiCoCheThuLai từ app.js để tự động chống lỗi 404
         const urlAPI = `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`;
         const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? fetchVoiCoCheThuLai(urlAPI) : fetch(urlAPI));
         
@@ -137,7 +120,6 @@ async function luuDuLieuDanhMucLopSangMayChu() {
 
         const payload = { thaoTac: 'luuDanhMucLop', duLieu: mangGhi };
         
-        // [NÂNG CẤP]: Áp dụng Exponential Backoff cho cả tiến trình Lưu dữ liệu
         const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? 
             fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) }) : 
             fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) })
