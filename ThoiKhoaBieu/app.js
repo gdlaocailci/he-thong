@@ -21,7 +21,7 @@ function kiemSoatGiaoDien() {
     });
 
     // 2. Quản lý tập trung toàn bộ Nhãn và Menu Quản Trị
-    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuPhanCong', 'menuKhungChuongTrinh'];
+    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh'];
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
@@ -568,7 +568,7 @@ async function luuDuLieu(event, loaiLuu) {
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     // 1. Phủ màu Menu mượt mà không độ trễ
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat'];
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuDanhMucLop', 'menuCaiDat'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
@@ -591,7 +591,7 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     }
 
     // 2. Chuyển đổi khung màn hình tức thì bằng CSS
-    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'];
+    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungDanhMucLop', 'khungCaiDat'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
         if (el) {
@@ -629,6 +629,10 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     }
     if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
         taiDuLieuCaiDatHeThong();
+    }
+
+    if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
+        taiDuLieuDanhMucLop();
     }
 };
 
