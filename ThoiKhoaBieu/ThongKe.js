@@ -63,7 +63,7 @@ function dungGiaoDienThongKe() {
 
 document.addEventListener('DOMContentLoaded', () => { 
     dungGiaoDienThongKe();
-    taiCayDanhMucThongKe();
+   
 });
 
 // =========================================================================
