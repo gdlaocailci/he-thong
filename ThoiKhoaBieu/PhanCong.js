@@ -43,11 +43,14 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
   document.getElementById('tieuDeMonHoc').innerHTML = headerHtml;
 
   let bodyHtml = '';
-  let optionsGV = `<option value=""></option>`;
+  
+  // [BẢN NÂNG CẤP]: Tạo Datalist chung duy nhất cho toàn bộ bảng để tối ưu hiệu suất bộ nhớ
+  let datalistHtml = `<datalist id="danhSachGiaoVienPhanCong">`;
   danhSachGV.forEach(gv => {
     let ma = gv.maGv || gv.hoTen;
-    optionsGV += `<option value="${ma}">${ma}</option>`;
+    datalistHtml += `<option value="${ma}"></option>`;
   });
+  datalistHtml += `</datalist>`;
 
   let mapPhanCongDaLuu = {};
   if (duLieuSever.phanCong && duLieuSever.phanCong.length > 0) {
@@ -70,19 +73,18 @@ function khoiTaoGiaoDienPhanCong(duLieuSever) {
         for (let j = 0; j < duLieuSever.monHoc.length; j++) {
           let tenMon = duLieuSever.monHoc[j];
           let gvHienTai = duLieuCuCuaLop[j + 1] || ''; 
-          let selectedOptions = optionsGV.replace(`value="${gvHienTai}"`, `value="${gvHienTai}" selected`);
           
+          // [BẢN NÂNG CẤP]: Chuyển sang Input + Datalist. Bổ sung size="1" và min-w-0 để neo đúng độ rộng nguyên bản
           bodyHtml += `<td class="p-0 border border-gray-400 transition-all duration-300 bg-white group-hover:bg-slate-50">
-                          <select data-lop="${maLop}" data-mon="${tenMon}" onchange="tinhToanTietDay()" class="w-full h-full min-h-[26px] outline-none appearance-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800">
-                              ${selectedOptions}
-                          </select>
+                          <input type="text" size="1" list="danhSachGiaoVienPhanCong" data-lop="${maLop}" data-mon="${tenMon}" value="${gvHienTai}" onchange="tinhToanTietDay()" placeholder="--" class="w-full h-full min-h-[26px] min-w-0 outline-none text-center bg-transparent focus:bg-blue-100 cursor-pointer font-semibold text-slate-800" autocomplete="off" onclick="if(this.showPicker) this.showPicker();" onfocus="this.select()">
                        </td>`;
         }
         bodyHtml += '</tr>';
       });
   }
   
-  document.getElementById('duLieuLopHoc').innerHTML = bodyHtml;
+  // Nạp Datalist vào cuối vùng dữ liệu
+  document.getElementById('duLieuLopHoc').innerHTML = bodyHtml + datalistHtml;
   tinhToanTietDay();
 }
 
@@ -98,9 +100,10 @@ function tinhToanTietDay() {
       thongKe[ma] = { hoTen: ten, dinhMuc: gv.dinhMuc, thucTe: 0, chiTiet: [] }; 
   });
 
-  const cacTheSelect = document.querySelectorAll('#bangChinh select');
+  // [BẢN NÂNG CẤP]: Đổi lệnh quét từ select sang input chứa thuộc tính data-lop
+  const cacTheSelect = document.querySelectorAll('#bangChinh input[data-lop]');
   cacTheSelect.forEach(sl => {
-    let maGV = sl.value;
+    let maGV = sl.value.trim();
     if (maGV && thongKe[maGV]) {
       let tenLop = sl.getAttribute('data-lop');
       let tenMon = sl.getAttribute('data-mon');
@@ -193,7 +196,8 @@ async function xuLyLuuTru() {
         let tdLop = tr.querySelector('td:first-child');
         if (tdLop) {
             dongDuLieu.push(tdLop.innerText.trim());
-            let cacSelect = tr.querySelectorAll('select');
+            // [BẢN NÂNG CẤP]: Cập nhật thu thập giá trị từ input
+            let cacSelect = tr.querySelectorAll('input[data-lop]');
             cacSelect.forEach(sl => {
                 dongDuLieu.push(sl.value.trim());
             });
@@ -231,7 +235,6 @@ async function xuatExcelPhanCong() {
     if (btn) btn.innerHTML = `Đang tạo file...`;
     
     try {
-        // Tự động tải thư viện ExcelJS chuyên dụng để vẽ Dropdown (không cần sửa file HTML)
         if (typeof ExcelJS === 'undefined') {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -251,7 +254,7 @@ async function xuatExcelPhanCong() {
         dsMaGV.forEach((ma, idx) => {
             wsData.getCell(`A${idx + 1}`).value = ma;
         });
-        wsData.state = 'hidden'; // Ẩn sheet danh mục đi cho chuyên nghiệp
+        wsData.state = 'hidden'; 
 
         // 2. Quét dòng Tiêu đề
         let thead = document.querySelectorAll('#tieuDeMonHoc th');
@@ -267,16 +270,16 @@ async function xuatExcelPhanCong() {
             let tdLop = tr.querySelector('td:first-child');
             if (tdLop) {
                 dong.push(tdLop.innerText.trim());
-                let cacSelect = tr.querySelectorAll('select');
+                // [BẢN NÂNG CẤP]: Cập nhật thu thập giá trị từ input
+                let cacSelect = tr.querySelectorAll('input[data-lop]');
                 cacSelect.forEach(sl => dong.push(sl.value.trim()));
                 worksheet.addRow(dong);
 
-                // Thiết lập danh sách thả xuống cho từng ô môn học
                 for (let c = 2; c <= dongTieuDe.length; c++) {
                     worksheet.getCell(rowCount, c).dataValidation = {
                         type: 'list',
                         allowBlank: true,
-                        showErrorMessage: false, // Tắt cảnh báo để có thể copy/paste tự do nếu cần
+                        showErrorMessage: false, 
                         formulae: [`DM_GV!$A$1:$A$${dsMaGV.length}`]
                     };
                 }
@@ -284,11 +287,9 @@ async function xuatExcelPhanCong() {
             }
         });
 
-        // Định dạng tiêu đề và độ rộng cột
         worksheet.getRow(1).font = { bold: true };
         worksheet.columns.forEach((col, i) => { col.width = i === 0 ? 12 : 18; });
 
-        // 4. Đóng gói và Xuất file về máy tính
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const link = document.createElement('a');
@@ -344,8 +345,8 @@ function xuLyTaiLenExcelPhanCong(e) {
                 }
             }
 
-            // Gán dữ liệu vào lưới select hiện tại
-            let cacTheSelect = document.querySelectorAll('#duLieuLopHoc select');
+            // [BẢN NÂNG CẤP]: Cập nhật biến quét từ select sang input
+            let cacTheSelect = document.querySelectorAll('#duLieuLopHoc input[data-lop]');
 
             cacTheSelect.forEach(sl => {
                 let lop = sl.getAttribute('data-lop');
@@ -362,30 +363,27 @@ function xuLyTaiLenExcelPhanCong(e) {
             console.error("Lỗi khi đọc file Excel:", loiDoc);
             alert("Không thể đọc tệp Excel. Vui lòng kiểm tra lại định dạng tệp.");
         } finally {
-            e.target.value = ''; // Reset lại nút chọn file
+            e.target.value = ''; 
         }
     };
     reader.readAsArrayBuffer(file);
 }
+
 // =========================================================================
 // KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC (ĐÃ TÍCH HỢP TẤT CẢ CÁC TAB)
 // =========================================================================
-
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
     
     setTimeout(() => {
-        // Ẩn thanh công cụ TKB
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
         
-        // Dùng vòng lặp ẩn tất cả các khung không liên quan (Đã thêm khungCaiDat)
         ['khungTKB', 'khungThongKe', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'].forEach(id => {
             let el = document.getElementById(id);
             if (el) { el.classList.remove('block', 'flex'); el.classList.add('hidden'); }
         });
         
-        // Hiện khung Phân Công
         let khungPC = document.getElementById('khungPhanCong');
         if (khungPC) { khungPC.classList.remove('hidden'); khungPC.classList.add('flex'); }
 
@@ -397,17 +395,14 @@ function moTabTKB() {
     thietLapMenuActive('menuTKB');
     
     setTimeout(() => {
-        // Hiện thanh công cụ TKB
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
         
-        // Ẩn tất cả các khung không liên quan
         ['khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'].forEach(id => {
             let el = document.getElementById(id);
             if (el) { el.classList.remove('block', 'flex'); el.classList.add('hidden'); }
         });
         
-        // Hiện khung TKB
         let khungTKB = document.getElementById('khungTKB');
         if (khungTKB) { khungTKB.classList.remove('hidden'); khungTKB.classList.add('block'); }
     }, 15);
@@ -420,13 +415,11 @@ window.moTabThongKe = function() {
         let thanhCongCu = document.getElementById('thanhCongCuTKB');
         if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
         
-        // Ẩn tất cả các khung không liên quan
         ['khungTKB', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'].forEach(id => {
             let el = document.getElementById(id);
             if (el) { el.classList.remove('block', 'flex'); el.classList.add('hidden'); }
         });
         
-        // Hiện khung Thống kê
         let khungTK = document.getElementById('khungThongKe');
         if (khungTK) { khungTK.classList.remove('hidden'); khungTK.classList.add('block'); }
     }, 15);
@@ -435,7 +428,6 @@ window.moTabThongKe = function() {
 window.dongTabThongKe = moTabTKB;
 
 function thietLapMenuActive(idKichHoat) {
-    // ĐIỀU CHỈNH: Đã thêm 'menuCaiDat' vào mảng để hệ thống quét và tắt màu
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat'];
     
     cacMenu.forEach(id => {
