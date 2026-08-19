@@ -156,16 +156,17 @@
 
                 <!-- CÁC NÚT THAO TÁC QUẢN TRỊ -->
                 <div class="flex flex-wrap space-x-2 font-sans justify-end gap-y-2">
+                     <button id="btnKhoiPhuc" onclick="luuDuLieu(event, 'khoiphuc')" style="display: none;" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-extrabold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg" title="Chuyển sang tuần tiếp theo">
+                        Tuần mới
+                    </button>
+                    
                     <button id="btnLuuTuan" onclick="luuDuLieu(event, 'tuan')" style="display: none;" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg">
                        Lưu TKB Tuần
                     </button>
                     <button id="btnLuuCoDinh" onclick="luuDuLieu(event, 'codinh')" style="display: none;" class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg" title="Lưu làm TKB gốc cho toàn trường">
                        TKB Cố Định
                     </button>
-                   <button id="btnKhoiPhuc" onclick="luuDuLieu(event, 'khoiphuc')" style="display: none;" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-extrabold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg" title="Lưu dữ liệu vào DATA_TKB, xóa bỏ chỉnh sửa tuần (khôi phục gốc) và chuyển sang tuần tiếp theo">
-                        Tuần mới
-                    </button>
-                    <button id="btnXepTuDong" onclick="goiThuatToanXepLich()" style="display: none;" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg">
+                   <button id="btnXepTuDong" onclick="goiThuatToanXepLich()" style="display: none;" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg">
                        Xếp Tự Động
                     </button>
                     <button id="btnKiemTra" onclick="kiemTraDinhMuc()" style="display: none;" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg">
