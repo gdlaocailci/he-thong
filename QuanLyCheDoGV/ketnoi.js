@@ -5,7 +5,7 @@
 const HT_DUONG_DAN_API = "https://script.google.com/macros/s/AKfycbzuvwPLKjGmcxqtwsur2h9GLJMsG0vayOcnTxgeiaZT0shYWhaj6dO__WGmGKV93HE3/exec";
 
 // Cấu hình định danh hành chính nhà trường
-const HT_LOGO = "https://i.ibb.co/XkjLVJFt/logo-TH-THCS-v3.png";
+const HT_LOGO = "https://i.postimg.cc/xjzpvXCm/Logo-HL.png";
 const HT_TEN_TRUONG = "Trường TH&THCS Hợp Thành";
 const HT_TIEU_DE_TRANG = "Quản lý Lương & Thâm niên - Trường TH&THCS Hợp Thành";
 
