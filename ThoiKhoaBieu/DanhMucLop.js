@@ -2,6 +2,7 @@
  * Tên file: DanhMucLop.js
  * Chức năng: Quản lý danh mục lớp (Đồng bộ sh DM_LOP)
  * Tác giả: Hoàng Ngọc Lâm
+ * Nâng cấp: Tích hợp Exponential Backoff chống nghẽn cổ chai tải dữ liệu
  */
 
 let duLieuDanhMucLop = [];
@@ -24,7 +25,11 @@ async function taiDuLieuDanhMucLop() {
     tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-slate-500 font-bold"><div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang tải Danh mục Lớp...</td></tr>`;
     
     try {
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`);
+        // [NÂNG CẤP]: Sử dụng hàm fetchVoiCoCheThuLai từ app.js để tự động chống lỗi 404
+        const urlAPI = `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`;
+        const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? fetchVoiCoCheThuLai(urlAPI) : fetch(urlAPI));
+        
+        if (!phanHoi.ok) throw new Error("Từ chối kết nối");
         const duLieuS = await phanHoi.json();
         
         duLieuDanhMucLop = [];
@@ -38,7 +43,10 @@ async function taiDuLieuDanhMucLop() {
         }
         veBangDanhMucLop();
     } catch (loi) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-600 font-bold">Lỗi kết nối máy chủ dữ liệu.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-600 font-bold">
+            ⚠️ Lỗi kết nối máy chủ dữ liệu.<br>
+            <span class="text-sm font-normal text-slate-500">Hệ thống đang bận hoặc gián đoạn mạng. Vui lòng chuyển qua tab khác và quay lại để tải lại.</span>
+        </td></tr>`;
     }
 }
 
@@ -102,7 +110,7 @@ function capNhatLop(index, truong, giaTri) {
 }
 
 function themDongLopMoi() { dongBoDomLopSangState(); duLieuDanhMucLop.push({ maLop: '', tenLop: '' }); veBangDanhMucLop(); }
-function xoaLop(index) { if (confirm("Đồng chí chắc chắn muốn xoá lớp này?")) { dongBoDomLopSangState(); duLieuDanhMucLop.splice(index, 1); veBangDanhMucLop(); } }
+function xoaLop(index) { if (confirm("Đồng chí chắc chắn muốn xoá lớp này khỏi hệ thống?")) { dongBoDomLopSangState(); duLieuDanhMucLop.splice(index, 1); veBangDanhMucLop(); } }
 function diChuyenLop(index, huong) {
     if (index + huong < 0 || index + huong >= duLieuDanhMucLop.length) return;
     dongBoDomLopSangState();
@@ -115,7 +123,8 @@ function diChuyenLop(index, huong) {
 async function luuDuLieuDanhMucLopSangMayChu() {
     const btn = document.querySelector('#khungDanhMucLop button[onclick="luuDuLieuDanhMucLopSangMayChu()"]');
     let textGoc = btn.innerHTML;
-    btn.innerHTML = `Đang lưu...`; btn.disabled = true;
+    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang lưu...`; 
+    btn.disabled = true;
 
     try {
         dongBoDomLopSangState();
@@ -127,11 +136,25 @@ async function luuDuLieuDanhMucLopSangMayChu() {
         });
 
         const payload = { thaoTac: 'luuDanhMucLop', duLieu: mangGhi };
-        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
+        
+        // [NÂNG CẤP]: Áp dụng Exponential Backoff cho cả tiến trình Lưu dữ liệu
+        const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? 
+            fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) }) : 
+            fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) })
+        );
+        
+        if (!phanHoi.ok) throw new Error("Từ chối kết nối");
         const ketQua = await phanHoi.json();
         
-        if (ketQua.trangThai === 'Thành công') { alert("Đã lưu Danh mục Lớp lên hệ thống an toàn!"); } 
-        else { alert("Lỗi từ máy chủ: " + ketQua.thongBao); }
-    } catch(loi) { alert("Lỗi kết nối mạng hoặc máy chủ."); } 
-    finally { btn.innerHTML = textGoc; btn.disabled = false; }
+        if (ketQua.trangThai === 'Thành công') { 
+            alert("Đã lưu Danh mục Lớp lên hệ thống an toàn!"); 
+        } else { 
+            alert("Lỗi từ máy chủ: " + ketQua.thongBao); 
+        }
+    } catch(loi) { 
+        alert("Lỗi kết nối mạng hoặc máy chủ. Vui lòng thử lưu lại."); 
+    } finally { 
+        btn.innerHTML = textGoc; 
+        btn.disabled = false; 
+    }
 }
