@@ -216,11 +216,23 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
     let thuocTinhKhoa = quyenSuaChua ? '' : 'disabled'; 
     let cssKhoa = quyenSuaChua ? 'cursor-pointer' : 'cursor-not-allowed opacity-80';
     let cssAn = !isTarget ? 'opacity-0 pointer-events-none select-none' : ''; 
-    let html = `<select ${idThocTinh} ${thuocTinhKhoa} class="w-full h-full bg-transparent outline-none appearance-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;"><option value=""></option>`; 
+    
+    // [BẢN NÂNG CẤP]: Cấu trúc lại bằng thẻ Input & Datalist để vừa nhập vừa chọn
+    // Khởi tạo ID duy nhất cho datalist gắn với mỗi input
+    let idDatalist = idPhanTu ? `list_${idPhanTu}` : `list_${Math.random().toString(36).substring(7)}`;
+    
+    // Thuộc tính autocomplete="off" để tránh Google chèn gợi ý cá nhân đè lên danh sách của trường
+    let html = `<input type="text" list="${idDatalist}" ${idThocTinh} ${thuocTinhKhoa} value="${giaTriMacDinh || ''}" placeholder="--" class="w-full h-full bg-transparent outline-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;" autocomplete="off" onclick="if(this.showPicker) this.showPicker();" onfocus="this.select()">`; 
+    
+    html += `<datalist id="${idDatalist}">`;
     if (danhSach && danhSach.length > 0) {
-        danhSach.forEach(muc => { html += `<option value="${muc}" ${(muc === giaTriMacDinh) ? 'selected' : ''}>${muc}</option>`; });
-    } else if (giaTriMacDinh) { html += `<option value="${giaTriMacDinh}" selected>${giaTriMacDinh}</option>`; }
-    html += `</select>`; return html;
+        danhSach.forEach(muc => { 
+            html += `<option value="${muc}">`; 
+        });
+    }
+    html += `</datalist>`; 
+    
+    return html;
 }
 
 // =========================================================================
@@ -231,13 +243,15 @@ function kiemTraDinhMuc() {
     const mangLopGoc = thongSoHocVu.DANH_SACH_LOP || [];
     
     mangLopGoc.forEach(lop => {
-        if (document.querySelector(`select[id$="_${lop}"]`)) {
+        // [CẬP NHẬT]: Dùng CSS Selector linh hoạt, không khóa cứng tên thẻ (select -> mọi thẻ)
+        if (document.querySelector(`[id$="_${lop}"]`)) {
             mangLop.push(lop);
         }
     });
 
     if (mangLop.length === 0) {
-        const cacSelect = document.querySelectorAll('select[id^="mon_"]');
+        // [CẬP NHẬT]: Truy vấn thẻ input thay vì select
+        const cacSelect = document.querySelectorAll('input[id^="mon_"]');
         let setLop = new Set();
         cacSelect.forEach(sl => {
             let parts = sl.id.split('_');
