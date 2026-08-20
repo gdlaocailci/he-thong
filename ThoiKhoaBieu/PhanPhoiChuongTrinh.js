@@ -343,7 +343,7 @@ function tuDongDienTenBai(inputTietElement) {
 }
 
 // =========================================================================
-// KHỐI 4: GIAO TIẾP EXCEL BẰNG SHEETJS (XLSX)
+// KHỐI 4: GIAO TIẾP EXCEL BẰNG SHEETJS (XLSX) - NÂNG CẤP TOÀN DIỆN
 // =========================================================================
 function xuLyXuatExcelPPCT() {
     if (typeof XLSX === 'undefined') { alert("Thư viện Excel chưa tải xong."); return; }
@@ -351,10 +351,7 @@ function xuLyXuatExcelPPCT() {
     const khoi = document.getElementById('locKhoiPPCT').getAttribute('data-khoi-so') || 'KX';
     const mon = document.getElementById('locMonPPCT').value.trim() || 'Mon';
     
-    const header = ["Khối", "Tiết PPCT", "Tên môn học", "Tên bài học", "Điều chỉnh"];
-    let rowsArr = [header];
-    
-    // Thu thập dữ liệu từ lưới UI
+    // 1. Đồng bộ dữ liệu đang gõ dở trên Lưới UI vào mảng gốc trước khi xuất
     const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
     cacOInputTiet.forEach(inp => {
         let valTiet = inp.value.trim();
@@ -362,14 +359,31 @@ function xuLyXuatExcelPPCT() {
             let idKhoa = inp.getAttribute('data-ppct-id');
             let valTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`).value.trim();
             let valDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`).value.trim();
-            rowsArr.push([khoi, valTiet, mon, valTenBai, valDieuChinh]);
+            
+            let idx = duLieuPpctGoc.findIndex(b => String(b.tiet) === valTiet);
+            if (idx !== -1) {
+                duLieuPpctGoc[idx].tenBaiHoc = valTenBai;
+                duLieuPpctGoc[idx].dieuChinh = valDieuChinh;
+            } else {
+                duLieuPpctGoc.push({ tiet: valTiet, tenBaiHoc: valTenBai, dieuChinh: valDieuChinh });
+            }
         }
     });
 
-    // Nâng cấp: Nếu trên lưới không có dữ liệu, xuất khung bảng trống (5 dòng) làm biểu mẫu
+    const header = ["Khối", "Tiết PPCT", "Tên môn học", "Tên bài học", "Điều chỉnh"];
+    let rowsArr = [header];
+    
+    // 2. Trút TOÀN BỘ mảng gốc ra Excel (Đã sắp xếp thứ tự tiết)
+    duLieuPpctGoc.sort((a,b) => parseInt(a.tiet) - parseInt(b.tiet)).forEach(dong => {
+        if(dong.tiet !== '') {
+            rowsArr.push([khoi, dong.tiet, mon, dong.tenBaiHoc || '', dong.dieuChinh || '']);
+        }
+    });
+
+    // Nếu không có dữ liệu, tự động tạo 35 dòng trắng làm biểu mẫu chuẩn
     if (rowsArr.length === 1) { 
-        for (let i = 0; i < 5; i++) {
-            rowsArr.push([khoi, "", mon, "", ""]);
+        for (let i = 1; i <= 35; i++) {
+            rowsArr.push([khoi, i, mon, "", ""]);
         }
     }
 
@@ -383,10 +397,7 @@ function xuLyXuatExcelPPCT() {
 function xuLyNhapExcelPPCT(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (typeof XLSX === 'undefined') {
-        alert("Thư viện Excel chưa tải xong. Vui lòng chờ vài giây.");
-        return;
-    }
+    if (typeof XLSX === 'undefined') { alert("Thư viện Excel chưa tải xong. Vui lòng chờ vài giây."); return; }
     
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -396,8 +407,8 @@ function xuLyNhapExcelPPCT(event) {
             const rowsArr = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             
             if (rowsArr.length > 1) {
+                // 1. Lưu toàn bộ dữ liệu Excel vào mảng gốc
                 duLieuPpctGoc = [];
-                // Bỏ qua dòng tiêu đề (i=0), đọc từ i=1
                 for (let i = 1; i < rowsArr.length; i++) {
                     let r = rowsArr[i];
                     if (r[1] !== undefined && r[1] !== "") {
@@ -409,7 +420,7 @@ function xuLyNhapExcelPPCT(event) {
                     }
                 }
 
-                // Thuật toán gán trực tiếp dữ liệu lên lưới UI
+                // 2. Cập nhật ngay lên lưới UI (Nếu lưới đang hiển thị)
                 const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
                 let chiSoExcel = 0;
 
@@ -417,37 +428,106 @@ function xuLyNhapExcelPPCT(event) {
                     let idKhoa = inp.getAttribute('data-ppct-id');
                     let inputTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
                     let inputDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
-                    
                     let valHienTai = inp.value.trim();
 
-                    // Trường hợp 1: Ô Tiết PPCT đang trống -> Điền nối tiếp từ trên xuống dưới
                     if (valHienTai === '' && chiSoExcel < duLieuPpctGoc.length) {
                         inp.value = duLieuPpctGoc[chiSoExcel].tiet;
                         if (inputTenBai) inputTenBai.value = duLieuPpctGoc[chiSoExcel].tenBaiHoc;
                         if (inputDieuChinh) inputDieuChinh.value = duLieuPpctGoc[chiSoExcel].dieuChinh;
                         chiSoExcel++;
-                    } 
-                    // Trường hợp 2: Ô Tiết PPCT đã có sẵn số -> Tìm trong dữ liệu Excel để khớp Tên Bài
-                    else if (valHienTai !== '') {
+                    } else if (valHienTai !== '') {
                         let baiHoc = duLieuPpctGoc.find(b => b.tiet === valHienTai);
                         if (baiHoc) {
-                            if (inputTenBai && inputTenBai.value === '') inputTenBai.value = baiHoc.tenBaiHoc;
-                            if (inputDieuChinh && inputDieuChinh.value === '') inputDieuChinh.value = baiHoc.dieuChinh;
+                            if (inputTenBai) inputTenBai.value = baiHoc.tenBaiHoc;
+                            if (inputDieuChinh) inputDieuChinh.value = baiHoc.dieuChinh;
                         }
                     }
                 });
 
-                alert("Đã nạp và gán trực tiếp dữ liệu PPCT từ Excel lên lưới thành công!");
+                alert("Đã nạp toàn bộ PPCT từ Excel vào bộ nhớ! Vui lòng bấm 'Lưu PPCT' để ghi vào cơ sở dữ liệu.");
             } else {
                 alert("File Excel trống hoặc không đúng biểu mẫu xuất ra.");
             }
-        } catch (loi) { 
-            alert("Lỗi đọc file Excel: " + loi.message); 
-        } finally { 
-            event.target.value = ''; // Reset thẻ input để có thể tải lại cùng 1 file
-        }
+        } catch (loi) { alert("Lỗi đọc file Excel: " + loi.message); } 
+        finally { event.target.value = ''; }
     };
     reader.readAsArrayBuffer(file);
+}
+
+// =========================================================================
+// KHỐI 5: LƯU TRỮ DỮ LIỆU PPCT LÊN HỆ THỐNG MÁY CHỦ
+// =========================================================================
+async function luuDuLieuPPCTLenMayChu(event) {
+    const nutBam = event.currentTarget;
+    const noiDungGoc = nutBam.innerHTML;
+    
+    const khoi = document.getElementById('locKhoiPPCT').getAttribute('data-khoi-so');
+    const mon = document.getElementById('locMonPPCT').value.trim();
+    
+    if (!khoi || !mon || khoi === 'KX') {
+        alert("Lỗi: Phải xác định rõ Lớp và Môn học trên bộ lọc trước khi Lưu.");
+        return;
+    }
+    
+    // 1. Đồng bộ các chỉnh sửa từ UI (nếu có) vào mảng gốc
+    const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
+    cacOInputTiet.forEach(inp => {
+        let valTiet = inp.value.trim();
+        if (valTiet !== '') {
+            let idKhoa = inp.getAttribute('data-ppct-id');
+            let valTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`).value.trim();
+            let valDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`).value.trim();
+            
+            let idx = duLieuPpctGoc.findIndex(b => String(b.tiet) === valTiet);
+            if (idx !== -1) {
+                duLieuPpctGoc[idx].tenBaiHoc = valTenBai;
+                duLieuPpctGoc[idx].dieuChinh = valDieuChinh;
+            } else {
+                duLieuPpctGoc.push({ tiet: valTiet, tenBaiHoc: valTenBai, dieuChinh: valDieuChinh });
+            }
+        }
+    });
+    
+    // 2. Chuyển đổi TOÀN BỘ mảng gốc thành Payload gửi đi
+    let mangGhi = [];
+    duLieuPpctGoc.forEach(dong => {
+        if (dong.tiet !== '') {
+            mangGhi.push({
+                khoi: khoi, 
+                tietPpc: dong.tiet, 
+                mon: mon, 
+                tenBai: dong.tenBaiHoc || '', 
+                dieuChinh: dong.dieuChinh || ''
+            });
+        }
+    });
+    
+    if (mangGhi.length === 0) {
+        if (!confirm("Dữ liệu trống! Hệ thống sẽ xóa toàn bộ PPCT của Môn này ở Khối này. Tiếp tục?")) return;
+    }
+    
+    nutBam.innerHTML = `<div class="flex items-center gap-1.5"><div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Đang lưu...</span></div>`;
+    nutBam.disabled = true;
+
+    try {
+        const payload = { thaoTac: 'luuPPCT', duLieu: mangGhi };
+        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        const ketQua = await phanHoi.json();
+        
+        if (ketQua.trangThai === 'Thành công') {
+            alert(`Đã lưu toàn bộ Phân phối chương trình Môn ${mon} - Khối ${khoi} lên hệ thống thành công!`);
+        } else {
+            alert(`Sự cố lưu trữ: ${ketQua.thongBao}`);
+        }
+    } catch (loi) {
+        alert('Lỗi đường truyền mạng hoặc máy chủ không phản hồi.');
+    } finally {
+        nutBam.innerHTML = noiDungGoc;
+        nutBam.disabled = false;
+    }
 }
 
 // =========================================================================
