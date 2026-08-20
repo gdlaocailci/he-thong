@@ -221,29 +221,16 @@ function veBangKhungLichPPCT(monDangChon) {
     const tuan = parseInt(document.getElementById('locTuanUI').value.trim()) || 1;
     const lop = document.getElementById('locLopPPCT').value.trim();
     
-    // ------------------------------------------------------------------
-    // THUẬT TOÁN ĐỐI CHIẾU KHUNG CHƯƠNG TRÌNH ĐỂ TÍNH TIẾT BẮT ĐẦU
-    // ------------------------------------------------------------------
     let soTiet1Tuan = 0; 
-    
-    // Truy xuất định mức từ Khung CT (Chống lỗi sai chính tả chữ Hoa/Thường/Khoảng trắng)
     if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.KHUNG_CHUONG_TRINH) {
         let dmKhoi = thongSoHocVu.KHUNG_CHUONG_TRINH[lop] || {};
         let monMatch = Object.keys(dmKhoi).find(m => m.trim().toLowerCase() === monDangChon.trim().toLowerCase());
-        if (monMatch) {
-            soTiet1Tuan = parseInt(dmKhoi[monMatch]);
-        }
+        if (monMatch) soTiet1Tuan = parseInt(dmKhoi[monMatch]);
     }
-    
-    // Nếu Khung CT chưa nhập môn này, dự phòng bằng số tiết thực tế xuất hiện trong TKB
-    if (!soTiet1Tuan || isNaN(soTiet1Tuan) || soTiet1Tuan === 0) {
-        soTiet1Tuan = demTietTuanNay;
-    }
+    if (!soTiet1Tuan || isNaN(soTiet1Tuan) || soTiet1Tuan === 0) soTiet1Tuan = demTietTuanNay;
 
-    // Công thức Tiên Tri: Tiết PPCT bắt đầu của tuần này
     let tietPpcAuto = (tuan - 1) * soTiet1Tuan + 1;
     let tongSoDongMucTieu = 0;
-    // ------------------------------------------------------------------
 
     thuMacDinh.forEach(thu => {
         let dsTietCuaThu = []; 
@@ -279,16 +266,12 @@ function veBangKhungLichPPCT(monDangChon) {
                         let tietTkb = item.tietTkb;
                         let tenMonTkb = tietTkb.monHoc;
 
-                        // KIỂM TRA LẤY SỐ TIẾT TỰ ĐỘNG
                         let valTietPPC = tietTkb.tietPpc || '';
-                        
-                        // Nếu CSDL chưa lưu tọa độ báo giảng, áp dụng tự động điền lần lượt
                         if (valTietPPC === '') {
                             valTietPPC = tietPpcAuto;
-                            tietPpcAuto++; // Cộng dồn số tiết cho ô tiếp theo
+                            tietPpcAuto++; 
                         }
 
-                        // Tự động map Tên bài học từ file Excel PPCT gốc
                         let valTenBai = '';
                         let valDieuChinh = '';
                         if (valTietPPC !== '') {
@@ -299,10 +282,10 @@ function veBangKhungLichPPCT(monDangChon) {
                             }
                         }
 
-                        html += `<tr class="bg-blue-50/20 hover:bg-blue-100 transition-colors border-b border-gray-300">`;
+                        html += `<tr class="bg-blue-50/10 hover:bg-blue-50 transition-colors border-b border-gray-300">`;
 
                         if (!daInCotThu) {
-                            html += `<td rowspan="${dsTietCuaThu.length}" class="border-r border-gray-400 bg-white align-middle">
+                            html += `<td rowspan="${dsTietCuaThu.length}" class="border-r border-gray-400 bg-white align-middle text-center">
                                         <div class="font-extrabold text-slate-800 text-base">${thu}</div>
                                         <div class="text-[11px] font-semibold text-gray-500 mt-1">(${ngayHienThi})</div>
                                      </td>`;
@@ -310,24 +293,19 @@ function veBangKhungLichPPCT(monDangChon) {
                         }
 
                         if (!daInCotBuoi) {
-                            html += `<td rowspan="${nhomBuoi[buoi].length}" class="border-r border-gray-400 bg-white align-middle font-bold text-slate-700">${buoi}</td>`;
+                            html += `<td rowspan="${nhomBuoi[buoi].length}" class="border-r border-gray-400 bg-white align-middle text-center font-bold text-slate-700">${buoi}</td>`;
                             daInCotBuoi = true;
                         }
 
                         let idKhoa = `${thu}_${buoi}_${tiet}`;
 
+                        // Đã thay thế INPUT bằng thẻ hiển thị Text trực tiếp để kích hoạt tự động xuống dòng và căn giữa
                         html += `
-                            <td class="border-r border-gray-400 align-middle font-extrabold text-slate-800">${tiet}</td>
-                            <td class="border-r border-gray-300 p-0">
-                                <input type="text" data-ppct-id="${idKhoa}" data-loai="tietPpc" value="${valTietPPC}" onchange="tuDongDienTenBai(this)" class="w-full h-full min-h-[35px] outline-none text-center font-extrabold text-red-600 bg-transparent focus:bg-white placeholder-gray-300" title="Nhập tay nếu cấn lịch/nghỉ lễ" placeholder="--">
-                            </td>
-                            <td class="border-r border-gray-300 align-middle font-bold text-blue-800">${tenMonTkb}</td>
-                            <td class="border-r border-gray-300 p-0">
-                                <input type="text" data-ppct-id="${idKhoa}" data-loai="tenBai" value="${valTenBai}" class="w-full h-full min-h-[35px] px-3 outline-none text-left font-semibold text-slate-900 bg-transparent focus:bg-white placeholder-gray-300" placeholder="Tên bài học...">
-                            </td>
-                            <td class="p-0">
-                                <input type="text" data-ppct-id="${idKhoa}" data-loai="dieuChinh" value="${valDieuChinh}" class="w-full h-full min-h-[35px] px-3 outline-none text-left italic text-gray-700 bg-transparent focus:bg-white placeholder-gray-300" placeholder="...">
-                            </td>
+                            <td class="border-r border-gray-400 align-middle font-extrabold text-slate-800 text-center">${tiet}</td>
+                            <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600 break-words whitespace-normal" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
+                            <td class="border-r border-gray-300 align-middle text-center font-bold text-blue-800 break-words whitespace-normal">${tenMonTkb}</td>
+                            <td class="border-r border-gray-300 align-middle text-left p-3 font-semibold text-slate-900 break-words whitespace-normal leading-relaxed" data-ppct-id="${idKhoa}" data-loai="tenBai">${valTenBai}</td>
+                            <td class="align-middle text-left p-3 italic text-gray-700 break-words whitespace-normal leading-relaxed" data-ppct-id="${idKhoa}" data-loai="dieuChinh">${valDieuChinh}</td>
                         </tr>`;
                     });
                 }
@@ -342,21 +320,6 @@ function veBangKhungLichPPCT(monDangChon) {
     tbody.innerHTML = html;
 }
 
-function tuDongDienTenBai(inputTietElement) {
-    const valTiet = inputTietElement.value.trim();
-    if (!valTiet || duLieuPpctGoc.length === 0) return;
-
-    const idKhoa = inputTietElement.getAttribute('data-ppct-id');
-    const inputTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
-    const inputDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
-
-    const baiHoc = duLieuPpctGoc.find(b => String(b.tiet) === valTiet);
-    if (baiHoc && inputTenBai) {
-        if (inputTenBai.value === '') inputTenBai.value = baiHoc.tenBaiHoc || '';
-        if (inputDieuChinh && inputDieuChinh.value === '') inputDieuChinh.value = baiHoc.dieuChinh || '';
-    }
-}
-
 // =========================================================================
 // KHỐI 4: GIAO TIẾP EXCEL BẰNG SHEETJS (XLSX)
 // =========================================================================
@@ -367,13 +330,13 @@ function xuLyXuatExcelPPCT() {
     const mon = document.getElementById('locMonPPCT').value.trim();
     if(!khoi || !mon || khoi === 'KX') { alert("Vui lòng chọn Khối và Môn trước khi xuất."); return; }
     
-    const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
+    const cacOInputTiet = document.querySelectorAll('[data-loai="tietPpc"]');
     cacOInputTiet.forEach(inp => {
-        let valTiet = inp.value.trim();
+        let valTiet = inp.innerText.trim();
         if (valTiet !== '') {
             let idKhoa = inp.getAttribute('data-ppct-id');
-            let valTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`).value.trim();
-            let valDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`).value.trim();
+            let valTenBai = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`).innerText.trim();
+            let valDieuChinh = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`).innerText.trim();
             
             let idx = duLieuPpctGoc.findIndex(b => String(b.tiet) === valTiet);
             if (idx !== -1) {
@@ -428,25 +391,25 @@ function xuLyNhapExcelPPCT(event) {
                     }
                 }
 
-                const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
+                const cacOInputTiet = document.querySelectorAll('[data-loai="tietPpc"]');
                 let chiSoExcel = 0;
 
                 cacOInputTiet.forEach(inp => {
                     let idKhoa = inp.getAttribute('data-ppct-id');
-                    let inputTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
-                    let inputDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
-                    let valHienTai = inp.value.trim();
+                    let inputTenBai = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
+                    let inputDieuChinh = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
+                    let valHienTai = inp.innerText.trim();
 
                     if (valHienTai === '' && chiSoExcel < duLieuPpctGoc.length) {
-                        inp.value = duLieuPpctGoc[chiSoExcel].tiet;
-                        if (inputTenBai) inputTenBai.value = duLieuPpctGoc[chiSoExcel].tenBaiHoc;
-                        if (inputDieuChinh) inputDieuChinh.value = duLieuPpctGoc[chiSoExcel].dieuChinh;
+                        inp.innerText = duLieuPpctGoc[chiSoExcel].tiet;
+                        if (inputTenBai) inputTenBai.innerText = duLieuPpctGoc[chiSoExcel].tenBaiHoc;
+                        if (inputDieuChinh) inputDieuChinh.innerText = duLieuPpctGoc[chiSoExcel].dieuChinh;
                         chiSoExcel++;
                     } else if (valHienTai !== '') {
-                        let baiHoc = duLieuPpctGoc.find(b => b.tiet === valHienTai);
+                        let baiHoc = duLieuPpctGoc.find(b => String(b.tiet) === valHienTai);
                         if (baiHoc) {
-                            if (inputTenBai) inputTenBai.value = baiHoc.tenBaiHoc;
-                            if (inputDieuChinh) inputDieuChinh.value = baiHoc.dieuChinh;
+                            if (inputTenBai) inputTenBai.innerText = baiHoc.tenBaiHoc;
+                            if (inputDieuChinh) inputDieuChinh.innerText = baiHoc.dieuChinh;
                         }
                     }
                 });
@@ -479,16 +442,16 @@ async function luuDuLieuPPCTLenMayChu(event) {
     }
     
     let mangGhi = [];
-    const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
+    const cacOInputTiet = document.querySelectorAll('[data-loai="tietPpc"]');
     
     cacOInputTiet.forEach(inp => {
-        let valTiet = inp.value.trim();
+        let valTiet = inp.innerText.trim();
         if (valTiet !== '') {
             let idKhoa = inp.getAttribute('data-ppct-id');
             let parts = idKhoa.split('_'); // [Thu, Buoi, Tiet]
             
-            let valTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`).value.trim();
-            let valDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`).value.trim();
+            let valTenBai = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`).innerText.trim();
+            let valDieuChinh = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`).innerText.trim();
             
             mangGhi.push({
                 khoi: khoi, 
@@ -509,7 +472,6 @@ async function luuDuLieuPPCTLenMayChu(event) {
         }
     });
     
-    // Đẩy toàn bộ dữ liệu ẩn chưa hiện trên lưới vào mảng gửi đi (Cơ chế Upsert)
     duLieuPpctGoc.forEach(goc => {
         let daCoTrenLuoi = mangGhi.some(ghi => String(ghi.tietPpc) === String(goc.tiet));
         if (!daCoTrenLuoi && goc.tiet !== '') {
