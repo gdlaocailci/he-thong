@@ -91,8 +91,8 @@ function taoKhungGiaoDienPPCT() {
                             <th class="py-2.5 px-2 border border-slate-400 w-12">Tiết</th>
                             <th class="py-2.5 px-2 border border-slate-400 w-24">Tiết PPC</th>
                             <th class="py-2.5 px-2 border border-slate-400 w-32">Môn</th>
-                            <th class="py-2.5 px-4 border border-slate-400 text-left min-w-[250px]">Tên bài học</th>
-                            <th class="py-2.5 px-4 border border-slate-400 text-left min-w-[200px]">Điều chỉnh</th>
+                            <th class="py-2.5 px-4 border border-slate-400 text-center min-w-[250px]">Tên bài học</th>
+                            <th class="py-2.5 px-4 border border-slate-400 text-center min-w-[200px]">Điều chỉnh</th>
                         </tr>
                     </thead>
                     <tbody id="vungDuLieuLichPPCT">
@@ -183,7 +183,10 @@ async function taiDuLieuTkbVaPpct() {
     </td></tr>`;
 
     try {
-        const urlAPI = `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTkbVaPpct&tuan=${tuan}&lop=${encodeURIComponent(lop)}&khoi=${khoi}&mon=${encodeURIComponent(mon)}`;
+        // [TỐI ƯU TỐC ĐỘ]: Gửi thẳng tuần hiện tại từ biến toàn cục lên máy chủ để bỏ qua khâu đọc cấu hình nặng nề
+        const tuanHeThong = typeof tuanDangXem !== 'undefined' ? tuanDangXem : 1;
+        const urlAPI = `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTkbVaPpct&tuan=${tuan}&lop=${encodeURIComponent(lop)}&khoi=${khoi}&mon=${encodeURIComponent(mon)}&tuanHienTai=${tuanHeThong}`;
+        
         const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? fetchVoiCoCheThuLai(urlAPI) : fetch(urlAPI));
         
         if (!phanHoi.ok) throw new Error("Mất kết nối máy chủ");
@@ -212,7 +215,6 @@ function veBangKhungLichPPCT(monDangChon) {
         if (!maTranTkb[t.thu]) maTranTkb[t.thu] = {};
         if (!maTranTkb[t.thu][t.buoi]) maTranTkb[t.thu][t.buoi] = {};
         maTranTkb[t.thu][t.buoi][t.tiet] = t;
-        
         if (t.monHoc.trim().toLowerCase() === monDangChon.trim().toLowerCase()) demTietTuanNay++;
     });
 
@@ -246,9 +248,7 @@ function veBangKhungLichPPCT(monDangChon) {
 
         if (dsTietCuaThu.length > 0) {
             let ngayHienThi = '--/--/----';
-            if (dsTietCuaThu[0].tietTkb.ngay) {
-                ngayHienThi = dsTietCuaThu[0].tietTkb.ngay;
-            }
+            if (dsTietCuaThu[0].tietTkb.ngay) ngayHienThi = dsTietCuaThu[0].tietTkb.ngay;
 
             let nhomBuoi = { "Sáng": [], "Chiều": [] };
             dsTietCuaThu.forEach(item => nhomBuoi[item.buoi].push(item));
@@ -265,19 +265,12 @@ function veBangKhungLichPPCT(monDangChon) {
                         let tenMonTkb = tietTkb.monHoc;
 
                         let valTietPPC = tietTkb.tietPpc || '';
-                        if (valTietPPC === '') {
-                            valTietPPC = tietPpcAuto;
-                            tietPpcAuto++; 
-                        }
+                        if (valTietPPC === '') { valTietPPC = tietPpcAuto; tietPpcAuto++; }
 
-                        let valTenBai = '';
-                        let valDieuChinh = '';
+                        let valTenBai = ''; let valDieuChinh = '';
                         if (valTietPPC !== '') {
                             let baiGoc = duLieuPpctGoc.find(b => String(b.tiet) === String(valTietPPC));
-                            if (baiGoc) {
-                                valTenBai = baiGoc.tenBaiHoc || '';
-                                valDieuChinh = baiGoc.dieuChinh || '';
-                            }
+                            if (baiGoc) { valTenBai = baiGoc.tenBaiHoc || ''; valDieuChinh = baiGoc.dieuChinh || ''; }
                         }
 
                         html += `<tr class="bg-blue-50/10 hover:bg-blue-50 transition-colors border-b border-gray-300">`;
@@ -297,13 +290,13 @@ function veBangKhungLichPPCT(monDangChon) {
 
                         let idKhoa = `${thu}_${buoi}_${tiet}`;
 
-                        // Đã thay thế INPUT bằng thẻ hiển thị Text trực tiếp để kích hoạt tự động xuống dòng và căn giữa
+                        // [NÂNG CẤP GIAO DIỆN]: Bổ sung style="white-space: normal !important;" để ghi đè lệnh cấm xuống dòng, khống chế độ rộng tối đa để ép chữ rớt dòng.
                         html += `
                             <td class="border-r border-gray-400 align-middle font-extrabold text-slate-800 text-center">${tiet}</td>
-                            <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600 break-words whitespace-normal" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
-                            <td class="border-r border-gray-300 align-middle text-center font-bold text-blue-800 break-words whitespace-normal">${tenMonTkb}</td>
-                            <td class="border-r border-gray-300 align-middle text-left p-3 font-semibold text-slate-900 break-words whitespace-normal leading-relaxed" data-ppct-id="${idKhoa}" data-loai="tenBai">${valTenBai}</td>
-                            <td class="align-middle text-left p-3 italic text-gray-700 break-words whitespace-normal leading-relaxed" data-ppct-id="${idKhoa}" data-loai="dieuChinh">${valDieuChinh}</td>
+                            <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
+                            <td class="border-r border-gray-300 align-middle text-center font-bold text-blue-800">${tenMonTkb}</td>
+                            <td class="border-r border-gray-300 align-middle text-left p-3 font-semibold text-slate-900 leading-relaxed" data-ppct-id="${idKhoa}" data-loai="tenBai" style="white-space: normal !important; max-width: 400px; word-break: break-word;">${valTenBai}</td>
+                            <td class="align-middle text-left p-3 italic text-gray-700 leading-relaxed" data-ppct-id="${idKhoa}" data-loai="dieuChinh" style="white-space: normal !important; max-width: 300px; word-break: break-word;">${valDieuChinh}</td>
                         </tr>`;
                     });
                 }
@@ -314,10 +307,8 @@ function veBangKhungLichPPCT(monDangChon) {
     if (tongSoDongMucTieu === 0) {
         html = `<tr><td colspan="7" class="text-center py-10 text-red-500 font-bold italic">Lịch giảng dạy tuần này không có môn "${monDangChon}".</td></tr>`;
     }
-
     tbody.innerHTML = html;
 }
-
 // =========================================================================
 // KHỐI 4: GIAO TIẾP EXCEL BẰNG SHEETJS (XLSX)
 // =========================================================================
