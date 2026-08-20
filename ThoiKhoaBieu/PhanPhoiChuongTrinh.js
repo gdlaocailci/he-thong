@@ -26,7 +26,7 @@ function taoMenuPhanPhoiChuongTrinh() {
             </svg>
             <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px]">Phân phối Chương trình</span>
         `;
-        nav.appendChild(menuPPCT);
+        menuThongKe.insertAdjacentElement('afterend', menuPPCT);
     }
 }
 
