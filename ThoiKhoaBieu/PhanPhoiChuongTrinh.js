@@ -208,87 +208,136 @@ function veBangKhungLichPPCT(monDangChon) {
     const cauTrucTiet = { "Sáng": [1,2,3,4,5], "Chiều": [1,2,3,4] };
     
     let maTranTkb = {};
+    let demTietTuanNay = 0; 
+    
     duLieuTkbTuan.forEach(t => {
         if (!maTranTkb[t.thu]) maTranTkb[t.thu] = {};
         if (!maTranTkb[t.thu][t.buoi]) maTranTkb[t.thu][t.buoi] = {};
         maTranTkb[t.thu][t.buoi][t.tiet] = t;
+        
+        if (t.monHoc.trim().toLowerCase() === monDangChon.trim().toLowerCase()) demTietTuanNay++;
     });
+
+    const tuan = parseInt(document.getElementById('locTuanUI').value.trim()) || 1;
+    const lop = document.getElementById('locLopPPCT').value.trim();
+    
+    // ------------------------------------------------------------------
+    // THUẬT TOÁN ĐỐI CHIẾU KHUNG CHƯƠNG TRÌNH ĐỂ TÍNH TIẾT BẮT ĐẦU
+    // ------------------------------------------------------------------
+    let soTiet1Tuan = 0; 
+    
+    // Truy xuất định mức từ Khung CT (Chống lỗi sai chính tả chữ Hoa/Thường/Khoảng trắng)
+    if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.KHUNG_CHUONG_TRINH) {
+        let dmKhoi = thongSoHocVu.KHUNG_CHUONG_TRINH[lop] || {};
+        let monMatch = Object.keys(dmKhoi).find(m => m.trim().toLowerCase() === monDangChon.trim().toLowerCase());
+        if (monMatch) {
+            soTiet1Tuan = parseInt(dmKhoi[monMatch]);
+        }
+    }
+    
+    // Nếu Khung CT chưa nhập môn này, dự phòng bằng số tiết thực tế xuất hiện trong TKB
+    if (!soTiet1Tuan || isNaN(soTiet1Tuan) || soTiet1Tuan === 0) {
+        soTiet1Tuan = demTietTuanNay;
+    }
+
+    // Công thức Tiên Tri: Tiết PPCT bắt đầu của tuần này
+    let tietPpcAuto = (tuan - 1) * soTiet1Tuan + 1;
+    let tongSoDongMucTieu = 0;
+    // ------------------------------------------------------------------
 
     thuMacDinh.forEach(thu => {
-        let ngayHienThi = '--/--/----';
-        if (maTranTkb[thu] && maTranTkb[thu]["Sáng"] && maTranTkb[thu]["Sáng"][1] && maTranTkb[thu]["Sáng"][1].ngay) {
-            ngayHienThi = maTranTkb[thu]["Sáng"][1].ngay;
-        }
-
-        let soDongCuaThu = cauTrucTiet["Sáng"].length + cauTrucTiet["Chiều"].length;
-        let daInCotThu = false;
-
+        let dsTietCuaThu = []; 
         ["Sáng", "Chiều"].forEach(buoi => {
-            let soDongCuaBuoi = cauTrucTiet[buoi].length;
-            let daInCotBuoi = false;
-
             cauTrucTiet[buoi].forEach(tiet => {
                 let tietTkb = (maTranTkb[thu] && maTranTkb[thu][buoi] && maTranTkb[thu][buoi][tiet]) ? maTranTkb[thu][buoi][tiet] : null;
-                let tenMonTkb = tietTkb ? tietTkb.monHoc : '';
-                let isMonMucTieu = (tenMonTkb.toLowerCase() === monDangChon.toLowerCase() && tenMonTkb !== '');
-                
-                let valTietPPC = '';
-                let valTenBai = '';
-                let valDieuChinh = '';
-                
-                if (isMonMucTieu && tietTkb && tietTkb.tietPpc) {
-                    valTietPPC = tietTkb.tietPpc;
-                    let baiGoc = duLieuPpctGoc.find(b => String(b.tiet) === valTietPPC);
-                    if (baiGoc) {
-                        valTenBai = baiGoc.tenBaiHoc || '';
-                        valDieuChinh = baiGoc.dieuChinh || '';
-                    }
-                }
+                let tenMonTkb = tietTkb ? tietTkb.monHoc.trim() : '';
 
-                let classDong = isMonMucTieu ? 'bg-blue-50/50 hover:bg-blue-100' : 'bg-white hover:bg-slate-50';
-                html += `<tr class="${classDong} transition-colors border-b border-gray-300">`;
-                
-                if (!daInCotThu) {
-                    html += `<td rowspan="${soDongCuaThu}" class="border-r border-gray-400 bg-white align-middle">
-                                <div class="font-extrabold text-slate-800 text-base">${thu}</div>
-                                <div class="text-[11px] font-semibold text-gray-500 mt-1">(${ngayHienThi})</div>
-                             </td>`;
-                    daInCotThu = true;
+                if (tenMonTkb.toLowerCase() === monDangChon.trim().toLowerCase() && tenMonTkb !== '') {
+                    dsTietCuaThu.push({ buoi: buoi, tiet: tiet, tietTkb: tietTkb });
+                    tongSoDongMucTieu++;
                 }
-                
-                if (!daInCotBuoi) {
-                    html += `<td rowspan="${soDongCuaBuoi}" class="border-r border-gray-400 bg-white align-middle font-bold text-slate-700">${buoi}</td>`;
-                    daInCotBuoi = true;
-                }
-                
-                html += `<td class="border-r border-gray-400 align-middle font-extrabold text-slate-800">${tiet}</td>`;
-                
-                if (isMonMucTieu) {
-                    let idKhoa = `${thu}_${buoi}_${tiet}`;
-                    html += `
-                        <td class="border-r border-gray-300 p-0">
-                            <input type="text" data-ppct-id="${idKhoa}" data-loai="tietPpc" value="${valTietPPC}" onchange="tuDongDienTenBai(this)" class="w-full h-full min-h-[32px] outline-none text-center font-extrabold text-blue-900 bg-transparent focus:bg-white" placeholder="--">
-                        </td>
-                        <td class="border-r border-gray-300 align-middle font-bold text-blue-800">${tenMonTkb}</td>
-                        <td class="border-r border-gray-300 p-0">
-                            <input type="text" data-ppct-id="${idKhoa}" data-loai="tenBai" value="${valTenBai}" class="w-full h-full min-h-[32px] px-3 outline-none text-left font-semibold text-slate-900 bg-transparent focus:bg-white" placeholder="Tên bài học...">
-                        </td>
-                        <td class="p-0">
-                            <input type="text" data-ppct-id="${idKhoa}" data-loai="dieuChinh" value="${valDieuChinh}" class="w-full h-full min-h-[32px] px-3 outline-none text-left italic text-gray-700 bg-transparent focus:bg-white" placeholder="...">
-                        </td>
-                    `;
-                } else {
-                    html += `
-                        <td class="border-r border-gray-300 bg-gray-100/50"></td>
-                        <td class="border-r border-gray-300 align-middle font-semibold text-slate-600">${tenMonTkb}</td>
-                        <td class="border-r border-gray-300 bg-gray-100/50"></td>
-                        <td class="bg-gray-100/50"></td>
-                    `;
-                }
-                html += `</tr>`;
             });
         });
+
+        if (dsTietCuaThu.length > 0) {
+            let ngayHienThi = '--/--/----';
+            if (dsTietCuaThu[0].tietTkb.ngay) {
+                ngayHienThi = dsTietCuaThu[0].tietTkb.ngay;
+            }
+
+            let nhomBuoi = { "Sáng": [], "Chiều": [] };
+            dsTietCuaThu.forEach(item => nhomBuoi[item.buoi].push(item));
+
+            let daInCotThu = false;
+
+            ["Sáng", "Chiều"].forEach(buoi => {
+                if (nhomBuoi[buoi].length > 0) {
+                    let daInCotBuoi = false;
+
+                    nhomBuoi[buoi].forEach(item => {
+                        let tiet = item.tiet;
+                        let tietTkb = item.tietTkb;
+                        let tenMonTkb = tietTkb.monHoc;
+
+                        // KIỂM TRA LẤY SỐ TIẾT TỰ ĐỘNG
+                        let valTietPPC = tietTkb.tietPpc || '';
+                        
+                        // Nếu CSDL chưa lưu tọa độ báo giảng, áp dụng tự động điền lần lượt
+                        if (valTietPPC === '') {
+                            valTietPPC = tietPpcAuto;
+                            tietPpcAuto++; // Cộng dồn số tiết cho ô tiếp theo
+                        }
+
+                        // Tự động map Tên bài học từ file Excel PPCT gốc
+                        let valTenBai = '';
+                        let valDieuChinh = '';
+                        if (valTietPPC !== '') {
+                            let baiGoc = duLieuPpctGoc.find(b => String(b.tiet) === String(valTietPPC));
+                            if (baiGoc) {
+                                valTenBai = baiGoc.tenBaiHoc || '';
+                                valDieuChinh = baiGoc.dieuChinh || '';
+                            }
+                        }
+
+                        html += `<tr class="bg-blue-50/20 hover:bg-blue-100 transition-colors border-b border-gray-300">`;
+
+                        if (!daInCotThu) {
+                            html += `<td rowspan="${dsTietCuaThu.length}" class="border-r border-gray-400 bg-white align-middle">
+                                        <div class="font-extrabold text-slate-800 text-base">${thu}</div>
+                                        <div class="text-[11px] font-semibold text-gray-500 mt-1">(${ngayHienThi})</div>
+                                     </td>`;
+                            daInCotThu = true;
+                        }
+
+                        if (!daInCotBuoi) {
+                            html += `<td rowspan="${nhomBuoi[buoi].length}" class="border-r border-gray-400 bg-white align-middle font-bold text-slate-700">${buoi}</td>`;
+                            daInCotBuoi = true;
+                        }
+
+                        let idKhoa = `${thu}_${buoi}_${tiet}`;
+
+                        html += `
+                            <td class="border-r border-gray-400 align-middle font-extrabold text-slate-800">${tiet}</td>
+                            <td class="border-r border-gray-300 p-0">
+                                <input type="text" data-ppct-id="${idKhoa}" data-loai="tietPpc" value="${valTietPPC}" onchange="tuDongDienTenBai(this)" class="w-full h-full min-h-[35px] outline-none text-center font-extrabold text-red-600 bg-transparent focus:bg-white placeholder-gray-300" title="Nhập tay nếu cấn lịch/nghỉ lễ" placeholder="--">
+                            </td>
+                            <td class="border-r border-gray-300 align-middle font-bold text-blue-800">${tenMonTkb}</td>
+                            <td class="border-r border-gray-300 p-0">
+                                <input type="text" data-ppct-id="${idKhoa}" data-loai="tenBai" value="${valTenBai}" class="w-full h-full min-h-[35px] px-3 outline-none text-left font-semibold text-slate-900 bg-transparent focus:bg-white placeholder-gray-300" placeholder="Tên bài học...">
+                            </td>
+                            <td class="p-0">
+                                <input type="text" data-ppct-id="${idKhoa}" data-loai="dieuChinh" value="${valDieuChinh}" class="w-full h-full min-h-[35px] px-3 outline-none text-left italic text-gray-700 bg-transparent focus:bg-white placeholder-gray-300" placeholder="...">
+                            </td>
+                        </tr>`;
+                    });
+                }
+            });
+        }
     });
+
+    if (tongSoDongMucTieu === 0) {
+        html = `<tr><td colspan="7" class="text-center py-10 text-red-500 font-bold italic">Lịch giảng dạy tuần này không có môn "${monDangChon}".</td></tr>`;
+    }
 
     tbody.innerHTML = html;
 }
