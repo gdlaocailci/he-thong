@@ -119,7 +119,7 @@ function taoKhungGiaoDienPPCT() {
 // KHỐI 2: ĐIỀU HƯỚNG TAB VÀ XỬ LÝ LAZY LOADING
 // =========================================================================
 function moTabPhanPhoiChuongTrinh() {
-    // 1. Reset TẤT CẢ các menu về trạng thái mặc định (inactive) chuẩn Tailwind
+    // 1. Reset TẤT CẢ các menu về trạng thái mặc định (inactive)
     document.querySelectorAll('nav a').forEach(m => {
         m.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group";
         let span = m.querySelector('span');
@@ -151,40 +151,36 @@ function moTabPhanPhoiChuongTrinh() {
     const khungPPCT = document.getElementById('khungPhanPhoiChuongTrinh');
     if (khungPPCT) { khungPPCT.classList.remove('hidden'); khungPPCT.classList.add('flex'); }
 
-    // 5. Nạp dữ liệu vào ô lọc
-    if (!trangThaiDaTaiGiaoDienPPCT) {
-        bomDuLieuVaoBoLoc();
-        if (typeof tuanDangXem !== 'undefined') {
-            document.getElementById('locTuanUI').value = tuanDangXem;
-        }
-        trangThaiDaTaiGiaoDienPPCT = true;
+    // 5. Nạp dữ liệu vào ô lọc (Đã tháo bỏ cờ khóa, luôn nạp mới để chống lỗi trống UI)
+    bomDuLieuVaoBoLoc();
+    if (typeof tuanDangXem !== 'undefined') {
+        document.getElementById('locTuanUI').value = tuanDangXem;
     }
 }
 
-// [BẢN VÁ UI]: TỰ ĐỘNG TẮT TAB PPCT KHI CLICK VÀO CÁC MENU KHÁC
-document.addEventListener('click', function(e) {
-    let menuClicked = e.target.closest('nav a');
-    // Nếu click vào một menu, và menu đó KHÔNG PHẢI là Phân phối chương trình
-    if (menuClicked && menuClicked.id !== 'menuPhanPhoiChuongTrinh') {
+function bomDuLieuVaoBoLoc() {
+    if (typeof thongSoHocVu !== 'undefined') {
+        const dsLop = thongSoHocVu.DANH_SACH_LOP || [];
+        const dsMon = thongSoHocVu.DANH_SACH_MON_HOC || [];
         
-        // Ẩn khung giao diện PPCT
-        let khungPPCT = document.getElementById('khungPhanPhoiChuongTrinh');
-        if (khungPPCT) {
-            khungPPCT.classList.remove('flex', 'block');
-            khungPPCT.classList.add('hidden');
+        const listLop = document.getElementById('listLopPPCT');
+        const listMon = document.getElementById('listMonPPCT');
+        const inputLop = document.getElementById('locLopPPCT');
+        const inputMon = document.getElementById('locMonPPCT');
+
+        if (listLop) listLop.innerHTML = dsLop.map(lop => `<option value="${lop}">`).join('');
+        if (listMon) listMon.innerHTML = dsMon.map(mon => `<option value="${mon}">`).join('');
+
+        // Tự động gán giá trị mặc định đầu tiên để không bị trống ô
+        if (inputLop && inputLop.value === '' && dsLop.length > 0) {
+            inputLop.value = dsLop[0];
+            tuDongTinhKhoiLop(); // Ép hệ thống tự tính Khối lớp ngay lập tức
         }
-        
-        // Trả Menu PPCT về trạng thái tối màu (inactive)
-        let m = document.getElementById('menuPhanPhoiChuongTrinh');
-        if (m) {
-            m.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group mt-1";
-            let span = m.querySelector('span');
-            if (span) span.className = "font-bold text-white/80 group-hover:text-white transition-colors text-[14px]";
-            let svg = m.querySelector('svg');
-            if (svg) svg.className = "w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white";
+        if (inputMon && inputMon.value === '' && dsMon.length > 0) {
+            inputMon.value = dsMon[0];
         }
     }
-});
+}
 
 function tuDongTinhKhoiLop() {
     const inputLop = document.getElementById('locLopPPCT').value.trim();
@@ -200,6 +196,26 @@ function tuDongTinhKhoiLop() {
         inputKhoi.setAttribute('data-khoi-so', 'KX');
     }
 }
+
+// Lắng nghe sự kiện click menu để tự động ẩn tab PPCT khi bấm sang phân hệ khác
+document.addEventListener('click', function(e) {
+    let menuClicked = e.target.closest('nav a');
+    if (menuClicked && menuClicked.id !== 'menuPhanPhoiChuongTrinh') {
+        let khungPPCT = document.getElementById('khungPhanPhoiChuongTrinh');
+        if (khungPPCT) {
+            khungPPCT.classList.remove('flex', 'block');
+            khungPPCT.classList.add('hidden');
+        }
+        let m = document.getElementById('menuPhanPhoiChuongTrinh');
+        if (m) {
+            m.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group mt-1";
+            let span = m.querySelector('span');
+            if (span) span.className = "font-bold text-white/80 group-hover:text-white transition-colors text-[14px]";
+            let svg = m.querySelector('svg');
+            if (svg) svg.className = "w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white";
+        }
+    }
+});
 // =========================================================================
 // KHỐI 3: GỌI API KÉP (TKB + PPCT) VÀ VẼ LƯỚI MA TRẬN
 // =========================================================================
