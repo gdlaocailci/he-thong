@@ -414,6 +414,16 @@ function xuLyNhapExcelPPCT(event) {
     if (!file) return;
     if (typeof XLSX === 'undefined') { alert("Thư viện Excel chưa tải xong."); return; }
     
+    // 1. Ép buộc lấy Khối và Môn từ Giao diện UI
+    const khoiUI = document.getElementById('locKhoiPPCT').getAttribute('data-khoi-so');
+    const monUI = document.getElementById('locMonPPCT').value.trim();
+    
+    if (!khoiUI || !monUI || khoiUI === 'KX') {
+        alert("⚠️ YÊU CẦU BẮT BUỘC: Đồng chí phải chọn 'Lớp' (để xác định Khối) và 'Môn học' trên giao diện trước khi tải file Excel lên.");
+        event.target.value = '';
+        return;
+    }
+    
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
@@ -423,8 +433,12 @@ function xuLyNhapExcelPPCT(event) {
             
             if (rowsArr.length > 1) {
                 duLieuPpctGoc = [];
+                // Bỏ qua dòng tiêu đề, bắt đầu quét từ dòng 1
                 for (let i = 1; i < rowsArr.length; i++) {
                     let r = rowsArr[i];
+                    
+                    // Lấy Tiết (cột 1), Tên bài (cột 3), Điều chỉnh (cột 4)
+                    // TUYỆT ĐỐI BỎ QUA Khối (cột 0) và Môn (cột 2) từ file Excel
                     if (r[1] !== undefined && r[1] !== "") {
                         duLieuPpctGoc.push({
                             tiet: r[1].toString().trim(),
@@ -434,6 +448,7 @@ function xuLyNhapExcelPPCT(event) {
                     }
                 }
 
+                // Cập nhật hiển thị lên Lưới giao diện
                 const cacOInputTiet = document.querySelectorAll('[data-loai="tietPpc"]');
                 let chiSoExcel = 0;
 
@@ -457,7 +472,7 @@ function xuLyNhapExcelPPCT(event) {
                     }
                 });
 
-                alert("Đã nạp toàn bộ PPCT từ Excel vào bộ nhớ! Vui lòng kiểm tra lại Lưới và bấm 'Lưu PPCT'.");
+                alert(`Đã nạp dữ liệu Excel thành công!\n\n- Khối ghi nhận: Khối ${khoiUI}\n- Môn ghi nhận: ${monUI}\n(Dữ liệu Khối/Môn bên trong file Excel đã bị loại bỏ hoàn toàn).\n\nLưu ý: Bấm nút "Lưu PPCT" để hệ thống tự động xóa sạch dữ liệu cũ của môn này và tải nối tiếp dữ liệu mới vào Sheet!`);
             } else {
                 alert("File Excel trống hoặc không đúng biểu mẫu xuất ra.");
             }
