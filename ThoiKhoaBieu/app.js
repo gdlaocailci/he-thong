@@ -134,6 +134,9 @@ async function khoiTaoGiaoDien() {
         
         kiemSoatGiaoDien(); 
         
+        // [CẬP NHẬT SỬA LỖI]: Gọi hàm nạp dữ liệu cho ô Lọc Giáo Viên ngay sau khi lấy cấu hình
+        napDuLieuBoLocGiaoVien();
+        
         if(thongSoHocVu.NAM_HOC) { 
             let menuNam = document.getElementById('menuHienThiNamHoc'); 
             if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
@@ -160,6 +163,28 @@ async function khoiTaoGiaoDien() {
                 ⚠️ Lỗi khởi động: ${loi.message}
             </td></tr>`;
         }
+    }
+}
+
+// =========================================================================
+// HÀM BỔ SUNG: NẠP DỮ LIỆU BỘ LỌC THEO ĐÚNG ID TRONG INDEX.HTML
+// =========================================================================
+function napDuLieuBoLocGiaoVien() {
+    // Trỏ chính xác vào ID datalist đang có sẵn trong file index.html
+    let dtList = document.getElementById('danhSachGvList');
+    if (!dtList) return;
+    
+    // Xóa bộ đệm cũ
+    dtList.innerHTML = '';
+    
+    // Nạp tùy chọn khôi phục lưới TKB toàn trường
+    dtList.innerHTML += `<option value="Toàn trường"></option>`;
+
+    // Quét và đổ dữ liệu từ biến toàn cục thongSoHocVu
+    if (thongSoHocVu.DANH_SACH_GIAO_VIEN && thongSoHocVu.DANH_SACH_GIAO_VIEN.length > 0) {
+        thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach(gv => {
+            dtList.innerHTML += `<option value="${gv}"></option>`;
+        });
     }
 }
 
