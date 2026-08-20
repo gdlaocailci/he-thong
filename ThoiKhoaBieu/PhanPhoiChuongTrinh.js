@@ -8,6 +8,16 @@ let trangThaiDaTaiGiaoDienPPCT = false;
 document.addEventListener('DOMContentLoaded', () => {
     taoMenuPhanPhoiChuongTrinh();
     taoKhungGiaoDienPPCT();
+    
+    // [BẢN NÂNG CẤP]: Liên tục lắng nghe trạng thái đăng nhập để phân quyền Admin
+    setInterval(() => {
+        if (typeof quyenSuaChua !== 'undefined') {
+            let nhomNut = document.getElementById('nhomNutCongCuPPCT');
+            if (nhomNut) {
+                nhomNut.style.display = quyenSuaChua ? 'flex' : 'none';
+            }
+        }
+    }, 1000);
 });
 
 function taoMenuPhanPhoiChuongTrinh() {
@@ -44,7 +54,8 @@ function taoKhungGiaoDienPPCT() {
                     <h2 class="text-xl font-extrabold text-blue-900 uppercase tracking-wide">Quản lý Phân Phối Chương Trình</h2>
                 </div>
                 
-                <div class="flex flex-wrap items-center gap-2">
+                <!-- [ĐIỂM CHỐT]: Bọc 3 nút trong ID này và gán thuộc tính ẩn mặc định -->
+                <div id="nhomNutCongCuPPCT" class="flex flex-wrap items-center gap-2" style="display: none;">
                     <input type="file" id="fileNhapPPCT" accept=".xlsx, .xls" class="hidden" onchange="xuLyNhapExcelPPCT(event)">
                     <button onclick="document.getElementById('fileNhapPPCT').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded shadow transition duration-200 flex items-center gap-1.5 text-sm">
                         Nhập Excel
