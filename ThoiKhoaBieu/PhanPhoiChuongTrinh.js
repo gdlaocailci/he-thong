@@ -89,7 +89,7 @@ function taoKhungGiaoDienPPCT() {
                     <datalist id="listMonPPCT"></datalist>
                 </div>
                 <button onclick="taiDuLieuTkbVaPpct()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-6 rounded shadow transition duration-200 text-sm ml-auto flex items-center gap-2">
-                    Hiển thị Lịch
+                    Xác nhận
                 </button>
             </div>
 
@@ -107,7 +107,7 @@ function taoKhungGiaoDienPPCT() {
                         </tr>
                     </thead>
                     <tbody id="vungDuLieuLichPPCT">
-                        <tr><td colspan="7" class="text-center py-10 text-slate-500 font-bold italic">Vui lòng chọn Tuần, Lớp, Môn và bấm "Hiển thị Lịch"</td></tr>
+                        <tr><td colspan="7" class="text-center py-10 text-slate-500 font-bold italic">Vui lòng chọn Tuần, Lớp, Môn và bấm "Xác nhận"</td></tr>
                     </tbody>
                 </table>
             </div>
