@@ -366,7 +366,12 @@ function xuLyXuatExcelPPCT() {
         }
     });
 
-    if (rowsArr.length === 1) { alert("Không có dữ liệu Tiết PPCT nào trên lưới để xuất."); return; }
+    // Nâng cấp: Nếu trên lưới không có dữ liệu, xuất khung bảng trống (5 dòng) làm biểu mẫu
+    if (rowsArr.length === 1) { 
+        for (let i = 0; i < 5; i++) {
+            rowsArr.push([khoi, "", mon, "", ""]);
+        }
+    }
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(rowsArr);
