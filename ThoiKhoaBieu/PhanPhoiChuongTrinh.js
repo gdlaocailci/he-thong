@@ -383,7 +383,10 @@ function xuLyXuatExcelPPCT() {
 function xuLyNhapExcelPPCT(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (typeof XLSX === 'undefined') return;
+    if (typeof XLSX === 'undefined') {
+        alert("Thư viện Excel chưa tải xong. Vui lòng chờ vài giây.");
+        return;
+    }
     
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -392,23 +395,57 @@ function xuLyNhapExcelPPCT(event) {
             const workbook = XLSX.read(data, { type: 'array' });
             const rowsArr = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             
-            // Xử lý nạp dữ liệu từ file vào mảng gốc duLieuPpctGoc để auto-fill
             if (rowsArr.length > 1) {
                 duLieuPpctGoc = [];
+                // Bỏ qua dòng tiêu đề (i=0), đọc từ i=1
                 for (let i = 1; i < rowsArr.length; i++) {
                     let r = rowsArr[i];
-                    if (r[1] !== undefined) {
+                    if (r[1] !== undefined && r[1] !== "") {
                         duLieuPpctGoc.push({
-                            tiet: r[1],
-                            tenBaiHoc: r[3] || '',
-                            dieuChinh: r[4] || ''
+                            tiet: r[1].toString().trim(),
+                            tenBaiHoc: r[3] !== undefined ? r[3].toString().trim() : '',
+                            dieuChinh: r[4] !== undefined ? r[4].toString().trim() : ''
                         });
                     }
                 }
-                alert("Đã nạp bộ PPCT từ Excel làm nguồn dữ liệu. Hãy gõ số Tiết PPC trên lưới để tự động điền Tên Bài.");
+
+                // Thuật toán gán trực tiếp dữ liệu lên lưới UI
+                const cacOInputTiet = document.querySelectorAll('input[data-loai="tietPpc"]');
+                let chiSoExcel = 0;
+
+                cacOInputTiet.forEach(inp => {
+                    let idKhoa = inp.getAttribute('data-ppct-id');
+                    let inputTenBai = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
+                    let inputDieuChinh = document.querySelector(`input[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
+                    
+                    let valHienTai = inp.value.trim();
+
+                    // Trường hợp 1: Ô Tiết PPCT đang trống -> Điền nối tiếp từ trên xuống dưới
+                    if (valHienTai === '' && chiSoExcel < duLieuPpctGoc.length) {
+                        inp.value = duLieuPpctGoc[chiSoExcel].tiet;
+                        if (inputTenBai) inputTenBai.value = duLieuPpctGoc[chiSoExcel].tenBaiHoc;
+                        if (inputDieuChinh) inputDieuChinh.value = duLieuPpctGoc[chiSoExcel].dieuChinh;
+                        chiSoExcel++;
+                    } 
+                    // Trường hợp 2: Ô Tiết PPCT đã có sẵn số -> Tìm trong dữ liệu Excel để khớp Tên Bài
+                    else if (valHienTai !== '') {
+                        let baiHoc = duLieuPpctGoc.find(b => b.tiet === valHienTai);
+                        if (baiHoc) {
+                            if (inputTenBai && inputTenBai.value === '') inputTenBai.value = baiHoc.tenBaiHoc;
+                            if (inputDieuChinh && inputDieuChinh.value === '') inputDieuChinh.value = baiHoc.dieuChinh;
+                        }
+                    }
+                });
+
+                alert("Đã nạp và gán trực tiếp dữ liệu PPCT từ Excel lên lưới thành công!");
+            } else {
+                alert("File Excel trống hoặc không đúng biểu mẫu xuất ra.");
             }
-        } catch (loi) { alert("Lỗi đọc file Excel."); }
-        finally { event.target.value = ''; }
+        } catch (loi) { 
+            alert("Lỗi đọc file Excel: " + loi.message); 
+        } finally { 
+            event.target.value = ''; // Reset thẻ input để có thể tải lại cùng 1 file
+        }
     };
     reader.readAsArrayBuffer(file);
 }
