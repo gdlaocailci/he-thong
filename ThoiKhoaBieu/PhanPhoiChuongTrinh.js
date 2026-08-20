@@ -104,7 +104,6 @@ function taoKhungGiaoDienPPCT() {
         vungHienThi.appendChild(khungPPCT);
     }
 }
-
 // =========================================================================
 // KHỐI 2: ĐIỀU HƯỚNG TAB VÀ XỬ LÝ LAZY LOADING
 // =========================================================================
@@ -163,7 +162,6 @@ function tuDongTinhKhoiLop() {
         inputKhoi.setAttribute('data-khoi-so', 'KX');
     }
 }
-
 // =========================================================================
 // KHỐI 3: GỌI API KÉP (TKB + PPCT) VÀ VẼ LƯỚI MA TRẬN
 // =========================================================================
