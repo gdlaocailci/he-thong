@@ -222,9 +222,14 @@ document.addEventListener('click', function(e) {
             if (svg) svg.className = "w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white";
         }
         
-        // [YÊU CẦU MỚI]: Hiện lại Header khi rời khỏi tab PPCT
         const headerHeThong = document.querySelector('header');
-        if (headerHeThong) { headerHeThong.style.display = ''; }
+        if (headerHeThong) { 
+            if (menuClicked.id === 'menuTKB') {
+                headerHeThong.style.display = ''; // Khôi phục khi về trang chủ
+            } else {
+                headerHeThong.style.display = 'none'; // Tiếp tục ẩn ở Thống kê, Cài đặt...
+            }
+        }
     }
 });
 
