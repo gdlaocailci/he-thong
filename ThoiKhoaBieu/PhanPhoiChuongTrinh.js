@@ -145,11 +145,11 @@ function moTabPhanPhoiChuongTrinh() {
         if (el) { el.classList.remove('flex', 'block'); el.classList.add('hidden'); }
     });
     
-    // [YÊU CẦU MỚI 1]: Hiện thanh menu TKB vì đây là thời khoá biểu
+    // [ĐÃ SỬA THEO YÊU CẦU]: Ẩn toàn bộ khu vực thanh công cụ TKB (Khu vực viền đỏ)
     const thanhCongCu = document.getElementById('thanhCongCuTKB');
-    if (thanhCongCu) { thanhCongCu.classList.remove('hidden'); thanhCongCu.classList.add('flex'); }
+    if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
 
-    // [YÊU CẦU MỚI 2]: Ẩn Header hệ thống ("THỜI KHÓA BIỂU - Smart Timetable")
+    // Ẩn Header hệ thống
     const headerHeThong = document.querySelector('header');
     if (headerHeThong) { headerHeThong.style.display = 'none'; }
 
@@ -157,10 +157,11 @@ function moTabPhanPhoiChuongTrinh() {
     const khungPPCT = document.getElementById('khungPhanPhoiChuongTrinh');
     if (khungPPCT) { khungPPCT.classList.remove('hidden'); khungPPCT.classList.add('flex'); }
 
-    // 5. Nạp dữ liệu vào ô lọc (Đã tháo bỏ cờ khóa, luôn nạp mới để chống lỗi trống UI)
+    // 5. Nạp dữ liệu vào ô lọc
     bomDuLieuVaoBoLoc();
     if (typeof tuanDangXem !== 'undefined') {
-        document.getElementById('locTuanUI').value = tuanDangXem;
+        let theTuanUI = document.getElementById('locTuanUI');
+        if(theTuanUI) theTuanUI.value = tuanDangXem;
     }
 }
 
