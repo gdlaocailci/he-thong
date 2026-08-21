@@ -279,16 +279,17 @@ function veBangKhungLichPPCT(monDangChon) {
     let ngayGocThu2 = null;
     const tuanHienTaiHeThong = (typeof tuanDangXem !== 'undefined') ? parseInt(tuanDangXem) : 1;
     
+    // Biến cờ kiểm tra xem tuần đang xem có phải là tuần tương lai không
+    const isTuongLai = tuan > tuanHienTaiHeThong;
+    
     if (typeof ngayDauTuanUI !== 'undefined' && ngayDauTuanUI !== '') {
-        // Tái tạo Date object từ chuỗi ngayDauTuanUI (Định dạng YYYY-MM-DD)
         let parts = ngayDauTuanUI.split('-');
         if (parts.length === 3) {
             let yy = parseInt(parts[0], 10);
-            let mm = parseInt(parts[1], 10) - 1; // Tháng trong JS bắt đầu từ 0
+            let mm = parseInt(parts[1], 10) - 1; 
             let dd = parseInt(parts[2], 10);
             ngayGocThu2 = new Date(yy, mm, dd);
             
-            // Tính độ lệch tuần (Khoảng cách giữa Tuần đang chọn và Tuần của hệ thống)
             let lechTuan = tuan - tuanHienTaiHeThong;
             if (lechTuan !== 0) {
                 ngayGocThu2.setDate(ngayGocThu2.getDate() + (lechTuan * 7));
@@ -322,7 +323,6 @@ function veBangKhungLichPPCT(monDangChon) {
         });
 
         if (dsTietCuaThu.length > 0) {
-            // [THUẬT TOÁN ĐỒNG BỘ NGÀY THÁNG]: Tự động sinh ngày cho từng Thứ
             let ngayHienThi = '--/--/----';
             if (ngayGocThu2) {
                 const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4};
@@ -361,7 +361,11 @@ function veBangKhungLichPPCT(monDangChon) {
                         html += `<tr class="bg-blue-50/10 hover:bg-blue-50 transition-colors border-b border-gray-300">`;
 
                         if (!daInCotThu) {
+                            // [NÂNG CẤP GIAO DIỆN]: Chèn thẻ (Dự kiến) nếu đang tra cứu tuần tương lai
+                            let theDuKien = isTuongLai ? `<div class="text-[10px] font-bold text-orange-600 uppercase mb-0.5 tracking-wider">(Dự kiến)</div>` : '';
+                            
                             html += `<td rowspan="${dsTietCuaThu.length}" class="border-r border-gray-400 bg-white align-middle text-center">
+                                        ${theDuKien}
                                         <div class="font-extrabold text-slate-800 text-base">${thu}</div>
                                         <div class="text-[11px] font-semibold text-gray-500 mt-1">(${ngayHienThi})</div>
                                      </td>`;
@@ -377,10 +381,10 @@ function veBangKhungLichPPCT(monDangChon) {
 
                         html += `
                             <td class="border-r border-gray-400 align-middle font-extrabold text-slate-800 text-center">${tiet}</td>
-                            <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
-                            <td class="border-r border-gray-300 align-middle text-center font-bold text-blue-800">${tenMonTkb}</td>
-                            <td class="border-r border-gray-300 align-middle text-left p-3 font-semibold text-slate-900 leading-relaxed" data-ppct-id="${idKhoa}" data-loai="tenBai" style="white-space: normal !important; max-width: 400px; word-break: break-word;">${valTenBai}</td>
-                            <td class="align-middle text-left p-3 italic text-gray-700 leading-relaxed" data-ppct-id="${idKhoa}" data-loai="dieuChinh" style="white-space: normal !important; max-width: 300px; word-break: break-word;">${valDieuChinh}</td>
+                            <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600 break-words whitespace-normal" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
+                            <td class="border-r border-gray-300 align-middle text-center font-bold text-blue-800 break-words whitespace-normal">${tenMonTkb}</td>
+                            <td class="border-r border-gray-300 align-middle text-left p-3 font-semibold text-slate-900 break-words whitespace-normal leading-relaxed" data-ppct-id="${idKhoa}" data-loai="tenBai" style="white-space: normal !important; max-width: 400px; word-break: break-word;">${valTenBai}</td>
+                            <td class="align-middle text-left p-3 italic text-gray-700 break-words whitespace-normal leading-relaxed" data-ppct-id="${idKhoa}" data-loai="dieuChinh" style="white-space: normal !important; max-width: 300px; word-break: break-word;">${valDieuChinh}</td>
                         </tr>`;
                     });
                 }
