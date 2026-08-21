@@ -147,14 +147,28 @@ function moTabPhanPhoiChuongTrinh() {
     const thanhCongCu = document.getElementById('thanhCongCuTKB');
     if (thanhCongCu) { thanhCongCu.classList.remove('flex'); thanhCongCu.classList.add('hidden'); }
 
+    // [ĐIỂM NÂNG CẤP]: Ẩn Header dùng chung của hệ thống để mở rộng không gian UI
+    const headerHeThong = document.querySelector('header');
+    if (headerHeThong) {
+        headerHeThong.style.display = 'none';
+    }
+
     // 4. Hiện khung PPCT
     const khungPPCT = document.getElementById('khungPhanPhoiChuongTrinh');
     if (khungPPCT) { khungPPCT.classList.remove('hidden'); khungPPCT.classList.add('flex'); }
 
-    // 5. Nạp dữ liệu vào ô lọc (Đã tháo bỏ cờ khóa, luôn nạp mới để chống lỗi trống UI)
-    bomDuLieuVaoBoLoc();
-    if (typeof tuanDangXem !== 'undefined') {
-        document.getElementById('locTuanUI').value = tuanDangXem;
+    // 5. Nạp dữ liệu vào ô lọc
+    if (!trangThaiDaTaiGiaoDienPPCT) {
+        if (typeof thongSoHocVu !== 'undefined') {
+            const dsLop = thongSoHocVu.DANH_SACH_LOP || [];
+            const dsMon = thongSoHocVu.DANH_SACH_MON_HOC || [];
+            document.getElementById('listLopPPCT').innerHTML = dsLop.map(lop => `<option value="${lop}">`).join('');
+            document.getElementById('listMonPPCT').innerHTML = dsMon.map(mon => `<option value="${mon}">`).join('');
+        }
+        if (typeof tuanDangXem !== 'undefined') {
+            document.getElementById('locTuanUI').value = tuanDangXem;
+        }
+        trangThaiDaTaiGiaoDienPPCT = true;
     }
 }
 
