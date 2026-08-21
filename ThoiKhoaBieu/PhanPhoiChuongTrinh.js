@@ -275,6 +275,27 @@ function veBangKhungLichPPCT(monDangChon) {
     const tuan = parseInt(document.getElementById('locTuanUI').value.trim()) || 1;
     const lop = document.getElementById('locLopPPCT').value.trim();
     
+    // [THUẬT TOÁN ĐỒNG BỘ NGÀY THÁNG]: Nội suy ngày tự động dựa trên mốc tuần hiện tại
+    let ngayGocThu2 = null;
+    const tuanHienTaiHeThong = (typeof tuanDangXem !== 'undefined') ? parseInt(tuanDangXem) : 1;
+    
+    if (typeof ngayDauTuanUI !== 'undefined' && ngayDauTuanUI !== '') {
+        // Tái tạo Date object từ chuỗi ngayDauTuanUI (Định dạng YYYY-MM-DD)
+        let parts = ngayDauTuanUI.split('-');
+        if (parts.length === 3) {
+            let yy = parseInt(parts[0], 10);
+            let mm = parseInt(parts[1], 10) - 1; // Tháng trong JS bắt đầu từ 0
+            let dd = parseInt(parts[2], 10);
+            ngayGocThu2 = new Date(yy, mm, dd);
+            
+            // Tính độ lệch tuần (Khoảng cách giữa Tuần đang chọn và Tuần của hệ thống)
+            let lechTuan = tuan - tuanHienTaiHeThong;
+            if (lechTuan !== 0) {
+                ngayGocThu2.setDate(ngayGocThu2.getDate() + (lechTuan * 7));
+            }
+        }
+    }
+
     let soTiet1Tuan = 0; 
     if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.KHUNG_CHUONG_TRINH) {
         let dmKhoi = thongSoHocVu.KHUNG_CHUONG_TRINH[lop] || {};
@@ -301,8 +322,18 @@ function veBangKhungLichPPCT(monDangChon) {
         });
 
         if (dsTietCuaThu.length > 0) {
+            // [THUẬT TOÁN ĐỒNG BỘ NGÀY THÁNG]: Tự động sinh ngày cho từng Thứ
             let ngayHienThi = '--/--/----';
-            if (dsTietCuaThu[0].tietTkb.ngay) ngayHienThi = dsTietCuaThu[0].tietTkb.ngay;
+            if (ngayGocThu2) {
+                const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4};
+                let ngayCuaThu = new Date(ngayGocThu2.getTime());
+                ngayCuaThu.setDate(ngayCuaThu.getDate() + (doLechThu[thu] || 0));
+                
+                let d = ngayCuaThu.getDate().toString().padStart(2, '0');
+                let m = (ngayCuaThu.getMonth() + 1).toString().padStart(2, '0');
+                let y = ngayCuaThu.getFullYear();
+                ngayHienThi = `${d}/${m}/${y}`;
+            }
 
             let nhomBuoi = { "Sáng": [], "Chiều": [] };
             dsTietCuaThu.forEach(item => nhomBuoi[item.buoi].push(item));
@@ -344,7 +375,6 @@ function veBangKhungLichPPCT(monDangChon) {
 
                         let idKhoa = `${thu}_${buoi}_${tiet}`;
 
-                        // [NÂNG CẤP GIAO DIỆN]: Bổ sung style="white-space: normal !important;" để ghi đè lệnh cấm xuống dòng, khống chế độ rộng tối đa để ép chữ rớt dòng.
                         html += `
                             <td class="border-r border-gray-400 align-middle font-extrabold text-slate-800 text-center">${tiet}</td>
                             <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
