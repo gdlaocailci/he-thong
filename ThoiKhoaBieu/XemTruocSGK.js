@@ -1,14 +1,10 @@
-// =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V3.0)
-// Nâng cấp: Thuật toán Từ khóa Lõi - Chống sai chính tả & Ép kiểu tuyệt đối
-// =========================================================================
-
 let boNhoHocLieuSGK = {}; 
 let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
 let heSoThuPhong = 1.2;
 let idTepHienTai = '';
 let tenBaiHienTai = '';
+let boNhoTrangPdfGoc = null; // [NÂNG CẤP]: Biến lưu trữ mảng byte PDF để tái sử dụng khi tải xuống
 
 document.addEventListener('DOMContentLoaded', () => {
     xayDungKhungGiaoDienXemTruoc();
@@ -57,7 +53,6 @@ function chuanHoaTenTimKiem(tenGoc) {
     return tenDaLoc.trim();
 }
 
-// [ÉP KIỂU TUYỆT ĐỐI]: Gọt bỏ toàn bộ dấu tiếng Việt, dấu cách, chữ hoa
 function lamSachTuyetDoi(str) {
     if (!str) return '';
     return str.normalize('NFD')
@@ -67,11 +62,9 @@ function lamSachTuyetDoi(str) {
               .toLowerCase();
 }
 
-// [THUẬT TOÁN MỚI]: Tạo mã lõi từ 3 từ đầu tiên để miễn nhiễm với lỗi chính tả
 function taoTuKhoaLoi(tuKhoaGoc) {
     let tenDaLoc = chuanHoaTenTimKiem(tuKhoaGoc);
     let mangTu = tenDaLoc.trim().split(/\s+/);
-    // Chỉ lấy 3 từ đầu tiên (đủ tính duy nhất, không lấy phần đuôi dễ gõ sai)
     let soTu = Math.min(mangTu.length, 3); 
     let cumTuLoi = mangTu.slice(0, soTu).join('');
     return lamSachTuyetDoi(cumTuLoi);
@@ -100,13 +93,10 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
     const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
     if (!idTepTin) {
         dongModalXemTruoc();
-        setTimeout(() => {
-            alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}.\nVui lòng kiểm tra lại bảng DANH_MUC_SGK.`);
-        }, 300);
+        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}.`); }, 300);
         return;
     }
 
-    // Khởi tạo các biến toàn cục cho tác vụ Tải PDF sau này
     const tenBaiDaLoc = chuanHoaTenTimKiem(tenBaiHoc);
     idTepHienTai = idTepTin;
     tenBaiHienTai = tenBaiDaLoc || 'TaiLieu';
@@ -175,7 +165,6 @@ function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tenDaLoc) {
     
     if (tenDaLoc) {
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang quét văn bản lõi, định vị bài học...";
-        // Hiển thị trực quan từ khóa lõi mà thuật toán đang dùng để quét
         document.getElementById('tuKhoaTimKiemSgk').innerText = `Mã đối chiếu: "${taoTuKhoaLoi(tenDaLoc)}"`;
     }
 
@@ -195,8 +184,39 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 3: ĐỘNG CƠ XỬ LÝ VÀ TRÍCH XUẤT VĂN BẢN PDF
+// KHỐI 3: ĐỘNG CƠ XỬ LÝ, TRÍCH XUẤT VĂN BẢN VÀ BỘ ĐỆM ĐA PROXY
 // =========================================================================
+
+// [BẢN NÂNG CẤP]: Hàm nạp PDF thông minh, tự động chuyển luồng nếu bị chặn, chống tải nhầm HTML
+async function taiDuLieuPdfAnToan(idPdf) {
+    const dsProxy = [
+        'https://api.allorigins.win/raw?url=',
+        'https://corsproxy.io/?',
+        'https://api.codetabs.com/v1/proxy?quest='
+    ];
+    // Gắn thêm tham số confirm=t để ép Google Drive bỏ qua trang cảnh báo virus với file dung lượng lớn
+    const linkGoc = encodeURIComponent(`https://drive.google.com/uc?export=download&confirm=t&id=${idPdf}`);
+    
+    for (let proxy of dsProxy) {
+        try {
+            document.getElementById('tuKhoaTimKiemSgk').innerText = `Đang kết nối cổng truy xuất an toàn...`;
+            let phanHoi = await fetch(proxy + linkGoc);
+            if (!phanHoi.ok) continue;
+            
+            let boDem = await phanHoi.arrayBuffer();
+            
+            // Xác thực mã Magic Number (%PDF-) để đảm bảo đây là tệp sách chứ không phải mã lỗi HTML
+            let kiemTra = new Uint8Array(boDem.slice(0, 5));
+            if (kiemTra[0]===37 && kiemTra[1]===80 && kiemTra[2]===68 && kiemTra[3]===70 && kiemTra[4]===45) {
+                return boDem;
+            }
+        } catch (loi) {
+            console.warn("Proxy quá tải, chuyển luồng dự phòng:", proxy);
+        }
+    }
+    throw new Error("Tất cả các cổng trung chuyển đều bị từ chối.");
+}
+
 async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
     if (typeof pdfjsLib === 'undefined') {
         await new Promise((resolve) => {
@@ -208,10 +228,11 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 
-    const urlProxy = `https://corsproxy.io/?${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${idPdf}`)}`;
-
     try {
-        const loadingTask = pdfjsLib.getDocument(urlProxy);
+        // [CỐT LÕI]: Gọi hàm tải mảng Byte an toàn và gán vào biến toàn cục để Nút Tải Xuống xài lại
+        boNhoTrangPdfGoc = await taiDuLieuPdfAnToan(idPdf);
+        
+        const loadingTask = pdfjsLib.getDocument({ data: boNhoTrangPdfGoc });
         theHienPdfHienTai = await loadingTask.promise;
         
         document.getElementById('tongSoTrang').innerText = theHienPdfHienTai.numPages;
@@ -220,8 +241,6 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
         if (tuKhoaTimKiem && tuKhoaTimKiem.length > 2) {
             let timThay = false;
             const gioiHanQuet = Math.min(theHienPdfHienTai.numPages, 100); 
-            
-            // [THỰC THI THUẬT TOÁN MỚI]: Bóc tách 3 từ đầu làm mã lõi
             let tuKhoaEpKieu = taoTuKhoaLoi(tuKhoaTimKiem);
 
             for (let i = 1; i <= gioiHanQuet; i++) {
@@ -229,11 +248,11 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
                 const trang = await theHienPdfHienTai.getPage(i);
                 const textContent = await trang.getTextContent();
                 
-                // Ép kiểu toàn bộ văn bản của trang SGK
                 const chuoiTrangGoc = textContent.items.map(item => item.str).join('');
+                // Lưu ý nhỏ: Nếu SGK là dạng ảnh Scan không có text chìm, vòng lặp này sẽ không tìm thấy.
+                // Khi đó, sách sẽ mở ở trang 1, nhưng nút Tải Xuống vẫn dùng được bình thường.
                 const chuoiTrangEpKieu = lamSachTuyetDoi(chuoiTrangGoc);
                 
-                // Đối chiếu: trang sách chứa mã lõi hay không
                 if (chuoiTrangEpKieu.includes(tuKhoaEpKieu)) {
                     trangHienTaiPDF = i;
                     timThay = true;
@@ -241,8 +260,8 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
                 }
             }
             if (!timThay) {
-                document.getElementById('tuKhoaTimKiemSgk').innerText = `Chưa tìm thấy khớp lệnh tuyệt đối. Hiển thị Trang 1.`;
-                await new Promise(r => setTimeout(r, 1200));
+                document.getElementById('tuKhoaTimKiemSgk').innerText = `Hiển thị mặc định Trang 1 (SGK có thể là định dạng ảnh Scan).`;
+                await new Promise(r => setTimeout(r, 1500));
             }
         }
 
@@ -252,7 +271,7 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
         veTrangCanVasPdf(trangHienTaiPDF);
 
     } catch (loi) {
-        console.warn("Quá tải Proxy, chuyển sang Iframe dự phòng.", loi);
+        console.warn("Chuyển sang Iframe dự phòng do lỗi tải luồng.", loi);
         kichHoatLuoiAnToanIframe(idPdf);
     }
 }
@@ -311,6 +330,11 @@ async function taiXuongBaiHocPDF() {
     nutTai.disabled = true;
 
     try {
+        if (!boNhoTrangPdfGoc) {
+            alert("Lỗi: Không tìm thấy dữ liệu đệm của SGK. Vui lòng tải lại trang.");
+            return;
+        }
+
         if (typeof PDFLib === 'undefined') {
             await new Promise((resolve) => {
                 const script = document.createElement('script');
@@ -320,13 +344,9 @@ async function taiXuongBaiHocPDF() {
             });
         }
 
-        const urlProxy = `https://corsproxy.io/?${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`)}`;
-        
-        const res = await fetch(urlProxy);
-        const pdfBytesGoc = await res.arrayBuffer();
-
         const { PDFDocument } = PDFLib;
-        const docGoc = await PDFDocument.load(pdfBytesGoc);
+        // [NÂNG CẤP]: Gọi trực tiếp mảng Byte đã tải từ lúc mở xem trước, nhanh gấp 10 lần
+        const docGoc = await PDFDocument.load(boNhoTrangPdfGoc);
         const docMoi = await PDFDocument.create();
 
         const chiSoTrang = trangHienTaiPDF - 1;
@@ -344,7 +364,7 @@ async function taiXuongBaiHocPDF() {
 
     } catch (loi) {
         console.error("Lỗi cắt file PDF:", loi);
-        alert("Có lỗi xảy ra khi xử lý trích xuất PDF. Vui lòng kiểm tra kết nối mạng.");
+        alert("Có lỗi xảy ra khi xử lý trích xuất PDF.");
     } finally {
         nutTai.innerHTML = noiDungGoc;
         nutTai.disabled = false;
