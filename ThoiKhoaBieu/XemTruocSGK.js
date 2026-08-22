@@ -330,7 +330,7 @@ function kichHoatLuoiAnToanIframe(idPdf) {
 }
 
 // =========================================================================
-// KHỐI 4: ÉP LUỒNG TẢI NGẦM ĐỂ CẮT PDF
+// KHỐI 4: ÉP LUỒNG TẢI NGẦM ĐỂ CẮT PDF (BẢN BỌC LÓT LỖI)
 // =========================================================================
 async function taiXuongBaiHocPDF() {
     const nutTai = document.getElementById('btnTienHanhTai');
@@ -339,7 +339,6 @@ async function taiXuongBaiHocPDF() {
     const trangTu = parseInt(document.getElementById('trangTaiTu').value, 10);
     const trangDen = parseInt(document.getElementById('trangTaiDen').value, 10);
     
-    // Ở chế độ Iframe, ta không biết trước số trang tối đa, nên lấy 9999 làm mốc chặn lỗi
     let maxTrang = theHienPdfHienTai ? theHienPdfHienTai.numPages : 9999;
 
     if (isNaN(trangTu) || isNaN(trangDen) || trangTu < 1 || trangTu > trangDen || trangTu > maxTrang || trangDen > maxTrang) {
@@ -353,18 +352,10 @@ async function taiXuongBaiHocPDF() {
     try {
         let pdfBuffer = boNhoTrangPdfGoc;
         
-        // NẾU ĐANG Ở CHẾ ĐỘ NỀN ĐEN (IFRAME): Ép hệ thống kéo luồng tải ngầm để lấy mảng Byte
         if (!pdfBuffer) {
-            document.getElementById('chuNutTai').innerText = "Đang kéo dữ liệu...";
-            try {
-                pdfBuffer = await taiDuLieuPdfAnToan(idTepHienTai);
-            } catch(e) {
-                alert("Tệp SGK này quá lớn và bị chặn luồng cắt trang bảo mật. Trình duyệt sẽ tải nguyên bản toàn bộ cuốn sách để đảm bảo an toàn.");
-                window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
-                nutTai.innerHTML = noiDungGoc;
-                nutTai.disabled = false;
-                return;
-            }
+            document.getElementById('chuNutTai').innerText = "Đang gắp dữ liệu...";
+            // Bỏ try-catch ở đây để dồn toàn bộ lỗi về khối catch tổng bên dưới xử lý một lần
+            pdfBuffer = await taiDuLieuPdfAnToan(idTepHienTai);
         }
 
         if (typeof PDFLib === 'undefined') {
@@ -377,7 +368,9 @@ async function taiXuongBaiHocPDF() {
         }
 
         const { PDFDocument } = PDFLib;
-        const docGoc = await PDFDocument.load(pdfBuffer);
+        
+        // [ĐÃ NÂNG CẤP]: Bổ sung ignoreEncryption để ép vượt qua lớp khóa bảo mật của NXB nếu có
+        const docGoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
         const docMoi = await PDFDocument.create();
         
         const tongSoTrangThucTe = docGoc.getPageCount();
@@ -414,8 +407,10 @@ async function taiXuongBaiHocPDF() {
         link.click();
 
     } catch (loi) {
-        console.error("Lỗi cắt file PDF:", loi);
-        alert("Có lỗi xảy ra khi xử lý trích xuất khoảng trang PDF.");
+        console.error("Lỗi trích xuất PDF:", loi);
+        // [ĐÃ NÂNG CẤP]: Bẫy lỗi thông minh. Nếu thất bại, tự động cho tải file gốc.
+        alert("Sự cố: Tệp SGK này bị khóa trích xuất bảo mật hoặc mạng tải ngầm bị nghẽn.\n\nHệ thống sẽ tự động chuyển sang tải toàn bộ cuốn sách nguyên bản.");
+        window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
     } finally {
         nutTai.innerHTML = noiDungGoc;
         nutTai.disabled = false;
