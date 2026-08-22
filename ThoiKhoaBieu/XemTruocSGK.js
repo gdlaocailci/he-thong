@@ -1,6 +1,6 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V11.0)
-// Nâng cấp: Nút Đồng bộ (Xóa Cache) giúp cập nhật sách mới mà không đổi Link
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V12.0)
+// Nâng cấp: Sửa lỗi bóp nghẹt Iframe Google Drive & Xử lý xung đột nút Zoom
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -51,7 +51,6 @@ function docTepTuBoNhoCucBo(idPdf) {
     });
 }
 
-// [TÍNH NĂNG MỚI]: Hàm xóa bộ nhớ đệm của một cuốn sách cụ thể
 function lamMoiBoNhoDemPdf() {
     if (!dbHocLieu || !idTepHienTai) {
         alert("Hệ thống đang tải hoặc không có dữ liệu để làm mới.");
@@ -63,12 +62,16 @@ function lamMoiBoNhoDemPdf() {
     store.delete(idTepHienTai);
     
     transaction.oncomplete = function() {
-        // Sau khi xóa cache, ép hệ thống tải lại file
-        boNhoTrangPdfGoc = null; // Xóa cả RAM
+        boNhoTrangPdfGoc = null; 
         document.getElementById('khoiTrangThaiSgk').classList.remove('hidden');
         document.getElementById('canvasHienThiPdf').classList.add('hidden');
         document.getElementById('bangDieuKhienTrang').classList.add('hidden');
         document.getElementById('cumNutTaiXuong').classList.add('hidden');
+        
+        // Ẩn nhóm công cụ Canvas khi đang tải lại
+        document.getElementById('nhomCongCuCanvas').classList.remove('flex');
+        document.getElementById('nhomCongCuCanvas').classList.add('hidden');
+        
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang đồng bộ tải lại phiên bản sách mới nhất...";
         
         xuLyDocPDF(idTepHienTai);
@@ -177,25 +180,26 @@ function xayDungKhungGiaoDienXemTruoc() {
                 
                 <div class="flex items-center gap-2 flex-none">
                     <!-- Nút Tải nguyên bản -->
-                    <div id="cumNutTaiXuong" class="hidden flex items-center gap-1.5 bg-white/10 p-1 rounded-lg mr-3 border border-white/20">
+                    <div id="cumNutTaiXuong" class="hidden flex items-center gap-1.5 bg-white/10 p-1 rounded-lg mr-1 border border-white/20">
                         <button onclick="taiToanBoSGK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải toàn bộ cuốn sách">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span>Tải SGK</span>
+                            <span class="hidden sm:inline">Tải SGK</span>
                         </button>
                     </div>
 
-                    <!-- [TÍNH NĂNG MỚI]: Nút Đồng bộ lại (Làm mới) -->
-                    <button onclick="lamMoiBoNhoDemPdf()" class="p-1.5 bg-yellow-500/20 hover:bg-yellow-500/40 rounded-md text-yellow-300 transition border border-yellow-500/30" title="Tải lại sách (Đồng bộ phiên bản mới nhất)"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></button>
-                    
-                    <!-- Dấu gạch chia cách -->
-                    <div class="h-6 w-px bg-white/30 mx-1"></div>
+                    <!-- [CẬP NHẬT UI]: Nhóm công cụ này sẽ bị ẨN HOÀN TOÀN khi dùng Iframe -->
+                    <div id="nhomCongCuCanvas" class="hidden items-center">
+                        <button onclick="lamMoiBoNhoDemPdf()" class="p-1.5 bg-yellow-500/20 hover:bg-yellow-500/40 rounded-md text-yellow-300 transition border border-yellow-500/30" title="Tải lại sách (Đồng bộ phiên bản mới nhất)"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></button>
+                        <div class="h-6 w-px bg-white/30 mx-1"></div>
+                        <button onclick="dieuChinhThuPhong(0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition" title="Phóng to Canvas"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
+                        <button onclick="dieuChinhThuPhong(-0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition mr-2" title="Thu nhỏ Canvas"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
+                    </div>
 
-                    <button onclick="dieuChinhThuPhong(0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition" title="Phóng to"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
-                    <button onclick="dieuChinhThuPhong(-0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition mr-2" title="Thu nhỏ"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
-                    <button onclick="dongModalXemTruoc()" class="p-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white shadow-sm transition" title="Đóng"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    <button onclick="dongModalXemTruoc()" class="p-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white shadow-sm transition ml-1" title="Đóng"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
             </div>
 
+            <!-- Không gian hiển thị (Giữ padding p-4 cho Canvas) -->
             <div class="flex-1 bg-slate-300 overflow-y-auto overflow-x-auto relative block text-center p-4 border-t border-slate-400" id="vungVeTaiLieu">
                 
                 <div id="bangDieuKhienTrang" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/95 backdrop-blur text-white px-5 py-3 rounded-2xl shadow-2xl flex-col items-center gap-2 z-20 border border-slate-600 min-w-[320px] transition-all">
@@ -218,11 +222,12 @@ function xayDungKhungGiaoDienXemTruoc() {
 
                 <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden mx-auto max-w-full h-auto mb-10"></canvas>
                 
-                <div id="vungIframeDuPhong" class="hidden w-full h-full relative">
-                    <div class="absolute top-0 right-4 w-[45px] h-[55px] bg-[#131313] z-50 flex items-center justify-center cursor-not-allowed border-b border-l border-r border-slate-700/50" title="Tính năng mở tab mới đã bị khóa">
+                <!-- [CẬP NHẬT GIAO DIỆN LÕI]: Đổi sang absolute inset-0 để Iframe đè lên toàn bộ padding, tối đa hóa không gian hiển thị -->
+                <div id="vungIframeDuPhong" class="hidden absolute inset-0 z-[100] bg-[#131313]">
+                    <div class="absolute top-0 right-4 w-[45px] h-[55px] bg-[#131313] z-[110] flex items-center justify-center cursor-not-allowed border-b border-l border-r border-slate-700/50" title="Tính năng mở tab mới đã bị khóa">
                         <svg class="w-5 h-5 text-gray-500 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>
-                    <iframe id="iframeTaiLieuGoc" src="" class="w-full h-full border-0 rounded shadow-inner" allow="autoplay"></iframe>
+                    <iframe id="iframeTaiLieuGoc" src="" class="w-full h-full border-0" allow="autoplay"></iframe>
                 </div>
             </div>
         </div>
@@ -240,8 +245,12 @@ function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tuanHienTai) {
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
     document.getElementById('vungIframeDuPhong').classList.add('hidden');
     document.getElementById('cumNutTaiXuong').classList.add('hidden'); 
+    
     document.getElementById('bangDieuKhienTrang').classList.remove('flex');
     document.getElementById('bangDieuKhienTrang').classList.add('hidden');
+    
+    document.getElementById('nhomCongCuCanvas').classList.remove('flex');
+    document.getElementById('nhomCongCuCanvas').classList.add('hidden');
     
     document.getElementById('iframeTaiLieuGoc').src = '';
     document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kiểm tra kho lưu trữ cục bộ...";
@@ -329,8 +338,13 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
         document.getElementById('canvasHienThiPdf').classList.remove('hidden');
         
+        // Chỉ khi vào chế độ Canvas thì mới MỞ KHÓA các nút bấm Thu/Phóng của chúng ta
+        document.getElementById('nhomCongCuCanvas').classList.remove('hidden');
+        document.getElementById('nhomCongCuCanvas').classList.add('flex');
+        
         document.getElementById('bangDieuKhienTrang').classList.remove('hidden');
         document.getElementById('bangDieuKhienTrang').classList.add('flex');
+        
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
         
         veTrangCanVasPdf(trangHienTaiPDF);
@@ -391,6 +405,10 @@ function dieuChinhThuPhong(heSoThuThayDoi) {
 function kichHoatLuoiAnToanIframe(idPdf) {
     document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
+    
+    // Đảm bảo KIẾN QUYẾT ẨN các công cụ Canvas đi để giáo viên không bị bấm nhầm
+    document.getElementById('nhomCongCuCanvas').classList.remove('flex');
+    document.getElementById('nhomCongCuCanvas').classList.add('hidden');
     
     document.getElementById('bangDieuKhienTrang').classList.remove('flex');
     document.getElementById('bangDieuKhienTrang').classList.add('hidden');
