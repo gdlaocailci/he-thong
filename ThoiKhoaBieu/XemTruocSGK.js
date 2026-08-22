@@ -76,7 +76,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
     const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
     if (!idTepTin) {
         dongModalXemTruoc();
-        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}. Vui lòng kiểm tra lại bảng DANH_MUC_SGK.`); }, 300);
+        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}. Vui lòng kiểm tra lại Danh mục sách.`); }, 300);
         return;
     }
 
@@ -121,11 +121,10 @@ function xayDungKhungGiaoDienXemTruoc() {
                 </div>
             </div>
 
-            <!-- Vùng hiển thị tài liệu (Căn giữa block để mở khóa thanh cuộn) -->
             <div class="flex-1 bg-slate-300 overflow-y-auto overflow-x-auto relative block text-center p-4 border-t border-slate-400" id="vungVeTaiLieu">
                 
-                <!-- Bảng điều khiển trang (Trượt và nhập liệu) -->
-                <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/95 backdrop-blur text-white px-5 py-3 rounded-2xl shadow-2xl flex flex-col items-center gap-2 z-20 border border-slate-600 min-w-[320px] transition-all">
+                <!-- [ĐÃ SỬA]: Gắn ID bangDieuKhienTrang và mặc định ẩn (hidden) -->
+                <div id="bangDieuKhienTrang" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/95 backdrop-blur text-white px-5 py-3 rounded-2xl shadow-2xl flex flex-col items-center gap-2 z-20 border border-slate-600 min-w-[320px] transition-all">
                     <div class="flex items-center gap-4 w-full justify-center">
                         <button onclick="chuyenTrangPdf(-1)" class="hover:text-blue-400 font-extrabold px-3 transition text-xl">◀</button>
                         <div class="text-sm font-semibold tracking-wide flex items-center gap-1.5">
@@ -141,11 +140,11 @@ function xayDungKhungGiaoDienXemTruoc() {
                 <div id="khoiTrangThaiSgk" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 z-10">
                     <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
                     <p id="vanBanTrangThaiSgk" class="text-slate-700 font-bold text-lg">Đang kết nối thư viện học liệu số...</p>
+                    <p id="tuKhoaTimKiemSgk" class="text-indigo-600 font-semibold text-sm mt-1"></p>
                 </div>
 
                 <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden mx-auto max-w-full h-auto mb-10"></canvas>
                 
-                <!-- Fallback Iframe với khiên chắn -->
                 <div id="vungIframeDuPhong" class="hidden w-full h-full relative">
                     <div class="absolute top-0 right-0 w-[60px] h-[55px] bg-[#131313] z-50 flex items-center justify-center cursor-not-allowed border-b border-l border-slate-700/50" title="Tính năng mở tab mới đã bị Quản trị viên khóa">
                         <svg class="w-5 h-5 text-gray-500 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -158,7 +157,7 @@ function xayDungKhungGiaoDienXemTruoc() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc) {
+function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tenDaLoc) {
     document.getElementById('tieuDeMonSgk').innerText = `Khối ${tenKhoi} - Môn ${tenMon}`;
     document.getElementById('tieuDeBaiSgk').innerText = tenBaiGoc;
     
@@ -166,9 +165,14 @@ function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc) {
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
     document.getElementById('vungIframeDuPhong').classList.add('hidden');
     document.getElementById('cumNutTaiXuong').classList.add('hidden'); 
+    
+    // [ĐÃ SỬA]: Ẩn bảng điều khiển trang lúc đang xoay loading
+    document.getElementById('bangDieuKhienTrang').classList.add('hidden'); 
+    
     document.getElementById('iframeTaiLieuGoc').src = '';
     
     document.getElementById('vanBanTrangThaiSgk').innerText = "Đang tải nguyên bản Sách giáo khoa PDF...";
+    document.getElementById('tuKhoaTimKiemSgk').innerText = "";
 
     const modal = document.getElementById('modalXemTruocSGK');
     modal.classList.remove('hidden');
@@ -232,7 +236,6 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('tongSoTrang').innerText = theHienPdfHienTai.numPages;
         trangHienTaiPDF = 1;
         
-        // Thiết lập giới hạn cho thanh công cụ
         document.getElementById('trangTaiTu').max = theHienPdfHienTai.numPages;
         document.getElementById('trangTaiDen').max = theHienPdfHienTai.numPages;
         document.getElementById('nhapSoTrangNhanh').max = theHienPdfHienTai.numPages;
@@ -241,7 +244,10 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
         document.getElementById('canvasHienThiPdf').classList.remove('hidden');
         
-        // Phục hồi cụm nút cắt trang
+        // [ĐÃ SỬA]: Tải mạng thành công -> Hiện lại Bảng điều khiển trang (Thanh trượt)
+        document.getElementById('bangDieuKhienTrang').classList.remove('hidden');
+        document.getElementById('bangDieuKhienTrang').classList.add('flex');
+        
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
         document.getElementById('nhanTrangTu').style.display = 'inline';
         document.getElementById('trangTaiTu').style.display = 'inline-block';
@@ -311,6 +317,10 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     boNhoTrangPdfGoc = null; 
     document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
+    
+    // [ĐÃ SỬA]: Giấu thanh trượt đi vì Google Drive không cho điều khiển
+    document.getElementById('bangDieuKhienTrang').classList.remove('flex');
+    document.getElementById('bangDieuKhienTrang').classList.add('hidden');
     
     const vungIframe = document.getElementById('vungIframeDuPhong');
     vungIframe.classList.remove('hidden');
