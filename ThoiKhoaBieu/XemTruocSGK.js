@@ -1,6 +1,9 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V16.0)
-// Khắc phục triệt để: Bắt chính xác số Tuần học trên UI, Rẽ nhánh Cột C/D chuẩn xác
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V17.0)
+// BẢN KẾ THỪA TOÀN DIỆN: 
+// 1. Kế thừa V15: Sử dụng đúng API gốc 'layDanhMucSGK' đảm bảo luôn tải được dữ liệu.
+// 2. Kế thừa V16: Thuật toán bắt số Tuần cực chuẩn không bị nhầm lẫn.
+// 3. Giữ nguyên: Chế độ làm mới Cache tự động và hiển thị Nút tải Iframe.
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -20,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let dbHocLieu = null;
 
 function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 6); // Đẩy version để ép xóa sạch cache cũ
+    const request = indexedDB.open("KhoHocLieuSoDB", 7); // Nâng version để reset cache
     request.onupgradeneeded = function(event) {
         dbHocLieu = event.target.result;
         if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
@@ -94,39 +97,38 @@ function lamMoiBoNhoDemPdf() {
 }
 
 // =========================================================================
-// KHỐI 2: ĐỌC DỮ LIỆU CHUẨN CỘT C (KỲ 1) VÀ CỘT D (KỲ 2) TỪ MÁY CHỦ
+// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ (KẾ THỪA V15: SỬ DỤNG LẠI API GỐC)
 // =========================================================================
 async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
         
-        // Gọi API lấy toàn bộ dữ liệu để đảm bảo đủ 4 cột
-        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
+        // Gọi API layDanhMucSGK gốc để nhận mảng dữ liệu (không có dòng tiêu đề)
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
         const duLieu = await phanHoi.json();
         
-        // Bẫy lỗi: Xác định xem mảng trả về có chứa dòng tiêu đề hay không
-        let dongBatDau = 0;
-        if (duLieu.length > 0 && String(duLieu[0][0]).toLowerCase().includes('khối')) {
-            dongBatDau = 1; // Bỏ qua dòng tiêu đề
+        if (!Array.isArray(duLieu)) {
+            throw new Error("Dữ liệu trả về không đúng định dạng mảng.");
         }
-        
-        for (let i = dongBatDau; i < duLieu.length; i++) {
-            let dong = duLieu[i];
-            let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
-            let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
-            
-            // Cột C (Index 2): Kỳ 1 | Cột D (Index 3): Kỳ 2
-            let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
-            let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
-            
-            if (tenKhoi && tenMon && linkKy1) {
-                let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
-                boNhoHocLieuSGK[khoaTruyXuat] = {
-                    idKy1: trichXuatIdTuLink(linkKy1),
-                    // Yêu cầu: Nếu cột D trống thì tiếp tục tải link cột C
-                    idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
-                };
-            }
+
+        if (duLieu.length > 0) {
+            // Duyệt từ index 0 vì API layDanhMucSGK đã tự cắt tiêu đề ở Apps Script
+            duLieu.forEach(dong => {
+                let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
+                let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
+                
+                // Cột C (Index 2): Kỳ 1 | Cột D (Index 3): Kỳ 2
+                let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
+                let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
+                
+                if (tenKhoi && tenMon && linkKy1) {
+                    let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
+                    boNhoHocLieuSGK[khoaTruyXuat] = {
+                        idKy1: trichXuatIdTuLink(linkKy1),
+                        idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
+                    };
+                }
+            });
         }
     } catch (loi) { 
         console.error("Lỗi kết nối tải Danh mục SGK:", loi);
@@ -140,24 +142,22 @@ function trichXuatIdTuLink(url) {
 }
 
 // =========================================================================
-// KHỐI 3: KÍCH HOẠT VÀ ĐIỀU HƯỚNG THEO TUẦN HỌC (THUẬT TOÁN NHẬN DIỆN MỚI)
+// KHỐI 3: ĐIỀU HƯỚNG THEO TUẦN HỌC (KẾ THỪA V16: BẮT TUẦN CHÍNH XÁC)
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
-    // THUẬT TOÁN ĐỌC TUẦN CHÍNH XÁC 100%
-    let tuanHienTai = 1; // Mặc định luôn là tuần 1
+    let tuanHienTai = 1; 
     
-    // Bước 1: Ưu tiên lấy từ tham số truyền vào hàm (nếu có)
+    // Ưu tiên tham số truyền vào
     if (thamSoTuan != null && typeof thamSoTuan !== 'object') {
         let match = String(thamSoTuan).match(/\d+/);
         if (match) tuanHienTai = parseInt(match[0], 10);
     } 
-    // Bước 2: Bắt trên giao diện nếu không truyền tham số
+    // Quét giao diện nếu không có tham số
     else {
-        // Chỉ đích danh các ID chuẩn để không bắt nhầm ô khác
         let dsIdChuan = ['tuan', 'cboTuan', 'tuanHoc', 'chonTuan', 'Tuan', 'TuanHoc'];
         let oNhapTuan = null;
         for (let id of dsIdChuan) {
@@ -165,13 +165,11 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
             if (oNhapTuan) break;
         }
         
-        // Quét vớt nếu vẫn không thấy
         if (!oNhapTuan) {
             oNhapTuan = document.querySelector('select[id*="tuan" i], input[id*="tuan" i]');
         }
         
         if (oNhapTuan) {
-            // Lấy thẳng Text đang chọn để bóc con số ra
             let giaTriChu = (oNhapTuan.tagName === 'SELECT') ? oNhapTuan.options[oNhapTuan.selectedIndex].text : oNhapTuan.value;
             let match = String(giaTriChu).match(/\d+/);
             if (match) tuanHienTai = parseInt(match[0], 10);
@@ -179,9 +177,8 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     }
     
     if (tuanHienTai < 1) tuanHienTai = 1;
-    console.log("Hệ thống nhận diện Tuần học đang chọn là: Tuần", tuanHienTai);
 
-    // Kích hoạt khởi tạo bộ nhớ nếu trống
+    // Khởi tạo bộ nhớ nếu trống
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
         hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang đồng bộ dữ liệu Sách giáo khoa...";
@@ -195,14 +192,14 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     }
 
     const duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem];
-    if (!duLieuMonHoc) {
+    if (!duLieuMonHoc || (!duLieuMonHoc.idKy1 && !duLieuMonHoc.idKy2)) {
         dongModalXemTruoc();
         setTimeout(() => { alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc} trong bảng tính.`); }, 300);
         return;
     }
 
-    // YÊU CẦU: Tuần > 18 lấy Cột D (Kỳ 2), Nhỏ hơn 18 lấy Cột C (Kỳ 1)
-    if (tuanHienTai > 18) {
+    // Logic rẽ nhánh: Tuần > 17 lấy Cột D (Kỳ 2), Nhỏ hơn 18 lấy Cột C (Kỳ 1)
+    if (tuanHienTai > 17) {
         idTepHienTai = duLieuMonHoc.idKy2;
     } else {
         idTepHienTai = duLieuMonHoc.idKy1;
@@ -327,7 +324,7 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 4: TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
+// KHỐI 4: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
 // =========================================================================
 async function taiDuLieuPdfAnToan(idPdf) {
     let mangByteCucBo = await docTepTuBoNhoCucBo(idPdf);
