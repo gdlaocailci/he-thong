@@ -1,6 +1,6 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V2.0)
-// Nâng cấp: Thuật toán tìm kiếm ép kiểu tuyệt đối & Tối ưu dung lượng
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V3.0)
+// Nâng cấp: Thuật toán Từ khóa Lõi - Chống sai chính tả & Ép kiểu tuyệt đối
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -57,14 +57,24 @@ function chuanHoaTenTimKiem(tenGoc) {
     return tenDaLoc.trim();
 }
 
-// [THUẬT TOÁN MỚI]: Ép kiểu văn bản lõi để chống lỗi dàn trang PDF
+// [ÉP KIỂU TUYỆT ĐỐI]: Gọt bỏ toàn bộ dấu tiếng Việt, dấu cách, chữ hoa
 function lamSachTuyetDoi(str) {
     if (!str) return '';
     return str.normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '') // Bỏ toàn bộ dấu tiếng Việt
+              .replace(/[\u0300-\u036f]/g, '') 
               .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-              .replace(/[^a-z0-9]/gi, '') // Bỏ TOÀN BỘ khoảng trắng, dấu chấm phẩy, ký tự đặc biệt
+              .replace(/[^a-z0-9]/gi, '') 
               .toLowerCase();
+}
+
+// [THUẬT TOÁN MỚI]: Tạo mã lõi từ 3 từ đầu tiên để miễn nhiễm với lỗi chính tả
+function taoTuKhoaLoi(tuKhoaGoc) {
+    let tenDaLoc = chuanHoaTenTimKiem(tuKhoaGoc);
+    let mangTu = tenDaLoc.trim().split(/\s+/);
+    // Chỉ lấy 3 từ đầu tiên (đủ tính duy nhất, không lấy phần đuôi dễ gõ sai)
+    let soTu = Math.min(mangTu.length, 3); 
+    let cumTuLoi = mangTu.slice(0, soTu).join('');
+    return lamSachTuyetDoi(cumTuLoi);
 }
 
 // =========================================================================
@@ -96,12 +106,13 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
         return;
     }
 
+    // Khởi tạo các biến toàn cục cho tác vụ Tải PDF sau này
     const tenBaiDaLoc = chuanHoaTenTimKiem(tenBaiHoc);
     idTepHienTai = idTepTin;
     tenBaiHienTai = tenBaiDaLoc || 'TaiLieu';
     
     hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tenBaiDaLoc);
-    await xuLyĐocVaTimKiemPDF(idTepTin, tenBaiDaLoc);
+    await xuLyĐocVaTimKiemPDF(idTepTin, tenBaiHienTai);
 };
 
 function xayDungKhungGiaoDienXemTruoc() {
@@ -164,7 +175,8 @@ function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tenDaLoc) {
     
     if (tenDaLoc) {
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang quét văn bản lõi, định vị bài học...";
-        document.getElementById('tuKhoaTimKiemSgk').innerText = `Bộ lọc nội suy: "${lamSachTuyetDoi(tenDaLoc)}"`;
+        // Hiển thị trực quan từ khóa lõi mà thuật toán đang dùng để quét
+        document.getElementById('tuKhoaTimKiemSgk').innerText = `Mã đối chiếu: "${taoTuKhoaLoi(tenDaLoc)}"`;
     }
 
     const modal = document.getElementById('modalXemTruocSGK');
@@ -196,7 +208,6 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 
-    // [NÂNG CẤP BĂNG THÔNG]: Đổi cổng trung chuyển Proxy mạnh hơn cho file SGK dung lượng lớn
     const urlProxy = `https://corsproxy.io/?${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${idPdf}`)}`;
 
     try {
@@ -210,20 +221,19 @@ async function xuLyĐocVaTimKiemPDF(idPdf, tuKhoaTimKiem) {
             let timThay = false;
             const gioiHanQuet = Math.min(theHienPdfHienTai.numPages, 100); 
             
-            // [THỰC THI THUẬT TOÁN]: Ép kiểu từ khóa
-            let tuKhoaEpKieu = lamSachTuyetDoi(tuKhoaTimKiem);
-            // Cắt lấy tối đa 25 ký tự đầu để quét, đề phòng tên bài trên PDF bị ngắt thành 2 dòng
-            if (tuKhoaEpKieu.length > 25) tuKhoaEpKieu = tuKhoaEpKieu.substring(0, 25);
+            // [THỰC THI THUẬT TOÁN MỚI]: Bóc tách 3 từ đầu làm mã lõi
+            let tuKhoaEpKieu = taoTuKhoaLoi(tuKhoaTimKiem);
 
             for (let i = 1; i <= gioiHanQuet; i++) {
                 document.getElementById('tuKhoaTimKiemSgk').innerText = `Đang đồng bộ dữ liệu: Trang ${i}...`;
                 const trang = await theHienPdfHienTai.getPage(i);
                 const textContent = await trang.getTextContent();
                 
-                // [THỰC THI THUẬT TOÁN]: Ép kiểu toàn bộ văn bản của trang SGK
+                // Ép kiểu toàn bộ văn bản của trang SGK
                 const chuoiTrangGoc = textContent.items.map(item => item.str).join('');
                 const chuoiTrangEpKieu = lamSachTuyetDoi(chuoiTrangGoc);
                 
+                // Đối chiếu: trang sách chứa mã lõi hay không
                 if (chuoiTrangEpKieu.includes(tuKhoaEpKieu)) {
                     trangHienTaiPDF = i;
                     timThay = true;
