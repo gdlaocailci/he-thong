@@ -198,8 +198,8 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
-    // Logic rẽ nhánh: Tuần > 17 lấy Cột D (Kỳ 2), Nhỏ hơn 18 lấy Cột C (Kỳ 1)
-    if (tuanHienTai > 17) {
+    // Logic rẽ nhánh: Tuần > 18 lấy Cột D (Kỳ 2), Nhỏ hơn 19 lấy Cột C (Kỳ 1)
+    if (tuanHienTai > 18) {
         idTepHienTai = duLieuMonHoc.idKy2;
     } else {
         idTepHienTai = duLieuMonHoc.idKy1;
