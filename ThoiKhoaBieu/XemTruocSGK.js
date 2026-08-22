@@ -1,7 +1,6 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V15.0)
-// Sửa lỗi API: Trả về hàm layDanhMucSGK gốc để quét chuẩn xác Cột C & D
-// Tự động hủy cache khi đổi link, Nút Tải SGK luôn hiển thị
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V16.0)
+// Khắc phục triệt để: Bắt chính xác số Tuần học trên UI, Rẽ nhánh Cột C/D chuẩn xác
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -16,13 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================================================
-// KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB VÀ THUẬT TOÁN QUẢN LÝ BỘ NHỚ
+// KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB (TỰ ĐỘNG HỦY CACHE KHI ĐỔI LINK)
 // =========================================================================
 let dbHocLieu = null;
 
-// Nâng lên version 5 để ép trình duyệt xóa sạch rác cũ
 function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 5);
+    const request = indexedDB.open("KhoHocLieuSoDB", 6); // Đẩy version để ép xóa sạch cache cũ
     request.onupgradeneeded = function(event) {
         dbHocLieu = event.target.result;
         if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
@@ -53,13 +51,13 @@ function docTepTuBoNhoCucBo(idPdf) {
     });
 }
 
-// Chế độ 1: Tự động xóa cache của các file cũ nếu ID Link thay đổi
 async function xoaBoNhoDemCu(idPdfMoi) {
     if (!dbHocLieu) return;
     return new Promise((resolve) => {
         const transaction = dbHocLieu.transaction(["BangTepPDF"], "readwrite");
         const store = transaction.objectStore("BangTepPDF");
         const request = store.getAllKeys();
+        
         request.onsuccess = function(event) {
             const danhSachIdCu = event.target.result;
             danhSachIdCu.forEach(idCu => {
@@ -73,7 +71,6 @@ async function xoaBoNhoDemCu(idPdfMoi) {
     });
 }
 
-// Chế độ 2: Xóa cache thủ công bằng Nút bấm Làm mới
 function lamMoiBoNhoDemPdf() {
     if (!dbHocLieu || !idTepHienTai) {
         alert("Không có dữ liệu để làm mới.");
@@ -103,27 +100,33 @@ async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
         
-        // [ĐÃ SỬA]: Dùng lại API layDanhMucSGK gốc để đảm bảo dữ liệu luôn được tải về thành công
-        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
+        // Gọi API lấy toàn bộ dữ liệu để đảm bảo đủ 4 cột
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
         const duLieu = await phanHoi.json();
         
-        if (duLieu && duLieu.length > 0) {
-            duLieu.forEach(dong => {
-                let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
-                let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
-                
-                // Mảng của hàm layDanhMucSGK bắt đầu dữ liệu từ index 2 (Cột C) và 3 (Cột D)
-                let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
-                let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
-                
-                if (tenKhoi && tenMon && (linkKy1 || linkKy2)) {
-                    let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
-                    boNhoHocLieuSGK[khoaTruyXuat] = {
-                        idKy1: trichXuatIdTuLink(linkKy1),
-                        idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
-                    };
-                }
-            });
+        // Bẫy lỗi: Xác định xem mảng trả về có chứa dòng tiêu đề hay không
+        let dongBatDau = 0;
+        if (duLieu.length > 0 && String(duLieu[0][0]).toLowerCase().includes('khối')) {
+            dongBatDau = 1; // Bỏ qua dòng tiêu đề
+        }
+        
+        for (let i = dongBatDau; i < duLieu.length; i++) {
+            let dong = duLieu[i];
+            let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
+            let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
+            
+            // Cột C (Index 2): Kỳ 1 | Cột D (Index 3): Kỳ 2
+            let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
+            let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
+            
+            if (tenKhoi && tenMon && linkKy1) {
+                let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
+                boNhoHocLieuSGK[khoaTruyXuat] = {
+                    idKy1: trichXuatIdTuLink(linkKy1),
+                    // Yêu cầu: Nếu cột D trống thì tiếp tục tải link cột C
+                    idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
+                };
+            }
         }
     } catch (loi) { 
         console.error("Lỗi kết nối tải Danh mục SGK:", loi);
@@ -137,21 +140,48 @@ function trichXuatIdTuLink(url) {
 }
 
 // =========================================================================
-// KHỐI 3: KÍCH HOẠT VÀ ĐIỀU HƯỚNG THEO TUẦN HỌC
+// KHỐI 3: KÍCH HOẠT VÀ ĐIỀU HƯỚNG THEO TUẦN HỌC (THUẬT TOÁN NHẬN DIỆN MỚI)
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
-    let tuanHienTai = parseInt(thamSoTuan, 10);
-    if (isNaN(tuanHienTai)) {
-        let oNhapTuan = document.querySelector('input[id*="tuan"], select[id*="tuan"], input[id*="Tuan"]');
-        tuanHienTai = oNhapTuan ? parseInt(oNhapTuan.value, 10) : 1;
+    // THUẬT TOÁN ĐỌC TUẦN CHÍNH XÁC 100%
+    let tuanHienTai = 1; // Mặc định luôn là tuần 1
+    
+    // Bước 1: Ưu tiên lấy từ tham số truyền vào hàm (nếu có)
+    if (thamSoTuan != null && typeof thamSoTuan !== 'object') {
+        let match = String(thamSoTuan).match(/\d+/);
+        if (match) tuanHienTai = parseInt(match[0], 10);
+    } 
+    // Bước 2: Bắt trên giao diện nếu không truyền tham số
+    else {
+        // Chỉ đích danh các ID chuẩn để không bắt nhầm ô khác
+        let dsIdChuan = ['tuan', 'cboTuan', 'tuanHoc', 'chonTuan', 'Tuan', 'TuanHoc'];
+        let oNhapTuan = null;
+        for (let id of dsIdChuan) {
+            oNhapTuan = document.getElementById(id);
+            if (oNhapTuan) break;
+        }
+        
+        // Quét vớt nếu vẫn không thấy
+        if (!oNhapTuan) {
+            oNhapTuan = document.querySelector('select[id*="tuan" i], input[id*="tuan" i]');
+        }
+        
+        if (oNhapTuan) {
+            // Lấy thẳng Text đang chọn để bóc con số ra
+            let giaTriChu = (oNhapTuan.tagName === 'SELECT') ? oNhapTuan.options[oNhapTuan.selectedIndex].text : oNhapTuan.value;
+            let match = String(giaTriChu).match(/\d+/);
+            if (match) tuanHienTai = parseInt(match[0], 10);
+        }
     }
-    if (isNaN(tuanHienTai)) tuanHienTai = 1; 
+    
+    if (tuanHienTai < 1) tuanHienTai = 1;
+    console.log("Hệ thống nhận diện Tuần học đang chọn là: Tuần", tuanHienTai);
 
-    // Nếu bộ nhớ rỗng, gọi hàm tải
+    // Kích hoạt khởi tạo bộ nhớ nếu trống
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
         hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang đồng bộ dữ liệu Sách giáo khoa...";
@@ -165,14 +195,14 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     }
 
     const duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem];
-    if (!duLieuMonHoc || (!duLieuMonHoc.idKy1 && !duLieuMonHoc.idKy2)) {
+    if (!duLieuMonHoc) {
         dongModalXemTruoc();
         setTimeout(() => { alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc} trong bảng tính.`); }, 300);
         return;
     }
 
-    // Tuần > 17 lấy Kỳ 2 (Cột D), ngược lại lấy Kỳ 1 (Cột C)
-    if (tuanHienTai > 17) {
+    // YÊU CẦU: Tuần > 18 lấy Cột D (Kỳ 2), Nhỏ hơn 18 lấy Cột C (Kỳ 1)
+    if (tuanHienTai > 18) {
         idTepHienTai = duLieuMonHoc.idKy2;
     } else {
         idTepHienTai = duLieuMonHoc.idKy1;
@@ -203,7 +233,7 @@ function xayDungKhungGiaoDienXemTruoc() {
                 
                 <div class="flex items-center gap-2 flex-none">
                     
-                    <!-- Nút Tải SGK (Xanh lá) -->
+                    <!-- Nút Tải SGK -->
                     <div id="cumNutTaiXuong" class="hidden flex items-center bg-white/10 p-1 rounded-lg mr-1 border border-white/20">
                         <button onclick="taiToanBoSGK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải toàn bộ cuốn sách">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -211,12 +241,10 @@ function xayDungKhungGiaoDienXemTruoc() {
                         </button>
                     </div>
 
-                    <!-- Khôi phục Nút Làm Mới thủ công (Vàng) -->
                     <button onclick="lamMoiBoNhoDemPdf()" class="p-1.5 bg-yellow-500/20 hover:bg-yellow-500/40 rounded-md text-yellow-300 transition border border-yellow-500/30" title="Tải lại sách (Xóa bộ nhớ cũ)">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
 
-                    <!-- Nhóm công cụ Zoom Canvas -->
                     <div id="nhomCongCuCanvas" class="hidden items-center">
                         <div class="h-6 w-px bg-white/30 mx-1"></div>
                         <button onclick="dieuChinhThuPhong(0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition" title="Phóng to"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
@@ -299,7 +327,7 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 4: TẢI ĐỆM VÀ ĐỒNG BỘ TỰ ĐỘNG
+// KHỐI 4: TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
 // =========================================================================
 async function taiDuLieuPdfAnToan(idPdf) {
     let mangByteCucBo = await docTepTuBoNhoCucBo(idPdf);
@@ -372,7 +400,6 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('bangDieuKhienTrang').classList.remove('hidden');
         document.getElementById('bangDieuKhienTrang').classList.add('flex');
         
-        // Luôn bật hiển thị nút tải
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
         
         veTrangCanVasPdf(trangHienTaiPDF);
@@ -444,7 +471,6 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     vungIframe.classList.remove('hidden');
     document.getElementById('iframeTaiLieuGoc').src = `https://drive.google.com/file/d/${idPdf}/preview`;
 
-    // Luôn hiển thị nút tải ngay cả khi chạy ở chế độ Iframe
     document.getElementById('cumNutTaiXuong').classList.remove('hidden');
 }
 
