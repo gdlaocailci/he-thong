@@ -1,8 +1,7 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (BẢN CHUẨN)
-// - Khắc phục gọi API (Dùng chung layDanhMucSGKToanBo để lấy chính xác Cột C, D)
-// - Khôi phục nút "Tải lại sách" (Làm mới Cache)
-// - Tự động dọn dẹp bộ nhớ đệm nếu link file thay đổi
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V15.0)
+// Sửa lỗi API: Trả về hàm layDanhMucSGK gốc để quét chuẩn xác Cột C & D
+// Tự động hủy cache khi đổi link, Nút Tải SGK luôn hiển thị
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -21,8 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // =========================================================================
 let dbHocLieu = null;
 
+// Nâng lên version 5 để ép trình duyệt xóa sạch rác cũ
 function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 4);
+    const request = indexedDB.open("KhoHocLieuSoDB", 5);
     request.onupgradeneeded = function(event) {
         dbHocLieu = event.target.result;
         if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
@@ -53,7 +53,7 @@ function docTepTuBoNhoCucBo(idPdf) {
     });
 }
 
-// Chế độ 1: Tự động xóa cache của các link cũ (Auto-Invalidation)
+// Chế độ 1: Tự động xóa cache của các file cũ nếu ID Link thay đổi
 async function xoaBoNhoDemCu(idPdfMoi) {
     if (!dbHocLieu) return;
     return new Promise((resolve) => {
@@ -73,7 +73,7 @@ async function xoaBoNhoDemCu(idPdfMoi) {
     });
 }
 
-// Chế độ 2: Xóa cache thủ công bằng Nút bấm (Manual Refresh)
+// Chế độ 2: Xóa cache thủ công bằng Nút bấm Làm mới
 function lamMoiBoNhoDemPdf() {
     if (!dbHocLieu || !idTepHienTai) {
         alert("Không có dữ liệu để làm mới.");
@@ -103,29 +103,27 @@ async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
         
-        // [QUAN TRỌNG]: Gọi API layDanhMucSGKToanBo để đảm bảo quét đúng 4 cột
-        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
+        // [ĐÃ SỬA]: Dùng lại API layDanhMucSGK gốc để đảm bảo dữ liệu luôn được tải về thành công
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
         const duLieu = await phanHoi.json();
         
-        if (duLieu && duLieu.length > 1) {
-            // Bỏ qua dòng tiêu đề (i = 0), đọc từ dòng dữ liệu
-            for (let i = 1; i < duLieu.length; i++) {
-                let dong = duLieu[i];
+        if (duLieu && duLieu.length > 0) {
+            duLieu.forEach(dong => {
                 let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
                 let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
                 
-                // Chuẩn xác index mảng: 2 là Cột C, 3 là Cột D
+                // Mảng của hàm layDanhMucSGK bắt đầu dữ liệu từ index 2 (Cột C) và 3 (Cột D)
                 let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
                 let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
                 
-                if (tenKhoi && tenMon && linkKy1) {
+                if (tenKhoi && tenMon && (linkKy1 || linkKy2)) {
                     let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
                     boNhoHocLieuSGK[khoaTruyXuat] = {
                         idKy1: trichXuatIdTuLink(linkKy1),
                         idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
                     };
                 }
-            }
+            });
         }
     } catch (loi) { 
         console.error("Lỗi kết nối tải Danh mục SGK:", loi);
@@ -153,6 +151,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     }
     if (isNaN(tuanHienTai)) tuanHienTai = 1; 
 
+    // Nếu bộ nhớ rỗng, gọi hàm tải
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
         hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang đồng bộ dữ liệu Sách giáo khoa...";
@@ -166,7 +165,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     }
 
     const duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem];
-    if (!duLieuMonHoc) {
+    if (!duLieuMonHoc || (!duLieuMonHoc.idKy1 && !duLieuMonHoc.idKy2)) {
         dongModalXemTruoc();
         setTimeout(() => { alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc} trong bảng tính.`); }, 300);
         return;
@@ -179,7 +178,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         idTepHienTai = duLieuMonHoc.idKy1;
     }
     
-    // Nếu link file thay đổi, lập tức dọn rác bản cũ
+    // Tự động xóa sạch bản nhớ đệm cũ nếu ID Link đã bị thay đổi
     await xoaBoNhoDemCu(idTepHienTai);
 
     hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
@@ -300,7 +299,7 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 4: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
+// KHỐI 4: TẢI ĐỆM VÀ ĐỒNG BỘ TỰ ĐỘNG
 // =========================================================================
 async function taiDuLieuPdfAnToan(idPdf) {
     let mangByteCucBo = await docTepTuBoNhoCucBo(idPdf);
@@ -373,7 +372,7 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('bangDieuKhienTrang').classList.remove('hidden');
         document.getElementById('bangDieuKhienTrang').classList.add('flex');
         
-        // Luôn bật hiển thị nút tải xanh lá
+        // Luôn bật hiển thị nút tải
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
         
         veTrangCanVasPdf(trangHienTaiPDF);
