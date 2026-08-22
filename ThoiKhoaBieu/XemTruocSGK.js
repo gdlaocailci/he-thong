@@ -1,11 +1,3 @@
-// =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V17.0)
-// BẢN KẾ THỪA TOÀN DIỆN: 
-// 1. Kế thừa V15: Sử dụng đúng API gốc 'layDanhMucSGK' đảm bảo luôn tải được dữ liệu.
-// 2. Kế thừa V16: Thuật toán bắt số Tuần cực chuẩn không bị nhầm lẫn.
-// 3. Giữ nguyên: Chế độ làm mới Cache tự động và hiển thị Nút tải Iframe.
-// =========================================================================
-
 let boNhoHocLieuSGK = {}; 
 let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
@@ -23,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let dbHocLieu = null;
 
 function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 7); // Nâng version để reset cache
+    const request = indexedDB.open("KhoHocLieuSoDB", 8); // Nâng version để reset bộ nhớ đệm
     request.onupgradeneeded = function(event) {
         dbHocLieu = event.target.result;
         if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
@@ -64,6 +56,7 @@ async function xoaBoNhoDemCu(idPdfMoi) {
         request.onsuccess = function(event) {
             const danhSachIdCu = event.target.result;
             danhSachIdCu.forEach(idCu => {
+                // Xóa các file cũ nếu ID Link đã bị thay đổi
                 if (idCu !== idPdfMoi) {
                     store.delete(idCu);
                 }
@@ -97,13 +90,12 @@ function lamMoiBoNhoDemPdf() {
 }
 
 // =========================================================================
-// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ (KẾ THỪA V15: SỬ DỤNG LẠI API GỐC)
+// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ (SỬ DỤNG API GỐC, ĐỌC CỘT C VÀ D)
 // =========================================================================
 async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
         
-        // Gọi API layDanhMucSGK gốc để nhận mảng dữ liệu (không có dòng tiêu đề)
         const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
         const duLieu = await phanHoi.json();
         
@@ -112,7 +104,6 @@ async function khoiTaoBoNhoHocLieu() {
         }
 
         if (duLieu.length > 0) {
-            // Duyệt từ index 0 vì API layDanhMucSGK đã tự cắt tiêu đề ở Apps Script
             duLieu.forEach(dong => {
                 let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
                 let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
@@ -142,7 +133,7 @@ function trichXuatIdTuLink(url) {
 }
 
 // =========================================================================
-// KHỐI 3: ĐIỀU HƯỚNG THEO TUẦN HỌC (KẾ THỪA V16: BẮT TUẦN CHÍNH XÁC)
+// KHỐI 3: ĐIỀU HƯỚNG THEO TUẦN HỌC (CHUẨN CHỈ: > 18 LÀ KỲ 2, CÒN LẠI KỲ 1)
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
@@ -198,7 +189,9 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
-    // Logic rẽ nhánh: Tuần > 18 lấy Cột D (Kỳ 2), Nhỏ hơn 19 lấy Cột C (Kỳ 1)
+    // ==============================================================
+    // [ĐÃ SỬA CHÍNH XÁC]: Tuần > 18 lấy Cột D (Kỳ 2), Tuần < 19 lấy Cột C (Kỳ 1)
+    // ==============================================================
     if (tuanHienTai > 18) {
         idTepHienTai = duLieuMonHoc.idKy2;
     } else {
@@ -289,7 +282,7 @@ function xayDungKhungGiaoDienXemTruoc() {
 }
 
 function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tuanHienTai) {
-    let nhanKyHoc = (tuanHienTai > 17) ? "[Tập 2 / Kỳ 2]" : "[Tập 1 / Kỳ 1]";
+    let nhanKyHoc = (tuanHienTai > 18) ? "[Tập 2 / Kỳ 2]" : "[Tập 1 / Kỳ 1]";
     
     document.getElementById('tieuDeMonSgk').innerText = `Khối ${tenKhoi} - Môn ${tenMon} ${nhanKyHoc}`;
     document.getElementById('tieuDeBaiSgk').innerText = tenBaiGoc;
