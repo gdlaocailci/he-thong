@@ -1,6 +1,6 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V9.0)
-// Nâng cấp: Giám sát giới hạn dung lượng Proxy & Tối ưu thông báo lỗi
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN
+// Phiên bản tối giản: Lật trang siêu tốc & Tải nguyên bản gốc độ tin cậy 100%
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -8,8 +8,6 @@ let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
 let heSoThuPhong = 1.2;
 let idTepHienTai = '';
-let tenBaiHienTai = '';
-let boNhoTrangPdfGoc = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
     xayDungKhungGiaoDienXemTruoc();
@@ -51,13 +49,6 @@ function trichXuatIdTuLink(url) {
     return ketQua ? ketQua[0] : null;
 }
 
-function chuanHoaTenTimKiem(tenGoc) {
-    if (!tenGoc) return '';
-    let tenDaLoc = tenGoc.toLowerCase();
-    tenDaLoc = tenDaLoc.replace(/(?:\b|^)(tiết|t|bài|b)\s*\d+\s*(:|-|\.)?\s*/gi, '');
-    return tenDaLoc.trim();
-}
-
 // =========================================================================
 // KHỐI 2: KÍCH HOẠT VÀ XÂY DỰNG GIAO DIỆN UI
 // =========================================================================
@@ -86,8 +77,6 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
     }
 
     idTepHienTai = idTepTin;
-    tenBaiHienTai = chuanHoaTenTimKiem(tenBaiHoc) || 'TaiLieu';
-    
     hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc);
     await xuLyDocPDF(idTepTin);
 };
@@ -109,14 +98,11 @@ function xayDungKhungGiaoDienXemTruoc() {
                 </div>
                 
                 <div class="flex items-center gap-2 flex-none">
+                    <!-- Nút Tải nguyên bản rút gọn -->
                     <div id="cumNutTaiXuong" class="hidden flex items-center gap-1.5 bg-white/10 p-1 rounded-lg mr-2 border border-white/20">
-                        <span class="text-white text-[11px] font-bold pl-2 uppercase tracking-wide">Từ trang</span>
-                        <input type="number" id="trangTaiTu" value="1" min="1" class="w-12 text-center text-sm font-bold text-blue-900 rounded outline-none py-1 bg-blue-50 border border-blue-200" title="Trang bắt đầu">
-                        <span class="text-white text-[11px] font-bold uppercase">đến</span>
-                        <input type="number" id="trangTaiDen" value="1" min="1" class="w-12 text-center text-sm font-bold text-blue-900 rounded outline-none py-1 bg-blue-50 border border-blue-200" title="Trang kết thúc">
-                        <button onclick="taiXuongBaiHocPDF()" id="btnTienHanhTai" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2.5 rounded shadow transition text-sm flex items-center gap-1.5 ml-1" title="Cắt và Tải PDF">
+                        <button onclick="taiToanBoSGK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải toàn bộ cuốn sách">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span id="chuNutTai">Cắt & Tải</span>
+                            <span>Tải toàn bộ SGK</span>
                         </button>
                     </div>
 
@@ -229,16 +215,14 @@ async function xuLyDocPDF(idPdf) {
     }
 
     try {
-        boNhoTrangPdfGoc = await taiDuLieuPdfAnToan(idPdf);
+        const duLieuPdf = await taiDuLieuPdfAnToan(idPdf);
         
-        const loadingTask = pdfjsLib.getDocument({ data: boNhoTrangPdfGoc });
+        const loadingTask = pdfjsLib.getDocument({ data: duLieuPdf });
         theHienPdfHienTai = await loadingTask.promise;
         
         document.getElementById('tongSoTrang').innerText = theHienPdfHienTai.numPages;
         trangHienTaiPDF = 1;
         
-        document.getElementById('trangTaiTu').max = theHienPdfHienTai.numPages;
-        document.getElementById('trangTaiDen').max = theHienPdfHienTai.numPages;
         document.getElementById('nhapSoTrangNhanh').max = theHienPdfHienTai.numPages;
         document.getElementById('thanhTruotTrang').max = theHienPdfHienTai.numPages;
 
@@ -248,7 +232,6 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('bangDieuKhienTrang').classList.remove('hidden');
         document.getElementById('bangDieuKhienTrang').classList.add('flex');
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
-        document.getElementById('chuNutTai').innerText = "Cắt & Tải";
         
         veTrangCanVasPdf(trangHienTaiPDF);
 
@@ -263,8 +246,6 @@ async function veTrangCanVasPdf(soTrang) {
     
     document.getElementById('nhapSoTrangNhanh').value = soTrang;
     document.getElementById('thanhTruotTrang').value = soTrang;
-    document.getElementById('trangTaiTu').value = soTrang;
-    document.getElementById('trangTaiDen').value = soTrang;
     
     const trang = await theHienPdfHienTai.getPage(soTrang);
     const canvas = document.getElementById('canvasHienThiPdf');
@@ -308,7 +289,6 @@ function dieuChinhThuPhong(heSoThuThayDoi) {
 }
 
 function kichHoatLuoiAnToanIframe(idPdf) {
-    boNhoTrangPdfGoc = null; 
     document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
     
@@ -320,94 +300,16 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     document.getElementById('iframeTaiLieuGoc').src = `https://drive.google.com/file/d/${idPdf}/preview`;
 
     document.getElementById('cumNutTaiXuong').classList.remove('hidden');
-    document.getElementById('chuNutTai').innerText = "Cắt & Tải";
 }
 
 // =========================================================================
-// KHỐI 4: ÉP LUỒNG TẢI VÀ BẪY LỖI DUNG LƯỢNG KHI CẮT TRANG
+// KHỐI 4: TẢI TRỰC TIẾP NGUYÊN BẢN GỐC TỪ GOOGLE DRIVE
 // =========================================================================
-async function taiXuongBaiHocPDF() {
-    const nutTai = document.getElementById('btnTienHanhTai');
-    const noiDungGoc = nutTai.innerHTML;
-
-    const trangTu = parseInt(document.getElementById('trangTaiTu').value, 10);
-    const trangDen = parseInt(document.getElementById('trangTaiDen').value, 10);
-    
-    let maxTrang = theHienPdfHienTai ? theHienPdfHienTai.numPages : 9999;
-
-    if (isNaN(trangTu) || isNaN(trangDen) || trangTu < 1 || trangTu > trangDen || trangTu > maxTrang || trangDen > maxTrang) {
-        alert("Vui lòng nhập khoảng trang hợp lệ (Từ trang phải nhỏ hơn hoặc bằng Đến trang).");
+function taiToanBoSGK() {
+    if (!idTepHienTai) {
+        alert("Sự cố: Không định vị được ID của tài liệu Sách giáo khoa.");
         return;
     }
-
-    nutTai.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
-    nutTai.disabled = true;
-
-    try {
-        let pdfBuffer = boNhoTrangPdfGoc;
-        
-        if (!pdfBuffer) {
-            document.getElementById('chuNutTai').innerText = "Đang kéo dữ liệu...";
-            pdfBuffer = await taiDuLieuPdfAnToan(idTepHienTai);
-        }
-
-        if (typeof PDFLib === 'undefined') {
-            await new Promise((resolve) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
-                script.onload = resolve;
-                document.head.appendChild(script);
-            });
-        }
-
-        const { PDFDocument } = PDFLib;
-        // Bắt lỗi rỗng mảng byte trước khi đưa vào thư viện
-        if (!pdfBuffer || pdfBuffer.byteLength < 1000) {
-             throw new Error("Mảng byte bị cắt xén do Proxy.");
-        }
-        
-        const docGoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
-        const docMoi = await PDFDocument.create();
-        
-        const tongSoTrangThucTe = docGoc.getPageCount();
-        if (trangDen > tongSoTrangThucTe) {
-             alert(`Lỗi: Cuốn SGK này chỉ có tổng cộng ${tongSoTrangThucTe} trang. Vui lòng nhập lại số trang kết thúc nhỏ hơn.`);
-             nutTai.innerHTML = noiDungGoc;
-             nutTai.disabled = false;
-             return;
-        }
-
-        const mangChiSoTrangCat = [];
-        for (let i = trangTu; i <= trangDen; i++) {
-            mangChiSoTrangCat.push(i - 1); 
-        }
-
-        const cacTrangSaoChep = await docMoi.copyPages(docGoc, mangChiSoTrangCat);
-        cacTrangSaoChep.forEach((trang) => {
-            docMoi.addPage(trang);
-        });
-
-        const pdfBytesMoi = await docMoi.save();
-        const blob = new Blob([pdfBytesMoi], { type: 'application/pdf' });
-        
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        const tenFile = tenBaiHienTai.replace(/[^a-zA-Z0-9]/g, '_') || 'TaiLieu';
-        
-        let tenTaiXuong = `${tenFile}_Trang_${trangTu}.pdf`;
-        if (trangTu !== trangDen) {
-            tenTaiXuong = `${tenFile}_Trang_${trangTu}_den_${trangDen}.pdf`;
-        }
-        
-        link.download = tenTaiXuong;
-        link.click();
-
-    } catch (loi) {
-        console.error("Lỗi trích xuất PDF do giới hạn Proxy:", loi);
-        alert("THÔNG BÁO TỪ HỆ THỐNG:\nDung lượng cuốn Sách giáo khoa này quá lớn, vượt quá giới hạn băng thông cho phép của máy chủ cắt trang trung gian.\n\nĐể đảm bảo học liệu không bị gián đoạn, trình duyệt sẽ tự động tải TOÀN BỘ cuốn sách gốc về máy tính. Đồng chí vui lòng sử dụng phần mềm đọc PDF trên máy (như Foxit Reader) để cắt trang.\n\n* Khuyến nghị quản trị viên: Nén tệp SGK trên Drive xuống dưới 15MB để mở khóa tính năng cắt trực tuyến.");
-        window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
-    } finally {
-        nutTai.innerHTML = noiDungGoc;
-        nutTai.disabled = false;
-    }
+    // Mở một cửa sổ mới trực tiếp gọi API tải xuống của Drive, đảm bảo tải siêu tốc không giới hạn
+    window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
 }
