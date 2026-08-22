@@ -1,8 +1,3 @@
-// =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V5.0)
-// Nâng cấp: Tải đệm an toàn, Chọn trang tải xuống, Khắc phục lỗi Fallback Iframe
-// =========================================================================
-
 let boNhoHocLieuSGK = {}; 
 let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
@@ -25,7 +20,7 @@ async function khoiTaoBoNhoHocLieu() {
         const duLieu = await phanHoi.json();
         
         if (duLieu.trangThai === 'loi_he_thong' || duLieu.trangThai === 'khong_ro_thao_tac') {
-            throw new Error("API layDanhMucSGK chưa được khai báo trên máy chủ Google Apps Script.");
+            throw new Error("API layDanhMucSGK chưa khai báo trên máy chủ.");
         }
 
         if (duLieu && duLieu.length > 0) {
@@ -81,7 +76,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
     const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
     if (!idTepTin) {
         dongModalXemTruoc();
-        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}. Vui lòng kiểm tra lại bảng DANH_MUC_SGK.`); }, 300);
+        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}.`); }, 300);
         return;
     }
 
@@ -92,6 +87,9 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
     await xuLyDocPDF(idTepTin);
 };
 
+// =========================================================================
+// HÀM XÂY DỰNG GIAO DIỆN (CẬP NHẬT: MỞ KHÓA THANH CUỘN DỌC)
+// =========================================================================
 function xayDungKhungGiaoDienXemTruoc() {
     const modalHTML = `
     <div id="modalXemTruocSGK" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[9999] flex items-center justify-center font-sans transition-opacity reactbits-fade-in">
@@ -109,23 +107,22 @@ function xayDungKhungGiaoDienXemTruoc() {
                 </div>
                 
                 <div class="flex items-center gap-2 flex-none">
-                    <!-- Cụm tính năng Chọn trang để Tải xuống -->
                     <div id="cumNutTaiXuong" class="hidden flex items-center gap-2 bg-white/10 p-1 rounded-lg mr-3 border border-white/20">
-                        <span class="text-white text-xs font-bold pl-2">Trang tải:</span>
+                        <span id="nhanTrangTai" class="text-white text-xs font-bold pl-2">Trang tải:</span>
                         <input type="number" id="trangTaiXuong" value="1" min="1" class="w-14 text-center text-sm font-bold text-blue-900 rounded outline-none py-1 bg-blue-50">
-                        <button onclick="taiXuongBaiHocPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải trang PDF đã chọn">
+                        <button onclick="taiXuongBaiHocPDF()" id="btnTienHanhTai" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải PDF">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Tải
+                            <span id="chuNutTai">Tải</span>
                         </button>
                     </div>
-
                     <button onclick="dieuChinhThuPhong(0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
                     <button onclick="dieuChinhThuPhong(-0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition mr-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
                     <button onclick="dongModalXemTruoc()" class="p-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white shadow-sm transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
             </div>
 
-            <div class="flex-1 bg-slate-300 overflow-y-auto relative flex justify-center p-4 border-t border-slate-400" id="vungVeTaiLieu">
+            <!-- [ĐÃ SỬA]: Chuyển từ "flex justify-center" sang "block text-center" và mở khóa overflow-x-auto -->
+            <div class="flex-1 bg-slate-300 overflow-y-auto overflow-x-auto relative block text-center p-4 border-t border-slate-400" id="vungVeTaiLieu">
                 <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur text-white px-5 py-2 rounded-full shadow-xl flex items-center gap-4 z-20 border border-slate-600">
                     <button onclick="chuyenTrangPdf(-1)" class="hover:text-blue-400 font-bold px-2 transition text-lg">◀</button>
                     <span class="text-sm font-semibold tracking-wide">Trang <span id="soTrangHienTai" class="font-extrabold text-blue-400 text-base">1</span> / <span id="tongSoTrang">--</span></span>
@@ -137,9 +134,9 @@ function xayDungKhungGiaoDienXemTruoc() {
                     <p id="vanBanTrangThaiSgk" class="text-slate-700 font-bold text-lg">Đang trích xuất học liệu số...</p>
                 </div>
 
-                <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden max-w-full h-auto"></canvas>
+                <!-- [ĐÃ SỬA]: Thêm class "mx-auto" để căn giữa trang sách khi đổi thẻ cha sang block -->
+                <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden mx-auto max-w-full h-auto mb-10"></canvas>
                 
-                <!-- Tấm khiên khóa thao tác mở cửa sổ mới -->
                 <div id="vungIframeDuPhong" class="hidden w-full h-full relative">
                     <div class="absolute top-0 right-0 w-[60px] h-[55px] bg-[#131313] z-50 flex items-center justify-center cursor-not-allowed border-b border-l border-slate-700/50" title="Tính năng mở tab mới đã bị Quản trị viên khóa">
                         <svg class="w-5 h-5 text-gray-500 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -203,7 +200,7 @@ async function taiDuLieuPdfAnToan(idPdf) {
             console.warn("Proxy quá tải, chuyển luồng:", proxy);
         }
     }
-    throw new Error("Tất cả các cổng trung chuyển đều bị từ chối.");
+    throw new Error("Tất cả cổng trung chuyển bị từ chối.");
 }
 
 async function xuLyDocPDF(idPdf) {
@@ -229,20 +226,25 @@ async function xuLyDocPDF(idPdf) {
 
         document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
         document.getElementById('canvasHienThiPdf').classList.remove('hidden');
+        
+        // Phục hồi giao diện Cắt Trang (Nếu mạng khỏe)
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
+        document.getElementById('nhanTrangTai').classList.remove('hidden');
+        document.getElementById('trangTaiXuong').classList.remove('hidden');
+        document.getElementById('chuNutTai').innerText = "Tải trang này";
         
         veTrangCanVasPdf(trangHienTaiPDF);
 
     } catch (loi) {
         console.warn("Lỗi phân giải Buffer, chuyển sang Iframe dự phòng.", loi);
-        kichHoatLuoiAnToanIframe(idPdf); // Đã khắc phục lỗi biến tại đây
+        kichHoatLuoiAnToanIframe(idPdf);
     }
 }
 
 async function veTrangCanVasPdf(soTrang) {
     if (!theHienPdfHienTai) return;
     document.getElementById('soTrangHienTai').innerText = soTrang;
-    document.getElementById('trangTaiXuong').value = soTrang; // Đồng bộ ô nhập trang tải với trang hiện tại
+    document.getElementById('trangTaiXuong').value = soTrang;
     
     const trang = await theHienPdfHienTai.getPage(soTrang);
     const canvas = document.getElementById('canvasHienThiPdf');
@@ -274,22 +276,35 @@ function dieuChinhThuPhong(heSoThuThayDoi) {
 }
 
 function kichHoatLuoiAnToanIframe(idPdf) {
+    boNhoTrangPdfGoc = null; // Xác nhận mất đệm
     document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
-    document.getElementById('cumNutTaiXuong').classList.add('hidden'); 
     
     const vungIframe = document.getElementById('vungIframeDuPhong');
     vungIframe.classList.remove('hidden');
     document.getElementById('iframeTaiLieuGoc').src = `https://drive.google.com/file/d/${idPdf}/preview`;
+
+    // Biến đổi Nút tải thành "Tải nguyên sách"
+    document.getElementById('cumNutTaiXuong').classList.remove('hidden');
+    document.getElementById('nhanTrangTai').classList.add('hidden');
+    document.getElementById('trangTaiXuong').classList.add('hidden');
+    document.getElementById('chuNutTai').innerText = "Tải toàn bộ SGK";
 }
 
 // =========================================================================
-// KHỐI 4: TRÍCH XUẤT VÀ TẢI XUỐNG PDF (PDF-LIB) THEO SỐ TRANG CHỌN
+// KHỐI 4: TRÍCH XUẤT VÀ TẢI XUỐNG PDF (THÍCH ỨNG)
 // =========================================================================
 async function taiXuongBaiHocPDF() {
-    const nutTai = document.querySelector('#cumNutTaiXuong button');
+    const nutTai = document.getElementById('btnTienHanhTai');
     const noiDungGoc = nutTai.innerHTML;
-    
+
+    // NHÁNH 1: Chế độ Iframe (Sập mạng) -> Tải nguyên cuốn
+    if (!boNhoTrangPdfGoc) {
+        window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
+        return;
+    }
+
+    // NHÁNH 2: Chế độ Canvas (Mạng khỏe) -> Cắt trang
     const trangMuonTai = parseInt(document.getElementById('trangTaiXuong').value, 10);
     if (isNaN(trangMuonTai) || trangMuonTai < 1 || trangMuonTai > theHienPdfHienTai.numPages) {
         alert("Vui lòng nhập số trang hợp lệ để tải.");
@@ -300,11 +315,6 @@ async function taiXuongBaiHocPDF() {
     nutTai.disabled = true;
 
     try {
-        if (!boNhoTrangPdfGoc) {
-            alert("Lỗi bộ đệm hệ thống. Vui lòng tải lại trang.");
-            return;
-        }
-
         if (typeof PDFLib === 'undefined') {
             await new Promise((resolve) => {
                 const script = document.createElement('script');
