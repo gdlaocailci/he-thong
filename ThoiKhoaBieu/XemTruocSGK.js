@@ -1,8 +1,3 @@
-// =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN
-// Nguyên tắc: Vận hành mượt mà, cắt đúng bài học, giao diện hành chính
-// =========================================================================
-
 let boNhoHocLieuSGK = {}; 
 let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
@@ -11,32 +6,40 @@ let idTepHienTai = '';
 let tenBaiHienTai = '';
 
 document.addEventListener('DOMContentLoaded', () => {
-    khoiTaoBoNhoHocLieu();
+    // [ĐÃ SỬA]: Loại bỏ hàm khoiTaoBoNhoHocLieu() ở đây để chống đụng độ API lúc khởi động
     xayDungKhungGiaoDienXemTruoc();
 });
 
 // =========================================================================
-// KHỐI 1: KHỞI TẠO BỘ NHỚ VÀ XỬ LÝ CHUỖI
+// KHỐI 1: KHỞI TẠO BỘ NHỚ VÀ XỬ LÝ CHUỖI (LAZY LOADING)
 // =========================================================================
 async function khoiTaoBoNhoHocLieu() {
     try {
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
+        // [BẢN NÂNG CẤP]: Dùng hàm fetch có cơ chế lùi bước (chống lỗi 404) nếu app.js đã tải
+        const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
         const duLieu = await phanHoi.json();
         
+        if (duLieu.trangThai === 'loi_he_thong' || duLieu.trangThai === 'khong_ro_thao_tac') {
+            throw new Error("API layDanhMucSGK chưa được khai báo trên máy chủ Google Apps Script.");
+        }
+
         if (duLieu && duLieu.length > 0) {
             duLieu.forEach(dong => {
                 let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
                 let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
                 let linkDrive = dong[2] ? String(dong[2]).trim() : '';
                 
-                // [NÂNG CẤP]: Ánh xạ khóa kép (Khối + Môn) để định danh chính xác SGK
                 if (tenKhoi && tenMon && linkDrive) {
                     let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
                     boNhoHocLieuSGK[khoaTruyXuat] = trichXuatIdTuLink(linkDrive);
                 }
             });
         }
-    } catch (loi) { console.warn("Chưa thể kết nối CSDL Danh mục SGK."); }
+    } catch (loi) { 
+        console.error("Lỗi tải Danh mục SGK:", loi);
+        throw loi; // Ném lỗi ra để hàm kích hoạt bắt được và báo cho GV
+    }
 }
 
 function trichXuatIdTuLink(url) {
@@ -47,7 +50,6 @@ function trichXuatIdTuLink(url) {
 function chuanHoaTenTimKiem(tenGoc) {
     if (!tenGoc) return '';
     let tenDaLoc = tenGoc.toLowerCase();
-    // Loại bỏ các tiền tố khai báo tiết học để lấy lõi kiến thức
     tenDaLoc = tenDaLoc.replace(/(?:\b|^)(tiết|t|bài|b)\s*\d+\s*(:|-|\.)?\s*/gi, '');
     return tenDaLoc.trim();
 }
@@ -56,14 +58,34 @@ function chuanHoaTenTimKiem(tenGoc) {
 // KHỐI 2: KÍCH HOẠT VÀ ĐIỀU HƯỚNG HIỂN THỊ UI
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
-    const khoaTimKiem = `${String(tenKhoiGoc).trim().toUpperCase()}_${String(tenMonGoc).trim().toLowerCase()}`;
-    const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
+    const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
+    const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
+    const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
+    // 1. TẢI DỮ LIỆU ON-DEMAND (Chỉ chạy 1 lần duy nhất khi bộ nhớ đang trống)
+    if (Object.keys(boNhoHocLieuSGK).length === 0) {
+        hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, null);
+        document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kết nối CSDL Danh mục Sách giáo khoa...";
+        try {
+            await khoiTaoBoNhoHocLieu();
+        } catch (loi) {
+            dongModalXemTruoc();
+            setTimeout(() => { alert(`Sự cố hệ thống: ${loi.message}\nĐồng chí vui lòng kiểm tra lại tệp code.html trên máy chủ đã có hàm layDanhMucSGK chưa, và nhớ Deploy lại phiên bản mới.`); }, 300);
+            return;
+        }
+    }
+
+    // 2. KIỂM TRA SÁCH GIÁO KHOA
+    const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
     if (!idTepTin) {
-        alert(`Hệ thống chưa tìm thấy dữ liệu Sách giáo khoa cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}. Vui lòng kiểm tra lại bảng DANH_MUC_SGK.`);
+        dongModalXemTruoc();
+        setTimeout(() => {
+            alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}.\nKhóa truy xuất hiện tại: "${khoaTimKiem}".\nVui lòng kiểm tra lại bảng DANH_MUC_SGK có nhập đúng số Khối và Tên môn học chưa.`);
+        }, 300);
         return;
     }
 
+    // 3. XỬ LÝ GIAO DIỆN VÀ MỞ PDF
     const tenBaiDaLoc = chuanHoaTenTimKiem(tenBaiHoc);
     idTepHienTai = idTepTin;
     tenBaiHienTai = tenBaiDaLoc || 'TaiLieu';
