@@ -397,7 +397,7 @@ function veBangKhungLichPPCT(monDangChon) {
                             <td class="border-r border-gray-300 align-middle text-center p-3 font-extrabold text-red-600 break-words whitespace-normal" data-ppct-id="${idKhoa}" data-loai="tietPpc">${valTietPPC}</td>
                             <td class="border-r border-gray-300 align-middle text-center font-bold text-blue-800 break-words whitespace-normal">${tenMonTkb}</td>
 
-                      // [BẢN NÂNG CẤP]: Cột Tên Bài Học - Tích hợp nút xem trước SGK (Bảo toàn Data Attributes cho Import Excel)
+                     
                             <td class="border-r border-gray-300 align-middle text-left p-3 break-words whitespace-normal leading-relaxed" style="white-space: normal !important; max-width: 400px; word-break: break-word;">
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="font-semibold text-slate-900 flex-1" data-ppct-id="${idKhoa}" data-loai="tenBai">${valTenBai}</span>
