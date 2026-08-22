@@ -1,6 +1,6 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V8.0)
-// Nâng cấp: Ép luồng tải ngầm để cắt trang ngay cả trong chế độ Iframe dự phòng
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ CẮT TRANG BÀI GIẢNG PDF TRỰC QUAN (V9.0)
+// Nâng cấp: Giám sát giới hạn dung lượng Proxy & Tối ưu thông báo lỗi
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -109,7 +109,6 @@ function xayDungKhungGiaoDienXemTruoc() {
                 </div>
                 
                 <div class="flex items-center gap-2 flex-none">
-                    <!-- KHỐI CHỨC NĂNG: Chọn khoảng trang tải xuống -->
                     <div id="cumNutTaiXuong" class="hidden flex items-center gap-1.5 bg-white/10 p-1 rounded-lg mr-2 border border-white/20">
                         <span class="text-white text-[11px] font-bold pl-2 uppercase tracking-wide">Từ trang</span>
                         <input type="number" id="trangTaiTu" value="1" min="1" class="w-12 text-center text-sm font-bold text-blue-900 rounded outline-none py-1 bg-blue-50 border border-blue-200" title="Trang bắt đầu">
@@ -129,7 +128,6 @@ function xayDungKhungGiaoDienXemTruoc() {
 
             <div class="flex-1 bg-slate-300 overflow-y-auto overflow-x-auto relative block text-center p-4 border-t border-slate-400" id="vungVeTaiLieu">
                 
-                <!-- Bảng điều khiển trang lật siêu tốc (Chỉ hiện ở chế độ Canvas) -->
                 <div id="bangDieuKhienTrang" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/95 backdrop-blur text-white px-5 py-3 rounded-2xl shadow-2xl flex-col items-center gap-2 z-20 border border-slate-600 min-w-[320px] transition-all">
                     <div class="flex items-center gap-4 w-full justify-center">
                         <button onclick="chuyenTrangPdf(-1)" class="hover:text-blue-400 font-extrabold px-3 transition text-xl">◀</button>
@@ -150,7 +148,6 @@ function xayDungKhungGiaoDienXemTruoc() {
 
                 <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden mx-auto max-w-full h-auto mb-10"></canvas>
                 
-                <!-- Fallback Iframe (Lưới an toàn) với tọa độ khiên đã tối ưu -->
                 <div id="vungIframeDuPhong" class="hidden w-full h-full relative">
                     <div class="absolute top-0 right-4 w-[45px] h-[55px] bg-[#131313] z-50 flex items-center justify-center cursor-not-allowed border-b border-l border-r border-slate-700/50" title="Tính năng mở tab mới đã bị khóa">
                         <svg class="w-5 h-5 text-gray-500 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -214,10 +211,10 @@ async function taiDuLieuPdfAnToan(idPdf) {
                 return boDem;
             }
         } catch (loi) {
-            console.warn("Proxy quá tải, chuyển luồng:", proxy);
+            console.warn("Proxy ngắt luồng:", proxy);
         }
     }
-    throw new Error("Mạng quá tải, không thể tải đệm tệp PDF.");
+    throw new Error("Dung lượng tệp vượt quá giới hạn của máy chủ Proxy.");
 }
 
 async function xuLyDocPDF(idPdf) {
@@ -248,7 +245,6 @@ async function xuLyDocPDF(idPdf) {
         document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
         document.getElementById('canvasHienThiPdf').classList.remove('hidden');
         
-        // Hiện đầy đủ bộ công cụ khi Canvas tải thành công
         document.getElementById('bangDieuKhienTrang').classList.remove('hidden');
         document.getElementById('bangDieuKhienTrang').classList.add('flex');
         document.getElementById('cumNutTaiXuong').classList.remove('hidden');
@@ -257,7 +253,7 @@ async function xuLyDocPDF(idPdf) {
         veTrangCanVasPdf(trangHienTaiPDF);
 
     } catch (loi) {
-        console.warn("Lỗi tải luồng, chuyển sang Iframe dự phòng.", loi);
+        console.warn("Chuyển lưới an toàn:", loi);
         kichHoatLuoiAnToanIframe(idPdf);
     }
 }
@@ -316,7 +312,6 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
     document.getElementById('canvasHienThiPdf').classList.add('hidden');
     
-    // Giấu thanh trượt vì Iframe không hỗ trợ điều khiển
     document.getElementById('bangDieuKhienTrang').classList.remove('flex');
     document.getElementById('bangDieuKhienTrang').classList.add('hidden');
     
@@ -324,13 +319,12 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     vungIframe.classList.remove('hidden');
     document.getElementById('iframeTaiLieuGoc').src = `https://drive.google.com/file/d/${idPdf}/preview`;
 
-    // [NÂNG CẤP]: Vẫn giữ nguyên 2 ô nhập trang ở chế độ Iframe để giáo viên nhập thủ công
     document.getElementById('cumNutTaiXuong').classList.remove('hidden');
     document.getElementById('chuNutTai').innerText = "Cắt & Tải";
 }
 
 // =========================================================================
-// KHỐI 4: ÉP LUỒNG TẢI NGẦM ĐỂ CẮT PDF (BẢN BỌC LÓT LỖI)
+// KHỐI 4: ÉP LUỒNG TẢI VÀ BẪY LỖI DUNG LƯỢNG KHI CẮT TRANG
 // =========================================================================
 async function taiXuongBaiHocPDF() {
     const nutTai = document.getElementById('btnTienHanhTai');
@@ -353,8 +347,7 @@ async function taiXuongBaiHocPDF() {
         let pdfBuffer = boNhoTrangPdfGoc;
         
         if (!pdfBuffer) {
-            document.getElementById('chuNutTai').innerText = "Đang gắp dữ liệu...";
-            // Bỏ try-catch ở đây để dồn toàn bộ lỗi về khối catch tổng bên dưới xử lý một lần
+            document.getElementById('chuNutTai').innerText = "Đang kéo dữ liệu...";
             pdfBuffer = await taiDuLieuPdfAnToan(idTepHienTai);
         }
 
@@ -368,8 +361,11 @@ async function taiXuongBaiHocPDF() {
         }
 
         const { PDFDocument } = PDFLib;
+        // Bắt lỗi rỗng mảng byte trước khi đưa vào thư viện
+        if (!pdfBuffer || pdfBuffer.byteLength < 1000) {
+             throw new Error("Mảng byte bị cắt xén do Proxy.");
+        }
         
-        // [ĐÃ NÂNG CẤP]: Bổ sung ignoreEncryption để ép vượt qua lớp khóa bảo mật của NXB nếu có
         const docGoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
         const docMoi = await PDFDocument.create();
         
@@ -407,9 +403,8 @@ async function taiXuongBaiHocPDF() {
         link.click();
 
     } catch (loi) {
-        console.error("Lỗi trích xuất PDF:", loi);
-        // [ĐÃ NÂNG CẤP]: Bẫy lỗi thông minh. Nếu thất bại, tự động cho tải file gốc.
-        alert("Sự cố: Tệp SGK này bị khóa trích xuất bảo mật hoặc mạng tải ngầm bị nghẽn.\n\nHệ thống sẽ tự động chuyển sang tải toàn bộ cuốn sách nguyên bản.");
+        console.error("Lỗi trích xuất PDF do giới hạn Proxy:", loi);
+        alert("THÔNG BÁO TỪ HỆ THỐNG:\nDung lượng cuốn Sách giáo khoa này quá lớn, vượt quá giới hạn băng thông cho phép của máy chủ cắt trang trung gian.\n\nĐể đảm bảo học liệu không bị gián đoạn, trình duyệt sẽ tự động tải TOÀN BỘ cuốn sách gốc về máy tính. Đồng chí vui lòng sử dụng phần mềm đọc PDF trên máy (như Foxit Reader) để cắt trang.\n\n* Khuyến nghị quản trị viên: Nén tệp SGK trên Drive xuống dưới 15MB để mở khóa tính năng cắt trực tuyến.");
         window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
     } finally {
         nutTai.innerHTML = noiDungGoc;
