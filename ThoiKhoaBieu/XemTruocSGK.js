@@ -93,8 +93,8 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
-    // [THUẬT TOÁN RẼ NHÁNH]: Tuần > 17 thì lấy ID Kỳ 2, ngược lại lấy ID Kỳ 1
-    if (tuanHienTai > 17) {
+    // [THUẬT TOÁN RẼ NHÁNH]: Tuần > 18 thì lấy ID Kỳ 2, ngược lại lấy ID Kỳ 1
+    if (tuanHienTai > 18) {
         idTepHienTai = duLieuMonHoc.idKy2;
     } else {
         idTepHienTai = duLieuMonHoc.idKy1;
