@@ -1,6 +1,6 @@
 // =========================================================================
 // HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN
-// Phiên bản tối giản: Lật trang siêu tốc & Tải nguyên bản gốc độ tin cậy 100%
+// Bản nâng cấp: Tự động rẽ nhánh SGK Kỳ 1 / Kỳ 2 theo mốc Tuần 18
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================================================
-// KHỐI 1: KHỞI TẠO BỘ NHỚ VÀ XỬ LÝ CHUỖI
+// KHỐI 1: KHỞI TẠO BỘ NHỚ VÀ XỬ LÝ CHUỖI (MỞ RỘNG CỘT D)
 // =========================================================================
 async function khoiTaoBoNhoHocLieu() {
     try {
@@ -23,18 +23,24 @@ async function khoiTaoBoNhoHocLieu() {
         const duLieu = await phanHoi.json();
         
         if (duLieu.trangThai === 'loi_he_thong' || duLieu.trangThai === 'khong_ro_thao_tac') {
-            throw new Error("API layDanhMucSGK chưa được khai báo trên máy chủ.");
+            throw new Error("API layDanhMucSGK chưa được khai báo hoặc quên Deploy bản mới.");
         }
 
         if (duLieu && duLieu.length > 0) {
             duLieu.forEach(dong => {
                 let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
                 let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
-                let linkDrive = dong[2] ? String(dong[2]).trim() : '';
+                let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; // Cột C
+                let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; // Cột D
                 
-                if (tenKhoi && tenMon && linkDrive) {
+                if (tenKhoi && tenMon && linkKy1) {
                     let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
-                    boNhoHocLieuSGK[khoaTruyXuat] = trichXuatIdTuLink(linkDrive);
+                    
+                    // [NÂNG CẤP]: Đóng gói cả 2 học kỳ. Nếu Kỳ 2 rỗng, tự động gán lại bằng Kỳ 1
+                    boNhoHocLieuSGK[khoaTruyXuat] = {
+                        idKy1: trichXuatIdTuLink(linkKy1),
+                        idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
+                    };
                 }
             });
         }
@@ -50,15 +56,25 @@ function trichXuatIdTuLink(url) {
 }
 
 // =========================================================================
-// KHỐI 2: KÍCH HOẠT VÀ XÂY DỰNG GIAO DIỆN UI
+// KHỐI 2: KÍCH HOẠT VÀ XÂY DỰNG GIAO DIỆN UI (TÍCH HỢP ĐO lƯỜNG TUẦN)
 // =========================================================================
-window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
+window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
+    // 1. Tự động nội suy Tuần học hiện tại từ giao diện (nếu không được truyền vào hàm)
+    let tuanHienTai = parseInt(thamSoTuan, 10);
+    if (isNaN(tuanHienTai)) {
+        // Quét các ô input có chứa chữ 'tuan' trên giao diện phần mềm để lấy số tuần
+        let oNhapTuan = document.querySelector('input[id*="tuan"], select[id*="tuan"], input[id*="Tuan"]');
+        tuanHienTai = oNhapTuan ? parseInt(oNhapTuan.value, 10) : 1;
+    }
+    if (isNaN(tuanHienTai)) tuanHienTai = 1; // Mặc định an toàn
+
+    // 2. Khởi tạo bộ nhớ nếu trống
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
-        hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc);
+        hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kết nối CSDL Danh mục Sách giáo khoa...";
         try {
             await khoiTaoBoNhoHocLieu();
@@ -69,16 +85,23 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
         }
     }
 
-    const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
-    if (!idTepTin) {
+    // 3. Phân luồng Học kỳ theo mốc Tuần 18
+    const duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem];
+    if (!duLieuMonHoc) {
         dongModalXemTruoc();
         setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}. Vui lòng kiểm tra lại bảng DANH_MUC_SGK.`); }, 300);
         return;
     }
 
-    idTepHienTai = idTepTin;
-    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc);
-    await xuLyDocPDF(idTepTin);
+    // [THUẬT TOÁN RẼ NHÁNH]: Tuần > 17 thì lấy ID Kỳ 2, ngược lại lấy ID Kỳ 1
+    if (tuanHienTai > 17) {
+        idTepHienTai = duLieuMonHoc.idKy2;
+    } else {
+        idTepHienTai = duLieuMonHoc.idKy1;
+    }
+    
+    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
+    await xuLyDocPDF(idTepHienTai);
 };
 
 function xayDungKhungGiaoDienXemTruoc() {
@@ -98,7 +121,6 @@ function xayDungKhungGiaoDienXemTruoc() {
                 </div>
                 
                 <div class="flex items-center gap-2 flex-none">
-                    <!-- Nút Tải nguyên bản rút gọn -->
                     <div id="cumNutTaiXuong" class="hidden flex items-center gap-1.5 bg-white/10 p-1 rounded-lg mr-2 border border-white/20">
                         <button onclick="taiToanBoSGK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải toàn bộ cuốn sách">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -146,8 +168,11 @@ function xayDungKhungGiaoDienXemTruoc() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc) {
-    document.getElementById('tieuDeMonSgk').innerText = `Khối ${tenKhoi} - Môn ${tenMon}`;
+function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tuanHienTai) {
+    // Hiển thị trực quan cho giáo viên biết hệ thống đang chọn tài liệu của Học kỳ nào
+    let nhanKyHoc = (tuanHienTai > 17) ? "[Tập 2 / Kỳ 2]" : "[Tập 1 / Kỳ 1]";
+    
+    document.getElementById('tieuDeMonSgk').innerText = `Khối ${tenKhoi} - Môn ${tenMon} ${nhanKyHoc}`;
     document.getElementById('tieuDeBaiSgk').innerText = tenBaiGoc;
     
     document.getElementById('khoiTrangThaiSgk').classList.remove('hidden');
@@ -310,6 +335,5 @@ function taiToanBoSGK() {
         alert("Sự cố: Không định vị được ID của tài liệu Sách giáo khoa.");
         return;
     }
-    // Mở một cửa sổ mới trực tiếp gọi API tải xuống của Drive, đảm bảo tải siêu tốc không giới hạn
     window.open(`https://drive.google.com/uc?export=download&id=${idTepHienTai}`, '_blank');
 }
