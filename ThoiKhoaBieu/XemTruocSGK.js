@@ -78,6 +78,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
+    // 1. Tải danh mục nếu bộ nhớ đang trống
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
         hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, null);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kết nối CSDL Danh mục Sách giáo khoa...";
@@ -90,19 +91,50 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc) {
         }
     }
 
+    // 2. Lấy ID tệp PDF từ bộ nhớ
     const idTepTin = boNhoHocLieuSGK[khoaTimKiem];
     if (!idTepTin) {
         dongModalXemTruoc();
-        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}.`); }, 300);
+        setTimeout(() => { alert(`Hệ thống chưa tìm thấy dữ liệu Sách giáo khoa cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}. Vui lòng kiểm tra lại bảng DANH_MUC_SGK.`); }, 300);
         return;
     }
 
-    const tenBaiDaLoc = chuanHoaTenTimKiem(tenBaiHoc);
     idTepHienTai = idTepTin;
-    tenBaiHienTai = tenBaiDaLoc || 'TaiLieu';
+    tenBaiHienTai = chuanHoaTenTimKiem(tenBaiHoc) || 'TaiLieu';
     
-    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tenBaiDaLoc);
-    await xuLyĐocVaTimKiemPDF(idTepTin, tenBaiHienTai);
+    // 3. Mở Modal hiển thị
+    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, null);
+    
+    // 4. Tải file PDF và hiển thị thẳng ở Trang 1 (Không quét từ khóa)
+    try {
+        if (typeof pdfjsLib === 'undefined') {
+            await new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
+
+        // Tải mảng Byte qua bộ đệm an toàn
+        boNhoTrangPdfGoc = await taiDuLieuPdfAnToan(idTepTin);
+        
+        const loadingTask = pdfjsLib.getDocument({ data: boNhoTrangPdfGoc });
+        theHienPdfHienTai = await loadingTask.promise;
+        
+        document.getElementById('tongSoTrang').innerText = theHienPdfHienTai.numPages;
+        trangHienTaiPDF = 1; // Luôn trỏ thẳng về trang đầu tiên của sách
+
+        document.getElementById('khoiTrangThaiSgk').classList.add('hidden');
+        document.getElementById('canvasHienThiPdf').classList.remove('hidden');
+        
+        veTrangCanVasPdf(trangHienTaiPDF);
+
+    } catch (loi) {
+        console.warn("Chuyển sang Iframe dự phòng do lỗi tải luồng.", loi);
+        kichHoatLuoiAnToanIframe(idPdfTin);
+    }
 };
 
 function xayDungKhungGiaoDienXemTruoc() {
