@@ -110,6 +110,7 @@ function xayDungKhungGiaoDienXemTruoc() {
     <div id="modalXemTruocSGK" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[9999] flex items-center justify-center font-sans transition-opacity reactbits-fade-in">
         <div class="bg-white w-11/12 md:w-5/6 lg:w-3/4 h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-300 transform scale-95 transition-transform duration-300" id="khungNoiDungModal">
             
+            <!-- Thanh Tiêu Đề -->
             <div class="bg-gradient-to-r from-blue-800 to-indigo-900 px-5 py-3 flex justify-between items-center shadow-md z-10 flex-none border-b border-indigo-700">
                 <div class="flex items-center gap-3 overflow-hidden">
                     <div class="bg-white/20 p-1.5 rounded-lg">
@@ -126,13 +127,15 @@ function xayDungKhungGiaoDienXemTruoc() {
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         <span class="text-sm hidden md:inline">Tải bài này</span>
                     </button>
-                    <button onclick="dieuChinhThuPhong(0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
-                    <button onclick="dieuChinhThuPhong(-0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition mr-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
-                    <button onclick="dongModalXemTruoc()" class="p-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white shadow-sm transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    <button onclick="dieuChinhThuPhong(0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition" title="Phóng to"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg></button>
+                    <button onclick="dieuChinhThuPhong(-0.2)" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-md text-white transition mr-2" title="Thu nhỏ"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path></svg></button>
+                    <button onclick="dongModalXemTruoc()" class="p-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white shadow-sm transition" title="Đóng cửa sổ"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
             </div>
 
-            <div class="flex-1 bg-slate-200 overflow-auto relative flex justify-center p-4" id="vungVeTaiLieu">
+            <!-- Vùng Hiển thị Tài liệu (Đã bổ sung overflow-y-auto để bật thanh trượt dọc) -->
+            <div class="flex-1 bg-slate-300 overflow-y-auto relative flex justify-center p-4 border-t border-slate-400" id="vungVeTaiLieu">
+                
                 <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur text-white px-5 py-2 rounded-full shadow-xl flex items-center gap-4 z-20 border border-slate-600">
                     <button onclick="chuyenTrangPdf(-1)" class="hover:text-blue-400 font-bold px-2 transition text-lg">◀</button>
                     <span class="text-sm font-semibold tracking-wide">Trang <span id="soTrangHienTai" class="font-extrabold text-blue-400 text-base">1</span> / <span id="tongSoTrang">--</span></span>
@@ -146,7 +149,17 @@ function xayDungKhungGiaoDienXemTruoc() {
                 </div>
 
                 <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden max-w-full h-auto"></canvas>
-                <div id="vungIframeDuPhong" class="hidden w-full h-full"></div>
+                
+                <!-- [BẢN NÂNG CẤP]: Iframe có Tấm khiên khóa nút mở cửa sổ mới -->
+                <div id="vungIframeDuPhong" class="hidden w-full h-full relative">
+                    <!-- Tấm khiên bảo vệ đặt đè lên góc trên bên phải -->
+                    <div class="absolute top-0 right-0 w-[60px] h-[55px] bg-[#131313] z-50 flex items-center justify-center cursor-not-allowed border-b border-l border-slate-700/50" title="Tính năng mở tab mới đã bị Quản trị viên khóa">
+                        <svg class="w-5 h-5 text-gray-500 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <!-- Khung Google Drive -->
+                    <iframe id="iframeTaiLieuGoc" src="" class="w-full h-full border-0 rounded shadow-inner" allow="autoplay"></iframe>
+                </div>
+
             </div>
         </div>
     </div>`;
@@ -316,7 +329,9 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     
     const vungIframe = document.getElementById('vungIframeDuPhong');
     vungIframe.classList.remove('hidden');
-    vungIframe.innerHTML = `<iframe src="https://drive.google.com/file/d/${idPdf}/preview" class="w-full h-full border-0 rounded shadow-inner" allow="autoplay"></iframe>`;
+    
+    // Nạp link vào iframe con nằm dưới tấm khiên bảo vệ
+    document.getElementById('iframeTaiLieuGoc').src = `https://drive.google.com/file/d/${idPdf}/preview`;
 }
 
 // =========================================================================
