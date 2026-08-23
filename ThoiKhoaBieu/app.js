@@ -142,6 +142,17 @@ async function khoiTaoGiaoDien() {
             let menuNam = document.getElementById('menuHienThiNamHoc'); 
             if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
         }
+        let theTrangThai = document.getElementById('trangThaiHeThong');
+        if (theTrangThai && thongSoHocVu.TRANG_THAI_WEB) {
+            let trangThai = thongSoHocVu.TRANG_THAI_WEB.trim();
+            if (trangThai.toLowerCase() === 'hoạt động') {
+                theTrangThai.innerText = 'Hệ thống mở';
+                theTrangThai.className = 'font-bold text-green-700 text-base leading-tight inline-block mt-0.5';
+            } else {
+                theTrangThai.innerText = trangThai; // Hiển thị "Bảo trì" hoặc "Tạm dừng"
+                theTrangThai.className = 'font-bold text-red-600 text-base leading-tight inline-block mt-0.5';
+            }
+        }
         
         tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
         let hienThiTuan = document.getElementById('hienThiTuanHienTai');
