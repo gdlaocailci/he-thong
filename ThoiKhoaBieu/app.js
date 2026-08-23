@@ -149,7 +149,7 @@ async function khoiTaoGiaoDien() {
                 theTrangThai.innerText = 'Hệ thống mở';
                 theTrangThai.className = 'font-bold text-green-700 text-base leading-tight inline-block mt-0.5';
             } else {
-                theTrangThai.innerText = trangThai; // Hiển thị "Bảo trì" hoặc "Tạm dừng"
+                theTrangThai.innerText = 'Hệ thống đang bảo trì'; // Hiển thị "Bảo trì" hoặc "Tạm dừng"
                 theTrangThai.className = 'font-bold text-red-600 text-base leading-tight inline-block mt-0.5';
             }
         }
