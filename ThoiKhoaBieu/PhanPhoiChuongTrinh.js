@@ -88,7 +88,17 @@ function taoKhungGiaoDienPPCT() {
                     <input type="text" id="locMonPPCT" list="listMonPPCT" class="w-full px-2 py-1.5 border border-blue-300 rounded outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-900 bg-blue-50" placeholder="Chọn môn">
                     <datalist id="listMonPPCT"></datalist>
                 </div>
-                <button onclick="taiDuLieuTkbVaPpct()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-6 rounded shadow transition duration-200 text-sm ml-auto flex items-center gap-2">
+                
+                <!-- [BẢN NÂNG CẤP]: Bổ sung nút Sách giáo khoa mở sang tab mới, tích hợp icon SVG -->
+                <a href="https://thuvienhoclieu.com/" target="_blank" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 px-4 rounded shadow transition duration-200 text-sm flex items-center gap-1.5 h-[34px]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    Sách giáo khoa
+                </a>
+
+                <button onclick="taiDuLieuTkbVaPpct()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-6 rounded shadow transition duration-200 text-sm ml-auto flex items-center gap-2 h-[34px]">
                     Xác nhận
                 </button>
             </div>
