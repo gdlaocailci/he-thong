@@ -1,8 +1,16 @@
+// =========================================================================
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V19.0)
+// LÕI CHỐNG LỖI: Thuật toán quét Tuần an toàn + Công tắc chuyển Kỳ học thủ công UI
+// =========================================================================
+
 let boNhoHocLieuSGK = {}; 
 let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
 let heSoThuPhong = 1.2;
 let idTepHienTai = '';
+
+// Biến lưu trữ toàn cục để phục vụ chuyển đổi Kỳ học qua lại tức thì
+let thongTinBaiHocHienTai = { khoi: '', mon: '', bai: '', idKy1: '', idKy2: '', kyDangXem: 1 };
 
 document.addEventListener('DOMContentLoaded', () => {
     khoiTaoBoNhoCucBoDB(); 
@@ -10,12 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================================================
-// KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB (TỰ ĐỘNG HỦY CACHE KHI ĐỔI LINK)
+// KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB VÀ QUẢN LÝ BỘ NHỚ
 // =========================================================================
 let dbHocLieu = null;
 
 function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 8); // Nâng version để reset bộ nhớ đệm
+    const request = indexedDB.open("KhoHocLieuSoDB", 9); // Nâng version để reset toàn bộ rác
     request.onupgradeneeded = function(event) {
         dbHocLieu = event.target.result;
         if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
@@ -56,10 +64,7 @@ async function xoaBoNhoDemCu(idPdfMoi) {
         request.onsuccess = function(event) {
             const danhSachIdCu = event.target.result;
             danhSachIdCu.forEach(idCu => {
-                // Xóa các file cũ nếu ID Link đã bị thay đổi
-                if (idCu !== idPdfMoi) {
-                    store.delete(idCu);
-                }
+                if (idCu !== idPdfMoi) { store.delete(idCu); }
             });
             resolve();
         };
@@ -77,52 +82,44 @@ function lamMoiBoNhoDemPdf() {
     store.delete(idTepHienTai);
     
     transaction.oncomplete = function() {
-        document.getElementById('khoiTrangThaiSgk').classList.remove('hidden');
-        document.getElementById('canvasHienThiPdf').classList.add('hidden');
-        document.getElementById('nhomCongCuCanvas').classList.remove('flex');
-        document.getElementById('nhomCongCuCanvas').classList.add('hidden');
-        document.getElementById('bangDieuKhienTrang').classList.remove('flex');
-        document.getElementById('bangDieuKhienTrang').classList.add('hidden');
-        
-        document.getElementById('vanBanTrangThaiSgk').innerText = "Đang tải lại phiên bản sách mới nhất...";
+        hienThiKhoiChoTai(`Đang đồng bộ tải lại phiên bản mới nhất...`);
         xuLyDocPDF(idTepHienTai);
     };
 }
 
 // =========================================================================
-// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ (SỬ DỤNG API GỐC, ĐỌC CỘT C VÀ D)
+// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ
 // =========================================================================
 async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
         
-        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
         const duLieu = await phanHoi.json();
         
-        if (!Array.isArray(duLieu)) {
-            throw new Error("Dữ liệu trả về không đúng định dạng mảng.");
-        }
+        if (!Array.isArray(duLieu)) throw new Error("Dữ liệu sai định dạng.");
 
-        if (duLieu.length > 0) {
-            duLieu.forEach(dong => {
-                let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
-                let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
-                
-                // Cột C (Index 2): Kỳ 1 | Cột D (Index 3): Kỳ 2
-                let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
-                let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
-                
-                if (tenKhoi && tenMon && linkKy1) {
-                    let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
-                    boNhoHocLieuSGK[khoaTruyXuat] = {
-                        idKy1: trichXuatIdTuLink(linkKy1),
-                        idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
-                    };
-                }
-            });
+        let dongBatDau = (duLieu.length > 0 && String(duLieu[0][0]).toLowerCase().includes('khối')) ? 1 : 0;
+
+        for (let i = dongBatDau; i < duLieu.length; i++) {
+            let dong = duLieu[i];
+            let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
+            let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
+            
+            // Cột C (Index 2): Kỳ 1 | Cột D (Index 3): Kỳ 2
+            let linkKy1 = dong[2] ? String(dong[2]).trim() : ''; 
+            let linkKy2 = dong[3] ? String(dong[3]).trim() : ''; 
+            
+            if (tenKhoi && tenMon && linkKy1) {
+                let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
+                boNhoHocLieuSGK[khoaTruyXuat] = {
+                    idKy1: trichXuatIdTuLink(linkKy1),
+                    idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
+                };
+            }
         }
     } catch (loi) { 
-        console.error("Lỗi kết nối tải Danh mục SGK:", loi);
+        console.error("Lỗi kết nối:", loi);
         throw loi; 
     }
 }
@@ -133,35 +130,23 @@ function trichXuatIdTuLink(url) {
 }
 
 // =========================================================================
-// KHỐI 3: ĐIỀU HƯỚNG THEO TUẦN HỌC (CHUẨN CHỈ: > 18 LÀ KỲ 2, CÒN LẠI KỲ 1)
+// KHỐI 3: THUẬT TOÁN ĐIỀU HƯỚNG VÀ KIỂM SOÁT KỲ HỌC
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
+    // 1. Quét tuần An toàn Tuyệt đối (Không dùng querySelector tràn lan)
     let tuanHienTai = 1; 
-    
-    // Ưu tiên tham số truyền vào
     if (thamSoTuan != null && typeof thamSoTuan !== 'object') {
         let match = String(thamSoTuan).match(/\d+/);
         if (match) tuanHienTai = parseInt(match[0], 10);
-    } 
-    // Quét giao diện nếu không có tham số
-    else {
-        let dsIdChuan = ['tuan', 'cboTuan', 'tuanHoc', 'chonTuan', 'Tuan', 'TuanHoc'];
-        let oNhapTuan = null;
-        for (let id of dsIdChuan) {
-            oNhapTuan = document.getElementById(id);
-            if (oNhapTuan) break;
-        }
-        
-        if (!oNhapTuan) {
-            oNhapTuan = document.querySelector('select[id*="tuan" i], input[id*="tuan" i]');
-        }
-        
-        if (oNhapTuan) {
-            let giaTriChu = (oNhapTuan.tagName === 'SELECT') ? oNhapTuan.options[oNhapTuan.selectedIndex].text : oNhapTuan.value;
+    } else {
+        // Chỉ đích danh các thẻ nhập liệu tuần, không quét lung tung
+        let oNhap = document.getElementById('tuan') || document.getElementById('tuanHoc') || document.getElementById('cboTuan') || document.getElementById('Tuan');
+        if (oNhap) {
+            let giaTriChu = (oNhap.tagName === 'SELECT') ? oNhap.options[oNhap.selectedIndex].text : oNhap.value;
             let match = String(giaTriChu).match(/\d+/);
             if (match) tuanHienTai = parseInt(match[0], 10);
         }
@@ -169,15 +154,15 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     
     if (tuanHienTai < 1) tuanHienTai = 1;
 
-    // Khởi tạo bộ nhớ nếu trống
+    // 2. Khởi tạo DB nếu trống
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
-        hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
+        hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, 1);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang đồng bộ dữ liệu Sách giáo khoa...";
         try {
             await khoiTaoBoNhoHocLieu();
         } catch (loi) {
             dongModalXemTruoc();
-            setTimeout(() => { alert("Sự cố hệ thống khi tải danh mục."); }, 300);
+            setTimeout(() => alert("Sự cố hệ thống khi tải danh mục."), 300);
             return;
         }
     }
@@ -185,26 +170,59 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     const duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem];
     if (!duLieuMonHoc || (!duLieuMonHoc.idKy1 && !duLieuMonHoc.idKy2)) {
         dongModalXemTruoc();
-        setTimeout(() => { alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc} trong bảng tính.`); }, 300);
+        setTimeout(() => alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc}.`), 300);
         return;
     }
 
-    // ==============================================================
-    // [ĐÃ SỬA CHÍNH XÁC]: Tuần > 18 lấy Cột D (Kỳ 2), Tuần < 19 lấy Cột C (Kỳ 1)
-    // ==============================================================
-    if (tuanHienTai > 18) {
-        idTepHienTai = duLieuMonHoc.idKy2;
-    } else {
-        idTepHienTai = duLieuMonHoc.idKy1;
-    }
-    
-    // Tự động xóa sạch bản nhớ đệm cũ nếu ID Link đã bị thay đổi
-    await xoaBoNhoDemCu(idTepHienTai);
+    // 3. Chốt Logic Tuần học
+    let kyHocPhanDong = (tuanHienTai > 18) ? 2 : 1;
 
-    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, tuanHienTai);
+    // 4. Lưu vào bộ nhớ tạm để phục vụ việc chuyển đổi bằng Nút bấm
+    thongTinBaiHocHienTai = {
+        khoi: tenKhoiGoc,
+        mon: tenMonGoc,
+        bai: tenBaiHoc,
+        idKy1: duLieuMonHoc.idKy1,
+        idKy2: duLieuMonHoc.idKy2,
+        kyDangXem: kyHocPhanDong
+    };
+
+    idTepHienTai = (kyHocPhanDong === 2) ? duLieuMonHoc.idKy2 : duLieuMonHoc.idKy1;
+    
+    await xoaBoNhoDemCu(idTepHienTai);
+    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, kyHocPhanDong);
     await xuLyDocPDF(idTepHienTai);
 };
 
+// [CHỨC NĂNG CHUYÊN GIA]: Hàm điều khiển Công tắc chuyển Kỳ học trên giao diện
+window.chuyenKyHocThuCong = async function(kyMoi) {
+    if (thongTinBaiHocHienTai.kyDangXem === kyMoi) return; // Không làm gì nếu ấn trùng
+
+    let idMoi = (kyMoi === 1) ? thongTinBaiHocHienTai.idKy1 : thongTinBaiHocHienTai.idKy2;
+    if (!idMoi) {
+        alert(`Tài liệu Tập ${kyMoi} của môn này chưa được cấu hình Link.`);
+        return;
+    }
+
+    thongTinBaiHocHienTai.kyDangXem = kyMoi;
+    idTepHienTai = idMoi;
+
+    // Cập nhật giao diện Công tắc
+    document.getElementById('btnChuyenKy1').className = (kyMoi === 1) ? "px-3 py-1 rounded-md text-xs font-extrabold transition bg-white text-blue-900 shadow" : "px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10";
+    document.getElementById('btnChuyenKy2').className = (kyMoi === 2) ? "px-3 py-1 rounded-md text-xs font-extrabold transition bg-white text-blue-900 shadow" : "px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10";
+
+    // Cập nhật tiêu đề
+    let nhanKyHoc = (kyMoi === 1) ? "[Tập 1 / Kỳ 1]" : "[Tập 2 / Kỳ 2]";
+    document.getElementById('tieuDeMonSgk').innerText = `Khối ${thongTinBaiHocHienTai.khoi} - Môn ${thongTinBaiHocHienTai.mon} ${nhanKyHoc}`;
+
+    await xoaBoNhoDemCu(idTepHienTai);
+    hienThiKhoiChoTai(`Đang truy xuất dữ liệu Kỳ ${kyMoi}...`);
+    await xuLyDocPDF(idTepHienTai);
+};
+
+// =========================================================================
+// KHỐI 4: GIAO DIỆN HTML (THÊM CÔNG TẮC CHUYỂN KỲ)
+// =========================================================================
 function xayDungKhungGiaoDienXemTruoc() {
     const modalHTML = `
     <div id="modalXemTruocSGK" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[9999] flex items-center justify-center font-sans transition-opacity reactbits-fade-in">
@@ -216,14 +234,19 @@ function xayDungKhungGiaoDienXemTruoc() {
                         <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                     </div>
                     <div class="truncate">
-                        <h3 id="tieuDeMonSgk" class="text-white font-extrabold text-lg leading-tight truncate">Đang tải học liệu...</h3>
-                        <p id="tieuDeBaiSgk" class="text-blue-100 text-sm font-semibold truncate">Vui lòng chờ hệ thống phân tích</p>
+                        <h3 id="tieuDeMonSgk" class="text-white font-extrabold text-lg leading-tight truncate">Đang tải...</h3>
+                        <p id="tieuDeBaiSgk" class="text-blue-100 text-sm font-semibold truncate">Vui lòng chờ...</p>
+                    </div>
+                    
+                    <!-- [ĐỘT PHÁ UI]: Bộ công tắc ép chuyển đổi Kỳ Học trực tiếp -->
+                    <div class="hidden sm:flex bg-blue-900/50 p-1 rounded-lg ml-2 border border-blue-700/50" id="congTacKyHoc">
+                        <button id="btnChuyenKy1" onclick="chuyenKyHocThuCong(1)" class="px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10">Kỳ 1</button>
+                        <button id="btnChuyenKy2" onclick="chuyenKyHocThuCong(2)" class="px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10">Kỳ 2</button>
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-2 flex-none">
                     
-                    <!-- Nút Tải SGK -->
                     <div id="cumNutTaiXuong" class="hidden flex items-center bg-white/10 p-1 rounded-lg mr-1 border border-white/20">
                         <button onclick="taiToanBoSGK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded shadow transition text-sm flex items-center gap-1.5" title="Tải toàn bộ cuốn sách">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -264,7 +287,7 @@ function xayDungKhungGiaoDienXemTruoc() {
 
                 <div id="khoiTrangThaiSgk" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 z-10">
                     <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                    <p id="vanBanTrangThaiSgk" class="text-slate-700 font-bold text-lg">Đang kết nối thư viện học liệu số...</p>
+                    <p id="vanBanTrangThaiSgk" class="text-slate-700 font-bold text-lg">Đang kết nối thư viện...</p>
                 </div>
 
                 <canvas id="canvasHienThiPdf" class="shadow-2xl bg-white hidden mx-auto max-w-full h-auto mb-10"></canvas>
@@ -281,25 +304,30 @@ function xayDungKhungGiaoDienXemTruoc() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, tuanHienTai) {
-    let nhanKyHoc = (tuanHienTai > 18) ? "[Tập 2 / Kỳ 2]" : "[Tập 1 / Kỳ 1]";
+function hienThiKhoiChoTai(vanBanThongBao) {
+    document.getElementById('khoiTrangThaiSgk').classList.remove('hidden');
+    document.getElementById('canvasHienThiPdf').classList.add('hidden');
+    document.getElementById('vungIframeDuPhong').classList.add('hidden');
+    document.getElementById('nhomCongCuCanvas').classList.remove('flex');
+    document.getElementById('nhomCongCuCanvas').classList.add('hidden');
+    document.getElementById('bangDieuKhienTrang').classList.remove('flex');
+    document.getElementById('bangDieuKhienTrang').classList.add('hidden');
+    document.getElementById('iframeTaiLieuGoc').src = '';
+    document.getElementById('vanBanTrangThaiSgk').innerText = vanBanThongBao;
+}
+
+function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, kyHoc) {
+    let nhanKyHoc = (kyHoc === 2) ? "[Tập 2 / Kỳ 2]" : "[Tập 1 / Kỳ 1]";
     
     document.getElementById('tieuDeMonSgk').innerText = `Khối ${tenKhoi} - Môn ${tenMon} ${nhanKyHoc}`;
     document.getElementById('tieuDeBaiSgk').innerText = tenBaiGoc;
     
-    document.getElementById('khoiTrangThaiSgk').classList.remove('hidden');
-    document.getElementById('canvasHienThiPdf').classList.add('hidden');
-    document.getElementById('vungIframeDuPhong').classList.add('hidden');
+    // Nổi bật công tắc UI
+    document.getElementById('btnChuyenKy1').className = (kyHoc === 1) ? "px-3 py-1 rounded-md text-xs font-extrabold transition bg-white text-blue-900 shadow" : "px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10";
+    document.getElementById('btnChuyenKy2').className = (kyHoc === 2) ? "px-3 py-1 rounded-md text-xs font-extrabold transition bg-white text-blue-900 shadow" : "px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10";
+    
+    hienThiKhoiChoTai("Đang kiểm tra kho lưu trữ cục bộ...");
     document.getElementById('cumNutTaiXuong').classList.add('hidden'); 
-    
-    document.getElementById('bangDieuKhienTrang').classList.remove('flex');
-    document.getElementById('bangDieuKhienTrang').classList.add('hidden');
-    
-    document.getElementById('nhomCongCuCanvas').classList.remove('flex');
-    document.getElementById('nhomCongCuCanvas').classList.add('hidden');
-    
-    document.getElementById('iframeTaiLieuGoc').src = '';
-    document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kiểm tra kho lưu trữ cục bộ...";
 
     const modal = document.getElementById('modalXemTruocSGK');
     modal.classList.remove('hidden');
@@ -317,12 +345,12 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 4: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
+// KHỐI 5: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
 // =========================================================================
 async function taiDuLieuPdfAnToan(idPdf) {
     let mangByteCucBo = await docTepTuBoNhoCucBo(idPdf);
     if (mangByteCucBo) {
-        document.getElementById('vanBanTrangThaiSgk').innerText = "Truy xuất thành công từ bộ nhớ đệm tốc độ cao...";
+        document.getElementById('vanBanTrangThaiSgk').innerText = "Truy xuất thành công từ bộ nhớ đệm...";
         return mangByteCucBo;
     }
 
@@ -430,7 +458,6 @@ function chuyenTrangPdf(buocNhay) {
 function nhayDenTrangHoc(giaTriTrang) {
     if (!theHienPdfHienTai) return;
     let trangMoi = parseInt(giaTriTrang, 10);
-    
     if (isNaN(trangMoi)) return;
     if (trangMoi < 1) trangMoi = 1;
     if (trangMoi > theHienPdfHienTai.numPages) trangMoi = theHienPdfHienTai.numPages;
@@ -464,9 +491,6 @@ function kichHoatLuoiAnToanIframe(idPdf) {
     document.getElementById('cumNutTaiXuong').classList.remove('hidden');
 }
 
-// =========================================================================
-// KHỐI 5: TẢI TRỰC TIẾP NGUYÊN BẢN GỐC TỪ GOOGLE DRIVE
-// =========================================================================
 function taiToanBoSGK() {
     if (!idTepHienTai) {
         alert("Sự cố: Không định vị được ID của tài liệu Sách giáo khoa.");
