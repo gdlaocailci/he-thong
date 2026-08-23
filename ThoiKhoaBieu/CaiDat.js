@@ -45,10 +45,21 @@ function veGiaoDienThamSo() {
     const tbody = document.getElementById('vungThamSo');
     let html = '';
     dsThamSo.forEach((ts, idx) => {
+        // [NÂNG CẤP]: Đặt biến chứa thuộc tính chữ mờ (placeholder)
+        let chuMoGiaTri = '';
+        let classChuMo = '';
+        
+        // Kiểm tra đúng dòng mã tham số TRANG_THAI_WEB để chèn chỉ dẫn
+        if (ts.maThamSo.trim() === 'TRANG_THAI_WEB') {
+            chuMoGiaTri = 'placeholder="Nhập: Hoạt động hoặc Bảo trì"';
+            // Thêm định dạng chữ mờ nghiêng, nhạt màu để phân biệt với dữ liệu thật
+            classChuMo = 'placeholder:text-gray-400 placeholder:italic placeholder:font-normal';
+        }
+
         // Nâng cấp: Khoá input Mã tham số (readonly), bỏ onchange, bỏ toàn bộ thẻ td chứa nút Xoá
         html += `<tr class="hover:bg-slate-50">
             <td class="p-0 border border-gray-300"><input type="text" value="${ts.maThamSo}" readonly class="w-full h-full min-h-[35px] px-2 outline-none bg-transparent font-extrabold text-blue-900 text-left uppercase cursor-not-allowed"></td>
-            <td class="p-0 border border-gray-300"><input type="text" value="${ts.giaTri}" onchange="capNhatThamSo(${idx}, 'giaTri', this.value)" class="w-full h-full min-h-[35px] px-2 outline-none bg-transparent text-center font-bold text-slate-800"></td>
+            <td class="p-0 border border-gray-300"><input type="text" ${chuMoGiaTri} value="${ts.giaTri}" onchange="capNhatThamSo(${idx}, 'giaTri', this.value)" class="w-full h-full min-h-[35px] px-2 outline-none bg-transparent text-center font-bold text-slate-800 ${classChuMo}"></td>
             <td class="p-0 border border-gray-300"><input type="text" value="${ts.ghiChu}" onchange="capNhatThamSo(${idx}, 'ghiChu', this.value)" class="w-full h-full min-h-[35px] px-2 outline-none bg-transparent text-left italic text-gray-600"></td>
         </tr>`;
     });
