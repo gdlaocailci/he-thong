@@ -37,8 +37,8 @@ function kiemSoatGiaoDien() {
         }
     });
 
-    // [ĐÃ THÊM 'menuDanhMucSGK']: Chỉ hiển thị menu này khi có quyền admin
-    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK'];
+    // [ĐÃ BỔ SUNG]: Đưa thêm Phân phối chương trình vào danh sách kiểm duyệt
+    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK', 'menuPhanPhoiChuongTrinh', 'menuPPCT'];
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
