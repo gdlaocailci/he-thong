@@ -625,8 +625,8 @@ async function luuDuLieu(event, loaiLuu) {
 // KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER)
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
-    // 1. Phủ màu Menu mượt mà không độ trễ
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop'];
+    // 1. Phủ màu Menu mượt mà không độ trễ [Đã bổ sung 'menuDanhMucSGK']
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop', 'menuDanhMucSGK'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
@@ -648,8 +648,8 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
     }
 
-    // 2. Chuyển đổi khung màn hình tức thì bằng CSS
-    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop'];
+    // 2. Chuyển đổi khung màn hình tức thì bằng CSS [Đã bổ sung 'khungDanhMucSGK']
+    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop', 'khungDanhMucSGK'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
         if (el) {
@@ -691,10 +691,11 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
         taiDuLieuCaiDatHeThong();
     }
-    
     if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
         taiDuLieuDanhMucLop();
     }
+    
+    // [ĐÃ BỔ SUNG]: Đánh thức hàm tải dữ liệu Danh mục SGK khi mở tab
     if (idKhung === 'khungDanhMucSGK' && typeof taiLaiDuLieuDanhMucSGK === 'function') {
         taiLaiDuLieuDanhMucSGK();
     }
