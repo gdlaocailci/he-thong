@@ -1,12 +1,13 @@
 // =========================================================================
 // LÕI THUẬT TOÁN QUẢN LÝ DANH MỤC SGK 
-// Giữ nguyên 100% cấu trúc gốc của tác giả Hoàng Ngọc Lâm
-// Đảm bảo tương thích tính năng: Sắp xếp Lên/Xuống, Gợi ý Môn học, Khóa click
+// Thiết kế và phát triển Hoàng Ngọc Lâm
+// [Nâng cấp]: Bổ sung tính năng di chuyển (Lên/Xuống) để sắp xếp trật tự Môn học
+// [Nâng cấp mới]: Tự động sinh thẻ datalist để hiển thị danh sách chọn môn học đồng bộ từ KHUNG_CHUONG_TRINH
 // =========================================================================
 
 let dangTaiDuLieuSGK = false; 
 let dangLuuDuLieuSGK = false; 
-let DANH_SACH_MON_CHUAN = []; // Lưu danh sách môn từ sheet KHUNG_CHUONG_TRINH
+let DANH_SACH_MON_CHUAN = []; // [NÂNG CẤP]: Mảng lưu dữ liệu đối chiếu từ máy chủ
 
 async function taiLaiDuLieuDanhMucSGK() {
     if (dangTaiDuLieuSGK) return; 
@@ -27,13 +28,21 @@ async function taiLaiDuLieuDanhMucSGK() {
         
         const duLieu = await phanHoi.json();
         
-      const datalist = document.getElementById('danhSachMonHocSGK');
+        // [NÂNG CẤP QUAN TRỌNG]: Tự động tạo thẻ datalist nếu giao diện HTML chưa có
+        let datalist = document.getElementById('danhSachMonHocSGK');
+        if (!datalist) {
+            datalist = document.createElement('datalist');
+            datalist.id = 'danhSachMonHocSGK';
+            document.body.appendChild(datalist);
+        }
+        
         if (datalist) {
             datalist.innerHTML = ''; 
             if (duLieu.monHoc && Array.isArray(duLieu.monHoc) && duLieu.monHoc.length > 0) {
-                // [NÂNG CẤP] Lưu lại danh sách môn chuẩn từ máy chủ để đối chiếu chéo
+                // Lưu lại mảng chuẩn để kiểm tra tính hợp lệ khi người dùng gõ tay
                 DANH_SACH_MON_CHUAN = duLieu.monHoc.map(m => String(m).trim()).filter(Boolean);
                 
+                // Đẩy dữ liệu vào danh sách xổ xuống
                 DANH_SACH_MON_CHUAN.forEach(mon => {
                     datalist.insertAdjacentHTML('beforeend', `<option value="${mon}">`);
                 });
@@ -43,16 +52,13 @@ async function taiLaiDuLieuDanhMucSGK() {
         const tbody = document.getElementById('danhSachDongDuLieuSGK');
         if (tbody) {
             tbody.innerHTML = '';
-            
-            // [MẸO NHỎ]: Xử lý thông minh để nhận cả 2 định dạng trả về từ máy chủ (Array hoặc Object)
-            const mangSGK = duLieu.sgk ? duLieu.sgk : (Array.isArray(duLieu) ? duLieu : []);
-            
-            if (mangSGK.length > 1) {
+            const mangSGK = duLieu.sgk || [];
+            if (Array.isArray(mangSGK) && mangSGK.length > 1) {
                 for (let i = 1; i < mangSGK.length; i++) {
                     let khoi = mangSGK[i][0] ? String(mangSGK[i][0]).trim() : '';
                     let mon = mangSGK[i][1] ? String(mangSGK[i][1]).trim() : '';
-                    let link1 = mangSGK[i][2] ? String(mangSGK[i][2]).trim() : ''; // Cột C
-                    let link2 = mangSGK[i][3] ? String(mangSGK[i][3]).trim() : ''; // Cột D
+                    let link1 = mangSGK[i][2] ? String(mangSGK[i][2]).trim() : '';
+                    let link2 = mangSGK[i][3] ? String(mangSGK[i][3]).trim() : '';
                     taoDongGiaoDienDuLieu(khoi, mon, link1, link2);
                 }
             } else {
@@ -71,6 +77,7 @@ async function taiLaiDuLieuDanhMucSGK() {
     }
 }
 
+// [NÂNG CẤP]: Hàm tự động so khớp, chuyển định dạng và cảnh báo theo Khung chương trình
 function dongBoVoiKhungChuongTrinh(input) {
     let giaTri = input.value.trim();
     if (!giaTri) {
@@ -79,7 +86,6 @@ function dongBoVoiKhungChuongTrinh(input) {
         return;
     }
     
-    // Đối chiếu với danh sách KHUNG_CHUONG_TRINH (không phân biệt hoa/thường)
     let giaTriThuong = giaTri.toLowerCase();
     let monChuan = DANH_SACH_MON_CHUAN.find(m => m.toLowerCase() === giaTriThuong);
     
@@ -87,11 +93,11 @@ function dongBoVoiKhungChuongTrinh(input) {
         input.value = monChuan; 
         input.classList.remove('text-red-500');
         input.classList.add('text-slate-800');
-        input.title = "Tên môn khớp với KHUNG_CHUONG_TRINH";
+        input.title = "Đã đồng bộ Khung chương trình";
     } else {
         input.classList.remove('text-slate-800');
         input.classList.add('text-red-500');
-        input.title = "Cảnh báo: Môn học không khớp với cột A2:A sheet KHUNG_CHUONG_TRINH";
+        input.title = "Cảnh báo: Môn học chưa khớp với cột A2:A sheet KHUNG_CHUONG_TRINH";
     }
 }
 
@@ -101,9 +107,10 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     const tr = document.createElement('tr');
     tr.className = "hover:bg-blue-50/60 transition-colors dong-nhap-lieu-sgk";
     
+    // [CẬP NHẬT GIAO DIỆN]: Bổ sung onblur="dongBoVoiKhungChuongTrinh(this)" vào thanh nhập môn
     tr.innerHTML = `
         <td class="px-2 py-2 text-center"><input type="text" class="w-full text-center bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-bold text-slate-700" value="${khoi}" placeholder="VD: 3"></td>
-       <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer transition-colors duration-300" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()" onblur="dongBoVoiKhungChuongTrinh(this)"></td>
+        <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer transition-colors duration-300" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()" onblur="dongBoVoiKhungChuongTrinh(this)"></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 text-blue-600 font-mono text-xs" value="${link1}" placeholder="Link Google Drive Kỳ 1..."></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 text-blue-600 font-mono text-xs" value="${link2}" placeholder="Link Google Drive Kỳ 2..."></td>
         <td class="px-2 py-2">
@@ -117,13 +124,16 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     tbody.appendChild(tr);
 }
 
+// [TÍNH NĂNG MỚI]: Thuật toán đảo vị trí các dòng HTML DOM
 function diChuyenDong(btn, huong) {
     const dongHienTai = btn.closest('tr');
     const tbody = dongHienTai.parentNode;
     
     if (huong === -1 && dongHienTai.previousElementSibling) {
+        // Đưa lên trên (Chèn dòng hiện tại lên trước dòng nằm phía trên nó)
         tbody.insertBefore(dongHienTai, dongHienTai.previousElementSibling);
     } else if (huong === 1 && dongHienTai.nextElementSibling) {
+        // Đưa xuống dưới (Chèn dòng bên dưới lên trước dòng hiện tại)
         tbody.insertBefore(dongHienTai.nextElementSibling, dongHienTai);
     }
 }
@@ -168,7 +178,6 @@ async function luuDongBoDanhMucSGK() {
         
         if (ketQua.trangThai === 'thanh_cong') {
             alert("THÔNG BÁO: Đã đồng bộ thành công!");
-            // Cập nhật quan trọng: Giải phóng cache để tính năng XemTruocSGK tự tải lại link mới
             if (typeof boNhoHocLieuSGK !== 'undefined') boNhoHocLieuSGK = {}; 
         } else {
             alert("Lưu thất bại: " + ketQua.thongBao);
