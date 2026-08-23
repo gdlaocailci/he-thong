@@ -29,9 +29,12 @@
 </head>
 <body class="bg-gray-100 text-slate-800 min-h-screen flex overflow-hidden">
 
-    <!-- 1. CỘT MENU BÊN TRÁI -->
-    <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-300 ease-in-out w-[280px] h-full min-h-screen bg-menu-main flex flex-col shadow-xl font-sans text-white z-50 flex-none">
-         <div class="flex flex-col items-center pt-8 pb-3 px-4">
+<!-- 1. CỘT MENU BÊN TRÁI -->
+    <!-- [ĐÃ SỬA]: Thay h-full min-h-screen bằng h-screen để chốt cứng chiều cao bằng đúng màn hình -->
+    <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-300 ease-in-out w-[280px] h-screen bg-menu-main flex flex-col shadow-xl font-sans text-white z-50 flex-none">
+         
+         <!-- PHẦN ĐẦU: LOGO (Thêm flex-none để không bị bóp méo khi phóng to) -->
+         <div class="flex flex-col items-center pt-8 pb-3 px-4 flex-none">
             <div class="bg-white p-1 rounded-full mb-4 shadow-lg border-2 border-blue-300">
                 <img id="logoMenuDoc" src="" alt="Logo" class="w-20 h-20 rounded-full object-cover">
             </div>
@@ -39,8 +42,8 @@
                 Trường Tiểu học<br>Hợp Thành
             </h2>
         </div>
-        <div class="px-6 my-2"><hr class="border-dashed border-blue-300 opacity-40"></div>
-        <div class="mx-2 my-2 bg-white rounded shadow-md px-3 py-2 text-sm text-slate-800">
+        <div class="px-6 my-2 flex-none"><hr class="border-dashed border-blue-300 opacity-40"></div>
+        <div class="mx-2 my-2 bg-white rounded shadow-md px-3 py-2 text-sm text-slate-800 flex-none">
             <div class="flex flex-col border-b border-dashed border-gray-300 pb-2 mb-1.5">
                 <div class="flex justify-center items-center gap-2 mb-1">
                     <span class="font-bold">Năm học:</span>
@@ -52,7 +55,8 @@
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto custom-scrollbar flex flex-col mt-4 px-3 gap-1 mb-2">
+        <!-- PHẦN GIỮA: DANH SÁCH MENU (Thêm flex-1, min-h-0 và overflow-y-auto để bật tính năng cuộn chuột) -->
+        <nav class="flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col mt-2 px-3 gap-1 pb-4">
             <a id="menuTKB" onclick="kichHoatTab('menuTKB', 'khungTKB', true)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
                 <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px]">TKB Toàn trường</span>
@@ -100,7 +104,8 @@
             </a>
         </nav>
         
-        <div class="mt-auto p-4 bg-black/20 text-center">
+        <!-- PHẦN CUỐI: NÚT ĐĂNG NHẬP VÀ BẢN QUYỀN (Thêm flex-none để ghim chặt dưới đáy màn hình) -->
+        <div class="p-4 bg-black/20 text-center flex-none">
             <button id="nutDangNhapG" onclick="khoiDongDangNhap()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-2 px-4 rounded shadow-md flex items-center justify-center gap-2 transition duration-200 mb-4 group">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
                 <span class="group-hover:text-blue-300 transition-colors">Đăng nhập</span>
