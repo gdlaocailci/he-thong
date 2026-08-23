@@ -142,6 +142,8 @@ async function khoiTaoGiaoDien() {
             let menuNam = document.getElementById('menuHienThiNamHoc'); 
             if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
         }
+
+        // [NÂNG CẤP]: Kiểm tra trạng thái web và áp dụng hiệu ứng bập bênh ReactBits
         let theTrangThai = document.getElementById('trangThaiHeThong');
         if (theTrangThai && thongSoHocVu.TRANG_THAI_WEB) {
             let trangThai = thongSoHocVu.TRANG_THAI_WEB.trim();
@@ -149,8 +151,8 @@ async function khoiTaoGiaoDien() {
                 theTrangThai.innerText = 'Hệ thống mở';
                 theTrangThai.className = 'font-bold text-green-700 text-base leading-tight inline-block mt-0.5';
             } else {
-                theTrangThai.innerText = 'Hệ thống đang bảo trì'; // Hiển thị "Bảo trì" hoặc "Tạm dừng"
-                theTrangThai.className = 'font-bold text-red-600 text-base leading-tight inline-block mt-0.5 animate-pulse';
+                theTrangThai.innerText = 'Hệ thống đang bảo trì'; 
+                theTrangThai.className = 'font-bold text-red-600 text-base leading-tight inline-block mt-0.5 reactbits-bap-benh';
             }
         }
         
