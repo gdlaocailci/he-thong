@@ -941,3 +941,36 @@ async function xuatExcel() {
         if (btn) btn.innerHTML = textGoc;
     }
 }
+
+document.addEventListener('click', function(suKien) {
+    let menuDuocBam = suKien.target.closest('nav a');
+    
+    // Nếu phát hiện người dùng vừa bấm vào một Menu bất kỳ
+    if (menuDuocBam) {
+        let vungChinh = document.getElementById('vungHienThiChinh');
+        if (!vungChinh) return;
+
+        // Đợi 20 mili-giây để các hàm onclick cũ của PPCT chạy xong màn hình
+        setTimeout(() => {
+            Array.from(vungChinh.children).forEach(khung => {
+                if (khung.tagName === 'DIV' && !khung.classList.contains('hidden')) {
+                    
+                    // XỬ LÝ 1: Nếu đang kẹt Khung SGK mà người dùng KHÔNG bấm Menu SGK -> Ép Ẩn
+                    if (khung.id === 'khungDanhMucSGK' && menuDuocBam.id !== 'menuDanhMucSGK') {
+                        khung.classList.add('hidden');
+                        khung.classList.remove('flex', 'block');
+                    }
+                    
+                    // XỬ LÝ 2: Nếu đang kẹt Khung PPCT mà người dùng KHÔNG bấm Menu PPCT -> Ép Ẩn
+                    let laMenuPPCT = menuDuocBam.id.includes('PhanPhoi') || menuDuocBam.id.includes('PPCT');
+                    let laKhungPPCT = khung.id.includes('PhanPhoi') || khung.id.includes('PPCT');
+                    
+                    if (laKhungPPCT && !laMenuPPCT) {
+                        khung.classList.add('hidden');
+                        khung.classList.remove('flex', 'block');
+                    }
+                }
+            });
+        }, 20);
+    }
+});
