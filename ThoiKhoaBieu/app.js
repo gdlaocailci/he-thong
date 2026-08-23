@@ -37,7 +37,8 @@ function kiemSoatGiaoDien() {
         }
     });
 
-    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh'];
+    // [ĐÃ THÊM 'menuDanhMucSGK']: Chỉ hiển thị menu này khi có quyền admin
+    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK'];
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
@@ -690,9 +691,12 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) {
         taiDuLieuCaiDatHeThong();
     }
-    // [NÂNG CẤP]: Bổ sung lệnh đánh thức hàm tải cho Danh mục Lớp
+    
     if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
         taiDuLieuDanhMucLop();
+    }
+    if (idKhung === 'khungDanhMucSGK' && typeof taiLaiDuLieuDanhMucSGK === 'function') {
+        taiLaiDuLieuDanhMucSGK();
     }
 };
 
