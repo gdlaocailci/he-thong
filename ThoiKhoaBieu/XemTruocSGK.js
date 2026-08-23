@@ -1,9 +1,6 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V20.0)
-// BẢN ỔN ĐỊNH CUỐI CÙNG:
-// 1. Dùng lại hàm API gốc 'layDanhMucSGK' với bộ lọc chống lỗi mảng tuyệt đối.
-// 2. Logic chốt: Tuần <= 18 (Cột C / Kỳ 1), Tuần > 18 (Cột D / Kỳ 2).
-// 3. Giữ công tắc UI điều hướng thủ công và tự động làm sạch Cache.
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V21.0 - TURBO)
+// BẢN TỐI ƯU SIÊU TỐC LÕI UI: Giữ nguyên 100% Logic V20, Bổ sung thuật toán tải đón đầu
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -11,6 +8,9 @@ let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
 let heSoThuPhong = 1.2;
 let idTepHienTai = '';
+
+// [BIẾN MỚI]: Bộ nhớ đệm RAM để lưu trữ các trang đã giải mã
+let boNhoTrangPdfGiaiMa = {};
 
 let thongTinBaiHocHienTai = { khoi: '', mon: '', bai: '', idKy1: '', idKy2: '', kyDangXem: 1 };
 
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let dbHocLieu = null;
 
 function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 10); // Nâng version để reset toàn bộ rác cũ
+    const request = indexedDB.open("KhoHocLieuSoDB", 10); 
     request.onupgradeneeded = function(event) {
         dbHocLieu = event.target.result;
         if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
@@ -96,19 +96,16 @@ async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
         
-        // CHÚ Ý: Dùng lại API 'layDanhMucSGK' cũ đã chạy ổn định, tuyệt đối không dùng API ToanBo ở đây
         const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
         if (!phanHoi.ok) throw new Error(`Lỗi HTTP: ${phanHoi.status}`);
         
         const duLieu = await phanHoi.json();
         
-        // Ép kiểu mảng an toàn
         let mangDuLieu = [];
         if (Array.isArray(duLieu)) mangDuLieu = duLieu;
         else if (duLieu && Array.isArray(duLieu.data)) mangDuLieu = duLieu.data;
         else throw new Error("Dữ liệu trả về không đúng cấu trúc mảng.");
 
-        // Bỏ qua dòng tiêu đề nếu có
         let dongBatDau = (mangDuLieu.length > 0 && String(mangDuLieu[0][0]).toLowerCase().includes('khối')) ? 1 : 0;
 
         for (let i = dongBatDau; i < mangDuLieu.length; i++) {
@@ -116,7 +113,6 @@ async function khoiTaoBoNhoHocLieu() {
             let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
             let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
             
-            // Lấy Cột C (Index 2) và Cột D (Index 3), bảo vệ lỗi Out of bounds
             let linkKy1 = (dong.length > 2 && dong[2]) ? String(dong[2]).trim() : ''; 
             let linkKy2 = (dong.length > 3 && dong[3]) ? String(dong[3]).trim() : ''; 
             
@@ -147,7 +143,6 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
-    // 1. Quét tuần An toàn (Phòng ngừa bắt nhầm ô input tổng số tuần)
     let tuanHienTai = 1; 
     if (thamSoTuan != null && typeof thamSoTuan !== 'object') {
         let match = String(thamSoTuan).match(/\d+/);
@@ -168,7 +163,6 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     
     if (tuanHienTai < 1) tuanHienTai = 1;
 
-    // 2. Tải dữ liệu nếu RAM rỗng
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
         hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, 1);
         document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kết nối thư viện Sách giáo khoa...";
@@ -176,7 +170,6 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
             await khoiTaoBoNhoHocLieu();
         } catch (loi) {
             dongModalXemTruoc();
-            // Cải tiến: In thẳng lỗi ra màn hình để giáo viên dễ báo cáo
             setTimeout(() => alert(`Sự cố mạng hoặc cấu hình API: ${loi.message}`), 300);
             return;
         }
@@ -189,7 +182,6 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
-    // 3. CHỐT LOGIC TUẦN HỌC (Tuần <= 18 là Kỳ 1, Tuần > 18 là Kỳ 2)
     let kyHocPhanDong = (tuanHienTai > 18) ? 2 : 1;
 
     thongTinBaiHocHienTai = {
@@ -353,7 +345,7 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 5: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF
+// KHỐI 5: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF (THUẬT TOÁN TURBO UI)
 // =========================================================================
 async function taiDuLieuPdfAnToan(idPdf) {
     let mangByteCucBo = await docTepTuBoNhoCucBo(idPdf);
@@ -402,11 +394,17 @@ async function xuLyDocPDF(idPdf) {
     try {
         const duLieuPdf = await taiDuLieuPdfAnToan(idPdf);
         
+        // Dọn dẹp RAM trước khi nạp tệp mới
+        boNhoTrangPdfGiaiMa = {};
+        
+        // [THUẬT TOÁN 1: RAM BYPASS] - Tối ưu hóa việc nạp file nội bộ
         const loadingTask = pdfjsLib.getDocument({ 
             data: duLieuPdf,
             cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/cmaps/',
             cMapPacked: true,
-            useWorkerFetch: true
+            disableStream: true,    // Bỏ qua luồng ảo vì file đã ở trong ổ cứng
+            disableAutoFetch: true, // Không cần tự kéo dữ liệu mạng
+            disableRange: true      // Tắt chia nhỏ file
         });
         
         theHienPdfHienTai = await loadingTask.promise;
@@ -442,7 +440,13 @@ async function veTrangCanVasPdf(soTrang) {
     document.getElementById('nhapSoTrangNhanh').value = soTrang;
     document.getElementById('thanhTruotTrang').value = soTrang;
     
-    const trang = await theHienPdfHienTai.getPage(soTrang);
+    // [THUẬT TOÁN 2: DECODED RAM CACHE] - Chỉ giải mã 1 lần duy nhất
+    let trang = boNhoTrangPdfGiaiMa[soTrang];
+    if (!trang) {
+        trang = await theHienPdfHienTai.getPage(soTrang);
+        boNhoTrangPdfGiaiMa[soTrang] = trang;
+    }
+    
     const canvas = document.getElementById('canvasHienThiPdf');
     const ctx = canvas.getContext('2d');
     
@@ -452,6 +456,13 @@ async function veTrangCanVasPdf(soTrang) {
 
     const renderContext = { canvasContext: ctx, viewport: viewport };
     await trang.render(renderContext).promise;
+    
+    // [THUẬT TOÁN 3: SMART PREFETCHING] - Giải mã ngầm trang tiếp theo
+    if (soTrang < theHienPdfHienTai.numPages && !boNhoTrangPdfGiaiMa[soTrang + 1]) {
+        theHienPdfHienTai.getPage(soTrang + 1).then(trangTiepTheo => {
+            boNhoTrangPdfGiaiMa[soTrang + 1] = trangTiepTheo;
+        });
+    }
 }
 
 function chuyenTrangPdf(buocNhay) {
