@@ -625,8 +625,9 @@ async function luuDuLieu(event, loaiLuu) {
 // KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER)
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
-    // 1. Phủ màu Menu mượt mà không độ trễ [Đã bổ sung 'menuDanhMucSGK']
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop', 'menuDanhMucSGK'];
+    // 1. Phủ màu Menu mượt mà không độ trễ
+    // [ĐÃ BỔ SUNG]: Đưa thêm Phân phối chương trình vào luồng quét UI
+    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop', 'menuDanhMucSGK', 'menuPhanPhoiChuongTrinh', 'menuPPCT'];
     cacMenu.forEach(id => {
         let m = document.getElementById(id);
         if (m) {
@@ -648,8 +649,8 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
     }
 
-    // 2. Chuyển đổi khung màn hình tức thì bằng CSS [Đã bổ sung 'khungDanhMucSGK']
-    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop', 'khungDanhMucSGK'];
+    // 2. Chuyển đổi khung màn hình tức thì bằng CSS
+    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop', 'khungDanhMucSGK', 'khungPhanPhoiChuongTrinh', 'khungPPCT'];
     tatCaKhung.forEach(id => {
         let el = document.getElementById(id);
         if (el) {
@@ -675,7 +676,7 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
         }
     }
 
-    // 4. KÍCH HOẠT TẢI DỮ LIỆU THÔNG MINH (Chỉ tải khi người dùng lần đầu bấm vào tab)
+    // 4. KÍCH HOẠT TẢI DỮ LIỆU THÔNG MINH 
     if (idKhung === 'khungThongKe' && typeof taiCayDanhMucThongKe === 'function' && Object.keys(cayDanhMucThongKe).length === 0) {
         taiCayDanhMucThongKe();
     }
@@ -694,10 +695,11 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
     if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) {
         taiDuLieuDanhMucLop();
     }
-    
-    // [ĐÃ BỔ SUNG]: Đánh thức hàm tải dữ liệu Danh mục SGK khi mở tab
     if (idKhung === 'khungDanhMucSGK' && typeof taiLaiDuLieuDanhMucSGK === 'function') {
         taiLaiDuLieuDanhMucSGK();
+    }
+    if ((idKhung === 'khungPhanPhoiChuongTrinh' || idKhung === 'khungPPCT') && typeof taiDuLieuPhanPhoiChuongTrinh === 'function') {
+        taiDuLieuPhanPhoiChuongTrinh();
     }
 };
 
