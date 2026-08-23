@@ -622,86 +622,88 @@ async function luuDuLieu(event, loaiLuu) {
 }
 
 // =========================================================================
-// KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER)
+// KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC (MASTER ROUTER TỰ ĐỘNG)
+// Khắc phục triệt để lỗi "Dính Khung UI" và "Đứng hình trình duyệt"
 // =========================================================================
 window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
-    // 1. Phủ màu Menu mượt mà 
-    const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat', 'menuDanhMucLop', 'menuDanhMucSGK', 'menuPhanPhoiChuongTrinh', 'menuPPCT'];
-    cacMenu.forEach(id => {
-        let m = document.getElementById(id);
-        if (m) {
+    try {
+        // 1. CHUYỂN MÀU MENU MƯỢT MÀ (Tự động quét toàn bộ thanh Menu)
+        document.querySelectorAll('nav a').forEach(m => {
             m.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group";
             let span = m.querySelector('span');
             if (span) span.className = "font-bold text-white/80 group-hover:text-white transition-colors text-[14px]";
             let svg = m.querySelector('svg');
             if (svg) svg.className = "w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white";
-        }
-    });
+        });
 
-    // Bật sáng Menu đang chọn
-    if (idMenu) {
-        let mActive = document.getElementById(idMenu);
-        if (mActive) {
-            mActive.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 shadow-md backdrop-blur-sm cursor-pointer group";
-            let spanActive = mActive.querySelector('span');
-            if (spanActive) spanActive.className = "font-bold text-menu-active text-[14px]";
-            let svgActive = mActive.querySelector('svg');
-            if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
+        if (idMenu) {
+            let mActive = document.getElementById(idMenu);
+            if (mActive) {
+                mActive.className = "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/20 bg-white/10 shadow-md backdrop-blur-sm cursor-pointer group";
+                let spanActive = mActive.querySelector('span');
+                if (spanActive) spanActive.className = "font-bold text-menu-active text-[14px]";
+                let svgActive = mActive.querySelector('svg');
+                if (svgActive) svgActive.className = "w-5 h-5 flex-none text-menu-active opacity-100";
+            }
         }
-    }
 
-    // 2. Chuyển đổi khung màn hình (Xử lý dứt điểm lỗi đè Khung SGK)
-    const tatCaKhung = ['khungTKB', 'khungThongKe', 'khungPhanCong', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat', 'khungDanhMucLop', 'khungDanhMucSGK', 'khungPhanPhoiChuongTrinh', 'khungPPCT'];
-    
-    tatCaKhung.forEach(id => {
-        let el = document.getElementById(id);
-        if (el) {
-            if (id === idKhung) {
-                el.classList.remove('hidden');
-                // [CHUẨN HÓA CSS]: Chỉ TKB dùng block, còn lại đều là flex-col
-                if (id === 'khungTKB') {
-                    el.classList.add('block');
-                    el.classList.remove('flex');
-                } else {
-                    el.classList.add('flex');
-                    el.classList.remove('block');
-                }
-            } else {
-                // Tự động ẩn toàn bộ các Tab không được gọi
+        // 2. DỌN DẸP GIAO DIỆN (Quét TẤT CẢ các thẻ DIV chứa Khung để ép ẨN)
+        // Kỹ thuật này miễn nhiễm với lỗi sai ID, đảm bảo SGK chắc chắn bị ẩn
+        document.querySelectorAll('div[id^="khung"]').forEach(el => {
+            // Giữ lại Khung đọc PDF của SGK để không hỏng sách
+            if (el.id !== 'khungNoiDungModal' && el.id !== idKhung && !el.classList.contains('hidden')) {
                 el.classList.add('hidden');
                 el.classList.remove('block', 'flex');
             }
-        }
-    });
+        });
 
-    // 3. Tắt/Bật thanh công cụ riêng của TKB
-    let thanhCongCu = document.getElementById('thanhCongCuTKB');
-    if (thanhCongCu) {
-        if (hienThanhCongCuTKB) {
-            thanhCongCu.classList.remove('hidden');
-            thanhCongCu.classList.add('flex');
-        } else {
-            thanhCongCu.classList.remove('flex');
-            thanhCongCu.classList.add('hidden');
+        // 3. HIỂN THỊ KHUNG MỤC TIÊU VÀO ĐÚNG VỊ TRÍ
+        let khungDich = document.getElementById(idKhung);
+        if (khungDich) {
+            khungDich.classList.remove('hidden');
+            if (idKhung === 'khungTKB' || idKhung === 'khungThongKe') {
+                khungDich.classList.add('block');
+            } else {
+                khungDich.classList.add('flex');
+            }
         }
+
+        // 4. QUẢN LÝ THANH CÔNG CỤ TKB
+        let thanhCongCu = document.getElementById('thanhCongCuTKB');
+        if (thanhCongCu) {
+            if (hienThanhCongCuTKB) {
+                thanhCongCu.classList.remove('hidden');
+                thanhCongCu.classList.add('flex');
+            } else {
+                thanhCongCu.classList.remove('flex');
+                thanhCongCu.classList.add('hidden');
+            }
+        }
+    } catch (loiUI) {
+        console.error("Sự cố chuyển giao diện UI:", loiUI);
     }
 
-    // 4. KÍCH HOẠT TẢI DỮ LIỆU THÔNG MINH
-    if (idKhung === 'khungThongKe' && typeof taiCayDanhMucThongKe === 'function' && Object.keys(cayDanhMucThongKe).length === 0) taiCayDanhMucThongKe();
-    if (idKhung === 'khungPhanCong' && typeof taiDuLieuPhanCongTuMayChu === 'function' && typeof danhSachGV !== 'undefined' && danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
-    if (idKhung === 'khungDanhMucGV' && typeof taiDuLieuDanhMucGV === 'function' && typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length === 0) taiDuLieuDanhMucGV();
-    if (idKhung === 'khungKhungChuongTrinh' && typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && typeof duLieuBangKCT !== 'undefined' && duLieuBangKCT.length === 0) taiDuLieuKhungChuongTrinhTuMayChu();
-    if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) taiDuLieuCaiDatHeThong();
-    if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) taiDuLieuDanhMucLop();
-    
-    // Đánh thức Danh mục SGK
-    if (idKhung === 'khungDanhMucSGK' && typeof taiLaiDuLieuDanhMucSGK === 'function') taiLaiDuLieuDanhMucSGK();
-    
-    // [ĐÁNH THỨC PPCT]: Gọi tải dữ liệu khi ấn vào tab
-    if (idKhung === 'khungPhanPhoiChuongTrinh' || idKhung === 'khungPPCT') {
-        if (typeof taiDuLieuPhanPhoiChuongTrinh === 'function') taiDuLieuPhanPhoiChuongTrinh();
-        if (typeof taiDuLieuPPCT === 'function') taiDuLieuPPCT();
-    }
+    // 5. ĐÁNH THỨC DỮ LIỆU ĐA TẦNG (TÁCH LUỒNG UI BẰNG SETTIMEOUT)
+    // Giúp giao diện chuyển ngay lập tức, không bị giật lag nếu dữ liệu tải chậm
+    setTimeout(() => {
+        try {
+            if (idKhung === 'khungThongKe' && typeof taiCayDanhMucThongKe === 'function' && Object.keys(cayDanhMucThongKe).length === 0) taiCayDanhMucThongKe();
+            if (idKhung === 'khungPhanCong' && typeof taiDuLieuPhanCongTuMayChu === 'function' && typeof danhSachGV !== 'undefined' && danhSachGV.length === 0) taiDuLieuPhanCongTuMayChu();
+            if (idKhung === 'khungDanhMucGV' && typeof taiDuLieuDanhMucGV === 'function' && typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length === 0) taiDuLieuDanhMucGV();
+            if (idKhung === 'khungKhungChuongTrinh' && typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && typeof duLieuBangKCT !== 'undefined' && duLieuBangKCT.length === 0) taiDuLieuKhungChuongTrinhTuMayChu();
+            if (idKhung === 'khungCaiDat' && typeof taiDuLieuCaiDatHeThong === 'function' && typeof dsThamSo !== 'undefined' && dsThamSo.length === 0) taiDuLieuCaiDatHeThong();
+            if (idKhung === 'khungDanhMucLop' && typeof taiDuLieuDanhMucLop === 'function' && typeof duLieuDanhMucLop !== 'undefined' && duLieuDanhMucLop.length === 0) taiDuLieuDanhMucLop();
+            if (idKhung === 'khungDanhMucSGK' && typeof taiLaiDuLieuDanhMucSGK === 'function') taiLaiDuLieuDanhMucSGK();
+            
+            // Bắt mọi ID liên quan đến Phân phối chương trình để đánh thức
+            if (idKhung && (idKhung.toLowerCase().includes('phanphoi') || idKhung.toLowerCase().includes('ppct'))) {
+                if (typeof taiDuLieuPhanPhoiChuongTrinh === 'function') taiDuLieuPhanPhoiChuongTrinh();
+                if (typeof taiDuLieuPPCT === 'function') taiDuLieuPPCT();
+            }
+        } catch (loiData) {
+            console.error("Lỗi động cơ tải dữ liệu:", loiData);
+        }
+    }, 50); // Độ trễ vàng 50ms cho phép trình duyệt vẽ xong UI
 };
 
 // =========================================================================
