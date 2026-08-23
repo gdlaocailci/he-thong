@@ -385,6 +385,43 @@
                     </div>
                 </div>
 
+                <!-- KHUNG 7: DANH MỤC SÁCH GIÁO KHOA -->
+                <div id="khungDanhMucSGK" class="hidden p-4 w-full h-full flex-col font-sans">
+                    <div class="flex justify-between items-center mb-4 flex-none">
+                        <h2 class="text-xl font-extrabold text-blue-900 uppercase">QUẢN LÝ DANH MỤC SÁCH GIÁO KHOA</h2>
+                        <div class="flex items-center gap-2">
+                            <button onclick="taiLaiDuLieuDanhMucSGK()" id="btnTaiLaiDanhMuc" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Tải lại
+                            </button>
+                            <button onclick="themDongMoiDanhMucSGK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-1.5">
+                                + Thêm dòng
+                            </button>
+                            <button onclick="luuDongBoDanhMucSGK()" id="btnLuuDanhMuc" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-5 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-1.5">
+                                Lưu Hệ Thống
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-auto border border-gray-400 shadow-sm bg-white relative flex-1">
+                        <!-- Thêm min-w-[800px] để chống bóp cột -->
+                        <table class="bang-excel w-full text-center min-w-[800px]">
+                            <thead class="sticky top-0 z-20 bg-slate-200 text-slate-900 shadow-sm">
+                                <tr>
+                                    <th class="py-2 w-24">Khối lớp</th>
+                                    <th class="py-2 w-48">Môn học</th>
+                                    <th class="py-2">Link SGK Kỳ 1 (Cột C)</th>
+                                    <th class="py-2">Link SGK Kỳ 2 (Cột D)</th>
+                                    <th class="py-2 w-16 text-red-600">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="danhSachDongDuLieuSGK">
+                                <tr><td colspan="5" class="text-center py-10 text-slate-500 font-bold">Vui lòng chờ, đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div> <!-- KẾT THÚC #vungHienThiChinh -->
         </main>
 
