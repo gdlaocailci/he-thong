@@ -1,6 +1,7 @@
 // =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V21.0 - TURBO)
-// BẢN TỐI ƯU SIÊU TỐC LÕI UI: Giữ nguyên 100% Logic V20, Bổ sung thuật toán tải đón đầu
+// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V22.0 - BẢN TURBO)
+// LÕI SIÊU TỐC: Xử lý triệt để lỗi nghẽn Cache, Thêm Timeout mạng, Nhớ trạng thái lỗi
+// BẢO LƯU 100% LOGIC V20: Chốt mốc Tuần <= 18 (Kỳ 1), Nút chuyển Kỳ thủ công
 // =========================================================================
 
 let boNhoHocLieuSGK = {}; 
@@ -9,57 +10,57 @@ let trangHienTaiPDF = 1;
 let heSoThuPhong = 1.2;
 let idTepHienTai = '';
 
-// [BIẾN MỚI]: Bộ nhớ đệm RAM để lưu trữ các trang đã giải mã
-let boNhoTrangPdfGiaiMa = {};
-
+let boNhoTrangPdfGiaiMa = {}; // RAM đệm giúp lật trang đã xem siêu mượt
 let thongTinBaiHocHienTai = { khoi: '', mon: '', bai: '', idKy1: '', idKy2: '', kyDangXem: 1 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    khoiTaoBoNhoCucBoDB(); 
     xayDungKhungGiaoDienXemTruoc();
 });
 
 // =========================================================================
-// KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB VÀ QUẢN LÝ BỘ NHỚ
+// KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB (THUẬT TOÁN ĐỒNG BỘ PROMISE CHỐNG VƯỢT MẶT)
 // =========================================================================
-let dbHocLieu = null;
-
-function khoiTaoBoNhoCucBoDB() {
-    const request = indexedDB.open("KhoHocLieuSoDB", 10); 
+// Ép hệ thống khởi tạo DB xong mới được làm việc khác
+const dbHocLieuPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open("KhoHocLieuSoDB", 11);
     request.onupgradeneeded = function(event) {
-        dbHocLieu = event.target.result;
-        if (!dbHocLieu.objectStoreNames.contains("BangTepPDF")) {
-            dbHocLieu.createObjectStore("BangTepPDF", { keyPath: "idPdf" });
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains("BangTepPDF")) {
+            db.createObjectStore("BangTepPDF", { keyPath: "idPdf" });
         }
     };
-    request.onsuccess = function(event) { dbHocLieu = event.target.result; };
-    request.onerror = function(event) { console.warn("Không hỗ trợ IndexedDB."); };
-}
+    request.onsuccess = function(event) { resolve(event.target.result); };
+    request.onerror = function(event) { console.warn("Lỗi IndexedDB"); resolve(null); };
+});
 
-function luuTepVaoBoNhoCucBo(idPdf, mangByte) {
-    if (!dbHocLieu) return;
+async function luuTepVaoBoNhoCucBo(idPdf, mangByte, laLoi = false) {
+    const db = await dbHocLieuPromise;
+    if (!db) return;
     try {
-        const transaction = dbHocLieu.transaction(["BangTepPDF"], "readwrite");
+        const transaction = db.transaction(["BangTepPDF"], "readwrite");
         const store = transaction.objectStore("BangTepPDF");
-        store.put({ idPdf: idPdf, duLieu: mangByte, thoiGian: new Date().getTime() });
+        // Lưu kèm cờ 'loi' để biết file này có bị quá tải mạng hay không
+        store.put({ idPdf: idPdf, duLieu: mangByte, loi: laLoi, thoiGian: new Date().getTime() });
     } catch (e) { console.warn("Đầy bộ nhớ cục bộ:", e); }
 }
 
-function docTepTuBoNhoCucBo(idPdf) {
+async function docTepTuBoNhoCucBo(idPdf) {
+    const db = await dbHocLieuPromise;
+    if (!db) return null;
     return new Promise((resolve) => {
-        if (!dbHocLieu) return resolve(null);
-        const transaction = dbHocLieu.transaction(["BangTepPDF"], "readonly");
+        const transaction = db.transaction(["BangTepPDF"], "readonly");
         const store = transaction.objectStore("BangTepPDF");
         const request = store.get(idPdf);
-        request.onsuccess = function(event) { resolve(request.result ? request.result.duLieu : null); };
-        request.onerror = function(event) { resolve(null); };
+        request.onsuccess = function(event) { resolve(request.result || null); };
+        request.onerror = function() { resolve(null); };
     });
 }
 
 async function xoaBoNhoDemCu(idPdfMoi) {
-    if (!dbHocLieu) return;
+    const db = await dbHocLieuPromise;
+    if (!db) return;
     return new Promise((resolve) => {
-        const transaction = dbHocLieu.transaction(["BangTepPDF"], "readwrite");
+        const transaction = db.transaction(["BangTepPDF"], "readwrite");
         const store = transaction.objectStore("BangTepPDF");
         const request = store.getAllKeys();
         
@@ -74,19 +75,17 @@ async function xoaBoNhoDemCu(idPdfMoi) {
     });
 }
 
-function lamMoiBoNhoDemPdf() {
-    if (!dbHocLieu || !idTepHienTai) {
-        alert("Không có dữ liệu để làm mới.");
-        return;
+async function lamMoiBoNhoDemPdf() {
+    if (!idTepHienTai) return;
+    const db = await dbHocLieuPromise;
+    if (db) {
+        const transaction = db.transaction(["BangTepPDF"], "readwrite");
+        transaction.objectStore("BangTepPDF").delete(idTepHienTai);
     }
-    const transaction = dbHocLieu.transaction(["BangTepPDF"], "readwrite");
-    const store = transaction.objectStore("BangTepPDF");
-    store.delete(idTepHienTai);
     
-    transaction.oncomplete = function() {
-        hienThiKhoiChoTai(`Đang đồng bộ tải lại phiên bản mới nhất...`);
-        xuLyDocPDF(idTepHienTai);
-    };
+    boNhoTrangPdfGiaiMa = {}; // Dọn RAM
+    hienThiKhoiChoTai(`Đang tải lại bản gốc sách mới nhất...`);
+    xuLyDocPDF(idTepHienTai);
 }
 
 // =========================================================================
@@ -95,12 +94,10 @@ function lamMoiBoNhoDemPdf() {
 async function khoiTaoBoNhoHocLieu() {
     try {
         const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-        
         const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
         if (!phanHoi.ok) throw new Error(`Lỗi HTTP: ${phanHoi.status}`);
         
         const duLieu = await phanHoi.json();
-        
         let mangDuLieu = [];
         if (Array.isArray(duLieu)) mangDuLieu = duLieu;
         else if (duLieu && Array.isArray(duLieu.data)) mangDuLieu = duLieu.data;
@@ -136,7 +133,7 @@ function trichXuatIdTuLink(url) {
 }
 
 // =========================================================================
-// KHỐI 3: THUẬT TOÁN ĐIỀU HƯỚNG VÀ KIỂM SOÁT KỲ HỌC
+// KHỐI 3: THUẬT TOÁN ĐIỀU HƯỚNG VÀ KIỂM SOÁT KỲ HỌC (CHUẨN V20)
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
@@ -224,7 +221,7 @@ window.chuyenKyHocThuCong = async function(kyMoi) {
 };
 
 // =========================================================================
-// KHỐI 4: GIAO DIỆN HTML (CÔNG TẮC ĐIỀU KHIỂN & LƯỚI AN TOÀN)
+// KHỐI 4: GIAO DIỆN HTML (GIỮ NGUYÊN BẢN CHUẨN)
 // =========================================================================
 function xayDungKhungGiaoDienXemTruoc() {
     const modalHTML = `
@@ -326,7 +323,7 @@ function hienThiModalXemTruoc(tenKhoi, tenMon, tenBaiGoc, kyHoc) {
     document.getElementById('btnChuyenKy1').className = (kyHoc === 1) ? "px-3 py-1 rounded-md text-xs font-extrabold transition bg-white text-blue-900 shadow" : "px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10";
     document.getElementById('btnChuyenKy2').className = (kyHoc === 2) ? "px-3 py-1 rounded-md text-xs font-extrabold transition bg-white text-blue-900 shadow" : "px-3 py-1 rounded-md text-xs font-bold transition text-blue-200 hover:text-white hover:bg-white/10";
     
-    hienThiKhoiChoTai("Đang kiểm tra kho lưu trữ cục bộ...");
+    hienThiKhoiChoTai("Đang kiểm tra ổ cứng tốc độ cao...");
     document.getElementById('cumNutTaiXuong').classList.add('hidden'); 
 
     const modal = document.getElementById('modalXemTruocSGK');
@@ -345,16 +342,36 @@ function dongModalXemTruoc() {
 }
 
 // =========================================================================
-// KHỐI 5: ĐỘNG CƠ TẢI ĐỆM VÀ HIỂN THỊ VĂN BẢN PDF (THUẬT TOÁN TURBO UI)
+// KHỐI 5: ĐỘNG CƠ TẢI SIÊU TỐC (MẠNG + CACHE + RENDER LÕI)
 // =========================================================================
+// Thuật toán: Bấm giờ mạng. Nếu proxy quá 20s không trả file, ngắt lập tức để khỏi treo máy.
+async function fetchVoiTimeout(url, thoiGianMax = 20000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), thoiGianMax);
+    try {
+        const phanHoi = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        return phanHoi;
+    } catch (loi) {
+        clearTimeout(timeoutId);
+        throw loi;
+    }
+}
+
 async function taiDuLieuPdfAnToan(idPdf) {
-    let mangByteCucBo = await docTepTuBoNhoCucBo(idPdf);
-    if (mangByteCucBo) {
-        document.getElementById('vanBanTrangThaiSgk').innerText = "Truy xuất thành công từ bộ nhớ đệm...";
-        return mangByteCucBo;
+    // Bước 1: Đọc DB an toàn nhờ luồng Promise (Không bao giờ bị lỗi vượt mặt)
+    let banGhiCache = await docTepTuBoNhoCucBo(idPdf);
+    if (banGhiCache) {
+        // [CƠ CHẾ DANH SÁCH ĐEN]: Nếu lần trước file này đã thất bại (mạng yếu/file quá to)
+        // Hệ thống sẽ NHỚ LỖI và đẩy ngay sang Iframe trong 0.1s, không bắt chờ 20s nữa.
+        if (banGhiCache.loi) {
+            throw new Error("Tệp lớn, chuyển thẳng lưới an toàn Iframe.");
+        }
+        document.getElementById('vanBanTrangThaiSgk').innerText = "Truy xuất tức thì từ ổ cứng (Không cần mạng)...";
+        return banGhiCache.duLieu;
     }
 
-    document.getElementById('vanBanTrangThaiSgk').innerText = "Đang tải nguyên bản Sách giáo khoa (1 lần duy nhất)...";
+    document.getElementById('vanBanTrangThaiSgk').innerText = "Đang tải Sách nguyên bản từ máy chủ (Chỉ đợi 1 lần duy nhất)...";
     const dsProxy = [
         'https://corsproxy.io/?',
         'https://api.allorigins.win/raw?url=',
@@ -364,20 +381,24 @@ async function taiDuLieuPdfAnToan(idPdf) {
     
     for (let proxy of dsProxy) {
         try {
-            let phanHoi = await fetch(proxy + linkGoc);
+            let phanHoi = await fetchVoiTimeout(proxy + linkGoc, 20000); 
             if (!phanHoi.ok) continue;
             
             let boDem = await phanHoi.arrayBuffer();
             let kiemTra = new Uint8Array(boDem.slice(0, 5));
             if (kiemTra[0]===37 && kiemTra[1]===80 && kiemTra[2]===68 && kiemTra[3]===70 && kiemTra[4]===45) {
-                luuTepVaoBoNhoCucBo(idPdf, boDem);
+                // Tải thành công -> Lưu vào ổ cứng với cờ loi = false
+                await luuTepVaoBoNhoCucBo(idPdf, boDem, false);
                 return boDem;
             }
         } catch (loi) {
-            console.warn("Proxy ngắt luồng:", proxy);
+            console.warn("Proxy quá tải / Timeout:", proxy);
         }
     }
-    throw new Error("Dung lượng tệp vượt giới hạn bộ nhớ tải ngầm của hệ thống.");
+    
+    // Nếu cả 3 proxy đều treo -> Lưu trạng thái LỖI vào ổ cứng để lần sau bypass thẳng proxy
+    await luuTepVaoBoNhoCucBo(idPdf, null, true);
+    throw new Error("Vượt quá giới hạn Proxy, tự động nhảy Iframe.");
 }
 
 async function xuLyDocPDF(idPdf) {
@@ -394,17 +415,15 @@ async function xuLyDocPDF(idPdf) {
     try {
         const duLieuPdf = await taiDuLieuPdfAnToan(idPdf);
         
-        // Dọn dẹp RAM trước khi nạp tệp mới
-        boNhoTrangPdfGiaiMa = {};
+        boNhoTrangPdfGiaiMa = {}; // Dọn RAM trước khi nạp
         
-        // [THUẬT TOÁN 1: RAM BYPASS] - Tối ưu hóa việc nạp file nội bộ
         const loadingTask = pdfjsLib.getDocument({ 
             data: duLieuPdf,
             cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/cmaps/',
             cMapPacked: true,
-            disableStream: true,    // Bỏ qua luồng ảo vì file đã ở trong ổ cứng
-            disableAutoFetch: true, // Không cần tự kéo dữ liệu mạng
-            disableRange: true      // Tắt chia nhỏ file
+            disableStream: true,    // Tắt luồng ảo (Tăng tốc vì file đã trong máy)
+            disableAutoFetch: true,
+            disableRange: true
         });
         
         theHienPdfHienTai = await loadingTask.promise;
@@ -429,7 +448,7 @@ async function xuLyDocPDF(idPdf) {
         veTrangCanVasPdf(trangHienTaiPDF);
 
     } catch (loi) {
-        console.warn("Lưới an toàn Iframe kích hoạt:", loi);
+        console.warn("Chuyển Lưới an toàn Iframe:", loi);
         kichHoatLuoiAnToanIframe(idPdf);
     }
 }
@@ -440,7 +459,7 @@ async function veTrangCanVasPdf(soTrang) {
     document.getElementById('nhapSoTrangNhanh').value = soTrang;
     document.getElementById('thanhTruotTrang').value = soTrang;
     
-    // [THUẬT TOÁN 2: DECODED RAM CACHE] - Chỉ giải mã 1 lần duy nhất
+    // THUẬT TOÁN ĐỆM LÕI (Không giải mã lại trang đã xem)
     let trang = boNhoTrangPdfGiaiMa[soTrang];
     if (!trang) {
         trang = await theHienPdfHienTai.getPage(soTrang);
@@ -456,13 +475,6 @@ async function veTrangCanVasPdf(soTrang) {
 
     const renderContext = { canvasContext: ctx, viewport: viewport };
     await trang.render(renderContext).promise;
-    
-    // [THUẬT TOÁN 3: SMART PREFETCHING] - Giải mã ngầm trang tiếp theo
-    if (soTrang < theHienPdfHienTai.numPages && !boNhoTrangPdfGiaiMa[soTrang + 1]) {
-        theHienPdfHienTai.getPage(soTrang + 1).then(trangTiepTheo => {
-            boNhoTrangPdfGiaiMa[soTrang + 1] = trangTiepTheo;
-        });
-    }
 }
 
 function chuyenTrangPdf(buocNhay) {
