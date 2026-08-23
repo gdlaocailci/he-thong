@@ -122,7 +122,7 @@ async function luuDongBoDanhMucSGK() {
         const ketQua = await phanHoi.json();
         
         if (ketQua.trangThai === 'thanh_cong') {
-            alert("THÔNG BÁO: Đã đồng bộ thành công danh mục sách lên bảng tính Google Sheets!");
+            alert("THÔNG BÁO: Đã đồng bộ thành công danh mục sách!");
             if (typeof boNhoHocLieuSGK !== 'undefined') boNhoHocLieuSGK = {}; 
         } else {
             alert("Lưu thất bại: " + ketQua.thongBao);
