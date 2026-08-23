@@ -51,7 +51,7 @@ function veGiaoDienThamSo() {
         
         // Kiểm tra đúng dòng mã tham số TRANG_THAI_WEB để chèn chỉ dẫn
         if (ts.maThamSo.trim() === 'TRANG_THAI_WEB') {
-            chuMoGiaTri = 'placeholder="Nhập: Hoạt động hoặc Bảo trì"';
+            chuMoGiaTri = 'placeholder="Hoạt động/Bảo trì"';
             // Thêm định dạng chữ mờ nghiêng, nhạt màu để phân biệt với dữ liệu thật
             classChuMo = 'placeholder:text-gray-400 placeholder:italic placeholder:font-normal';
         }
