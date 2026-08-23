@@ -6,6 +6,7 @@
 
 let dangTaiDuLieuSGK = false; 
 let dangLuuDuLieuSGK = false; 
+let DANH_SACH_MON_CHUAN = []; // Lưu danh sách môn từ sheet KHUNG_CHUONG_TRINH
 
 async function taiLaiDuLieuDanhMucSGK() {
     if (dangTaiDuLieuSGK) return; 
@@ -26,11 +27,14 @@ async function taiLaiDuLieuDanhMucSGK() {
         
         const duLieu = await phanHoi.json();
         
-        const datalist = document.getElementById('danhSachMonHocSGK');
+      const datalist = document.getElementById('danhSachMonHocSGK');
         if (datalist) {
             datalist.innerHTML = ''; 
             if (duLieu.monHoc && Array.isArray(duLieu.monHoc) && duLieu.monHoc.length > 0) {
-                duLieu.monHoc.forEach(mon => {
+                // [NÂNG CẤP] Lưu lại danh sách môn chuẩn từ máy chủ để đối chiếu chéo
+                DANH_SACH_MON_CHUAN = duLieu.monHoc.map(m => String(m).trim()).filter(Boolean);
+                
+                DANH_SACH_MON_CHUAN.forEach(mon => {
                     datalist.insertAdjacentHTML('beforeend', `<option value="${mon}">`);
                 });
             }
@@ -67,6 +71,30 @@ async function taiLaiDuLieuDanhMucSGK() {
     }
 }
 
+function dongBoVoiKhungChuongTrinh(input) {
+    let giaTri = input.value.trim();
+    if (!giaTri) {
+        input.classList.remove('text-red-500');
+        input.classList.add('text-slate-800');
+        return;
+    }
+    
+    // Đối chiếu với danh sách KHUNG_CHUONG_TRINH (không phân biệt hoa/thường)
+    let giaTriThuong = giaTri.toLowerCase();
+    let monChuan = DANH_SACH_MON_CHUAN.find(m => m.toLowerCase() === giaTriThuong);
+    
+    if (monChuan) {
+        input.value = monChuan; 
+        input.classList.remove('text-red-500');
+        input.classList.add('text-slate-800');
+        input.title = "Tên môn khớp với KHUNG_CHUONG_TRINH";
+    } else {
+        input.classList.remove('text-slate-800');
+        input.classList.add('text-red-500');
+        input.title = "Cảnh báo: Môn học không khớp với cột A2:A sheet KHUNG_CHUONG_TRINH";
+    }
+}
+
 function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     const tbody = document.getElementById('danhSachDongDuLieuSGK');
     if (!tbody) return;
@@ -75,7 +103,7 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     
     tr.innerHTML = `
         <td class="px-2 py-2 text-center"><input type="text" class="w-full text-center bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-bold text-slate-700" value="${khoi}" placeholder="VD: 3"></td>
-        <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()"></td>
+       <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer transition-colors duration-300" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()" onblur="dongBoVoiKhungChuongTrinh(this)"></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 text-blue-600 font-mono text-xs" value="${link1}" placeholder="Link Google Drive Kỳ 1..."></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 text-blue-600 font-mono text-xs" value="${link2}" placeholder="Link Google Drive Kỳ 2..."></td>
         <td class="px-2 py-2">
