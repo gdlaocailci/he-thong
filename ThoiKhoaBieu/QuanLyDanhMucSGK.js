@@ -1,6 +1,7 @@
 // =========================================================================
 // LÕI THUẬT TOÁN QUẢN LÝ DANH MỤC SGK 
-// [Nâng cấp]: Bổ sung tính năng di chuyển (Lên/Xuống) để sắp xếp trật tự Môn học
+// Giữ nguyên 100% cấu trúc gốc của tác giả Hoàng Ngọc Lâm
+// Đảm bảo tương thích tính năng: Sắp xếp Lên/Xuống, Gợi ý Môn học, Khóa click
 // =========================================================================
 
 let dangTaiDuLieuSGK = false; 
@@ -38,13 +39,16 @@ async function taiLaiDuLieuDanhMucSGK() {
         const tbody = document.getElementById('danhSachDongDuLieuSGK');
         if (tbody) {
             tbody.innerHTML = '';
-            const mangSGK = duLieu.sgk || [];
-            if (Array.isArray(mangSGK) && mangSGK.length > 1) {
+            
+            // [MẸO NHỎ]: Xử lý thông minh để nhận cả 2 định dạng trả về từ máy chủ (Array hoặc Object)
+            const mangSGK = duLieu.sgk ? duLieu.sgk : (Array.isArray(duLieu) ? duLieu : []);
+            
+            if (mangSGK.length > 1) {
                 for (let i = 1; i < mangSGK.length; i++) {
                     let khoi = mangSGK[i][0] ? String(mangSGK[i][0]).trim() : '';
                     let mon = mangSGK[i][1] ? String(mangSGK[i][1]).trim() : '';
-                    let link1 = mangSGK[i][2] ? String(mangSGK[i][2]).trim() : '';
-                    let link2 = mangSGK[i][3] ? String(mangSGK[i][3]).trim() : '';
+                    let link1 = mangSGK[i][2] ? String(mangSGK[i][2]).trim() : ''; // Cột C
+                    let link2 = mangSGK[i][3] ? String(mangSGK[i][3]).trim() : ''; // Cột D
                     taoDongGiaoDienDuLieu(khoi, mon, link1, link2);
                 }
             } else {
@@ -69,7 +73,6 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     const tr = document.createElement('tr');
     tr.className = "hover:bg-blue-50/60 transition-colors dong-nhap-lieu-sgk";
     
-    // [CẬP NHẬT GIAO DIỆN]: Bổ sung 2 nút Lên/Xuống vào cụm thao tác
     tr.innerHTML = `
         <td class="px-2 py-2 text-center"><input type="text" class="w-full text-center bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-bold text-slate-700" value="${khoi}" placeholder="VD: 3"></td>
         <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()"></td>
@@ -86,16 +89,13 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     tbody.appendChild(tr);
 }
 
-// [TÍNH NĂNG MỚI]: Thuật toán đảo vị trí các dòng HTML DOM
 function diChuyenDong(btn, huong) {
     const dongHienTai = btn.closest('tr');
     const tbody = dongHienTai.parentNode;
     
     if (huong === -1 && dongHienTai.previousElementSibling) {
-        // Đưa lên trên (Chèn dòng hiện tại lên trước dòng nằm phía trên nó)
         tbody.insertBefore(dongHienTai, dongHienTai.previousElementSibling);
     } else if (huong === 1 && dongHienTai.nextElementSibling) {
-        // Đưa xuống dưới (Chèn dòng bên dưới lên trước dòng hiện tại)
         tbody.insertBefore(dongHienTai.nextElementSibling, dongHienTai);
     }
 }
@@ -140,6 +140,7 @@ async function luuDongBoDanhMucSGK() {
         
         if (ketQua.trangThai === 'thanh_cong') {
             alert("THÔNG BÁO: Đã đồng bộ thành công!");
+            // Cập nhật quan trọng: Giải phóng cache để tính năng XemTruocSGK tự tải lại link mới
             if (typeof boNhoHocLieuSGK !== 'undefined') boNhoHocLieuSGK = {}; 
         } else {
             alert("Lưu thất bại: " + ketQua.thongBao);
