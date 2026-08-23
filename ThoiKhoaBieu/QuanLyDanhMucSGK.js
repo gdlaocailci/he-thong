@@ -1,17 +1,16 @@
 // =========================================================================
-// LÕI THUẬT TOÁN QUẢN LÝ DANH MỤC SGK
-// Cập nhật: Khóa luồng (Mutex Lock) chống lỗi xoay vòng vô tận
+// LÕI THUẬT TOÁN QUẢN LÝ DANH MỤC SGK 
+// [Nâng cấp]: Bổ sung tính năng di chuyển (Lên/Xuống) để sắp xếp trật tự Môn học
 // =========================================================================
 
-let dangTaiDuLieuSGK = false; // Biến khóa (lock) chống gọi đúp lệnh tải
-let dangLuuDuLieuSGK = false; // Biến khóa (lock) chống gọi đúp lệnh lưu
+let dangTaiDuLieuSGK = false; 
+let dangLuuDuLieuSGK = false; 
 
 async function taiLaiDuLieuDanhMucSGK() {
-    if (dangTaiDuLieuSGK) return; // Khóa luồng: Đang tải thì bỏ qua lệnh mới
+    if (dangTaiDuLieuSGK) return; 
     dangTaiDuLieuSGK = true;
 
     const nutTai = document.getElementById('btnTaiLaiDanhMuc');
-    // Cố định cứng mã HTML gốc để phục hồi chuẩn xác
     const htmlGoc = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Tải lại`;
     
     if (nutTai) {
@@ -26,7 +25,6 @@ async function taiLaiDuLieuDanhMucSGK() {
         
         const duLieu = await phanHoi.json();
         
-        // Cập nhật thẻ Datalist
         const datalist = document.getElementById('danhSachMonHocSGK');
         if (datalist) {
             datalist.innerHTML = ''; 
@@ -37,7 +35,6 @@ async function taiLaiDuLieuDanhMucSGK() {
             }
         }
 
-        // Cập nhật Bảng
         const tbody = document.getElementById('danhSachDongDuLieuSGK');
         if (tbody) {
             tbody.innerHTML = '';
@@ -57,13 +54,12 @@ async function taiLaiDuLieuDanhMucSGK() {
     } catch (loi) {
         console.error("Lỗi lấy danh mục SGK:", loi);
         if (nutTai) nutTai.innerHTML = `<span class="text-red-600 font-bold">Lỗi mạng!</span>`;
-        // Tạm dừng 2s rồi phục hồi nút để người dùng thử lại
         await new Promise(resolve => setTimeout(resolve, 2000));
     } finally {
         if (nutTai && nutTai.innerHTML.includes("Đang tải")) {
             nutTai.innerHTML = htmlGoc;
         }
-        dangTaiDuLieuSGK = false; // Mở khóa luồng
+        dangTaiDuLieuSGK = false; 
     }
 }
 
@@ -73,14 +69,35 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     const tr = document.createElement('tr');
     tr.className = "hover:bg-blue-50/60 transition-colors dong-nhap-lieu-sgk";
     
+    // [CẬP NHẬT GIAO DIỆN]: Bổ sung 2 nút Lên/Xuống vào cụm thao tác
     tr.innerHTML = `
         <td class="px-2 py-2 text-center"><input type="text" class="w-full text-center bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-bold text-slate-700" value="${khoi}" placeholder="VD: 3"></td>
         <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()"></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 text-blue-600 font-mono text-xs" value="${link1}" placeholder="Link Google Drive Kỳ 1..."></td>
         <td class="px-2 py-2"><input type="text" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 text-blue-600 font-mono text-xs" value="${link2}" placeholder="Link Google Drive Kỳ 2..."></td>
-        <td class="px-2 py-2 text-center"><button onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600 p-1.5 bg-red-50 hover:bg-red-100 rounded transition" title="Xóa dòng này"><svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td>
+        <td class="px-2 py-2">
+            <div class="flex items-center justify-center gap-1">
+                <button onclick="diChuyenDong(this, -1)" class="text-blue-500 hover:text-blue-700 p-1.5 bg-blue-50 hover:bg-blue-100 rounded transition" title="Di chuyển lên"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg></button>
+                <button onclick="diChuyenDong(this, 1)" class="text-blue-500 hover:text-blue-700 p-1.5 bg-blue-50 hover:bg-blue-100 rounded transition" title="Di chuyển xuống"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg></button>
+                <button onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600 p-1.5 bg-red-50 hover:bg-red-100 rounded transition" title="Xóa dòng này"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+            </div>
+        </td>
     `;
     tbody.appendChild(tr);
+}
+
+// [TÍNH NĂNG MỚI]: Thuật toán đảo vị trí các dòng HTML DOM
+function diChuyenDong(btn, huong) {
+    const dongHienTai = btn.closest('tr');
+    const tbody = dongHienTai.parentNode;
+    
+    if (huong === -1 && dongHienTai.previousElementSibling) {
+        // Đưa lên trên (Chèn dòng hiện tại lên trước dòng nằm phía trên nó)
+        tbody.insertBefore(dongHienTai, dongHienTai.previousElementSibling);
+    } else if (huong === 1 && dongHienTai.nextElementSibling) {
+        // Đưa xuống dưới (Chèn dòng bên dưới lên trước dòng hiện tại)
+        tbody.insertBefore(dongHienTai.nextElementSibling, dongHienTai);
+    }
 }
 
 function themDongMoiDanhMucSGK() {
@@ -90,7 +107,7 @@ function themDongMoiDanhMucSGK() {
 }
 
 async function luuDongBoDanhMucSGK() {
-    if (dangLuuDuLieuSGK) return; // Khóa luồng
+    if (dangLuuDuLieuSGK) return; 
     dangLuuDuLieuSGK = true;
 
     const nutLuu = document.getElementById('btnLuuDanhMuc');
@@ -122,7 +139,7 @@ async function luuDongBoDanhMucSGK() {
         const ketQua = await phanHoi.json();
         
         if (ketQua.trangThai === 'thanh_cong') {
-            alert("THÔNG BÁO: Đã đồng bộ thành công danh mục sách!");
+            alert("THÔNG BÁO: Đã đồng bộ thành công!");
             if (typeof boNhoHocLieuSGK !== 'undefined') boNhoHocLieuSGK = {}; 
         } else {
             alert("Lưu thất bại: " + ketQua.thongBao);
@@ -135,6 +152,6 @@ async function luuDongBoDanhMucSGK() {
             nutLuu.innerHTML = htmlGoc;
             nutLuu.disabled = false;
         }
-        dangLuuDuLieuSGK = false; // Mở khóa luồng
+        dangLuuDuLieuSGK = false; 
     }
 }
