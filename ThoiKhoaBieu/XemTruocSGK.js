@@ -15,6 +15,7 @@ let thongTinBaiHocHienTai = { khoi: '', mon: '', bai: '', idKy1: '', idKy2: '', 
 
 document.addEventListener('DOMContentLoaded', () => {
     xayDungKhungGiaoDienXemTruoc();
+ khoiTaoBoNhoHocLieu().catch(loi => console.warn("Chưa tải được danh mục SGK:", loi));   
 });
 
 // =========================================================================
