@@ -311,7 +311,7 @@
 <div id="login-overlay">
     <!-- NÂNG CẤP: Bổ sung position: relative để neo nút bấm vào đúng giới hạn của khung trắng -->
     <div class="login-box" style="padding-top: 35px; padding-bottom: 25px; position: relative;">
-      <img src="" class="login-logo" alt="Logo Trường">
+     <img src="" class="login-logo" alt="Logo Trường" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.08)'; this.style.opacity='0.9'" onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
       
       <h2 id="login-title-main" style="color: #b91c1c; margin-top: 0; margin-bottom: 25px; text-transform: uppercase; font-size: 26px;"></h2>
       <h3 id="login-subtitle-main" style="color: #1e3a8a; margin-bottom: 25px; display: none;"></h3>
@@ -1118,6 +1118,11 @@ function yeuCauDonDepHeThong() {
     });
 }
 
+   function chuyenHuongHeThong() {
+        var urlDich = 'https://gdlaocailci.github.io/he-thong/';
+        window.open(urlDich, '_top');
+    }
+   
    function khoaTruyCapMaNguon() {
         // 1. Khóa menu chuột phải
         document.addEventListener('contextmenu', function(e) {
