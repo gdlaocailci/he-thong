@@ -11,8 +11,7 @@ var PGV_PHIEN_BAN = "V17.6.2026";
 var PGV_TAC_GIA = "HOÀNG NGỌC LÂM";
 var PGV_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
 var PGV_MO_TA = "Hệ thống quản lý hiệu quả công việc nội bộ - " + PGV_TEN_TRUONG;
-const QLNS_LINK_TRANG_CHU = '[https://gdlaocailci.github.io/he-thong/](https://gdlaocailci.github.io/he-thong/)';
-// Bổ sung biến lưu trữ liên kết video hướng dẫn
+
 var DG_LINK_YOUTUBE = "https://www.youtube.com/playlist?list=PLbwoEbiWlf1A";
 
 // ==================== BIẾN TOÀN CỤC HỆ THỐNG ====================
