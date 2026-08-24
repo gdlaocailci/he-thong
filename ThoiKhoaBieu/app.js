@@ -6,6 +6,7 @@ let ngayDauTuanUI = '';
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
+
 async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3) {
     for (let i = 0; i < soLanThu; i++) {
         try {
@@ -14,23 +15,28 @@ async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3) {
             if (!phanHoi.ok) {
                 throw new Error(`Máy chủ từ chối kết nối (Mã lỗi HTTP: ${phanHoi.status})`);
             }
-            
-            // [BỘ LỌC CỐT LÕI]: Nhân bản luồng dữ liệu (clone) để kiểm tra định dạng
-            // Xử lý triệt để lỗi sập TKB khi Google trả về HTML thay vì JSON
-            const banSao = phanHoi.clone();
-            const noiDungText = await banSao.text();
-            
+
+            // [LÕI NÂNG CẤP]: Đọc thẳng văn bản 1 lần duy nhất, KHÔNG dùng clone()
+            const noiDungText = await phanHoi.text();
+
+            // Kiểm tra tính hợp lệ của dữ liệu (Chống HTML ảo từ Google)
             try {
-                JSON.parse(noiDungText); // Thử ép kiểu, nếu là HTML sẽ văng lỗi ngay lập tức
+                JSON.parse(noiDungText);
             } catch (loiCuPhap) {
-                throw new Error("Dữ liệu trả về không phải JSON (Google Apps Script đang bận).");
+                throw new Error("Dữ liệu trả về bị nhiễu định dạng (Google Apps Script đang bận).");
             }
-            
-            return phanHoi; // Trả về luồng gốc nguyên vẹn và an toàn cho hệ thống
+
+            // Đóng gói lại thành đối tượng Response chuẩn để các hàm khác gọi .json() mượt mà
+            return new Response(noiDungText, {
+                status: phanHoi.status,
+                statusText: phanHoi.statusText,
+                headers: phanHoi.headers
+            });
+
         } catch (loi) {
-            if (i === soLanThu - 1) throw loi; // Ném lỗi ra giao diện nếu đã thử hết giới hạn
-            console.warn(`Luồng dữ liệu bị nhiễu, hệ thống tự động kết nối lại lần ${i + 1}...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Tự động lùi bước 1s, 2s
+            if (i === soLanThu - 1) throw loi; // Văng lỗi ra giao diện nếu đã thử hết giới hạn
+            console.warn(`Đường truyền bị nghẽn, tự động kết nối lại lần ${i + 1}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Lùi bước 1s, 2s
         }
     }
 }
