@@ -116,8 +116,9 @@ async function khoiTaoBoNhoHocLieu() {
             if (tenKhoi && tenMon && (linkKy1 || linkKy2)) {
                 let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
                 boNhoHocLieuSGK[khoaTruyXuat] = {
-                    idKy1: trichXuatIdTuLink(linkKy1),
-                    idKy2: trichXuatIdTuLink(linkKy2) || trichXuatIdTuLink(linkKy1)
+                    // [NÂNG CẤP]: Lưu toàn bộ đường link URL tĩnh (Loại bỏ hàm trichXuatIdTuLink)
+                    linkKy1: linkKy1,
+                    linkKy2: linkKy2 || linkKy1
                 };
             }
         }
@@ -161,40 +162,33 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     if (tuanHienTai < 1) tuanHienTai = 1;
 
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
-        hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, 1);
-        document.getElementById('vanBanTrangThaiSgk').innerText = "Đang kết nối thư viện Sách giáo khoa...";
+        console.log("Đang kết nối thư viện Sách giáo khoa...");
         try {
             await khoiTaoBoNhoHocLieu();
         } catch (loi) {
-            dongModalXemTruoc();
-            setTimeout(() => alert(`Sự cố mạng hoặc cấu hình API: ${loi.message}`), 300);
+            alert(`Sự cố mạng hoặc cấu hình API: ${loi.message}`);
             return;
         }
     }
 
     const duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem];
-    if (!duLieuMonHoc || (!duLieuMonHoc.idKy1 && !duLieuMonHoc.idKy2)) {
-        dongModalXemTruoc();
-        setTimeout(() => alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc} trong bảng tính.`), 300);
+    if (!duLieuMonHoc || (!duLieuMonHoc.linkKy1 && !duLieuMonHoc.linkKy2)) {
+        alert(`Chưa thiết lập Link SGK cho Khối ${tenKhoiGoc} - Môn ${tenMonGoc} trong bảng tính.`);
         return;
     }
 
     let kyHocPhanDong = (tuanHienTai > 18) ? 2 : 1;
-
-    thongTinBaiHocHienTai = {
-        khoi: tenKhoiGoc,
-        mon: tenMonGoc,
-        bai: tenBaiHoc,
-        idKy1: duLieuMonHoc.idKy1,
-        idKy2: duLieuMonHoc.idKy2,
-        kyDangXem: kyHocPhanDong
-    };
-
-    idTepHienTai = (kyHocPhanDong === 2) ? duLieuMonHoc.idKy2 : duLieuMonHoc.idKy1;
     
-    await xoaBoNhoDemCu(idTepHienTai);
-    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, kyHocPhanDong);
-    await xuLyDocPDF(idTepHienTai);
+    // [NÂNG CẤP]: Lấy url tĩnh đã lưu theo kỳ
+    let linkTepHienTai = (kyHocPhanDong === 2) ? duLieuMonHoc.linkKy2 : duLieuMonHoc.linkKy1;
+    
+    if (!linkTepHienTai) {
+        alert(`Tài liệu Tập ${kyHocPhanDong} của môn này chưa được cấu hình Link.`);
+        return;
+    }
+
+    // [THAY ĐỔI CỐT LÕI]: Mở thẳng đường link (bất kể định dạng gì) sang tab mới
+    window.open(linkTepHienTai, '_blank', 'noopener,noreferrer');
 };
 
 window.chuyenKyHocThuCong = async function(kyMoi) {
