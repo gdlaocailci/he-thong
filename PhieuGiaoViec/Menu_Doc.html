@@ -8,7 +8,16 @@
         overflow: hidden; z-index: 1000; /* [CẬP NHẬT] Khóa cuộn khung ngoài để cố định nút đăng xuất */
     }
     .khung-logo { margin-bottom: 15px; display: flex; align-items: center; justify-content: center;}
-    .khung-logo img { width: 85px; background: white; border-radius: 50%; padding: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+    .khung-logo img { 
+        width: 85px; background: white; border-radius: 50%; padding: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+   .khung-logo img:hover {
+        transform: scale(1.1) rotate(-3deg);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
     
     .ten-truong-trai { 
         color: #ffffff; font-size: 14px; font-weight: bold; text-align: center; 
@@ -102,7 +111,7 @@
 
 <div class="khung-trai">
     <div class="khung-logo">
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="menu_logo" alt="Logo">
+       <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="menu_logo" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống">
     </div>
     <div class="ten-truong-trai" id="menu_school_name">ĐANG TẢI...</div>
 
