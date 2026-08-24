@@ -13,16 +13,21 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="ketnoi.js"></script>
   <script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+    // [Nâng cấp]: Cơ chế chống lưu đệm (cache) tự động cho file ketnoi.js
+    document.write('<script src="ketnoi.js?v=' + new Date().getTime() + '"><\/script>');
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('favicon').href = HKS_CAU_HINH_LOGO_STR;
         document.getElementById('gate-logo-img').src = HKS_CAU_HINH_LOGO_STR;
-              
+        
+        // [Nâng cấp]: Cấp nguồn ảnh (src) cho logo trên thanh tiêu đề mới thêm
         let hks_headerLogo_el = document.getElementById('header-logo-img');
         if(hks_headerLogo_el) hks_headerLogo_el.src = HKS_CAU_HINH_LOGO_STR;
         
         document.getElementById('ten-truong-text').innerText = HKS_CAU_HINH_TEN_DINH_DANH_STR;
         
+        // Khôi phục các phần lệnh phía sau bị khuyết
         let tacGiaElements = document.querySelectorAll('.ten-tac-gia-text');
         tacGiaElements.forEach(el => el.innerText = HKS_CAU_HINH_TAC_GIA_STR);
 
