@@ -5,3 +5,4 @@ const HKS_CAU_HINH_CLIENT_ID_STR = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7
 const HKS_CAU_HINH_LOGO_STR = "https://i.postimg.cc/xjzpvXCm/Logo-HL.png";
 const HKS_CAU_HINH_TEN_DINH_DANH_STR = "Trường TH&THCS Hợp Thành";
 const HKS_CAU_HINH_TAC_GIA_STR = "Hoàng Ngọc Lâm";
+const HKS_LINK_TRANG_CHU = '[https://gdlaocailci.github.io/he-thong/](https://gdlaocailci.github.io/he-thong/)';
