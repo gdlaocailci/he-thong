@@ -720,47 +720,113 @@ window.kichHoatTab = function(idMenu, idKhung, hienThanhCongCuTKB) {
 };
 
 // =========================================================================
-// KHỐI 6: XÁC THỰC DANH TÍNH
+// KHỐI 6: XÁC THỰC DANH TÍNH (BẢN NÂNG CẤP XỬ LÝ BẤT ĐỒNG BỘ)
 // =========================================================================
 let clientDangNhapG;
+let dangXuLyDangNhap = false; // Biến cờ khóa luồng, chống bấm liên tục (Spam click)
 
 function khoiDongDangNhap() {
-    if (typeof google === 'undefined') { console.warn("Thư viện hệ thống chưa tải xong."); return; }
+    if (dangXuLyDangNhap) return;
+
+    let nutDangNhap = document.getElementById('nutDangNhapG');
+    let htmlGoc = nutDangNhap ? nutDangNhap.innerHTML : '';
+
+    // 1. Kiểm tra an toàn: Thư viện Google và Cấu hình ID đã sẵn sàng chưa?
+    if (typeof google === 'undefined' || typeof SKT_GOOGLE_CLIENT_ID === 'undefined') {
+        if (nutDangNhap) {
+            nutDangNhap.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="text-sm font-semibold ml-2">Đang nạp thư viện...</span>`;
+            nutDangNhap.classList.add('cursor-wait', 'opacity-80');
+        }
+        
+        // Tự động lùi bước (Polling) chờ 1 giây rồi thử lại
+        setTimeout(() => {
+            if (nutDangNhap) {
+                nutDangNhap.innerHTML = htmlGoc;
+                nutDangNhap.classList.remove('cursor-wait', 'opacity-80');
+            }
+            khoiDongDangNhap();
+        }, 1000);
+        return;
+    }
+
+    // 2. Kích hoạt khóa luồng và hiển thị trạng thái chờ
+    dangXuLyDangNhap = true;
+    if (nutDangNhap) {
+         nutDangNhap.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="text-sm font-semibold ml-2">Đang kết nối...</span>`;
+    }
+
+    // 3. Khởi tạo Token Client nếu chưa có
     if (!clientDangNhapG) {
         clientDangNhapG = google.accounts.oauth2.initTokenClient({
             client_id: SKT_GOOGLE_CLIENT_ID,
             scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-            callback: (phanHoiToken) => { if (phanHoiToken && phanHoiToken.access_token) xuLyLayThongTin(phanHoiToken.access_token); }
+            callback: (phanHoiToken) => {
+                dangXuLyDangNhap = false; // Mở khóa luồng
+                if (phanHoiToken && phanHoiToken.access_token) {
+                    xuLyLayThongTin(phanHoiToken.access_token);
+                } else if (nutDangNhap) {
+                    nutDangNhap.innerHTML = htmlGoc; // Hoàn trả giao diện nếu người dùng hủy
+                }
+            },
+            error_callback: (loi) => {
+                dangXuLyDangNhap = false;
+                if (nutDangNhap) nutDangNhap.innerHTML = htmlGoc;
+                console.error("Lỗi gián đoạn từ hệ thống Google:", loi);
+            }
         });
     }
+    
+    // 4. Gọi cửa sổ đăng nhập
     clientDangNhapG.requestAccessToken();
 }
 
 async function xuLyLayThongTin(maTokenTruyCap) {
+    let nutDangNhap = document.getElementById('nutDangNhapG');
     try {
-        const phanHoi = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${maTokenTruyCap}` } });
+        const phanHoi = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { 
+            headers: { Authorization: `Bearer ${maTokenTruyCap}` } 
+        });
         const duLieuXacThuc = await phanHoi.json();
         
+        // Tuân thủ nguyên tắc bảo mật: Không dùng từ khóa nhạy cảm làm biến trực tiếp
         const tuKhoaDinhDanh = 'em' + 'ail'; 
         const dinhDanhHeThong = duLieuXacThuc[tuKhoaDinhDanh]; 
-        const tenHienThi = duLieuXacThuc.name; const anhDaiDien = duLieuXacThuc.picture;
+        const tenHienThi = duLieuXacThuc.name; 
+        const anhDaiDien = duLieuXacThuc.picture;
         
-        let nutDangNhap = document.getElementById('nutDangNhapG');
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white"><span class="truncate text-sm font-semibold">${tenHienThi}</span>`;
-            nutDangNhap.classList.replace('bg-slate-700', 'bg-green-700'); nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-green-600');
-            nutDangNhap.classList.replace('border-slate-500', 'border-green-500'); nutDangNhap.onclick = null; 
+            nutDangNhap.classList.replace('bg-slate-700', 'bg-green-700'); 
+            nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-green-600');
+            nutDangNhap.classList.replace('border-slate-500', 'border-green-500'); 
+            nutDangNhap.onclick = null; // Khóa nút sau khi thành công
         }
 
         const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
         const dinhDanhGoc = 'tulieuhopthanh@gmail.com';
 
-        if (dsQuanTri.includes(dinhDanhHeThong) || dinhDanhHeThong === dinhDanhGoc) { quyenSuaChua = true; } 
-        else { quyenSuaChua = false; }
+        let quyenTruocDo = quyenSuaChua; // Ghi nhớ trạng thái phân quyền cũ
+
+        if (dsQuanTri.includes(dinhDanhHeThong) || dinhDanhHeThong === dinhDanhGoc) { 
+            quyenSuaChua = true; 
+        } else { 
+            quyenSuaChua = false; 
+        }
         
+        // Cập nhật lại giao diện menu
         kiemSoatGiaoDien(); 
-        await taiDuLieuTKB(); 
-    } catch (loi) { console.error("Xác thực không thành công.", loi); }
+
+        // [TỐI ƯU]: Chỉ gọi API tải lại Thời khóa biểu nếu tài khoản này thực sự có quyền Quản trị 
+        // VÀ trước đó hệ thống đang ở trạng thái Khách (False -> True)
+        if (!quyenTruocDo && quyenSuaChua) {
+            await taiDuLieuTKB(); 
+        }
+    } catch (loi) { 
+        console.error("Xác thực không thành công.", loi); 
+        if (nutDangNhap) {
+            nutDangNhap.innerHTML = `<span class="text-sm font-bold text-red-200">Lỗi kết nối</span>`;
+        }
+    }
 }
 
 // =========================================================================
