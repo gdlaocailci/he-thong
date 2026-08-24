@@ -127,15 +127,15 @@ async function khoiTaoGiaoDien() {
             if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
         }
 
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
-        if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối");
+        // [SỬA LỖI CỐT LÕI]: Áp dụng fetchVoiCoCheThuLai để chống ngắt kết nối
+        // Hàm này sẽ tự động thử lại tối đa 3 lần nếu Google Apps Script từ chối
+        const phanHoi = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         
         thongSoHocVu = await phanHoi.json();
         if (thongSoHocVu.trangThai === 'loi_he_thong') throw new Error(thongSoHocVu.thongBao);
         
         kiemSoatGiaoDien(); 
         
-        // [CẬP NHẬT SỬA LỖI]: Gọi hàm nạp dữ liệu cho ô Lọc Giáo Viên ngay sau khi lấy cấu hình
         napDuLieuBoLocGiaoVien();
         
         if(thongSoHocVu.NAM_HOC) { 
@@ -143,7 +143,6 @@ async function khoiTaoGiaoDien() {
             if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
         }
 
-        // [NÂNG CẤP]: Kiểm tra trạng thái web và áp dụng hiệu ứng bập bênh ReactBits
         let theTrangThai = document.getElementById('trangThaiHeThong');
         if (theTrangThai && thongSoHocVu.TRANG_THAI_WEB) {
             let trangThai = thongSoHocVu.TRANG_THAI_WEB.trim();
@@ -160,12 +159,10 @@ async function khoiTaoGiaoDien() {
         let hienThiTuan = document.getElementById('hienThiTuanHienTai');
         if (hienThiTuan) hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
         
-        // [KHẮC PHỤC KHỞI ĐỘNG CHẬM]: Kế thừa TKB từ biến cấu hình, chặn gọi thêm API layTKB
         if (thongSoHocVu.TKB_TUAN && thongSoHocVu.TKB_TUAN.length > 0) {
             duLieuTkbHienTai = thongSoHocVu.TKB_TUAN;
             xuatMaTranBang(duLieuTkbHienTai);
         } else {
-            // Chỉ gọi API độc lập khi Cấu hình không gắn kèm TKB (dự phòng)
             await taiDuLieuTKB(); 
         }
         
