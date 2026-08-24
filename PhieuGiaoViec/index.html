@@ -261,7 +261,7 @@ function xulyPhienDn(phanho) {
   <div id="manhChao">
     <div class="card border-0 shadow-lg" style="max-width: 450px; width: 100%; border-top: 5px solid #0d6efd !important; border-radius: 12px; margin: 20px;">
       <div class="card-body p-4 text-center">
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="login_logo" style="width: 80px; height: 80px; margin-bottom: 15px;">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="login_logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="width: 80px; height: 80px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.08)'; this.style.opacity='0.9'" onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
         <h3 class="fw-bold text-primary text-uppercase mb-1" id="login_app_name">ĐANG TẢI...</h3>
         <h5 class="text-danger fw-bold mb-4" id="login_school_name">...</h5>
         <p class="text-muted small mb-4">Hệ thống nội bộ. Vui lòng xác thực phiên làm việc để tiếp tục.</p>
@@ -919,6 +919,14 @@ function taiTepDangXem() {
       }, 2500); 
   }
 }
+    function chuyenHuongHeThong() {
+        var urlDich = (typeof PGV_LINK_TRANG_CHU !== 'undefined' && PGV_LINK_TRANG_CHU.trim() !== '') 
+                      ? PGV_LINK_TRANG_CHU 
+                      : 'https://gdlaocailci.github.io/he-thong/';
+                      
+        window.open(urlDich, '_top');
+    }
+    
     function khoaTruyCapMaNguon() {
         // 1. Khóa menu chuột phải
         document.addEventListener('contextmenu', function(e) {
