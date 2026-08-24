@@ -13,9 +13,14 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="ketnoi.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('favicon').href = HKS_CAU_HINH_LOGO_STR;
         document.getElementById('gate-logo-img').src = HKS_CAU_HINH_LOGO_STR;
+              
+        let hks_headerLogo_el = document.getElementById('header-logo-img');
+        if(hks_headerLogo_el) hks_headerLogo_el.src = HKS_CAU_HINH_LOGO_STR;
+        
         document.getElementById('ten-truong-text').innerText = HKS_CAU_HINH_TEN_DINH_DANH_STR;
         
         let tacGiaElements = document.querySelectorAll('.ten-tac-gia-text');
@@ -116,7 +121,7 @@
 
 <div id="gate-overlay" style="display:none;">
   <div class="gate-box">
-    <img id="gate-logo-img" src="" class="gate-logo" alt="Logo">
+   <img id="gate-logo-img" src="" class="gate-logo" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.08)'; this.style.opacity='0.9'" onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
     <h2 style="color: #b91c1c; margin-top: 0; font-family: 'Times New Roman', serif; font-size: 28px; text-transform: uppercase;">Quản Lý Học Sinh</h2>
     <h3 id="ten-truong-text" style="color: #1e3a8a; margin-bottom: 25px; border-bottom: none; font-family: 'Times New Roman', serif; font-size: 24px; text-transform: none;"></h3>
     
@@ -135,6 +140,7 @@
 <div id="main-app" style="display:none;">
   <div class="d-flex justify-content-between align-items-center mb-2 px-3 py-2" style="background: rgba(255,255,255,0.9); border-radius: 4px; border: 1px solid #d4af37; max-width: 99%; margin: 10px auto 0 auto;">
     <div class="d-flex align-items-center">
+      <img id="header-logo-img" src="" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="width: 26px; height: 26px; object-fit: contain; margin-right: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.1) rotate(-3deg)'; this.style.filter='drop-shadow(0 4px 6px rgba(0,0,0,0.15))'" onmouseout="this.style.transform='scale(1) rotate(0deg)'; this.style.filter='none'">
        <span class="me-2 small fw-bold">Xin chào:</span> 
        <span id="profile-display" class="fw-bold text-primary me-3 small"></span> 
        <span id="role-badge" class="badge bg-danger" style="font-size: 0.75rem;"></span>
@@ -602,6 +608,15 @@ function hks_khoiPhucTrangThaiGoc_fn(hks_chiSoThe_num) {
         }
     });
   }
+
+  function chuyenHuongHeThong() {
+      var urlDich = (typeof HKS_LINK_TRANG_CHU !== 'undefined' && HKS_LINK_TRANG_CHU.trim() !== '') 
+                    ? HKS_LINK_TRANG_CHU 
+                    : 'https://gdlaocailci.github.io/he-thong/';
+                    
+      window.open(urlDich, '_top');
+  }
+  
   function khoaTruyCapMaNguon() {
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
