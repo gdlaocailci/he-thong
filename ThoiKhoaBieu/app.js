@@ -6,19 +6,30 @@ let ngayDauTuanUI = '';
 
 document.addEventListener('DOMContentLoaded', () => { khoiTaoGiaoDien(); });
 
-// =========================================================================
-// [BẢN NÂNG CẤP]: HÀM TIỆN ÍCH FETCH VỚI CƠ CHẾ LÙI BƯỚC (EXPONENTIAL BACKOFF)
-// Giải quyết triệt để lỗi 404 ngắt quãng do Google Rate Limiting
-// =========================================================================
 async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3) {
     for (let i = 0; i < soLanThu; i++) {
         try {
             const phanHoi = await fetch(url, tuyChon);
-            if (!phanHoi.ok) throw new Error(`Máy chủ từ chối kết nối (Mã lỗi HTTP: ${phanHoi.status})`);
-            return phanHoi;
+            
+            if (!phanHoi.ok) {
+                throw new Error(`Máy chủ từ chối kết nối (Mã lỗi HTTP: ${phanHoi.status})`);
+            }
+            
+            // [BỘ LỌC CỐT LÕI]: Nhân bản luồng dữ liệu (clone) để kiểm tra định dạng
+            // Xử lý triệt để lỗi sập TKB khi Google trả về HTML thay vì JSON
+            const banSao = phanHoi.clone();
+            const noiDungText = await banSao.text();
+            
+            try {
+                JSON.parse(noiDungText); // Thử ép kiểu, nếu là HTML sẽ văng lỗi ngay lập tức
+            } catch (loiCuPhap) {
+                throw new Error("Dữ liệu trả về không phải JSON (Google Apps Script đang bận).");
+            }
+            
+            return phanHoi; // Trả về luồng gốc nguyên vẹn và an toàn cho hệ thống
         } catch (loi) {
-            if (i === soLanThu - 1) throw loi; // Ném lỗi nếu đã thử hết giới hạn
-            console.warn(`Kết nối API bị gián đoạn, đang thử lại lần ${i + 1}...`);
+            if (i === soLanThu - 1) throw loi; // Ném lỗi ra giao diện nếu đã thử hết giới hạn
+            console.warn(`Luồng dữ liệu bị nhiễu, hệ thống tự động kết nối lại lần ${i + 1}...`);
             await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Tự động lùi bước 1s, 2s
         }
     }
