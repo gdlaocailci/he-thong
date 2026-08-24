@@ -99,7 +99,7 @@
 
 <div id="login-overlay">
   <div class="login-box">
-    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="80" style="margin-bottom: 15px;" alt="Logo">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="width: 80px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.08)'; this.style.opacity='0.9'" onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
     <h2 id="login-title-main" style="color: #b91c1c; margin-top: 20px; text-transform: uppercase;">ĐANG TẢI...</h2>
     <h3 id="login_ten_truong" style="color: #1e3a8a; margin-bottom: 25px;">Đang tải thông tin đơn vị...</h3>
     
@@ -123,7 +123,7 @@
 </div>
 
 <div class="header" style="position: sticky; top: 0; z-index: 1000; background: white;"> 
-  <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Logo">
+  <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.1) rotate(-3deg)'; this.style.filter='drop-shadow(0 4px 6px rgba(0,0,0,0.15))'" onmouseout="this.style.transform='scale(1) rotate(0deg)'; this.style.filter='none'">
   <div class="header-text">
     <div class="school-name" id="header_ten_truong">ĐANG TẢI...</div>
     <div class="app-title" id="header-title-main">ĐANG TẢI...</div>
@@ -713,6 +713,14 @@ function copyLinkDangXem() {
     }
   }
 
+  function chuyenHuongHeThong() {
+      var urlDich = (typeof SCV_LINK_TRANG_CHU !== 'undefined' && SCV_LINK_TRANG_CHU.trim() !== '') 
+                    ? SCV_LINK_TRANG_CHU 
+                    : 'https://gdlaocailci.github.io/he-thong/';
+                    
+      window.open(urlDich, '_top');
+  }
+  
   function khoaTruyCapMaNguon() {
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
