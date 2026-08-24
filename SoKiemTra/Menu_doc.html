@@ -27,6 +27,12 @@
       background: #ffffff;
       border-radius: 50%;
       padding: 3px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .sidebar-logo:hover {
+      transform: scale(1.1) rotate(-3deg);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
   }
   .sidebar-title {
       color: #ffeb3b;
@@ -150,7 +156,7 @@
 
 <div class="sidebar-menu">
   <div class="sidebar-header">
-    <img src="" class="sidebar-logo" alt="Logo">
+   <img src="" class="sidebar-logo" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống">
     <h3 class="sidebar-title" id="menu_title"></h3>
     <div class="sidebar-subtitle" id="menu_subtitle"></div>
   </div>
