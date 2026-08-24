@@ -777,10 +777,15 @@ function khoiDongDangNhap() {
     clientDangNhapG.requestAccessToken();
 }
 
+// =========================================================================
+// THAY THẾ TOÀN BỘ HÀM NÀY TRONG KHỐI 6: XÁC THỰC DANH TÍNH
+// =========================================================================
 async function xuLyLayThongTin(maTokenTruyCap) {
     let nutDangNhap = document.getElementById('nutDangNhapG');
     try {
-        const phanHoi = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { 
+        // [NÂNG CẤP ĐỒNG BỘ]: Sử dụng fetchVoiCoCheThuLai thay cho fetch nguyên thủy
+        // Đảm bảo phiên đăng nhập không bị gián đoạn nếu mạng nội bộ chập chờn
+        const phanHoi = await fetchVoiCoCheThuLai('https://www.googleapis.com/oauth2/v3/userinfo', { 
             headers: { Authorization: `Bearer ${maTokenTruyCap}` } 
         });
         const duLieuXacThuc = await phanHoi.json();
