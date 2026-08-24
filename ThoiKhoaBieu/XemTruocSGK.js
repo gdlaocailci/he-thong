@@ -1,9 +1,3 @@
-// =========================================================================
-// HỆ THỐNG XỬ LÝ HỌC LIỆU SỐ VÀ HIỂN THỊ BÀI GIẢNG PDF TRỰC QUAN (V22.0 - BẢN TURBO)
-// LÕI SIÊU TỐC: Xử lý triệt để lỗi nghẽn Cache, Thêm Timeout mạng, Nhớ trạng thái lỗi
-// BẢO LƯU 100% LOGIC V20: Chốt mốc Tuần <= 18 (Kỳ 1), Nút chuyển Kỳ thủ công
-// =========================================================================
-
 let boNhoHocLieuSGK = {}; 
 let theHienPdfHienTai = null;
 let trangHienTaiPDF = 1;
