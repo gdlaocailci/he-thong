@@ -639,7 +639,7 @@
                             <option value="cntt">Công nghệ thông tin & Tin học (Máy tính)</option>
                             <option value="vimach">Vi mạch & Điện tử (Bo mạch)</option>
                             <option value="hieuung">Hiệu ứng & Đồ họa (Gậy phép)</option>
-                            <option value="trangchu">Trang chủ & Cổng thông tin (Ngôi nhà)</option>
+                            <option value="trangchu">Trang chủ & Cổng thông tin (Ảnh Logo)</option>
                             <option value="suaicon">Sửa chữa & Tùy chỉnh Icon (Cờ lê)</option>
                             <option value="sualink">Sửa chữa & Quản lý Link (Liên kết)</option>
                             <option value="mang">Mạng Internet & Viễn thông (Wifi)</option>
@@ -1115,7 +1115,7 @@ function apDungPhanQuyen(roles) {
             case 'cntt': iconContent = '<span class="material-icons">computer</span>'; bgClass = 'bg-9'; break;
             case 'vimach': iconContent = '<span class="material-icons">developer_board</span>'; bgClass = 'bg-9'; break;
             case 'hieuung': iconContent = '<span class="material-icons">auto_fix_high</span>'; bgClass = 'bg-5'; break;
-            case 'trangchu': iconContent = '<span class="material-icons">home</span>'; bgClass = 'bg-1'; break;
+            case 'trangchu': iconContent = '<img src="' + KETNOI.LINK_ICON_TRANG_CHU + '" class="custom-avatar" alt="Trang chủ">'; bgClass = 'bg-avatar'; break;
             case 'suaicon': iconContent = '<span class="material-icons">build</span>'; bgClass = 'bg-2'; break;
             case 'sualink': iconContent = '<span class="material-icons">link</span>'; bgClass = 'bg-4'; break;
             case 'mang': iconContent = '<span class="material-icons">wifi</span>'; bgClass = 'bg-1'; break;
