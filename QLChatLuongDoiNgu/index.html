@@ -149,7 +149,7 @@
 
   <div id="manhDn" style="display:none;">
     <div class="hopDn text-center">
-      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="login_logo" style="width: 85px; height: 85px; margin-bottom: 15px;">
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="login_logo" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="width: 85px; height: 85px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.08)'; this.style.opacity='0.9'" onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
       <h3 class="fw-bold text-uppercase mb-2" style="color: #b91c1c;" id="login_app_name">ĐANG TẢI...</h3>
       <h4 class="fw-bold mb-4" style="color: #1e3a8a;" id="login_school_name">...</h4>
       
@@ -192,8 +192,12 @@
 </ul>
     
     <div class="thongTinDau d-flex justify-content-between align-items-center">
-      <div class="tenTruong" id="header_ten_truong">ĐANG TẢI...</div>
+        <div class="d-flex align-items-center" style="gap: 10px;">
+         <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="header_logo" alt="Logo" onclick="chuyenHuongHeThong()" title="Trở về trang Hệ thống" style="width: 28px; height: 28px; object-fit: contain; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);" onmouseover="this.style.transform='scale(1.1) rotate(-3deg)'; this.style.filter='drop-shadow(0 4px 6px rgba(0,0,0,0.15))'" onmouseout="this.style.transform='scale(1) rotate(0deg)'; this.style.filter='none'">
+         <div class="tenTruong" id="header_ten_truong" style="margin-bottom: 0;">ĐANG TẢI...</div>
+      </div>
       <div class="khuGdev">
+        
          <div class="vongTlua"><i class="fas fa-rocket"></i></div>
          <div class="chuDev">
             <div class="tenDev" id="header_author_name">ĐANG TẢI...</div>
@@ -239,10 +243,13 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script>
+    
     function applyQLNSConfig() {
         if(typeof QLNS_LINK_LOGO !== 'undefined') {
             let log = document.getElementById('login_logo');
             if(log) log.src = QLNS_LINK_LOGO;
+            let hLog = document.getElementById('header_logo');
+            if(hLog) hLog.src = QLNS_LINK_LOGO;
         }
         if(typeof QLNS_TEN_PM_UP !== 'undefined') {
             let app = document.getElementById('login_app_name');
@@ -561,6 +568,15 @@ function apDungPhanQuyenTabs() {
 
     function layTuyc(chS) { return chinhToanc.map(r => String(r[chS]).trim()).filter(x => x && x!=="" && x!=="undefined").filter((v,i,a) => a.indexOf(v)===i); }
     function doDlChon(clL, chS) { let co = layTuyc(chS); $(clL).html('<option value="">--Chọn--</option>' + co.map(o => `<option value="${o}">${o}</option>`).join('')); }
+
+    function chuyenHuongHeThong() {
+        var urlDich = (typeof QLNS_LINK_TRANG_CHU !== 'undefined' && QLNS_LINK_TRANG_CHU.trim() !== '') 
+                      ? QLNS_LINK_TRANG_CHU 
+                      : 'https://gdlaocailci.github.io/he-thong/';
+                      
+        window.open(urlDich, '_top');
+    }
+    
 function khoaTruyCapMaNguon() {
         // 1. Khóa menu chuột phải
         document.addEventListener('contextmenu', function(e) {
