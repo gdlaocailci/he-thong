@@ -110,15 +110,15 @@ async function khoiTaoBoNhoHocLieu() {
             let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
             let tenMon = dong[1] ? String(dong[1]).trim().toLowerCase() : '';
             
-            let linkKy1 = (dong.length > 2 && dong[2]) ? String(dong[2]).trim() : ''; 
-            let linkKy2 = (dong.length > 3 && dong[3]) ? String(dong[3]).trim() : ''; 
+            let linkKy1 = (dong.length > 2 && dong[2]) ? String(dong[2]).trim() : ''; // Cột C
+            let linkKy2 = (dong.length > 3 && dong[3]) ? String(dong[3]).trim() : ''; // Cột D
             
             if (tenKhoi && tenMon && (linkKy1 || linkKy2)) {
                 let khoaTruyXuat = `${tenKhoi}_${tenMon}`;
                 boNhoHocLieuSGK[khoaTruyXuat] = {
-                    // [NÂNG CẤP]: Lưu toàn bộ đường link URL tĩnh (Loại bỏ hàm trichXuatIdTuLink)
                     linkKy1: linkKy1,
-                    linkKy2: linkKy2 || linkKy1
+                    // [LOGIC CHỐT]: Nếu Cột D có link thì lấy Cột D, nếu Cột D để trống thì lấy Cột C xài chung
+                    linkKy2: linkKy2 !== '' ? linkKy2 : linkKy1 
                 };
             }
         }
@@ -141,12 +141,14 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     const tenMonChuan = String(tenMonGoc).trim().toLowerCase();
     const khoaTimKiem = `${tenKhoiChuan}_${tenMonChuan}`;
 
+    // 1. Phân tích tuần học từ giao diện
     let tuanHienTai = 1; 
     if (thamSoTuan != null && typeof thamSoTuan !== 'object') {
         let match = String(thamSoTuan).match(/\d+/);
         if (match) tuanHienTai = parseInt(match[0], 10);
     } else {
-        let dsIdChuan = ['tuan', 'cboTuan', 'tuanHoc', 'chonTuan', 'Tuan', 'TuanHoc'];
+        // [SỬA LỖI QUAN TRỌNG]: Bổ sung 'locTuanUI' vào danh sách tìm kiếm để hệ thống đọc được chính xác ô Tuần trên bảng PPCT
+        let dsIdChuan = ['locTuanUI', 'tuan', 'cboTuan', 'tuanHoc', 'chonTuan', 'Tuan', 'TuanHoc'];
         let oNhapTuan = null;
         for (let id of dsIdChuan) {
             oNhapTuan = document.getElementById(id);
@@ -161,6 +163,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
     
     if (tuanHienTai < 1) tuanHienTai = 1;
 
+    // 2. Nạp dữ liệu
     if (Object.keys(boNhoHocLieuSGK).length === 0) {
         console.log("Đang kết nối thư viện Sách giáo khoa...");
         try {
@@ -177,9 +180,8 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
+    // 3. Logic chuyển đổi Kỳ theo số Tuần (>18)
     let kyHocPhanDong = (tuanHienTai > 18) ? 2 : 1;
-    
-    // [NÂNG CẤP]: Lấy url tĩnh đã lưu theo kỳ
     let linkTepHienTai = (kyHocPhanDong === 2) ? duLieuMonHoc.linkKy2 : duLieuMonHoc.linkKy1;
     
     if (!linkTepHienTai) {
@@ -187,7 +189,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
-    // [THAY ĐỔI CỐT LÕI]: Mở thẳng đường link (bất kể định dạng gì) sang tab mới
+    // 4. Mở thẳng URL (Drive, SpeakerDeck, Web...) sang tab mới
     window.open(linkTepHienTai, '_blank', 'noopener,noreferrer');
 };
 
