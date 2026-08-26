@@ -44,7 +44,7 @@
             withSuccessHandler: function(cb) { return createRunner(cb, onFailure); },
             withFailureHandler: function(cb) { return createRunner(onSuccess, cb); },
          
-    _call: function(hdong, tso) {
+_call: function(hdong, tso) {
                 const sysId = window.skttktoanc || sessionStorage.getItem("SKT_DINHDANH_TAIK") || ""; 
                 const maDonVi = sessionStorage.getItem("SKT_MA_DON_VI") || "TRUONG_1"; 
                 const endpoint = typeof SKT_GAS_URL !== 'undefined' ? SKT_GAS_URL : "";
@@ -61,7 +61,16 @@
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ hdong: hdong, tso: tso, taik: sysId, ma_don_vi: maDonVi })
                 })
-                .then(res => res.json())
+                // --- BẮT ĐẦU VỊ TRÍ NÂNG CẤP BẮT LỖI UNEXPECTED TOKEN '<' ---
+                .then(res => {
+                    const kieuDuLieu = res.headers.get("content-type");
+                    if (kieuDuLieu && kieuDuLieu.includes("application/json")) {
+                        return res.json();
+                    } else {
+                        throw new Error("LỖI TRIỂN KHAI: Máy chủ Google từ chối quyền truy cập API (Trả về trang HTML thay vì dữ liệu JSON). Yêu cầu kiểm tra lại cấu hình Deploy (Who has access: Anyone).");
+                    }
+                })
+                // --- KẾT THÚC VỊ TRÍ NÂNG CẤP ---
                 .then(res => {
                     if (res.trth === "tcon") { 
                         if (onSuccess) onSuccess(res.dliu); 
@@ -79,6 +88,7 @@
                     else alert("Lỗi kết nối máy chủ: " + err.message);
                 });
             },
+         
             skt_laydl_bda: function(taik, cnh) { this._call('skt_laydl_bda', { cnh: cnh }); },
             skt_laybg_mahs: function(mhso) { this._call('skt_laybg_mahs', { mhso: mhso }); },
             skt_luubg_nha: function(mdl) { this._call('skt_luubg_nha', { mdl: mdl }); },
