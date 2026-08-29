@@ -250,7 +250,8 @@ async function xuatExcelPhanCong() {
         const wsData = workbook.addWorksheet('DM_GV'); 
         
         // 1. Tạo danh sách Nguồn (Data Source) ở Sheet ẩn
-        let dsMaGV = danhSachGV.map(gv => gv.maGv || gv.hoTen);
+        // [BẢN NÂNG CẤP]: Sắp xếp danh sách Alphabet chuẩn tiếng Việt để Excel hỗ trợ Auto-complete tốt nhất
+        let dsMaGV = danhSachGV.map(gv => gv.maGv || gv.hoTen).sort((a, b) => a.localeCompare(b, 'vi'));
         dsMaGV.forEach((ma, idx) => {
             wsData.getCell(`A${idx + 1}`).value = ma;
         });
@@ -280,14 +281,16 @@ async function xuatExcelPhanCong() {
                     worksheet.getCell(rowCount, c).dataValidation = {
                         type: 'list',
                         allowBlank: true,
-                        // [BẢN NÂNG CẤP]: Bật khóa bảo vệ, chặn nhập ngoài danh sách
+                        // Bật khóa bảo vệ chặn nhập ngoài danh sách
                         showErrorMessage: true, 
                         errorStyle: 'error', 
                         errorTitle: 'Dữ liệu không hợp lệ',
                         error: 'Vui lòng chọn hoặc gõ chính xác mã giáo viên có trong danh sách!',
-                        // Bật tính năng hiển thị dropdown khi người dùng tương tác
-                        showDropDown: true, 
-                        formulae: [`DM_GV!$A$1:$A$${dsMaGV.length}`]
+                        // [BẢN NÂNG CẤP]: Hiển thị hướng dẫn khi click vào ô để người dùng biết cách tìm kiếm
+                        showInputMessage: true,
+                        promptTitle: 'Thao tác tìm kiếm',
+                        prompt: 'Nhấn tổ hợp phím [Alt + ↓] để mở danh sách, sau đó gõ ký tự để lọc nhanh.',
+                        formulae: [`'DM_GV'!$A$1:$A$${dsMaGV.length}`] // Bao dấu nháy đơn tên sheet để an toàn tham chiếu
                     };
                 }
                 rowCount++;
@@ -295,7 +298,7 @@ async function xuatExcelPhanCong() {
         });
 
         worksheet.getRow(1).font = { bold: true };
-        worksheet.columns.forEach((col, i) => { col.width = i === 0 ? 12 : 18; });
+        worksheet.columns.forEach((col, i) => { col.width = i === 0 ? 12 : 20; });
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
