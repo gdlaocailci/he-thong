@@ -54,7 +54,7 @@ function dungGiaoDienThongKe() {
         </div>
 
         <div id="vungKetQuaThongKe" class="bg-white shadow-inner border border-gray-400 flex-1 overflow-auto flex flex-col relative">
-            <div class="text-center text-slate-400 mt-20 font-bold">
+            <div class="text-center text-slate-400 m-auto font-bold px-4 py-8">
                 Vui lòng chọn bộ lọc và bấm "Tra cứu" để hiển thị dữ liệu thống kê.
             </div>
         </div>
@@ -158,7 +158,7 @@ async function goiTraCuuThongKe() {
     const vungKetQua = document.getElementById('vungKetQuaThongKe');
     vungKetQua.classList.remove('p-4', 'overflow-auto');
     vungKetQua.classList.add('p-0', 'overflow-hidden');
-    vungKetQua.innerHTML = `<div class="mt-20 text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
+    vungKetQua.innerHTML = `<div class="m-auto text-center text-blue-600 font-bold w-full"><div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang truy xuất CSDL...</div>`;
 
     try {
         let mangDinhMucChuan = {};
@@ -207,9 +207,9 @@ async function goiTraCuuThongKe() {
             }
         });
         
-    } catch (loi) {
+        } catch (loi) {
         console.error("Lỗi Tra cứu:", loi);
-        vungKetQua.innerHTML = `<div class="mt-20 text-center text-red-500 font-bold w-full">Lỗi kết nối máy chủ dữ liệu.</div>`;
+        vungKetQua.innerHTML = `<div class="m-auto text-center text-red-500 font-bold w-full">Lỗi kết nối máy chủ dữ liệu.</div>`;
     }
 }
 
