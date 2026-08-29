@@ -270,16 +270,23 @@ async function xuatExcelPhanCong() {
             let tdLop = tr.querySelector('td:first-child');
             if (tdLop) {
                 dong.push(tdLop.innerText.trim());
-                // [BẢN NÂNG CẤP]: Cập nhật thu thập giá trị từ input
+                // Thu thập giá trị từ input
                 let cacSelect = tr.querySelectorAll('input[data-lop]');
                 cacSelect.forEach(sl => dong.push(sl.value.trim()));
                 worksheet.addRow(dong);
 
+                // Thiết lập Dropdown cho từng ô môn học
                 for (let c = 2; c <= dongTieuDe.length; c++) {
                     worksheet.getCell(rowCount, c).dataValidation = {
                         type: 'list',
                         allowBlank: true,
-                        showErrorMessage: false, 
+                        // [BẢN NÂNG CẤP]: Bật khóa bảo vệ, chặn nhập ngoài danh sách
+                        showErrorMessage: true, 
+                        errorStyle: 'error', 
+                        errorTitle: 'Dữ liệu không hợp lệ',
+                        error: 'Vui lòng chọn hoặc gõ chính xác mã giáo viên có trong danh sách!',
+                        // Bật tính năng hiển thị dropdown khi người dùng tương tác
+                        showDropDown: true, 
                         formulae: [`DM_GV!$A$1:$A$${dsMaGV.length}`]
                     };
                 }
