@@ -475,7 +475,8 @@ function xuLyXuatExcelPPCT() {
 }
 
 // =========================================================================
-// THUẬT TOÁN NHẬP EXCEL ĐỒNG BỘ: TẢI TOÀN BỘ VÀO BỘ NHỚ VÀ ÁNH XẠ LÊN UI
+// THUẬT TOÁN NHẬP EXCEL ĐỒNG BỘ: HIỂN THỊ KÉP VÀ XEM TRƯỚC TOÀN BỘ FILE
+// Thiết kế và phát triển: Hoàng Ngọc Lâm
 // =========================================================================
 function xuLyNhapExcelPPCT(event) {
     const file = event.target.files[0];
@@ -499,7 +500,7 @@ function xuLyNhapExcelPPCT(event) {
             const rowsArr = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             
             if (rowsArr.length > 1) {
-                // 1. LÀM SẠCH BỘ NHỚ VÀ NẠP FILE MỚI: Reset mảng để nhận dữ liệu hoàn toàn mới từ file tải lên
+                // 1. LÀM SẠCH VÀ NẠP TOÀN BỘ FILE EXCEL VÀO BỘ NHỚ
                 duLieuPpctGoc = []; 
                 for (let i = 1; i < rowsArr.length; i++) {
                     let r = rowsArr[i];
@@ -512,36 +513,44 @@ function xuLyNhapExcelPPCT(event) {
                     }
                 }
 
-                // 2. TẢI DỮ LIỆU LÊN UI: Ánh xạ và hiển thị ngay lập tức lên lưới của Tuần hiện tại
-                const cacOInputTiet = document.querySelectorAll('[data-loai="tietPpc"]');
-                cacOInputTiet.forEach(inp => {
-                    let valHienTai = inp.innerText.trim();
-                    if (valHienTai !== '') {
-                        let idKhoa = inp.getAttribute('data-ppct-id');
-                        let inputTenBai = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
-                        let inputDieuChinh = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
-                        
-                        // Đối chiếu Tiết trên lưới UI với Tiết trong mảng Excel vừa tải lên
-                        let baiHoc = duLieuPpctGoc.find(b => String(b.tiet) === valHienTai);
-                        if (baiHoc) {
-                            if (inputTenBai) inputTenBai.innerText = baiHoc.tenBaiHoc;
-                            if (inputDieuChinh) inputDieuChinh.innerText = baiHoc.dieuChinh;
-                        } else {
-                            // Nếu file Excel không có tiết này (trống), làm sạch ô trên UI
-                            if (inputTenBai) inputTenBai.innerText = '';
-                            if (inputDieuChinh) inputDieuChinh.innerText = '';
-                        }
-                    }
+                // 2. VẼ LẠI LƯỚI CỦA TUẦN HIỆN TẠI 
+                // Cập nhật dữ liệu Excel vào các tiết của tuần này để giữ liên kết TKB
+                veBangKhungLichPPCT(monUI);
+
+                // 3. MỞ RỘNG GIAO DIỆN: XUẤT TOÀN BỘ DỮ LIỆU EXCEL XUỐNG BÊN DƯỚI ĐỂ KIỂM TRA
+                const tbody = document.getElementById('vungDuLieuLichPPCT');
+                let htmlPreview = `
+                    <tr>
+                        <td colspan="7" class="bg-indigo-100 text-indigo-900 font-extrabold py-3 uppercase tracking-wide border-y-2 border-indigo-300 text-center shadow-inner">
+                            🔍 BẢN XEM TRƯỚC TOÀN BỘ DỮ LIỆU EXCEL (SẼ ĐƯỢC LƯU VÀO HỆ THỐNG KHI BẤM "LƯU PPCT")
+                        </td>
+                    </tr>
+                `;
+
+                // Đổ toàn bộ dữ liệu ra lưới (Chủ đích KHÔNG gắn thuộc tính data-loai để bảo vệ thuật toán của nút Lưu)
+                duLieuPpctGoc.forEach(row => {
+                    htmlPreview += `
+                    <tr class="bg-indigo-50/40 hover:bg-indigo-100 transition-colors border-b border-indigo-200">
+                        <td colspan="3" class="text-center italic text-indigo-600/70 text-[13px] align-middle font-semibold border-r border-indigo-200">
+                            ⚡ Chờ đồng bộ...
+                        </td>
+                        <td class="border-r border-indigo-200 align-middle text-center p-2 font-extrabold text-red-600">${row.tiet}</td>
+                        <td class="border-r border-indigo-200 align-middle text-center font-bold text-indigo-800">${monUI}</td>
+                        <td class="border-r border-indigo-200 align-middle text-left p-2 font-semibold text-slate-900">${row.tenBaiHoc}</td>
+                        <td class="align-middle text-left p-2 italic text-gray-700">${row.dieuChinh}</td>
+                    </tr>`;
                 });
 
-                alert(`✅ Đã nạp thành công toàn bộ ${duLieuPpctGoc.length} tiết từ file Excel lên giao diện!\n\n- Khối: Khối ${khoiUI}\n- Môn: ${monUI}\n\n👉 Hướng dẫn: Nội dung tuần hiện tại đã được hiển thị trên lưới. Đồng chí hãy nhấn nút "Lưu PPCT" để hệ thống tự động xóa dữ liệu cũ trong Sheet và lưu toàn bộ file Excel mới này.`);
+                // Chèn bảng xem trước vào ngay dưới lưới lịch tuần
+                tbody.insertAdjacentHTML('beforeend', htmlPreview);
+
+                alert(`✅ Đã nạp thành công toàn bộ ${duLieuPpctGoc.length} tiết từ file Excel!\n\n👉 Hướng dẫn: Toàn bộ nội dung file đã được hiển thị trên giao diện (Kéo xuống dưới để xem trước). Nếu dữ liệu đã chính xác, Đồng chí hãy nhấn nút "Lưu PPCT" để ghi đè vào hệ thống.`);
             } else {
                 alert("Lỗi: File Excel trống hoặc không đúng biểu mẫu chuẩn.");
             }
         } catch (loi) { 
             alert("Sự cố đọc file Excel: " + loi.message); 
         } finally { 
-            // Reset input file để có thể tải lên lại cùng một file nếu cần
             event.target.value = ''; 
         }
     };
