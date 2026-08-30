@@ -474,10 +474,13 @@ function xuLyXuatExcelPPCT() {
     XLSX.writeFile(wb, `LichBaoGiang_Khoi${khoi}_${mon.replace(/\s+/g, '')}.xlsx`);
 }
 
+// =========================================================================
+// THUẬT TOÁN NHẬP EXCEL ĐỒNG BỘ: TẢI TOÀN BỘ VÀO BỘ NHỚ VÀ ÁNH XẠ LÊN UI
+// =========================================================================
 function xuLyNhapExcelPPCT(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (typeof XLSX === 'undefined') { alert("Thư viện Excel chưa tải xong."); return; }
+    if (typeof XLSX === 'undefined') { alert("Cảnh báo: Thư viện Excel chưa được tải xong."); return; }
     
     const khoiUI = document.getElementById('locKhoiPPCT').getAttribute('data-khoi-so');
     const monUI = document.getElementById('locMonPPCT').value.trim();
@@ -496,7 +499,8 @@ function xuLyNhapExcelPPCT(event) {
             const rowsArr = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
             
             if (rowsArr.length > 1) {
-                duLieuPpctGoc = [];
+                // 1. LÀM SẠCH BỘ NHỚ VÀ NẠP FILE MỚI: Reset mảng để nhận dữ liệu hoàn toàn mới từ file tải lên
+                duLieuPpctGoc = []; 
                 for (let i = 1; i < rowsArr.length; i++) {
                     let r = rowsArr[i];
                     if (r[1] !== undefined && r[1] !== "") {
@@ -508,35 +512,38 @@ function xuLyNhapExcelPPCT(event) {
                     }
                 }
 
+                // 2. TẢI DỮ LIỆU LÊN UI: Ánh xạ và hiển thị ngay lập tức lên lưới của Tuần hiện tại
                 const cacOInputTiet = document.querySelectorAll('[data-loai="tietPpc"]');
-                let chiSoExcel = 0;
-
                 cacOInputTiet.forEach(inp => {
-                    let idKhoa = inp.getAttribute('data-ppct-id');
-                    let inputTenBai = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
-                    let inputDieuChinh = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
                     let valHienTai = inp.innerText.trim();
-
-                    if (valHienTai === '' && chiSoExcel < duLieuPpctGoc.length) {
-                        inp.innerText = duLieuPpctGoc[chiSoExcel].tiet;
-                        if (inputTenBai) inputTenBai.innerText = duLieuPpctGoc[chiSoExcel].tenBaiHoc;
-                        if (inputDieuChinh) inputDieuChinh.innerText = duLieuPpctGoc[chiSoExcel].dieuChinh;
-                        chiSoExcel++;
-                    } else if (valHienTai !== '') {
+                    if (valHienTai !== '') {
+                        let idKhoa = inp.getAttribute('data-ppct-id');
+                        let inputTenBai = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="tenBai"]`);
+                        let inputDieuChinh = document.querySelector(`[data-ppct-id="${idKhoa}"][data-loai="dieuChinh"]`);
+                        
+                        // Đối chiếu Tiết trên lưới UI với Tiết trong mảng Excel vừa tải lên
                         let baiHoc = duLieuPpctGoc.find(b => String(b.tiet) === valHienTai);
                         if (baiHoc) {
                             if (inputTenBai) inputTenBai.innerText = baiHoc.tenBaiHoc;
                             if (inputDieuChinh) inputDieuChinh.innerText = baiHoc.dieuChinh;
+                        } else {
+                            // Nếu file Excel không có tiết này (trống), làm sạch ô trên UI
+                            if (inputTenBai) inputTenBai.innerText = '';
+                            if (inputDieuChinh) inputDieuChinh.innerText = '';
                         }
                     }
                 });
 
-                alert(`Đã nạp dữ liệu Excel thành công!\n\n- Khối ghi nhận: Khối ${khoiUI}\n- Môn ghi nhận: ${monUI}\n(Dữ liệu Khối/Môn bên trong file Excel đã bị loại bỏ hoàn toàn).\n\nLưu ý: Bấm nút "Lưu PPCT" để hệ thống tự động xóa sạch dữ liệu cũ của môn này và tải nối tiếp dữ liệu mới vào Sheet!`);
+                alert(`✅ Đã nạp thành công toàn bộ ${duLieuPpctGoc.length} tiết từ file Excel lên giao diện!\n\n- Khối: Khối ${khoiUI}\n- Môn: ${monUI}\n\n👉 Hướng dẫn: Nội dung tuần hiện tại đã được hiển thị trên lưới. Đồng chí hãy nhấn nút "Lưu PPCT" để hệ thống tự động xóa dữ liệu cũ trong Sheet và lưu toàn bộ file Excel mới này.`);
             } else {
-                alert("File Excel trống hoặc không đúng biểu mẫu xuất ra.");
+                alert("Lỗi: File Excel trống hoặc không đúng biểu mẫu chuẩn.");
             }
-        } catch (loi) { alert("Lỗi đọc file Excel: " + loi.message); } 
-        finally { event.target.value = ''; }
+        } catch (loi) { 
+            alert("Sự cố đọc file Excel: " + loi.message); 
+        } finally { 
+            // Reset input file để có thể tải lên lại cùng một file nếu cần
+            event.target.value = ''; 
+        }
     };
     reader.readAsArrayBuffer(file);
 }
