@@ -4,7 +4,7 @@ const KET_NOI = {
   
   // 2. THÔNG TIN THỂ THỨC VĂN BẢN (NĐ 30/2020/NĐ-CP)
   CQ_CHU_QUAN: 'UBND XÃ HỢP THÀNH',
-  TEN_TO_CHUC: 'TRƯỜNG TH&THCS HỢP THÀNH',
+  TEN_TO_CHUC: 'TRƯỜNG TH&THCS TẢ PHỜI',
   NOI_BAN_HANH: 'Hợp Thành',
   MA_SO_VAN_BAN: '/BB-THHT', 
   
@@ -18,7 +18,7 @@ const KET_NOI = {
   
   // 5. DANH SÁCH KIỂM DUYỆT BỀ MẶT (Phục hồi để Frontend chặn tức thời)
   DANH_SACH_TAI_KHOAN: [
-      'tulieuhopthanh@gmail.com'
+      'hoangngoclamlc@gmail.com'
   ],
 
   // 6. DANH MỤC VĂN BẢN
