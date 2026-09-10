@@ -633,16 +633,72 @@
         });
         return { data: dl, labels: nd };
     }
+    
+    function napDuLieuSua(chuoi) {
+        try {
+            const dl = typeof chuoi === 'string' ? JSON.parse(chuoi) : chuoi; 
+            const loai = dl.loaiVanBan;
+            const f = dl.duLieu;
+            
+            document.getElementById('loaiVanBan').value = loai;
+            dongTatCaPanel(); 
+            
+            const k = document.getElementById('khoi_' + loai);
+            if(k) {
+                k.querySelectorAll('[data-key]').forEach(inp => {
+                    let key = inp.getAttribute('data-key');
+                    if (f[key] !== undefined && f[key] !== null && f[key] !== "") {
+                        let strVal = f[key].toString();
+                        
+                        if (inp.rteObject) {
+                            let strRTE = strVal.replace(/\r?\n/g, '<br>');
+                            inp.rteObject.innerHTML = strRTE;
+                            inp.value = strRTE;
+                        } else {
+                            // BẮT ĐẦU NÂNG CẤP: Ép chuẩn cấu trúc HTML5 cho lưới UI
+                            if (inp.type === 'datetime-local') {
+                                if (strVal.length === 10) strVal += "T00:00"; 
+                                else if (strVal.length > 16) strVal = strVal.substring(0, 16);
+                            } else if (inp.type === 'date') {
+                                if (strVal.includes('T')) strVal = strVal.split('T')[0];
+                            } else if (inp.type === 'time') {
+                                if (strVal.length > 5) strVal = strVal.substring(0, 5);
+                            }
+                            inp.value = strVal;
+                        }
+                    } else {
+                        inp.value = "";
+                        if(inp.rteObject) inp.rteObject.innerHTML = "";
+                    }
+                });
+            }
 
-    function hienThiXemTruoc() {
-        const t = layToanBoDuLieuGiaoDien(); if(document.getElementById('loaiVanBan').value === "0") return;
-        let html = "<table class='preview-table'><tbody>", coDuLieu = false;
-        for (let id in t.data) { if (t.data[id].trim() !== "") { html += `<tr><th>${t.labels[id]}</th><td>${t.data[id].replace(/\n/g, '<br>')}</td></tr>`; coDuLieu = true; } }
-        if (!coDuLieu) { HeThong.thongBao("Biểu mẫu đang trống!", "loi"); return; }
-        document.getElementById('previewBody').innerHTML = html + "</tbody></table>";
-        document.getElementById('previewModal').style.display = 'flex'; setTimeout(() => document.getElementById('previewModal').classList.add('active'), 50);
+            chuyenDoiBieuMau(true);
+            
+            if(k) {
+                let soLanQuet = 0;
+                let boDemGianO = setInterval(() => {
+                    if (k.offsetWidth > 0) { 
+                        k.querySelectorAll('textarea').forEach(ta => tuDongGianCao(ta));
+                        soLanQuet++;
+                        if (soLanQuet >= 6) clearInterval(boDemGianO);
+                    }
+                }, 150);
+                
+                setTimeout(() => {
+                    if(loai === "1") tinhTongDiemThanhPhan(1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    let btn = document.getElementById('btnHoSo'); 
+                    if(btn){ btn.innerText = "Cập Nhật Văn Bản"; btn.className = "btn btn-orange"; }
+                    k.style.boxShadow = "0 0 15px #f97316"; 
+                    setTimeout(() => k.style.boxShadow = "none", 1500);
+                }, 500);
+            }
+            
+        } catch(e) { 
+            HeThong.thongBao("Lỗi giải mã dữ liệu: " + e.message, "loi"); 
+        }
     }
-    function dongXemTruoc() { document.getElementById('previewModal').classList.remove('active'); setTimeout(() => document.getElementById('previewModal').style.display = 'none', 300); }
 
     function lamMoiForm(boQua = false) {
         if (boQua || confirm("Xóa toàn bộ dữ liệu đang nhập?")) {
@@ -650,7 +706,8 @@
             if(loai !== "0") {
                 const khoi = document.getElementById('khoi_' + loai);
                 
-                khoi.querySelectorAll('input:not([type="datetime-local"]), textarea').forEach(o => {
+                // BẮT ĐẦU NÂNG CẤP: Dọn dẹp hoàn toàn mọi loại input (gồm cả datetime) để chống nhiễu
+                khoi.querySelectorAll('input, textarea').forEach(o => {
                     o.value = '';
                     if(o.rteObject) o.rteObject.innerHTML = '';
                 });
@@ -676,6 +733,16 @@
             HeThong.thongBao("Đã làm mới biểu mẫu.");
         }
     }
+    
+    function hienThiXemTruoc() {
+        const t = layToanBoDuLieuGiaoDien(); if(document.getElementById('loaiVanBan').value === "0") return;
+        let html = "<table class='preview-table'><tbody>", coDuLieu = false;
+        for (let id in t.data) { if (t.data[id].trim() !== "") { html += `<tr><th>${t.labels[id]}</th><td>${t.data[id].replace(/\n/g, '<br>')}</td></tr>`; coDuLieu = true; } }
+        if (!coDuLieu) { HeThong.thongBao("Biểu mẫu đang trống!", "loi"); return; }
+        document.getElementById('previewBody').innerHTML = html + "</tbody></table>";
+        document.getElementById('previewModal').style.display = 'flex'; setTimeout(() => document.getElementById('previewModal').classList.add('active'), 50);
+    }
+    function dongXemTruoc() { document.getElementById('previewModal').classList.remove('active'); setTimeout(() => document.getElementById('previewModal').style.display = 'none', 300); }
 
     function chayNghiepVu(hanhDong) {
         const loai = document.getElementById('loaiVanBan').value;
@@ -788,62 +855,6 @@
         }, () => { ul.innerHTML = '<li style="padding: 15px; text-align: center; color: #ef4444;">Lỗi tải dữ liệu.</li>'; });
     }
 
-    function napDuLieuSua(chuoi) {
-        try {
-            const dl = typeof chuoi === 'string' ? JSON.parse(chuoi) : chuoi; 
-            const loai = dl.loaiVanBan;
-            const f = dl.duLieu;
-            
-            document.getElementById('loaiVanBan').value = loai;
-            dongTatCaPanel(); 
-            
-            const k = document.getElementById('khoi_' + loai);
-            if(k) {
-                k.querySelectorAll('[data-key]').forEach(inp => {
-                    let key = inp.getAttribute('data-key');
-                    if (f[key] !== undefined && f[key] !== null) {
-                        let strVal = f[key].toString();
-                        
-                        if (inp.rteObject) {
-                            let strRTE = strVal.replace(/\r?\n/g, '<br>');
-                            inp.rteObject.innerHTML = strRTE;
-                            inp.value = strRTE;
-                        } else {
-                            inp.value = strVal;
-                        }
-                    } else {
-                        inp.value = "";
-                        if(inp.rteObject) inp.rteObject.innerHTML = "";
-                    }
-                });
-            }
-
-            chuyenDoiBieuMau(true);
-            
-            if(k) {
-                let soLanQuet = 0;
-                let boDemGianO = setInterval(() => {
-                    if (k.offsetWidth > 0) { 
-                        k.querySelectorAll('textarea').forEach(ta => tuDongGianCao(ta));
-                        soLanQuet++;
-                        if (soLanQuet >= 6) clearInterval(boDemGianO);
-                    }
-                }, 150);
-                
-                setTimeout(() => {
-                    if(loai === "1") tinhTongDiemThanhPhan(1);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    let btn = document.getElementById('btnHoSo'); 
-                    if(btn){ btn.innerText = "Cập Nhật Văn Bản"; btn.className = "btn btn-orange"; }
-                    k.style.boxShadow = "0 0 15px #f97316"; 
-                    setTimeout(() => k.style.boxShadow = "none", 1500);
-                }, 500);
-            }
-            
-        } catch(e) { 
-            HeThong.thongBao("Lỗi giải mã dữ liệu: " + e.message, "loi"); 
-        }
-    }
 
     function kichHoatTruyVanCheo() {
         const cauHoi = document.getElementById('aiCauHoiTruyVan').value.trim();
