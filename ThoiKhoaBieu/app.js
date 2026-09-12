@@ -40,13 +40,9 @@ async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3) {
         }
     }
 }
-
-// =========================================================================
-// KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM (Đã nâng cấp khóa chuyển tuần)
-// Thay thế toàn bộ hàm này trong file app.js
 // =========================================================================
 function kiemSoatGiaoDien() {
-    // 1. Bọc thép dữ liệu: Đảm bảo luôn trả về mảng dù lỗi mạng
+    // 1. Bọc thép dữ liệu
     const menuDuocCap = (quyenChiTiet && quyenChiTiet.menu) ? quyenChiTiet.menu : [];
     const nutDuocCap = (quyenChiTiet && quyenChiTiet.nut) ? quyenChiTiet.nut : [];
     const lopDuocCap = (quyenChiTiet && quyenChiTiet.lop) ? quyenChiTiet.lop : [];
@@ -56,7 +52,6 @@ function kiemSoatGiaoDien() {
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
         if (nut) {
-            // Hoặc là Admin, Hoặc là được cấp phép nút này
             let duocPhep = quyenSuaChua || nutDuocCap.includes(idNut);
             if (duocPhep) { nut.style.display = 'flex'; nut.disabled = false; } 
             else { nut.style.display = 'none'; nut.disabled = true; }
@@ -66,40 +61,41 @@ function kiemSoatGiaoDien() {
     // 3. Mở khóa Menu 
     const dsMenuQuanTri = ['menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK'];
     let coMenuQuanTriDuocMo = false;
-
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
-            // Hoặc là Admin, Hoặc là được cấp phép Menu này
             let duocXem = quyenSuaChua || menuDuocCap.includes(idMenu);
             menu.style.display = duocXem ? 'flex' : 'none'; 
             if (duocXem) coMenuQuanTriDuocMo = true;
         }
     });
 
-    // 4. Nếu có bất kỳ Menu quản trị nào được mở, thì mới hiện chữ "Hệ thống"
+    // 4. Nếu có Menu quản trị mở thì hiện nhãn "Hệ thống"
     let nhanHT = document.getElementById('nhanHeThong');
-    if (nhanHT) {
-        nhanHT.style.display = coMenuQuanTriDuocMo ? 'flex' : 'none';
-    }
+    if (nhanHT) nhanHT.style.display = coMenuQuanTriDuocMo ? 'flex' : 'none';
 
-    // 5. [LÕI NÂNG CẤP]: Khóa/Mở tương tác Ngày/Tuần theo phân quyền
-    let btnTuanTruoc = document.querySelector('button[onclick="chuyenTuan(-1)"]');
-    let btnTuanTiep = document.querySelector('button[onclick="chuyenTuan(1)"]');
-    let inputNgay = document.getElementById('chonNgayDauTuan');
-
-    // Điều kiện mở khóa: Là Admin (quyenSuaChua) HOẶC được phân quyền thao tác (có menu/nút/lớp)
+    // 5. [LÕI NÂNG CẤP]: ẨN HOÀN TOÀN MŨI TÊN VỚI NGƯỜI DÙNG CÔNG KHAI
     let coQuyenChuyenTuan = quyenSuaChua || lopDuocCap.length > 0 || nutDuocCap.length > 0 || menuDuocCap.length > 0;
+    
+    // Quét tìm tất cả các thẻ mũi tên có chứa hàm chuyenTuan
+    document.querySelectorAll('[onclick*="chuyenTuan"]').forEach(nut => {
+        if (coQuyenChuyenTuan) {
+            nut.style.display = ''; // Hiện lại mũi tên cho Ban giám hiệu hoặc người có quyền
+        } else {
+            nut.style.display = 'none'; // Xóa sổ hoàn toàn mũi tên khỏi giao diện công khai
+        }
+    });
 
-    if (coQuyenChuyenTuan) {
-        if (btnTuanTruoc) { btnTuanTruoc.disabled = false; btnTuanTruoc.classList.remove('opacity-50', 'cursor-not-allowed'); }
-        if (btnTuanTiep) { btnTuanTiep.disabled = false; btnTuanTiep.classList.remove('opacity-50', 'cursor-not-allowed'); }
-        if (inputNgay) { inputNgay.disabled = false; inputNgay.classList.remove('cursor-not-allowed', 'opacity-80'); }
-    } else {
-        // Đóng băng tương tác với người dùng vãng lai
-        if (btnTuanTruoc) { btnTuanTruoc.disabled = true; btnTuanTruoc.classList.add('opacity-50', 'cursor-not-allowed'); }
-        if (btnTuanTiep) { btnTuanTiep.disabled = true; btnTuanTiep.classList.add('opacity-50', 'cursor-not-allowed'); }
-        if (inputNgay) { inputNgay.disabled = true; inputNgay.classList.add('cursor-not-allowed', 'opacity-80'); }
+    // Xử lý khóa mờ đối với ô chọn Từ ngày
+    let inputNgay = document.getElementById('chonNgayDauTuan');
+    if (inputNgay) {
+        if (coQuyenChuyenTuan) {
+            inputNgay.disabled = false;
+            inputNgay.classList.remove('cursor-not-allowed', 'opacity-80', 'pointer-events-none');
+        } else {
+            inputNgay.disabled = true;
+            inputNgay.classList.add('cursor-not-allowed', 'opacity-80', 'pointer-events-none');
+        }
     }
 }
 
