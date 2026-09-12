@@ -42,36 +42,61 @@ async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3) {
 }
 
 // =========================================================================
-// KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM
+// KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM (Đã nâng cấp khóa chuyển tuần)
+// Thay thế toàn bộ hàm này trong file app.js
 // =========================================================================
 function kiemSoatGiaoDien() {
-    const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra'];
+    // 1. Bọc thép dữ liệu: Đảm bảo luôn trả về mảng dù lỗi mạng
+    const menuDuocCap = (quyenChiTiet && quyenChiTiet.menu) ? quyenChiTiet.menu : [];
+    const nutDuocCap = (quyenChiTiet && quyenChiTiet.nut) ? quyenChiTiet.nut : [];
+    const lopDuocCap = (quyenChiTiet && quyenChiTiet.lop) ? quyenChiTiet.lop : [];
+
+    // 2. Mở khóa Nút Bấm
+    const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra', 'btnNhapExcelTKB', 'btnDongBoChuan'];
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
         if (nut) {
-            if (quyenSuaChua) { nut.style.display = 'flex'; nut.disabled = false; } 
+            // Hoặc là Admin, Hoặc là được cấp phép nút này
+            let duocPhep = quyenSuaChua || nutDuocCap.includes(idNut);
+            if (duocPhep) { nut.style.display = 'flex'; nut.disabled = false; } 
             else { nut.style.display = 'none'; nut.disabled = true; }
         }
     });
 
-    // [ĐÃ SỬA LỖI]: Chỉ khóa đúng các Menu Quản trị thực sự. Trả lại hiển thị cho Phân phối chương trình.
-    const dsMenuQuanTri = ['nhanHeThong', 'menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK'];
+    // 3. Mở khóa Menu 
+    const dsMenuQuanTri = ['menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK'];
+    let coMenuQuanTriDuocMo = false;
+
     dsMenuQuanTri.forEach(idMenu => {
         let menu = document.getElementById(idMenu);
         if (menu) {
-            menu.style.display = quyenSuaChua ? 'flex' : 'none'; 
+            // Hoặc là Admin, Hoặc là được cấp phép Menu này
+            let duocXem = quyenSuaChua || menuDuocCap.includes(idMenu);
+            menu.style.display = duocXem ? 'flex' : 'none'; 
+            if (duocXem) coMenuQuanTriDuocMo = true;
         }
     });
 
+    // 4. Nếu có bất kỳ Menu quản trị nào được mở, thì mới hiện chữ "Hệ thống"
+    let nhanHT = document.getElementById('nhanHeThong');
+    if (nhanHT) {
+        nhanHT.style.display = coMenuQuanTriDuocMo ? 'flex' : 'none';
+    }
+
+    // 5. [LÕI NÂNG CẤP]: Khóa/Mở tương tác Ngày/Tuần theo phân quyền
     let btnTuanTruoc = document.querySelector('button[onclick="chuyenTuan(-1)"]');
     let btnTuanTiep = document.querySelector('button[onclick="chuyenTuan(1)"]');
     let inputNgay = document.getElementById('chonNgayDauTuan');
 
-    if (quyenSuaChua) {
+    // Điều kiện mở khóa: Là Admin (quyenSuaChua) HOẶC được phân quyền thao tác (có menu/nút/lớp)
+    let coQuyenChuyenTuan = quyenSuaChua || lopDuocCap.length > 0 || nutDuocCap.length > 0 || menuDuocCap.length > 0;
+
+    if (coQuyenChuyenTuan) {
         if (btnTuanTruoc) { btnTuanTruoc.disabled = false; btnTuanTruoc.classList.remove('opacity-50', 'cursor-not-allowed'); }
         if (btnTuanTiep) { btnTuanTiep.disabled = false; btnTuanTiep.classList.remove('opacity-50', 'cursor-not-allowed'); }
         if (inputNgay) { inputNgay.disabled = false; inputNgay.classList.remove('cursor-not-allowed', 'opacity-80'); }
     } else {
+        // Đóng băng tương tác với người dùng vãng lai
         if (btnTuanTruoc) { btnTuanTruoc.disabled = true; btnTuanTruoc.classList.add('opacity-50', 'cursor-not-allowed'); }
         if (btnTuanTiep) { btnTuanTiep.disabled = true; btnTuanTiep.classList.add('opacity-50', 'cursor-not-allowed'); }
         if (inputNgay) { inputNgay.disabled = true; inputNgay.classList.add('cursor-not-allowed', 'opacity-80'); }
