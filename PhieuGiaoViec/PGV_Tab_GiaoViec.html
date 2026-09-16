@@ -280,9 +280,7 @@ function gvTaiCanb() {
         }); 
     }
 
-    // NÂNG CẤP: Hàm sinh Datalist dùng chung cho toàn bộ các dòng trong bảng
     function gvTaoDatalistChung() {
-        // 1. Tạo danh sách Người nhận (Giáo viên)
         let dlNguoi = document.getElementById('dl_gvNguoiNhan');
         if (!dlNguoi) {
             dlNguoi = document.createElement('datalist');
@@ -295,12 +293,14 @@ function gvTaiCanb() {
                 if (!s) return;
                 let qy = String(s.quyen || "").trim().toLowerCase();
                 if (qy === "" || qy === "x" || qy === "xx") {
-                    dlNguoi.appendChild(new Option(s.tenn, s.tenn));
+                    let opt = document.createElement('option');
+                    // Ép cả Tên (Cột D) và ID (Cột B) vào giá trị để giải quyết triệt để trùng tên
+                    opt.value = s.tenn + " | ID: " + s.ttrg; 
+                    dlNguoi.appendChild(opt);
                 }
             });
         }
 
-        // 2. Tạo danh sách Tiến độ
         let dlTienDo = document.getElementById('dl_gvTienDo');
         if (!dlTienDo) {
             dlTienDo = document.createElement('datalist');
@@ -597,8 +597,7 @@ function gvVeDong(dong = null) {
         setTimeout(() => gvAutoResizeAllTextareas(), 50);
     }
 
-// HÀM 1: LƯU TỪNG DÒNG (OnChange)
-    function gvDoiNgn(ptu) {
+function gvDoiNgn(ptu) {
         if (!ptu) return;
         const dong = ptu.closest('tr');
         if (!dong) return;
@@ -616,7 +615,6 @@ function gvVeDong(dong = null) {
         const gth = gt_nhap.toUpperCase();
         const nm = document.getElementById('gvLocNam') ? document.getElementById('gvLocNam').value : "";
         
-        // NÂNG CẤP: Dò ngược từ Tên hiển thị sang Mã tài khoản
         let ma_tai_khoan = gt_nhap;
         let ten_hien_thi = gt_nhap;
         
@@ -625,10 +623,17 @@ function gvVeDong(dong = null) {
             ten_hien_thi = '-TOÀN TRƯỜNG-';
             ptu.value = 'ALL'; 
         } else {
-            let found = dsCanbgv.find(s => s.tenn === gt_nhap);
-            if (found) {
-                ma_tai_khoan = found.ttrg || found.tenn;
-                ten_hien_thi = found.tenn;
+            // Nhận diện và tách Tên (Cột D) và ID (Cột B)
+            if (gt_nhap.includes(" | ID: ")) {
+                let parts = gt_nhap.split(" | ID: ");
+                ten_hien_thi = parts[0].trim(); // Tên cột D
+                ma_tai_khoan = parts[1].trim(); // ID cột B
+            } else {
+                let found = dsCanbgv.find(s => s.tenn === gt_nhap || s.ttrg === gt_nhap);
+                if (found) {
+                    ma_tai_khoan = found.ttrg;
+                    ten_hien_thi = found.tenn;
+                }
             }
         }
         
@@ -641,9 +646,9 @@ function gvVeDong(dong = null) {
             tght: dong.querySelector('.oTGHoanThanh') ? dong.querySelector('.oTGHoanThanh').value : "",
             diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "",
             gchu: dong.querySelector('.oGchuGv') ? dong.querySelector('.oGchuGv').value : "",
-            ngnhan: ma_tai_khoan, // Gửi mã định danh lên Server
-            trangngnhan: ma_tai_khoan,
-            tenngnhan: ten_hien_thi, 
+            ngnhan: ma_tai_khoan, // ID chuẩn Cột B
+            trangngnhan: ma_tai_khoan, 
+            tenngnhan: ten_hien_thi, // Tên chuẩn Cột D
             colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
             colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
             colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
@@ -656,8 +661,7 @@ function gvVeDong(dong = null) {
         gvGoiMayChu(nm, th_htai, newTask, ptu, gth);
     }
 
-// HÀM 2: LƯU ĐỒNG LOẠT TOÀN BỘ (Nút Cập nhật chung)
-    function gvCapNhatNhiemVuChung() {
+function gvCapNhatNhiemVuChung() {
         const nm = document.getElementById('gvLocNam') ? document.getElementById('gvLocNam').value : ""; 
         const th_htai = document.getElementById('gvLocThang') ? document.getElementById('gvLocThang').value : "";
         let dsNviec = [];
@@ -669,7 +673,6 @@ function gvVeDong(dong = null) {
             if (!ndgInput) return;
             const ndg = ndgInput.value.trim();
             if (ndg !== "") {
-                // NÂNG CẤP: Dò ngược từ Tên hiển thị sang Mã tài khoản
                 const ptu_ngnhan = dong.querySelector('.oNnghanGv');
                 let gt_nhap = ptu_ngnhan ? ptu_ngnhan.value.trim() : "";
                 let ma_tai_khoan = gt_nhap;
@@ -679,10 +682,17 @@ function gvVeDong(dong = null) {
                     ma_tai_khoan = 'ALL';
                     ten_hien_thi = '-TOÀN TRƯỜNG-';
                 } else if (gt_nhap !== "") {
-                    let found = dsCanbgv.find(s => s.tenn === gt_nhap);
-                    if (found) {
-                        ma_tai_khoan = found.ttrg || found.tenn;
-                        ten_hien_thi = found.tenn;
+                    // Nhận diện và tách Tên (Cột D) và ID (Cột B)
+                    if (gt_nhap.includes(" | ID: ")) {
+                        let parts = gt_nhap.split(" | ID: ");
+                        ten_hien_thi = parts[0].trim(); // Tên cột D
+                        ma_tai_khoan = parts[1].trim(); // ID cột B
+                    } else {
+                        let found = dsCanbgv.find(s => s.tenn === gt_nhap || s.ttrg === gt_nhap);
+                        if (found) {
+                            ma_tai_khoan = found.ttrg;
+                            ten_hien_thi = found.tenn;
+                        }
                     }
                 }
 
@@ -697,9 +707,9 @@ function gvVeDong(dong = null) {
                     tght: dong.querySelector('.oTGHoanThanh') ? dong.querySelector('.oTGHoanThanh').value : "", 
                     diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "", 
                     gchu: dong.querySelector('.oGchuGv') ? dong.querySelector('.oGchuGv').value.trim() : "", 
-                    ngnhan: ma_tai_khoan, 
+                    ngnhan: ma_tai_khoan, // ID chuẩn Cột B
                     trangngnhan: ma_tai_khoan, 
-                    tenngnhan: ten_hien_thi,
+                    tenngnhan: ten_hien_thi, // Tên chuẩn Cột D
                     colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
                     colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
                     colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
