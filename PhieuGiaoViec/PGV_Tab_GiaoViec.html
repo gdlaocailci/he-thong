@@ -280,7 +280,9 @@ function gvTaiCanb() {
         }); 
     }
 
+    // NÂNG CẤP: Hàm sinh Datalist dùng chung cho toàn bộ các dòng trong bảng
     function gvTaoDatalistChung() {
+        // 1. Tạo danh sách Người nhận (Giáo viên)
         let dlNguoi = document.getElementById('dl_gvNguoiNhan');
         if (!dlNguoi) {
             dlNguoi = document.createElement('datalist');
@@ -293,14 +295,16 @@ function gvTaiCanb() {
                 if (!s) return;
                 let qy = String(s.quyen || "").trim().toLowerCase();
                 if (qy === "" || qy === "x" || qy === "xx") {
+                    // NÂNG CẤP: Hiển thị 2 thông tin (Tên giáo viên và ID)
                     let opt = document.createElement('option');
-                    // Ép cả Tên (Cột D) và ID (Cột B) vào giá trị để giải quyết triệt để trùng tên
-                    opt.value = s.tenn + " | ID: " + s.ttrg; 
+                    opt.value = s.tenn;         // Giá trị chính được đẩy vào ô input khi chọn
+                    opt.text = "ID: " + s.ttrg; // Giá trị phụ (ID) hiển thị nhạt bên cạnh hoặc bên dưới tên
                     dlNguoi.appendChild(opt);
                 }
             });
         }
 
+        // 2. Tạo danh sách Tiến độ
         let dlTienDo = document.getElementById('dl_gvTienDo');
         if (!dlTienDo) {
             dlTienDo = document.createElement('datalist');
