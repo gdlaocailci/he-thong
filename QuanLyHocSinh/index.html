@@ -182,9 +182,6 @@
 let hks_khoDuLieuTong_arr = [];
   let hks_tienTrinhTaiDuLieu_promise = null; // [BẢN NÂNG CẤP]: Cờ theo dõi tiến trình API chống gọi lặp
 
-let hks_khoDuLieuTong_arr = [];
-  let hks_tienTrinhTaiDuLieu_promise = null; // Cờ theo dõi tiến trình API chống gọi lặp
-
   async function hks_thucThiGiaoTiep_fn(hks_lenhDieuPhoi_str, hks_goiDuLieu_obj = {}) {
       hks_goiDuLieu_obj.hks_lenhKichHoat_str = hks_lenhDieuPhoi_str;
       try {
@@ -201,7 +198,7 @@ let hks_khoDuLieuTong_arr = [];
   }
 
   async function hks_capNhatBoNhoDem_fn() {
-      // Thuật toán Singleton Promise - Trả về luồng đang chạy nếu hệ thống đang tải, tuyệt đối không tạo thêm request
+      // [BẢN NÂNG CẤP]: Thuật toán Singleton Promise - Nếu đang tải, trả về luôn Promise đang chạy để các lệnh khác await cùng, tuyệt đối không tạo thêm request mới.
       if (hks_tienTrinhTaiDuLieu_promise) return hks_tienTrinhTaiDuLieu_promise;
       
       hks_tienTrinhTaiDuLieu_promise = hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId})
@@ -211,7 +208,7 @@ let hks_khoDuLieuTong_arr = [];
           })
           .catch(e => { 
               console.error("Lỗi đệm:", e); 
-              hks_tienTrinhTaiDuLieu_promise = null; // Mở khóa nếu gặp lỗi
+              hks_tienTrinhTaiDuLieu_promise = null; // Mở khóa nếu lỗi
               throw e; 
           });
           
