@@ -1,32 +1,49 @@
 <div class="tab-pane active" id="tab1">
   <div class="text-center"><h4>QUẢN LÝ THÔNG TIN HỌC SINH</h4></div>
   <div class="filter-box">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-1"><label>Năm học</label><select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-1"><label>Lớp</label><select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select></div>
-      <div class="col-md-2"><label>CCCD</label><input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập..."></div>
-      <div class="col-md-2"><label>Họ đệm</label><input id="t1_hodem" class="form-control form-control-sm"></div>
-      <div class="col-md-1"><label>Tên</label><input id="t1_ten" class="form-control form-control-sm"></div>
+    <!-- KHỐI 1: HÀNG NÚT BẤM CÔNG CỤ (Được đẩy lên trên) -->
+    <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-1 pb-1 border-bottom border-light">
+      <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm dữ liệu</button>
+      <button class="btn btn-sm btn-warning fw-bold px-3 shadow-sm" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Chỉnh sửa</button>
+      <button class="btn btn-sm btn-danger fw-bold px-3 shadow-sm" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
       
-      <div class="col-md-5 d-flex flex-wrap justify-content-end align-items-center gap-2">
-        <button class="btn btn-sm btn-danger fw-bold px-3" id="btnLenLop" onclick="hks_nhanBanLenLop_fn()" style="display:none"><i class="bi bi-rocket-takeoff"></i> Nhân bản lên lớp</button>
-        <button class="btn btn-sm btn-warning fw-bold px-3" id="btnEdit1" onclick="hks_kichHoatChinhSua_fn(1)" style="display:none"><i class="bi bi-pencil-square"></i> Sửa</button>
-        <button class="btn btn-sm btn-primary px-3" onclick="hks_layDuLieuPhanMot_fn()"><i class="bi bi-search"></i> Tìm</button>
-        
-        <span id="groupEdit1" class="edit-mode-btn" style="display:none;">
-          <button class="btn btn-sm btn-success px-3" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
-          <button class="btn btn-sm btn-secondary px-3 ms-1" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
-          <button class="btn btn-sm btn-info px-3 ms-1" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
-          <button class="btn btn-sm btn-dark px-3 ms-1" id="btnChuyenTruong" onclick="hks_thucHienChuyenTruong_fn()"><i class="bi bi-box-arrow-right"></i> Chuyển trường</button>
-        </span>
+      <span id="groupEdit1" class="edit-mode-btn" style="display:none;">
+        <button class="btn btn-sm btn-success px-3 shadow-sm" onclick="hks_dayDuLieuPhanMot_fn()"><i class="bi bi-hdd-fill"></i> Cập nhật</button>
+        <button class="btn btn-sm btn-secondary px-3 ms-1 shadow-sm" onclick="hks_chenDongPhanMot_fn()"><i class="bi bi-plus-lg"></i> Thêm</button>
+        <button class="btn btn-sm btn-info px-3 ms-1 shadow-sm" id="btnChuyenLop" onclick="hks_thucHienDoiLop_fn()" style="display:none"><i class="bi bi-arrow-left-right"></i> Chuyển lớp</button>
+        <button class="btn btn-sm btn-dark px-3 ms-1 shadow-sm" id="btnChuyenTruong" onclick="hks_thucHienChuyenTruong_fn()" style="display:none"><i class="bi bi-box-arrow-right"></i> Chuyển trường</button>
+      </span>
 
-        <button class="btn btn-sm btn-success fw-bold px-3" id="btnExportExcel" onclick="hks_xuatDuLieuExcel_fn()" style="display:none">
-          <i class="bi bi-download"></i> File Excel
-        </button>
-        <button class="btn btn-sm btn-info fw-bold px-3" id="btnImportExcel" onclick="document.getElementById('fileImportExcel').click()" style="display:none">
-          <i class="bi bi-upload"></i> File Excel
-        </button>
-        <input type="file" id="fileImportExcel" accept=".xlsx, .xls" style="display:none" onchange="hks_nhapDuLieuExcel_fn(event)">
+      <button class="btn btn-sm btn-success fw-bold px-3 shadow-sm" id="btnExportExcel" onclick="hks_xuatDuLieuExcel_fn()" style="display:none">
+        <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+      </button>
+      <button class="btn btn-sm btn-info fw-bold px-3 shadow-sm" id="btnImportExcel" onclick="document.getElementById('fileImportExcel').click()" style="display:none">
+        <i class="bi bi-upload"></i> Nhập Excel
+      </button>
+      <input type="file" id="fileImportExcel" accept=".xlsx, .xls" style="display:none" onchange="hks_nhapDuLieuExcel_fn(event)">
+    </div>
+    
+    <!-- KHỐI 2: HÀNG Ô LỌC DỮ LIỆU (Trải đều ra không gian 12 cột) -->
+    <div class="row g-2 align-items-end">
+      <div class="col-md-2 col-sm-6">
+        <label class="fw-bold text-secondary mb-1" style="font-size: 13px;">Năm học</label>
+        <select id="t1_nam" class="form-select form-select-sm fw-bold text-primary"></select>
+      </div>
+      <div class="col-md-2 col-sm-6">
+        <label class="fw-bold text-secondary mb-1" style="font-size: 13px;">Lớp</label>
+        <select id="t1_lop" class="form-select form-select-sm fw-bold text-primary"></select>
+      </div>
+      <div class="col-md-3 col-sm-4">
+        <label class="fw-bold text-secondary mb-1" style="font-size: 13px;">CCCD / Định danh</label>
+        <input id="t1_cccd" class="form-control form-control-sm" placeholder="Nhập...">
+      </div>
+      <div class="col-md-3 col-sm-4">
+        <label class="fw-bold text-secondary mb-1" style="font-size: 13px;">Họ đệm</label>
+        <input id="t1_hodem" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-2 col-sm-4">
+        <label class="fw-bold text-secondary mb-1" style="font-size: 13px;">Tên</label>
+        <input id="t1_ten" class="form-control form-control-sm">
       </div>
     </div>
   </div>
@@ -39,7 +56,7 @@
           <th style="min-width:100px">Năm học</th><th style="min-width:60px">Lớp</th><th style="min-width:110px">CCCD</th>
           <th style="min-width:110px">Họ đệm</th><th style="min-width:60px">Tên</th>
           <th style="min-width:100px">Ngày sinh</th><th style="min-width:60px">Nam/nữ</th><th style="min-width:95px">Nơi ở (Thôn)</th><th style="min-width:200px">Thường trú (Xã/tỉnh)</th>
-          <th style="min-width:80px">Dân tộc</th><th style="min-width:80px">C.Sách</th><th style="min-width:80px">K.Tật</th><th style="min-width:60px">Nghèo</th><th style="min-width:60px">Cận N</th><th style="min-width:60px">BHYT</th>
+          <th style="min-width:80px">Dân tộc</th><th style="min-width:80px">Tôn giáo</th><th style="min-width:80px">C.Sách</th><th style="min-width:80px">K.Tật</th><th style="min-width:60px">Nghèo</th><th style="min-width:60px">Cận N</th><th style="min-width:60px">BHYT</th>
           <th style="min-width:130px">Tên Bố</th><th style="min-width:130px">Tên Mẹ</th><th style="min-width:100px">SĐT</th><th style="min-width:50px">Khẩu nơi khác</th>
         </tr>
       </thead>
@@ -49,14 +66,25 @@
 </div>
 
 <script>
-  async function hks_layDuLieuPhanMot_fn() {
-    hks_hienThiManHinhTai_fn(true);
+async function hks_layDuLieuPhanMot_fn() {
+    // [BẢN NÂNG CẤP]: Cải tiến UX, chặn phủ mờ màn hình (chống mệt mỏi) nếu chỉ lọc dữ liệu nội bộ
+    let hks_chuaCoDuLieu_bol = (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0);
     
-    if (!hks_khoDuLieuTong_arr || hks_khoDuLieuTong_arr.length === 0) {
+    if (hks_chuaCoDuLieu_bol) {
+        hks_hienThiManHinhTai_fn(true); // Chỉ phủ mờ nếu thực sự phải chờ API Server
         try {
-            let hks_res_obj = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
-            if (hks_res_obj && hks_res_obj.success) { hks_khoDuLieuTong_arr = hks_res_obj.data || []; }
+            // Sử dụng hàm đệm toàn cục để hứng Promise chung, chống chồng chéo API
+            if (typeof hks_capNhatBoNhoDem_fn === 'function') {
+                await hks_capNhatBoNhoDem_fn();
+            } else {
+                let hks_res_obj = await hks_thucThiGiaoTiep_fn('hks_taiToanBoThucThe_api', {hks_dinhTuyenNguon_str: hks_hoSoNguoiDungHienTai_obj.reqId});
+                if (hks_res_obj && hks_res_obj.success) { hks_khoDuLieuTong_arr = hks_res_obj.data || []; }
+            }
         } catch(e) { console.error("Lỗi lấy dữ liệu cục bộ: ", e); }
+        hks_hienThiManHinhTai_fn(false);
+    } else {
+        // [BẢN NÂNG CẤP]: Nếu đã có cache, dùng spinner cục bộ ở thân bảng
+        document.querySelector('#bang1 tbody').innerHTML = '<tr><td colspan="20" class="text-center py-3 text-primary"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang kết xuất dữ liệu nội bộ...</td></tr>';
     }
 
     let n = document.getElementById('t1_nam').value || "";
@@ -105,30 +133,22 @@
   }
 
   function hks_veBangPhanMot_fn(hks_duLieuBang_arr) {
-    const hks_thanBang_el = document.querySelector('#bang1 tbody'); hks_thanBang_el.innerHTML = '';
-    hks_duLieuBang_arr.forEach(hks_dongDuLieu_arr => hks_chenDongPhanMot_fn(hks_dongDuLieu_arr));
-    hks_hienThiManHinhTai_fn(false);
+    const hks_thanBang_el = document.querySelector('#bang1 tbody'); 
+    hks_thanBang_el.innerHTML = '';
+    
+    // [BẢN NÂNG CẤP]: Dùng DocumentFragment gom toàn bộ DOM rồi mới đính vào bảng (chỉ 1 reflow), giải quyết dứt điểm kẹt giao diện
+    const hks_manhGhepBoNho_frag = document.createDocumentFragment();
+    
+    hks_duLieuBang_arr.forEach(hks_dongDuLieu_arr => {
+        // Tham số true yêu cầu trả về node DOM thay vì ép chèn ngay vào bảng
+        let hks_theDong_el = hks_chenDongPhanMot_fn(hks_dongDuLieu_arr, true);
+        hks_manhGhepBoNho_frag.appendChild(hks_theDong_el);
+    });
+    
+    hks_thanBang_el.appendChild(hks_manhGhepBoNho_frag);
   }
 
-  function hks_danhDauChinhSua_fn(el) {
-      let tr = el.closest('tr');
-      if (!tr.classList.contains('hks-dong-da-sua')) {
-          tr.classList.add('hks-dong-da-sua');
-          let cellTen = tr.cells[5]; 
-          if (cellTen) {
-              let icon = document.createElement('i');
-              icon.className = 'bi bi-pencil-fill hks-icon-sua';
-              icon.style = 'color: #b71c1c; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 10; pointer-events: none;';
-              icon.title = "Đã chỉnh sửa";
-              cellTen.style.position = 'relative';
-              let input = cellTen.querySelector('input');
-              if(input) input.style.paddingRight = '20px';
-              cellTen.appendChild(icon);
-          }
-      }
-  }
-
-  function hks_chenDongPhanMot_fn(hks_duLieuBang_arr = null) {
+  function hks_chenDongPhanMot_fn(hks_duLieuBang_arr = null, hks_traVePhanTu_bol = false) {
     const hks_thanBang_el = document.querySelector('#bang1 tbody');
     const hks_theDong_el = document.createElement('tr');
     
@@ -144,7 +164,7 @@
        let hks_hienThiXoa_str = hks_trangThaiSuaMot_bol ? 'inline-block' : 'none';
        hks_chuoiHtmlXoa_str = `<i class="bi bi-x-circle-fill text-secondary fs-6" style="cursor:pointer; display:${hks_hienThiXoa_str}" title="Hủy" onclick="this.closest('tr').remove()"></i>`;
     } else {
-       let hks_chuoiSTT_str = hks_thanBang_el.rows.length + 1;
+       let hks_chuoiSTT_str = hks_thanBang_el.rows.length + 1; // Sẽ xử lý đồng bộ CSS hiển thị
        let hks_hienThiXoa_str = (hks_trangThaiSuaMot_bol && hks_laQuanTriCapCao_bol) ? 'inline-block' : 'none'; 
        let hks_hienThiSTT_str = (hks_trangThaiSuaMot_bol && hks_laQuanTriCapCao_bol) ? 'none' : 'inline-block';
        if (hks_laQuanTriCapCao_bol) {
@@ -164,14 +184,18 @@
       {k:'sel', o: hks_danhSachChuKy_arr}, {k:'sel', o: hks_danhSachPhanLoai_arr}, 
       {k:'text'}, {k:'text'}, {k:'text'}, {k:'text'}, {k:'sel', o:['Nam','Nữ']},
       {k:'text'}, {k:'text'}, {k:'sel', o: hks_danhSachChiSo_arr},
-      {k:'text'}, {k:'text'}, {k:'num'}, {k:'num'}, {k:'num'},
+      {k:'text'}, {k:'text'}, {k:'text'}, {k:'num'}, {k:'num'}, {k:'num'},
       {k:'text'}, {k:'text'}, {k:'text'}, {k:'check'}
     ];
 
+    const hks_thuTuCotDB_arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 49, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
     let hks_voHieuHoa_bol = !hks_trangThaiSuaMot_bol;
     hks_cauHinhCot_arr.forEach((hks_thietLapCot_obj, hks_chiSoCot_num) => {
+      let hks_dbIdx_num = hks_thuTuCotDB_arr[hks_chiSoCot_num];
       let hks_theCot_el = document.createElement('td'); 
-      let hks_giaTriCot_str = hks_duLieuBang_arr ? hks_duLieuBang_arr[hks_chiSoCot_num] : (hks_chiSoCot_num === 0 ? hks_dienNamTruoc_str : (hks_chiSoCot_num === 1 ? hks_dienLopTruoc_str : ""));
+      let hks_giaTriCot_str = hks_duLieuBang_arr ? hks_duLieuBang_arr[hks_dbIdx_num] : (hks_chiSoCot_num === 0 ? hks_dienNamTruoc_str : (hks_chiSoCot_num === 1 ? hks_dienLopTruoc_str : ""));
+      
       if(hks_thietLapCot_obj.k === 'sel') {
         let hks_theChon_el = document.createElement('select'); hks_theChon_el.className = 'cell-input'; hks_theChon_el.disabled = hks_voHieuHoa_bol;
         if(hks_thietLapCot_obj.o) { hks_thietLapCot_obj.o.forEach(opt => { let hks_theTuyChon_el = document.createElement('option'); hks_theTuyChon_el.value = opt; hks_theTuyChon_el.text = opt; if(String(opt) === String(hks_giaTriCot_str)) hks_theTuyChon_el.selected = true; hks_theChon_el.add(hks_theTuyChon_el); }); }
@@ -204,17 +228,39 @@
 
       hks_theDong_el.appendChild(hks_theCot_el);
     });
-    hks_thanBang_el.appendChild(hks_theDong_el);
-
-    if (!hks_duLieuBang_arr) {
-        let hks_khungCuon_el = hks_thanBang_el.closest('.table-container');
-        if (hks_khungCuon_el) hks_khungCuon_el.scrollTop = hks_khungCuon_el.scrollHeight;
-        
-        setTimeout(() => {
-            let hks_oHoDem_el = hks_theDong_el.cells[4].querySelector('input');
-            if (hks_oHoDem_el) hks_oHoDem_el.focus();
-        }, 100);
+    
+    // [BẢN NÂNG CẤP]: Phân luồng điều khiển trả về Element (Tối ưu kết xuất số lượng lớn) hoặc tự append (Khi người dùng tự thêm 1 dòng mới)
+    if (hks_traVePhanTu_bol) {
+        return hks_theDong_el;
+    } else {
+        hks_thanBang_el.appendChild(hks_theDong_el);
+        if (!hks_duLieuBang_arr) {
+            let hks_khungCuon_el = hks_thanBang_el.closest('.table-container');
+            if (hks_khungCuon_el) hks_khungCuon_el.scrollTop = hks_khungCuon_el.scrollHeight;
+            setTimeout(() => {
+                let hks_oHoDem_el = hks_theDong_el.cells[4].querySelector('input');
+                if (hks_oHoDem_el) hks_oHoDem_el.focus();
+            }, 100);
+        }
     }
+  }
+
+  function hks_danhDauChinhSua_fn(el) {
+      let tr = el.closest('tr');
+      if (!tr.classList.contains('hks-dong-da-sua')) {
+          tr.classList.add('hks-dong-da-sua');
+          let cellTen = tr.cells[5]; 
+          if (cellTen) {
+              let icon = document.createElement('i');
+              icon.className = 'bi bi-pencil-fill hks-icon-sua';
+              icon.style = 'color: #b71c1c; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 10; pointer-events: none;';
+              icon.title = "Đã chỉnh sửa";
+              cellTen.style.position = 'relative';
+              let input = cellTen.querySelector('input');
+              if(input) input.style.paddingRight = '20px';
+              cellTen.appendChild(icon);
+          }
+      }
   }
 
 function hks_xuLyHanhDongXoa_fn(hks_nutBamUI_el, hks_thongTinTruyen_obj) {
@@ -447,9 +493,14 @@ function hks_thucHienChuyenTruong_fn() {
 
       let hks_nutXuatUI_el = document.getElementById('btnExportExcel');
       let hks_nutNhapUI_el = document.getElementById('btnImportExcel');
+      let hks_nutChuyenTruongUI_el = document.getElementById('btnChuyenTruong');
 
       if (hks_nutXuatUI_el) hks_nutXuatUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
       if (hks_nutNhapUI_el) hks_nutNhapUI_el.style.display = hks_hienThi_bol ? 'inline-block' : 'none';
+      
+      if (hks_nutChuyenTruongUI_el) {
+          hks_nutChuyenTruongUI_el.style.display = hks_laAdmin_bol ? 'inline-block' : 'none';
+      }
   }
 
   function hks_xuatDuLieuExcel_fn() {
@@ -461,7 +512,7 @@ function hks_thucHienChuyenTruong_fn() {
       }
       
       let hks_duLieuXuat_arr = [
-          ["Năm học", "Lớp", "CCCD", "Họ đệm", "Tên", "Ngày sinh", "Nam/nữ", "Nơi ở (Thôn)", "Thường trú (Xã/tỉnh)", "Dân tộc", "Chính sách", "Khuyết tật", "Nghèo", "Cận nghèo", "BHYT", "Tên bố", "Tên mẹ", "SĐT", "Khẩu nơi khác", "UUID (Không sửa)"]
+          ["Năm học", "Lớp", "CCCD", "Họ đệm", "Tên", "Ngày sinh", "Nam/nữ", "Nơi ở (Thôn)", "Thường trú (Xã/tỉnh)", "Dân tộc", "Tôn giáo", "Chính sách", "Khuyết tật", "Nghèo", "Cận nghèo", "BHYT", "Tên bố", "Tên mẹ", "SĐT", "Khẩu nơi khác", "UUID (Không sửa)"]
       ];
       
       for (let hks_theDong_el of hks_thanBang_el.rows) {
@@ -542,11 +593,11 @@ function hks_thucHienChuyenTruong_fn() {
               
               let hks_dongDuLieu_arr = new Array(54).fill("");
               
-              for(let j = 0; j < 19; j++) {
+              for(let j = 0; j < 20; j++) { // Đồng bộ nâng cấp số lượng mốc lặp do thêm Tôn giáo
                   hks_dongDuLieu_arr[j] = hks_dongHienTai_arr[j] !== undefined ? hks_dongHienTai_arr[j] : "";
               }
               
-              hks_dongDuLieu_arr[53] = hks_dongHienTai_arr[19] || "";
+              hks_dongDuLieu_arr[53] = hks_dongHienTai_arr[20] || "";
               
               if(hks_dongDuLieu_arr[0] && hks_dongDuLieu_arr[1]) {
                   hks_duLieuCanLuu_arr.push(hks_dongDuLieu_arr);
