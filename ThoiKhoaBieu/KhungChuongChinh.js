@@ -246,7 +246,6 @@ function veBangKhungChuongTrinh() {
 
     tinhTongTietKCT();
 }
-
 // ==========================================
 // 4. CÁC HÀM XỬ LÝ LOGIC DỮ LIỆU
 // ==========================================
@@ -317,7 +316,6 @@ function diChuyenDongKCT(indexDong, huong) {
         veBangKhungChuongTrinh();
     }
 }
-
 // ==========================================
 // 5. CHỨC NĂNG TẢI EXCEL (.XLSX) QUA SHEETJS
 // ==========================================
