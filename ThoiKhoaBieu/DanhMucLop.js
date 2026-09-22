@@ -1,19 +1,35 @@
 let duLieuDanhMucLop = [];
 const TIEU_DE_DM_LOP = ['MaLop', 'TenLop'];
 
-// Đã loại bỏ vòng lặp DOMContentLoaded kiểm tra menu thủ công. 
-// Giao diện đã được quản lý chuẩn mực tại kiemSoatGiaoDien() trong app.js.
-
+// =========================================================================
+// KHỐI 1: GIAO TIẾP MÁY CHỦ (NÂNG CẤP ĐỘNG CƠ FIREBASE WEBSOCKETS)
+// =========================================================================
 async function taiDuLieuDanhMucLop() {
     const tbody = document.getElementById('vungDuLieuDanhMucLop');
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-slate-500 font-bold"><div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang tải Danh mục Lớp...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-slate-500 font-bold"><div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang tải Danh mục Lớp từ CSDL...</td></tr>`;
     
     try {
-        const urlAPI = `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`;
-        const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? fetchVoiCoCheThuLai(urlAPI) : fetch(urlAPI));
-        
-        if (!phanHoi.ok) throw new Error("Từ chối kết nối");
-        const duLieuS = await phanHoi.json();
+        let duLieuS = null;
+
+        if (typeof khoDuLieuRealtime !== 'undefined') {
+            // [NÂNG CẤP LÕI]: Đọc dữ liệu Master từ Firebase
+            const snapshot = await khoDuLieuRealtime.ref('DANH_MUC_LOP_MASTER').once('value');
+            duLieuS = snapshot.val();
+
+            // Thuật toán Auto-Migration: Kéo từ Google Sheets nếu Firebase rỗng
+            if (!duLieuS) {
+                console.log("⚡ [Auto-Migration]: Kéo dữ liệu Danh mục Lớp từ Google Sheets...");
+                const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`) : fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`));
+                duLieuS = await phanHoi.json();
+                if (duLieuS) {
+                    await khoDuLieuRealtime.ref('DANH_MUC_LOP_MASTER').set(duLieuS);
+                }
+            }
+        } else {
+            // Dự phòng REST API
+            const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`) : fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucLop`));
+            duLieuS = await phanHoi.json();
+        }
         
         duLieuDanhMucLop = [];
         if (duLieuS && duLieuS.length > 1) {
@@ -28,11 +44,15 @@ async function taiDuLieuDanhMucLop() {
     } catch (loi) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-600 font-bold">
             ⚠️ Lỗi kết nối máy chủ dữ liệu.<br>
-            <span class="text-sm font-normal text-slate-500">Hệ thống đang bận hoặc gián đoạn mạng. Vui lòng chuyển qua tab khác và quay lại để tải lại.</span>
+            <span class="text-sm font-normal text-slate-500">Hệ thống đang bận hoặc gián đoạn mạng. Vui lòng thử lại.</span>
         </td></tr>`;
+        console.error(loi);
     }
 }
 
+// =========================================================================
+// KHỐI 2: VẼ BẢNG VÀ XỬ LÝ SỰ KIỆN GIAO DIỆN
+// =========================================================================
 function veBangDanhMucLop() {
     const tbody = document.getElementById('vungDuLieuDanhMucLop');
     if (duLieuDanhMucLop.length === 0) {
@@ -103,53 +123,73 @@ function diChuyenLop(index, huong) {
     veBangDanhMucLop();
 }
 
+// =========================================================================
+// KHỐI 3: ĐỒNG BỘ DỮ LIỆU LÊN FIREBASE (CROSS-NODE UPDATE)
+// =========================================================================
 async function luuDuLieuDanhMucLopSangMayChu() {
     const btn = document.querySelector('#khungDanhMucLop button[onclick="luuDuLieuDanhMucLopSangMayChu()"]');
     let textGoc = btn.innerHTML;
-    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang lưu...`; 
+    btn.innerHTML = `<div class="flex items-center justify-center gap-1.5 whitespace-nowrap"><div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Đang lưu...</span></div>`; 
     btn.disabled = true;
 
     try {
-        dongBoDomLopSangState();
+        dongBoDomLopSangState(); // Vét cạn dữ liệu DOM
         let mangGhi = [TIEU_DE_DM_LOP]; 
+        let dsLopUpdate = []; // Dành cho Cross-node Update
+
         duLieuDanhMucLop.forEach(lop => {
             if (lop.maLop.trim() !== '') {
                 mangGhi.push([lop.maLop.trim(), lop.tenLop.trim()]);
+                dsLopUpdate.push(lop.maLop.trim());
             }
         });
 
-        const payload = { thaoTac: 'luuDanhMucLop', duLieu: mangGhi };
-        const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? 
-            fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) }) : 
-            fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) })
-        );
-        
-        if (!phanHoi.ok) throw new Error("Từ chối kết nối");
-        const ketQua = await phanHoi.json();
-        
-        if (ketQua.trangThai === 'Thành công') { 
-            alert("Đã lưu Danh mục Lớp lên hệ thống an toàn!"); 
+        if (typeof khoDuLieuRealtime !== 'undefined') {
+            // 1. Ghi đè cấu trúc lưới bảng vào nhánh Master
+            await khoDuLieuRealtime.ref('DANH_MUC_LOP_MASTER').set(mangGhi);
             
-            // [KHẮC PHỤC KẾ THỪA]: Bơm danh sách Lớp mới vào biến toàn cục
-            if (typeof thongSoHocVu !== 'undefined') {
-                thongSoHocVu.DANH_SACH_LOP = duLieuDanhMucLop.map(lop => lop.maLop.trim()).filter(String);
-            }
-            // Xóa Cache các phân hệ phụ thuộc để ép chúng tái tạo cấu trúc khi bấm sang
+            // 2. Bắn dữ liệu chéo (Cross-Node) để kích hoạt Realtime trên các module khác
+            await khoDuLieuRealtime.ref('CAU_HINH/DANH_SACH_LOP').set(dsLopUpdate);
+
+            alert("✅ Đã đồng bộ Danh mục Lớp lên Firebase! Lưới Thời khóa biểu và Khung chương trình đã tự động cập nhật cấu trúc.");
+            
+            // Xóa Cache cục bộ để ép các module khác tái tạo cấu trúc khi người dùng chuyển Tab
+            if (typeof thongSoHocVu !== 'undefined') thongSoHocVu.DANH_SACH_LOP = dsLopUpdate;
             if (typeof duLieuBangKCT !== 'undefined') duLieuBangKCT = []; 
             if (typeof danhSachGV !== 'undefined') danhSachGV = []; 
             if (typeof duLieuTkbHienTai !== 'undefined') duLieuTkbHienTai = []; 
+        } else {
+            // Dự phòng REST API
+            const payload = { thaoTac: 'luuDanhMucLop', duLieu: mangGhi };
+            const phanHoi = await (typeof fetchVoiCoCheThuLai === 'function' ? 
+                fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) }) : 
+                fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) })
+            );
             
-        } else { 
-            alert("Lỗi từ máy chủ: " + ketQua.thongBao); 
+            if (!phanHoi.ok) throw new Error("Từ chối kết nối");
+            const ketQua = await phanHoi.json();
+            
+            if (ketQua.trangThai === 'Thành công') { 
+                alert("Đã lưu Danh mục Lớp lên hệ thống an toàn!"); 
+                if (typeof thongSoHocVu !== 'undefined') thongSoHocVu.DANH_SACH_LOP = dsLopUpdate;
+                if (typeof duLieuBangKCT !== 'undefined') duLieuBangKCT = []; 
+                if (typeof danhSachGV !== 'undefined') danhSachGV = []; 
+                if (typeof duLieuTkbHienTai !== 'undefined') duLieuTkbHienTai = []; 
+            } else { 
+                alert("Lỗi từ máy chủ: " + ketQua.thongBao); 
+            }
         }
     } catch(loi) { 
-        alert("Lỗi kết nối mạng hoặc máy chủ. Vui lòng thử lưu lại."); 
+        alert("Lỗi kết nối mạng hoặc máy chủ Firebase. Vui lòng thử lưu lại."); 
+        console.error(loi);
     } finally { 
         btn.innerHTML = textGoc; 
         btn.disabled = false; 
     }
 }
 
+// =========================================================================
+// KHỐI 4: NHẬP XUẤT EXCEL
 // =========================================================================
 function xuatExcelDanhMucLop() {
     if (typeof XLSX === 'undefined') { 
@@ -199,6 +239,7 @@ function nhapExcelDanhMucLop(event) {
             
             let xoaTrang = confirm("Đồng chí muốn XÓA TRẮNG danh sách lớp hiện tại để nạp mới (OK), hay THÊM NỐI TIẾP vào danh sách cũ (Cancel)?");
             if (xoaTrang) duLieuDanhMucLop = [];
+            else dongBoDomLopSangState();
             
             let soLopBiTrung = 0;
 
@@ -208,7 +249,7 @@ function nhapExcelDanhMucLop(event) {
                 let tenLopMoi = row[1] ? String(row[1]).trim().toUpperCase() : '';
                 
                 if (maLopMoi !== '') {
-                    // Thuật toán kiểm tra và chặn trùng lặp mã lớp nếu chọn chế độ nối tiếp
+                    // Thuật toán kiểm tra và chặn trùng lặp mã lớp
                     let biTrung = duLieuDanhMucLop.some(lop => lop.maLop === maLopMoi);
                     if (biTrung && !xoaTrang) {
                         soLopBiTrung++;
