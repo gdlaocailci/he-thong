@@ -28,13 +28,13 @@ const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.app
 // Phục vụ cơ chế đồng bộ WebSockets thời gian thực, thay thế Google Sheets
 // =========================================================================
 const CAU_HINH_FIREBASE = {
-    apiKey: "NHAP_API_KEY_CUA_DONG_CHI",
-    authDomain: "NHAP_AUTH_DOMAIN.firebaseapp.com",
-    databaseURL: "https://NHAP_DATABASE_NAME.firebaseio.com",
-    projectId: "NHAP_PROJECT_ID",
-    storageBucket: "NHAP_STORAGE_BUCKET.appspot.com",
-    messagingSenderId: "NHAP_SENDER_ID",
-    appId: "NHAP_APP_ID"
+    apiKey: "AIzaSyBkEMdRiacXV6rIJwZUF_QITeMPs5BJIlM",
+    authDomain: "sodaubai-572c8.firebaseapp.com",
+    databaseURL: "https://sodaubai-572c8-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sodaubai-572c8",
+    storageBucket: "sodaubai-572c8.firebasestorage.app",
+    messagingSenderId: "487746193012",
+    appId: "1:487746193012:web:b3d7d8d99f6e513b207321"
 };
 
 // Biến toàn cục quản lý phiên kết nối Database
