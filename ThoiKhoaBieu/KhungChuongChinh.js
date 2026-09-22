@@ -76,7 +76,6 @@ function khoiTaoGiaoDienKhungChuongTrinh() {
 }
 
 function moTabKhungChuongTrinh() {
-    // ĐIỀU CHỈNH: Bổ sung 'khungDanhMucGV' và 'khungCaiDat' vào mảng để hệ thống dọn dẹp màn hình
     const cacKhung = ['khungTKB', 'khungPhanCong', 'khungThongKe', 'khungKhungChuongTrinh', 'khungDanhMucGV', 'khungCaiDat'];
     cacKhung.forEach(id => {
         const el = document.getElementById(id);
@@ -107,9 +106,17 @@ function moTabKhungChuongTrinh() {
         if(span) { span.classList.add('text-menu-active'); span.classList.remove('text-white'); }
     }
 
-    taiDuLieuKhungChuongTrinhTuMayChu();
+    // [LÕI NÂNG CẤP]: CƠ CHẾ CACHE THÔNG MINH
+    if (duLieuBangKCT && duLieuBangKCT.length > 0) {
+        veBangKhungChuongTrinh();
+    } else {
+        taiDuLieuKhungChuongTrinhTuMayChu();
+    }
 }
 
+// ==========================================
+// 2. KẾT NỐI API / FIREBASE VÀ AUTO-MIGRATION
+// ==========================================
 async function taiDuLieuKhungChuongTrinhTuMayChu() {
     const tbody = document.getElementById('duLieuBangKCT');
     if (tbody) {
@@ -117,8 +124,27 @@ async function taiDuLieuKhungChuongTrinhTuMayChu() {
     }
 
     try {
-        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layBanGhiKhungChuongTrinh`);
-        const response = await phanHoi.json();
+        let response = null;
+        
+        if (typeof khoDuLieuRealtime !== 'undefined') {
+            // Đọc dữ liệu từ Firebase
+            const snapshot = await khoDuLieuRealtime.ref('KHUNG_CHUONG_TRINH_MASTER').once('value');
+            response = snapshot.val();
+            
+            // Thuật toán Auto-Migration: Nếu Firebase chưa có, gọi Google Sheets API
+            if (!response) {
+                console.log("⚡ [Auto-Migration]: Kéo dữ liệu Khung chương trình từ Google Sheets...");
+                const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layBanGhiKhungChuongTrinh`);
+                response = await phanHoi.json();
+                if (response && response.data) {
+                    await khoDuLieuRealtime.ref('KHUNG_CHUONG_TRINH_MASTER').set(response);
+                }
+            }
+        } else {
+            // Dự phòng REST API
+            const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layBanGhiKhungChuongTrinh`);
+            response = await phanHoi.json();
+        }
         
         const classTuDM = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_LOP && thongSoHocVu.DANH_SACH_LOP.length > 0) 
                           ? thongSoHocVu.DANH_SACH_LOP 
@@ -141,7 +167,7 @@ async function taiDuLieuKhungChuongTrinhTuMayChu() {
 }
 
 // ==========================================
-// 3. VẼ BẢNG VÀ XỬ LÝ SỰ KIỆN GIAO DIỆN
+// 3. VẼ BẢNG VÀ XỬ LÝ SỰ KIỆN GIAO DIỆN (NÂNG CẤP BATCH-RENDER)
 // ==========================================
 function veBangKhungChuongTrinh() {
     const thead = document.getElementById('tieuDeBangKCT');
@@ -150,13 +176,10 @@ function veBangKhungChuongTrinh() {
     if (!thead || !tbody) return;
 
     let chuoiThead = '<tr>';
-    
-    // Khai báo CSS chốt viền dưới sắc nét cho tiêu đề
     const cssChotVien = "p-2 border border-gray-400 !border-b-[2px] !border-b-slate-600";
     const shadowBottom = "!shadow-[0_2px_0_0_#475569]"; 
     const shadowBottomRight = "!shadow-[1px_2px_0_0_#475569]"; 
     
-    // Cố định dọc bên trái đến hết cột Ưu tiên. Đã thu hẹp cột Ưu tiên thành w-20 min-w-[80px]
     chuoiThead += `<th class="w-28 min-w-[112px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-0 z-30">Điều chỉnh</th>`;
     chuoiThead += `<th class="w-48 min-w-[192px] ${cssChotVien} ${shadowBottom} bg-slate-200 sticky left-[112px] z-30">Môn học</th>`;
     chuoiThead += `<th class="w-20 min-w-[80px] ${cssChotVien} ${shadowBottomRight} bg-slate-200 sticky left-[304px] z-30">Ưu tiên</th>`;
@@ -167,7 +190,6 @@ function veBangKhungChuongTrinh() {
     chuoiThead += '</tr>';
     thead.innerHTML = chuoiThead;
 
-    // NÂNG CẤP: Dựng dòng tổng tiết cố định khớp chuẩn tọa độ sticky với tbody
     if (tfoot) {
         const cssChotVienTfoot = "p-2 border border-gray-400 !border-t-[2px] !border-t-slate-600";
         let chuoiTfoot = `<tr>`;
@@ -182,17 +204,16 @@ function veBangKhungChuongTrinh() {
         tfoot.innerHTML = chuoiTfoot;
     }
 
-    tbody.innerHTML = '';
     if (duLieuBangKCT.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${3 + danhSachLopKCT.length}" class="text-center py-6 text-slate-500">Chưa có dữ liệu. Vui lòng thêm dòng hoặc tải lên từ Excel.</td></tr>`;
         if (tfoot) tfoot.innerHTML = '';
         return;
     }
 
+    // [LÕI NÂNG CẤP]: Gộp toàn bộ HTML vào 1 biến duy nhất để Render một lần, chấm dứt giật lag
+    let chuoiTbody = '';
+
     duLieuBangKCT.forEach((dong, indexDong) => {
-        let tr = document.createElement('tr');
-        tr.className = 'hover:bg-yellow-50 transition-colors group';
-        
         let cotThaoTac = `
             <td class="p-1.5 border border-gray-400 text-center bg-white sticky left-0 z-10 group-hover:bg-yellow-50">
                 <div class="flex justify-center items-center gap-1.5">
@@ -218,11 +239,12 @@ function veBangKhungChuongTrinh() {
             cotCacLop += `<td class="p-0 border border-gray-400"><input type="number" class="w-full h-full px-1 py-2 outline-none text-center focus:bg-blue-50 text-slate-700 bg-transparent" value="${giaTriTiet}" onchange="capNhatSoTietKCT(${indexDong}, ${indexCot}, this.value)"></td>`;
         });
 
-        tr.innerHTML = cotThaoTac + cotMonHoc + cotUuTien + cotCacLop;
-        tbody.appendChild(tr);
+        chuoiTbody += `<tr class="hover:bg-yellow-50 transition-colors group">${cotThaoTac}${cotMonHoc}${cotUuTien}${cotCacLop}</tr>`;
     });
 
-    tinhTongTietKCT(); // Tự động tính tổng tiết ngay sau khi nạp cấu trúc lưới
+    tbody.innerHTML = chuoiTbody;
+
+    tinhTongTietKCT();
 }
 
 // ==========================================
@@ -233,7 +255,7 @@ function capNhatGiaTriKCT(indexDong, truong, giaTri) { duLieuBangKCT[indexDong][
 function capNhatSoTietKCT(indexDong, indexCot, giaTri) {
     let soTiet = parseInt(giaTri, 10);
     duLieuBangKCT[indexDong].soTiet[indexCot] = isNaN(soTiet) ? '' : soTiet;
-    tinhTongTietKCT(); // Tính lại tổng tiết thời gian thực khi ô số liệu thay đổi
+    tinhTongTietKCT(); 
 }
 
 function tinhTongTietKCT() {
@@ -320,10 +342,6 @@ function xuatExcelKCT() {
     XLSX.writeFile(wb, `KhungChuongTrinh_KCT.xlsx`);
 }
 
-// ==========================================
-// 5. CHỨC NĂNG TẢI EXCEL (.XLSX) QUA SHEETJS (NÂNG CẤP)
-// Nguyên tắc: Chỉ xử lý trên UI, không gọi API để tránh lag
-// ==========================================
 function nhapExcelKCT(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -335,19 +353,16 @@ function nhapExcelKCT(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            // Đọc dữ liệu thô vào bộ đệm
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             
-            // Ép kiểu mảng 2 chiều, điền chuỗi rỗng nếu ô bị khuyết
             const rowsArr = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
             if (rowsArr.length < 2) { 
                 alert("Bảng Excel trống hoặc thiếu dữ liệu tiêu đề."); 
                 return; 
             }
             
-            // Trích xuất mảng lớp từ dòng tiêu đề của file tải lên
             const fileClasses = [];
             const firstRow = rowsArr[0];
             for (let i = 2; i < firstRow.length; i++) {
@@ -355,44 +370,40 @@ function nhapExcelKCT(event) {
             }
             
             const newData = [];
-            // Thuật toán O(N) quét các dòng dữ liệu môn học
             for (let i = 1; i < rowsArr.length; i++) {
                 const cells = rowsArr[i];
                 if (!cells || cells.length < 1) continue;
                 
                 const monHoc = cells[0] !== undefined ? String(cells[0]).trim() : '';
-                if (!monHoc) continue; // Khử nhiễu các dòng trống
+                if (!monHoc) continue; 
                 
                 const uuTien = cells[1] !== undefined ? String(cells[1]).trim() : '';
                 
-                // Ánh xạ 1:1 chính xác tọa độ lớp trên Excel với danhSachLopKCT trên hệ thống
                 const mappedSoTiet = danhSachLopKCT.map(lop => {
                     const idx = fileClasses.indexOf(lop);
                     const rawValue = idx !== -1 ? cells[idx + 2] : '';
                     const parsedValue = parseInt(rawValue, 10);
-                    return isNaN(parsedValue) ? '' : parsedValue; // Đảm bảo kiểu số học chuẩn
+                    return isNaN(parsedValue) ? '' : parsedValue; 
                 });
                 
                 newData.push({ monHoc: monHoc, uuTien: uuTien, soTiet: mappedSoTiet });
             }
             
-            // 1. Cập nhật biến toàn cục
             duLieuBangKCT = newData;
-            // 2. Kích hoạt vẽ lại giao diện ngay lập tức
             veBangKhungChuongTrinh();
             
             alert("Đã hiển thị dữ liệu từ file Excel! Đồng chí vui lòng kiểm tra UI và nhấn nút 'Lưu Khung CT' để đồng bộ lên máy chủ.");
         } catch (loi) {
             alert("Lỗi đọc dữ liệu tệp XLSX: " + loi.message);
         } finally {
-            event.target.value = ''; // Giải phóng input để tải lại cùng 1 tệp nếu cần
+            event.target.value = ''; 
         }
     };
     reader.readAsArrayBuffer(file);
 }
 
 // ==========================================
-// 6. ĐỒNG BỘ DỮ LIỆU LÊN MÁY CHỦ BẰNG POST FETCH
+// 6. ĐỒNG BỘ DỮ LIỆU LÊN MÁY CHỦ FIREBASE (NÂNG CẤP LÕI CROSS-NODE)
 // ==========================================
 async function luuDuLieuKhungChuongTrinh(event) {
     const nutBam = event.currentTarget;
@@ -411,17 +422,59 @@ async function luuDuLieuKhungChuongTrinh(event) {
     };
 
     try {
-        const payload = { thaoTac: 'luuBanGhiKhungChuongTrinh', duLieu: duLieuDongBo };
-        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        const ketQua = await phanHoi.json();
-        
-        if (ketQua.trangThai === 'Thành công') {
-            alert('Đã đồng bộ Khung chương trình lên máy chủ thành công!');
+        if (typeof khoDuLieuRealtime !== 'undefined') {
+            // 1. Lưu cấu trúc bảng lưới nguyên bản vào Master
+            await khoDuLieuRealtime.ref('KHUNG_CHUONG_TRINH_MASTER').set(duLieuDongBo);
+            
+            // 2. Chuyển đổi định dạng để cập nhật chéo (Cross-Node) cho app.js
+            let kctUpdate = {};
+            let dsMonHocUpdate = [];
+            
+            duLieuBangKCT.forEach(dong => {
+                let mon = dong.monHoc ? String(dong.monHoc).trim() : '';
+                if (mon) {
+                    if (!dsMonHocUpdate.includes(mon)) dsMonHocUpdate.push(mon);
+                    
+                    // Phục hồi logic gắn ưu tiên
+                    if (dong.uuTien !== '') {
+                        let keyUuTien = Object.keys(kctUpdate).find(k => k.toLowerCase().includes('ưutiên') || k.toLowerCase().includes('uutien'));
+                        if (!keyUuTien) {
+                            keyUuTien = 'Ưu tiên';
+                            kctUpdate[keyUuTien] = {};
+                        }
+                        kctUpdate[keyUuTien][mon] = dong.uuTien;
+                    }
+                    
+                    // Nạp số tiết cho từng lớp
+                    danhSachLopKCT.forEach((lop, idx) => {
+                        let tiet = parseInt(dong.soTiet[idx], 10);
+                        if (!isNaN(tiet) && tiet > 0) {
+                            if (!kctUpdate[lop]) kctUpdate[lop] = {};
+                            kctUpdate[lop][mon] = tiet;
+                        }
+                    });
+                }
+            });
+            
+            // Cập nhật ngược lên CAU_HINH để mọi máy trạm đang mở tự động Reload Dropdown
+            await khoDuLieuRealtime.ref('CAU_HINH/KHUNG_CHUONG_TRINH').set(kctUpdate);
+            await khoDuLieuRealtime.ref('CAU_HINH/DANH_SACH_MON_HOC').set(dsMonHocUpdate);
+            
+            alert('✅ Đã đồng bộ Khung chương trình lên Firebase thành công! Các lưới Thời khóa biểu và Dropdown chọn Môn học đã tự động cập nhật ngay lập tức.');
         } else {
-            alert('Lỗi từ máy chủ: ' + (ketQua.thongBao || 'Không xác định.'));
+            // Dự phòng REST API
+            const payload = { thaoTac: 'luuBanGhiKhungChuongTrinh', duLieu: duLieuDongBo };
+            const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const ketQua = await phanHoi.json();
+            
+            if (ketQua.trangThai === 'Thành công') {
+                alert('Đã đồng bộ Khung chương trình lên máy chủ thành công!');
+            } else {
+                alert('Lỗi từ máy chủ: ' + (ketQua.thongBao || 'Không xác định.'));
+            }
         }
     } catch (loi) {
         alert('Lỗi kết nối mạng trong quá trình đồng bộ: ' + loi);
