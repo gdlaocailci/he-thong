@@ -1931,17 +1931,25 @@ async function luuSuaCucBoTKB(event) {
     let dsThayDoi = [];
     let danhSachThongBao = []; 
     let namHocChuan = thongSoHocVu.NAM_HOC || "";
+    
+    // Lấy tất cả các ô Môn học làm gốc tọa độ
     let cacOMon = document.querySelectorAll('input[id^="mon_"]');
     
     cacOMon.forEach(oMon => {
+        let parts = oMon.id.split('_'); 
+        let thu = parts[1], buoi = parts[2], tiet = parts[3], lop = parts.slice(4).join('_'); 
+        
+        let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
+        
         let tdMon = oMon.closest('td');
-        // Chỉ quét những ô có gắn cờ thay đổi (icon cây bút)
-        if (tdMon && tdMon.getAttribute('data-thaydoi') === 'true') {
+        let tdGv = oGv ? oGv.closest('td') : null;
+
+        // [LÕI KHẮC PHỤC TỔNG THỂ]: Kiểm tra cờ thay đổi trên CẢ 2 Ô (Môn HOẶC Giáo viên)
+        let coSuThayDoiDOM = (tdMon && tdMon.getAttribute('data-thaydoi') === 'true') || 
+                             (tdGv && tdGv.getAttribute('data-thaydoi') === 'true');
+
+        if (coSuThayDoiDOM) {
             let valMon = oMon.value.trim();
-            let parts = oMon.id.split('_'); 
-            let thu = parts[1], buoi = parts[2], tiet = parts[3], lop = parts.slice(4).join('_'); 
-            
-            let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
             let valGv = oGv ? oGv.value.trim() : "";
             
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
@@ -1959,6 +1967,8 @@ async function luuSuaCucBoTKB(event) {
                 let chiTiet = [];
                 if (valMon !== monGoc) chiTiet.push(`Môn [${monGoc || '--'}] -> [${valMon || '--'}]`);
                 if (valGv !== gvGoc) chiTiet.push(`GV [${gvGoc || '--'}] -> [${valGv || '--'}]`);
+                // Nếu sửa 1 ô nhưng ô kia giữ nguyên, vẫn ghi nhận để báo cáo cho mượt
+                if (chiTiet.length === 0) chiTiet.push(`Cập nhật thông số`); 
                 msg += chiTiet.join(' | ');
             }
             danhSachThongBao.push(msg);
@@ -1988,7 +1998,6 @@ async function luuSuaCucBoTKB(event) {
     btn.disabled = true;
 
     try {
-        // Gọi API với biến thaoTac mới: luuSuaTkbHienTai
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { 
             method: 'POST', 
             body: JSON.stringify({ thaoTac: 'luuSuaTkbHienTai', duLieu: dsThayDoi }) 
@@ -2007,7 +2016,7 @@ async function luuSuaCucBoTKB(event) {
                 else duLieuTkbHienTai.push(tietMoi);
             });
             
-            // Xóa cờ và icon cây bút
+            // Gỡ toàn bộ cờ và icon cây bút trên lưới (cả cột Môn và GV)
             document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
                 td.removeAttribute('data-thaydoi');
                 let icon = td.querySelector('.icon-sua-chua');
