@@ -968,9 +968,6 @@ function xuatMaTranBang(danhSachTiet) {
     if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
 }
 
-// =========================================================================
-// KHỐI 4: TRÌNH LƯU TRỮ VÀ XỬ LÝ DỮ LIỆU ĐA TẦNG
-// =========================================================================
 async function luuDuLieu(event, loaiLuu) {
     let coQuyenThaoTac = quyenSuaChua || (quyenChiTiet && (quyenChiTiet.lop.length > 0 || quyenChiTiet.nut.length > 0));
     if (!coQuyenThaoTac) return;
@@ -990,89 +987,73 @@ async function luuDuLieu(event, loaiLuu) {
         let danhSachThongBao = []; 
         let namHocChuan = thongSoHocVu.NAM_HOC || "";
         let cacOMon = document.querySelectorAll('input[id^="mon_"]');
+        let setLopDangHienThi = new Set();
 
         // =====================================================================
-        // NHÁNH 1: LƯU TUẦN CỤC BỘ (CHỈ THU THẬP DÒNG CÓ SỰ THAY ĐỔI)
+        // QUÉT LƯỚI: PHÁT HIỆN SỰ THAY ĐỔI & ĐÓNG GÓI TOÀN BỘ LƯỚI
         // =====================================================================
-        if (loaiLuu === 'tuan') {
-            cacOMon.forEach(oMon => {
-                let valMon = oMon.value.trim();
-                let parts = oMon.id.split('_'); 
-                let thu = parts[1], buoi = parts[2], tiet = parts[3], lop = parts.slice(4).join('_'); 
-                
-                let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
-                let valGv = oGv ? oGv.value.trim() : "";
-                
-                let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
-                let maTietHienTai = `${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
-                
-                let tietGoc = duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietHienTai);
-                let monGoc = tietGoc ? (tietGoc.monHoc || "").trim() : "";
-                let gvGoc = tietGoc ? (tietGoc.maGv || "").trim() : "";
-                
-                if (valMon !== monGoc || valGv !== gvGoc) {
-                    let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
-                    dsTietLuoi.push({ 
-                        maTiet: maTietHienTai, namHoc: namHocChuan || thongTinNgay.nam, 
-                        thang: thongTinNgay.thang, ngay: thongTinNgay.ngayDayDu, 
-                        tuan: tuanDangXem, thu: thu, buoi: buoi, tiet: tiet, 
-                        maLop: lop, monHoc: valMon, maGv: valGv 
-                    });
-                    
-                    if (valMon !== "" && monGoc !== "") danhSachThongBao.push(`- ${lop} (${thu}, T${tiet}): [${monGoc}] -> [${valMon}]`);
-                    else if (valMon === "") danhSachThongBao.push(`- ${lop} (${thu}, T${tiet}): Xóa trắng`);
-                    else danhSachThongBao.push(`- ${lop} (${thu}, T${tiet}): Thêm mới [${valMon}]`);
-                }
-            });
-
-            if (btn.id === 'btnLuuTuan') {
-                if (dsTietLuoi.length === 0) {
-                    alert("Lưới Thời khóa biểu chưa có thay đổi nào để lưu.");
-                    return;
-                }
-                let thongBaoGiaoDien = `Hệ thống ghi nhận ${dsTietLuoi.length} tiết có sự thay đổi:\n\n` + 
-                                       danhSachThongBao.slice(0, 15).join('\n') + 
-                                       (danhSachThongBao.length > 15 ? `\n... và ${danhSachThongBao.length - 15} thay đổi khác.` : "") + 
-                                       `\n\nĐồng chí có chắc chắn muốn chốt ghi đè vào Cơ sở dữ liệu?`;
-                if (!confirm(thongBaoGiaoDien)) return;
+        cacOMon.forEach(oMon => {
+            let valMon = oMon.value.trim();
+            let parts = oMon.id.split('_'); 
+            let thu = parts[1], buoi = parts[2], tiet = parts[3], lop = parts.slice(4).join('_'); 
+            setLopDangHienThi.add(lop); 
+            
+            let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
+            let valGv = oGv ? oGv.value.trim() : "";
+            
+            let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
+            let maTietHienTai = `${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
+            
+            let tietGoc = duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietHienTai);
+            let monGoc = tietGoc ? (tietGoc.monHoc || "").trim() : "";
+            let gvGoc = tietGoc ? (tietGoc.maGv || "").trim() : "";
+            
+            // 1. Phân tích sự thay đổi để hiển thị thông báo an toàn
+            if (valMon !== monGoc || valGv !== gvGoc) {
+                if (valMon !== "" && monGoc !== "") danhSachThongBao.push(`- ${lop} (${thu}, T${tiet}): [${monGoc}] -> đổi thành [${valMon}]`);
+                else if (valMon === "") danhSachThongBao.push(`- ${lop} (${thu}, T${tiet}): Xóa trắng`);
+                else danhSachThongBao.push(`- ${lop} (${thu}, T${tiet}): Thêm mới [${valMon}]`);
             }
 
-        // =====================================================================
-        // NHÁNH 2: LƯU TOÀN BỘ SNAPSHOT (CHO NÚT TUẦN TIẾP THEO / CỐ ĐỊNH)
-        // =====================================================================
-        } else {
-            let setLopDangHienThi = new Set();
-            cacOMon.forEach(oMon => {
-                let valMon = oMon.value.trim();
-                if (valMon !== "") {
-                    let parts = oMon.id.split('_'); 
-                    let thu = parts[1], buoi = parts[2], tiet = parts[3], lop = parts.slice(4).join('_'); 
-                    setLopDangHienThi.add(lop); 
-                    
-                    let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
-                    let valGv = oGv ? oGv.value.trim() : "";
-                    let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
-                    let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
-                    
-                    dsTietLuoi.push({ 
-                        maTiet: `${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`, 
-                        namHoc: namHocChuan || thongTinNgay.nam, 
-                        thang: thongTinNgay.thang, ngay: thongTinNgay.ngayDayDu, 
-                        tuan: tuanDangXem, thu: thu, buoi: buoi, tiet: tiet, 
-                        maLop: lop, monHoc: valMon, maGv: valGv 
-                    });
-                }
-            });
-
-            let mangLopDangHienThi = Array.from(setLopDangHienThi);
-            if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
-                duLieuTkbHienTai.forEach(tietGoc => {
-                    if (!mangLopDangHienThi.includes(tietGoc.maLop)) dsTietLuoi.push(tietGoc);
+            // 2. Thu thập TOÀN BỘ lưới để bảo toàn mảng khi ghi đè Backend
+            if (valMon !== "" || (valMon === "" && monGoc !== "")) {
+                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+                dsTietLuoi.push({ 
+                    maTiet: maTietHienTai, namHoc: namHocChuan || thongTinNgay.nam, 
+                    thang: thongTinNgay.thang, ngay: thongTinNgay.ngayDayDu, 
+                    tuan: tuanDangXem, thu: thu, buoi: buoi, tiet: tiet, 
+                    maLop: lop, monHoc: valMon, maGv: valGv 
                 });
             }
+        });
+
+        // Lấy thêm các lớp bị ẩn (do bộ lọc) để không bị mất
+        let mangLopDangHienThi = Array.from(setLopDangHienThi);
+        if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
+            duLieuTkbHienTai.forEach(tietGoc => {
+                if (!mangLopDangHienThi.includes(tietGoc.maLop)) dsTietLuoi.push(tietGoc);
+            });
         }
 
-        // Gọi API Máy chủ
+        // Khóa an toàn cho nhánh Lưu Tuần
+        if (loaiLuu === 'tuan' && btn.id === 'btnLuuTuan') {
+            if (danhSachThongBao.length === 0) {
+                alert("Lưới Thời khóa biểu chưa có thay đổi nào để lưu.");
+                return;
+            }
+            let thongBaoGiaoDien = `Hệ thống ghi nhận ${danhSachThongBao.length} tiết có sự thay đổi:\n\n` + 
+                                   danhSachThongBao.slice(0, 15).join('\n') + 
+                                   (danhSachThongBao.length > 15 ? `\n... và ${danhSachThongBao.length - 15} thay đổi khác.` : "") + 
+                                   `\n\nĐồng chí có chắc chắn muốn chốt ghi đè vào Cơ sở dữ liệu?`;
+            if (!confirm(thongBaoGiaoDien)) return;
+        }
+
+        if (dsTietLuoi.length === 0 && loaiLuu !== 'codinh') {
+            if (loaiLuu === 'khoiphuc') await chuyenTuan(1); 
+            return;
+        }
+
+        // Gọi API
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { 
             method: 'POST', 
             body: JSON.stringify({ thaoTac: 'luuDuLieu', loaiLuu: loaiLuu, tuan: tuanDangXem, duLieu: dsTietLuoi }) 
@@ -1092,16 +1073,8 @@ async function luuDuLieu(event, loaiLuu) {
                 if (loaiLuu === 'tuan') alert("Đã lưu dữ liệu thời khóa biểu thành công!");
                 if (loaiLuu === 'codinh') alert("Đã thiết lập Thời khóa biểu Cố định thành công!");
                 
-                // Cập nhật lại mốc Dữ liệu RAM
-                if (loaiLuu === 'tuan') {
-                    dsTietLuoi.forEach(tietMoi => {
-                        let idx = duLieuTkbHienTai.findIndex(t => t.maTiet === tietMoi.maTiet);
-                        if (idx !== -1) duLieuTkbHienTai[idx] = tietMoi; 
-                        else duLieuTkbHienTai.push(tietMoi);
-                    });
-                } else {
-                    duLieuTkbHienTai = dsTietLuoi;
-                }
+                // Cập nhật lại mốc Dữ liệu RAM toàn diện
+                duLieuTkbHienTai = dsTietLuoi;
                 
                 // Gỡ toàn bộ cờ và icon cây bút
                 document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
