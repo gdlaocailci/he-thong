@@ -72,14 +72,28 @@ function kiemSoatGiaoDien() {
     const nutDuocCap = (quyenChiTiet && quyenChiTiet.nut) ? quyenChiTiet.nut : [];
     const lopDuocCap = (quyenChiTiet && quyenChiTiet.lop) ? quyenChiTiet.lop : [];
 
-   const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra', 'btnNhapExcelTKB', 'btnDongBoChuan', 'btnLuuSua'];
+    const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra', 'btnNhapExcelTKB', 'btnDongBoChuan', 'btnLuuSua'];
     
     dsNut.forEach(idNut => {
         let nut = document.getElementById(idNut);
         if (nut) {
             let duocPhep = quyenSuaChua || nutDuocCap.includes(idNut);
-            if (duocPhep) { nut.style.display = 'flex'; nut.disabled = false; } 
-            else { nut.style.display = 'none'; nut.disabled = true; }
+            
+            // [NÂNG CẤP]: Cho phép nút Lưu Sửa và Lưu Tuần hiển thị nếu giáo viên có quyền quản lý ít nhất 1 lớp
+            // (Vì họ được phép sửa TKB của các môn họ được phân công)
+            if (idNut === 'btnLuuSua' || idNut === 'btnLuuTuan') {
+                if (quyenSuaChua || nutDuocCap.includes(idNut) || lopDuocCap.length > 0) {
+                    duocPhep = true;
+                }
+            }
+
+            if (duocPhep) { 
+                nut.style.display = 'flex'; 
+                nut.disabled = false; 
+            } else { 
+                nut.style.display = 'none'; 
+                nut.disabled = true; 
+            }
         }
     });
 
