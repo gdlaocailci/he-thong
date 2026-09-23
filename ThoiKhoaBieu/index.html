@@ -14,7 +14,7 @@
         .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; }
         
         body { font-family: "Times New Roman", Times, serif; }
-        .bang-excel { border-collapse: collapse; width: max-content; min-width: 100%; }
+        .bang-excel { border-collapse: collapse; width: 100%; min-width: 100%; }
         .bang-excel th, .bang-excel td { border: 1px solid #718096; padding: 6px 8px; font-size: 1rem; white-space: nowrap; }
         .bang-excel th { background-color: #f8fafc; color: #0f172a; background-clip: padding-box; }
         .bang-excel thead tr:first-child th { border-bottom: 1px solid #718096 !important; }
@@ -278,7 +278,7 @@
                 
                 <!-- KHUNG 1: TKB HIỆN TẠI (Thêm min-w-[1200px] vào table để tự động cuộn ngang) -->
                <div id="khungTKB" class="block min-w-full min-h-full">
-                    <table class="bang-excel relative min-w-[1200px]">
+                    <table class="bang-excel relative min-w-[1200px] w-full">
                         <thead id="tieuDeBang" class="sticky top-0 z-10 bg-slate-50 shadow-sm">
                             <tr><th class="text-center text-slate-500 py-3">Đang phân tích định dạng biểu mẫu...</th></tr>
                         </thead>
