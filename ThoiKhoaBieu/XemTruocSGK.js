@@ -4,17 +4,18 @@ let trangHienTaiPDF = 1;
 let heSoThuPhong = 1.2;
 let idTepHienTai = '';
 
-let boNhoTrangPdfGiaiMa = {}; 
+let boNhoTrangPdfGiaiMa = {}; // RAM đệm giúp lật trang đã xem siêu mượt
 let thongTinBaiHocHienTai = { khoi: '', mon: '', bai: '', idKy1: '', idKy2: '', kyDangXem: 1 };
 
 document.addEventListener('DOMContentLoaded', () => {
     xayDungKhungGiaoDienXemTruoc();
-    khoiTaoBoNhoHocLieu().catch(loi => console.warn("Chưa tải được danh mục SGK:", loi));   
+ khoiTaoBoNhoHocLieu().catch(loi => console.warn("Chưa tải được danh mục SGK:", loi));   
 });
 
 // =========================================================================
 // KHỐI 1: CƠ SỞ DỮ LIỆU INDEXEDDB (THUẬT TOÁN ĐỒNG BỘ PROMISE CHỐNG VƯỢT MẶT)
 // =========================================================================
+// Ép hệ thống khởi tạo DB xong mới được làm việc khác
 const dbHocLieuPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open("KhoHocLieuSoDB", 11);
     request.onupgradeneeded = function(event) {
@@ -33,6 +34,7 @@ async function luuTepVaoBoNhoCucBo(idPdf, mangByte, laLoi = false) {
     try {
         const transaction = db.transaction(["BangTepPDF"], "readwrite");
         const store = transaction.objectStore("BangTepPDF");
+        // Lưu kèm cờ 'loi' để biết file này có bị quá tải mạng hay không
         store.put({ idPdf: idPdf, duLieu: mangByte, loi: laLoi, thoiGian: new Date().getTime() });
     } catch (e) { console.warn("Đầy bộ nhớ cục bộ:", e); }
 }
@@ -76,55 +78,32 @@ async function lamMoiBoNhoDemPdf() {
         transaction.objectStore("BangTepPDF").delete(idTepHienTai);
     }
     
-    boNhoTrangPdfGiaiMa = {}; 
+    boNhoTrangPdfGiaiMa = {}; // Dọn RAM
     hienThiKhoiChoTai(`Đang tải lại bản gốc sách mới nhất...`);
     xuLyDocPDF(idTepHienTai);
 }
 
 // =========================================================================
-// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ (BỘ LỌC CHỐNG LỖI TỐI ĐA - FIREBASE/REST)
+// KHỐI 2: ĐỌC DỮ LIỆU TỪ MÁY CHỦ (BỘ LỌC CHỐNG LỖI TỐI ĐA)
 // =========================================================================
 async function khoiTaoBoNhoHocLieu() {
     try {
-        let mangDuLieu = [];
+        const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
+        if (!phanHoi.ok) throw new Error(`Lỗi HTTP: ${phanHoi.status}`);
         
-        // [NÂNG CẤP LÕI]: Trích xuất Master Data của SGK từ hệ sinh thái WebSockets
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            const snapshot = await khoDuLieuRealtime.ref('DANH_MUC_SGK_MASTER/sgk').once('value');
-            mangDuLieu = snapshot.val();
-            
-            // Auto-Migration từ Google Sheets nếu Firebase trống
-            if (!mangDuLieu) {
-                const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-                const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
-                if (!phanHoi.ok) throw new Error(`Lỗi HTTP: ${phanHoi.status}`);
-                const duLieu = await phanHoi.json();
-                
-                if (Array.isArray(duLieu)) mangDuLieu = duLieu;
-                else if (duLieu && Array.isArray(duLieu.data)) mangDuLieu = duLieu.data;
-                else throw new Error("Dữ liệu trả về không đúng cấu trúc mảng.");
-                
-                // Đồng bộ ngược lại Firebase để chuẩn hóa CSDL
-                if (mangDuLieu && mangDuLieu.length > 0) {
-                    await khoDuLieuRealtime.ref('DANH_MUC_SGK_MASTER/sgk').set(mangDuLieu);
-                }
-            }
-        } else {
-            const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-            const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGK`);
-            if (!phanHoi.ok) throw new Error(`Lỗi HTTP: ${phanHoi.status}`);
-            
-            const duLieu = await phanHoi.json();
-            if (Array.isArray(duLieu)) mangDuLieu = duLieu;
-            else if (duLieu && Array.isArray(duLieu.data)) mangDuLieu = duLieu.data;
-            else throw new Error("Dữ liệu trả về không đúng cấu trúc mảng.");
-        }
+        const duLieu = await phanHoi.json();
+        let mangDuLieu = [];
+        if (Array.isArray(duLieu)) mangDuLieu = duLieu;
+        else if (duLieu && Array.isArray(duLieu.data)) mangDuLieu = duLieu.data;
+        else throw new Error("Dữ liệu trả về không đúng cấu trúc mảng.");
 
-        let dongBatDau = (mangDuLieu && mangDuLieu.length > 0 && String(mangDuLieu[0][0]).toLowerCase().includes('khối')) ? 1 : 0;
+        let dongBatDau = (mangDuLieu.length > 0 && String(mangDuLieu[0][0]).toLowerCase().includes('khối')) ? 1 : 0;
 
         for (let i = dongBatDau; i < mangDuLieu.length; i++) {
             let dong = mangDuLieu[i];
             let tenKhoi = dong[0] ? String(dong[0]).trim().toUpperCase() : '';
+            // [NÂNG CẤP]: Xóa toàn bộ khoảng trắng thừa của môn trong CSDL Học liệu
             let tenMon = dong[1] ? String(dong[1]).trim().replace(/\s+/g, '').toLowerCase() : '';
             
             let linkKy1 = (dong.length > 2 && dong[2]) ? String(dong[2]).trim() : ''; 
@@ -154,8 +133,11 @@ function trichXuatIdTuLink(url) {
 // =========================================================================
 window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, thamSoTuan) {
     const tenKhoiChuan = String(tenKhoiGoc).trim().toUpperCase();
+    
+    // [NÂNG CẤP 1]: Xóa khoảng trắng khi tìm kiếm
     const tenMonChuan = String(tenMonGoc).trim().replace(/\s+/g, '').toLowerCase();
     
+    // [NÂNG CẤP 2]: Bóc tách môn gốc (Ví dụ: hdtn2 -> hdtn)
     let tenMonGocChuan = tenMonChuan;
     const match = tenMonChuan.match(/^(.*?)(\d+)$/);
     if (match) {
@@ -195,6 +177,7 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         }
     }
 
+    // [NÂNG CẤP 3]: Tìm link cho môn chia nhỏ trước, nếu không có thì lấy link của cuốn sách môn gốc
     let duLieuMonHoc = boNhoHocLieuSGK[khoaTimKiem] || boNhoHocLieuSGK[khoaTimKiemGoc];
 
     if (!duLieuMonHoc || (!duLieuMonHoc.linkKy1 && !duLieuMonHoc.linkKy2)) {
@@ -202,26 +185,15 @@ window.kichHoatXemTruocSGK = async function(tenKhoiGoc, tenMonGoc, tenBaiHoc, th
         return;
     }
 
-    let idKy1 = trichXuatIdTuLink(duLieuMonHoc.linkKy1);
-    let idKy2 = trichXuatIdTuLink(duLieuMonHoc.linkKy2);
-
     let kyHocPhanDong = (tuanHienTai > 18) ? 2 : 1;
-    let idTepBaoCao = (kyHocPhanDong === 2 && idKy2) ? idKy2 : idKy1;
+    let linkTepHienTai = (kyHocPhanDong === 2) ? duLieuMonHoc.linkKy2 : duLieuMonHoc.linkKy1;
     
-    if (!idTepBaoCao) {
-        alert(`Không thể trích xuất ID Google Drive từ Link Tập ${kyHocPhanDong}. Vui lòng cấu hình chuẩn xác.`);
+    if (!linkTepHienTai) {
+        alert(`Tài liệu Tập ${kyHocPhanDong} của môn này chưa được cấu hình Link.`);
         return;
     }
 
-    thongTinBaiHocHienTai = { 
-        khoi: tenKhoiGoc, mon: tenMonGoc, bai: tenBaiHoc, 
-        idKy1: idKy1, idKy2: idKy2, kyDangXem: kyHocPhanDong 
-    };
-    idTepHienTai = idTepBaoCao;
-
-    hienThiModalXemTruoc(tenKhoiGoc, tenMonGoc, tenBaiHoc, kyHocPhanDong);
-    await xoaBoNhoDemCu(idTepHienTai);
-    xuLyDocPDF(idTepHienTai);
+    window.open(linkTepHienTai, '_blank', 'noopener,noreferrer');
 };
 
 window.chuyenKyHocThuCong = async function(kyMoi) {
@@ -248,7 +220,7 @@ window.chuyenKyHocThuCong = async function(kyMoi) {
 };
 
 // =========================================================================
-// KHỐI 4: GIAO DIỆN HTML
+// KHỐI 4: GIAO DIỆN HTML (GIỮ NGUYÊN BẢN CHUẨN)
 // =========================================================================
 function xayDungKhungGiaoDienXemTruoc() {
     const modalHTML = `
@@ -371,6 +343,7 @@ function dongModalXemTruoc() {
 // =========================================================================
 // KHỐI 5: ĐỘNG CƠ TẢI SIÊU TỐC (MẠNG + CACHE + RENDER LÕI)
 // =========================================================================
+// Thuật toán: Bấm giờ mạng. Nếu proxy quá 20s không trả file, ngắt lập tức để khỏi treo máy.
 async function fetchVoiTimeout(url, thoiGianMax = 20000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), thoiGianMax);
@@ -385,8 +358,11 @@ async function fetchVoiTimeout(url, thoiGianMax = 20000) {
 }
 
 async function taiDuLieuPdfAnToan(idPdf) {
+    // Bước 1: Đọc DB an toàn nhờ luồng Promise (Không bao giờ bị lỗi vượt mặt)
     let banGhiCache = await docTepTuBoNhoCucBo(idPdf);
     if (banGhiCache) {
+        // [CƠ CHẾ DANH SÁCH ĐEN]: Nếu lần trước file này đã thất bại (mạng yếu/file quá to)
+        // Hệ thống sẽ NHỚ LỖI và đẩy ngay sang Iframe trong 0.1s, không bắt chờ 20s nữa.
         if (banGhiCache.loi) {
             throw new Error("Tệp lớn, chuyển thẳng lưới an toàn Iframe.");
         }
@@ -410,6 +386,7 @@ async function taiDuLieuPdfAnToan(idPdf) {
             let boDem = await phanHoi.arrayBuffer();
             let kiemTra = new Uint8Array(boDem.slice(0, 5));
             if (kiemTra[0]===37 && kiemTra[1]===80 && kiemTra[2]===68 && kiemTra[3]===70 && kiemTra[4]===45) {
+                // Tải thành công -> Lưu vào ổ cứng với cờ loi = false
                 await luuTepVaoBoNhoCucBo(idPdf, boDem, false);
                 return boDem;
             }
@@ -418,6 +395,7 @@ async function taiDuLieuPdfAnToan(idPdf) {
         }
     }
     
+    // Nếu cả 3 proxy đều treo -> Lưu trạng thái LỖI vào ổ cứng để lần sau bypass thẳng proxy
     await luuTepVaoBoNhoCucBo(idPdf, null, true);
     throw new Error("Vượt quá giới hạn Proxy, tự động nhảy Iframe.");
 }
@@ -436,13 +414,13 @@ async function xuLyDocPDF(idPdf) {
     try {
         const duLieuPdf = await taiDuLieuPdfAnToan(idPdf);
         
-        boNhoTrangPdfGiaiMa = {}; 
+        boNhoTrangPdfGiaiMa = {}; // Dọn RAM trước khi nạp
         
         const loadingTask = pdfjsLib.getDocument({ 
             data: duLieuPdf,
             cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/cmaps/',
             cMapPacked: true,
-            disableStream: true,    
+            disableStream: true,    // Tắt luồng ảo (Tăng tốc vì file đã trong máy)
             disableAutoFetch: true,
             disableRange: true
         });
@@ -480,6 +458,7 @@ async function veTrangCanVasPdf(soTrang) {
     document.getElementById('nhapSoTrangNhanh').value = soTrang;
     document.getElementById('thanhTruotTrang').value = soTrang;
     
+    // THUẬT TOÁN ĐỆM LÕI (Không giải mã lại trang đã xem)
     let trang = boNhoTrangPdfGiaiMa[soTrang];
     if (!trang) {
         trang = await theHienPdfHienTai.getPage(soTrang);
