@@ -66,36 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================================================
-// KHỐI 2: GIAO TIẾP MÁY CHỦ VÀ LOGIC DROPDOWN LIÊN HOÀN (NÂNG CẤP FIREBASE)
+// KHỐI 2: GIAO TIẾP MÁY CHỦ VÀ LOGIC DROPDOWN LIÊN HOÀN
 // =========================================================================
 async function taiCayDanhMucThongKe() {
     const btn = document.querySelector('button[onclick="goiTraCuuThongKe()"]');
     if (btn) btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang tải...`;
     
     try {
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // [NÂNG CẤP LÕI]: Đọc cây thống kê từ Firebase
-            const snapshot = await khoDuLieuRealtime.ref('CAY_DANH_MUC_THONG_KE').once('value');
-            cayDanhMucThongKe = snapshot.val();
-            
-            // Auto-Migration: Nếu chưa có thì lấy từ Google Sheets và lưu lại
-            if (!cayDanhMucThongKe) {
-                console.log("⚡ [Auto-Migration]: Đang khởi tạo Cây danh mục thống kê...");
-                const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-                const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCayQuanHeThongKe`);
-                cayDanhMucThongKe = await phanHoi.json();
-                
-                if (cayDanhMucThongKe) {
-                    await khoDuLieuRealtime.ref('CAY_DANH_MUC_THONG_KE').set(cayDanhMucThongKe);
-                }
-            }
-        } else {
-            const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-            const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCayQuanHeThongKe`);
-            cayDanhMucThongKe = await phanHoi.json();
-        }
+        // [NÂNG CẤP]: Áp dụng fetchVoiCoCheThuLai
+        const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCayQuanHeThongKe`);
+        cayDanhMucThongKe = await phanHoi.json();
         
-        let dsNam = Object.keys(cayDanhMucThongKe || {});
+        let dsNam = Object.keys(cayDanhMucThongKe);
         if (dsNam.length > 0) {
             let htmlArr = [];
             dsNam.forEach(n => htmlArr.push(`<option value="${n}">`));
@@ -115,11 +98,11 @@ function xuLyDoiNamHocTk() {
     let duLieuNam = cayDanhMucThongKe[nam];
     if (!duLieuNam) return;
 
-    let htmlThang = `<option value="Cả năm">` + (duLieuNam.danhSachThang || []).map(th => `<option value="Tháng ${th}">`).join('');
+    let htmlThang = `<option value="Cả năm">` + duLieuNam.danhSachThang.map(th => `<option value="Tháng ${th}">`).join('');
     document.getElementById('dlThangTk').innerHTML = htmlThang;
     document.getElementById('inputThangTk').value = "Cả năm";
 
-    let htmlGv = `<option value="Toàn trường">` + (duLieuNam.danhSachGiaoVien || []).map(gv => `<option value="${gv}">`).join('');
+    let htmlGv = `<option value="Toàn trường">` + duLieuNam.danhSachGiaoVien.map(gv => `<option value="${gv}">`).join('');
     document.getElementById('dlGiaoVienTk').innerHTML = htmlGv;
     document.getElementById('inputGiaoVienTk').value = "Toàn trường";
 
@@ -181,15 +164,17 @@ async function goiTraCuuThongKe() {
         let mangDinhMucChuan = {};
         let mapTenGiaoVien = {}; 
         
-        // 1. Tải định mức giáo viên (Tận dụng biến môi trường CAU_HINH trên RAM nếu có)
-        if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_GIAO_VIEN && thongSoHocVu.DINH_MUC_GIAO_VIEN) {
-            thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach(ma => {
+        // [NÂNG CẤP]: Áp dụng fetchVoiCoCheThuLai để kết nối ổn định
+        const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
+
+        if (typeof duLieuDanhMucGV !== 'undefined' && duLieuDanhMucGV.length > 0) {
+            duLieuDanhMucGV.forEach(g => {
+                let ma = (g.maGv || g.hoTen || '').toString().trim();
                 let maKey = ma.toLowerCase(); 
-                mangDinhMucChuan[maKey] = parseInt(thongSoHocVu.DINH_MUC_GIAO_VIEN[ma]) || 0;
-                mapTenGiaoVien[maKey] = ma;
+                mangDinhMucChuan[maKey] = parseInt(g.dinhMuc) || 0;
+                mapTenGiaoVien[maKey] = (g.hoTen || ma).toString().trim();
             });
         } else {
-            const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
             try {
                 const resDM = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucGV`);
                 const dataDM = await resDM.json();
@@ -208,64 +193,12 @@ async function goiTraCuuThongKe() {
             } catch(e) { console.warn("Lỗi tải định mức:", e); }
         }
 
-        // 2. [NÂNG CẤP LÕI]: Trích xuất dữ liệu Thống kê trực tiếp từ Firebase thay vì chọc API vào Sheets
-        duLieuThongKeHienTai = [];
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // Lấy từ lịch sử
-            if (tuan !== "") {
-                // Lọc cụ thể 1 tuần
-                const snapDataTkb = await khoDuLieuRealtime.ref(`DATA_TKB/Tuan_${tuan}`).once('value');
-                let arrTkb = snapDataTkb.val();
-                if (!arrTkb) {
-                    // Nếu là tuần hiện tại đang chạy
-                    const snapHienTai = await khoDuLieuRealtime.ref('TKB_HIEN_TAI').once('value');
-                    arrTkb = snapHienTai.val();
-                }
-                
-                if (arrTkb) {
-                    let dArr = Array.isArray(arrTkb) ? arrTkb : Object.values(arrTkb);
-                    duLieuThongKeHienTai = dArr.filter(t => 
-                        (!namHoc || t.namHoc === namHoc) &&
-                        (!thang || t.thang === thang) &&
-                        (!giaoVien || t.maGv === giaoVien) &&
-                        (t.monHoc && t.monHoc !== '')
-                    );
-                }
-            } else {
-                // Phải lấy tất cả dữ liệu
-                const snapDataTkb = await khoDuLieuRealtime.ref('DATA_TKB').once('value');
-                const snapHienTai = await khoDuLieuRealtime.ref('TKB_HIEN_TAI').once('value');
-                
-                let combinedData = [];
-                let history = snapDataTkb.val();
-                if (history) {
-                    Object.values(history).forEach(tuanData => {
-                        let dArr = Array.isArray(tuanData) ? tuanData : Object.values(tuanData);
-                        combinedData = combinedData.concat(dArr);
-                    });
-                }
-                let current = snapHienTai.val();
-                if (current) {
-                    let dArr = Array.isArray(current) ? current : Object.values(current);
-                    combinedData = combinedData.concat(dArr);
-                }
-                
-                duLieuThongKeHienTai = combinedData.filter(t => 
-                    (!namHoc || t.namHoc === namHoc) &&
-                    (!thang || t.thang === thang) &&
-                    (!giaoVien || t.maGv === giaoVien) &&
-                    (t.monHoc && t.monHoc !== '')
-                );
-            }
-        } else {
-            // Dự phòng REST API
-            const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-            const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
-            duLieuThongKeHienTai = await phanHoi.json();
-        }
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=traCuuThongKe&namHoc=${namHoc}&thang=${thang}&tuan=${tuan}&giaoVien=${giaoVien}`);
+        duLieuThongKeHienTai = await phanHoi.json();
         
         let kieuGv = document.getElementById('inputGiaoVienTk').value.trim();
         
+        // [NÂNG CẤP]: Sử dụng requestAnimationFrame để tránh nghẽn luồng render
         requestAnimationFrame(() => {
             if (kieuGv === "Toàn trường" || kieuGv === "") {
                 veBangThongKeToanTruong(duLieuThongKeHienTai, namHoc, thang, tuan, soTuanTraCuu, mangDinhMucChuan, mapTenGiaoVien);
@@ -313,6 +246,7 @@ function veBangThongKeToanTruong(duLieu, nam, thang, tuan, soTuanTraCuu, mangDin
         hienThiGhiChuDm = `Dựa trên mốc ${soTuanTraCuu} tuần giảng dạy`;
     }
 
+    // [NÂNG CẤP]: Chuyển sang dùng Array.push để tối ưu bộ nhớ
     let htmlArr = [];
     htmlArr.push(`<div class="flex-none p-4 pb-2 bg-white z-30 relative shadow-sm border-b border-gray-300 text-center">
                     <h2 class="text-xl font-bold text-blue-900 uppercase tracking-wide">${tDe}</h2>
@@ -457,6 +391,8 @@ function veMaTranThongKeCaNhan(duLieu, gv, nam, thang, tuan) {
                     <tbody>`);
 
     thuMacDinh.forEach(thu => {
+        // [SỬA LỖI UI QUAN TRỌNG]: Tính toán chính xác tổng số dòng của cả ngày trước khi vẽ HTML
+        // Đảm bảo thuộc tính rowspan của cột "Thứ" không bị gãy cấu trúc khi có buổi học bị trống hoàn toàn
         let soDongThu = Object.keys(luoi[thu]["Sáng"]).length + Object.keys(luoi[thu]["Chiều"]).length;
         let daInCotThu = false;
 
