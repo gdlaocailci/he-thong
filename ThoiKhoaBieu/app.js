@@ -224,9 +224,6 @@ function capNhatNgayDauTuan() {
     }, 500); 
 }
 
-// =========================================================================
-// KHỐI 1: KHỞI TẠO VÀ TẢI DỮ LIỆU CƠ BẢN (ĐÃ NÂNG CẤP SMART SYNC FINGERPRINT)
-// =========================================================================
 async function khoiTaoGiaoDien() {
     const MA_DA = (typeof CAU_HINH_FRONTEND !== 'undefined' && CAU_HINH_FRONTEND.MA_DU_AN) ? CAU_HINH_FRONTEND.MA_DU_AN : 'MAC_DINH';
     const KEY_CH = 'SmartTKB_CauHinh_' + MA_DA;
@@ -243,39 +240,6 @@ async function khoiTaoGiaoDien() {
             let logoMenu = document.getElementById('logoMenuDoc'); 
             if (logoMenu) logoMenu.src = CAU_HINH_FRONTEND.LINK_LOGO_TRANG_CHU;
         }
-
-        let coCache = false;
-        try {
-            let cacheCauHinh = localStorage.getItem(KEY_CH);
-            let cacheTkb = localStorage.getItem(KEY_TKB);
-            
-            if (cacheCauHinh && cacheTkb) {
-                thongSoHocVu = JSON.parse(cacheCauHinh);
-                duLieuTkbHienTai = JSON.parse(cacheTkb);
-                
-                kiemSoatGiaoDien(); 
-                napDuLieuBoLocGiaoVien();
-                
-                if(thongSoHocVu.NAM_HOC) { 
-                    let menuNam = document.getElementById('menuHienThiNamHoc'); 
-                    if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
-                }
-
-                tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
-                
-                if (hienThiTuan) {
-                    if (hienThiTuan.tagName === 'INPUT') {
-                        hienThiTuan.value = tuanDangXem;
-                        if (spinnerTuan) spinnerTuan.classList.remove('hidden');
-                    } else {
-                        hienThiTuan.innerHTML = `Tuần ${tuanDangXem} <svg class="inline w-4 h-4 text-blue-500 animate-spin ml-1.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"></path></svg>`;
-                    }
-                }
-
-                xuatMaTranBang(duLieuTkbHienTai);
-                coCache = true;
-            }
-        } catch(e) { console.warn("Cache hỏng, tải lại từ đầu."); }
 
         const phanHoi = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
         const thongSoMoi = await phanHoi.json();
@@ -305,55 +269,25 @@ async function khoiTaoGiaoDien() {
             }
         }
         
+        // [SỬA LỖI LỆCH TUẦN]: Ép cứng biến Tuần trên UI tuân thủ tuyệt đối mốc thời gian từ máy chủ
         tuanDangXem = parseInt(thongSoHocVu.TUAN_HIEN_TAI) || 1;
+        if (hienThiTuan) {
+            if (hienThiTuan.tagName === 'INPUT') {
+                hienThiTuan.value = tuanDangXem;
+            } else {
+                hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
+            }
+        }
         
-        // [NÂNG CẤP]: THUẬT TOÁN ĐỐI SÁNH THÔNG MINH CÓ KHÓA CHỐNG TRỄ
         if (thongSoHocVu.TKB_TUAN && thongSoHocVu.TKB_TUAN.length > 0) {
             let tkbMayChu = thongSoHocVu.TKB_TUAN;
-            let tkbRam = [];
-            try { tkbRam = JSON.parse(localStorage.getItem(KEY_TKB) || '[]'); } catch(e){}
-
-            // Hàm băm dữ liệu (Tạo "dấu vân tay" loại bỏ nhiễu cấu trúc JSON)
-            const taoDauVanTay = (mangTkb) => {
-                if (!Array.isArray(mangTkb)) return '';
-                return mangTkb.map(t => `${String(t.thu).trim()}_${String(t.buoi).trim()}_${String(t.tiet).trim()}_${String(t.maLop).trim()}_${String(t.monHoc || '').trim()}_${String(t.maGv || '').trim()}`).sort().join('||');
-            };
-
-            let vanTayMayChu = taoDauVanTay(tkbMayChu);
-            let vanTayRam = taoDauVanTay(tkbRam);
-
-            // Kiểm tra xem giáo viên có vừa ấn "Lưu" trong 15 giây qua không
-            let thoiGianKhoa = parseInt(localStorage.getItem('KhoaDongBo_TKB') || '0');
-            let vuaMoiLuu = (Date.now() - thoiGianKhoa) < 15000; 
-
-            if (vanTayMayChu !== vanTayRam) {
-                if (vuaMoiLuu) {
-                    console.log("🔒 [Bảo vệ RAM]: Server có dấu hiệu trễ nhịp. Giữ nguyên dữ liệu vừa lưu trên UI!");
-                    if (!duLieuTkbHienTai || duLieuTkbHienTai.length === 0) duLieuTkbHienTai = tkbRam;
-                } else {
-                    console.log("⚡ [Smart Sync]: Dữ liệu thay đổi. Đang đồng bộ hóa lưới UI...");
-                    duLieuTkbHienTai = tkbMayChu;
-                    localStorage.setItem(KEY_TKB, JSON.stringify(tkbMayChu));
-                    xuatMaTranBang(duLieuTkbHienTai);
-                    if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
-                }
-            } else {
-                console.log("✅ [Smart Sync]: Dữ liệu RAM và Server khớp 100%.");
-                if (!duLieuTkbHienTai || duLieuTkbHienTai.length === 0) {
-                    duLieuTkbHienTai = tkbRam.length > 0 ? tkbRam : tkbMayChu;
-                }
-            }
+            duLieuTkbHienTai = tkbMayChu;
+            localStorage.setItem(KEY_TKB, JSON.stringify(tkbMayChu));
+            xuatMaTranBang(duLieuTkbHienTai);
             
-            if (hienThiTuan) {
-                if (hienThiTuan.tagName === 'INPUT') {
-                    hienThiTuan.value = tuanDangXem;
-                    if (spinnerTuan) spinnerTuan.classList.add('hidden');
-                } else {
-                    hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
-                }
-            }
+            if (spinnerTuan) spinnerTuan.classList.add('hidden');
         } else {
-            await taiDuLieuTKB(coCache); 
+            await taiDuLieuTKB(false); 
         }
         
     } catch (loi) { 
@@ -584,6 +518,23 @@ function locTheoGiaoVien() {
     });
 }
 
+// =========================================================================
+// [NÂNG CẤP]: HÀM GẮN CỜ VÀ BIỂU TƯỢNG CÂY BÚT (TKB)
+// =========================================================================
+window.danhDauDongThayDoiTKB = function(inputEl) {
+    if (!inputEl) return;
+    let td = inputEl.closest('td');
+    if (td && td.getAttribute('data-thaydoi') !== 'true') {
+        td.setAttribute('data-thaydoi', 'true');
+        td.classList.add('relative'); 
+        
+        // Chèn biểu tượng cây bút nhấp nháy góc phải ô lưới
+        if (!td.querySelector('.icon-sua-chua')) {
+            inputEl.insertAdjacentHTML('afterend', `<svg class="icon-sua-chua w-[14px] h-[14px] absolute top-1 right-1 text-amber-600 animate-pulse pointer-events-none drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`);
+        }
+    }
+};
+
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = true, loaiDanhSach = '', coQuyenSua = quyenSuaChua) {
     let idThocTinh = idPhanTu ? `id="${idPhanTu}"` : '';
     let thuocTinhKhoa = coQuyenSua ? '' : 'disabled'; 
@@ -593,11 +544,14 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
     
     let kieuKiemTraGV = (idPhanTu && idPhanTu.startsWith('gv_')) ? `if(typeof kiemTraTrungGiaoVienToanBang === 'function') kiemTraTrungGiaoVienToanBang();` : '';
     
-    // [THỦ THUẬT LÁCH LUẬT HTML5]: Đẩy tạm value sang placeholder để giữ hình ảnh chữ, ép datalist xổ toàn bộ
+    // Tích hợp hàm đánh dấu dòng thay đổi ngay khi nhập liệu
+    let triggerThayDoi = `if(typeof danhDauDongThayDoiTKB === 'function') danhDauDongThayDoiTKB(this);`;
+    
     let onFocusClick = `this.dataset.val=this.value; if(this.value !== ''){ this.placeholder=this.value; this.value=''; } if(this.showPicker) this.showPicker();`;
     let onBlurLogic = `if(this.value.trim() === '') { this.value = this.dataset.val || ''; } this.placeholder='--'; xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV}`;
     
-    let suKienMoi = `oninput="${kieuKiemTraGV}" onchange="xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV}" onfocus="${onFocusClick}" onclick="if(this.showPicker) this.showPicker();" onblur="${onBlurLogic}"`;
+    // Gắn sự kiện triggerThayDoi vào oninput và onchange
+    let suKienMoi = `oninput="${kieuKiemTraGV} ${triggerThayDoi}" onchange="xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV} ${triggerThayDoi}" onfocus="${onFocusClick}" onclick="if(this.showPicker) this.showPicker();" onblur="${onBlurLogic}"`;
 
     let html = `<input type="text" size="1" list="${idDatalist}" ${idThocTinh} ${thuocTinhKhoa} value="${giaTriMacDinh || ''}" placeholder="--" class="w-full h-full min-w-0 bg-transparent outline-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;" autocomplete="off" ${suKienMoi}>`; 
     
