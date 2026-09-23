@@ -918,17 +918,13 @@ function xuatMaTranBang(danhSachTiet) {
     if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
 }
 
-// =========================================================================
-// KHỐI LƯU DỮ LIỆU TỔNG THỂ (XÓA TOÀN DIỆN VÀ GHI MỚI)
-// =========================================================================
 async function luuDuLieu(event, loaiLuu) {
     let coQuyenThaoTac = quyenSuaChua || (quyenChiTiet && (quyenChiTiet.lop.length > 0 || quyenChiTiet.nut.length > 0));
     if (!coQuyenThaoTac) return;
     
     if (loaiLuu === 'codinh') { if (!confirm("CẢNH BÁO: Thao tác này sẽ ghi đè toàn bộ TKB hiện tại làm TKB Gốc Cố Định cho toàn trường. Bấm OK để tiếp tục.")) return; }
     if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem}, tự động chuyển sang tuần tiếp theo?`)) return; }
-    // [NÂNG CẤP]: Cảnh báo xóa ghi đè toàn diện
-    if (loaiLuu === 'tuan') { if (!confirm(`Xác nhận: Xóa trắng toàn bộ dữ liệu Tuần ${tuanDangXem} trên máy chủ và lưu lại toàn bộ dữ liệu đang hiển thị trên màn hình?`)) return; }
+    if (loaiLuu === 'tuan') { if (!confirm(`Xác nhận: Xóa trắng và ghi đè toàn bộ dữ liệu Tuần ${tuanDangXem} trên máy chủ bằng nội dung đang hiển thị trên màn hình?`)) return; }
 
     const btn = event.currentTarget; 
     const textGoc = btn.innerHTML;
@@ -943,7 +939,7 @@ async function luuDuLieu(event, loaiLuu) {
         let cacOMon = document.querySelectorAll('input[id^="mon_"]');
         let setLopDangHienThi = new Set();
         
-        // Quét lấy TOÀN BỘ dữ liệu trên lưới (Không phân biệt có sửa hay không)
+        // Quét lấy toàn bộ lưới UI
         cacOMon.forEach(oMon => {
             let valMon = oMon.value.trim();
             if (valMon !== "") {
@@ -974,7 +970,7 @@ async function luuDuLieu(event, loaiLuu) {
             }
         });
 
-        // Bổ sung các lớp đang bị ẩn bởi bộ lọc (để không bị mất dữ liệu khi lưu)
+        // Giữ lại các lớp bị ẩn do bộ lọc để tránh mất dữ liệu
         let mangLopDangHienThi = Array.from(setLopDangHienThi);
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
             duLieuTkbHienTai.forEach(tietGoc => {
@@ -989,7 +985,6 @@ async function luuDuLieu(event, loaiLuu) {
             return;
         }
 
-        // Đẩy lên máy chủ
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { 
             method: 'POST', 
             body: JSON.stringify({ thaoTac: 'luuDuLieu', loaiLuu: loaiLuu, tuan: tuanDangXem, duLieu: dsTietLuoi }) 
@@ -1001,17 +996,13 @@ async function luuDuLieu(event, loaiLuu) {
         } else { 
             if (loaiLuu === 'khoiphuc') {
                 await chuyenTuan(1); 
-                console.log("Kích hoạt Lưu Tuần tự động để neo lại mốc thời gian...");
-                let btnAn = document.createElement('button');
-                btnAn.innerHTML = "Auto Save";
+                let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
                 await luuDuLieu({ currentTarget: btnAn }, 'tuan');
             } else {
-                if (loaiLuu === 'tuan') alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
-                if (loaiLuu === 'codinh') alert("Đã thiết lập Thời khóa biểu Cố định thành công!");
-                
+                alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
                 duLieuTkbHienTai = dsTietLuoi;
                 
-                // Gỡ toàn bộ cờ và icon cây bút
+                // Gỡ bỏ toàn bộ cờ và icon cây bút
                 document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
                     td.removeAttribute('data-thaydoi');
                     let icon = td.querySelector('.icon-sua-chua');
@@ -1019,10 +1010,9 @@ async function luuDuLieu(event, loaiLuu) {
                 });
 
                 const MA_DA = (typeof CAU_HINH_FRONTEND !== 'undefined' && CAU_HINH_FRONTEND.MA_DU_AN) ? CAU_HINH_FRONTEND.MA_DU_AN : 'MAC_DINH';
-                localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(duLieuTkbHienTai));
+                localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(dsTietLuoi));
 
                 if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
-                
                 await taiDuLieuTKB(true, 'TKB_HIEN_TAI', true);
                 localStorage.setItem('KhoaDongBo_TKB', Date.now().toString());
             }
