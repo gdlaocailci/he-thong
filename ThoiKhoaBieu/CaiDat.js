@@ -2,38 +2,17 @@ let dsThamSo = [];
 let dsQuanTri = [];
 const TIEU_DE_CAI_DAT = ['MaThamSo', 'GiaTri', 'GhiChu', '', 'Quyền Admin'];
 
-// =========================================================================
-// KHỐI 1: GIAO TIẾP MÁY CHỦ (NÂNG CẤP ĐỘNG CƠ FIREBASE WEBSOCKETS)
-// =========================================================================
 async function taiDuLieuCaiDatHeThong() {
     const tbThamSo = document.getElementById('vungThamSo');
     const tbQuanTri = document.getElementById('vungQuanTri');
     
-    tbThamSo.innerHTML = `<tr><td colspan="3" class="text-center py-10 font-bold text-slate-500"><div class="w-6 h-6 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>Đang kết nối cơ sở dữ liệu...</td></tr>`;
-    tbQuanTri.innerHTML = `<tr><td colspan="2" class="text-center py-10 font-bold text-slate-500"><div class="w-6 h-6 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-2"></div>Đang tải cấu hình Admin...</td></tr>`;
+    // Nâng cấp: Sửa colspan thành 3 do đã bỏ cột xoá
+    tbThamSo.innerHTML = `<tr><td colspan="3" class="text-center py-10 font-bold text-slate-500">Đang tải cấu hình...</td></tr>`;
+    tbQuanTri.innerHTML = `<tr><td colspan="2" class="text-center py-10 font-bold text-slate-500">Đang tải cấu hình...</td></tr>`;
 
     try {
-        let duLieu = null;
-
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // [NÂNG CẤP LÕI]: Đọc dữ liệu Cài đặt từ Firebase
-            const snapshot = await khoDuLieuRealtime.ref('CAI_DAT').once('value');
-            duLieu = snapshot.val();
-            
-            // Thuật toán Auto-Migration: Nếu Firebase chưa có, kéo từ Google Sheets sang
-            if (!duLieu) {
-                console.log("⚡ [Auto-Migration]: Kéo dữ liệu Cài Đặt Hệ Thống từ Google Sheets...");
-                const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCaiDat`);
-                duLieu = await phanHoi.json();
-                if (duLieu && !duLieu.trangThai) {
-                    await khoDuLieuRealtime.ref('CAI_DAT').set(duLieu);
-                }
-            }
-        } else {
-            // Dự phòng REST API nếu mất kết nối Firebase
-            const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCaiDat`);
-            duLieu = await phanHoi.json();
-        }
+        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCaiDat`);
+        const duLieu = await phanHoi.json();
         
         dsThamSo = []; dsQuanTri = [];
         
@@ -49,28 +28,25 @@ async function taiDuLieuCaiDatHeThong() {
             }
         }
         veGiaoDienThamSo(); veGiaoDienQuanTri();
-    } catch (loi) { 
-        console.error("Lỗi tải cài đặt:", loi); 
-        tbThamSo.innerHTML = `<tr><td colspan="3" class="text-center py-10 font-bold text-red-500">Lỗi kết nối dữ liệu.</td></tr>`;
-        tbQuanTri.innerHTML = `<tr><td colspan="2" class="text-center py-10 font-bold text-red-500">Lỗi kết nối dữ liệu.</td></tr>`;
-    }
+    } catch (loi) { console.error("Lỗi tải cài đặt:", loi); }
 }
 
-// =========================================================================
-// KHỐI 2: KHỞI TẠO VÀ XỬ LÝ LƯỚI GIAO DIỆN (GIỮ NGUYÊN BẢN 100%)
-// =========================================================================
 function veGiaoDienThamSo() {
     const tbody = document.getElementById('vungThamSo');
     let html = '';
     dsThamSo.forEach((ts, idx) => {
+        // [NÂNG CẤP]: Đặt biến chứa thuộc tính chữ mờ (placeholder)
         let chuMoGiaTri = '';
         let classChuMo = '';
         
+        // Kiểm tra đúng dòng mã tham số TRANG_THAI_WEB để chèn chỉ dẫn
         if (ts.maThamSo.trim() === 'TRANG_THAI_WEB') {
             chuMoGiaTri = 'placeholder="Hoạt động/Bảo trì"';
+            // Thêm định dạng chữ mờ nghiêng, nhạt màu để phân biệt với dữ liệu thật
             classChuMo = 'placeholder:text-gray-400 placeholder:italic placeholder:font-normal';
         }
 
+        // Nâng cấp: Khoá input Mã tham số (readonly), bỏ onchange, bỏ toàn bộ thẻ td chứa nút Xoá
         html += `<tr class="hover:bg-slate-50">
             <td class="p-0 border border-gray-300"><input type="text" value="${ts.maThamSo}" readonly class="w-full h-full min-h-[35px] px-2 outline-none bg-transparent font-extrabold text-blue-900 text-left uppercase cursor-not-allowed"></td>
             <td class="p-0 border border-gray-300"><input type="text" ${chuMoGiaTri} value="${ts.giaTri}" onchange="capNhatThamSo(${idx}, 'giaTri', this.value)" class="w-full h-full min-h-[35px] px-2 outline-none bg-transparent text-center font-bold text-slate-800 ${classChuMo}"></td>
@@ -95,13 +71,14 @@ function veGiaoDienQuanTri() {
 }
 
 // =========================================================================
-// KHỐI ĐỒNG BỘ & THAO TÁC CÀI ĐẶT
+// KHỐI ĐỒNG BỘ & THAO TÁC CÀI ĐẶT (ĐÃ NÂNG CẤP KIÊN CỐ)
 // =========================================================================
 
 function dongBoDomSangState() {
     dsThamSo = [];
     document.querySelectorAll('#vungThamSo tr').forEach(tr => {
         let cacInput = tr.querySelectorAll('input');
+        // Nâng cấp: Cấu trúc DOM vẫn giữ nguyên 3 thẻ input (vì input 1 chuyển sang readonly) nên logic đồng bộ không bị vỡ.
         if (cacInput && cacInput.length === 3) {
             dsThamSo.push({ 
                 maThamSo: cacInput[0].value, 
@@ -121,6 +98,7 @@ function dongBoDomSangState() {
 }
 
 function capNhatThamSo(idx, truong, giaTri) { dsThamSo[idx][truong] = giaTri; }
+// Đã loại bỏ hoàn toàn hàm themDongThamSo() và xoaThamSo() theo yêu cầu.
 
 function capNhatQuanTri(idx, giaTri) { dsQuanTri[idx] = giaTri; }
 function themDongQuanTri() { dongBoDomSangState(); dsQuanTri.push(''); veGiaoDienQuanTri(); }
@@ -129,10 +107,10 @@ function xoaQuanTri(idx) { if(confirm("Hủy quyền Admin của tài khoản n�
 async function luuCaiDatSangMayChu() {
     const btn = document.querySelector('#khungCaiDat button[onclick="luuCaiDatSangMayChu()"]');
     let textGoc = btn.innerHTML;
-    btn.innerHTML = `<div class="flex items-center gap-1.5"><div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang lưu...</div>`; 
-    btn.disabled = true;
+    btn.innerHTML = `Đang lưu...`; btn.disabled = true;
 
     try {
+        // Chốt hạ dữ liệu từ giao diện vào mảng trước khi chuẩn bị Payload gửi đi
         dongBoDomSangState();
 
         let mangGhi = [TIEU_DE_CAI_DAT]; // ['MaThamSo', 'GiaTri', 'GhiChu', '', 'Quyền Admin']
@@ -142,44 +120,23 @@ async function luuCaiDatSangMayChu() {
             let ts = dsThamSo[i] || { maThamSo: '', giaTri: '', ghiChu: '' };
             let qt = dsQuanTri[i] || '';
             
+            // Ép kiểu trim() làm sạch khoảng trắng thừa
             if(ts.maThamSo.trim() !== '' || qt.trim() !== '') {
                 mangGhi.push([ts.maThamSo.trim(), ts.giaTri.trim(), ts.ghiChu.trim(), '', qt.trim()]);
             }
         }
 
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // [NÂNG CẤP LÕI]: Lưu dữ liệu cấu hình thô
-            await khoDuLieuRealtime.ref('CAI_DAT').set(mangGhi);
-            
-            // [CÔNG NGHỆ CHÉO]: Update ngược trở lại node CAU_HINH (Để app.js nhận thay đổi Real-time ngay lập tức)
-            let objCauHinhUpdate = { DANH_SACH_QUAN_TRI: [] };
-            for (let i = 1; i < mangGhi.length; i++) {
-                if (mangGhi[i][0]) objCauHinhUpdate[mangGhi[i][0]] = mangGhi[i][1];
-                if (mangGhi[i][4]) objCauHinhUpdate.DANH_SACH_QUAN_TRI.push(mangGhi[i][4]);
-            }
-            await khoDuLieuRealtime.ref('CAU_HINH').update(objCauHinhUpdate);
-
-            alert("✅ Đã lưu Cấu hình hệ thống lên Firebase thành công! Các thông số đã có hiệu lực ngay lập tức."); 
-        } else {
-            const payload = { thaoTac: 'luuCaiDat', duLieu: mangGhi };
-            const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
-            const ketQua = await phanHoi.json();
-            
-            if (ketQua.trangThai === 'Thành công') { 
-                alert("Đã lưu Cấu hình hệ thống thành công! Vui lòng tải lại trang (F5) để các thông số mới có hiệu lực."); 
-            } else { alert("Lỗi từ máy chủ: " + ketQua.thongBao); }
-        }
-    } catch(loi) { 
-        alert("Lỗi kết nối mạng hoặc CSDL."); 
-        console.error(loi);
-    } finally { 
-        btn.innerHTML = textGoc; btn.disabled = false; 
-    }
+        const payload = { thaoTac: 'luuCaiDat', duLieu: mangGhi };
+        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
+        const ketQua = await phanHoi.json();
+        
+        if (ketQua.trangThai === 'Thành công') { 
+            alert("Đã lưu Cấu hình hệ thống thành công! Vui lòng tải lại trang (F5) để các thông số mới có hiệu lực."); 
+        } else { alert("Lỗi từ máy chủ: " + ketQua.thongBao); }
+    } catch(loi) { alert("Lỗi kết nối mạng."); } 
+    finally { btn.innerHTML = textGoc; btn.disabled = false; }
 }
 
-// =========================================================================
-// KHỐI ĐIỀU HƯỚNG MÀN HÌNH
-// =========================================================================
 function moTabCaiDat() {
     const cacMenu = ['menuTKB', 'menuThongKe', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucGV', 'menuCaiDat'];
     cacMenu.forEach(id => {
