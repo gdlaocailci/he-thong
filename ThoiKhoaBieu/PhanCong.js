@@ -4,54 +4,31 @@ let khungChuongTrinhToanTruong = {};
 let gvDangDuocChon = null; 
 
 // =========================================================================
-// KHỐI 1: GIAO TIẾP MÁY CHỦ (NÂNG CẤP ĐỘNG CƠ FIREBASE WEBSOCKETS)
+// KHỐI 1: GIAO TIẾP MÁY CHỦ (API FETCH)
 // =========================================================================
 async function taiDuLieuPhanCongTuMayChu() {
-    const tbody = document.getElementById('duLieuLopHoc');
-    if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-slate-500 font-bold">
-            <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
-            Đang kết nối Cổng Dữ liệu Thời gian thực (WebSockets)...
-        </td></tr>`;
-    }
-
     try {
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // [NÂNG CẤP LÕI]: Lắng nghe toàn bộ Cụm dữ liệu Master của Phân công
-            khoDuLieuRealtime.ref('DU_LIEU_PHAN_CONG_MASTER').on('value', async (snapshot) => {
-                let duLieuSever = snapshot.val();
-                
-                // Thuật toán Auto-Migration: Tự động kéo từ Google Sheets nếu Firebase trống
-                if (!duLieuSever) {
-                    console.log("⚡ [Auto-Migration]: Đang khởi tạo Master Data Phân công từ Google Sheets...");
-                    const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
-                    duLieuSever = await phanHoi.json();
-                    
-                    // Nạp lên Firebase để các lần sau lấy tức thì
-                    if (duLieuSever && !duLieuSever.trangThai) {
-                        await khoDuLieuRealtime.ref('DU_LIEU_PHAN_CONG_MASTER').set(duLieuSever);
-                    }
-                }
-                
-                if (duLieuSever) {
-                    khoiTaoGiaoDienPhanCong(duLieuSever);
-                    console.log("✅ [Smart Sync]: Lưới Phân công đã được đồng bộ tức thì!");
-                }
-            });
-        } else {
-            // Dự phòng an toàn (Fallback) về REST API nếu Firebase chưa sẵn sàng
-            const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
-            const duLieuSever = await phanHoi.json();
-            khoiTaoGiaoDienPhanCong(duLieuSever);
+        const tbody = document.getElementById('duLieuLopHoc');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-slate-500 font-bold">
+                <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+                Đang kết nối Cổng API máy chủ để lấy Cấu hình Môn học...
+            </td></tr>`;
         }
+
+        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuKhoiTao`);
+        const duLieuSever = await phanHoi.json();
+        
+        khoiTaoGiaoDienPhanCong(duLieuSever);
     } catch (loi) {
         console.error("Lỗi kết nối khi tải dữ liệu phân công:", loi);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Lỗi kết nối hoặc máy chủ từ chối truy cập. Vui lòng thử lại.</td></tr>`;
+        const tbody = document.getElementById('duLieuLopHoc');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="15" class="text-center py-10 text-red-600 font-bold text-lg">Lỗi kết nối hoặc máy chủ từ chối truy cập. Vui lòng thử lại.</td></tr>`;
     }
 }
 
 // =========================================================================
-// KHỐI 2: KHỞI TẠO VÀ XỬ LÝ LƯỚI GIAO DIỆN PHÂN CÔNG (GIỮ NGUYÊN BẢN 100%)
+// KHỐI 2: KHỞI TẠO VÀ XỬ LÝ LƯỚI GIAO DIỆN PHÂN CÔNG
 // =========================================================================
 function khoiTaoGiaoDienPhanCong(duLieuSever) {
   danhSachGV = duLieuSever.giaoVien || [];
@@ -232,7 +209,7 @@ function diChuyenCotMonHoc(element, huong) {
 }
 
 // =========================================================================
-// KHỐI 3: THỐNG KÊ ĐỊNH MỨC & PHÂN CÔNG NHANH
+// KHỐI 3: THỐNG KÊ ĐỊNH MỨC & PHÂN CÔNG NHANH (NÂNG CẤP LÕI)
 // =========================================================================
 function tinhToanTietDay(maGVVuaChon = null) {
   let thongKe = {};
@@ -335,6 +312,7 @@ function tinhToanTietDay(maGVVuaChon = null) {
         bgClass = 'bg-yellow-200 border-yellow-400 shadow-inner'; 
     }
 
+    // [NÂNG CẤP LÕI]: Biến ô Chi tiết thành nút bấm mở Modal Phân công nhanh
     let textChuaPhanCong = `<span class="text-slate-400 italic text-[11px] group-hover:text-blue-500 transition-colors">Bấm để gán môn học...</span>`;
     let chiTietHienThi = soLieu.chiTiet.length > 0 ? soLieu.chiTiet.join(' ') : textChuaPhanCong;
     let hienThiTen = (soLieu.hoTen && soLieu.hoTen !== ma) ? `${soLieu.hoTen} <br><span class="text-[13px] text-gray-500 font-bold italic">(${ma})</span>` : ma;
@@ -396,7 +374,7 @@ function locDuLieuThongKeThoiGianThuc() {
 }
 
 // =========================================================================
-// KHỐI 3B: MODAL PHÂN CÔNG NHANH
+// KHỐI 3B: MODAL PHÂN CÔNG NHANH (ĐỘNG CƠ ĐỒNG BỘ 2 CHIỀU)
 // =========================================================================
 function chenHTMLModalPhanCongNhanh() {
     let html = `
@@ -409,6 +387,7 @@ function chenHTMLModalPhanCongNhanh() {
                 <button onclick="dongKhungPhanCongNhanh()" class="text-white hover:text-red-300 text-3xl leading-none transition-colors outline-none">&times;</button>
             </div>
             <div id="noiDungPhanCongNhanh" class="p-5 overflow-y-auto flex-1 custom-scrollbar">
+                <!-- Nội dung checkbox render động -->
             </div>
             <div class="bg-white p-4 border-t flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <span class="text-sm text-slate-500 italic flex-1 flex items-center gap-2">
@@ -512,7 +491,7 @@ window.xuLyTichPhanCongNhanh = function(checkbox, maLop, mon, maGV) {
 };
 
 // =========================================================================
-// KHỐI 4: LƯU TRỮ TRỰC TIẾP LÊN FIREBASE WEBSOCKETS (NÂNG CẤP LÕI)
+// KHỐI 4: LƯU TRỮ VÀ XỬ LÝ NHẬP/XUẤT EXCEL TỐC ĐỘ CAO
 // =========================================================================
 async function xuLyLuuTru() {
   const btnLuu = document.querySelector('#khungPhanCong button[onclick="xuLyLuuTru()"]');
@@ -542,19 +521,12 @@ async function xuLyLuuTru() {
         }
     });
     
-    // [NÂNG CẤP LÕI]: Ghi đè vào nhánh `phanCong` thuộc Cụm Master Data trên Firebase
-    if (typeof khoDuLieuRealtime !== 'undefined') {
-        await khoDuLieuRealtime.ref('DU_LIEU_PHAN_CONG_MASTER/phanCong').set(mangGhi);
-        alert("✅ Đã lưu bảng Phân công chuyên môn vào hệ thống thành công (Cập nhật thời gian thực)!");
-    } else {
-        // Dự phòng về REST API nếu mất kết nối Firebase
-        const payload = { thaoTac: 'luuDuLieuPhanCong', duLieu: mangGhi };
-        const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
-        const ketQua = await phanHoi.json();
-        
-        if (ketQua.trangThai === 'Thành công') alert("Đã lưu bảng Phân công chuyên môn vào hệ thống thành công!");
-        else alert("Lỗi từ máy chủ: " + ketQua.thongBao);
-    }
+    const payload = { thaoTac: 'luuDuLieuPhanCong', duLieu: mangGhi };
+    const phanHoi = await fetch(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
+    const ketQua = await phanHoi.json();
+    
+    if (ketQua.trangThai === 'Thành công') alert("Đã lưu bảng Phân công chuyên môn vào hệ thống thành công!");
+    else alert("Lỗi từ máy chủ: " + ketQua.thongBao);
   } catch(loi) {
     console.error("Lỗi khi lưu phân công:", loi);
     alert("Lỗi kết nối mạng hoặc máy chủ không phản hồi.");
@@ -563,9 +535,6 @@ async function xuLyLuuTru() {
   }
 }
 
-// =========================================================================
-// KHỐI 5: XỬ LÝ NHẬP/XUẤT EXCEL TỐC ĐỘ CAO (GIỮ NGUYÊN BẢN 100%)
-// =========================================================================
 async function xuatExcelPhanCong() {
     const btn = document.querySelector('button[onclick="xuatExcelPhanCong()"]');
     let textGoc = btn ? btn.innerHTML : 'Xuất Excel';
@@ -774,7 +743,7 @@ async function xuatExcelThongKePhanCong() {
 }
 
 // =========================================================================
-// KHỐI 6: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC
+// KHỐI 5: ĐIỀU HƯỚNG MÀN HÌNH TỔNG LỰC
 // =========================================================================
 function moTabPhanCong() {
     thietLapMenuActive('menuPhanCong');
