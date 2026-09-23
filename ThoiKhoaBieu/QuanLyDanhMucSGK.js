@@ -3,12 +3,11 @@
 // Thiết kế và phát triển Hoàng Ngọc Lâm
 // [Nâng cấp]: Bổ sung tính năng di chuyển (Lên/Xuống) để sắp xếp trật tự Môn học
 // [Nâng cấp mới]: Tự động sinh thẻ datalist để hiển thị danh sách chọn môn học đồng bộ từ KHUNG_CHUONG_TRINH
-// [Nâng cấp Lõi]: Tích hợp Firebase Realtime Database WebSockets
 // =========================================================================
 
 let dangTaiDuLieuSGK = false; 
 let dangLuuDuLieuSGK = false; 
-let DANH_SACH_MON_CHUAN = []; 
+let DANH_SACH_MON_CHUAN = []; // [NÂNG CẤP]: Mảng lưu dữ liệu đối chiếu từ máy chủ
 
 async function taiLaiDuLieuDanhMucSGK() {
     if (dangTaiDuLieuSGK) return; 
@@ -22,34 +21,14 @@ async function taiLaiDuLieuDanhMucSGK() {
     }
     
     try {
-        let duLieu = null;
-
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // [NÂNG CẤP LÕI]: Kéo dữ liệu từ Firebase thay vì gọi API liên tục
-            const snapshot = await khoDuLieuRealtime.ref('DANH_MUC_SGK_MASTER').once('value');
-            duLieu = snapshot.val();
-            
-            // Thuật toán Auto-Migration: Nếu Firebase chưa có, kéo từ Google Sheets qua
-            if (!duLieu) {
-                console.log("⚡ [Auto-Migration]: Đang kéo dữ liệu Danh mục SGK từ Google Sheets...");
-                const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-                const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
-                
-                if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối.");
-                duLieu = await phanHoi.json();
-                
-                if (duLieu) {
-                    await khoDuLieuRealtime.ref('DANH_MUC_SGK_MASTER').set(duLieu);
-                }
-            }
-        } else {
-            // Dự phòng REST API nếu mất kết nối
-            const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-            const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
-            if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối.");
-            duLieu = await phanHoi.json();
-        }
+        const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
+        const phanHoi = await fetchFunc(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDanhMucSGKToanBo`);
         
+        if (!phanHoi.ok) throw new Error("Máy chủ từ chối kết nối.");
+        
+        const duLieu = await phanHoi.json();
+        
+        // [NÂNG CẤP QUAN TRỌNG]: Tự động tạo thẻ datalist nếu giao diện HTML chưa có
         let datalist = document.getElementById('danhSachMonHocSGK');
         if (!datalist) {
             datalist = document.createElement('datalist');
@@ -60,8 +39,10 @@ async function taiLaiDuLieuDanhMucSGK() {
         if (datalist) {
             datalist.innerHTML = ''; 
             if (duLieu.monHoc && Array.isArray(duLieu.monHoc) && duLieu.monHoc.length > 0) {
+                // Lưu lại mảng chuẩn để kiểm tra tính hợp lệ khi người dùng gõ tay
                 DANH_SACH_MON_CHUAN = duLieu.monHoc.map(m => String(m).trim()).filter(Boolean);
                 
+                // Đẩy dữ liệu vào danh sách xổ xuống
                 DANH_SACH_MON_CHUAN.forEach(mon => {
                     datalist.insertAdjacentHTML('beforeend', `<option value="${mon}">`);
                 });
@@ -96,6 +77,7 @@ async function taiLaiDuLieuDanhMucSGK() {
     }
 }
 
+// [NÂNG CẤP]: Hàm tự động so khớp, chuyển định dạng và cảnh báo theo Khung chương trình
 function dongBoVoiKhungChuongTrinh(input) {
     let giaTri = input.value.trim();
     if (!giaTri) {
@@ -125,6 +107,7 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     const tr = document.createElement('tr');
     tr.className = "hover:bg-blue-50/60 transition-colors dong-nhap-lieu-sgk";
     
+    // [CẬP NHẬT GIAO DIỆN]: Bổ sung onblur="dongBoVoiKhungChuongTrinh(this)" vào thanh nhập môn
     tr.innerHTML = `
         <td class="px-2 py-2 text-center"><input type="text" class="w-full text-center bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-bold text-slate-700" value="${khoi}" placeholder="VD: 3"></td>
         <td class="px-2 py-2"><input type="text" list="danhSachMonHocSGK" class="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:bg-white outline-none py-1 font-semibold text-slate-800 cursor-pointer transition-colors duration-300" value="${mon}" placeholder="Nhấp đúp chọn môn..." onfocus="this.select()" onblur="dongBoVoiKhungChuongTrinh(this)"></td>
@@ -141,13 +124,16 @@ function taoDongGiaoDienDuLieu(khoi = '', mon = '', link1 = '', link2 = '') {
     tbody.appendChild(tr);
 }
 
+// [TÍNH NĂNG MỚI]: Thuật toán đảo vị trí các dòng HTML DOM
 function diChuyenDong(btn, huong) {
     const dongHienTai = btn.closest('tr');
     const tbody = dongHienTai.parentNode;
     
     if (huong === -1 && dongHienTai.previousElementSibling) {
+        // Đưa lên trên (Chèn dòng hiện tại lên trước dòng nằm phía trên nó)
         tbody.insertBefore(dongHienTai, dongHienTai.previousElementSibling);
     } else if (huong === 1 && dongHienTai.nextElementSibling) {
+        // Đưa xuống dưới (Chèn dòng bên dưới lên trước dòng hiện tại)
         tbody.insertBefore(dongHienTai.nextElementSibling, dongHienTai);
     }
 }
@@ -181,36 +167,24 @@ async function luuDongBoDanhMucSGK() {
     });
 
     try {
-        if (typeof khoDuLieuRealtime !== 'undefined') {
-            // [NÂNG CẤP LÕI]: Đẩy dữ liệu trực tiếp vào Firebase
-            let mangSgkLuu = [['Khối', 'Môn', 'Link SGK 1', 'Link SGK 2']];
-            mangDuLieuGoiDi.forEach(r => mangSgkLuu.push(r));
-            
-            await khoDuLieuRealtime.ref('DANH_MUC_SGK_MASTER/sgk').set(mangSgkLuu);
-            
-            alert("THÔNG BÁO: Đã đồng bộ thành công lên Firebase!");
+        const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
+        const phanHoi = await fetchFunc(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ thaoTac: 'luuCapNhatDanhMucSGK', duLieuBang: mangDuLieuGoiDi })
+        });
+        const ketQua = await phanHoi.json();
+        
+        if (ketQua.trangThai === 'thanh_cong') {
+            alert("THÔNG BÁO: Đã đồng bộ thành công!");
             if (typeof boNhoHocLieuSGK !== 'undefined') boNhoHocLieuSGK = {}; 
         } else {
-            // Dự phòng REST API
-            const fetchFunc = (typeof fetchVoiCoCheThuLai === 'function') ? fetchVoiCoCheThuLai : fetch;
-            const phanHoi = await fetchFunc(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
-                method: 'POST',
-                redirect: 'follow',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ thaoTac: 'luuCapNhatDanhMucSGK', duLieuBang: mangDuLieuGoiDi })
-            });
-            const ketQua = await phanHoi.json();
-            
-            if (ketQua.trangThai === 'thanh_cong') {
-                alert("THÔNG BÁO: Đã đồng bộ thành công!");
-                if (typeof boNhoHocLieuSGK !== 'undefined') boNhoHocLieuSGK = {}; 
-            } else {
-                alert("Lưu thất bại: " + ketQua.thongBao);
-            }
+            alert("Lưu thất bại: " + ketQua.thongBao);
         }
     } catch (loi) {
         console.error(loi);
-        alert("Sự cố đường truyền: Không thể kết nối đến cơ sở dữ liệu. Bạn hãy tải lại trang và thử lại.");
+        alert("Sự cố đường truyền: Không thể gửi lệnh lưu lên máy chủ. Bạn hãy tải lại trang và thử lại.");
     } finally {
         if (nutLuu) {
             nutLuu.innerHTML = htmlGoc;
