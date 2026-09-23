@@ -8,12 +8,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <!-- [NÂNG CẤP LÕI]: NHÚNG BỘ SDK FIREBASE ĐỂ KẾT NỐI WEBSOCKETS -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-
     <style>
         .reactbits-fade-in { animation: fadeInBlur 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; filter: blur(8px); transform: translateY(15px); }
         @keyframes fadeInBlur { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
@@ -58,7 +52,7 @@
                 <img id="logoMenuDoc" src="" alt="Logo" class="w-20 h-20 rounded-full object-cover">
             </div>
             <h2 id="tenDonViMenu" class="text-center text-white font-bold text-base uppercase tracking-wide leading-relaxed">
-                Trường TH&THCS Tả Phời<br>Cấp tiểu học
+                Trường TH&THCS Hợp Thành<br>Cấp tiểu học
             </h2>
         </div>
         <div class="px-6 my-2 flex-none"><hr class="border-dashed border-blue-300 opacity-40"></div>
@@ -138,6 +132,7 @@
             </a>
         </nav>
 
+        
         <!-- PHẦN CUỐI: NÚT ĐĂNG NHẬP VÀ BẢN QUYỀN (Thêm flex-none để ghim chặt dưới đáy màn hình) -->
        <div class="p-4 bg-black/20 text-center flex-none mt-auto w-full relative z-20">
             <button id="nutDangNhapG" onclick="khoiDongDangNhap()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-2 px-4 rounded shadow-md flex items-center justify-center gap-2 transition duration-200 mb-4 group">
@@ -195,6 +190,11 @@
                         </button>
                     </div>
 
+                <!-- BỘ CHỌN NGÀY -->
+                <div class="flex items-center bg-white border border-gray-400 rounded shadow-sm px-2 py-1 gap-2 flex-none" title="Cài đặt mốc ngày cho Thứ 2 của tuần này">
+                    <span class="text-sm font-bold text-slate-600 whitespace-nowrap">Từ ngày:</span>
+                    <input type="date" id="chonNgayDauTuan" onchange="capNhatNgayDauTuan()" class="text-sm font-bold text-blue-900 outline-none cursor-pointer bg-transparent">
+                </div>
                     <!-- BỘ CHỌN NGÀY -->
                     <div class="flex items-center bg-white border border-gray-400 rounded shadow-sm px-2 py-1 gap-2 flex-none" title="Cài đặt mốc ngày cho Thứ 2 của tuần này">
                         <span class="text-sm font-bold text-slate-600 whitespace-nowrap">Từ ngày:</span>
@@ -655,7 +655,7 @@
     
     <script>
         function chuyenHuongHeThong() {
-            var urlDich = 'https://gdlaocailci.github.io/taphoi/';
+            var urlDich = 'https://gdlaocailci.github.io/he-thong/';
             window.open(urlDich, '_top');
         }
         function moDongMenuMobile() {
@@ -672,18 +672,21 @@
                 });
             });
         });
-    </script>
 
+        function khoaTruyCapMaNguon() {
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || e.keyCode === 123) { e.preventDefault(); }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) { e.preventDefault(); }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) { e.preventDefault(); }
+            if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) { e.preventDefault(); }
+            if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) { e.preventDefault(); }
+        });
+    }
+    khoaTruyCapMaNguon();
+    </script>
     <!-- CÁC FILE SCRIPT -->
     <script src="KetNoi.js"></script>
-    
-    <!-- [NÂNG CẤP LÕI]: Kích hoạt cỗ máy Firebase ngay sau khi nạp cấu hình -->
-    <script>
-        if (typeof khoiDongBoMayFirebase === 'function') {
-            khoiDongBoMayFirebase();
-        }
-    </script>
-    
     <script src="app.js"></script>
     <script src="ThongKe.js"></script>
     <script src="PhanCong.js"></script>
@@ -697,5 +700,70 @@
     <script src="QuanLyDanhMucSGK.js"></script>
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
+    <script>
+        let boDemLamMoiNgam;
+        const THOI_GIAN_CHO_LAM_MOI = 60000; // 1 phút = 60000 ms
+
+        async function thucThiLamMoiNgam() {
+            // Chỉ chạy đồng bộ ngầm khi người dùng đang mở tab Sổ đầu bài
+            let tabSDB = document.getElementById('khungSoDauBai');
+            if (!tabSDB || tabSDB.classList.contains('hidden')) return;
+            
+            let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+            if (!emailGoiLen || typeof CAU_HINH_FRONTEND === 'undefined') return;
+
+            try {
+                // 1. Gọi API lấy dữ liệu tĩnh lặng (Không hiển thị vòng quay Loading)
+                const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`);
+                const duLieuSever = await phanHoi.json();
+                
+                if (duLieuSever && duLieuSever.trangThai !== 'loi_he_thong') {
+                    
+                    // 2. Lưu lại tùy chọn Tuần và Lớp hiện tại của giáo viên
+                    let theTuan = document.getElementById('chonTuanSo');
+                    let theLop = document.getElementById('chonLopSo');
+                    let tuanChon = theTuan ? theTuan.value : null;
+                    let lopChon = theLop ? theLop.value : null;
+                    
+                    // 3. [MẸO KỸ THUẬT]: Tạm thời đổi ID của vùng hiển thị để chặn hàm mặc định xóa trắng lưới
+                    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
+                    if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
+                    
+                    // 4. Cập nhật dữ liệu mới từ Server vào bộ nhớ RAM (Biến toàn cục)
+                    if (typeof khoiTaoDuLieuSoDauBai === 'function') {
+                        khoiTaoDuLieuSoDauBai(duLieuSever);
+                    }
+                    
+                    // 5. Trả lại ID gốc
+                    let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
+                    if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
+                    
+                    // 6. Khôi phục tùy chọn và render lại lưới (Dữ liệu mới đè lên siêu mượt)
+                    if (tuanChon && theTuan) theTuan.value = tuanChon;
+                    if (lopChon && theLop) theLop.value = lopChon;
+                    
+                    if (tuanChon && lopChon && typeof ketXuatSoDauBaiLenLuoi === 'function') {
+                        ketXuatSoDauBaiLenLuoi();
+                    }
+                }
+            } catch (loi) {
+                // Lỗi mạng hoặc đang offline sẽ bị bỏ qua, không làm phiền người dùng
+                console.warn("Tiến trình đồng bộ ngầm tạm dừng do mạng.");
+            }
+        }
+
+        function datLaiBoDemLamMoi() {
+            if (boDemLamMoiNgam) clearInterval(boDemLamMoiNgam);
+            // Thiết lập gọi hàm đồng bộ ngầm sau mỗi 1 phút rảnh tay
+            boDemLamMoiNgam = setInterval(thucThiLamMoiNgam, THOI_GIAN_CHO_LAM_MOI);
+        }
+
+        // Theo dõi hành vi: Chỉ đếm thời gian khi người dùng KHÔNG thao tác (chuột/phím)
+        document.addEventListener('DOMContentLoaded', datLaiBoDemLamMoi);
+        document.addEventListener('mousemove', datLaiBoDemLamMoi);
+        document.addEventListener('keypress', datLaiBoDemLamMoi);
+        document.addEventListener('click', datLaiBoDemLamMoi);
+        document.addEventListener('scroll', datLaiBoDemLamMoi);
+    </script>
 </body>
 </html>
