@@ -183,7 +183,7 @@ async function khoiTaoGiaoDien() {
     let daVeLuoiRam = false;
 
     try {
-        // [ƯU TIÊN 1]: BẬT GIAO DIỆN TỨC THÌ TỪ CACHE
+        // [ƯU TIÊN 1]: BẬT GIAO DIỆN TỨC THÌ TỪ CACHE (Nếu có)
         let cacheCauHinh = localStorage.getItem(KEY_CH);
         let cacheTkb = localStorage.getItem(KEY_TKB);
         
@@ -205,7 +205,7 @@ async function khoiTaoGiaoDien() {
                     if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
                 }
 
-                // Vẽ lưới ngay để người dùng thấy kết quả (0 giây chờ)
+                // Vẽ lưới TKB ngay để người dùng thấy kết quả (0 giây chờ)
                 xuatMaTranBang(duLieuTkbHienTai);
                 daVeLuoiRam = true;
             } catch(e) { console.warn("Cache lỗi định dạng, tiến hành nạp mới hoàn toàn."); }
@@ -225,6 +225,7 @@ async function khoiTaoGiaoDien() {
             else hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
         }
         
+        // Vẽ lại lưới nếu có dữ liệu mới từ Server, hoặc nếu chưa vẽ từ Cache
         if (thongSoHocVu.TKB_TUAN && thongSoHocVu.TKB_TUAN.length > 0) {
             duLieuTkbHienTai = thongSoHocVu.TKB_TUAN;
             localStorage.setItem(KEY_TKB, JSON.stringify(duLieuTkbHienTai));
@@ -234,6 +235,7 @@ async function khoiTaoGiaoDien() {
             await taiDuLieuTKB(false); 
         }
 
+        // Cập nhật các thành phần phụ trợ
         kiemSoatGiaoDien(); 
         napDuLieuBoLocGiaoVien();
         let theTrangThai = document.getElementById('trangThaiHeThong');
@@ -248,7 +250,7 @@ async function khoiTaoGiaoDien() {
             }
         }
 
-        // [ƯU TIÊN 3]: TẢI NGẦM TẤT CẢ CÁC PHÂN HỆ KHÁC
+        // [ƯU TIÊN 3]: KÍCH HOẠT TẢI NGẦM CÁC PHÂN HỆ KHÁC
         kichHoatTaiNgamCacPhanHeKhac();
         
     } catch (loi) { 
@@ -262,8 +264,8 @@ async function khoiTaoGiaoDien() {
     }
 }
 
+// Hàm bổ trợ thực thi tải ngầm (Không block luồng chính)
 window.kichHoatTaiNgamCacPhanHeKhac = function() {
-    // Kích hoạt sau 1.5s để bảo toàn sự mượt mà của giao diện TKB
     setTimeout(() => {
         if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         if (typeof taiCayDanhMucThongKe === 'function' && (!window.cayDanhMucThongKe || Object.keys(window.cayDanhMucThongKe).length === 0)) taiCayDanhMucThongKe();
