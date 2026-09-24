@@ -954,9 +954,10 @@ async function luuDuLieu(event, loaiLuu) {
                 let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
-                dsTietLuoi.push({ 
-                    maTiet: `${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`, 
-                    namHoc: namHocChuan || thongTinNgay.nam, 
+                dsTietLuoi.push({
+                    
+                    maTiet: `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`, 
+                    namHoc: namHocDung, 
                     thang: thongTinNgay.thang, 
                     ngay: thongTinNgay.ngayDayDu, 
                     tuan: tuanDangXem, 
@@ -965,7 +966,7 @@ async function luuDuLieu(event, loaiLuu) {
                     tiet: tiet, 
                     maLop: lop, 
                     monHoc: valMon, 
-                    maGv: valGv 
+                    maGv: valGv
                 });
             }
         });
@@ -1967,13 +1968,31 @@ async function luuSuaCucBoTKB(event) {
             }
             danhSachThongBao.push(msg);
 
-            let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
-            dsThayDoi.push({ 
-                maTiet: maTietHienTai, namHoc: namHocChuan || thongTinNgay.nam, 
-                thang: thongTinNgay.thang, ngay: thongTinNgay.ngayDayDu, 
-                tuan: tuanDangXem, thu: thu, buoi: buoi, tiet: tiet, 
-                maLop: lop, monHoc: valMon, maGv: valGv 
-            });
+                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+                let namHocDung = namHocChuan || thongTinNgay.nam;
+                let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
+                
+                // [BỔ SUNG NĂM HỌC VÀO MÃ TIẾT ĐỂ ĐỐI CHIẾU MAP]:
+                let maTietHienTai = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
+                
+                let tietGoc = duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietHienTai);
+                let monGoc = tietGoc ? (tietGoc.monHoc || "").trim() : "";
+                let gvGoc = tietGoc ? (tietGoc.maGv || "").trim() : "";
+                
+                // ... các logic đẩy vào dsThayDoi giữ nguyên ...
+                dsThayDoi.push({ 
+                    maTiet: maTietHienTai, 
+                    namHoc: namHocDung, 
+                    thang: thongTinNgay.thang, 
+                    ngay: thongTinNgay.ngayDayDu, 
+                    tuan: tuanDangXem, 
+                    thu: thu, 
+                    buoi: buoi, 
+                    tiet: tiet, 
+                    maLop: lop, 
+                    monHoc: valMon, 
+                    maGv: valGv 
+                });
         }
     });
 
