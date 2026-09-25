@@ -62,7 +62,8 @@
     
 /* 1. Kích thước mặc định (Dành cho Tab 1 và 2) */
     .table-container { 
-        overflow: auto !important; 
+        overflow-y: auto !important; 
+        overflow-x: auto !important;
         height: calc(100vh - 300px); 
         background: rgba(255,255,255,0.95); 
         border: 1px solid #333; 
@@ -71,16 +72,15 @@
     /* 2. Kích thước cho Tab 3 (Trừ hao thanh menu phụ nav-pills) */
     #tab3 .table-container {
         height: calc(100vh - 310px) !important;
-        max-height: calc(100vh - 310px) !important;
     }
 
     /* 3. Khóa vùng Biểu đồ (Ép max-height tuyệt đối chống giãn nở của thẻ Canvas) */
-    #tab3 #tk_bieudo .table-container {
+    #tk_bieudo .table-container {
         height: calc(100vh - 400px) !important;
         max-height: calc(100vh - 400px) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        display: block !important;
+        display: block !important; /* Ngắt hiệu ứng giãn nở tự do của hệ thống Flexbox Bootstrap */
         border: none !important;
         background: transparent !important;
         padding-bottom: 30px !important;
