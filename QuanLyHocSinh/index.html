@@ -296,13 +296,15 @@ let hks_khoDuLieuTong_arr = [];
       }).catch(e => { Swal.fire("Sự cố hệ thống", e.message, "warning"); hks_hienThiManHinhTai_fn(false); });
   }
 
- $(document).ready(function() {
+$(document).ready(function() {
     hks_hienThiManHinhTai_fn(true);
+        // [Nâng cấp]: Gắn mã thời gian (timeStamp) để triệt tiêu cache khi $.get()
+        let hks_boChongNhoDem_num = new Date().getTime();
         Promise.all([
-        $.get("Tab1.html"),
-        $.get("Tab2.html"),
-        $.get("Tab3.html"),
-        $.get("Tab5.html")
+        $.get("Tab1.html?v=" + hks_boChongNhoDem_num),
+        $.get("Tab2.html?v=" + hks_boChongNhoDem_num),
+        $.get("Tab3.html?v=" + hks_boChongNhoDem_num),
+        $.get("Tab5.html?v=" + hks_boChongNhoDem_num)
     ]).then(function(hks_mangKetQua_arr) {
         
         // Gắn cấu trúc DOM đồng loạt sau khi tải xong
@@ -505,7 +507,8 @@ function hks_khoiPhucTrangThaiGoc_fn(hks_chiSoThe_num) {
           </button>
         </li>
       `);
-      $.get("Tab4.html", function(hks_giaoDienTab4_str) {
+      // [Nâng cấp]: Gắn mã thời gian triệt tiêu cache
+      $.get("Tab4.html?v=" + new Date().getTime(), function(hks_giaoDienTab4_str) {
         $("#khung-chua-tab").append(hks_giaoDienTab4_str);
       });
     }
