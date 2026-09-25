@@ -60,27 +60,27 @@
     .nav-pills .nav-link.active { background-color: #b71c1c; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .nav-pills .nav-link { color: #333; background: #eceff1; font-weight: 700; border: 1px solid #999; margin-right: 5px; }
     
-  /* 1. Kích thước mặc định (Dành cho Tab 1 và 2) */
+ /* 1. Kích thước mặc định (Dành cho Tab 1 và 2) */
     .table-container { 
-        overflow-y: scroll !important; /* Ép luôn hiện rãnh thanh cuộn để chống giật giao diện */
-        overflow-x: auto;
+        overflow-y: auto !important; 
+        overflow-x: auto !important;
         height: calc(100vh - 300px); 
         background: rgba(255,255,255,0.95); 
         border: 1px solid #333; 
     }
 
-    /* 2. Kích thước cho 3 bảng dữ liệu Tab 3 (Trừ hao Menu phụ nav-pills) */
-    #tab3 #tk_soluong_th .table-container,
-    #tab3 #tk_soluong_thcs .table-container,
-    #tab3 #tk_chatluong .table-container {
-        height: calc(100vh - 360px) !important; 
+    /* 2. Kích thước cho Tab 3 (Có thêm hàng menu phụ nên bù trừ 320px) */
+    div#tab3 .table-container {
+        height: calc(100vh - 320px) !important;
     }
 
-    /* 3. Khóa không gian tuyệt đối cho phân hệ Biểu đồ (Gánh toàn bộ Menu phụ + Bộ lọc) */
-    #tab3 #tk_bieudo .table-container {
-        height: calc(100vh - 450px) !important;
-        max-height: calc(100vh - 450px) !important;
-        border: none !important; /* Ẩn viền đen để giao diện thẻ đồ họa thoáng hơn */
+    /* 3. KHÓA TỬ HUYỆT CHO TAB BIỂU ĐỒ (Gánh cả Menu phụ + Bộ lọc năm học) */
+    div#tab3 div#tk_bieudo .table-container {
+        height: calc(100vh - 400px) !important;
+        max-height: calc(100vh - 400px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        border: none !important; /* Bỏ viền đen để giao diện thanh thoát hơn */
         background: transparent !important;
         padding-bottom: 20px !important;
     }
@@ -278,7 +278,11 @@ let hks_khoDuLieuTong_arr = [];
 
           hks_doDuLieuVaoHopChon_fn();
           hks_thietLapBoLoc_fn();
-          hks_kiemTraQuyenVaNapTabBon_fn(); 
+        
+         $.get("Tab4.html?v=" + new Date().getTime(), function(hks_giaoDienTab4_str) {
+        $("#khung-chua-tab").append(hks_giaoDienTab4_str);
+      });
+    }
           
           if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
 
@@ -298,13 +302,13 @@ let hks_khoDuLieuTong_arr = [];
 
 $(document).ready(function() {
     hks_hienThiManHinhTai_fn(true);
-        // [Nâng cấp]: Gắn mã thời gian (timeStamp) để triệt tiêu cache khi $.get()
-        let hks_boChongNhoDem_num = new Date().getTime();
+        // [NÂNG CẤP TỐI QUAN TRỌNG]: Chống Cache vĩnh viễn bằng TimeStamp
+        let hks_chongCache = new Date().getTime();
         Promise.all([
-        $.get("Tab1.html?v=" + hks_boChongNhoDem_num),
-        $.get("Tab2.html?v=" + hks_boChongNhoDem_num),
-        $.get("Tab3.html?v=" + hks_boChongNhoDem_num),
-        $.get("Tab5.html?v=" + hks_boChongNhoDem_num)
+        $.get("Tab1.html?v=" + hks_chongCache),
+        $.get("Tab2.html?v=" + hks_chongCache),
+        $.get("Tab3.html?v=" + hks_chongCache),
+        $.get("Tab5.html?v=" + hks_chongCache)
     ]).then(function(hks_mangKetQua_arr) {
         
         // Gắn cấu trúc DOM đồng loạt sau khi tải xong
