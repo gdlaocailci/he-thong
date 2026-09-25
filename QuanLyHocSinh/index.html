@@ -73,15 +73,13 @@
         height: calc(100vh - 330px) !important;
     }
 
-    /* 3. KHÓA TỬ HUYỆT VÙNG BIỂU ĐỒ (Chống đâm xuyên Taskbar và ép xuất hiện thanh cuộn) */
-    #tab3 #tk_bieudo .table-container {
-        height: calc(100vh - 420px) !important;
-        max-height: calc(100vh - 420px) !important;
-        overflow-y: auto !important;
+    /* 3. Kích thước riêng cho Tab Biểu đồ (Có tới 3 hàng công cụ phía trên nên trừ tối đa để không lẹm thanh trượt) */
+    #tk_bieudo .table-container {
+        height: calc(100vh - 350px) !important;
+        max-height: calc(100vh - 350px) !important; /* Chốt chặn bắt buộc để ép Canvas không được phình to */
+        overflow-y: auto !important; /* Ép hiển thị thanh trượt dọc giống hệt Tab 3.3 */
         overflow-x: hidden !important;
-        border: none !important; 
-        background: transparent !important;
-        padding-bottom: 30px !important;
+        display: block !important; /* Ngắt hiệu ứng giãn nở tự do của hệ thống Flexbox Bootstrap */
     }
     table { margin-bottom: 0 !important; border-collapse: collapse; border-spacing: 0; }
     table thead th { background-color: #e0e0e0; color: #000000; text-shadow: none; text-align: center; vertical-align: middle; white-space: nowrap; border: 1px solid #999; position: sticky; top: 0; z-index: 10; font-weight: 700; font-size: 14px; padding: 6px 4px !important; }
