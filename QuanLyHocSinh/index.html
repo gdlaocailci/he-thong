@@ -278,11 +278,8 @@ let hks_khoDuLieuTong_arr = [];
 
           hks_doDuLieuVaoHopChon_fn();
           hks_thietLapBoLoc_fn();
-        
-         $.get("Tab4.html?v=" + new Date().getTime(), function(hks_giaoDienTab4_str) {
-        $("#khung-chua-tab").append(hks_giaoDienTab4_str);
-      });
-    }
+        hks_kiemTraQuyenVaNapTabBon_fn();
+     
           
           if (typeof hks_kiemTraQuyenXuatNhapExcel_fn === 'function') { hks_kiemTraQuyenXuatNhapExcel_fn(); }
 
