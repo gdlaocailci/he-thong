@@ -1810,3 +1810,88 @@ document.addEventListener('scroll', function(event) {
         dongKhungTruotChuKy();
     }
 }, true);
+// =========================================================================
+// THUẬT TOÁN TÍNH TỔNG HỢP THỜI GIAN THỰC (TỰ ĐỘNG NHẢY SỐ KHI GÕ)
+// =========================================================================
+window.capNhatThongKeSoDauBai = function() {
+    let tbody = document.querySelector('#vungHienThiSoDauBai tbody');
+    if (!tbody) return;
+    let cacDong = tbody.querySelectorAll('tr.dong-sdb');
+
+    let buoiDay = new Set();
+    let buoiThay = new Set();
+    let tietThay = 0;
+    let tongTietDay = 0;
+    let hsVangCoPhep = 0;
+    let hsVangKhongPhep = 0;
+    let tot = 0, kha = 0, tb = 0, yeu = 0;
+
+    cacDong.forEach(dong => {
+        let theMon = dong.querySelector('td[data-loai="mon"]');
+        let monHoc = theMon ? theMon.innerText.trim() : '';
+        if (monHoc === '') return;
+
+        let thu = dong.getAttribute('data-thu');
+        let buoi = dong.getAttribute('data-buoi');
+        let gvGoc = dong.getAttribute('data-gvgoc') ? dong.getAttribute('data-gvgoc').toLowerCase().normalize('NFC') : '';
+
+        // Trích xuất Chữ ký, Xếp loại, Vắng mặt
+        let theChuKy = dong.querySelector('td[data-loai="chuKy"]');
+        let chuKy = theChuKy ? (theChuKy.querySelector('input') ? theChuKy.querySelector('input').value.trim() : (theChuKy.querySelector('span') ? theChuKy.querySelector('span').innerText.trim() : '')) : '';
+
+        let theXepLoai = dong.querySelector('td[data-loai="xepLoai"]');
+        let xepLoai = theXepLoai ? (theXepLoai.querySelector('select') ? theXepLoai.querySelector('select').value.trim() : (theXepLoai.querySelector('span') ? theXepLoai.querySelector('span').innerText.trim() : '')) : '';
+
+        let theVang = dong.querySelector('td[data-loai="vang"]');
+        let vang = theVang ? (theVang.querySelector('input') ? theVang.querySelector('input').value.trim() : (theVang.querySelector('span') ? theVang.querySelector('span').innerText.trim() : '')) : '';
+
+        // Bóc tách vắng P (Có phép) và K (Không phép) thông minh
+        let matchP = vang.match(/(\d+)\s*[Pp]/g);
+        if (matchP) { matchP.forEach(m => { let num = m.match(/\d+/); if (num) hsVangCoPhep += parseInt(num[0]); }); } 
+        else if (vang.toUpperCase() === 'P') hsVangCoPhep += 1;
+
+        let matchK = vang.match(/(\d+)\s*[Kk]/g);
+        if (matchK) { matchK.forEach(m => { let num = m.match(/\d+/); if (num) hsVangKhongPhep += parseInt(num[0]); }); } 
+        else if (vang.toUpperCase() === 'K') hsVangKhongPhep += 1;
+
+        // Tính toán các chỉ số khi có giáo viên ký
+        if (chuKy !== '') {
+            tongTietDay++;
+            buoiDay.add(`${thu}_${buoi}`);
+
+            if (xepLoai === 'Tốt') tot++;
+            else if (xepLoai === 'Khá') kha++;
+            else if (xepLoai === 'TB') tb++;
+            else if (xepLoai === 'Yếu') yeu++;
+
+            // Kiểm tra dạy thay (So sánh với giáo viên trong TKB Gốc)
+            let isThay = true;
+            let chuKyLC = chuKy.toLowerCase().normalize('NFC');
+            if (gvGoc) {
+                let tapHopGvGoc = gvGoc.split(/[,;&-]/).map(g => g.trim());
+                if (tapHopGvGoc.includes(chuKyLC) || tapHopGvGoc.some(g => chuKyLC.includes(g) && g.length > 2)) isThay = false;
+            }
+            if (isThay) { tietThay++; buoiThay.add(`${thu}_${buoi}`); }
+        }
+    });
+
+    // Tính toán Nghỉ dạy (1 Tuần chốt 9 buổi, số tiết chuẩn từ Khung CT)
+    let buoiNghi = Math.max(0, 9 - buoiDay.size);
+    let tongTietChuan = window.tongTietChuanKhoiHienTai || 0;
+    let tietNghi = Math.max(0, tongTietChuan - tongTietDay);
+
+    // Bơm dữ liệu ngược lên DOM Giao diện tức thì
+    const setVal = (id, val) => { let el = document.getElementById(id); if (el) el.innerText = val; };
+    setVal('sdb_sum_buoiNghi', buoiNghi);
+    setVal('sdb_sum_tietNghi', tietNghi);
+    setVal('sdb_sum_buoiThay', buoiThay.size);
+    setVal('sdb_sum_tietThay', tietThay);
+    setVal('sdb_sum_tongVang', hsVangCoPhep + hsVangKhongPhep);
+    setVal('sdb_sum_vangP', hsVangCoPhep);
+    setVal('sdb_sum_vangK', hsVangKhongPhep);
+    setVal('sdb_sum_tongDay', tongTietDay);
+    setVal('sdb_sum_tot', tot);
+    setVal('sdb_sum_kha', kha);
+    setVal('sdb_sum_tb', tb);
+    setVal('sdb_sum_yeu', yeu);
+};
