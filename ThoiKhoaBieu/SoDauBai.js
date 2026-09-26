@@ -929,8 +929,27 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
     htmlBang += `</tbody></table></div>`;
 
-    let isBGH = quyenQuanTri;
-    let isGVCN = (madinhdanhGV.trim().toLowerCase().normalize('NFC') === gvcnCuaLop.toLowerCase().normalize('NFC')) || isBGH;
+    // Kiểm tra quyền từ Ma trận phân quyền (quyenChiTiet.nut)
+    let hasNutGVCN = (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnGVCNChotSo'));
+    let hasNutBGHDuyet = (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnBGHDuyetSo'));
+    let hasNutBGHMoKhoa = (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnBGHMoKhoa'));
+
+    let isBGH = quyenQuanTri || hasNutBGHDuyet || hasNutBGHMoKhoa;
+    let isGVCN = (madinhdanhGV.trim().toLowerCase().normalize('NFC') === gvcnCuaLop.toLowerCase().normalize('NFC')) || isBGH || hasNutGVCN;
+
+    let choPhepGVCN = laGVCN || quyenQuanTri || hasNutGVCN;
+    let choPhepBGHDuyet = quyenQuanTri || hasNutBGHDuyet;
+    let choPhepBGHMoKhoa = quyenQuanTri || hasNutBGHMoKhoa;
+
+    let htmlNutBGH = '';
+    if (choPhepGVCN || choPhepBGHDuyet || choPhepBGHMoKhoa) {
+        htmlNutBGH = `
+        <div class="flex justify-end gap-2 mb-3 bg-slate-50 p-2 border border-slate-300 rounded shadow-sm">
+            ${choPhepGVCN ? `<button onclick="thucThiLenhKhoaSo(2, 'Chốt sổ tuần')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> GVCN Chốt Sổ</button>` : ''}
+            ${choPhepBGHDuyet ? `<button onclick="thucThiLenhKhoaSo(3, 'BGH Duyệt sổ')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> BGH Phê Duyệt</button>` : ''}
+            ${choPhepBGHMoKhoa ? `<button onclick="thucThiLenhKhoaSo(0, 'BGH Mở khóa')" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg> Mở Khóa Sửa</button>` : ''}
+        </div>`;
+    }
 
     let htmlTongHop = `
         <div class="mt-6 w-full xl:w-1/4 min-w-[320px] flex-none border border-gray-600 bg-white shadow-sm flex flex-col rounded-sm text-sm">
