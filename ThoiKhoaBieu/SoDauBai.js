@@ -184,6 +184,9 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
     return `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 }
 
+// =========================================================================
+// BẢN NÂNG CẤP CHỐNG LỖI TIÊU ĐỀ & TỰ ĐỘNG KHÓA: KHỞI TẠO DỮ LIỆU SDB
+// =========================================================================
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
     coToanQuyenSDB = duLieuSever.TOAN_QUYEN || false;
@@ -194,7 +197,6 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         theChotQuyen = document.createElement('div');
         theChotQuyen.id = 'theChotQuyenSDB';
         theChotQuyen.style.display = 'none';
-        
         let vungChinh = document.getElementById('khungSoDauBai');
         if (vungChinh) vungChinh.appendChild(theChotQuyen);
         else document.body.appendChild(theChotQuyen);
@@ -205,7 +207,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     theChotQuyen.setAttribute('data-matranquyen', JSON.stringify(tuDienQuyenPhanCong));
 
     let mapDuiLieuHopNhat = {};
-    window.duLieuTongHopSDB = {}; // Biến toàn cục lưu phần Tổng hợp
+    window.duLieuTongHopSDB = {}; 
 
     const chuanHoaThu = (thuStr) => {
         if (!thuStr) return '';
@@ -213,41 +215,59 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         return raw.charAt(0).toUpperCase() + raw.slice(1);
     };
 
+    // [THUẬT TOÁN MỚI]: Bóc tách dữ liệu siêu chống lỗi (Chuẩn hóa Unicode + Includes)
+    const getValIgnoreCase = (obj, keyName) => {
+        if (!obj) return '';
+        let target = keyName.toLowerCase().normalize('NFC').replace(/\s+/g, '');
+        let foundKey = Object.keys(obj).find(k => k.toLowerCase().normalize('NFC').replace(/\s+/g, '') === target);
+        if (!foundKey) {
+            foundKey = Object.keys(obj).find(k => k.toLowerCase().normalize('NFC').replace(/\s+/g, '').includes(target));
+        }
+        return foundKey ? obj[foundKey] : '';
+    };
+
     if (duLieuSever.SO_DAU_BAI) {
         duLieuSever.SO_DAU_BAI.forEach(dong => {
-            let tuan = String(dong['Tuần']).replace(/\D/g, '');
-            let lop = String(dong['Mã Lớp']).trim().toUpperCase();
-            let thuChuan = chuanHoaThu(dong['Thứ']); 
+            let tuan = String(getValIgnoreCase(dong, 'Tuần')).replace(/\D/g, '');
+            let lop = String(getValIgnoreCase(dong, 'Mã Lớp')).trim().toUpperCase();
+            let thuChuan = chuanHoaThu(getValIgnoreCase(dong, 'Thứ')); 
             
-            // Tách riêng dòng dữ liệu thủ công của BGH/GVCN
             if (thuChuan.toUpperCase() === 'TONGHOP') {
                 window.duLieuTongHopSDB[`${tuan}_${lop}`] = {
-                    chuKyGVCN: dong['Tên Bài Dạy'] || '',
-                    nhanXetBGH: dong['Nhận Xét'] || '',
-                    chuKyBGH: dong['Chữ Ký GV'] || ''
+                    chuKyGVCN: getValIgnoreCase(dong, 'Tên Bài Dạy') || getValIgnoreCase(dong, 'Tên bài'),
+                    nhanXetBGH: getValIgnoreCase(dong, 'Nhận Xét'),
+                    chuKyBGH: getValIgnoreCase(dong, 'Chữ Ký GV') || getValIgnoreCase(dong, 'Chữ ký')
                 };
-                return; // Bỏ qua, không đưa dòng này vào lưới Sổ đầu bài
+                return; 
             }
 
-            let buoi = String(dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
-            let tiet = String(dong['Tiết']).trim();
+            let buoiRaw = String(getValIgnoreCase(dong, 'Buổi')).trim().toLowerCase();
+            let buoi = buoiRaw === 'sáng' ? 'sáng' : 'chiều';
+            let tiet = String(getValIgnoreCase(dong, 'Tiết')).trim();
             let khoa = `${tuan}_${lop}_${thuChuan}_${buoi}_${tiet}`;
+            
+            // Xử lý cơ chế Tự động khóa (Auto-lock)
+            let chuKy = getValIgnoreCase(dong, 'Chữ Ký GV') || getValIgnoreCase(dong, 'Chữ ký');
+            let trangThaiKhoa = parseInt(getValIgnoreCase(dong, 'Trạng Thái Khóa')) || 0;
+            if (trangThaiKhoa === 0 && chuKy !== '') {
+                trangThaiKhoa = 1; // Tự động khóa cứng dòng nếu đã có chữ ký nhưng sheet bị thiếu cột
+            }
             
             mapDuiLieuHopNhat[khoa] = {
                 'Tuần': tuan, 'Mã Lớp': lop, 'Thứ': thuChuan, 'Buổi': buoi, 'Tiết': tiet,
-                'Môn Học': dong['Môn Học'] || dong['Môn học'] || dong['Môn'] || '',
-                'Mã GV': dong['Giáo viên'] || dong['Mã GV'] || dong['Giáo Viên'] || dong['GV'] || '',
-                'Ngày': dong['Ngày'] || '',
-                'TietPPCT_Thuc': dong['Tiết PPCT'] || '',
-                'TenBai_Thuc': dong['Tên Bài Dạy'] || dong['Tên bài dạy'] || dong['Tên Bài'] || dong['Tên bài'] || '',
-                'Có Mặt': dong['Có Mặt'] || '',
-                'Vắng': dong['Vắng'] || '',
-                'NhanXet_Thuc': dong['Nhận Xét'] || dong['Nhận xét'] || '',
-                'XepLoai_Thuc': dong['Xếp Loại'] || dong['Xếp loại'] || '',
-                'ChuKy_Thuc': dong['Chữ Ký GV'] || dong['Chữ ký GV'] || dong['Chữ ký'] || '',
-                'Trạng Thái Khóa': dong['Trạng Thái Khóa'] || 0,
-                'Lịch Sử Ký': dong['Lịch Sử Ký'] || '',
-                'Mã Lưu Trữ': dong['Mã Lưu Trữ'] || '',
+                'Môn Học': getValIgnoreCase(dong, 'Môn Học') || getValIgnoreCase(dong, 'Môn'),
+                'Mã GV': getValIgnoreCase(dong, 'Mã GV') || getValIgnoreCase(dong, 'Giáo viên'),
+                'Ngày': getValIgnoreCase(dong, 'Ngày'),
+                'TietPPCT_Thuc': getValIgnoreCase(dong, 'Tiết PPCT'),
+                'TenBai_Thuc': getValIgnoreCase(dong, 'Tên Bài Dạy') || getValIgnoreCase(dong, 'Tên bài'),
+                'Có Mặt': getValIgnoreCase(dong, 'Có Mặt') || getValIgnoreCase(dong, 'Có mặt'),
+                'Vắng': getValIgnoreCase(dong, 'Vắng') || getValIgnoreCase(dong, 'Vắng mặt'),
+                'NhanXet_Thuc': getValIgnoreCase(dong, 'Nhận Xét') || getValIgnoreCase(dong, 'Nhận xét giờ học'),
+                'XepLoai_Thuc': getValIgnoreCase(dong, 'Xếp Loại'),
+                'ChuKy_Thuc': chuKy,
+                'Trạng Thái Khóa': trangThaiKhoa,
+                'Lịch Sử Ký': getValIgnoreCase(dong, 'Lịch Sử Ký'),
+                'Mã Lưu Trữ': getValIgnoreCase(dong, 'Mã Lưu Trữ'),
                 'DaLuu': true 
             };
         });
@@ -295,6 +315,9 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         } else {
             if (!mapDuiLieuHopNhat[khoa]['Mã GV'] || mapDuiLieuHopNhat[khoa]['Mã GV'].trim() === '') {
                 mapDuiLieuHopNhat[khoa]['Mã GV'] = dongTkb['Mã GV'] || dongTkb['Giáo viên'] || '';
+            }
+            if (!mapDuiLieuHopNhat[khoa]['Môn Học'] || mapDuiLieuHopNhat[khoa]['Môn Học'].trim() === '') {
+                mapDuiLieuHopNhat[khoa]['Môn Học'] = dongTkb['Môn Học'] || '';
             }
         }
     });
