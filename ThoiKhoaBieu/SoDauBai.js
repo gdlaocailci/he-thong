@@ -1,5 +1,5 @@
 // =========================================================================
-// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (ĐÃ VÁ LỖI)
+// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (ĐÃ VÁ LỖI TÊ LIỆT)
 // Vị trí thay thế: Toàn bộ từ dòng 1 đến trước hàm tinhNgayTuInputDate
 // =========================================================================
 let daTaiDuLieuSoDauBai = false;
@@ -14,7 +14,7 @@ let danhSachGiaoVienToanCuc = [];
 let tuanTruocDo_SDB = '';
 let lopTruocDo_SDB = '';
 let coThayDoiChuaLuu_SDB = false;
-let vongLapKiemTraDangNhap = null;
+let vongLapKiemTraSDB = null; // Quản lý vòng lặp chống đè
 
 window.lamSachBoNhoSoDauBai = function() {
     daTaiDuLieuSoDauBai = false;
@@ -75,8 +75,8 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                         <button onclick="document.getElementById('menuTKB').click()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold rounded shadow-sm transition-colors border border-gray-400">
                             Quay lại TKB
                         </button>
-                        <!-- Ủy quyền cho nút gốc click và khởi động giám sát trạng thái đăng nhập -->
-                        <button onclick="document.getElementById('nutDangNhapG').click(); kiemTraTrangThaiDangNhapSDB();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
+                        <!-- TRẢ LẠI LUỒNG GỐC: KHÔNG QUA HÀM TRUNG GIAN VÀ KHÔNG SỬA DOM -->
+                        <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
                             Đăng nhập ngay
                         </button>
@@ -101,39 +101,29 @@ function danhDauDongThayDoi(tr) {
     }
 }
 
+// [NGUYÊN NHÂN CỐT LÕI ĐƯỢC VÁ LỖI]: Loại bỏ hoàn toàn sự can thiệp DOM bên trong vòng lặp chờ
+// Đảm bảo trình duyệt không cắt đứt liên kết giữa Mouse Click và Google SDK Popup
 function kiemTraTrangThaiDangNhapSDB() {
-    let soLanKiemTra = 0;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    let soLanKiemTra = 0;
 
-    // Reset lại nút trạng thái nếu tìm thấy
-    if (vungHienThi) {
-        let btnDangNhap = vungHienThi.querySelector('.bg-blue-600');
-        if (btnDangNhap) {
-            btnDangNhap.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="ml-2">Đang xác thực...</span>`;
-        }
-    }
+    if (vongLapKiemTraSDB) clearInterval(vongLapKiemTraSDB);
 
-    if(vongLapKiemTraDangNhap) clearInterval(vongLapKiemTraDangNhap);
-
-    vongLapKiemTraDangNhap = setInterval(() => {
+    vongLapKiemTraSDB = setInterval(() => {
         let tkDangNhap = window.emailGiaoVienToanCuc || window.dinhDanhHeThongToanCuc || '';
         let chuoiDinhDanh = String(tkDangNhap).trim();
         
         if (chuoiDinhDanh !== '' && chuoiDinhDanh !== 'undefined' && chuoiDinhDanh !== 'null') {
-            clearInterval(vongLapKiemTraDangNhap);
-            vongLapKiemTraDangNhap = null;
+            clearInterval(vongLapKiemTraSDB);
+            vongLapKiemTraSDB = null;
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
             return;
         }
         
         soLanKiemTra++;
-        // Sau khoảng 60 giây nếu chưa đăng nhập, reset lại nút
         if (soLanKiemTra > 120) {
-            clearInterval(vongLapKiemTraDangNhap);
-            vongLapKiemTraDangNhap = null;
-            if (vungHienThi) {
-                taiDuLieuSoDauBaiTuMayChu(); 
-            }
+            clearInterval(vongLapKiemTraSDB);
+            vongLapKiemTraSDB = null;
         }
     }, 500);
 }
