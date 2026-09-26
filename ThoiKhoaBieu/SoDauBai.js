@@ -1,5 +1,6 @@
 // =========================================================================
-// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI
+// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (ĐÃ VÁ LỖI)
+// Vị trí: Thay thế toàn bộ nội dung từ đầu file cho đến trước hàm tinhNgayTuInputDate
 // =========================================================================
 let daTaiDuLieuSoDauBai = false;
 let duLieuTKBGopDaMap = [];
@@ -27,13 +28,12 @@ window.lamSachBoNhoSoDauBai = function() {
     lopTruocDo_SDB = '';
     coThayDoiChuaLuu_SDB = false;
     
-    // [NÂNG CẤP BẢO MẬT]: Đổi tên biến tránh vi phạm chính sách
-    let dinhDanhHeThong = typeof window.dinhDanhHeThongToanCuc !== 'undefined' ? window.dinhDanhHeThongToanCuc : '';
-    try { sessionStorage.removeItem(`SDB_CACHE_${dinhDanhHeThong}`); } catch(e) {}
+    // [VÁ LỖI]: Nhận diện đồng thời cả 2 tên biến để tránh lỗi rỗng
+    let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+    try { sessionStorage.removeItem(`SDB_CACHE_${tkDangNhap}`); } catch(e) {}
     
     maGvDangNhapHeThong = '';
     
-    // Hủy thẻ quyền cũ để không bị kế thừa sai khi đổi tài khoản
     let theChotQuyenCu = document.getElementById('theChotQuyenSDB');
     if (theChotQuyenCu) theChotQuyenCu.remove();
     
@@ -55,12 +55,11 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
-    // [VÁ LỖI TREO UI]: Quét sạch các biến thể chuỗi ảo của undefined/null sinh ra từ Cache
-    let dinhDanhHeThong = typeof window.dinhDanhHeThongToanCuc !== 'undefined' ? window.dinhDanhHeThongToanCuc : '';
-    const chuoiDinhDanh = String(dinhDanhHeThong).trim();
+    // [VÁ LỖI]: Bắt chuẩn biến lưu trữ phiên đăng nhập từ app.js
+    let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+    const chuoiDinhDanh = String(tkDangNhap).trim();
     const chuaDangNhap = (!chuoiDinhDanh || chuoiDinhDanh === '' || chuoiDinhDanh === 'undefined' || chuoiDinhDanh === 'null');
 
-    // Nếu chưa đăng nhập, tự động khóa thanh công cụ phía trên
     let cssKhoaDieuKhien = chuaDangNhap ? `<style>#chonTuanSo, #chonLopSo, #chonNgaySDB, #btnDongBoTenBai, #btnLuuSoDauBai { pointer-events: none; opacity: 0.5; cursor: not-allowed; }</style>` : ``;
 
     if (chuaDangNhap) {
@@ -77,7 +76,7 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                         <button onclick="document.getElementById('menuTKB').click()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold rounded shadow-sm transition-colors border border-gray-400">
                             Quay lại TKB
                         </button>
-                        <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
+                        <button onclick="thucThiGoiDangNhapAnToan()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
                             Đăng nhập ngay
                         </button>
@@ -90,6 +89,22 @@ async function taiDuLieuSoDauBaiTuMayChu() {
 
     thucThiTaiDuLieuVaVeLuoi(vungHienThi);
 }
+
+// Hàm bổ trợ gọi đăng nhập an toàn (Không phụ thuộc vào phần tử Sidebar)
+window.thucThiGoiDangNhapAnToan = function() {
+    const vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    if (vungHienThi) {
+        let btn = vungHienThi.querySelector('.bg-blue-600');
+        if (btn) btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div> Đang kết nối Google...`;
+    }
+    
+    if (typeof khoiDongDangNhap === 'function') {
+        khoiDongDangNhap();
+        kiemTraTrangThaiDangNhapSDB();
+    } else {
+        alert("Thư viện xác thực chưa sẵn sàng. Vui lòng tải lại trang (F5)!");
+    }
+};
 
 function danhDauDongThayDoi(tr) {
     if (!tr) return;
@@ -105,15 +120,10 @@ function danhDauDongThayDoi(tr) {
 function kiemTraTrangThaiDangNhapSDB() {
     let soLanKiemTra = 0;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
-    
-    if (vungHienThi) {
-         let btnDangNhap = vungHienThi.querySelector('.bg-blue-600');
-         if(btnDangNhap) btnDangNhap.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xác thực...`;
-    }
 
     let vongLap = setInterval(() => {
-        let dinhDanhHeThong = typeof window.dinhDanhHeThongToanCuc !== 'undefined' ? window.dinhDanhHeThongToanCuc : '';
-        let chuoiDinhDanh = String(dinhDanhHeThong).trim();
+        let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+        let chuoiDinhDanh = String(tkDangNhap).trim();
         
         if (chuoiDinhDanh && chuoiDinhDanh !== '' && chuoiDinhDanh !== 'undefined' && chuoiDinhDanh !== 'null') {
             clearInterval(vongLap);
@@ -127,9 +137,6 @@ function kiemTraTrangThaiDangNhapSDB() {
     }, 500);
 }
 
-// =========================================================================
-// HÀM TẢI DỮ LIỆU TỐC ĐỘ CAO (ASYNCHRONOUS BACKGROUND THREAD)
-// =========================================================================
 async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     if (vungHienThi) {
         vungHienThi.innerHTML = `<div class="text-center py-12 text-slate-500 font-bold">
@@ -140,10 +147,10 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     }
 
     try {
-        let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+        let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
         
         const phanHoi = await fetchVoiCoCheThuLai(
-            `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
+            `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(tkDangNhap)}`,
             {},
             3,
             60000
