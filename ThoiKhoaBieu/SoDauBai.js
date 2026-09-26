@@ -185,7 +185,8 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 }
 
 // =========================================================================
-// BẢN NÂNG CẤP CHỐNG LỖI TIÊU ĐỀ & TỰ ĐỘNG KHÓA: KHỞI TẠO DỮ LIỆU SDB
+// BẢN HOÀN THIỆN: KHỞI TẠO DỮ LIỆU SỔ ĐẦU BÀI (BAO GỒM DICTIONARY GV)
+// Thay thế toàn bộ hàm khoiTaoDuLieuSoDauBai trong file SoDauBai.js
 // =========================================================================
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
@@ -215,7 +216,6 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         return raw.charAt(0).toUpperCase() + raw.slice(1);
     };
 
-    // [THUẬT TOÁN MỚI]: Bóc tách dữ liệu siêu chống lỗi (Chuẩn hóa Unicode + Includes)
     const getValIgnoreCase = (obj, keyName) => {
         if (!obj) return '';
         let target = keyName.toLowerCase().normalize('NFC').replace(/\s+/g, '');
@@ -246,11 +246,10 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
             let tiet = String(getValIgnoreCase(dong, 'Tiết')).trim();
             let khoa = `${tuan}_${lop}_${thuChuan}_${buoi}_${tiet}`;
             
-            // Xử lý cơ chế Tự động khóa (Auto-lock)
             let chuKy = getValIgnoreCase(dong, 'Chữ Ký GV') || getValIgnoreCase(dong, 'Chữ ký');
             let trangThaiKhoa = parseInt(getValIgnoreCase(dong, 'Trạng Thái Khóa')) || 0;
             if (trangThaiKhoa === 0 && chuKy !== '') {
-                trangThaiKhoa = 1; // Tự động khóa cứng dòng nếu đã có chữ ký nhưng sheet bị thiếu cột
+                trangThaiKhoa = 1; 
             }
             
             mapDuiLieuHopNhat[khoa] = {
@@ -266,7 +265,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
                 'XepLoai_Thuc': getValIgnoreCase(dong, 'Xếp Loại'),
                 'ChuKy_Thuc': chuKy,
                 'Trạng Thái Khóa': trangThaiKhoa,
-                'Lịch Sử Ký': getValIgnoreCase(dong, 'Lịch Sử Ký'),
+                'Lịch Sử Ký': getValIgnoreCase(dong, 'Lịch Sử Ký') || getValIgnoreCase(dong, 'Lịch sử') || getValIgnoreCase(dong, 'Lịch sử giờ học'),
                 'Mã Lưu Trữ': getValIgnoreCase(dong, 'Mã Lưu Trữ'),
                 'DaLuu': true 
             };
@@ -375,18 +374,18 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         });
     }
 
+    window.tuDienGiaoVienSDB = {}; 
     if (duLieuSever.DANH_SACH_GIAO_VIEN && duLieuSever.DANH_SACH_GIAO_VIEN.length > 0) {
         danhSachGiaoVienToanCuc = duLieuSever.DANH_SACH_GIAO_VIEN;
-    } else {
-        let tapHopGV = new Set();
-        tkbGop.forEach(d => { 
-            if(d['Mã GV'] && d['Mã GV'].trim() !== '') {
-                d['Mã GV'].split(/[,;&-]/).forEach(g => {
-                    if(g.trim().length > 2) tapHopGV.add(g.trim());
-                });
+        duLieuSever.DANH_SACH_GIAO_VIEN.forEach(gv => {
+            if (typeof gv === 'object') {
+                window.tuDienGiaoVienSDB[gv.id.toLowerCase().normalize('NFC')] = gv.ten;
+            } else {
+                window.tuDienGiaoVienSDB[String(gv).toLowerCase().normalize('NFC')] = gv;
             }
         });
-        danhSachGiaoVienToanCuc = Array.from(tapHopGV).sort();
+    } else {
+        danhSachGiaoVienToanCuc = [];
     }
 
     duLieuTKBGopDaMap = tkbGop; 
@@ -883,7 +882,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                         ['Tốt', 'Khá', 'TB', 'Yếu'].forEach(xl => selectHTML += `<option value="${xl}" ${xepLoai===xl?'selected':''}>${xl}</option>`);
                         theXepLoai = selectHTML + `</select>`;
                         
-                        let onfocusChuKy = `moKhungTruotChuKy(event, this)`;
+                        let onfocusChuKy = `moKhungTruotChuKy(event, this, '${gvTkb}')`;
                         theChuKy = `<div class="relative flex items-center justify-center w-full h-full">
                                         <input type="text" autocomplete="off" ${!quyenNhapThuCong?'disabled':''} data-thuocve="${quyenNhapThuCong}" 
                                             class="w-full text-center outline-none transition-colors rounded ${cssNenKhoa} font-semibold text-blue-700 cursor-pointer pr-5" 
@@ -1703,14 +1702,13 @@ document.addEventListener('mousedown', function(event) {
 });
 
 // =========================================================================
-// KHỐI MỚI: THUẬT TOÁN CỬA SỔ TRƯỢT DANH SÁCH GIÁO VIÊN (COMBO BOX KÝ TÊN)
+// KHỐI: THUẬT TOÁN CỬA SỔ TRƯỢT CHỮ KÝ (ÉP BUỘC CHỌN TÊN THEO ID PHÂN CÔNG)
 // =========================================================================
-let trangThaiKhungChuKy = { dangMo: false, inputChuKy: null, dangHover: false };
+let trangThaiKhungChuKy = { dangMo: false, inputChuKy: null, dangHover: false, gvPhanCong: '' };
 
-function moKhungTruotChuKy(event, theInputChuKy) {
+function moKhungTruotChuKy(event, theInputChuKy, gvPhanCong) {
     if (event) event.stopPropagation();
     
-    // Nếu click lại vào chính ô đang mở thì bỏ qua
     if (trangThaiKhungChuKy.dangMo && trangThaiKhungChuKy.inputChuKy === theInputChuKy) return;
     
     if (typeof dongKhungTruotPPCT === 'function') dongKhungTruotPPCT(); 
@@ -1718,21 +1716,20 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     
     trangThaiKhungChuKy.inputChuKy = theInputChuKy;
     trangThaiKhungChuKy.dangHover = false; 
+    trangThaiKhungChuKy.gvPhanCong = gvPhanCong || ''; // Lưu ID giáo viên vào biến trạng thái
 
-    // Mờ chữ khi mở khung chọn (nhưng sẽ đậm lại khi gõ)
     theInputChuKy.classList.remove('text-blue-700');
     theInputChuKy.classList.add('text-slate-400', 'opacity-60');
 
-    if (theInputChuKy.disabled || !danhSachGiaoVienToanCuc || danhSachGiaoVienToanCuc.length === 0) return;
+    if (theInputChuKy.disabled) return;
 
     let divKhung = document.createElement('div');
     divKhung.id = 'khungHienThiChuKy_Dong';
     divKhung.className = 'fixed z-[9999] mt-1'; 
     
-    // Khởi tạo HTML toàn bộ danh sách (Truyền rỗng = Không lọc)
-    divKhung.innerHTML = taoHtmlDanhSachChuKy('');
+    // Khởi tạo HTML (Chỉ truyền ID giáo viên được phép ký)
+    divKhung.innerHTML = taoHtmlDanhSachChuKy('', trangThaiKhungChuKy.gvPhanCong);
 
-    // Bắt sự kiện chuột ra/vào để chống lỗi văng khung khi lăn bi
     divKhung.addEventListener('mouseenter', () => { trangThaiKhungChuKy.dangHover = true; });
     divKhung.addEventListener('mouseleave', () => { trangThaiKhungChuKy.dangHover = false; });
 
@@ -1745,30 +1742,31 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     trangThaiKhungChuKy.dangMo = true;
 }
 
-// [THUẬT TOÁN MỚI]: Lọc và xây dựng HTML dựa theo từ khóa
-function taoHtmlDanhSachChuKy(tuKhoa) {
-    let tk = String(tuKhoa).trim().toLowerCase();
-    let danhSachLoc = danhSachGiaoVienToanCuc;
-    
-    // Lọc thông minh: Không phân biệt dấu tiếng Việt
-    if (tk !== '') {
-        let locKhongDau = tk.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        danhSachLoc = danhSachGiaoVienToanCuc.filter(gv => {
-            let gvKhongDau = gv.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return gv.toLowerCase().includes(tk) || gvKhongDau.includes(locKhongDau);
-        });
-    }
-
+function taoHtmlDanhSachChuKy(tuKhoa, gvPhanCong) {
     let htmlDanhSach = `<ul class="max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 shadow-2xl rounded text-sm w-48 text-left divide-y divide-slate-100">`;
     htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-red-50 text-red-600 transition-colors italic text-center font-semibold" onmousedown="chonMucChuKy('', event)">-- Xóa chữ ký --</li>`;
 
-    if (danhSachLoc.length === 0) {
-        htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Không tìm thấy giáo viên...</li>`;
+    let dsChoPhep = [];
+    
+    // ÉP BUỘC CHỌN TÊN: Chỉ lấy Tên (Cột B) tương ứng với ID Phân công (Cột A)
+    if (gvPhanCong && window.tuDienGiaoVienSDB) {
+        let tapHopMaGV = gvPhanCong.split(/[,;&-]/).map(g => g.trim().toLowerCase().normalize('NFC'));
+        tapHopMaGV.forEach(ma => {
+            if (window.tuDienGiaoVienSDB[ma]) {
+                dsChoPhep.push(window.tuDienGiaoVienSDB[ma]); // Nếu có map, đẩy tên thật vào
+            } else if (ma !== '') {
+                dsChoPhep.push(ma); // Fallback: Nếu không tìm thấy trong từ điển, cho phép dùng mã hiện tại
+            }
+        });
+    }
+
+    if (dsChoPhep.length === 0) {
+        htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Không có giáo viên phân công</li>`;
     } else {
-        danhSachLoc.forEach(gv => {
-            let gvAnToan = gv.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        dsChoPhep.forEach(tenGv => {
+            let gvAnToan = tenGv.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-blue-50 transition-colors" onmousedown="chonMucChuKy('${gvAnToan}', event)">
-                                 <span class="text-blue-800 font-bold block">${gv}</span>
+                                 <span class="text-blue-800 font-bold block">${tenGv}</span>
                              </li>`;
         });
     }
@@ -1776,23 +1774,20 @@ function taoHtmlDanhSachChuKy(tuKhoa) {
     return htmlDanhSach;
 }
 
-// [THUẬT TOÁN MỚI]: Kích hoạt khi người dùng gõ phím trực tiếp
 function locDanhSachChuKy(theInput) {
     coThayDoiChuaLuu_SDB = true;
-    
-    // Khi tự gõ phím thì chữ phải rõ ràng, không bị mờ
     theInput.classList.remove('text-slate-400', 'opacity-60');
     theInput.classList.add('text-blue-700');
 
-    // Nếu người dùng bắt đầu gõ mà khung chưa mở -> Mở khung
     if (!trangThaiKhungChuKy.dangMo || trangThaiKhungChuKy.inputChuKy !== theInput) {
-        moKhungTruotChuKy(null, theInput);
+        let tr = theInput.closest('tr');
+        let gvPhanCong = tr ? tr.getAttribute('data-gvgoc') : '';
+        moKhungTruotChuKy(null, theInput, gvPhanCong);
     }
     
-    // Tiêm từ khóa đang gõ vào hàm lọc và cập nhật ngay lập tức giao diện khung thả xuống
     let khungDong = document.getElementById('khungHienThiChuKy_Dong');
     if (khungDong) {
-        khungDong.innerHTML = taoHtmlDanhSachChuKy(theInput.value);
+        khungDong.innerHTML = taoHtmlDanhSachChuKy(theInput.value, trangThaiKhungChuKy.gvPhanCong);
         khungDong.addEventListener('mouseenter', () => { trangThaiKhungChuKy.dangHover = true; });
         khungDong.addEventListener('mouseleave', () => { trangThaiKhungChuKy.dangHover = false; });
     }
@@ -1914,4 +1909,39 @@ window.capNhatThongKeSoDauBai = function() {
     setVal('sdb_sum_kha', kha);
     setVal('sdb_sum_tb', tb);
     setVal('sdb_sum_yeu', yeu);
+};
+// =========================================================================
+// HÀM HIỂN THỊ LỊCH SỬ KÝ (TẠO MODAL ĐỘNG)
+// Vị trí: Đặt ở cuối file SoDauBai.js
+// =========================================================================
+window.xemLichSuKhaiBao = function(maLuuTru) {
+    let dongDich = duLieuTKBGopDaMap.find(d => d['Mã Lưu Trữ'] === maLuuTru || `${d['Tuần']}_${d['Mã Lớp']}_${d['Thứ']}_${d['Buổi']}_${d['Tiết']}` === maLuuTru);
+    
+    // Kiểm tra dữ liệu lịch sử
+    let noiDungLS = (dongDich && dongDich['Lịch Sử Ký']) ? String(dongDich['Lịch Sử Ký']).trim() : '';
+    if (noiDungLS === '') return alert("Tiết học này chưa có dữ liệu lịch sử khai báo trên hệ thống.");
+    
+    // Kiểm tra và tạo Modal nếu chưa có trong DOM
+    let modalH = document.getElementById('modalLichSuSDB');
+    if (!modalH) {
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="modalLichSuSDB" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] hidden">
+                <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-1/2 max-w-lg border border-slate-300 flex flex-col">
+                    <div class="bg-slate-100 p-3 border-b flex justify-between items-center rounded-t-lg">
+                        <h3 class="font-bold text-blue-900 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            LỊCH SỬ XÁC NHẬN KÝ TÊN
+                        </h3>
+                        <button onclick="document.getElementById('modalLichSuSDB').classList.add('hidden')" class="text-slate-500 hover:text-red-500 text-2xl leading-none">&times;</button>
+                    </div>
+                    <div class="p-4 bg-slate-50 font-mono text-sm whitespace-pre-wrap text-slate-700 h-64 overflow-y-auto custom-scrollbar" id="noiDungLichSuSDB"></div>
+                </div>
+            </div>
+        `);
+        modalH = document.getElementById('modalLichSuSDB');
+    }
+    
+    // Bơm nội dung và hiển thị
+    document.getElementById('noiDungLichSuSDB').innerText = noiDungLS;
+    modalH.classList.remove('hidden');
 };
