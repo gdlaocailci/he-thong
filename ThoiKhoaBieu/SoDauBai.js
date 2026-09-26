@@ -1,6 +1,5 @@
 // =========================================================================
 // KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (ĐÃ VÁ LỖI)
-// Vị trí: Thay thế toàn bộ nội dung từ đầu file cho đến trước hàm tinhNgayTuInputDate
 // =========================================================================
 let daTaiDuLieuSoDauBai = false;
 let duLieuTKBGopDaMap = [];
@@ -28,8 +27,7 @@ window.lamSachBoNhoSoDauBai = function() {
     lopTruocDo_SDB = '';
     coThayDoiChuaLuu_SDB = false;
     
-    // [VÁ LỖI]: Nhận diện đồng thời cả 2 tên biến để tránh lỗi rỗng
-    let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+    let tkDangNhap = window.emailGiaoVienToanCuc || window.dinhDanhHeThongToanCuc || '';
     try { sessionStorage.removeItem(`SDB_CACHE_${tkDangNhap}`); } catch(e) {}
     
     maGvDangNhapHeThong = '';
@@ -56,7 +54,7 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
     // [VÁ LỖI]: Bắt chuẩn biến lưu trữ phiên đăng nhập từ app.js
-    let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+    let tkDangNhap = window.emailGiaoVienToanCuc || window.dinhDanhHeThongToanCuc || '';
     const chuoiDinhDanh = String(tkDangNhap).trim();
     const chuaDangNhap = (!chuoiDinhDanh || chuoiDinhDanh === '' || chuoiDinhDanh === 'undefined' || chuoiDinhDanh === 'null');
 
@@ -95,7 +93,7 @@ window.thucThiGoiDangNhapAnToan = function() {
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     if (vungHienThi) {
         let btn = vungHienThi.querySelector('.bg-blue-600');
-        if (btn) btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div> Đang kết nối Google...`;
+        if (btn) btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div> Đang kết nối...`;
     }
     
     if (typeof khoiDongDangNhap === 'function') {
@@ -122,7 +120,7 @@ function kiemTraTrangThaiDangNhapSDB() {
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
 
     let vongLap = setInterval(() => {
-        let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+        let tkDangNhap = window.emailGiaoVienToanCuc || window.dinhDanhHeThongToanCuc || '';
         let chuoiDinhDanh = String(tkDangNhap).trim();
         
         if (chuoiDinhDanh && chuoiDinhDanh !== '' && chuoiDinhDanh !== 'undefined' && chuoiDinhDanh !== 'null') {
@@ -147,7 +145,7 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     }
 
     try {
-        let tkDangNhap = window.dinhDanhHeThongToanCuc || window.emailGiaoVienToanCuc || '';
+        let tkDangNhap = window.emailGiaoVienToanCuc || window.dinhDanhHeThongToanCuc || '';
         
         const phanHoi = await fetchVoiCoCheThuLai(
             `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(tkDangNhap)}`,
