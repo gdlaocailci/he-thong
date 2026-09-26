@@ -36,7 +36,7 @@ window.lamSachBoNhoSoDauBai = function() {
     
     maGvDangNhapHeThong = '';
     
-    // [BỔ SUNG SỬA LỖI]: Phá hủy hoàn toàn thẻ chốt quyền cũ
+    // [VÁ LỖI]: Phá hủy hoàn toàn thẻ chốt quyền cũ để tránh rò rỉ phân quyền giữa các tài khoản
     let theChotQuyenCu = document.getElementById('theChotQuyenSDB');
     if (theChotQuyenCu) theChotQuyenCu.remove();
     
@@ -190,7 +190,6 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 
 // =========================================================================
 // BẢN HOÀN THIỆN: KHỞI TẠO DỮ LIỆU SỔ ĐẦU BÀI (BAO GỒM DICTIONARY GV)
-// Thay thế toàn bộ hàm khoiTaoDuLieuSoDauBai trong file SoDauBai.js
 // =========================================================================
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
@@ -202,10 +201,9 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         theChotQuyen = document.createElement('div');
         theChotQuyen.id = 'theChotQuyenSDB';
         theChotQuyen.style.display = 'none';
+        
+        // [VÁ LỖI]: Bắt buộc gắn thẻ chốt quyền vào trực tiếp body để không bị mất khi chuyển đổi menu UI
         document.body.appendChild(theChotQuyen);
-        let vungChinh = document.getElementById('khungSoDauBai');
-        if (vungChinh) vungChinh.appendChild(theChotQuyen);
-        else document.body.appendChild(theChotQuyen);
     }
     
     theChotQuyen.setAttribute('data-madinhdanh', maGvDangNhapHeThong);
