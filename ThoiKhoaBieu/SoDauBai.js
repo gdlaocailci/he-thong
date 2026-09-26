@@ -446,8 +446,130 @@ function ketXuatSoDauBaiLenLuoi() {
 }
 
 // =========================================================================
-// [BẢN SỬA LỖI UI]: VẼ LƯỚI SỔ ĐẦU BÀI 17 CỘT CHUẨN MẪU & TỔNG HỢP TỰ ĐỘNG
-// Thay thế toàn bộ hàm thucThiKetXuatSoDauBaiLenLuoi trong tệp SoDauBai.js
+// THUẬT TOÁN TÍNH TỔNG HỢP THỜI GIAN THỰC (TỰ ĐỘNG NHẢY SỐ KHI GÕ)
+// Chèn hàm này vào bất kỳ đâu trong file SoDauBai.js (Khuyến nghị chèn ngoài các hàm khác)
+// =========================================================================
+window.capNhatThongKeSoDauBai = function() {
+    let tbody = document.querySelector('#vungHienThiSoDauBai tbody');
+    if (!tbody) return;
+    let cacDong = tbody.querySelectorAll('tr.dong-sdb');
+
+    let buoiDay = new Set();
+    let buoiThay = new Set();
+    let tietThay = 0;
+    let tongTietDay = 0;
+    let hsVangCoPhep = 0;
+    let hsVangKhongPhep = 0;
+    let tot = 0, kha = 0, tb = 0, yeu = 0;
+
+    cacDong.forEach(dong => {
+        let theMon = dong.querySelector('td[data-loai="mon"]');
+        let monHoc = theMon ? theMon.innerText.trim() : '';
+        if (monHoc === '') return;
+
+        let thu = dong.getAttribute('data-thu');
+        let buoi = dong.getAttribute('data-buoi');
+        let gvGoc = dong.getAttribute('data-gvgoc').toLowerCase().normalize('NFC');
+
+        // Trích xuất Chữ ký
+        let theChuKy = dong.querySelector('td[data-loai="chuKy"]');
+        let chuKy = '';
+        if (theChuKy) {
+            let inputCK = theChuKy.querySelector('input');
+            if (inputCK) chuKy = inputCK.value.trim();
+            else {
+                let spanCK = theChuKy.querySelector('span');
+                if (spanCK) chuKy = spanCK.innerText.trim();
+            }
+        }
+
+        // Trích xuất Xếp loại
+        let theXepLoai = dong.querySelector('td[data-loai="xepLoai"]');
+        let xepLoai = '';
+        if (theXepLoai) {
+            let selectXL = theXepLoai.querySelector('select');
+            if (selectXL) xepLoai = selectXL.value.trim();
+            else {
+                let spanXL = theXepLoai.querySelector('span');
+                if (spanXL) xepLoai = spanXL.innerText.trim();
+            }
+        }
+
+        // Trích xuất Vắng mặt (Cộng dồn thông minh bằng Regex)
+        let theVang = dong.querySelector('td[data-loai="vang"]');
+        let vang = '';
+        if (theVang) {
+            let inputV = theVang.querySelector('input');
+            if (inputV) vang = inputV.value.trim();
+            else {
+                let spanV = theVang.querySelector('span');
+                if (spanV) vang = spanV.innerText.trim();
+            }
+        }
+
+        // Bóc tách vắng P (Có phép)
+        let matchP = vang.match(/(\d+)\s*[Pp]/g);
+        if (matchP) {
+            matchP.forEach(m => { let num = m.match(/\d+/); if (num) hsVangCoPhep += parseInt(num[0]); });
+        } else if (vang.toUpperCase() === 'P') hsVangCoPhep += 1;
+
+        // Bóc tách vắng K (Không phép)
+        let matchK = vang.match(/(\d+)\s*[Kk]/g);
+        if (matchK) {
+            matchK.forEach(m => { let num = m.match(/\d+/); if (num) hsVangKhongPhep += parseInt(num[0]); });
+        } else if (vang.toUpperCase() === 'K') hsVangKhongPhep += 1;
+
+        // Xử lý các chỉ số liên quan đến Tiết đã dạy
+        if (chuKy !== '') {
+            tongTietDay++;
+            buoiDay.add(`${thu}_${buoi}`);
+
+            if (xepLoai === 'Tốt') tot++;
+            else if (xepLoai === 'Khá') kha++;
+            else if (xepLoai === 'TB') tb++;
+            else if (xepLoai === 'Yếu') yeu++;
+
+            // Kiểm tra dạy thay (So sánh với TKB Gốc)
+            let chuKyLC = chuKy.toLowerCase().normalize('NFC');
+            let isThay = true;
+            if (gvGoc) {
+                let tapHopGvGoc = gvGoc.split(/[,;&-]/).map(g => g.trim());
+                if (tapHopGvGoc.includes(chuKyLC) || tapHopGvGoc.some(g => chuKyLC.includes(g) && g.length > 2)) {
+                    isThay = false;
+                }
+            }
+            if (isThay) {
+                tietThay++;
+                buoiThay.add(`${thu}_${buoi}`);
+            }
+        }
+    });
+
+    // Tính toán Nghỉ dạy
+    let buoiNghi = Math.max(0, 9 - buoiDay.size);
+    let tongTietChuan = window.tongTietChuanKhoiHienTai || 0;
+    let tietNghi = Math.max(0, tongTietChuan - tongTietDay);
+
+    // Bơm dữ liệu ngược lên DOM Giao diện
+    const setVal = (id, val) => { let el = document.getElementById(id); if (el) el.innerText = val; };
+    setVal('sdb_sum_buoiNghi', buoiNghi);
+    setVal('sdb_sum_tietNghi', tietNghi);
+    setVal('sdb_sum_buoiThay', buoiThay.size);
+    setVal('sdb_sum_tietThay', tietThay);
+    setVal('sdb_sum_tongVang', hsVangCoPhep + hsVangKhongPhep);
+    setVal('sdb_sum_vangP', hsVangCoPhep);
+    setVal('sdb_sum_vangK', hsVangKhongPhep);
+    setVal('sdb_sum_tongDay', tongTietDay);
+    setVal('sdb_sum_tot', tot);
+    setVal('sdb_sum_kha', kha);
+    setVal('sdb_sum_tb', tb);
+    setVal('sdb_sum_yeu', yeu);
+};
+
+
+// =========================================================================
+// [BẢN NÂNG CẤP XÓA KHUNG THỪA VÀ KÍCH HOẠT REAL-TIME]
+// Thay thế toàn bộ hàm thucThiKetXuatSoDauBaiLenLuoi() trong file SoDauBai.js
 // =========================================================================
 function thucThiKetXuatSoDauBaiLenLuoi() {
     let tuanChon = document.getElementById('chonTuanSo')?.value;
@@ -495,6 +617,14 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let matchKhoiChon = lopChon.match(/\d+/);
     let khoiChon = matchKhoiChon ? matchKhoiChon[0] : '';
     let dinhMucKhoiNay = dinhMucKhungCT[khoiChon] || {};
+    
+    // Tính tổng tiết chuẩn của Khối hiện tại để dùng cho hàm tính Tiết nghỉ
+    let tongTietChuanKhoiHienTai = 0;
+    for (let mon in dinhMucKhoiNay) {
+        tongTietChuanKhoiHienTai += parseInt(dinhMucKhoiNay[mon]) || 0;
+    }
+    window.tongTietChuanKhoiHienTai = tongTietChuanKhoiHienTai;
+
     let canhBaoHtml = ''; let hasCanhBao = false;
 
     if (maxTuanChon > 0) {
@@ -605,6 +735,17 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let ngayDauTieuDe = mapNgayChinhXac['Thứ 2'] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, "Thứ 2") : '...');
     let ngayCuoiTieuDe = mapNgayChinhXac[danhSachThu[danhSachThu.length - 1]] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, danhSachThu[danhSachThu.length - 1]) : '...');
 
+    // Lọc triệt để thẻ Div thừa: Khung chứa nút BGH/GVCN chỉ xuất hiện khi đủ thẩm quyền
+    let htmlNutBGH = '';
+    if (laGVCN || quyenQuanTri) {
+        htmlNutBGH = `
+        <div class="flex justify-end gap-2 mb-3 bg-slate-50 p-2 border border-slate-300 rounded shadow-sm">
+            ${laGVCN ? `<button onclick="thucThiLenhKhoaSo(2, 'Chốt sổ tuần')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> GVCN Chốt Sổ</button>` : ''}
+            ${quyenQuanTri ? `<button onclick="thucThiLenhKhoaSo(3, 'BGH Duyệt sổ')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> BGH Phê Duyệt</button>
+                              <button onclick="thucThiLenhKhoaSo(0, 'BGH Mở khóa')" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg> Mở Khóa Sửa</button>` : ''}
+        </div>`;
+    }
+
     let htmlBang = `
         <div class="mb-8 bang-so-dau-bai-container overflow-x-auto relative">
             <div class="flex justify-between items-center mb-2 font-bold text-slate-800 uppercase text-lg">
@@ -615,11 +756,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 (Từ ngày ${ngayDauTieuDe} đến ngày ${ngayCuoiTieuDe})
             </div>
             
-            <div class="flex justify-end gap-2 mb-3 bg-slate-50 p-2 border border-slate-300 rounded shadow-sm">
-                ${laGVCN ? `<button onclick="thucThiLenhKhoaSo(2, 'Chốt sổ tuần')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> GVCN Chốt Sổ</button>` : ''}
-                ${quyenQuanTri ? `<button onclick="thucThiLenhKhoaSo(3, 'BGH Duyệt sổ')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> BGH Phê Duyệt</button>
-                                  <button onclick="thucThiLenhKhoaSo(0, 'BGH Mở khóa')" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg> Mở Khóa Sửa</button>` : ''}
-            </div>
+            ${htmlNutBGH}
 
             <div class="flex flex-col xl:flex-row gap-4 items-start">
                 <div class="flex-1 w-full xl:w-3/4 overflow-x-auto border border-gray-500 shadow-sm rounded-sm">
@@ -644,8 +781,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                         <tbody>
     `;
 
-    let tongHopSDB = { tietNghi: 0, buoiNghi: new Set(), tietThay: 0, buoiThay: new Set(), hsVangCoPhep: 0, hsVangKhongPhep: 0, tongTietDay: 0, tot: 0, kha: 0, tb: 0, yeu: 0 };
-    
     let khoaTH = `${maxTuanChon}_${lopChon}`;
     let dataTH = window.duLieuTongHopSDB && window.duLieuTongHopSDB[khoaTH] ? window.duLieuTongHopSDB[khoaTH] : {nhanXetBGH: '', chuKyGVCN: '', chuKyBGH: ''};
 
@@ -655,7 +790,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
         let danhSachBuoi = [{ id: 'Sang', dataBuoi: 'Sáng', dsTiet: [1, 2, 3, 4] }, { id: 'Chieu', dataBuoi: 'Chiều', dsTiet: [1, 2, 3] }];
 
         danhSachBuoi.forEach(buoiObj => {
-            // [SỬA LỖI UI]: Reset cờ in cột và tính số dòng gộp cho mỗi buổi thay vì gộp cả ngày
             let inCotThuBuoi = true;
             let rowspanBuoi = buoiObj.dsTiet.length; 
 
@@ -674,28 +808,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 let gvTkb = dongDuLieu ? String(dongDuLieu['Mã GV']).trim().toLowerCase().normalize('NFC') : '';
                 let maLuuTru = dongDuLieu ? (dongDuLieu['Mã Lưu Trữ'] || `${maxTuanChon}_${lopChon}_${thu}_${buoiObj.dataBuoi}_${tiet}`) : '';
                 let trangThaiKhoa = dongDuLieu ? (parseInt(dongDuLieu['Trạng Thái Khóa']) || 0) : 0;
-                
-                if (isDaLuu && monHoc !== '') {
-                    if (chuKy !== '') {
-                        tongHopSDB.tongTietDay++;
-                        if(xepLoai === 'Tốt') tongHopSDB.tot++; else if(xepLoai === 'Khá') tongHopSDB.kha++; else if(xepLoai === 'TB') tongHopSDB.tb++; else if(xepLoai === 'Yếu') tongHopSDB.yeu++;
-                        
-                        let isDayThay = true;
-                        if (gvTkb) {
-                            let tapHopGvTkb = gvTkb.split(/[,;&-]/).map(g => g.trim());
-                            let gvKyLC = chuKy.trim().toLowerCase().normalize('NFC');
-                            if (tapHopGvTkb.includes(gvKyLC) || tapHopGvTkb.some(g => gvKyLC.includes(g) && g.length > 2)) isDayThay = false;
-                        }
-                        if (isDayThay) { tongHopSDB.tietThay++; tongHopSDB.buoiThay.add(`${thu}_${buoiObj.id}`); }
-                    } else if ((tenBai || '').toLowerCase().includes('nghỉ')) {
-                        tongHopSDB.tietNghi++; tongHopSDB.buoiNghi.add(`${thu}_${buoiObj.id}`);
-                    }
-
-                    let matchP = vang.match(/(\d+)\s*[Pp]/) || (vang.toUpperCase() === 'P' ? [0, 1] : null);
-                    let matchK = vang.match(/(\d+)\s*[Kk]/) || (vang.toUpperCase() === 'K' ? [0, 1] : null);
-                    if (matchP) tongHopSDB.hsVangCoPhep += parseInt(matchP[1] || 1);
-                    if (matchK) tongHopSDB.hsVangKhongPhep += parseInt(matchK[1] || 1);
-                }
                 
                 let quyenNhapThuCong = false;
                 if (quyenQuanTri) {
@@ -735,7 +847,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                         
                         theTenBai = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${!quyenNhapThuCong?'disabled':''} class="w-full text-left outline-none ${cssNenKhoa} font-semibold text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle">${tenBai}</textarea>`;
                         theCoMat = `<input type="number" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-semibold text-slate-800" placeholder=".." value="${coMat}">`;
-                        theVang = `<input type="text" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-bold text-red-600" placeholder="VD: 1P, 2K" value="${vang}">`;
+                        theVang = `<input type="text" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-bold text-red-600 vang-input" placeholder="VD: 1P, 2K" value="${vang}">`;
                         theNhanXet = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${!quyenNhapThuCong?'disabled':''} class="w-full text-left outline-none ${cssNenKhoa} font-normal text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle">${nhanXet}</textarea>`;
                         
                         let monHocAnToan = monHoc.replace(/'/g, "\\'"); 
@@ -760,9 +872,9 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 let isRowDauChieu = (buoiObj.id === 'Chieu' && tiet === 1);
                 let cssRow = isRowDauChieu ? "border-t-2 border-gray-400" : "";
 
-                htmlBang += `<tr class="hover:bg-blue-50/30 transition-colors ${cssRow}" data-buoi="${buoiObj.dataBuoi}" data-daluu="${isDaLuu}" data-maluutru="${maLuuTru}" data-thaydoi="false">`;
+                // Gắn thêm các Data Attribute để truyền dữ liệu cho thuật toán Real-time bắt chữ
+                htmlBang += `<tr class="dong-sdb hover:bg-blue-50/30 transition-colors ${cssRow}" data-buoi="${buoiObj.dataBuoi}" data-thu="${thu}" data-mon="${monHoc}" data-gvgoc="${gvTkb}" data-daluu="${isDaLuu}" data-maluutru="${maLuuTru}" data-thaydoi="false">`;
                 
-                // [SỬA LỖI UI]: Tách riêng ô "Sáng" và "Chiều" vào 2 cột khác nhau theo rowspan tương ứng
                 if (inCotThuBuoi) {
                     if (buoiObj.id === 'Sang') {
                         htmlBang += `<td class="border border-gray-500 text-center font-bold bg-white align-middle" rowspan="${rowspanBuoi}">
@@ -797,40 +909,41 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let isBGH = quyenQuanTri;
     let isGVCN = (madinhdanhGV.trim().toLowerCase().normalize('NFC') === gvcnCuaLop.toLowerCase().normalize('NFC')) || isBGH;
 
+    // Giao diện Khung Tổng Hợp - Các con số mặc định bằng 0, sẽ được nhúng ID để hệ thống tự nhảy số
     let htmlTongHop = `
         <div class="mt-6 w-full xl:w-1/4 min-w-[320px] flex-none border border-gray-600 bg-white shadow-sm flex flex-col rounded-sm text-sm">
             <div class="bg-slate-100 font-extrabold text-center py-2 border-b border-gray-600 uppercase tracking-widest text-slate-800">Phần Tổng Hợp</div>
             <div class="p-4 flex flex-col gap-2 flex-1">
                 <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
-                    <span>- Số buổi nghỉ dạy:</span><span class="font-bold">${tongHopSDB.buoiNghi.size}</span>
+                    <span>- Số buổi nghỉ dạy:</span><span id="sdb_sum_buoiNghi" class="font-bold">0</span>
                 </div>
                 <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
-                    <span>- Số tiết nghỉ dạy:</span><span class="font-bold">${tongHopSDB.tietNghi}</span>
+                    <span>- Số tiết nghỉ dạy:</span><span id="sdb_sum_tietNghi" class="font-bold">0</span>
                 </div>
                 <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
-                    <span>- Số buổi đã dạy thay:</span><span class="font-bold">${tongHopSDB.buoiThay.size}</span>
+                    <span>- Số buổi đã dạy thay:</span><span id="sdb_sum_buoiThay" class="font-bold">0</span>
                 </div>
                 <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
-                    <span>- Số tiết đã dạy thay:</span><span class="font-bold">${tongHopSDB.tietThay}</span>
+                    <span>- Số tiết đã dạy thay:</span><span id="sdb_sum_tietThay" class="font-bold">0</span>
                 </div>
                 <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
-                    <span>- Tổng số HS vắng mặt:</span><span class="font-bold text-red-600">${tongHopSDB.hsVangCoPhep + tongHopSDB.hsVangKhongPhep}</span>
+                    <span>- Tổng số HS vắng mặt:</span><span id="sdb_sum_tongVang" class="font-bold text-red-600">0</span>
                 </div>
                 <div class="pl-4 text-slate-700 flex justify-between">
-                    <span>Có lí do (P):</span><span class="font-bold text-blue-700">${tongHopSDB.hsVangCoPhep}</span>
+                    <span>Có lí do (P):</span><span id="sdb_sum_vangP" class="font-bold text-blue-700">0</span>
                 </div>
                 <div class="pl-4 text-slate-700 flex justify-between border-b border-dotted border-gray-300 pb-1">
-                    <span>Không có lí do (K):</span><span class="font-bold text-red-600">${tongHopSDB.hsVangKhongPhep}</span>
+                    <span>Không có lí do (K):</span><span id="sdb_sum_vangK" class="font-bold text-red-600">0</span>
                 </div>
                 
                 <div class="mt-2 font-bold text-blue-900 border-b border-gray-400 pb-1 flex justify-between">
-                    <span>Tổng số tiết dạy trong tuần:</span><span class="text-lg">${tongHopSDB.tongTietDay}</span>
+                    <span>Tổng số tiết dạy trong tuần:</span><span id="sdb_sum_tongDay" class="text-lg">0</span>
                 </div>
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-sm border-b border-gray-400 pb-2">
-                    <div class="flex justify-between pl-2"><span>Loại Tốt:</span><span class="font-bold">${tongHopSDB.tot}</span></div>
-                    <div class="flex justify-between pl-2"><span>Loại TB:</span><span class="font-bold">${tongHopSDB.tb}</span></div>
-                    <div class="flex justify-between pl-2"><span>Loại Khá:</span><span class="font-bold">${tongHopSDB.kha}</span></div>
-                    <div class="flex justify-between pl-2"><span>Loại Yếu:</span><span class="font-bold text-red-600">${tongHopSDB.yeu}</span></div>
+                    <div class="flex justify-between pl-2"><span>Loại Tốt:</span><span id="sdb_sum_tot" class="font-bold">0</span></div>
+                    <div class="flex justify-between pl-2"><span>Loại TB:</span><span id="sdb_sum_tb" class="font-bold">0</span></div>
+                    <div class="flex justify-between pl-2"><span>Loại Khá:</span><span id="sdb_sum_kha" class="font-bold">0</span></div>
+                    <div class="flex justify-between pl-2"><span>Loại Yếu:</span><span id="sdb_sum_yeu" class="font-bold text-red-600">0</span></div>
                 </div>
             </div>
             
@@ -855,6 +968,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
     vungHienThi.innerHTML = theTrangThaiHtml + thanhCanhBaoRender + theHienThiQuyen + htmlBang + htmlTongHop;
 
+    // Đính kèm các Event Listener để kích hoạt thuật toán thời gian thực
     setTimeout(() => {
         let cacOVanBan = vungHienThi.querySelectorAll('textarea');
         cacOVanBan.forEach(ta => {
@@ -867,12 +981,18 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
             oNhap.addEventListener('input', (e) => { 
                 coThayDoiChuaLuu_SDB = true; 
                 if (e.target.closest('tr')) danhDauDongThayDoi(e.target.closest('tr'));
+                // Liên tục quét và cập nhật lại thống kê khi gõ
+                if (typeof window.capNhatThongKeSoDauBai === 'function') window.capNhatThongKeSoDauBai();
             });
             oNhap.addEventListener('change', (e) => { 
                 coThayDoiChuaLuu_SDB = true; 
                 if (e.target.closest('tr')) danhDauDongThayDoi(e.target.closest('tr'));
+                if (typeof window.capNhatThongKeSoDauBai === 'function') window.capNhatThongKeSoDauBai();
             });
         });
+        
+        // Gọi hàm quét 1 lần đầu tiên để lên bảng số liệu chuẩn xác
+        if (typeof window.capNhatThongKeSoDauBai === 'function') window.capNhatThongKeSoDauBai();
     }, 50);
 }
 
