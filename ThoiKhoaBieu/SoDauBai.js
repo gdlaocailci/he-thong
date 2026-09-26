@@ -36,7 +36,7 @@ window.lamSachBoNhoSoDauBai = function() {
     
     maGvDangNhapHeThong = '';
     
-    // [VÁ LỖI]: Phá hủy hoàn toàn thẻ chốt quyền cũ để tránh rò rỉ phân quyền giữa các tài khoản
+    // [VÁ LỖI]: Hủy thẻ quyền cũ để không bị kế thừa sai khi đổi tài khoản
     let theChotQuyenCu = document.getElementById('theChotQuyenSDB');
     if (theChotQuyenCu) theChotQuyenCu.remove();
     
@@ -46,7 +46,6 @@ window.lamSachBoNhoSoDauBai = function() {
     let elementTuan = document.getElementById('chonTuanSo');
     let elementLop = document.getElementById('chonLopSo');
 
-    // [NÂNG CẤP]: Khôi phục hiển thị và dọn dẹp các lớp bọc UI khi hệ thống reset
     let wTuan = document.getElementById('wrapper_chonTuanSo'); if (wTuan) wTuan.remove();
     let wLop = document.getElementById('wrapper_chonLopSo'); if (wLop) wLop.remove();
 
@@ -59,8 +58,9 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
-    // Kiểm tra trực tiếp biến toàn cục thay vì check sự kiện onclick để chống lỗi Race Condition
-    const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
+    // [VÁ LỖI]: Kiểm tra định danh chặt chẽ hơn, chống lỗi bị gán chuỗi 'undefined' hoặc 'null' do bộ nhớ đệm
+    const emailHienTai = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+    const chuaDangNhap = !emailHienTai || emailHienTai === '' || emailHienTai === 'undefined' || emailHienTai === 'null';
 
     if (chuaDangNhap) {
         // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan trên vùng hiển thị
@@ -107,7 +107,6 @@ function danhDauDongThayDoi(tr) {
         }
     }
 }
-// Lắng nghe trạng thái đăng nhập để tự động mở Sổ đầu bài
 function kiemTraTrangThaiDangNhapSDB() {
     let soLanKiemTra = 0;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
@@ -118,7 +117,8 @@ function kiemTraTrangThaiDangNhapSDB() {
     }
 
     let vongLap = setInterval(() => {
-        if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
+        const emailHienTai = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+        if (emailHienTai && emailHienTai !== '' && emailHienTai !== 'undefined' && emailHienTai !== 'null') {
             clearInterval(vongLap);
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
         }
@@ -188,9 +188,6 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
     return `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 }
 
-// =========================================================================
-// BẢN HOÀN THIỆN: KHỞI TẠO DỮ LIỆU SỔ ĐẦU BÀI (BAO GỒM DICTIONARY GV)
-// =========================================================================
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
     coToanQuyenSDB = duLieuSever.TOAN_QUYEN || false;
@@ -202,7 +199,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         theChotQuyen.id = 'theChotQuyenSDB';
         theChotQuyen.style.display = 'none';
         
-        // [VÁ LỖI]: Bắt buộc gắn thẻ chốt quyền vào trực tiếp body để không bị mất khi chuyển đổi menu UI
+        // [VÁ LỖI]: Bắt buộc gắn thẳng vào thẻ body thay vì khung DOM có thể bị xóa
         document.body.appendChild(theChotQuyen);
     }
     
@@ -211,7 +208,6 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     theChotQuyen.setAttribute('data-matranquyen', JSON.stringify(tuDienQuyenPhanCong));
 
     let mapDuiLieuHopNhat = {};
-    window.duLieuTongHopSDB = {}; 
 
     const chuanHoaThu = (thuStr) => {
         if (!thuStr) return '';
@@ -219,57 +215,27 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         return raw.charAt(0).toUpperCase() + raw.slice(1);
     };
 
-    const getValIgnoreCase = (obj, keyName) => {
-        if (!obj) return '';
-        let target = keyName.toLowerCase().normalize('NFC').replace(/\s+/g, '');
-        let foundKey = Object.keys(obj).find(k => k.toLowerCase().normalize('NFC').replace(/\s+/g, '') === target);
-        if (!foundKey) {
-            foundKey = Object.keys(obj).find(k => k.toLowerCase().normalize('NFC').replace(/\s+/g, '').includes(target));
-        }
-        return foundKey ? obj[foundKey] : '';
-    };
-
     if (duLieuSever.SO_DAU_BAI) {
         duLieuSever.SO_DAU_BAI.forEach(dong => {
-            let tuan = String(getValIgnoreCase(dong, 'Tuần')).replace(/\D/g, '');
-            let lop = String(getValIgnoreCase(dong, 'Mã Lớp')).trim().toUpperCase();
-            let thuChuan = chuanHoaThu(getValIgnoreCase(dong, 'Thứ')); 
+            let tuan = String(dong['Tuần']).replace(/\D/g, '');
+            let lop = String(dong['Mã Lớp']).trim().toUpperCase();
+            let thuChuan = chuanHoaThu(dong['Thứ']); 
+            let buoi = String(dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
+            let tiet = String(dong['Tiết']).trim();
             
-            if (thuChuan.toUpperCase() === 'TONGHOP') {
-                window.duLieuTongHopSDB[`${tuan}_${lop}`] = {
-                    chuKyGVCN: getValIgnoreCase(dong, 'Tên Bài Dạy') || getValIgnoreCase(dong, 'Tên bài'),
-                    nhanXetBGH: getValIgnoreCase(dong, 'Nhận Xét'),
-                    chuKyBGH: getValIgnoreCase(dong, 'Chữ Ký GV') || getValIgnoreCase(dong, 'Chữ ký')
-                };
-                return; 
-            }
-
-            let buoiRaw = String(getValIgnoreCase(dong, 'Buổi')).trim().toLowerCase();
-            let buoi = buoiRaw === 'sáng' ? 'sáng' : 'chiều';
-            let tiet = String(getValIgnoreCase(dong, 'Tiết')).trim();
             let khoa = `${tuan}_${lop}_${thuChuan}_${buoi}_${tiet}`;
-            
-            let chuKy = getValIgnoreCase(dong, 'Chữ Ký GV') || getValIgnoreCase(dong, 'Chữ ký');
-            let trangThaiKhoa = parseInt(getValIgnoreCase(dong, 'Trạng Thái Khóa')) || 0;
-            if (trangThaiKhoa === 0 && chuKy !== '') {
-                trangThaiKhoa = 1; 
-            }
             
             mapDuiLieuHopNhat[khoa] = {
                 'Tuần': tuan, 'Mã Lớp': lop, 'Thứ': thuChuan, 'Buổi': buoi, 'Tiết': tiet,
-                'Môn Học': getValIgnoreCase(dong, 'Môn Học') || getValIgnoreCase(dong, 'Môn'),
-                'Mã GV': getValIgnoreCase(dong, 'Mã GV') || getValIgnoreCase(dong, 'Giáo viên'),
-                'Ngày': getValIgnoreCase(dong, 'Ngày'),
-                'TietPPCT_Thuc': getValIgnoreCase(dong, 'Tiết PPCT'),
-                'TenBai_Thuc': getValIgnoreCase(dong, 'Tên Bài Dạy') || getValIgnoreCase(dong, 'Tên bài'),
-                'Có Mặt': getValIgnoreCase(dong, 'Có Mặt') || getValIgnoreCase(dong, 'Có mặt'),
-                'Vắng': getValIgnoreCase(dong, 'Vắng') || getValIgnoreCase(dong, 'Vắng mặt'),
-                'NhanXet_Thuc': getValIgnoreCase(dong, 'Nhận Xét') || getValIgnoreCase(dong, 'Nhận xét giờ học'),
-                'XepLoai_Thuc': getValIgnoreCase(dong, 'Xếp Loại'),
-                'ChuKy_Thuc': chuKy,
-                'Trạng Thái Khóa': trangThaiKhoa,
-                'Lịch Sử Ký': getValIgnoreCase(dong, 'Lịch Sử Ký') || getValIgnoreCase(dong, 'Lịch sử') || getValIgnoreCase(dong, 'Lịch sử giờ học'),
-                'Mã Lưu Trữ': getValIgnoreCase(dong, 'Mã Lưu Trữ'),
+                'Môn Học': dong['Môn Học'] || dong['Môn học'] || dong['Môn'] || '',
+                'Mã GV': dong['Giáo viên'] || dong['Mã GV'] || dong['Giáo Viên'] || dong['GV'] || '',
+                'Ngày': dong['Ngày'] || '',
+                'TietPPCT_Thuc': dong['Tiết PPCT'] || '',
+                'TenBai_Thuc': dong['Tên Bài Dạy'] || dong['Tên bài dạy'] || dong['Tên Bài'] || dong['Tên bài'] || '',
+                'NhanXet_Thuc': dong['Nhận Xét'] || dong['Nhận xét'] || '',
+                'XepLoai_Thuc': dong['Xếp Loại'] || dong['Xếp loại'] || '',
+                'ChuKy_Thuc': dong['Chữ Ký GV'] || dong['Chữ ký GV'] || dong['Chữ ký'] || '',
+                'ChuyenCan_Thuc': dong['Chuyên Cần'] || dong['Chuyên cần'] || '',
                 'DaLuu': true 
             };
         });
@@ -311,15 +277,12 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
                 'Mã GV': dongTkb['Mã GV'] || dongTkb['Giáo viên'] || '',
                 'Ngày': dongTkb['Ngày'] || '',
                 'TietPPCT_Thuc': '', 'TenBai_Thuc': '', 'NhanXet_Thuc': '', 
-                'XepLoai_Thuc': '', 'ChuKy_Thuc': '', 'Có Mặt': '', 'Vắng': '',
+                'XepLoai_Thuc': '', 'ChuKy_Thuc': '', 'ChuyenCan_Thuc': '',
                 'DaLuu': false 
             };
         } else {
             if (!mapDuiLieuHopNhat[khoa]['Mã GV'] || mapDuiLieuHopNhat[khoa]['Mã GV'].trim() === '') {
                 mapDuiLieuHopNhat[khoa]['Mã GV'] = dongTkb['Mã GV'] || dongTkb['Giáo viên'] || '';
-            }
-            if (!mapDuiLieuHopNhat[khoa]['Môn Học'] || mapDuiLieuHopNhat[khoa]['Môn Học'].trim() === '') {
-                mapDuiLieuHopNhat[khoa]['Môn Học'] = dongTkb['Môn Học'] || '';
             }
         }
     });
