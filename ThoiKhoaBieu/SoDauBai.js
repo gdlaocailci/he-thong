@@ -589,10 +589,9 @@ window.capNhatThongKeSoDauBai = function() {
     setVal('sdb_sum_yeu', yeu);
 };
 
-
 // =========================================================================
-// [BẢN NÂNG CẤP XÓA KHUNG THỪA VÀ KÍCH HOẠT REAL-TIME]
-// Thay thế toàn bộ hàm thucThiKetXuatSoDauBaiLenLuoi() trong file SoDauBai.js
+// [NÂNG CẤP]: HIỂN THỊ NỘI DUNG LỊCH SỬ KHI RÊ CHUỘT (HOVER TOOLTIP)
+// Thay thế toàn bộ hàm thucThiKetXuatSoDauBaiLenLuoi trong tệp SoDauBai.js
 // =========================================================================
 function thucThiKetXuatSoDauBaiLenLuoi() {
     let tuanChon = document.getElementById('chonTuanSo')?.value;
@@ -641,7 +640,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let khoiChon = matchKhoiChon ? matchKhoiChon[0] : '';
     let dinhMucKhoiNay = dinhMucKhungCT[khoiChon] || {};
     
-    // Tính tổng tiết chuẩn của Khối hiện tại để dùng cho hàm tính Tiết nghỉ
     let tongTietChuanKhoiHienTai = 0;
     for (let mon in dinhMucKhoiNay) {
         tongTietChuanKhoiHienTai += parseInt(dinhMucKhoiNay[mon]) || 0;
@@ -676,7 +674,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let dictTKB = {}; let mapNgayChinhXac = {}; 
     let coDayBuThu7 = false; let coDayBuChuNhat = false;
 
-    // Xác định Giáo viên chủ nhiệm
     let demTietGV = {}; let gvcnCuaLop = ""; let maxTiet = 0;
 
     tkbTuanNay.forEach(dong => {
@@ -758,7 +755,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let ngayDauTieuDe = mapNgayChinhXac['Thứ 2'] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, "Thứ 2") : '...');
     let ngayCuoiTieuDe = mapNgayChinhXac[danhSachThu[danhSachThu.length - 1]] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, danhSachThu[danhSachThu.length - 1]) : '...');
 
-    // Lọc triệt để thẻ Div thừa: Khung chứa nút BGH/GVCN chỉ xuất hiện khi đủ thẩm quyền
     let htmlNutBGH = '';
     if (laGVCN || quyenQuanTri) {
         htmlNutBGH = `
@@ -823,14 +819,18 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 
                 let tietPPCT = dongDuLieu ? dongDuLieu['TietPPCT_Thuc'] : '';
                 let tenBai = dongDuLieu ? dongDuLieu['TenBai_Thuc'] : '';
-                let coMat = dongDuLieu ? (dongDuLieu['Có Mặt'] || '') : '';
-                let vang = dongDuLieu ? String(dongDuLieu['Vắng'] || '') : '';
+                let coMat = dongDuLieu ? dongDuLieu['Có Mặt'] : '';
+                let vang = dongDuLieu ? String(dongDuLieu['Vắng']) : '';
                 let nhanXet = dongDuLieu ? dongDuLieu['NhanXet_Thuc'] : '';
                 let xepLoai = dongDuLieu ? dongDuLieu['XepLoai_Thuc'] : '';
                 let chuKy = dongDuLieu ? dongDuLieu['ChuKy_Thuc'] : '';
                 let gvTkb = dongDuLieu ? String(dongDuLieu['Mã GV']).trim().toLowerCase().normalize('NFC') : '';
                 let maLuuTru = dongDuLieu ? (dongDuLieu['Mã Lưu Trữ'] || `${maxTuanChon}_${lopChon}_${thu}_${buoiObj.dataBuoi}_${tiet}`) : '';
                 let trangThaiKhoa = dongDuLieu ? (parseInt(dongDuLieu['Trạng Thái Khóa']) || 0) : 0;
+                
+                // [TRÍCH XUẤT LỊCH SỬ KÝ VÀ MÃ HÓA AN TOÀN HTML]
+                let lichSuKy = dongDuLieu && dongDuLieu['Lịch Sử Ký'] ? String(dongDuLieu['Lịch Sử Ký']) : 'Chưa có thông tin lịch sử';
+                let lichSuKyAnToan = lichSuKy.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 
                 let quyenNhapThuCong = false;
                 if (quyenQuanTri) {
@@ -860,7 +860,8 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                         theNhanXet = `<span class="font-normal text-slate-800 block whitespace-pre-wrap">${nhanXet}</span>`;
                         theXepLoai = `<span class="font-bold text-slate-800 block text-center">${xepLoai}</span>`;
                         
-                        theChuKy = `<div class="flex items-center justify-center gap-1 cursor-pointer hover:bg-slate-100 rounded px-1" onclick="xemLichSuKhaiBao('${maLuuTru}')" title="Xem lịch sử ký">
+                        // [CẬP NHẬT]: Gắn trực tiếp lịch sử đã mã hóa vào thuộc tính title
+                        theChuKy = `<div class="flex items-center justify-center gap-1 cursor-pointer hover:bg-slate-100 rounded px-1" onclick="xemLichSuKhaiBao('${maLuuTru}')" title="${lichSuKyAnToan}">
                                         <span class="font-bold ${lockColor} uppercase text-center">${chuKy}</span>
                                         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>`;
@@ -870,6 +871,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                         
                         theTenBai = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${!quyenNhapThuCong?'disabled':''} class="w-full text-left outline-none ${cssNenKhoa} font-semibold text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle">${tenBai}</textarea>`;
                         theCoMat = `<input type="number" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-semibold text-slate-800" placeholder=".." value="${coMat}">`;
+                        // Cập nhật cỡ chữ [11px] cho placeholder Vắng
                         theVang = `<input type="text" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-bold text-red-600 text-[11px] placeholder-slate-400" placeholder="1P, 2K" value="${vang}">`;
                         theNhanXet = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${!quyenNhapThuCong?'disabled':''} class="w-full text-left outline-none ${cssNenKhoa} font-normal text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle">${nhanXet}</textarea>`;
                         
@@ -895,7 +897,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 let isRowDauChieu = (buoiObj.id === 'Chieu' && tiet === 1);
                 let cssRow = isRowDauChieu ? "border-t-2 border-gray-400" : "";
 
-                // Gắn thêm các Data Attribute để truyền dữ liệu cho thuật toán Real-time bắt chữ
                 htmlBang += `<tr class="dong-sdb hover:bg-blue-50/30 transition-colors ${cssRow}" data-buoi="${buoiObj.dataBuoi}" data-thu="${thu}" data-mon="${monHoc}" data-gvgoc="${gvTkb}" data-daluu="${isDaLuu}" data-maluutru="${maLuuTru}" data-thaydoi="false">`;
                 
                 if (inCotThuBuoi) {
@@ -932,7 +933,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let isBGH = quyenQuanTri;
     let isGVCN = (madinhdanhGV.trim().toLowerCase().normalize('NFC') === gvcnCuaLop.toLowerCase().normalize('NFC')) || isBGH;
 
-    // Giao diện Khung Tổng Hợp - Các con số mặc định bằng 0, sẽ được nhúng ID để hệ thống tự nhảy số
     let htmlTongHop = `
         <div class="mt-6 w-full xl:w-1/4 min-w-[320px] flex-none border border-gray-600 bg-white shadow-sm flex flex-col rounded-sm text-sm">
             <div class="bg-slate-100 font-extrabold text-center py-2 border-b border-gray-600 uppercase tracking-widest text-slate-800">Phần Tổng Hợp</div>
@@ -991,7 +991,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
     vungHienThi.innerHTML = theTrangThaiHtml + thanhCanhBaoRender + theHienThiQuyen + htmlBang + htmlTongHop;
 
-    // Đính kèm các Event Listener để kích hoạt thuật toán thời gian thực
     setTimeout(() => {
         let cacOVanBan = vungHienThi.querySelectorAll('textarea');
         cacOVanBan.forEach(ta => {
@@ -1004,7 +1003,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
             oNhap.addEventListener('input', (e) => { 
                 coThayDoiChuaLuu_SDB = true; 
                 if (e.target.closest('tr')) danhDauDongThayDoi(e.target.closest('tr'));
-                // Liên tục quét và cập nhật lại thống kê khi gõ
                 if (typeof window.capNhatThongKeSoDauBai === 'function') window.capNhatThongKeSoDauBai();
             });
             oNhap.addEventListener('change', (e) => { 
@@ -1014,7 +1012,6 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
             });
         });
         
-        // Gọi hàm quét 1 lần đầu tiên để lên bảng số liệu chuẩn xác
         if (typeof window.capNhatThongKeSoDauBai === 'function') window.capNhatThongKeSoDauBai();
     }, 50);
 }
