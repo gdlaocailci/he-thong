@@ -36,6 +36,10 @@ window.lamSachBoNhoSoDauBai = function() {
     
     maGvDangNhapHeThong = '';
     
+    // [BỔ SUNG SỬA LỖI]: Phá hủy hoàn toàn thẻ chốt quyền cũ
+    let theChotQuyenCu = document.getElementById('theChotQuyenSDB');
+    if (theChotQuyenCu) theChotQuyenCu.remove();
+    
     let vungHienThi = document.getElementById('vungHienThiSoDauBai');
     if (vungHienThi) vungHienThi.innerHTML = '';
     
@@ -198,6 +202,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         theChotQuyen = document.createElement('div');
         theChotQuyen.id = 'theChotQuyenSDB';
         theChotQuyen.style.display = 'none';
+        document.body.appendChild(theChotQuyen);
         let vungChinh = document.getElementById('khungSoDauBai');
         if (vungChinh) vungChinh.appendChild(theChotQuyen);
         else document.body.appendChild(theChotQuyen);
