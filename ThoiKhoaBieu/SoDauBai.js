@@ -914,7 +914,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
                 htmlBang += `
                     <td class="border border-gray-500 text-center p-1 bg-white" data-loai="tietSDB">${tiet}</td>
-                    <td class="border border-gray-500 p-1 font-bold text-slate-900 bg-white" data-loai="mon">${monHoc}</td>
+                    <td class="border border-gray-500 p-1 font-bold text-slate-900 bg-white text-center align-middle" data-loai="mon">${monHoc}</td>
                     <td class="border border-gray-500 p-1 bg-white align-middle" data-loai="tiet">${theTietPPCT}</td>
                     <td class="border border-gray-500 p-1 bg-white align-middle" data-loai="tenBai" data-islocked="${isLocked}">${theTenBai}</td>
                     <td class="border border-gray-500 p-1 bg-white align-middle" data-loai="coMat">${theCoMat}</td>
