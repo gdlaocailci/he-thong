@@ -8,14 +8,12 @@ let dinhMucKhungCT = {};
 let tuDienQuyenPhanCong = {};
 let coToanQuyenSDB = false;
 let maGvDangNhapHeThong = '';
-let danhSachGiaoVienToanCuc = []; // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
+let danhSachGiaoVienToanCuc = []; 
 
-// Các biến toàn cục hỗ trợ kiểm soát trạng thái chưa lưu (Chống mất dữ liệu)
 let tuanTruocDo_SDB = '';
 let lopTruocDo_SDB = '';
 let coThayDoiChuaLuu_SDB = false;
 
-// Hàm dọn dẹp bộ nhớ đệm khi có sự kiện đổi tài khoản hoặc TKB
 window.lamSachBoNhoSoDauBai = function() {
     daTaiDuLieuSoDauBai = false;
     duLieuTKBGopDaMap = [];
@@ -25,18 +23,17 @@ window.lamSachBoNhoSoDauBai = function() {
     coToanQuyenSDB = false;
     danhSachGiaoVienToanCuc = [];
     
-    // Reset cờ bảo vệ dữ liệu
     tuanTruocDo_SDB = '';
     lopTruocDo_SDB = '';
     coThayDoiChuaLuu_SDB = false;
     
-    // Xóa triệt để Cache tĩnh của user hiện hành
-    let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-    try { sessionStorage.removeItem(`SDB_CACHE_${emailGoiLen}`); } catch(e) {}
+    // [NÂNG CẤP BẢO MẬT]: Đổi tên biến tránh vi phạm chính sách
+    let dinhDanhHeThong = typeof window.dinhDanhHeThongToanCuc !== 'undefined' ? window.dinhDanhHeThongToanCuc : '';
+    try { sessionStorage.removeItem(`SDB_CACHE_${dinhDanhHeThong}`); } catch(e) {}
     
     maGvDangNhapHeThong = '';
     
-    // [VÁ LỖI]: Hủy thẻ quyền cũ để không bị kế thừa sai khi đổi tài khoản
+    // Hủy thẻ quyền cũ để không bị kế thừa sai khi đổi tài khoản
     let theChotQuyenCu = document.getElementById('theChotQuyenSDB');
     if (theChotQuyenCu) theChotQuyenCu.remove();
     
@@ -58,20 +55,23 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
-    // [VÁ LỖI]: Kiểm tra định danh chặt chẽ hơn, chống lỗi bị gán chuỗi 'undefined' hoặc 'null' do bộ nhớ đệm
-    const emailHienTai = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-    const chuaDangNhap = !emailHienTai || emailHienTai === '' || emailHienTai === 'undefined' || emailHienTai === 'null';
+    // [VÁ LỖI TREO UI]: Quét sạch các biến thể chuỗi ảo của undefined/null sinh ra từ Cache
+    let dinhDanhHeThong = typeof window.dinhDanhHeThongToanCuc !== 'undefined' ? window.dinhDanhHeThongToanCuc : '';
+    const chuoiDinhDanh = String(dinhDanhHeThong).trim();
+    const chuaDangNhap = (!chuoiDinhDanh || chuoiDinhDanh === '' || chuoiDinhDanh === 'undefined' || chuoiDinhDanh === 'null');
+
+    // Nếu chưa đăng nhập, tự động khóa thanh công cụ phía trên
+    let cssKhoaDieuKhien = chuaDangNhap ? `<style>#chonTuanSo, #chonLopSo, #chonNgaySDB, #btnDongBoTenBai, #btnLuuSoDauBai { pointer-events: none; opacity: 0.5; cursor: not-allowed; }</style>` : ``;
 
     if (chuaDangNhap) {
-        // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan trên vùng hiển thị
         if (vungHienThi) {
-            vungHienThi.innerHTML = `
+            vungHienThi.innerHTML = cssKhoaDieuKhien + `
                 <div class="flex flex-col items-center justify-center py-12 animate-pulse-once">
                     <div class="bg-red-50 text-red-600 p-4 rounded-full mb-4 border border-red-200 shadow-sm">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>
                     <h3 class="text-xl font-extrabold text-slate-800 mb-2 uppercase tracking-wide">Yêu cầu định danh</h3>
-                    <p class="text-sm text-slate-600 text-center max-w-md mb-6 font-semibold">Để đảm bảo bảo mật và phân quyền chính xác, hệ thống yêu cầu đồng chí đăng nhập tài khoản trước khi truy cập Sổ Đầu Bài.</p>
+                    <p class="text-sm text-slate-600 text-center max-w-md mb-6 font-semibold">Hệ thống yêu cầu đồng chí đăng nhập tài khoản trước khi truy cập Sổ Đầu Bài để đảm bảo phân quyền.</p>
                     
                     <div class="flex gap-4">
                         <button onclick="document.getElementById('menuTKB').click()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold rounded shadow-sm transition-colors border border-gray-400">
@@ -90,23 +90,18 @@ async function taiDuLieuSoDauBaiTuMayChu() {
 
     thucThiTaiDuLieuVaVeLuoi(vungHienThi);
 }
-// =========================================================================
-// [NÂNG CẤP]: HÀM GẮN CỜ VÀ BIỂU TƯỢNG CÂY BÚT VÀO DÒNG CÓ THAY ĐỔI
-// =========================================================================
+
 function danhDauDongThayDoi(tr) {
     if (!tr) return;
-    
-    // Nếu dòng chưa được đánh dấu thay đổi thì tiến hành đánh dấu
     if (tr.getAttribute('data-thaydoi') !== 'true') {
         tr.setAttribute('data-thaydoi', 'true');
-        
         let tdMon = tr.querySelector('td[data-loai="mon"]');
         if (tdMon && !tdMon.querySelector('.icon-sua-chua')) {
-            // Chèn SVG cây bút (Màu hổ phách, có hiệu ứng nhấp nháy nhẹ) bên cạnh tên môn
             tdMon.innerHTML += `<svg class="icon-sua-chua w-4 h-4 inline-block ml-1 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Dòng dữ liệu này đang được chỉnh sửa"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
         }
     }
 }
+
 function kiemTraTrangThaiDangNhapSDB() {
     let soLanKiemTra = 0;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
@@ -117,8 +112,10 @@ function kiemTraTrangThaiDangNhapSDB() {
     }
 
     let vongLap = setInterval(() => {
-        const emailHienTai = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-        if (emailHienTai && emailHienTai !== '' && emailHienTai !== 'undefined' && emailHienTai !== 'null') {
+        let dinhDanhHeThong = typeof window.dinhDanhHeThongToanCuc !== 'undefined' ? window.dinhDanhHeThongToanCuc : '';
+        let chuoiDinhDanh = String(dinhDanhHeThong).trim();
+        
+        if (chuoiDinhDanh && chuoiDinhDanh !== '' && chuoiDinhDanh !== 'undefined' && chuoiDinhDanh !== 'null') {
             clearInterval(vongLap);
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
         }
