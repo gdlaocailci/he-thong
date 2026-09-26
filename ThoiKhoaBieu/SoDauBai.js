@@ -870,7 +870,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                         
                         theTenBai = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${!quyenNhapThuCong?'disabled':''} class="w-full text-left outline-none ${cssNenKhoa} font-semibold text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle">${tenBai}</textarea>`;
                         theCoMat = `<input type="number" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-semibold text-slate-800" placeholder=".." value="${coMat}">`;
-                        theVang = `<input type="text" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-bold text-red-600 vang-input" placeholder="VD: 1P, 2K" value="${vang}">`;
+                        theVang = `<input type="text" ${!quyenNhapThuCong?'disabled':''} class="w-full text-center outline-none ${cssNenKhoa} font-bold text-red-600 text-[11px] placeholder-slate-400" placeholder="1P, 2K" value="${vang}">`;
                         theNhanXet = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${!quyenNhapThuCong?'disabled':''} class="w-full text-left outline-none ${cssNenKhoa} font-normal text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle">${nhanXet}</textarea>`;
                         
                         let monHocAnToan = monHoc.replace(/'/g, "\\'"); 
