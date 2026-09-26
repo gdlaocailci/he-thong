@@ -21,7 +21,7 @@ const CAU_HINH_FRONTEND = {
 // =========================================================================
 // KHỐI 2: CẤU HÌNH XÁC THỰC (GOOGLE IDENTITY)
 // =========================================================================
-const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
+//const SKT_GOOGLE_CLIENT_ID = "1097384743947-1jdc5rhhmbu0s9jp5vgt814g4f4id7lu.apps.googleusercontent.com";
 
 // =========================================================================
 // [NÂNG CẤP LÕI]: KHỐI 3: CẤU HÌNH KẾT NỐI FIREBASE REALTIME DATABASE
