@@ -1,5 +1,5 @@
 // =========================================================================
-// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (VÁ LỖI TOÀN DIỆN)
+// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (ĐÃ VÁ LỖI)
 // Vị trí thay thế: Toàn bộ từ dòng 1 đến trước hàm tinhNgayTuInputDate
 // =========================================================================
 let daTaiDuLieuSoDauBai = false;
@@ -28,7 +28,7 @@ window.lamSachBoNhoSoDauBai = function() {
     lopTruocDo_SDB = '';
     coThayDoiChuaLuu_SDB = false;
     
-    // [VÁ LỖI ĐỒNG BỘ]: Khớp chính xác tên biến định danh từ app.js
+    // Kiểm tra an toàn biến window
     let tkDangNhap = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
     try { sessionStorage.removeItem(`SDB_CACHE_${tkDangNhap}`); } catch(e) {}
     
@@ -55,10 +55,9 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
-    // [VÁ LỖI ĐỒNG BỘ]: Khớp chính xác tên biến định danh từ app.js
+    // Kiểm tra an toàn
     let tkDangNhap = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-    const chuoiDinhDanh = String(tkDangNhap).trim();
-    const chuaDangNhap = (!chuoiDinhDanh || chuoiDinhDanh === '' || chuoiDinhDanh === 'undefined' || chuoiDinhDanh === 'null');
+    const chuaDangNhap = (!tkDangNhap || tkDangNhap === '');
 
     let cssKhoaDieuKhien = chuaDangNhap ? `<style>#chonTuanSo, #chonLopSo, #chonNgaySDB, #btnDongBoTenBai, #btnLuuSoDauBai { pointer-events: none; opacity: 0.5; cursor: not-allowed; }</style>` : ``;
 
@@ -76,8 +75,8 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                         <button onclick="document.getElementById('menuTKB').click()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold rounded shadow-sm transition-colors border border-gray-400">
                             Quay lại TKB
                         </button>
-                        <!-- Gọi thẳng hàm nguyên bản khoiDongDangNhap của App.js -->
-                        <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
+                        <!-- Gắn sự kiện click trực tiếp gọi ID của nút đăng nhập gốc (Google yêu cầu click do người dùng) -->
+                        <button onclick="document.getElementById('nutDangNhapG').click(); kiemTraTrangThaiDangNhapSDB();" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
                             Đăng nhập ngay
                         </button>
@@ -102,6 +101,8 @@ function danhDauDongThayDoi(tr) {
     }
 }
 
+// Hàm lắng nghe không đè biến vòng lặp
+let vongLapKiemTraDangNhap = null;
 function kiemTraTrangThaiDangNhapSDB() {
     let soLanKiemTra = 0;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
@@ -111,19 +112,25 @@ function kiemTraTrangThaiDangNhapSDB() {
          if(btnDangNhap) btnDangNhap.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xác thực...`;
     }
 
-    let vongLap = setInterval(() => {
-        // [VÁ LỖI ĐỒNG BỘ]: Khớp chính xác tên biến định danh từ app.js
+    if(vongLapKiemTraDangNhap) clearInterval(vongLapKiemTraDangNhap);
+
+    vongLapKiemTraDangNhap = setInterval(() => {
         let tkDangNhap = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-        let chuoiDinhDanh = String(tkDangNhap).trim();
         
-        if (chuoiDinhDanh && chuoiDinhDanh !== '' && chuoiDinhDanh !== 'undefined' && chuoiDinhDanh !== 'null') {
-            clearInterval(vongLap);
+        if (tkDangNhap !== '') {
+            clearInterval(vongLapKiemTraDangNhap);
+            vongLapKiemTraDangNhap = null;
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
+            return;
         }
+        
         soLanKiemTra++;
-        if (soLanKiemTra > 120) {
-            clearInterval(vongLap); 
-            if (vungHienThi) taiDuLieuSoDauBaiTuMayChu(); 
+        if (soLanKiemTra > 120) { // Timeout sau 60 giây
+            clearInterval(vongLapKiemTraDangNhap);
+            vongLapKiemTraDangNhap = null;
+            if (vungHienThi) {
+                taiDuLieuSoDauBaiTuMayChu(); // Vẽ lại nút đăng nhập
+            }
         }
     }, 500);
 }
@@ -138,10 +145,10 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     }
 
     try {
-        let tkDangNhap = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+        let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
         
         const phanHoi = await fetchVoiCoCheThuLai(
-            `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(tkDangNhap)}`,
+            `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
             {},
             3,
             60000
