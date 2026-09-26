@@ -1,24 +1,26 @@
 // =========================================================================
 // KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN (TẠO ĐỘNG GIAO DIỆN & LOGIC)
-
 // =========================================================================
 let duLieuBangPhanQuyen = [];
 const DANH_SACH_MENU_HE_THONG = [
     {id: 'menuCaiDat', ten: '1. Cài đặt'}, {id: 'menuDanhMucGV', ten: '2. DM Giáo viên'},
     {id: 'menuDanhMucLop', ten: '3. DM Lớp'}, {id: 'menuKhungChuongTrinh', ten: '4. Khung CT'},
     {id: 'menuPhanCong', ten: '5. Phân công'}, {id: 'menuDanhMucSGK', ten: '6. DM SGK'},
-    {id: 'menuPhanQuyen', ten: '7. Phân quyền'}
+    {id: 'menuPhanQuyen', ten: '7. Phân quyền'}, {id: 'menuSoDauBai', ten: '8. Sổ đầu bài'}
 ];
 
 const DANH_SACH_NUT_CHUC_NANG = [
-    {id: 'btnNhapExcelTKB', ten: 'Nhập Excel'},
+    {id: 'btnNhapExcelTKB', ten: 'Nhập Excel TKB'},
     {id: 'btnKhoiPhuc', ten: 'Tuần mới'},
     {id: 'btnLuuTuan', ten: 'Lưu TKB Tuần'},
     {id: 'btnLuuCoDinh', ten: 'TKB Cố Định'},
     {id: 'btnXepTuDong', ten: 'Xếp Tự Động'},
     {id: 'btnKiemTra', ten: 'Định Mức tiết'},
     {id: 'btnChuyenTuan', ten: 'Mũi tên Chuyển tuần'},
-    { id: 'btnLuuSua', ten: 'Lưu Sửa' }
+    {id: 'btnLuuSua', ten: 'Lưu Sửa (Map)'},
+    {id: 'btnGVCNChotSo', ten: 'GVCN Chốt Sổ'},
+    {id: 'btnBGHDuyetSo', ten: 'BGH Phê Duyệt'},
+    {id: 'btnBGHMoKhoa', ten: 'BGH Mở Khóa'}
 ];
 
 // Khởi tạo và Bơm Giao diện vào index.html lúc tải trang
@@ -74,14 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
         vungChinh.insertAdjacentHTML('beforeend', khungHtml);
     }
     
-// 3. Gắn nối vào hệ thống phân quyền của app.js
+    // 3. Gắn nối vào hệ thống phân quyền của app.js
     if (typeof kiemSoatGiaoDien === 'function') {
         const kiemSoatGoc = kiemSoatGiaoDien;
         window.kiemSoatGiaoDien = function() {
             kiemSoatGoc();
             let menuPQ = document.getElementById('menuPhanQuyen');
             if (menuPQ) {
-                // [ĐÃ SỬA]: Đồng bộ gọi đúng tên biến quyenChiTiet.menu và thêm lớp bảo vệ an toàn
                 let duocXem = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
                               (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanQuyen'));
                 menuPQ.style.display = duocXem ? 'flex' : 'none';
@@ -111,11 +112,9 @@ async function taiDuLieuPhanQuyenTuMayChu() {
             throw new Error(ketQua.thongBao);
         }
         
-        // [CHỐT CHẶN AN TOÀN]: Đảm bảo dữ liệu nhận được phải là một mảng
         if (Array.isArray(ketQua)) {
             duLieuBangPhanQuyen = ketQua;
         } else if (ketQua && ketQua.trangThai === 'thanh_cong') {
-            // Cảnh báo khi người dùng quên Deploy mã Google Apps Script
             throw new Error("Mã máy chủ chưa được đồng bộ. Đồng chí vui lòng chọn Manage Deployments -> New version trên Google Apps Script.");
         } else {
             duLieuBangPhanQuyen = [];
