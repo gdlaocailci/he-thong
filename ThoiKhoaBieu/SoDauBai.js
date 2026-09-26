@@ -445,6 +445,10 @@ function ketXuatSoDauBaiLenLuoi() {
     coThayDoiChuaLuu_SDB = false; 
 }
 
+// =========================================================================
+// [BẢN SỬA LỖI UI]: VẼ LƯỚI SỔ ĐẦU BÀI 17 CỘT CHUẨN MẪU & TỔNG HỢP TỰ ĐỘNG
+// Thay thế toàn bộ hàm thucThiKetXuatSoDauBaiLenLuoi trong tệp SoDauBai.js
+// =========================================================================
 function thucThiKetXuatSoDauBaiLenLuoi() {
     let tuanChon = document.getElementById('chonTuanSo')?.value;
     let lopChon = document.getElementById('chonLopSo')?.value;
@@ -647,11 +651,14 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
     danhSachThu.forEach(thu => {
         let ngayCuaThu = mapNgayChinhXac[thu] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, thu) : '');
-        let hienThiThu = ngayCuaThu ? `<span class="uppercase">${thu}</span><br><span class="text-[11px] font-normal tracking-tight">Ngày ${ngayCuaThu}</span>` : `<span class="uppercase">${thu}</span>`;
+        let hienThiThu = ngayCuaThu ? `<span class="uppercase">${thu}</span><br><span class="text-[11px] font-normal tracking-tight normal-case">${ngayCuaThu}</span>` : `<span class="uppercase">${thu}</span>`;
         let danhSachBuoi = [{ id: 'Sang', dataBuoi: 'Sáng', dsTiet: [1, 2, 3, 4] }, { id: 'Chieu', dataBuoi: 'Chiều', dsTiet: [1, 2, 3] }];
-        let tongDongTrongNgay = 7; let daInCotThu = false;
 
         danhSachBuoi.forEach(buoiObj => {
+            // [SỬA LỖI UI]: Reset cờ in cột và tính số dòng gộp cho mỗi buổi thay vì gộp cả ngày
+            let inCotThuBuoi = true;
+            let rowspanBuoi = buoiObj.dsTiet.length; 
+
             buoiObj.dsTiet.forEach(tiet => {
                 let dongDuLieu = dictTKB[`${thu}_${buoiObj.id}_${tiet}`]; 
                 let monHoc = dongDuLieu ? dongDuLieu['Môn Học'] : '';
@@ -750,15 +757,24 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 }
 
                 let buoiText = buoiObj.dataBuoi === 'Sáng' ? 'Sáng' : 'Chiều';
-                htmlBang += `<tr class="hover:bg-blue-50/30 transition-colors" data-buoi="${buoiObj.dataBuoi}" data-daluu="${isDaLuu}" data-maluutru="${maLuuTru}" data-thaydoi="false">`;
-                if (!daInCotThu) {
-                    htmlBang += `<td class="border border-gray-500 text-center font-bold bg-white align-middle" rowspan="${tongDongTrongNgay}">
-                                    <div class="writing-vertical md:writing-horizontal">${hienThiThu}</div>
-                                    <div class="mt-2 font-bold text-xs text-slate-500">${buoiText}</div>
-                                 </td>`;
-                    daInCotThu = true;
-                } else if (tiet === 1 && buoiObj.id === 'Chieu') {
-                    htmlBang += `<td class="border border-gray-500 text-center font-bold bg-white align-middle border-t-2" rowspan="3"><div class="text-xs text-slate-500">${buoiText}</div></td>`;
+                let isRowDauChieu = (buoiObj.id === 'Chieu' && tiet === 1);
+                let cssRow = isRowDauChieu ? "border-t-2 border-gray-400" : "";
+
+                htmlBang += `<tr class="hover:bg-blue-50/30 transition-colors ${cssRow}" data-buoi="${buoiObj.dataBuoi}" data-daluu="${isDaLuu}" data-maluutru="${maLuuTru}" data-thaydoi="false">`;
+                
+                // [SỬA LỖI UI]: Tách riêng ô "Sáng" và "Chiều" vào 2 cột khác nhau theo rowspan tương ứng
+                if (inCotThuBuoi) {
+                    if (buoiObj.id === 'Sang') {
+                        htmlBang += `<td class="border border-gray-500 text-center font-bold bg-white align-middle" rowspan="${rowspanBuoi}">
+                                        <div class="writing-vertical md:writing-horizontal">${hienThiThu}</div>
+                                        <div class="mt-2 font-bold text-sm text-slate-700">${buoiText}</div>
+                                     </td>`;
+                    } else {
+                        htmlBang += `<td class="border border-gray-500 text-center font-bold bg-white align-middle border-t-2 border-gray-400" rowspan="${rowspanBuoi}">
+                                        <div class="font-bold text-sm text-slate-700">${buoiText}</div>
+                                     </td>`;
+                    }
+                    inCotThuBuoi = false;
                 }
 
                 htmlBang += `
