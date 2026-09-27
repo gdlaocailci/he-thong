@@ -367,21 +367,34 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         });
     }
 
-  // [NÂNG CẤP - FIX LỖI]: Quét mảng DANH_SACH_GIAO_VIEN, đối chiếu ID (Cột A) để lấy chính xác Họ tên (Cột B)
-    let tenGiaoVienChuKy = tenGvDangNhapHeThong;
+  // =========================================================================
+    // [NÂNG CẤP ĐỒNG BỘ]: Quét danh mục giáo viên, đối chiếu chính xác Mã GV (Cột A) để lấy Họ Tên (Cột B)
+    // =========================================================================
+    let tenGiaoVienChuKy = tenGvDangNhapHeThong || maGvDangNhapHeThong; // Mặc định dự phòng
     
-    if (duLieuSever.DANH_SACH_GIAO_VIEN && duLieuSever.DANH_SACH_GIAO_VIEN.length > 0) {
-        // Tìm dòng dữ liệu có Cột A khớp với ID đang đăng nhập
-        let dataGv = duLieuSever.DANH_SACH_GIAO_VIEN.find(dong => 
-            String(dong['A'] || '').trim().toUpperCase() === maGvDangNhapHeThong.trim().toUpperCase()
-        );
-        
-        // Nếu tìm thấy và Cột B có dữ liệu thì gán làm tên chữ ký
-        if (dataGv && dataGv['B']) {
-            tenGiaoVienChuKy = String(dataGv['B']).trim();
+    if (duLieuSever.DANH_SACH_GIAO_VIEN && Array.isArray(duLieuSever.DANH_SACH_GIAO_VIEN)) {
+        for (let i = 0; i < duLieuSever.DANH_SACH_GIAO_VIEN.length; i++) {
+            let dong = duLieuSever.DANH_SACH_GIAO_VIEN[i];
+            let maGvCotA = '';
+            let hoTenCotB = '';
+            
+            // Đọc an toàn định dạng Object (A, B) trả về từ Google Sheets
+            if (typeof dong === 'object' && dong !== null) {
+                maGvCotA = String(dong['A'] || dong['Mã GV'] || dong[0] || '').trim();
+                hoTenCotB = String(dong['B'] || dong['Họ Tên'] || dong[1] || '').trim();
+            }
+
+            // Đối chiếu Mã GV (Bỏ qua khoảng trắng và viết hoa/thường)
+            if (maGvCotA.toLowerCase() === String(maGvDangNhapHeThong).trim().toLowerCase()) {
+                if (hoTenCotB !== '') {
+                    tenGiaoVienChuKy = hoTenCotB; // Ghi đè tên chuẩn từ Cột B
+                }
+                break; // Dừng vòng lặp khi đã tìm thấy ID
+            }
         }
     }
 
+    // Gán duy nhất Họ Tên đã lấy được vào danh sách ký
     if (tenGiaoVienChuKy && tenGiaoVienChuKy !== '') {
         danhSachGiaoVienToanCuc = [tenGiaoVienChuKy];
     } else {
