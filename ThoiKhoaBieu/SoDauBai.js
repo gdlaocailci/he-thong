@@ -762,7 +762,7 @@ async function luuSoDauBaiSangMayChu() {
     let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
 
     let duLieuQuetDuoc = [];
-    let danhSachThongBao = []; // [NÂNG CẤP]: Mảng thu thập log để báo cáo trước khi lưu
+    let danhSachThongBao = []; 
     let cacBang = document.querySelectorAll('#vungHienThiSoDauBai .bang-so-dau-bai-container');
     let canThiTietThieuTenBai = false; 
     let loiPhanQuyen = false;
@@ -786,10 +786,12 @@ async function luuSoDauBaiSangMayChu() {
                 let isDaLuu = dong.getAttribute('data-daluu') === 'true';
                 let isThayDoi = dong.getAttribute('data-thaydoi') === 'true';
 
+                // [NÂNG CẤP CHỐNG LỆCH CỘT]: Lọc bỏ ký tự ngắt dòng (Enter) trong Textarea để chống gãy mảng khi ghi xuống Sheet
                 let getVal = (cell) => {
                     if (!cell) return '';
                     let theNhap = cell.querySelector('input, select, textarea');
-                    return theNhap ? theNhap.value.trim() : cell.innerText.trim();
+                    let rawVal = theNhap ? theNhap.value : cell.innerText;
+                    return rawVal.replace(/\n/g, ' ').trim(); 
                 };
 
                 let tiet = getVal(dong.querySelector('td[data-loai="tietSDB"]'));
@@ -838,25 +840,35 @@ async function luuSoDauBaiSangMayChu() {
                             theTextarea.style.height = 'auto';
                             theTextarea.style.height = (theTextarea.scrollHeight) + 'px';
                         }
-                        tenBai = baiDayChuan; 
+                        tenBai = baiDayChuan.replace(/\n/g, ' ').trim(); 
                         isThayDoi = true;
-                        danhDauDongThayDoi(dong); // Gắn cờ tự động
+                        danhDauDongThayDoi(dong); 
                     }
                 }
 
-                // [NÂNG CẤP]: Thu thập thông tin cho thông báo hộp thoại
                 if (isThayDoi || !isDaLuu) {
                     let maLuuTru = `${tuanSo}_${lopChon}_${thuHienTai}_${buoi}_${tiet}`;
+                    let maGvGoc = tkbDoiChieu ? (tkbDoiChieu['Mã GV'] || '') : '';
 
+                    // [NÂNG CẤP CHỐNG LỆCH CỘT]: Sắp xếp lại thứ tự Object và bổ sung maGv để đồng bộ chính xác với Google Sheet
                     duLieuQuetDuoc.push({
-                        maLuuTru: maLuuTru, tuan: tuanSo, maLop: lopChon,
-                        thu: thuHienTai, ngay: ngayHienTai, buoi: buoi, tiet: tiet,
-                        mon: mon, tietPPCT: tietPPCT, tenBai: tenBai, 
-                        nhanXet: nhanXetGV, xepLoai: xepLoaiGV, chuKy: chuKyGV,
+                        maLuuTru: maLuuTru, 
+                        tuan: tuanSo, 
+                        maLop: lopChon,
+                        thu: thuHienTai, 
+                        ngay: ngayHienTai, 
+                        buoi: buoi, 
+                        tiet: tiet,
+                        mon: mon, 
+                        maGv: maGvGoc,       // Bổ sung GV dạy để Apps Script không bị hụt cột
+                        tietPPCT: tietPPCT, 
+                        tenBai: tenBai, 
+                        nhanXet: nhanXetGV, 
+                        xepLoai: xepLoaiGV, 
+                        chuKy: chuKyGV,
                         chuyenCan: chuyenCan
                     });
                     
-                    // Thêm dòng thay đổi vào danh sách để người dùng đọc trước khi xác nhận
                     danhSachThongBao.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: ${mon}`);
                 }
             }
@@ -874,7 +886,6 @@ async function luuSoDauBaiSangMayChu() {
 
     if (duLieuQuetDuoc.length === 0) return alert("Sổ đầu bài chưa có thay đổi nào để lưu.");
     
-    // [NÂNG CẤP]: Bật hộp thoại thông báo chi tiết
     let thongBaoHienThi = `Hệ thống ghi nhận ${duLieuQuetDuoc.length} tiết học có sự thay đổi/cập nhật dữ liệu:\n\n` + 
                           danhSachThongBao.join('\n') + 
                           `\n\nĐồng chí có chắc chắn muốn chốt lưu các thay đổi này vào Cơ sở dữ liệu?`;
@@ -904,7 +915,6 @@ async function luuSoDauBaiSangMayChu() {
         btn.innerHTML = textGoc; btn.disabled = false; 
     }
 }
-
 function dongBoTenBaiHoc() {
     const btn = document.getElementById('btnDongBoTenBai');
     let textGoc = btn ? btn.innerHTML : '';
