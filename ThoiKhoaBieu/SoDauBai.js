@@ -8,6 +8,7 @@ let dinhMucKhungCT = {};
 let tuDienQuyenPhanCong = {};
 let coToanQuyenSDB = false;
 let maGvDangNhapHeThong = '';
+let tenGvDangNhapHeThong = ''; // [NÂNG CẤP]: Biến lưu giá trị Cột B (Tên hiển thị)
 let danhSachGiaoVienToanCuc = []; // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
 
 // Các biến toàn cục hỗ trợ kiểm soát trạng thái chưa lưu (Chống mất dữ liệu)
@@ -35,6 +36,7 @@ window.lamSachBoNhoSoDauBai = function() {
     try { sessionStorage.removeItem(`SDB_CACHE_${emailGoiLen}`); } catch(e) {}
     
     maGvDangNhapHeThong = '';
+    tenGvDangNhapHeThong = ''; // Dọn dẹp tên hiển thị
     
     let vungHienThi = document.getElementById('vungHienThiSoDauBai');
     if (vungHienThi) vungHienThi.innerHTML = '';
@@ -186,6 +188,7 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
+    tenGvDangNhapHeThong = duLieuSever.TEN_GIAO_VIEN || duLieuSever.MA_GIAO_VIEN || ''; // [NÂNG CẤP]: Hứng tên Cột B
     coToanQuyenSDB = duLieuSever.TOAN_QUYEN || false;
     tuDienQuyenPhanCong = duLieuSever.QUYEN_THEO_LOP || {};
 
@@ -201,6 +204,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     }
     
     theChotQuyen.setAttribute('data-madinhdanh', maGvDangNhapHeThong);
+    theChotQuyen.setAttribute('data-tendinhdanh', tenGvDangNhapHeThong); // Chốt tên hiển thị vào DOM
     theChotQuyen.setAttribute('data-quantri', coToanQuyenSDB);
     theChotQuyen.setAttribute('data-matranquyen', JSON.stringify(tuDienQuyenPhanCong));
 
