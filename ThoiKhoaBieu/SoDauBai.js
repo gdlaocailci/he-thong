@@ -190,6 +190,7 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 // =========================================================================
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
+    // [ĐỒNG BỘ]: Ưu tiên nhận TEN_GIAO_VIEN do Backend cung cấp, nếu không có mới lùi về MA_GIAO_VIEN
     let tenGvDangNhapHeThong = duLieuSever.TEN_GIAO_VIEN || duLieuSever.MA_GIAO_VIEN || '';
     coToanQuyenSDB = duLieuSever.TOAN_QUYEN || false;
     tuDienQuyenPhanCong = duLieuSever.QUYEN_THEO_LOP || {};
@@ -367,36 +368,12 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         });
     }
 
-  // =========================================================================
-    // [NÂNG CẤP ĐỒNG BỘ]: Quét danh mục giáo viên, đối chiếu chính xác Mã GV (Cột A) để lấy Họ Tên (Cột B)
     // =========================================================================
-    let tenGiaoVienChuKy = tenGvDangNhapHeThong || maGvDangNhapHeThong; // Mặc định dự phòng
-    
-    if (duLieuSever.DANH_SACH_GIAO_VIEN && Array.isArray(duLieuSever.DANH_SACH_GIAO_VIEN)) {
-        for (let i = 0; i < duLieuSever.DANH_SACH_GIAO_VIEN.length; i++) {
-            let dong = duLieuSever.DANH_SACH_GIAO_VIEN[i];
-            let maGvCotA = '';
-            let hoTenCotB = '';
-            
-            // Đọc an toàn định dạng Object (A, B) trả về từ Google Sheets
-            if (typeof dong === 'object' && dong !== null) {
-                maGvCotA = String(dong['A'] || dong['Mã GV'] || dong[0] || '').trim();
-                hoTenCotB = String(dong['B'] || dong['Họ Tên'] || dong[1] || '').trim();
-            }
-
-            // Đối chiếu Mã GV (Bỏ qua khoảng trắng và viết hoa/thường)
-            if (maGvCotA.toLowerCase() === String(maGvDangNhapHeThong).trim().toLowerCase()) {
-                if (hoTenCotB !== '') {
-                    tenGiaoVienChuKy = hoTenCotB; // Ghi đè tên chuẩn từ Cột B
-                }
-                break; // Dừng vòng lặp khi đã tìm thấy ID
-            }
-        }
-    }
-
-    // Gán duy nhất Họ Tên đã lấy được vào danh sách ký
-    if (tenGiaoVienChuKy && tenGiaoVienChuKy !== '') {
-        danhSachGiaoVienToanCuc = [tenGiaoVienChuKy];
+    // [NÂNG CẤP ĐỒNG BỘ - BẢN FIX CUỐI]: Gán danh sách giáo viên từ Backend gửi sang
+    // =========================================================================
+    // Nhờ việc Backend trả trực tiếp TEN_GIAO_VIEN, ta có thể gán trực tiếp làm chữ ký
+    if (tenGvDangNhapHeThong && tenGvDangNhapHeThong.trim() !== '') {
+        danhSachGiaoVienToanCuc = [tenGvDangNhapHeThong.trim()];
     } else {
         danhSachGiaoVienToanCuc = [];
     }
