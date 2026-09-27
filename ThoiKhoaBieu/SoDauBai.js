@@ -62,22 +62,17 @@ window.lamSachBoNhoSoDauBai = function() {
 };
 
 async function taiDuLieuSoDauBaiTuMayChu() {
-    if (daTaiDuLieuSoDauBai) return;
-    
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     const vungDieuKhien = document.getElementById('vungDieuKhienSDB');
     
+    // Kiểm tra trực tiếp biến toàn cục
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
     if (chuaDangNhap) {
-        // Khóa vùng điều khiển thao tác nếu chưa đăng nhập
+        // Nếu chưa đăng nhập: Ẩn ngay vùng chọn Tuần/Lớp/Nút
         if (vungDieuKhien) vungDieuKhien.style.display = 'none';
         
-        // [PHỤC HỒI]: Tự động gọi UI đăng nhập Google ngay lập tức
-        if (typeof khoiDongDangNhap === 'function') khoiDongDangNhap();
-        if (typeof kiemTraTrangThaiDangNhapSDB === 'function') kiemTraTrangThaiDangNhapSDB();
-
-        // Giao diện Khóa bảo mật dự phòng
+        // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan
         if (vungHienThi) {
             vungHienThi.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-12 animate-pulse-once">
@@ -99,11 +94,16 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                 </div>
             `;
         }
-        return;
+        return; // Dừng lại không chạy tiếp
     }
 
-    // Mở khóa vùng điều khiển khi đã xác thực quyền
+    // Nếu đã đăng nhập: Chắc chắn mở khóa vùng điều khiển
     if (vungDieuKhien) vungDieuKhien.style.display = 'flex';
+    
+    // NẾU DỮ LIỆU ĐÃ TẢI RỒI: Dừng hàm tại đây (nhưng vungDieuKhien đã được bật lên an toàn)
+    if (daTaiDuLieuSoDauBai) return;
+
+    // NẾU CHƯA TẢI: Kích hoạt tải dữ liệu
     thucThiTaiDuLieuVaVeLuoi(vungHienThi);
 }
 // =========================================================================
