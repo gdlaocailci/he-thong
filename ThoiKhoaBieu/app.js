@@ -941,7 +941,9 @@ async function luuDuLieu(event, loaiLuu) {
                 localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(dsTietLuoi));
 
                 if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
-                await taiDuLieuTKB(true, 'TKB_HIEN_TAI', true);
+                
+                // [ĐÃ SỬA]: Chỉ giữ lại một dòng gọi hàm tải dữ liệu với tham số false
+                await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
                 localStorage.setItem('KhoaDongBo_TKB', Date.now().toString());
             }
         }
@@ -951,7 +953,6 @@ async function luuDuLieu(event, loaiLuu) {
         if(btn.disabled !== undefined) { btn.innerHTML = textGoc; btn.disabled = false; }
     }
 }
-
 // =========================================================================
 // KHỐI 5: ĐỘNG CƠ ĐIỀU HƯỚNG SIÊU TỐC
 // =========================================================================
@@ -1083,7 +1084,8 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         window.emailGiaoVienToanCuc = dinhDanhHeThong;
 
         if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
-        
+        await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
+        localStorage.setItem('KhoaDongBo_TKB', Date.now().toString());
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white" title="Tài khoản: ${tenHienThi}"><span class="truncate text-sm font-semibold group-hover:text-red-300 transition-colors">Đăng xuất</span>`;
             nutDangNhap.classList.replace('bg-slate-700', 'bg-slate-800'); 
@@ -1808,3 +1810,53 @@ async function thucThiChuyenTuanTiepTheo(event) {
         btn.disabled = false;
     }
 }
+// =========================================================================
+// KHỐI ĐỒNG BỘ DỮ LIỆU NGẦM THÔNG MINH (BẢO VỆ CHỐNG MẤT DỮ LIỆU)
+// =========================================================================
+let boDemDongBoToanCuc;
+let thoiGianThaoTacCuoi = Date.now();
+const THOI_GIAN_DONG_BO = 60000; // 1 phút / lần
+
+// Ghi nhận mốc thời gian khi có thao tác gõ phím trên toàn hệ thống
+document.addEventListener('keydown', () => { thoiGianThaoTacCuoi = Date.now(); });
+document.addEventListener('input', () => { thoiGianThaoTacCuoi = Date.now(); });
+
+async function dongBoDuLieuNgamToanCuc() {
+    // 1. Kiểm tra thao tác: Nếu người dùng vừa gõ phím trong 10 giây qua -> Tạm hoãn tải
+    if (Date.now() - thoiGianThaoTacCuoi < 10000) return;
+
+    // 2. Chống mất dữ liệu: Quét toàn bộ lưới xem có ô nào đang sửa chưa lưu không
+    let coOThayDoiTKB = document.querySelector('td[data-thaydoi="true"]');
+    let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
+
+    // Nếu phát hiện có dữ liệu đang sửa dở, tuyệt đối không đồng bộ
+    if (coOThayDoiTKB || coThayDoiSDB) {
+        console.warn("Hệ thống tạm dừng đồng bộ ngầm để bảo vệ dữ liệu đang chỉnh sửa.");
+        return; 
+    }
+
+    // 3. Tiến hành đồng bộ ngầm dựa trên Tab đang mở
+    let khungTKB = document.getElementById('khungTKB');
+    let khungSDB = document.getElementById('khungSoDauBai');
+
+    if (khungTKB && !khungTKB.classList.contains('hidden')) {
+        // Tải TKB: coCache=true (không xoay loading to), epDongBo=false
+        if (typeof taiDuLieuTKB === 'function') {
+            await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
+        }
+    } 
+    else if (khungSDB && !khungSDB.classList.contains('hidden')) {
+        // Tải Sổ đầu bài ngầm
+        if (typeof thucThiLamMoiNgam === 'function') {
+            await thucThiLamMoiNgam();
+        }
+    }
+}
+
+function kichHoatDongBoNgamToanCuc() {
+    if (boDemDongBoToanCuc) clearInterval(boDemDongBoToanCuc);
+    boDemDongBoToanCuc = setInterval(dongBoDuLieuNgamToanCuc, THOI_GIAN_DONG_BO);
+}
+
+// Khởi chạy động cơ khi trang được nạp
+document.addEventListener('DOMContentLoaded', kichHoatDongBoNgamToanCuc);
