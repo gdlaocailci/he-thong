@@ -65,12 +65,19 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     if (daTaiDuLieuSoDauBai) return;
     
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    const vungDieuKhien = document.getElementById('vungDieuKhienSDB');
     
-    // Kiểm tra trực tiếp biến toàn cục thay vì check sự kiện onclick để chống lỗi Race Condition
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
     if (chuaDangNhap) {
-        // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan trên vùng hiển thị
+        // Khóa vùng điều khiển thao tác nếu chưa đăng nhập
+        if (vungDieuKhien) vungDieuKhien.style.display = 'none';
+        
+        // [PHỤC HỒI]: Tự động gọi UI đăng nhập Google ngay lập tức
+        if (typeof khoiDongDangNhap === 'function') khoiDongDangNhap();
+        if (typeof kiemTraTrangThaiDangNhapSDB === 'function') kiemTraTrangThaiDangNhapSDB();
+
+        // Giao diện Khóa bảo mật dự phòng
         if (vungHienThi) {
             vungHienThi.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-12 animate-pulse-once">
@@ -86,7 +93,7 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                         </button>
                         <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
-                            Đăng nhập ngay
+                            Tiếp tục đăng nhập
                         </button>
                     </div>
                 </div>
@@ -95,6 +102,8 @@ async function taiDuLieuSoDauBaiTuMayChu() {
         return;
     }
 
+    // Mở khóa vùng điều khiển khi đã xác thực quyền
+    if (vungDieuKhien) vungDieuKhien.style.display = 'flex';
     thucThiTaiDuLieuVaVeLuoi(vungHienThi);
 }
 // =========================================================================
@@ -114,8 +123,11 @@ function danhDauDongThayDoi(tr) {
         }
     }
 }
+let intervalKiemTraDangNhap = null;
+
 // Lắng nghe trạng thái đăng nhập để tự động mở Sổ đầu bài
 function kiemTraTrangThaiDangNhapSDB() {
+    if (intervalKiemTraDangNhap) clearInterval(intervalKiemTraDangNhap);
     let soLanKiemTra = 0;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
@@ -124,14 +136,19 @@ function kiemTraTrangThaiDangNhapSDB() {
          if(btnDangNhap) btnDangNhap.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xác thực...`;
     }
 
-    let vongLap = setInterval(() => {
+    intervalKiemTraDangNhap = setInterval(() => {
         if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
-            clearInterval(vongLap);
+            clearInterval(intervalKiemTraDangNhap);
+            
+            // Xác thực thành công -> Mở khóa vùng điều khiển SĐB
+            let vungDieuKhien = document.getElementById('vungDieuKhienSDB');
+            if (vungDieuKhien) vungDieuKhien.style.display = 'flex';
+            
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
         }
         soLanKiemTra++;
-        if (soLanKiemTra > 120) {
-            clearInterval(vongLap); 
+        if (soLanKiemTra > 120) { // Timeout sau 1 phút
+            clearInterval(intervalKiemTraDangNhap); 
             if (vungHienThi) taiDuLieuSoDauBaiTuMayChu(); 
         }
     }, 500);
