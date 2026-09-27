@@ -700,11 +700,12 @@
     <script src="QuanLyDanhMucSGK.js"></script>
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
-    <script>
-        let boDemLamMoiNgam;
-        const THOI_GIAN_CHO_LAM_MOI = 60000; // 1 phút = 60000 ms
-
+   <script>
         async function thucThiLamMoiNgam() {
+            // [CHỐT BẢO VỆ KÉP]: Bắt buộc phải có để chống mất dữ liệu khi đang gõ
+            if (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true) return;
+            if (document.querySelector('td[data-thaydoi="true"]')) return;
+
             // Chỉ chạy đồng bộ ngầm khi người dùng đang mở tab Sổ đầu bài
             let tabSDB = document.getElementById('khungSoDauBai');
             if (!tabSDB || tabSDB.classList.contains('hidden')) return;
@@ -739,8 +740,14 @@
                     if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
                     
                     // 6. Khôi phục tùy chọn và render lại lưới (Dữ liệu mới đè lên siêu mượt)
-                    if (tuanChon && theTuan) theTuan.value = tuanChon;
-                    if (lopChon && theLop) theLop.value = lopChon;
+                    if (tuanChon && theTuan) {
+                        theTuan.value = tuanChon;
+                        if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonTuanSo');
+                    }
+                    if (lopChon && theLop) {
+                        theLop.value = lopChon;
+                        if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo');
+                    }
                     
                     if (tuanChon && lopChon && typeof ketXuatSoDauBaiLenLuoi === 'function') {
                         ketXuatSoDauBaiLenLuoi();
@@ -748,19 +755,9 @@
                 }
             } catch (loi) {
                 // Lỗi mạng hoặc đang offline sẽ bị bỏ qua, không làm phiền người dùng
-                console.warn("Tiến trình đồng bộ ngầm tạm dừng do mạng.");
+                console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do mạng.");
             }
         }
-
-        function datLaiBoDemLamMoi() {
-            if (boDemLamMoiNgam) clearInterval(boDemLamMoiNgam);
-            // Thiết lập gọi hàm đồng bộ ngầm sau mỗi 1 phút rảnh tay
-            boDemLamMoiNgam = setInterval(thucThiLamMoiNgam, THOI_GIAN_CHO_LAM_MOI);
-        }
-
-        // Theo dõi hành vi: Chỉ đếm thời gian khi người dùng KHÔNG thao tác (chuột/phím)
-        document.addEventListener('DOMContentLoaded', datLaiBoDemLamMoi);
-        
     </script>
 </body>
 </html>
