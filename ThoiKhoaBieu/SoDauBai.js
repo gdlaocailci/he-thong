@@ -185,7 +185,7 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 }
 
 // =========================================================================
-// [NÂNG CẤP]: ÁNH XẠ DỮ LIỆU CHUẨN XÁC BẰNG ID CỘT (A, B, C...) CHỐNG LỖI ĐỔI TIÊU ĐỀ
+// [NÂNG CẤP]: ÁNH XẠ DỮ LIỆU TUYỆT ĐỐI THEO TÊN CỘT VẬT LÝ (A, B, C...)
 // =========================================================================
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
@@ -217,28 +217,29 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         return raw.charAt(0).toUpperCase() + raw.slice(1);
     };
 
+    // 1. XỬ LÝ SỔ ĐẦU BÀI (Khớp 100% theo ảnh chụp trang tính)
     if (duLieuSever.SO_DAU_BAI) {
         duLieuSever.SO_DAU_BAI.forEach(dong => {
-            // Đọc dữ liệu ưu tiên theo Cột (A, B, C...) -> Phòng trường hợp đổi tiêu đề
-            let tuan = String(dong['A'] || dong['Tuần'] || '').replace(/\D/g, '');
-            let lop = String(dong['B'] || dong['Mã Lớp'] || '').trim().toUpperCase();
-            let thuChuan = chuanHoaThu(dong['C'] || dong['Thứ'] || ''); 
-            let buoi = String(dong['D'] || dong['Buổi'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
-            let tiet = String(dong['E'] || dong['Tiết'] || '').trim();
+            let tuan = String(dong['B'] || '').replace(/\D/g, '');
+            let lop = String(dong['C'] || '').trim().toUpperCase();
+            let thuChuan = chuanHoaThu(dong['D'] || ''); 
+            let ngay = String(dong['E'] || '').trim();
+            let buoi = String(dong['F'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
+            let tiet = String(dong['G'] || '').trim();
             
             let khoa = `${tuan}_${lop}_${thuChuan}_${buoi}_${tiet}`;
             
             mapDuiLieuHopNhat[khoa] = {
                 'Tuần': tuan, 'Mã Lớp': lop, 'Thứ': thuChuan, 'Buổi': buoi, 'Tiết': tiet,
-                'Môn Học': dong['F'] || dong['Môn Học'] || dong['Môn học'] || dong['Môn'] || '',
-                'Mã GV': dong['G'] || dong['Giáo viên'] || dong['Mã GV'] || dong['Giáo Viên'] || dong['GV'] || '',
-                'Ngày': dong['H'] || dong['Ngày'] || '',
-                'TietPPCT_Thuc': dong['I'] || dong['Tiết PPCT'] || '',
-                'TenBai_Thuc': dong['J'] || dong['Tên Bài Dạy'] || dong['Tên bài dạy'] || dong['Tên Bài'] || dong['Tên bài'] || '',
-                'NhanXet_Thuc': dong['K'] || dong['Nhận Xét'] || dong['Nhận xét'] || '',
-                'XepLoai_Thuc': dong['L'] || dong['Xếp Loại'] || dong['Xếp loại'] || '',
-                'ChuKy_Thuc': dong['M'] || dong['Chữ Ký GV'] || dong['Chữ ký GV'] || dong['Chữ ký'] || '',
-                'ChuyenCan_Thuc': dong['N'] || dong['Chuyên Cần'] || dong['Chuyên cần'] || '',
+                'Môn Học': dong['H'] || '',
+                'Mã GV': '', // Lấy chéo từ TKB
+                'Ngày': ngay,
+                'TietPPCT_Thuc': dong['I'] || '',
+                'TenBai_Thuc': dong['J'] || '',
+                'NhanXet_Thuc': dong['K'] || '',
+                'XepLoai_Thuc': dong['L'] || '',
+                'ChuKy_Thuc': dong['M'] || '',
+                'ChuyenCan_Thuc': dong['N'] || '',
                 'DaLuu': true 
             };
         });
@@ -247,20 +248,20 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     let mapTkbToanTap = {};
     let tuanHeThong = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.TUAN_HIEN_TAI) ? parseInt(thongSoHocVu.TUAN_HIEN_TAI) : 999;
 
+    // 2. XỬ LÝ THỜI KHÓA BIỂU (Đã chuyển sang A, B, C. Cần đảm bảo Sheet TKB gửi về đúng chuẩn này)
     const quyTrinhXuLyTKB = (dong) => {
-        let tuanDong = parseInt(String(dong['A'] || dong['Tuần'] || '').replace(/\D/g, '')) || 0;
-        let lop = String(dong['B'] || dong['Mã Lớp'] || '').trim().toUpperCase();
-        let thu = chuanHoaThu(dong['C'] || dong['Thứ'] || '');
-        let buoi = String(dong['D'] || dong['Buổi'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
-        let tiet = String(dong['E'] || dong['Tiết'] || '').trim();
+        let tuanDong = parseInt(String(dong['A'] || '').replace(/\D/g, '')) || 0;
+        let lop = String(dong['B'] || '').trim().toUpperCase();
+        let thu = chuanHoaThu(dong['C'] || '');
+        let buoi = String(dong['D'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
+        let tiet = String(dong['E'] || '').trim();
         
         let khoa = `${tuanDong}_${lop}_${thu}_${buoi}_${tiet}`;
-        // Map lại TKB để có key đồng nhất
         mapTkbToanTap[khoa] = {
             'Tuần': tuanDong, 'Mã Lớp': lop, 'Thứ': thu, 'Buổi': buoi, 'Tiết': tiet,
-            'Môn Học': dong['F'] || dong['Môn Học'] || '',
-            'Mã GV': dong['G'] || dong['Mã GV'] || dong['Giáo viên'] || '',
-            'Ngày': dong['H'] || dong['Ngày'] || ''
+            'Môn Học': dong['F'] || '',
+            'Mã GV': dong['G'] || '',
+            'Ngày': dong['H'] || ''
         };
         return tuanDong;
     };
@@ -268,14 +269,14 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     if (duLieuSever.DATA_TKB) {
         duLieuSever.DATA_TKB.forEach(dong => {
             let tuanDong = quyTrinhXuLyTKB(dong);
-            if (tuanDong >= tuanHeThong) delete mapTkbToanTap[`${tuanDong}_${String(dong['B'] || dong['Mã Lớp']).trim().toUpperCase()}_${chuanHoaThu(dong['C'] || dong['Thứ'])}_${String(dong['D'] || dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều'}_${String(dong['E'] || dong['Tiết']).trim()}`]; // Filter logical error safe
+            if (tuanDong >= tuanHeThong) delete mapTkbToanTap[`${tuanDong}_${String(dong['B'] || '').trim().toUpperCase()}_${chuanHoaThu(dong['C'] || '')}_${String(dong['D'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều'}_${String(dong['E'] || '').trim()}`];
         });
     }
     
     if (duLieuSever.TKB_HIEN_TAI) {
         duLieuSever.TKB_HIEN_TAI.forEach(dong => {
             let tuanDong = quyTrinhXuLyTKB(dong);
-            if (tuanDong < tuanHeThong) delete mapTkbToanTap[`${tuanDong}_${String(dong['B'] || dong['Mã Lớp']).trim().toUpperCase()}_${chuanHoaThu(dong['C'] || dong['Thứ'])}_${String(dong['D'] || dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều'}_${String(dong['E'] || dong['Tiết']).trim()}`];
+            if (tuanDong < tuanHeThong) delete mapTkbToanTap[`${tuanDong}_${String(dong['B'] || '').trim().toUpperCase()}_${chuanHoaThu(dong['C'] || '')}_${String(dong['D'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều'}_${String(dong['E'] || '').trim()}`];
         });
     }
 
@@ -316,15 +317,15 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         return (parseInt(a['Tiết']) || 0) - (parseInt(b['Tiết']) || 0);
     });
 
+    // 3. XỬ LÝ KHUNG CHƯƠNG TRÌNH & PPCT (Đã chuyển sang A, B, C)
     dinhMucKhungCT = {};
     if (duLieuSever.KHUNG_CHUONG_TRINH) {
         duLieuSever.KHUNG_CHUONG_TRINH.forEach(dong => {
-            let mon = String(dong['A'] || dong['Môn học'] || dong['Tên môn học'] || dong['Môn Học'] || '').trim().toLowerCase();
+            let mon = String(dong['A'] || '').trim().toLowerCase();
             if (!mon) return;
             Object.keys(dong).forEach(key => {
                 let matchKhoi = key.match(/\d+/);
-                // Loại trừ các cột không phải số (ví dụ: Ưu tiên, STT)
-                if (matchKhoi && key !== 'A' && key !== 'Môn học' && key !== 'Ưu tiên' && key !== 'Tên môn học') {
+                if (matchKhoi && key !== 'A') {
                     let khoi = matchKhoi[0];
                     if (!dinhMucKhungCT[khoi]) dinhMucKhungCT[khoi] = {};
                     let tiet = parseInt(dong[key]) || 0;
@@ -338,16 +339,16 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     if (duLieuSever.PPCT) {
         let boNhoKhoi = ''; let boNhoMon = ''; 
         duLieuSever.PPCT.forEach(dong => {
-            let khoiGoc = String(dong['A'] || dong['Khối lớp'] || dong['Khối'] || '').trim();
+            let khoiGoc = String(dong['A'] || '').trim();
             if (khoiGoc !== '') boNhoKhoi = khoiGoc; else khoiGoc = boNhoKhoi; 
             let matchKhoi = khoiGoc.match(/\d+/);
             let khoi = matchKhoi ? matchKhoi[0] : khoiGoc; 
             
-            let monGoc = String(dong['B'] || dong['Tên môn học'] || dong['Môn học'] || dong['Môn Học'] || '').trim().toLowerCase();
+            let monGoc = String(dong['B'] || '').trim().toLowerCase();
             if (monGoc !== '') boNhoMon = monGoc; else monGoc = boNhoMon; 
             let monRutGon = monGoc.replace(/[0-9\(\)]/g, '').trim().replace(/\s+/g, ' ');
-            let tietPPCT_Goc = String(dong['C'] || dong['Tiết PPCT'] || dong['Tiết'] || '').trim();
-            let baiDay = dong['D'] || dong['Tên bài học'] || dong['Tên bài'] || dong['Tên bài dạy'] || dong['Nội dung'] || '';
+            let tietPPCT_Goc = String(dong['C'] || '').trim();
+            let baiDay = dong['D'] || '';
             
             tuDienPPCTToanCuc[`${khoi}_${monGoc}_${tietPPCT_Goc}`] = baiDay;
             if (!tuDienPPCTToanCuc[`${khoi}_${monRutGon}_${tietPPCT_Goc}`]) {
