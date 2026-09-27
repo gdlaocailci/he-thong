@@ -367,9 +367,23 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         });
     }
 
-  // [NÂNG CẤP]: Gán danh sách giáo viên chữ ký giới hạn duy nhất là tên của đúng ID đang đăng nhập
-    if (tenGvDangNhapHeThong && tenGvDangNhapHeThong.trim() !== '') {
-        danhSachGiaoVienToanCuc = [tenGvDangNhapHeThong.trim()];
+  // [NÂNG CẤP - FIX LỖI]: Quét mảng DANH_SACH_GIAO_VIEN, đối chiếu ID (Cột A) để lấy chính xác Họ tên (Cột B)
+    let tenGiaoVienChuKy = tenGvDangNhapHeThong;
+    
+    if (duLieuSever.DANH_SACH_GIAO_VIEN && duLieuSever.DANH_SACH_GIAO_VIEN.length > 0) {
+        // Tìm dòng dữ liệu có Cột A khớp với ID đang đăng nhập
+        let dataGv = duLieuSever.DANH_SACH_GIAO_VIEN.find(dong => 
+            String(dong['A'] || '').trim().toUpperCase() === maGvDangNhapHeThong.trim().toUpperCase()
+        );
+        
+        // Nếu tìm thấy và Cột B có dữ liệu thì gán làm tên chữ ký
+        if (dataGv && dataGv['B']) {
+            tenGiaoVienChuKy = String(dataGv['B']).trim();
+        }
+    }
+
+    if (tenGiaoVienChuKy && tenGiaoVienChuKy !== '') {
+        danhSachGiaoVienToanCuc = [tenGiaoVienChuKy];
     } else {
         danhSachGiaoVienToanCuc = [];
     }
