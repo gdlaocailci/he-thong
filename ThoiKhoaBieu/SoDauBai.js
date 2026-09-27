@@ -15,6 +15,17 @@ let tuanTruocDo_SDB = '';
 let lopTruocDo_SDB = '';
 let coThayDoiChuaLuu_SDB = false;
 
+// =========================================================================
+// KHẮC PHỤC: HÀM MỒI ĐỂ GỌI TRỰC TIẾP UI ĐĂNG NHẬP GOOGLE TỪ MENU
+// =========================================================================
+window.truyCapSoDauBai = function() {
+    const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
+    if (chuaDangNhap) {
+        if (typeof khoiDongDangNhap === 'function') khoiDongDangNhap();
+        if (typeof kiemTraTrangThaiDangNhapSDB === 'function') kiemTraTrangThaiDangNhapSDB();
+    }
+    if (typeof kichHoatTab === 'function') kichHoatTab('menuSoDauBai', 'khungSoDauBai', false);
+};
 // Hàm dọn dẹp bộ nhớ đệm khi có sự kiện đổi tài khoản hoặc TKB
 window.lamSachBoNhoSoDauBai = function() {
     daTaiDuLieuSoDauBai = false;
