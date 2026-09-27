@@ -625,12 +625,13 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let ngayDauTieuDe = mapNgayChinhXac['Thứ 2'] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, "Thứ 2") : '...');
     let ngayCuoiTieuDe = mapNgayChinhXac[danhSachThu[danhSachThu.length - 1]] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, danhSachThu[danhSachThu.length - 1]) : '...');
 
-    // [NÂNG CẤP]: Cấu trúc Flexbox chia khung theo biểu mẫu chuẩn
+    // [NÂNG CẤP]: Ép khung dàn ngang (w-max) và cho phép cuộn tràn màn hình
     let htmlBang = `
-        <div class="mb-8 bang-so-dau-bai-container flex flex-col xl:flex-row gap-4">
-            <!-- KHUNG TRÁI: CHI TIẾT SỔ ĐẦU BÀI -->
-            <div class="flex-1 overflow-x-auto bg-white border border-gray-500 shadow-sm relative">
-                <div class="flex justify-between items-center p-2 font-bold text-slate-800 uppercase border-b border-gray-400 bg-slate-50">
+        <div class="mb-8 bang-so-dau-bai-container overflow-x-auto custom-scrollbar pb-4">
+            <div style="display: flex; gap: 1rem; width: max-content; min-width: 100%;">
+                <!-- KHUNG TRÁI: CHI TIẾT SỔ ĐẦU BÀI -->
+                <div class="flex-1 bg-white border border-gray-500 shadow-sm relative min-w-[950px]">
+                    <div class="flex justify-between items-center p-2 font-bold text-slate-800 uppercase border-b border-gray-400 bg-slate-50">
                     <span>LỚP: ${lopChon}</span>
                     <span class="text-center italic text-sm text-slate-600 normal-case">(Từ ngày ${ngayDauTieuDe} đến ngày ${ngayCuoiTieuDe})</span>
                     <span>TUẦN ${tuanChon.replace(/\D/g,'')}</span>
@@ -766,7 +767,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
     htmlBang += `
             <!-- KHUNG PHẢI: TỔNG HỢP -->
-            <div class="w-full xl:w-[320px] flex-none border border-gray-500 bg-white font-serif text-sm flex flex-col shadow-sm">
+            <div class="w-[320px] flex-none border border-gray-500 bg-white font-serif text-sm shadow-sm" style="display: flex; flex-direction: column;">
                 <div class="font-bold text-center border-b border-gray-500 p-2 bg-slate-100 uppercase">PHẦN TỔNG HỢP</div>
                 
                 <div class="p-3 border-b border-gray-500 flex flex-col gap-2">
