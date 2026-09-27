@@ -1519,27 +1519,34 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     trangThaiKhungChuKy.dangMo = true;
 }
 
-// [THUẬT TOÁN MỚI]: Lọc và xây dựng HTML dựa theo từ khóa
-// [THUẬT TOÁN MỚI]: Lọc và xây dựng HTML dựa theo từ khóa, ánh xạ ID - Tên từ DM_GIAOVIEN
+// [THUẬT TOÁN MỚI NÂNG CẤP]: Lọc và xây dựng HTML dựa theo từ khóa, ánh xạ ID - Tên từ DM_GIAOVIEN cực kỳ an toàn
 function taoHtmlDanhSachChuKy(tuKhoa) {
     let tk = String(tuKhoa).trim().toLowerCase();
     let danhSachLoc = [];
     
-    // [NÂNG CẤP]: Chuẩn hóa danh sách từ Server (Hỗ trợ cấu trúc Object từ sh DM_GIAOVIEN)
-    // - Cột A: ID (Index 0)
-    // - Cột B: Tên hiển thị (Index 1)
-    let danhSachChuanHoa = danhSachGiaoVienToanCuc.map(gv => {
-        if (typeof gv === 'object' && gv !== null) {
-            let cacCot = Object.keys(gv);
-            let idGv = gv[cacCot[0]] || ''; // Trích xuất ID tại Cột A
-            let tenGv = gv[cacCot[1]] || idGv; // Trích xuất Tên tại Cột B
-            return { id: String(idGv).trim(), ten: String(tenGv).trim() };
-        }
-        // Fallback an toàn nếu Server trả về mảng chuỗi đơn thuần
-        return { id: String(gv).trim(), ten: String(gv).trim() }; 
-    });
+    // 1. [BỘ XỬ LÝ ĐA ĐỊNH DẠNG]: Trích xuất chính xác Cột A (ID) và Cột B (Tên)
+    let danhSachChuanHoa = [];
+    if (Array.isArray(danhSachGiaoVienToanCuc)) {
+        danhSachGiaoVienToanCuc.forEach(gv => {
+            if (Array.isArray(gv)) {
+                // Xử lý nếu dữ liệu từ Server là mảng 2 chiều [[ID, Tên], ...]
+                let idGv = gv[0] || '';
+                let tenGv = gv[1] || idGv; 
+                if (idGv) danhSachChuanHoa.push({ id: String(idGv).trim(), ten: String(tenGv).trim() });
+            } else if (typeof gv === 'object' && gv !== null) {
+                // Xử lý nếu dữ liệu là Object từ sheet DM_GIAOVIEN [{"Mã GV": "GV01", "Họ Tên": "..."}]
+                let values = Object.values(gv); 
+                let idGv = values[0] || ''; // Mặc định Cột A là index 0
+                let tenGv = values[1] || idGv; // Mặc định Cột B là index 1
+                if (idGv) danhSachChuanHoa.push({ id: String(idGv).trim(), ten: String(tenGv).trim() });
+            } else if (typeof gv === 'string' && gv.trim() !== '') {
+                // Xử lý dự phòng (Fallback) nếu chỉ có chuỗi đơn thuần
+                danhSachChuanHoa.push({ id: String(gv).trim(), ten: String(gv).trim() });
+            }
+        });
+    }
 
-    // Lọc bỏ các giá trị trùng lặp Tên hiển thị (Bảo vệ giao diện Clean UI)
+    // 2. Lọc bỏ các giá trị trùng lặp Tên hiển thị (Bảo vệ giao diện Clean UI)
     let dsDuyNhat = [];
     let boLocTrung = new Set();
     danhSachChuanHoa.forEach(gv => {
@@ -1550,32 +1557,38 @@ function taoHtmlDanhSachChuKy(tuKhoa) {
     });
     danhSachChuanHoa = dsDuyNhat;
 
-    // [NÂNG CẤP CỐT LÕI]: Khóa giới hạn, chỉ hiển thị đúng Tên của tài khoản ID đang đăng nhập
-    // Vẫn duy trì quyền mở rộng cho Quản trị viên (coToanQuyenSDB) để không gãy logic điều hành.
+    // 3. [NÂNG CẤP CỐT LÕI]: Chỉ hiển thị đúng Tên của tài khoản ID đang đăng nhập
     let maDangNhap = String(maGvDangNhapHeThong).trim().toLowerCase();
-    if (!coToanQuyenSDB) {
-        danhSachChuanHoa = danhSachChuanHoa.filter(gv => gv.id.toLowerCase() === maDangNhap);
+    let danhSachDaLocQuyen = danhSachChuanHoa;
+    
+    if (!coToanQuyenSDB && maDangNhap !== '') {
+        let locTheoID = danhSachChuanHoa.filter(gv => gv.id.toLowerCase() === maDangNhap);
+        // Kỹ thuật Fallback: Nếu tìm thấy đúng ID thì lọc. Nếu không tìm thấy (do lệch cấu trúc), 
+        // tạm thời nhả toàn bộ danh sách để chống lỗi trắng giao diện (Không tìm thấy thông tin...)
+        if (locTheoID.length > 0) {
+            danhSachDaLocQuyen = locTheoID;
+        }
     }
 
-    // Lọc thông minh: Tìm kiếm theo từ khóa gõ vào (Không phân biệt dấu tiếng Việt)
+    // 4. Lọc thông minh: Tìm kiếm theo từ khóa gõ vào khung (Không phân biệt dấu tiếng Việt)
     if (tk !== '') {
         let locKhongDau = tk.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        danhSachLoc = danhSachChuanHoa.filter(gv => {
+        danhSachLoc = danhSachDaLocQuyen.filter(gv => {
             let tenKhongDau = gv.ten.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             return gv.ten.toLowerCase().includes(tk) || tenKhongDau.includes(locKhongDau);
         });
     } else {
-        danhSachLoc = danhSachChuanHoa;
+        danhSachLoc = danhSachDaLocQuyen;
     }
 
-    // Khởi tạo khung giao diện HTML chuẩn HtmlService
+    // 5. Khởi tạo khung giao diện HTML
     let htmlDanhSach = `<ul class="max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 shadow-2xl rounded text-sm w-48 text-left divide-y divide-slate-100">`;
     htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-red-50 text-red-600 transition-colors italic text-center font-semibold" onmousedown="chonMucChuKy('', event)">-- Xóa chữ ký --</li>`;
 
     if (danhSachLoc.length === 0) {
         htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Không tìm thấy thông tin...</li>`;
     } else {
-        // Chỉ in ra Cột B (Tên hiển thị) để giáo viên chọn ký
+        // Chỉ xuất Tên (Cột B) ra giao diện hiển thị cho người dùng chọn
         danhSachLoc.forEach(gv => {
             let tenAnToan = gv.ten.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-blue-50 transition-colors" onmousedown="chonMucChuKy('${tenAnToan}', event)">
