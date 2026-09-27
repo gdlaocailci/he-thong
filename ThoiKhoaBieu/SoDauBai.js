@@ -65,17 +65,17 @@ window.lamSachBoNhoSoDauBai = function() {
 };
 
 async function taiDuLieuSoDauBaiTuMayChu() {
-    const vungHienThi = document.getElementById('vungHienThiSoDauBai');
-    const vungDieuKhien = document.getElementById('vungDieuKhienSDB');
+    if (daTaiDuLieuSoDauBai) return;
     
-    // Kiểm tra trực tiếp biến toàn cục
+    const vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    const vungDieuKhien = document.getElementById('vungDieuKhienSDB'); 
+    
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
     if (chuaDangNhap) {
-        // Nếu chưa đăng nhập: Ẩn ngay vùng chọn Tuần/Lớp/Nút
+        // Ẩn Vùng quyền (thanh công cụ) nếu chưa đăng nhập
         if (vungDieuKhien) vungDieuKhien.style.display = 'none';
         
-        // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan
         if (vungHienThi) {
             vungHienThi.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-12 animate-pulse-once">
@@ -91,44 +91,21 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                         </button>
                         <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 bg-white rounded-full p-0.5" alt="G">
-                            Tiếp tục đăng nhập
+                            Đăng nhập ngay
                         </button>
                     </div>
                 </div>
             `;
         }
-        return; // Dừng lại không chạy tiếp
+        return;
     }
 
-    // Nếu đã đăng nhập: Chắc chắn mở khóa vùng điều khiển
+    // Đã đăng nhập: Mở khóa Vùng quyền và vẽ dữ liệu
     if (vungDieuKhien) vungDieuKhien.style.display = 'flex';
-    
-    // NẾU DỮ LIỆU ĐÃ TẢI RỒI: Dừng hàm tại đây (nhưng vungDieuKhien đã được bật lên an toàn)
-    if (daTaiDuLieuSoDauBai) return;
-
-    // NẾU CHƯA TẢI: Kích hoạt tải dữ liệu
     thucThiTaiDuLieuVaVeLuoi(vungHienThi);
 }
-// =========================================================================
-// [NÂNG CẤP]: HÀM GẮN CỜ VÀ BIỂU TƯỢNG CÂY BÚT VÀO DÒNG CÓ THAY ĐỔI
-// =========================================================================
-function danhDauDongThayDoi(tr) {
-    if (!tr) return;
-    
-    // Nếu dòng chưa được đánh dấu thay đổi thì tiến hành đánh dấu
-    if (tr.getAttribute('data-thaydoi') !== 'true') {
-        tr.setAttribute('data-thaydoi', 'true');
-        
-        let tdMon = tr.querySelector('td[data-loai="mon"]');
-        if (tdMon && !tdMon.querySelector('.icon-sua-chua')) {
-            // Chèn SVG cây bút (Màu hổ phách, có hiệu ứng nhấp nháy nhẹ) bên cạnh tên môn
-            tdMon.innerHTML += `<svg class="icon-sua-chua w-4 h-4 inline-block ml-1 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Dòng dữ liệu này đang được chỉnh sửa"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
-        }
-    }
-}
-let intervalKiemTraDangNhap = null;
 
-// Lắng nghe trạng thái đăng nhập để tự động mở Sổ đầu bài
+let intervalKiemTraDangNhap = null;
 function kiemTraTrangThaiDangNhapSDB() {
     if (intervalKiemTraDangNhap) clearInterval(intervalKiemTraDangNhap);
     let soLanKiemTra = 0;
@@ -142,15 +119,12 @@ function kiemTraTrangThaiDangNhapSDB() {
     intervalKiemTraDangNhap = setInterval(() => {
         if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
             clearInterval(intervalKiemTraDangNhap);
-            
-            // Xác thực thành công -> Mở khóa vùng điều khiển SĐB
             let vungDieuKhien = document.getElementById('vungDieuKhienSDB');
             if (vungDieuKhien) vungDieuKhien.style.display = 'flex';
-            
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
         }
         soLanKiemTra++;
-        if (soLanKiemTra > 120) { // Timeout sau 1 phút
+        if (soLanKiemTra > 120) {
             clearInterval(intervalKiemTraDangNhap); 
             if (vungHienThi) taiDuLieuSoDauBaiTuMayChu(); 
         }
