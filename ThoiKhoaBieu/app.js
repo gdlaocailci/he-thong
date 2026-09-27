@@ -1825,42 +1825,40 @@ async function dongBoDuLieuNgamToanCuc() {
     // 1. Kiểm tra thao tác: Nếu người dùng vừa gõ phím trong 10 giây qua -> Tạm hoãn tải
     if (Date.now() - thoiGianThaoTacCuoi < 10000) return;
 
-    // 2. Chống mất dữ liệu: Quét toàn bộ lưới xem có ô nào đang sửa chưa lưu không
-    let coOThayDoiTKB = document.querySelector('td[data-thaydoi="true"]');
-    let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
-
-    if (coOThayDoiTKB || coThayDoiSDB) {
-        console.warn("Hệ thống tạm dừng đồng bộ ngầm để bảo vệ dữ liệu đang chỉnh sửa.");
-        return; 
-    }
-
     let khungTKB = document.getElementById('khungTKB');
     let khungSDB = document.getElementById('khungSoDauBai');
 
-    // NẾU CÓ LƯỚI ĐANG MỞ, BẬT HIỆU ỨNG THÔNG BÁO TẢI NGẦM
-    if ((khungTKB && !khungTKB.classList.contains('hidden')) || 
-        (khungSDB && !khungSDB.classList.contains('hidden'))) {
-        
-        hienThiThongBaoTaiNgam(true); // Trượt thông báo lên
-        
+    // LUỒNG 1: XỬ LÝ ĐỘC LẬP CHO THỜI KHÓA BIỂU
+    if (khungTKB && !khungTKB.classList.contains('hidden')) {
+        // [CHỐT ĐỘC LẬP]: Chỉ quét cây bút bên trong vùng khungTKB
+        if (khungTKB.querySelector('td[data-thaydoi="true"]')) {
+            console.warn("TKB đang có ô sửa đổi, tạm dừng tải TKB.");
+            return; 
+        }
+
+        hienThiThongBaoTaiNgam(true);
         try {
-            if (khungTKB && !khungTKB.classList.contains('hidden')) {
-                // Tải TKB
-                if (typeof taiDuLieuTKB === 'function') {
-                    await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
-                }
-            } 
-            else if (khungSDB && !khungSDB.classList.contains('hidden')) {
-                // Tải Sổ đầu bài ngầm
-                if (typeof thucThiLamMoiNgam === 'function') {
-                    await thucThiLamMoiNgam();
-                }
-            }
+            if (typeof taiDuLieuTKB === 'function') await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
         } finally {
-            // TẮT THÔNG BÁO SAU KHI TẢI XONG (Đợi 1.5 giây để người dùng kịp đọc)
-            setTimeout(() => {
-                hienThiThongBaoTaiNgam(false);
-            }, 1500);
+            setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
+        }
+    } 
+    // LUỒNG 2: XỬ LÝ ĐỘC LẬP CHO SỔ ĐẦU BÀI
+    else if (khungSDB && !khungSDB.classList.contains('hidden')) {
+        let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
+        // [CHỐT ĐỘC LẬP]: Chỉ quét cây bút bên trong vùng khungSDB
+        let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
+
+        if (coThayDoiSDB || coOThayDoiDOM_SDB) {
+            console.warn("Sổ đầu bài đang gõ dở, tạm dừng tải SDB.");
+            return;
+        }
+
+        hienThiThongBaoTaiNgam(true);
+        try {
+            if (typeof thucThiLamMoiNgam === 'function') await thucThiLamMoiNgam();
+        } finally {
+            setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
         }
     }
 }
