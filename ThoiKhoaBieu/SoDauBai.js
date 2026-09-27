@@ -221,8 +221,8 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     // 1. XỬ LÝ SỔ ĐẦU BÀI (Chỉ đọc cột vật lý)
     if (duLieuSever.SO_DAU_BAI) {
         duLieuSever.SO_DAU_BAI.forEach(dong => {
-            let tuan = String(dong['B'] || '').replace(/\D/g, '');
-            let lop = String(dong['C'] || '').trim().toUpperCase();
+            let tuan = String(dong['B'] || '').replace(/\D/g, ''); // Cột B: Tuần
+            let lop = String(dong['C'] || '').trim().toUpperCase(); // Cột C: Lớp
             let thuChuan = chuanHoaThu(dong['D'] || ''); 
             let ngay = String(dong['E'] || '').trim();
             let buoi = String(dong['F'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
@@ -251,6 +251,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
 
     // 2. XỬ LÝ THỜI KHÓA BIỂU (Tọa độ vật lý của TKB khác SĐB)
     const quyTrinhXuLyTKB = (dong) => {
+        // [SỬA LỖI ĐỘT PHÁ]: TKB lấy Tuần ở Cột C và Lớp ở Cột G
         let tuanDong = parseInt(String(dong['C'] || '').replace(/\D/g, '')) || 0; // Cột C: Tuần
         let lop = String(dong['G'] || '').trim().toUpperCase(); // Cột G: Mã Lớp
         let thu = chuanHoaThu(dong['D'] || ''); // Cột D: Thứ
@@ -325,7 +326,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         
         for (let i = 1; i < duLieuSever.KHUNG_CHUONG_TRINH.length; i++) {
             let dong = duLieuSever.KHUNG_CHUONG_TRINH[i];
-            let mon = String(dong['A'] || '').trim().toLowerCase();
+            let mon = String(dong['A'] || '').trim().toLowerCase(); // Cột A: Môn học
             if (!mon || mon === 'môn học') continue;
             
             Object.keys(dong).forEach(colKey => {
@@ -353,10 +354,10 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
             let matchKhoi = khoiGoc.match(/\d+/);
             let khoi = matchKhoi ? matchKhoi[0] : khoiGoc; 
             
+            let tietPPCT_Goc = String(dong['B'] || '').trim(); // Cột B: Tiết
             let monGoc = String(dong['C'] || '').trim().toLowerCase(); // Cột C: Môn học
             if (monGoc !== '') boNhoMon = monGoc; else monGoc = boNhoMon; 
             let monRutGon = monGoc.replace(/[0-9\(\)]/g, '').trim().replace(/\s+/g, ' ');
-            let tietPPCT_Goc = String(dong['B'] || '').trim(); // Cột B: Tiết
             let baiDay = dong['D'] || ''; // Cột D: Tên bài
             
             tuDienPPCTToanCuc[`${khoi}_${monGoc}_${tietPPCT_Goc}`] = baiDay;
