@@ -367,18 +367,11 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         });
     }
 
-    if (duLieuSever.DANH_SACH_GIAO_VIEN && duLieuSever.DANH_SACH_GIAO_VIEN.length > 0) {
-        danhSachGiaoVienToanCuc = duLieuSever.DANH_SACH_GIAO_VIEN;
+  // [NÂNG CẤP]: Gán danh sách giáo viên chữ ký giới hạn duy nhất là tên của đúng ID đang đăng nhập
+    if (tenGvDangNhapHeThong && tenGvDangNhapHeThong.trim() !== '') {
+        danhSachGiaoVienToanCuc = [tenGvDangNhapHeThong.trim()];
     } else {
-        let tapHopGV = new Set();
-        tkbGop.forEach(d => { 
-            if(d['Mã GV'] && d['Mã GV'].trim() !== '') {
-                d['Mã GV'].split(/[,;&-]/).forEach(g => {
-                    if(g.trim().length > 2) tapHopGV.add(g.trim());
-                });
-            }
-        });
-        danhSachGiaoVienToanCuc = Array.from(tapHopGV).sort();
+        danhSachGiaoVienToanCuc = [];
     }
 
     duLieuTKBGopDaMap = tkbGop; 
