@@ -1519,47 +1519,58 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     trangThaiKhungChuKy.dangMo = true;
 }
 
-// [THUẬT TOÁN MỚI TỐI ƯU]: Ép buộc khóa danh sách, chỉ hiển thị đúng Tên ở Cột B của ID Cột A
+// [THUẬT TOÁN MỚI NHẤT]: Ánh xạ chính xác ID (Cột A) -> Tên (Cột B) và khử nhiễu khoảng trắng
 function taoHtmlDanhSachChuKy(tuKhoa) {
     let tk = String(tuKhoa).trim().toLowerCase();
-    let danhSachLoc = [];
     
-    // 1. [BỘ CHUẨN HÓA DỮ LIỆU]: Trích xuất ID (Cột A) và Tên (Cột B) từ Server
+    // 1. [BỘ CHUẨN HÓA DỮ LIỆU CỨNG]: Ép trích xuất Cột A và Cột B
     let danhSachChuanHoa = [];
     if (Array.isArray(danhSachGiaoVienToanCuc)) {
         danhSachGiaoVienToanCuc.forEach(gv => {
+            let idGv = '';
+            let tenGv = '';
+            
             if (Array.isArray(gv)) {
-                let idGv = gv[0] || '';
-                let tenGv = gv[1] || idGv; 
-                if (idGv) danhSachChuanHoa.push({ id: String(idGv).trim(), ten: String(tenGv).trim() });
+                idGv = gv[0] || '';
+                tenGv = gv[1] || idGv; 
             } else if (typeof gv === 'object' && gv !== null) {
-                let values = Object.values(gv); 
-                let idGv = values[0] || ''; 
-                let tenGv = values[1] || idGv; 
-                if (idGv) danhSachChuanHoa.push({ id: String(idGv).trim(), ten: String(tenGv).trim() });
+                // Trích xuất dựa trên Index thực tế của Object (Index 0 = Cột A, Index 1 = Cột B)
+                let keys = Object.keys(gv);
+                idGv = keys.length > 0 ? gv[keys[0]] : ''; 
+                tenGv = keys.length > 1 ? gv[keys[1]] : idGv; 
             } else if (typeof gv === 'string' && gv.trim() !== '') {
-                danhSachChuanHoa.push({ id: String(gv).trim(), ten: String(gv).trim() });
+                idGv = gv;
+                tenGv = gv;
+            }
+            
+            if (idGv !== '') {
+                danhSachChuanHoa.push({ 
+                    id: String(idGv).trim(), 
+                    ten: String(tenGv).trim() 
+                });
             }
         });
     }
 
-    // 2. [KHÓA QUYỀN TUYỆT ĐỐI]: Logic bắt buộc hiển thị tên của chính chủ
-    let maDangNhap = String(maGvDangNhapHeThong).trim().toLowerCase().normalize('NFC');
+    // 2. [KHÓA QUYỀN VÀ KHỬ NHIỄU]: Xóa sạch khoảng trắng ẩn để so khớp tuyệt đối
+    let maDangNhap = String(maGvDangNhapHeThong).toLowerCase().normalize('NFC');
+    let maDangNhapSieuSach = maDangNhap.replace(/\s+/g, ''); // Xóa mọi dấu cách thừa
+    
     let danhSachDaLocQuyen = [];
 
     if (coToanQuyenSDB) {
-        // Nếu là Quản trị viên (Ban Giám Hiệu), cho phép thấy toàn bộ để ký thay/kiểm tra
         danhSachDaLocQuyen = danhSachChuanHoa;
     } else {
-        // Nếu là Giáo viên bình thường: CHỈ lọc ra bản ghi có ID khớp tuyệt đối
-        // Không dùng Fallback, nếu không khớp sẽ trả về rỗng.
         danhSachDaLocQuyen = danhSachChuanHoa.filter(gv => {
-            let idGvChuanHoa = gv.id.toLowerCase().normalize('NFC');
-            return idGvChuanHoa === maDangNhap;
+            let idGvSieuSach = gv.id.toLowerCase().normalize('NFC').replace(/\s+/g, '');
+            let tenSieuSach = gv.ten.toLowerCase().normalize('NFC').replace(/\s+/g, '');
+            
+            // Đối chiếu: ID hệ thống khớp ID Cột A (hoặc đề phòng ID bị nhầm vào Cột B)
+            return idGvSieuSach === maDangNhapSieuSach || tenSieuSach === maDangNhapSieuSach;
         });
     }
 
-    // Lọc loại bỏ các bản ghi trùng lặp Tên để danh sách gọn gàng
+    // Lọc loại bỏ các bản ghi trùng lặp
     let dsDuyNhat = [];
     let boLocTrung = new Set();
     danhSachDaLocQuyen.forEach(gv => {
@@ -1570,7 +1581,8 @@ function taoHtmlDanhSachChuKy(tuKhoa) {
     });
     danhSachDaLocQuyen = dsDuyNhat;
 
-    // 3. Lọc theo từ khóa gõ trên khung (Giúp tìm kiếm nhanh nếu có quyền Quản trị)
+    // 3. Lọc theo từ khóa nhập vào ô chữ ký
+    let danhSachLoc = [];
     if (tk !== '') {
         let locKhongDau = tk.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         danhSachLoc = danhSachDaLocQuyen.filter(gv => {
