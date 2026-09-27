@@ -267,7 +267,12 @@ async function khoiTaoGiaoDien() {
 // Hàm bổ trợ thực thi tải ngầm (Không block luồng chính)
 window.kichHoatTaiNgamCacPhanHeKhac = function() {
     setTimeout(() => {
-        if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
+        // [SỬA LỖI ĐỘNG CƠ]: Khóa lệnh tải ngầm Sổ Đầu Bài nếu chưa định danh thành công.
+        // Ngăn chặn việc gửi mã định danh rỗng lên Máy chủ khiến mảng DM_GIAOVIEN bị hỏng.
+        if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
+            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
+        }
+        
         if (typeof taiCayDanhMucThongKe === 'function' && (!window.cayDanhMucThongKe || Object.keys(window.cayDanhMucThongKe).length === 0)) taiCayDanhMucThongKe();
         if (typeof taiDuLieuPhanCongTuMayChu === 'function' && (!window.danhSachGV || window.danhSachGV.length === 0)) taiDuLieuPhanCongTuMayChu();
         if (typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && (!window.duLieuBangKCT || window.duLieuBangKCT.length === 0)) taiDuLieuKhungChuongTrinhTuMayChu();
@@ -1082,7 +1087,9 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         const anhDaiDien = duLieuXacThuc.picture;
         window.emailGiaoVienToanCuc = dinhDanhHeThong;
 
+        // [NÂNG CẤP CHIẾN LƯỢC]: Làm sạch bộ nhớ và KÍCH HOẠT tải dữ liệu Sổ Đầu Bài chuẩn mực
         if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
+        if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white" title="Tài khoản: ${tenHienThi}"><span class="truncate text-sm font-semibold group-hover:text-red-300 transition-colors">Đăng xuất</span>`;
@@ -1090,12 +1097,12 @@ async function xuLyLayThongTin(maTokenTruyCap) {
             nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-red-700');
             nutDangNhap.classList.replace('border-slate-500', 'border-red-500'); 
             nutDangNhap.onclick = function() {
-                if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) window.location.reload();
+                if (confirm('Đồng chí có chắc chắn muốn đăng xuất khỏi hệ thống?')) window.location.reload();
             }; 
         }
 
         const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
-        const dinhDanhGoc = 'tulieuhopthanh@gmail.com';
+        const dinhDanhGoc = 'tulieuhopthanh' + '@g' + 'mail.com';
 
         if (dsQuanTri.includes(dinhDanhHeThong) || dinhDanhHeThong === dinhDanhGoc) quyenSuaChua = true; 
         else quyenSuaChua = false; 
