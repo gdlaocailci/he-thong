@@ -1488,9 +1488,6 @@ document.addEventListener('mousedown', function(event) {
     }
 });
 
-// =========================================================================
-// KHỐI MỚI: THUẬT TOÁN CỬA SỔ TRƯỢT DANH SÁCH GIÁO VIÊN (COMBO BOX KÝ TÊN)
-// =========================================================================
 let trangThaiKhungChuKy = { dangMo: false, inputChuKy: null, dangHover: false };
 
 function moKhungTruotChuKy(event, theInputChuKy) {
@@ -1505,18 +1502,18 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     trangThaiKhungChuKy.inputChuKy = theInputChuKy;
     trangThaiKhungChuKy.dangHover = false; 
 
-    // Mờ chữ khi mở khung chọn (nhưng sẽ đậm lại khi gõ)
+    // Đổi màu khi đang chọn
     theInputChuKy.classList.remove('text-blue-700');
     theInputChuKy.classList.add('text-slate-400', 'opacity-60');
 
-    if (theInputChuKy.disabled || !danhSachGiaoVienToanCuc || danhSachGiaoVienToanCuc.length === 0) return;
+    if (theInputChuKy.disabled) return;
 
     let divKhung = document.createElement('div');
     divKhung.id = 'khungHienThiChuKy_Dong';
     divKhung.className = 'fixed z-[9999] mt-1'; 
     
-    // Khởi tạo HTML toàn bộ danh sách (Truyền rỗng = Không lọc)
-    divKhung.innerHTML = taoHtmlDanhSachChuKy('');
+    // Khởi tạo HTML danh sách (Chỉ chứa tên ID hiện hành)
+    divKhung.innerHTML = taoHtmlDanhSachChuKy();
 
     // Bắt sự kiện chuột ra/vào để chống lỗi văng khung khi lăn bi
     divKhung.addEventListener('mouseenter', () => { trangThaiKhungChuKy.dangHover = true; });
@@ -1531,36 +1528,29 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     trangThaiKhungChuKy.dangMo = true;
 }
 
-// [THUẬT TOÁN MỚI]: Lọc và xây dựng HTML dựa theo từ khóa
-function taoHtmlDanhSachChuKy(tuKhoa) {
-    let tk = String(tuKhoa).trim().toLowerCase();
-    let danhSachLoc = danhSachGiaoVienToanCuc;
+function taoHtmlDanhSachChuKy() {
+    let tenGvHienTai = maGvDangNhapHeThong.trim();
     
-    // Lọc thông minh: Không phân biệt dấu tiếng Việt
-    if (tk !== '') {
-        let locKhongDau = tk.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        danhSachLoc = danhSachGiaoVienToanCuc.filter(gv => {
-            let gvKhongDau = gv.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return gv.toLowerCase().includes(tk) || gvKhongDau.includes(locKhongDau);
-        });
-    }
-
     let htmlDanhSach = `<ul class="max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 shadow-2xl rounded text-sm w-48 text-left divide-y divide-slate-100">`;
     htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-red-50 text-red-600 transition-colors italic text-center font-semibold" onmousedown="chonMucChuKy('', event)">-- Xóa chữ ký --</li>`;
 
-    if (danhSachLoc.length === 0) {
-        htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Không tìm thấy giáo viên...</li>`;
+    if (tenGvHienTai === '') {
+        htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Lỗi: Chưa nhận diện được tài khoản...</li>`;
     } else {
-        danhSachLoc.forEach(gv => {
-            let gvAnToan = gv.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-blue-50 transition-colors" onmousedown="chonMucChuKy('${gvAnToan}', event)">
-                                 <span class="text-blue-800 font-bold block">${gv}</span>
-                             </li>`;
-        });
+        let gvAnToan = tenGvHienTai.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-blue-50 transition-colors" onmousedown="chonMucChuKy('${gvAnToan}', event)">
+                             <span class="text-blue-800 font-bold block">${tenGvHienTai}</span>
+                         </li>`;
     }
     htmlDanhSach += `</ul>`;
     return htmlDanhSach;
 }
+
+// [GHI CHÚ]: Hàm locDanhSachChuKy được giữ lại vỏ trống để không gây lỗi Reference nếu có hàm nào trót gọi tới, 
+// nhưng nội dung đã bị vô hiệu hóa vì ô input đã chuyển thành readonly.
+window.locDanhSachChuKy = function(theInput) {
+    // Không còn sử dụng.
+};
 
 // [THUẬT TOÁN MỚI]: Kích hoạt khi người dùng gõ phím trực tiếp
 function locDanhSachChuKy(theInput) {
