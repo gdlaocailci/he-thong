@@ -1,7 +1,3 @@
-// =========================================================================
-// KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN (TẠO ĐỘNG GIAO DIỆN & LOGIC)
-
-// =========================================================================
 let duLieuBangPhanQuyen = [];
 const DANH_SACH_MENU_HE_THONG = [
     {id: 'menuCaiDat', ten: '1. Cài đặt'}, {id: 'menuDanhMucGV', ten: '2. DM Giáo viên'},
