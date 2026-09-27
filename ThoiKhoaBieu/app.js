@@ -267,12 +267,7 @@ async function khoiTaoGiaoDien() {
 // Hàm bổ trợ thực thi tải ngầm (Không block luồng chính)
 window.kichHoatTaiNgamCacPhanHeKhac = function() {
     setTimeout(() => {
-        // [SỬA LỖI ĐỘNG CƠ]: Khóa lệnh tải ngầm Sổ Đầu Bài nếu chưa định danh thành công.
-        // Ngăn chặn việc gửi mã định danh rỗng lên Máy chủ khiến mảng DM_GIAOVIEN bị hỏng.
-        if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
-            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
-        }
-        
+        if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         if (typeof taiCayDanhMucThongKe === 'function' && (!window.cayDanhMucThongKe || Object.keys(window.cayDanhMucThongKe).length === 0)) taiCayDanhMucThongKe();
         if (typeof taiDuLieuPhanCongTuMayChu === 'function' && (!window.danhSachGV || window.danhSachGV.length === 0)) taiDuLieuPhanCongTuMayChu();
         if (typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && (!window.duLieuBangKCT || window.duLieuBangKCT.length === 0)) taiDuLieuKhungChuongTrinhTuMayChu();
@@ -861,7 +856,7 @@ async function luuDuLieu(event, loaiLuu) {
     
     if (loaiLuu === 'codinh') { if (!confirm("CẢNH BÁO: Thao tác này sẽ ghi đè toàn bộ TKB hiện tại làm TKB Gốc Cố Định cho toàn trường. Bấm OK để tiếp tục.")) return; }
     if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem}, tự động chuyển sang tuần tiếp theo?`)) return; }
-    if (loaiLuu === 'tuan') { if (!confirm(`Xác nhận: Xóa trắng và ghi đè toàn bộ dữ liệu Tuần ${tuanDangXem} trên máy chủ bằng dữ liệu thời khoá biểu mặc định?`)) return; }
+    if (loaiLuu === 'tuan') { if (!confirm(`Xác nhận: Xóa trắng và ghi đè toàn bộ dữ liệu Tuần ${tuanDangXem} trên máy chủ bằng nội dung Thời khoá biểu mặc định?`)) return; }
 
     const btn = event.currentTarget; 
     const textGoc = btn.innerHTML;
@@ -1087,9 +1082,7 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         const anhDaiDien = duLieuXacThuc.picture;
         window.emailGiaoVienToanCuc = dinhDanhHeThong;
 
-        // [NÂNG CẤP CHIẾN LƯỢC]: Làm sạch bộ nhớ và KÍCH HOẠT tải dữ liệu Sổ Đầu Bài chuẩn mực
         if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
-        if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white" title="Tài khoản: ${tenHienThi}"><span class="truncate text-sm font-semibold group-hover:text-red-300 transition-colors">Đăng xuất</span>`;
@@ -1097,12 +1090,12 @@ async function xuLyLayThongTin(maTokenTruyCap) {
             nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-red-700');
             nutDangNhap.classList.replace('border-slate-500', 'border-red-500'); 
             nutDangNhap.onclick = function() {
-                if (confirm('Đồng chí có chắc chắn muốn đăng xuất khỏi hệ thống?')) window.location.reload();
+                if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) window.location.reload();
             }; 
         }
 
         const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
-        const dinhDanhGoc = 'tulieuhopthanh' + '@g' + 'mail.com';
+        const dinhDanhGoc = 'tulieuhopthanh@gmail.com';
 
         if (dsQuanTri.includes(dinhDanhHeThong) || dinhDanhHeThong === dinhDanhGoc) quyenSuaChua = true; 
         else quyenSuaChua = false; 
