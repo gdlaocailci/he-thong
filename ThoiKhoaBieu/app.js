@@ -1829,26 +1829,38 @@ async function dongBoDuLieuNgamToanCuc() {
     let coOThayDoiTKB = document.querySelector('td[data-thaydoi="true"]');
     let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
 
-    // Nếu phát hiện có dữ liệu đang sửa dở, tuyệt đối không đồng bộ
     if (coOThayDoiTKB || coThayDoiSDB) {
         console.warn("Hệ thống tạm dừng đồng bộ ngầm để bảo vệ dữ liệu đang chỉnh sửa.");
         return; 
     }
 
-    // 3. Tiến hành đồng bộ ngầm dựa trên Tab đang mở
     let khungTKB = document.getElementById('khungTKB');
     let khungSDB = document.getElementById('khungSoDauBai');
 
-    if (khungTKB && !khungTKB.classList.contains('hidden')) {
-        // Tải TKB: coCache=true (không xoay loading to), epDongBo=false
-        if (typeof taiDuLieuTKB === 'function') {
-            await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
-        }
-    } 
-    else if (khungSDB && !khungSDB.classList.contains('hidden')) {
-        // Tải Sổ đầu bài ngầm
-        if (typeof thucThiLamMoiNgam === 'function') {
-            await thucThiLamMoiNgam();
+    // NẾU CÓ LƯỚI ĐANG MỞ, BẬT HIỆU ỨNG THÔNG BÁO TẢI NGẦM
+    if ((khungTKB && !khungTKB.classList.contains('hidden')) || 
+        (khungSDB && !khungSDB.classList.contains('hidden'))) {
+        
+        hienThiThongBaoTaiNgam(true); // Trượt thông báo lên
+        
+        try {
+            if (khungTKB && !khungTKB.classList.contains('hidden')) {
+                // Tải TKB
+                if (typeof taiDuLieuTKB === 'function') {
+                    await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
+                }
+            } 
+            else if (khungSDB && !khungSDB.classList.contains('hidden')) {
+                // Tải Sổ đầu bài ngầm
+                if (typeof thucThiLamMoiNgam === 'function') {
+                    await thucThiLamMoiNgam();
+                }
+            }
+        } finally {
+            // TẮT THÔNG BÁO SAU KHI TẢI XONG (Đợi 1.5 giây để người dùng kịp đọc)
+            setTimeout(() => {
+                hienThiThongBaoTaiNgam(false);
+            }, 1500);
         }
     }
 }
@@ -1860,3 +1872,34 @@ function kichHoatDongBoNgamToanCuc() {
 
 // Khởi chạy động cơ khi trang được nạp
 document.addEventListener('DOMContentLoaded', kichHoatDongBoNgamToanCuc);
+
+// =========================================================================
+// GIAO DIỆN HIỂN THỊ TRẠNG THÁI TẢI NGẦM (TOAST NOTIFICATION)
+// =========================================================================
+function hienThiThongBaoTaiNgam(dangTai) {
+    let theThongBao = document.getElementById('thongBaoTaiNgamHT');
+    
+    // Nếu chưa có thẻ HTML thì tự động tạo mới
+    if (!theThongBao) {
+        theThongBao = document.createElement('div');
+        theThongBao.id = 'thongBaoTaiNgamHT';
+        // Tailwind CSS: Bo góc, đổ bóng, màu nền Slate sang trọng và hiệu ứng trượt (Transition)
+        theThongBao.className = 'fixed bottom-5 right-5 bg-slate-800 border border-slate-600 text-white px-4 py-2.5 rounded-lg shadow-2xl flex items-center gap-3 z-[9999] transition-all duration-500 transform translate-y-20 opacity-0 pointer-events-none';
+        theThongBao.innerHTML = `
+            <svg class="w-4 h-4 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span class="text-sm font-bold tracking-wide">Đang đồng bộ dữ liệu ngầm...</span>
+        `;
+        document.body.appendChild(theThongBao);
+    }
+
+    // Điều khiển hiệu ứng hiển thị / ẩn
+    if (dangTai) {
+        theThongBao.classList.remove('translate-y-20', 'opacity-0');
+        theThongBao.classList.add('translate-y-0', 'opacity-100');
+    } else {
+        theThongBao.classList.remove('translate-y-0', 'opacity-100');
+        theThongBao.classList.add('translate-y-20', 'opacity-0');
+    }
+}
