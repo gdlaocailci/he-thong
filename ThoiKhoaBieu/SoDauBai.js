@@ -564,12 +564,24 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuThu7) danhSachThu.push("Thứ 7");
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
-    let mienNgayHienTai = inputNgay ? inputNgay.value : '';
-    if (!mienNgayHienTai && mapNgayChinhXac['Thứ 2']) {
+    // [NÂNG CẤP - FIX LỖI]: Ép buộc cập nhật Ngày đầu tuần theo đúng dữ liệu TKB của tuần vừa chọn
+    let mienNgayHienTai = '';
+    
+    // Ưu tiên lấy ngày Thứ 2 trực tiếp từ cục dữ liệu TKB của tuần đang được render
+    if (mapNgayChinhXac['Thứ 2']) {
         let p = mapNgayChinhXac['Thứ 2'].split('/');
         if (p.length === 3) {
-            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; 
-            if (inputNgay) inputNgay.value = mienNgayHienTai;
+            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; // Định dạng yyyy-mm-dd chuẩn cho thẻ input
+        }
+    }
+
+    if (inputNgay) {
+        if (mienNgayHienTai) {
+            // Nếu có ngày chính xác từ tuần mới, ghi đè ngay lập tức để đồng bộ UI
+            inputNgay.value = mienNgayHienTai;
+        } else {
+            // Dự phòng: Nếu tuần này khuyết dữ liệu ngày trên server, dùng tạm giá trị đang có trên Input để tính toán tiếp
+            mienNgayHienTai = inputNgay.value;
         }
     }
 
@@ -1519,96 +1531,34 @@ function moKhungTruotChuKy(event, theInputChuKy) {
     trangThaiKhungChuKy.dangMo = true;
 }
 
-// [THUẬT TOÁN MỚI NHẤT]: Ánh xạ chính xác ID (Cột A) -> Tên (Cột B) và khử nhiễu khoảng trắng
+// [THUẬT TOÁN MỚI]: Lọc và xây dựng HTML dựa theo từ khóa
 function taoHtmlDanhSachChuKy(tuKhoa) {
     let tk = String(tuKhoa).trim().toLowerCase();
+    let danhSachLoc = danhSachGiaoVienToanCuc;
     
-    // 1. [BỘ CHUẨN HÓA DỮ LIỆU CỨNG]: Ép trích xuất Cột A và Cột B
-    let danhSachChuanHoa = [];
-    if (Array.isArray(danhSachGiaoVienToanCuc)) {
-        danhSachGiaoVienToanCuc.forEach(gv => {
-            let idGv = '';
-            let tenGv = '';
-            
-            if (Array.isArray(gv)) {
-                idGv = gv[0] || '';
-                tenGv = gv[1] || idGv; 
-            } else if (typeof gv === 'object' && gv !== null) {
-                // Trích xuất dựa trên Index thực tế của Object (Index 0 = Cột A, Index 1 = Cột B)
-                let keys = Object.keys(gv);
-                idGv = keys.length > 0 ? gv[keys[0]] : ''; 
-                tenGv = keys.length > 1 ? gv[keys[1]] : idGv; 
-            } else if (typeof gv === 'string' && gv.trim() !== '') {
-                idGv = gv;
-                tenGv = gv;
-            }
-            
-            if (idGv !== '') {
-                danhSachChuanHoa.push({ 
-                    id: String(idGv).trim(), 
-                    ten: String(tenGv).trim() 
-                });
-            }
-        });
-    }
-
-    // 2. [KHÓA QUYỀN VÀ KHỬ NHIỄU]: Xóa sạch khoảng trắng ẩn để so khớp tuyệt đối
-    let maDangNhap = String(maGvDangNhapHeThong).toLowerCase().normalize('NFC');
-    let maDangNhapSieuSach = maDangNhap.replace(/\s+/g, ''); // Xóa mọi dấu cách thừa
-    
-    let danhSachDaLocQuyen = [];
-
-    if (coToanQuyenSDB) {
-        danhSachDaLocQuyen = danhSachChuanHoa;
-    } else {
-        danhSachDaLocQuyen = danhSachChuanHoa.filter(gv => {
-            let idGvSieuSach = gv.id.toLowerCase().normalize('NFC').replace(/\s+/g, '');
-            let tenSieuSach = gv.ten.toLowerCase().normalize('NFC').replace(/\s+/g, '');
-            
-            // Đối chiếu: ID hệ thống khớp ID Cột A (hoặc đề phòng ID bị nhầm vào Cột B)
-            return idGvSieuSach === maDangNhapSieuSach || tenSieuSach === maDangNhapSieuSach;
-        });
-    }
-
-    // Lọc loại bỏ các bản ghi trùng lặp
-    let dsDuyNhat = [];
-    let boLocTrung = new Set();
-    danhSachDaLocQuyen.forEach(gv => {
-        if (!boLocTrung.has(gv.ten)) {
-            boLocTrung.add(gv.ten);
-            dsDuyNhat.push(gv);
-        }
-    });
-    danhSachDaLocQuyen = dsDuyNhat;
-
-    // 3. Lọc theo từ khóa nhập vào ô chữ ký
-    let danhSachLoc = [];
+    // Lọc thông minh: Không phân biệt dấu tiếng Việt
     if (tk !== '') {
         let locKhongDau = tk.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        danhSachLoc = danhSachDaLocQuyen.filter(gv => {
-            let tenKhongDau = gv.ten.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return gv.ten.toLowerCase().includes(tk) || tenKhongDau.includes(locKhongDau);
+        danhSachLoc = danhSachGiaoVienToanCuc.filter(gv => {
+            let gvKhongDau = gv.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return gv.toLowerCase().includes(tk) || gvKhongDau.includes(locKhongDau);
         });
-    } else {
-        danhSachLoc = danhSachDaLocQuyen;
     }
 
-    // 4. KẾT XUẤT HTML
     let htmlDanhSach = `<ul class="max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 shadow-2xl rounded text-sm w-48 text-left divide-y divide-slate-100">`;
     htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-red-50 text-red-600 transition-colors italic text-center font-semibold" onmousedown="chonMucChuKy('', event)">-- Xóa chữ ký --</li>`;
 
     if (danhSachLoc.length === 0) {
-        htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Không tìm thấy thông tin...</li>`;
+        htmlDanhSach += `<li class="p-2.5 text-slate-500 italic text-center bg-slate-50">Không tìm thấy giáo viên...</li>`;
     } else {
         danhSachLoc.forEach(gv => {
-            let tenAnToan = gv.ten.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-blue-50 transition-colors" onmousedown="chonMucChuKy('${tenAnToan}', event)">
-                                 <span class="text-blue-800 font-bold block">${gv.ten}</span>
+            let gvAnToan = gv.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            htmlDanhSach += `<li class="p-2.5 cursor-pointer hover:bg-blue-50 transition-colors" onmousedown="chonMucChuKy('${gvAnToan}', event)">
+                                 <span class="text-blue-800 font-bold block">${gv}</span>
                              </li>`;
         });
     }
     htmlDanhSach += `</ul>`;
-    
     return htmlDanhSach;
 }
 
