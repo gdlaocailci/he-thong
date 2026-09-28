@@ -782,7 +782,8 @@
             });
         }
         else if (hanhDong === 'LuuHoSo' || hanhDong === 'XuatWord') {
-            HeThong.hienTai(true, HeThong.trangThai.idFileDangSua ? "Đang ghi đè tài liệu..." : "Đang tạo tài liệu mới...");
+            // NÂNG CẤP: Tắt lớp phủ màn hình (loading), thay bằng thông báo góc màn hình (toast) để người dùng biết hệ thống đang xử lý ngầm
+            HeThong.thongBao(HeThong.trangThai.idFileDangSua ? "Tiến trình ngầm: Đang ghi đè tài liệu..." : "Tiến trình ngầm: Đang tạo tài liệu mới...");
             
             const taiKhoanHienTai = HeThong.phienLamViec();
             let dlGiaoDien = layToanBoDuLieuGiaoDien();
@@ -796,7 +797,7 @@
                     taiKhoanYeuCau: taiKhoanHienTai
                 } 
             }, (kq) => {
-                HeThong.hienTai(false);
+                HeThong.hienTai(false); // Giữ lại lệnh này để đảm bảo an toàn, phòng trường hợp có tiến trình cũ chưa tắt
                 if(kq.trangThai === "ThanhCong") { 
                     HeThong.thongBao(HeThong.trangThai.idFileDangSua ? "Cập nhật thành công!" : "Khởi tạo thành công!"); 
                     
