@@ -1682,3 +1682,193 @@ document.addEventListener('scroll', function(event) {
         dongKhungTruotChuKy();
     }
 }, true);
+
+// =========================================================================
+// HÀM MỚI: CẬP NHẬT DỮ LIỆU NGẦM LÊN LƯỚI MÀ KHÔNG VẼ LẠI UI (CHỐNG GIẬT)
+// =========================================================================
+window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
+    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    if (!vungHienThi || !tuanChon || !lopChon) return;
+
+    // Lọc lại dữ liệu TKB gộp của tuần và lớp đang hiển thị
+    let tkbTuanNay = duLieuTKBGopDaMap.filter(d => 
+        String(d['Tuần']).trim() === tuanChon && 
+        String(d['Mã Lớp']).trim().toUpperCase() === lopChon.toUpperCase()
+    );
+
+    let dictTKBMoi = {};
+    tkbTuanNay.forEach(dong => {
+        let thuGoc = String(dong['Thứ']).trim();
+        let buoiKiemTra = String(dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'Sang' : 'Chieu';
+        dictTKBMoi[`${thuGoc}_${buoiKiemTra}_${dong['Tiết']}`] = dong;
+    });
+
+    let theChotQuyen = document.getElementById('theChotQuyenSDB');
+    let madinhdanhGV = maGvDangNhapHeThong || (theChotQuyen ? theChotQuyen.getAttribute('data-madinhdanh') || '' : '');
+    let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true' || theChotQuyen.getAttribute('data-quantri') === true) : false);
+    let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
+
+    let cacBang = document.querySelectorAll('#vungHienThiSoDauBai .bang-so-dau-bai-container');
+    
+    cacBang.forEach(khungBang => {
+        let thuHienTai = '';
+        let cacDong = khungBang.querySelectorAll('table tbody tr');
+        
+        cacDong.forEach(dong => {
+            let cellThu = dong.querySelector('td[rowspan]');
+            if (cellThu) {
+                let textThuNgay = cellThu.innerText.split('\n');
+                thuHienTai = textThuNgay[0].trim();
+            }
+
+            let buoiThuocDong = dong.getAttribute('data-buoi') || 'Sáng';
+            let buoiKiemTra = buoiThuocDong.toLowerCase() === 'sáng' ? 'Sang' : 'Chieu';
+            
+            let oTiet = dong.querySelector('td[data-loai="tietSDB"]');
+            let tiet = oTiet ? oTiet.innerText.trim() : '';
+
+            if (thuHienTai !== '' && tiet !== '') {
+                let dongDuLieuMoi = dictTKBMoi[`${thuHienTai}_${buoiKiemTra}_${tiet}`];
+                
+                if (dongDuLieuMoi) {
+                    let monHocMoi = dongDuLieuMoi['Môn Học'] || '';
+                    let isDaLuuMoi = dongDuLieuMoi['DaLuu'] || false;
+                    let tenBaiMoi = dongDuLieuMoi['TenBai_Thuc'] || '';
+                    let nhanXetMoi = dongDuLieuMoi['NhanXet_Thuc'] || '';
+                    let xepLoaiMoi = dongDuLieuMoi['XepLoai_Thuc'] || '';
+                    let chuKyMoi = dongDuLieuMoi['ChuKy_Thuc'] || '';
+                    let chuyenCanMoi = dongDuLieuMoi['ChuyenCan_Thuc'] || '';
+                    let tietPPCTMoi = dongDuLieuMoi['TietPPCT_Thuc'] || '';
+                    let isLockedMoi = isDaLuuMoi && chuKyMoi.trim() !== '';
+
+                    // Kiểm tra quyền nhập liệu
+                    let gvTkb = String(dongDuLieuMoi['Mã GV']).trim().toLowerCase().normalize('NFC');
+                    let quyenNhapThuCong = false;
+                    if (quyenQuanTri) {
+                        quyenNhapThuCong = true;
+                    } else if (monHocMoi !== '' && maGvDangNhapLC !== '') {
+                        let tapHopGvTkb = gvTkb.split(/[,;&-]/).map(g => g.trim());
+                        if (tapHopGvTkb.includes(maGvDangNhapLC) || tapHopGvTkb.some(g => maGvDangNhapLC.includes(g) && g.length > 2)) {
+                            quyenNhapThuCong = true;
+                        }
+                    }
+
+                    // Cập nhật Cột Môn (Chỉ cập nhật text)
+                    let tdMon = dong.querySelector('td[data-loai="mon"]');
+                    if (tdMon && tdMon.innerText.trim() !== monHocMoi) {
+                        tdMon.innerText = monHocMoi;
+                    }
+
+                    // Hàm phụ trợ so sánh và cập nhật DOM cục bộ
+                    const capNhatO = (loai, giaTriMoi, laChuyenCan = false) => {
+                        let td = dong.querySelector(`td[data-loai="${loai}"]`);
+                        if (!td) return;
+                        
+                        // Nếu đang ở trạng thái khóa
+                        if (isLockedMoi) {
+                            let theSpan = td.querySelector('span');
+                            let canThaySpan = !theSpan; // Chưa có span thì phải thay
+                            if (theSpan && theSpan.innerText.trim() !== giaTriMoi) canThaySpan = true; // Có span nhưng dữ liệu khác thì thay
+
+                            if (canThaySpan) {
+                                if (loai === 'tenBai') {
+                                    td.innerHTML = giaTriMoi; // Tên bài không bọc span
+                                    td.className = "border border-gray-500 p-1 text-emerald-700 font-bold bg-white group-hover:bg-slate-50 align-middle";
+                                } else if (loai === 'chuyenCan') {
+                                    td.innerHTML = `<span class="font-bold text-slate-800 block text-center">${giaTriMoi}</span>`;
+                                } else if (loai === 'nhanXet') {
+                                    td.innerHTML = `<span class="font-normal text-slate-800 block">${giaTriMoi}</span>`;
+                                } else if (loai === 'xepLoai') {
+                                    td.innerHTML = `<span class="font-bold text-slate-800 block text-center">${giaTriMoi}</span>`;
+                                } else if (loai === 'chuKy') {
+                                    td.innerHTML = `<span class="font-bold text-slate-800 uppercase block text-center">${giaTriMoi}</span>`;
+                                } else if (loai === 'tiet') {
+                                    td.innerHTML = `<span class="font-extrabold text-blue-700 block text-center">${giaTriMoi}</span>`;
+                                }
+                            }
+                        } else {
+                            // Trạng thái mở khóa (Input/Textarea/Select)
+                            let tagNhap = td.querySelector('input, select, textarea');
+                            let trangThaiKhoa = !quyenNhapThuCong ? "disabled" : "";
+                            let cssNenKhoa = !quyenNhapThuCong ? "bg-slate-100 cursor-not-allowed opacity-70" : "bg-transparent";
+
+                            // Nếu đang là text/span (ví dụ ô vừa bị khóa, giờ máy chủ mở lại), hoặc chưa có ô nhập
+                            if (!tagNhap) {
+                                if (loai === 'tenBai') {
+                                    let placeholderText = !quyenNhapThuCong ? "Không có quyền" : "Nhập...";
+                                    td.innerHTML = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${trangThaiKhoa} class="w-full text-left outline-none ${cssNenKhoa} font-semibold text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle" placeholder="${placeholderText}">${giaTriMoi}</textarea>`;
+                                    td.className = "border border-gray-500 p-1 bg-white group-hover:bg-slate-50 align-middle";
+                                } else if (loai === 'chuyenCan') {
+                                    td.innerHTML = `<input type="text" ${trangThaiKhoa} class="w-full text-center outline-none ${cssNenKhoa} font-semibold text-slate-800 placeholder-slate-400" placeholder="..." value="${giaTriMoi}">`;
+                                } else if (loai === 'nhanXet') {
+                                    td.innerHTML = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${trangThaiKhoa} class="w-full text-left outline-none ${cssNenKhoa} font-normal text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle" placeholder="Nhận xét...">${giaTriMoi}</textarea>`;
+                                } else if (loai === 'xepLoai') {
+                                    let optTot = (giaTriMoi === 'Tốt') ? 'selected' : '';
+                                    let optKha = (giaTriMoi === 'Khá') ? 'selected' : '';
+                                    let optTB = (giaTriMoi === 'TB') ? 'selected' : '';
+                                    let optYeu = (giaTriMoi === 'Yếu') ? 'selected' : '';
+                                    td.innerHTML = `<select ${trangThaiKhoa} class="w-full text-center outline-none ${cssNenKhoa} font-bold text-slate-800 cursor-pointer appearance-none"><option value="" ${!giaTriMoi ? 'selected' : ''}>-Chọn-</option><option value="Tốt" ${optTot}>Tốt</option><option value="Khá" ${optKha}>Khá</option><option value="TB" ${optTB}>TB</option><option value="Yếu" ${optYeu}>Yếu</option></select>`;
+                                } else if (loai === 'chuKy') {
+                                    let thuocVeGvHienTai = quyenNhapThuCong && !quyenQuanTri;
+                                    td.innerHTML = `<div class="relative flex items-center justify-center w-full h-full"><input type="text" autocomplete="off" ${trangThaiKhoa} data-thuocve="${thuocVeGvHienTai}" class="w-full text-center outline-none transition-colors duration-300 rounded ${cssNenKhoa} font-semibold text-blue-700 placeholder-blue-300 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 pr-5" placeholder="${!quyenNhapThuCong ? 'Không có quyền' : 'Ghi rõ họ tên...'}" value="${giaTriMoi}" onclick="moKhungTruotChuKy(event, this)" oninput="locDanhSachChuKy(this)">${!quyenNhapThuCong ? '' : `<svg class="w-4 h-4 absolute right-1 text-blue-400 pointer-events-none opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`}</div>`;
+                                } else if (loai === 'tiet') {
+                                    let monHocAnToan = monHocMoi.replace(/'/g, "\\'"); 
+                                    let matchKhoiChon = lopChon.match(/\d+/);
+                                    let khoiChon = matchKhoiChon ? matchKhoiChon[0] : '';
+                                    let onfocusLogic = `moKhungTruotPPCT(event, this, '${khoiChon}', '${monHocAnToan}', this.value || 1)`;
+                                    td.innerHTML = `<input type="text" onclick="${onfocusLogic}" readonly ${trangThaiKhoa} class="w-full text-center outline-none ${cssNenKhoa} font-extrabold text-blue-700 placeholder-blue-300 transition-all cursor-pointer hover:bg-blue-50" placeholder="..." value="${giaTriMoi}">`;
+                                }
+                                
+                                // Gắn lại sự kiện input/change cho phần tử mới
+                                let tagMoi = td.querySelector('input, select, textarea');
+                                if(tagMoi) {
+                                    tagMoi.addEventListener('input', (e) => { coThayDoiChuaLuu_SDB = true; danhDauDongThayDoi(e.target.closest('tr')); });
+                                    tagMoi.addEventListener('change', (e) => { coThayDoiChuaLuu_SDB = true; danhDauDongThayDoi(e.target.closest('tr')); });
+                                }
+                                
+                            } else {
+                                // Đã có ô nhập, chỉ cập nhật giá trị nếu khác biệt (tránh ghi đè khi user đang gõ)
+                                if (tagNhap.value !== giaTriMoi) {
+                                    tagNhap.value = giaTriMoi;
+                                    if (tagNhap.tagName === 'TEXTAREA') {
+                                        tagNhap.style.height = 'auto';
+                                        tagNhap.style.height = (tagNhap.scrollHeight) + 'px';
+                                    }
+                                }
+                                
+                                // Cập nhật trạng thái disable/enable theo phân quyền
+                                if (quyenNhapThuCong) {
+                                    tagNhap.removeAttribute('disabled');
+                                    tagNhap.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-70');
+                                    tagNhap.classList.add('bg-transparent');
+                                } else {
+                                    tagNhap.setAttribute('disabled', 'disabled');
+                                    tagNhap.classList.remove('bg-transparent');
+                                    tagNhap.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-70');
+                                }
+                            }
+                        }
+                    };
+
+                    capNhatO('chuyenCan', chuyenCanMoi);
+                    capNhatO('tiet', tietPPCTMoi);
+                    capNhatO('tenBai', tenBaiMoi);
+                    capNhatO('nhanXet', nhanXetMoi);
+                    capNhatO('xepLoai', xepLoaiMoi);
+                    capNhatO('chuKy', chuKyMoi);
+                    
+                    // Cập nhật trạng thái khóa của ô Tên bài
+                    let tdTenBai = dong.querySelector('td[data-loai="tenBai"]');
+                    if (tdTenBai) {
+                        tdTenBai.setAttribute('data-islocked', isLockedMoi);
+                    }
+                    
+                    // Xóa trạng thái đang chỉnh sửa (Cờ vàng) vì dữ liệu đã đồng bộ
+                    dong.setAttribute('data-thaydoi', 'false');
+                    let iconSua = dong.querySelector('.icon-sua-chua');
+                    if(iconSua) iconSua.remove();
+                }
+            }
+        });
+    });
+};
