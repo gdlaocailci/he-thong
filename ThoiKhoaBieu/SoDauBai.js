@@ -590,29 +590,61 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuThu7) danhSachThu.push("Thứ 7");
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
-    // [NÂNG CẤP - FIX LỖI]: Ép buộc cập nhật Ngày đầu tuần theo đúng dữ liệu TKB của tuần vừa chọn
-    let mienNgayHienTai = '';
-    
-    // Ưu tiên lấy ngày Thứ 2 trực tiếp từ cục dữ liệu TKB của tuần đang được render
-    if (mapNgayChinhXac['Thứ 2']) {
-        let p = mapNgayChinhXac['Thứ 2'].split('/');
+   // [NÂNG CẤP ĐỘT PHÁ - THUẬT TOÁN TỊNH TIẾN NGÀY TOÁN HỌC CHUẨN XÁC]
+    let mienNgayHienTai = inputNgay ? inputNgay.value : '';
+    let tuanMoi = parseInt(tuanChon.replace(/\D/g, '')) || 0;
+    let tuanCu = parseInt(tuanTruocDo_SDB.replace(/\D/g, '')) || 0;
+
+    // Kịch bản 1: Bấm chuyển tuần -> Bắt buộc dùng toán học tịnh tiến để vượt qua rác dữ liệu trong CSDL
+    if (tuanCu > 0 && tuanMoi > 0 && tuanCu !== tuanMoi && mienNgayHienTai) {
+        let p = mienNgayHienTai.split('-');
         if (p.length === 3) {
-            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; // Định dạng yyyy-mm-dd chuẩn cho thẻ input
+            let d = new Date(p[0], p[1] - 1, p[2]);
+            d.setDate(d.getDate() + (tuanMoi - tuanCu) * 7);
+            let y = d.getFullYear();
+            let m = String(d.getMonth() + 1).padStart(2, '0');
+            let day = String(d.getDate()).padStart(2, '0');
+            mienNgayHienTai = `${y}-${m}-${day}`;
+        }
+    } 
+    // Kịch bản 2: Tải trang lần đầu hoặc Tuần mới chưa từng lưu -> Quét tìm trong CSDL
+    else if (!mienNgayHienTai || tuanCu === 0) {
+        // Ưu tiên 1: Lấy ngày Thứ 2 của Tuần đang chọn để tôn trọng ngày đã chỉnh tay
+        if (mapNgayChinhXac['Thứ 2']) {
+            let p = mapNgayChinhXac['Thứ 2'].split('/');
+            if (p.length === 3) {
+                mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`;
+            }
+        } 
+        // Ưu tiên 2: Nếu chưa lưu, nội suy từ một tuần bất kỳ có ngày trong hệ thống
+        else if (tuanMoi > 0) {
+            let dongCoNgay = duLieuTKBGopDaMap.find(d => 
+                parseInt(String(d['Tuần']).replace(/\D/g, '')) > 0 && 
+                String(d['Thứ']).trim() === 'Thứ 2' && 
+                d['Ngày'] && d['Ngày'].includes('/')
+            );
+            if (dongCoNgay) {
+                let tuanGoc = parseInt(String(dongCoNgay['Tuần']).replace(/\D/g, ''));
+                let p = dongCoNgay['Ngày'].split('/');
+                if (p.length === 3) {
+                    let d = new Date(p[2], p[1] - 1, p[0]);
+                    d.setDate(d.getDate() + (tuanMoi - tuanGoc) * 7);
+                    let y = d.getFullYear();
+                    let m = String(d.getMonth() + 1).padStart(2, '0');
+                    let day = String(d.getDate()).padStart(2, '0');
+                    mienNgayHienTai = `${y}-${m}-${day}`;
+                }
+            }
         }
     }
 
+    // Đẩy ngược ngày chuẩn xác lên ô Input của UI
     if (inputNgay) {
-        if (mienNgayHienTai) {
-            // Nếu có ngày chính xác từ tuần mới, ghi đè ngay lập tức để đồng bộ UI
-            inputNgay.value = mienNgayHienTai;
-        } else {
-            // Dự phòng: Nếu tuần này khuyết dữ liệu ngày trên server, dùng tạm giá trị đang có trên Input để tính toán tiếp
-            mienNgayHienTai = inputNgay.value;
-        }
+        inputNgay.value = mienNgayHienTai;
     }
 
-    let ngayDauTieuDe = mapNgayChinhXac['Thứ 2'] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, "Thứ 2") : '...');
-    let ngayCuoiTieuDe = mapNgayChinhXac[danhSachThu[danhSachThu.length - 1]] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, danhSachThu[danhSachThu.length - 1]) : '...');
+    let ngayDauTieuDe = mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, "Thứ 2") : (mapNgayChinhXac['Thứ 2'] || '...');
+    let ngayCuoiTieuDe = mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, danhSachThu[danhSachThu.length - 1]) : (mapNgayChinhXac[danhSachThu[danhSachThu.length - 1]] || '...');
 
     let htmlBang = `
         <div class="mb-8 bang-so-dau-bai-container overflow-x-auto">
@@ -641,7 +673,8 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     `;
 
     danhSachThu.forEach(thu => {
-        let ngayCuaThu = mapNgayChinhXac[thu] || (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, thu) : '');
+        // [CẬP NHẬT TRỌNG YẾU]: Ưu tiên dùng hàm toán học để vẽ ngày cho tất cả các thứ, triệt tiêu dữ liệu rác
+        let ngayCuaThu = (mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, thu) : '') || mapNgayChinhXac[thu] || '';
         let hienThiThu = ngayCuaThu ? `${thu}<br><span class="text-[11px] font-normal tracking-tight normal-case">${ngayCuaThu}</span>` : thu;
         let danhSachBuoi = [{ id: 'Sang', dataBuoi: 'Sáng', dsTiet: [1, 2, 3, 4, 5] }, { id: 'Chieu', dataBuoi: 'Chiều', dsTiet: [1, 2, 3, 4] }];
         let tongDongTrongNgay = 9; let daInCotThu = false;
