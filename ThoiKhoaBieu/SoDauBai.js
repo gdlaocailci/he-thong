@@ -981,9 +981,33 @@ async function luuSoDauBaiSangMayChu() {
             alert(`✅ Đã chốt thành công các cập nhật của Sổ đầu bài Lớp ${lopChon} - Tuần ${tuanSo}!`);
             coThayDoiChuaLuu_SDB = false; 
             
-            // ÉP TẢI LẠI TRỰC TIẾP TỪ MÁY CHỦ LÊN GIAO DIỆN
-            daTaiDuLieuSoDauBai = false; // Reset cờ để kích hoạt hàm tải
-            await taiDuLieuSoDauBaiTuMayChu();
+            // ĐỒNG BỘ DỮ LIỆU NGẦM VÀO RAM - KHÔNG GỌI MÁY CHỦ
+            duLieuQuetDuoc.forEach(itemLuu => {
+                let matchDong = duLieuTKBGopDaMap.find(d => 
+                    String(d['Tuần']).trim() == itemLuu.tuan && 
+                    String(d['Mã Lớp']).trim().toUpperCase() === itemLuu.maLop.toUpperCase() &&
+                    String(d['Thứ']).trim() === itemLuu.thu &&
+                    String(d['Buổi']).trim().toLowerCase() === itemLuu.buoi.toLowerCase() &&
+                    String(d['Tiết']).trim() == itemLuu.tiet
+                );
+                if (matchDong) {
+                    matchDong['DaLuu'] = true;
+                    matchDong['ChuyenCan_Thuc'] = itemLuu.chuyenCan;
+                    matchDong['TietPPCT_Thuc'] = itemLuu.tietPPCT;
+                    matchDong['TenBai_Thuc'] = itemLuu.tenBai;
+                    matchDong['NhanXet_Thuc'] = itemLuu.nhanXet;
+                    matchDong['XepLoai_Thuc'] = itemLuu.xepLoai;
+                    matchDong['ChuKy_Thuc'] = itemLuu.chuKy;
+                }
+            });
+
+            // Gọi hàm cập nhật UI cục bộ mượt mà
+            if (typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
+                capNhatSoDauBaiNgamLenLuoi(tuanChon, lopChon);
+            } else {
+                thucThiKetXuatSoDauBaiLenLuoi();
+            }
+            
         } else throw new Error(ketQua.thongBao);
     } catch (loi) { 
         alert("Lưu thất bại: " + loi.message); 
