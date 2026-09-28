@@ -977,19 +977,21 @@ async function luuSoDauBaiSangMayChu() {
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
         const ketQua = await phanHoi.json();
 
-        if (ketQua.trangThai === 'thanh_cong') {
+       if (ketQua.trangThai === 'thanh_cong') {
             alert(`✅ Đã chốt thành công các cập nhật của Sổ đầu bài Lớp ${lopChon} - Tuần ${tuanSo}!`);
             coThayDoiChuaLuu_SDB = false; 
             
             // ĐỒNG BỘ DỮ LIỆU NGẦM VÀO RAM - KHÔNG GỌI MÁY CHỦ
             duLieuQuetDuoc.forEach(itemLuu => {
                 let matchDong = duLieuTKBGopDaMap.find(d => 
-                    String(d['Tuần']).trim() == itemLuu.tuan && 
-                    String(d['Mã Lớp']).trim().toUpperCase() === itemLuu.maLop.toUpperCase() &&
-                    String(d['Thứ']).trim() === itemLuu.thu &&
-                    String(d['Buổi']).trim().toLowerCase() === itemLuu.buoi.toLowerCase() &&
-                    String(d['Tiết']).trim() == itemLuu.tiet
+                    String(d['Tuần']).trim() == String(itemLuu.tuan).trim() && 
+                    String(d['Mã Lớp']).trim().toUpperCase() === String(itemLuu.maLop).trim().toUpperCase() &&
+                    // [BẢN VÁ]: Ép kiểu chữ thường ở cả 2 vế để vượt qua bẫy CSS in hoa "THỨ 2"
+                    String(d['Thứ']).trim().toLowerCase() === String(itemLuu.thu).trim().toLowerCase() &&
+                    String(d['Buổi']).trim().toLowerCase() === String(itemLuu.buoi).trim().toLowerCase() &&
+                    String(d['Tiết']).trim() == String(itemLuu.tiet).trim()
                 );
+                
                 if (matchDong) {
                     matchDong['DaLuu'] = true;
                     matchDong['ChuyenCan_Thuc'] = itemLuu.chuyenCan;
