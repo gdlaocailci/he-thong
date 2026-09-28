@@ -812,7 +812,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 }
 
 // =========================================================================
-// HÀM LƯU SỔ ĐẦU BÀI (BẢN VÁ: CHỈ QUÉT VÀ GHI CÁC DÒNG CÓ BÚT SỬA)
+// HÀM LƯU SỔ ĐẦU BÀI (BẢN TỐI ƯU: GIỮ NGUYÊN LƯỚI, CHỈ CẬP NHẬT TRẠNG THÁI RAM & DOM)
 // =========================================================================
 async function luuSoDauBaiSangMayChu() {
     let tuanChon = document.getElementById('chonTuanSo')?.value;
@@ -827,7 +827,7 @@ async function luuSoDauBaiSangMayChu() {
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true') : false);
     let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
 
-    let duLieuQuetDuoc = []; // Mảng CHỈ chứa dữ liệu các dòng có sửa đổi
+    let duLieuQuetDuoc = []; 
     let danhSachThongBao = []; 
     let soDongCoThayDoi = 0; 
 
@@ -915,7 +915,6 @@ async function luuSoDauBaiSangMayChu() {
 
                 let maLuuTru = `${tuanSo}_${lopChon}_${thuHienTai}_${buoi}_${tiet}`;
 
-                // [CỐT LÕI VÁ LỖI]: Chỉ thu thập và ghi MAP với những dòng CHƯA LƯU hoặc CÓ BÚT SỬA ĐỔI
                 if (isThayDoi || !isDaLuu) {
                     duLieuQuetDuoc.push({
                         maLuuTru: maLuuTru, 
@@ -972,8 +971,67 @@ async function luuSoDauBaiSangMayChu() {
             alert(`✅ Đã chốt thành công các cập nhật của Sổ đầu bài Lớp ${lopChon} - Tuần ${tuanSo}!`);
             coThayDoiChuaLuu_SDB = false; 
             
-            daTaiDuLieuSoDauBai = false; 
-            await taiDuLieuSoDauBaiTuMayChu();
+            // [TỐI ƯU TRỰC TIẾP]: Cập nhật trạng thái trực tiếp trên DOM và RAM mà không làm mới lưới
+            cacBang.forEach(khungBang => {
+                let thuHienTai = '';
+                let cacDong = khungBang.querySelectorAll('table tbody tr');
+                
+                cacDong.forEach(dong => {
+                    let cellThu = dong.querySelector('td[rowspan]');
+                    if (cellThu) {
+                        let textThuNgay = cellThu.innerText.split('\n');
+                        thuHienTai = textThuNgay[0].trim();
+                    }
+
+                    let cellMon = dong.querySelector('td[data-loai="mon"]');
+                    let mon = cellMon ? cellMon.innerText.trim() : '';
+
+                    if (mon && mon !== '') {
+                        let isThayDoi = dong.getAttribute('data-thaydoi') === 'true';
+                        let isDaLuu = dong.getAttribute('data-daluu') === 'true';
+
+                        if (isThayDoi || !isDaLuu) {
+                            dong.setAttribute('data-daluu', 'true');
+                            dong.setAttribute('data-thaydoi', 'false');
+                            
+                            // Gỡ bỏ biểu tượng cây bút sửa chữa trên dòng
+                            let iconSua = dong.querySelector('.icon-sua-chua');
+                            if (iconSua) iconSua.remove();
+                            
+                            dong.classList.remove('bg-red-100');
+
+                            let getVal = (cell) => {
+                                if (!cell) return '';
+                                let theNhap = cell.querySelector('input, select, textarea');
+                                let rawVal = theNhap ? theNhap.value : cell.innerText;
+                                return rawVal.replace(/\n/g, ' ').trim(); 
+                            };
+
+                            let tiet = getVal(dong.querySelector('td[data-loai="tietSDB"]'));
+                            let buoi = dong.getAttribute('data-buoi') || 'Sáng';
+
+                            let itemMap = duLieuTKBGopDaMap.find(d => 
+                                String(d['Tuần']).trim() == tuanSo && 
+                                String(d['Mã Lớp']).trim().toUpperCase() === lopChon.toUpperCase() && 
+                                String(d['Thứ']).trim() === thuHienTai && 
+                                String(d['Tiết']).trim() == tiet &&
+                                String(d['Buổi']).trim().toLowerCase() === buoi.toLowerCase()
+                            );
+
+                            if (itemMap) {
+                                itemMap.DaLuu = true;
+                                itemMap.ChuyenCan_Thuc = getVal(dong.querySelector('td[data-loai="chuyenCan"]'));
+                                itemMap.TietPPCT_Thuc = getVal(dong.querySelector('td[data-loai="tiet"]'));
+                                itemMap.TenBai_Thuc = getVal(dong.querySelector('td[data-loai="tenBai"]'));
+                                itemMap.NhanXet_Thuc = getVal(dong.querySelector('td[data-loai="nhanXet"]'));
+                                itemMap.XepLoai_Thuc = getVal(dong.querySelector('td[data-loai="xepLoai"]'));
+                                itemMap.ChuKy_Thuc = getVal(dong.querySelector('td[data-loai="chuKy"]'));
+                            }
+                        }
+                    }
+                });
+            });
+
         } else throw new Error(ketQua.thongBao);
     } catch (loi) { 
         alert("Lưu thất bại: " + loi.message); 
