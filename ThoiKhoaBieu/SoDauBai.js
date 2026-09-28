@@ -920,28 +920,25 @@ async function luuSoDauBaiSangMayChu() {
                     }
                 }
 
-                let maLuuTru = `${tuanSo}_${lopChon}_${thuHienTai}_${buoi}_${tiet}`;
-
-                // [KHẮC PHỤC LỖI ĐỒNG BỘ]: Trả lại đúng các Key mà Code.gs đang nhận diện
-                duLieuQuetDuoc.push({
-                    maLuuTru: maLuuTru, 
-                    tuan: tuanSo, 
-                    maLop: lopChon,
-                    thu: thuHienTai, 
-                    ngay: ngayHienTai, 
-                    buoi: buoi, 
-                    tiet: tiet,
-                    mon: mon, 
-                    tietPPCT: tietPPCT, 
-                    tenBai: tenBai, 
-                    nhanXet: nhanXetGV, 
-                    xepLoai: xepLoaiGV, 
-                    chuKy: chuKyGV,
-                    chuyenCan: chuyenCan
-                });
-
-                // CHỈ THÔNG BÁO CHO NGƯỜI DÙNG NHỮNG DÒNG THỰC SỰ CÓ THAY ĐỔI
+               let maLuuTru = `${tuanSo}_${lopChon}_${thuHienTai}_${buoi}_${tiet}`;
                 if (isThayDoi || !isDaLuu) {
+                    duLieuQuetDuoc.push({
+                        maLuuTru: maLuuTru, 
+                        tuan: tuanSo, 
+                        maLop: lopChon,
+                        thu: thuHienTai, 
+                        ngay: ngayHienTai, 
+                        buoi: buoi, 
+                        tiet: tiet,
+                        mon: mon, 
+                        tietPPCT: tietPPCT, 
+                        tenBai: tenBai, 
+                        nhanXet: nhanXetGV, 
+                        xepLoai: xepLoaiGV, 
+                        chuKy: chuKyGV,
+                        chuyenCan: chuyenCan
+                    });
+
                     soDongCoThayDoi++;
                     danhSachThongBao.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: ${mon}`);
                 }
