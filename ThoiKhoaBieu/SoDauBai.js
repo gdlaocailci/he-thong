@@ -591,22 +591,47 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
     // [NÂNG CẤP - FIX LỖI]: Ép buộc cập nhật Ngày đầu tuần theo đúng dữ liệu TKB của tuần vừa chọn
+    // [NÂNG CẤP ĐỘT PHÁ - THUẬT TOÁN TỊNH TIẾN NGÀY THÔNG MINH]
     let mienNgayHienTai = '';
     
-    // Ưu tiên lấy ngày Thứ 2 trực tiếp từ cục dữ liệu TKB của tuần đang được render
+    // 1. Ưu tiên lấy ngày Thứ 2 trực tiếp từ cục dữ liệu TKB của tuần đang hiển thị
     if (mapNgayChinhXac['Thứ 2']) {
         let p = mapNgayChinhXac['Thứ 2'].split('/');
         if (p.length === 3) {
-            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; // Định dạng yyyy-mm-dd chuẩn cho thẻ input
+            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; // Định dạng yyyy-mm-dd
         }
     }
 
+    // 2. Suy luận toán học: Nếu tuần này khuyết ngày, tìm tuần bất kỳ có ngày để tịnh tiến
+    if (!mienNgayHienTai && maxTuanChon > 0) {
+        let dongCoNgay = duLieuTKBGopDaMap.find(d => 
+            parseInt(String(d['Tuần']).replace(/\D/g, '')) > 0 && 
+            String(d['Thứ']).trim() === 'Thứ 2' && 
+            d['Ngày'] && d['Ngày'].includes('/')
+        );
+        
+        if (dongCoNgay) {
+            let tuanGoc = parseInt(String(dongCoNgay['Tuần']).replace(/\D/g, ''));
+            let p = dongCoNgay['Ngày'].split('/');
+            if (p.length === 3) {
+                let ngayGocObj = new Date(p[2], p[1] - 1, p[0]);
+                // Thuật toán nhảy ngày: Cộng số ngày bằng Độ lệch tuần x 7
+                ngayGocObj.setDate(ngayGocObj.getDate() + ((maxTuanChon - tuanGoc) * 7));
+                
+                let y = ngayGocObj.getFullYear();
+                let m = String(ngayGocObj.getMonth() + 1).padStart(2, '0');
+                let d = String(ngayGocObj.getDate()).padStart(2, '0');
+                mienNgayHienTai = `${y}-${m}-${d}`;
+            }
+        }
+    }
+
+    // 3. Gắn ngược lên giao diện (Khóa chặt việc sai lệch ngày)
     if (inputNgay) {
         if (mienNgayHienTai) {
-            // Nếu có ngày chính xác từ tuần mới, ghi đè ngay lập tức để đồng bộ UI
             inputNgay.value = mienNgayHienTai;
         } else {
-            // Dự phòng: Nếu tuần này khuyết dữ liệu ngày trên server, dùng tạm giá trị đang có trên Input để tính toán tiếp
+            // Nếu data trắng hoàn toàn (VD: Tuần 1 hệ thống mới tinh), lấy giá trị trên UI do người dùng chọn
             mienNgayHienTai = inputNgay.value;
         }
     }
