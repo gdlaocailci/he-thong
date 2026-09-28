@@ -922,7 +922,7 @@ async function luuDuLieu(event, loaiLuu) {
         
         if(ketQua.trangThai !== 'thanh_cong') { 
             alert("Lưu thất bại: " + ketQua.thongBao);
-      } else { 
+        } else { 
             if (loaiLuu === 'khoiphuc') {
                 await chuyenTuan(1); 
                 let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
@@ -940,11 +940,10 @@ async function luuDuLieu(event, loaiLuu) {
                 const MA_DA = (typeof CAU_HINH_FRONTEND !== 'undefined' && CAU_HINH_FRONTEND.MA_DU_AN) ? CAU_HINH_FRONTEND.MA_DU_AN : 'MAC_DINH';
                 localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(dsTietLuoi));
 
-                // Chỉ dọn dẹp bộ nhớ ẩn để SĐB tự nạp lại nếu người dùng chuyển tab
                 if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
                 
-                // [NÂNG CẤP]: Đã loại bỏ lệnh tải lại máy chủ gây chớp giao diện.
-                // Hệ thống sẽ dựa hoàn toàn vào RAM và Động cơ đồng bộ ngầm 60s.
+                // [ĐÃ SỬA]: Chỉ giữ lại một dòng gọi hàm tải dữ liệu với tham số false
+                await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
                 localStorage.setItem('KhoaDongBo_TKB', Date.now().toString());
             }
         }
@@ -1888,7 +1887,7 @@ function hienThiThongBaoTaiNgam(dangTai) {
             <svg class="w-4 h-4 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            <span class="text-sm font-bold tracking-wide">Đang đồng bộ dữ liệu mới nhất lên giao diện...</span>
+            <span class="text-sm font-bold tracking-wide">Đang đồng bộ dữ liệu mới nhất...</span>
         `;
         document.body.appendChild(theThongBao);
     }
