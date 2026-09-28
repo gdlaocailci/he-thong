@@ -778,14 +778,19 @@ async function luuSoDauBaiSangMayChu() {
     let tuanSo = parseInt(tuanChon.replace(/\D/g, ''));
     let tuanHeThong = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.TUAN_HIEN_TAI) ? parseInt(window.thongSoHocVu.TUAN_HIEN_TAI) : 999;
     
+    // [NÂNG CẤP]: Lấy thông tin năm học từ biến toàn cục thongSoHocVu để làm tiền tố tạo mã lưu trữ duy nhất. 
+    let namHocHienTai = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.NAM_HOC) 
+                        ? window.thongSoHocVu.NAM_HOC 
+                        : `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+    
     let theChotQuyen = document.getElementById('theChotQuyenSDB');
     let madinhdanhGV = maGvDangNhapHeThong || (theChotQuyen ? theChotQuyen.getAttribute('data-madinhdanh') || '' : '');
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true') : false);
     let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
 
-    let duLieuQuetDuoc = []; // Mảng chứa TOÀN BỘ dữ liệu để gửi lên server (tránh mất dữ liệu)
+    let duLieuQuetDuoc = []; // Mảng chứa TOÀN BỘ dữ liệu để gửi lên server
     let danhSachThongBao = []; // Mảng CHỈ chứa thông tin các dòng có thay đổi để hiện hộp thoại
-    let soDongCoThayDoi = 0; // Biến đếm số lượng thực sự có sửa đổi
+    let soDongCoThayDoi = 0; 
 
     let cacBang = document.querySelectorAll('#vungHienThiSoDauBai .bang-so-dau-bai-container');
     let canThiTietThieuTenBai = false; 
@@ -806,12 +811,11 @@ async function luuSoDauBaiSangMayChu() {
             let cellMon = dong.querySelector('td[data-loai="mon"]');
             let mon = cellMon ? cellMon.innerText.trim() : '';
 
-            // Quét và lấy TẤT CẢ các tiết có môn học để đề phòng Backend xóa đè toàn bộ
+            // Quét và lấy TẤT CẢ các tiết có môn học
             if (mon && mon !== '') {
                 let isDaLuu = dong.getAttribute('data-daluu') === 'true';
                 let isThayDoi = dong.getAttribute('data-thaydoi') === 'true';
 
-                // Lọc bỏ ký tự ngắt dòng (Enter) trong Textarea để chống gãy mảng khi ghi xuống Sheet
                 let getVal = (cell) => {
                     if (!cell) return '';
                     let theNhap = cell.querySelector('input, select, textarea');
@@ -871,9 +875,12 @@ async function luuSoDauBaiSangMayChu() {
                     }
                 }
 
-                let maLuuTru = `${tuanSo}_${lopChon}_${thuHienTai}_${buoi}_${tiet}`;
+                // [NÂNG CẤP ĐỒNG BỘ CẤU TRÚC]: Chuyển đổi "Sáng"/"Chiều" thành "S"/"C"
+                let buoiVietTat = buoi.toLowerCase() === 'sáng' ? 'S' : 'C';
+                
+                // [NÂNG CẤP ĐỒNG BỘ CẤU TRÚC]: Cấu trúc Mã Lưu Trữ khớp với ảnh: NămHọc_Tuần_Thứ_KýHiệuBuổi_Tiết_Lớp
+                let maLuuTru = `${namHocHienTai}_${tuanSo}_${thuHienTai}_${buoiVietTat}_${tiet}_${lopChon}`;
 
-                // [KHẮC PHỤC LỖI ĐỒNG BỘ]: Trả lại đúng các Key mà Code.gs đang nhận diện
                 duLieuQuetDuoc.push({
                     maLuuTru: maLuuTru, 
                     tuan: tuanSo, 
@@ -891,7 +898,6 @@ async function luuSoDauBaiSangMayChu() {
                     chuyenCan: chuyenCan
                 });
 
-                // CHỈ THÔNG BÁO CHO NGƯỜI DÙNG NHỮNG DÒNG THỰC SỰ CÓ THAY ĐỔI
                 if (isThayDoi || !isDaLuu) {
                     soDongCoThayDoi++;
                     danhSachThongBao.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: ${mon}`);
@@ -909,7 +915,6 @@ async function luuSoDauBaiSangMayChu() {
         return; 
     }
 
-    // Nếu không có dòng nào thực sự thay đổi, chặn thao tác gửi server
     if (soDongCoThayDoi === 0) return alert("Sổ đầu bài chưa có thay đổi nào để lưu.");
     
     let thongBaoHienThi = `Hệ thống ghi nhận ${soDongCoThayDoi} tiết học có sự thay đổi/cập nhật dữ liệu:\n\n` + 
@@ -952,7 +957,6 @@ async function luuSoDauBaiSangMayChu() {
                 }
             });
 
-            // Vẽ lại lưới ngay lập tức từ bộ nhớ cục bộ để khóa các ô đã ký và xóa cờ báo thay đổi
             thucThiKetXuatSoDauBaiLenLuoi();
             
         } else throw new Error(ketQua.thongBao);
