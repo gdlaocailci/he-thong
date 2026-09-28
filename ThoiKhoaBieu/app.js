@@ -1857,7 +1857,7 @@ async function dongBoDuLieuNgamToanCuc() {
     else if (khungSDB && !khungSDB.classList.contains('hidden')) {
         let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
         // [CHỐT ĐỘC LẬP]: Chỉ quét cây bút bên trong vùng khungSDB
-        let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
+        let coOThayDoiDOM_SDB = khungSDB.querySelector('tr[data-thaydoi="true"]');
 
         if (coThayDoiSDB || coOThayDoiDOM_SDB) {
             console.warn("Sổ đầu bài đang gõ dở, tạm dừng tải SDB.");
