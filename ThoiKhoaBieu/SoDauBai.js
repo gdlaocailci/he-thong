@@ -42,12 +42,27 @@ window.lamSachBoNhoSoDauBai = function() {
     let elementTuan = document.getElementById('chonTuanSo');
     let elementLop = document.getElementById('chonLopSo');
 
-    // [NÂNG CẤP]: Khôi phục hiển thị và dọn dẹp các lớp bọc UI khi hệ thống reset
-    let wTuan = document.getElementById('wrapper_chonTuanSo'); if (wTuan) wTuan.remove();
-    let wLop = document.getElementById('wrapper_chonLopSo'); if (wLop) wLop.remove();
+    // [VÁ LỖI MẤT Ô CHỌN]: Đưa thẻ <select> gốc thoát ra ngoài trước khi hủy lớp vỏ bọc
+    let wTuan = document.getElementById('wrapper_chonTuanSo'); 
+    if (wTuan && elementTuan) { 
+        wTuan.parentNode.insertBefore(elementTuan, wTuan); 
+        wTuan.remove(); 
+    } else if (wTuan) { wTuan.remove(); }
 
-    if(elementTuan) { elementTuan.style.display = ''; elementTuan.innerHTML = '<option value="" disabled selected>-- Chọn Tuần --</option>'; }
-    if(elementLop) { elementLop.style.display = ''; elementLop.innerHTML = '<option value="" disabled selected>-- Chọn Lớp --</option>'; }
+    let wLop = document.getElementById('wrapper_chonLopSo'); 
+    if (wLop && elementLop) { 
+        wLop.parentNode.insertBefore(elementLop, wLop); 
+        wLop.remove(); 
+    } else if (wLop) { wLop.remove(); }
+
+    if(elementTuan) { 
+        elementTuan.style.display = ''; 
+        elementTuan.innerHTML = '<option value="" disabled selected>-- Chọn Tuần --</option>'; 
+    }
+    if(elementLop) { 
+        elementLop.style.display = ''; 
+        elementLop.innerHTML = '<option value="" disabled selected>-- Chọn Lớp --</option>'; 
+    }
 };
 
 async function taiDuLieuSoDauBaiTuMayChu() {
@@ -591,9 +606,10 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
    // [NÂNG CẤP ĐỘT PHÁ - THUẬT TOÁN TỊNH TIẾN NGÀY TOÁN HỌC CHUẨN XÁC]
+    // Ép kiểu String() để chống lỗi crash UI khi ô chọn bị mất hoặc chưa sẵn sàng
     let mienNgayHienTai = inputNgay ? inputNgay.value : '';
-    let tuanMoi = parseInt(tuanChon.replace(/\D/g, '')) || 0;
-    let tuanCu = parseInt(tuanTruocDo_SDB.replace(/\D/g, '')) || 0;
+    let tuanMoi = parseInt(String(tuanChon).replace(/\D/g, '')) || 0;
+    let tuanCu = parseInt(String(tuanTruocDo_SDB).replace(/\D/g, '')) || 0;
 
     // Kịch bản 1: Bấm chuyển tuần -> Bắt buộc dùng toán học tịnh tiến để vượt qua rác dữ liệu trong CSDL
     if (tuanCu > 0 && tuanMoi > 0 && tuanCu !== tuanMoi && mienNgayHienTai) {
