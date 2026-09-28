@@ -719,22 +719,16 @@
                 const duLieuSever = await phanHoi.json();
                 
                 if (duLieuSever && duLieuSever.trangThai !== 'loi_he_thong') {
-                    // ... (Toàn bộ phần code cập nhật dữ liệu bên dưới giữ nguyên)
                     
                     let theTuan = document.getElementById('chonTuanSo');
                     let theLop = document.getElementById('chonLopSo');
                     let tuanChon = theTuan ? theTuan.value : null;
                     let lopChon = theLop ? theLop.value : null;
                     
-                    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
-                    if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
-                    
+                    // Cập nhật ngầm dữ liệu Server vào Map RAM
                     if (typeof khoiTaoDuLieuSoDauBai === 'function') {
                         khoiTaoDuLieuSoDauBai(duLieuSever);
                     }
-                    
-                    let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
-                    if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
                     
                     if (tuanChon && theTuan) {
                         theTuan.value = tuanChon;
@@ -745,12 +739,13 @@
                         if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo');
                     }
                     
-                    if (tuanChon && lopChon && typeof ketXuatSoDauBaiLenLuoi === 'function') {
-                        ketXuatSoDauBaiLenLuoi();
+                    // [NÂNG CẤP ĐỘT PHÁ]: Gọi hàm cập nhật cục bộ DOM thay vì vẽ lại toàn bộ bảng gây giật
+                    if (tuanChon && lopChon && typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
+                        capNhatSoDauBaiNgamLenLuoi(tuanChon, lopChon);
                     }
                 }
             } catch (loi) {
-                console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do mạng.");
+                console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do lỗi mạng.");
             }
         }
     </script>
