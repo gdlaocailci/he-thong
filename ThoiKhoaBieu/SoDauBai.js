@@ -1995,3 +1995,29 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
         }
     }
 };
+// =========================================================================
+// HÀM ĐỒNG BỘ NGẦM CHO SỔ ĐẦU BÀI (TẢI DỮ LIỆU MỚI TỪ MÁY CHỦ)
+// =========================================================================
+async function thucThiLamMoiNgam() {
+    try {
+        let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+        
+        const phanHoi = await fetchVoiCoCheThuLai(
+            `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
+            {},
+            1,
+            30000
+        );
+        
+        const duLieuSever = await phanHoi.json();
+        if (duLieuSever && duLieuSever.trangThai === 'thanh_cong') {
+            // Cập nhật ngầm dữ liệu nguồn vào RAM mà không làm gián đoạn ô input đang nhập
+            if (typeof khoiTaoDuLieuSoDauBai === 'function' && !coThayDoiChuaLuu_SDB) {
+                khoiTaoDuLieuSoDauBai(duLieuSever);
+                console.log("⚡ [Background Sync SDB]: Đã làm mới dữ liệu Sổ đầu bài thành công.");
+            }
+        }
+    } catch (loi) {
+        console.warn("Tải ngầm Sổ đầu bài tạm hoãn:", loi.message);
+    }
+}
