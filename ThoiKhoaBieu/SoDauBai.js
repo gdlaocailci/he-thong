@@ -1720,7 +1720,8 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
 
     let dictTKBMoi = {};
     tkbTuanNay.forEach(dong => {
-        let thuGoc = String(dong['Thứ']).trim();
+        // [KHẮC PHỤC LỖI TẢI LÊN UI]: Ép chữ thường (toLowerCase) để chống sai lệch từ CSS uppercase
+        let thuGoc = String(dong['Thứ']).trim().toLowerCase();
         let buoiKiemTra = String(dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'Sang' : 'Chieu';
         
         let mon = String(dong['Môn Học']).trim();
@@ -1758,7 +1759,8 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
             let cellThu = dong.querySelector('td[rowspan]');
             if (cellThu) {
                 let textThuNgay = cellThu.innerText.split('\n');
-                thuHienTai = textThuNgay[0].trim();
+                // [KHẮC PHỤC LỖI TẢI LÊN UI]: Ép chữ thường khi đọc DOM để khớp chuẩn với Server
+                thuHienTai = textThuNgay[0].trim().toLowerCase();
             }
 
             let buoiThuocDong = dong.getAttribute('data-buoi') || 'Sáng';
@@ -1768,13 +1770,13 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
             let tiet = oTiet ? oTiet.innerText.trim() : '';
 
             if (thuHienTai !== '' && tiet !== '') {
+                // Ánh xạ khóa sẽ tuyệt đối chính xác
                 let dongDuLieuMoi = dictTKBMoi[`${thuHienTai}_${buoiKiemTra}_${tiet}`];
                 
                 if (dongDuLieuMoi) {
                     let monHocMoi = dongDuLieuMoi['Môn Học'] || '';
                     let isDaLuuMoi = dongDuLieuMoi['DaLuu'] || false;
                     
-                    // Xử lý ép kiểu an toàn chống rỗng
                     let tenBaiMoi = String(dongDuLieuMoi['TenBai_Thuc'] || '');
                     let nhanXetMoi = String(dongDuLieuMoi['NhanXet_Thuc'] || '');
                     let xepLoaiMoi = String(dongDuLieuMoi['XepLoai_Thuc'] || '');
@@ -1783,7 +1785,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                     let tietPPCTMoi = String(dongDuLieuMoi['TietPPCT_Thuc'] || '');
                     let isLockedMoi = isDaLuuMoi && chuKyMoi.trim() !== '';
 
-                    // Kiểm tra quyền ghi
                     let gvTkb = String(dongDuLieuMoi['Mã GV']).trim().toLowerCase().normalize('NFC');
                     let quyenNhapThuCong = false;
                     if (quyenQuanTri) {
@@ -1795,18 +1796,15 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                         }
                     }
 
-                    // Cập nhật text Tên Môn
                     let tdMon = dong.querySelector('td[data-loai="mon"]');
                     if (tdMon && tdMon.innerText.trim() !== monHocMoi) {
                         tdMon.innerText = monHocMoi;
                     }
 
-                    // Cập nhật trạng thái khóa
                     let tdTenBai = dong.querySelector('td[data-loai="tenBai"]');
                     if (tdTenBai) tdTenBai.setAttribute('data-islocked', isLockedMoi);
                     dong.setAttribute('data-daluu', isDaLuuMoi);
 
-                    // Khối thuật toán tiêm dữ liệu
                     const capNhatO = (loai, giaTriMoi) => {
                         let td = dong.querySelector(`td[data-loai="${loai}"]`);
                         if (!td) return;
@@ -1842,7 +1840,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                             let cssNenKhoa = !quyenNhapThuCong ? "bg-slate-100 cursor-not-allowed opacity-70" : "bg-transparent";
 
                             if (!tagNhap) {
-                                // Xây dựng lại Input nếu ô bị khóa trước đó
                                 if (loai === 'tenBai') {
                                     let placeholderText = !quyenNhapThuCong ? "Không có quyền" : "Nhập...";
                                     td.innerHTML = `<textarea rows="1" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';" ${trangThaiKhoa} class="w-full text-left outline-none ${cssNenKhoa} font-semibold text-slate-800 placeholder-slate-400 px-1 resize-none overflow-hidden align-middle" placeholder="${placeholderText}">${giaTriMoi}</textarea>`;
@@ -1866,7 +1863,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                                     td.innerHTML = `<input type="text" onclick="${onfocusLogic}" readonly ${trangThaiKhoa} class="w-full text-center outline-none ${cssNenKhoa} font-extrabold text-blue-700 placeholder-blue-300 transition-all cursor-pointer hover:bg-blue-50" placeholder="..." value="${giaTriMoi}">`;
                                 }
                                 
-                                // Gắn lại sự kiện lắng nghe để hiện cây bút
                                 let tagMoi = td.querySelector('input, select, textarea');
                                 if(tagMoi) {
                                     tagMoi.addEventListener('input', (e) => { coThayDoiChuaLuu_SDB = true; danhDauDongThayDoi(e.target.closest('tr')); });
@@ -1877,7 +1873,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                                     }
                                 }
                             } else {
-                                // Tiêm dữ liệu vào Input có sẵn nếu có sự thay đổi
                                 if (tagNhap.value !== giaTriMoi) {
                                     tagNhap.value = giaTriMoi;
                                     if (tagNhap.tagName === 'TEXTAREA') {
@@ -1906,7 +1901,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                     capNhatO('xepLoai', xepLoaiMoi);
                     capNhatO('chuKy', chuKyMoi);
                     
-                    // Dọn dẹp cờ sửa đổi (vì dữ liệu đã khớp Server)
                     dong.setAttribute('data-thaydoi', 'false');
                     let iconSua = dong.querySelector('.icon-sua-chua');
                     if(iconSua) iconSua.remove();
