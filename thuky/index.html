@@ -422,13 +422,16 @@
             this.trangThai.boDemTimKiem = setTimeout(thucHienTimKiem, 400);
         },
 
-        goiMayChu: function(tenLenh, thamSo, hamThanhCong, hamThatBai = null) {
+       goiMayChu: function(tenLenh, thamSo, hamThanhCong, hamThatBai = null, soLanThu = 0) {
             const phien = this.phienLamViec();
             if (!phien) { this.thongBao("Phiên đăng nhập hết hạn.", "loi"); return; }
             
             thamSo.taiKhoanYeuCau = phien;
             const laGAS = (typeof google !== 'undefined' && google.script && google.script.run);
-            const xuLyLoi = hamThatBai || (l => { this.hienTai(false); this.thongBao(l.message, "loi"); });
+            const xuLyLoi = hamThatBai || (l => { 
+                this.hienTai(false); 
+                this.thongBao("Lỗi đường truyền: " + (l.message || l), "loi"); 
+            });
 
             if (laGAS) {
                 const runner = google.script.run
@@ -437,7 +440,14 @@
                         if (typeof res === 'string') { try { parsed = JSON.parse(res); } catch(e) {} }
                         hamThanhCong(parsed);
                     })
-                    .withFailureHandler(xuLyLoi);
+                    .withFailureHandler(loi => {
+                        // NÂNG CẤP: Tự động thử lại nếu GAS nội bộ rớt mạng (tối đa 2 lần)
+                        if (soLanThu < 2) {
+                            setTimeout(() => this.goiMayChu(tenLenh, thamSo, hamThanhCong, hamThatBai, soLanThu + 1), 1000);
+                        } else {
+                            xuLyLoi(loi);
+                        }
+                    });
                     
                 if(tenLenh === 'PhanTichAI') runner.phanTichUuKhuyetDiem(thamSo.noiDung, thamSo.chuoiPhanLoai, thamSo.taiKhoanYeuCau);
                 else if(tenLenh === 'LuuHoSo' || tenLenh === 'XuatWord') runner.xuLyLuuHoSo(thamSo.dongGoiTruyenLen);
@@ -446,7 +456,16 @@
                 else if(tenLenh === 'TruyVanCheoAI') runner.truyVanCheoAI(thamSo.cauHoi, thamSo.dieuKienLoc, thamSo.taiKhoanYeuCau);
             } else if (typeof KET_NOI !== 'undefined' && KET_NOI.URL_API_BACKEND) {
                 fetch(KET_NOI.URL_API_BACKEND, { method: 'POST', body: JSON.stringify({ hanhDong: tenLenh, ...thamSo }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
-                .then(res => res.text()).then(txt => { let p = txt; try { p = JSON.parse(txt); } catch(e) {} hamThanhCong(p); }).catch(xuLyLoi);
+                .then(res => res.text()).then(txt => { 
+                    let p = txt; try { p = JSON.parse(txt); } catch(e) {} hamThanhCong(p); 
+                }).catch(loi => {
+                    // NÂNG CẤP: Thuật toán tự động thử lại khi gặp lỗi mạng/fetch chéo (tối đa 2 lần)
+                    if (soLanThu < 2) {
+                        setTimeout(() => this.goiMayChu(tenLenh, thamSo, hamThanhCong, hamThatBai, soLanThu + 1), 1500);
+                    } else {
+                        xuLyLoi(loi);
+                    }
+                });
             }
         }
     };
