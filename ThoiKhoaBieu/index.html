@@ -701,7 +701,7 @@
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
    <script>
-        async function thucThiLamMoiNgam() {
+      async function thucThiLamMoiNgam() {
             // Xác định khung Sổ đầu bài trước
             let tabSDB = document.getElementById('khungSoDauBai');
             if (!tabSDB || tabSDB.classList.contains('hidden')) return;
@@ -725,10 +725,18 @@
                     let tuanChon = theTuan ? theTuan.value : null;
                     let lopChon = theLop ? theLop.value : null;
                     
+                    // [KHẮC PHỤC LỖI TRẮNG UI]: Đổi tên ID tạm thời để bảo vệ lưới hiện tại khỏi lệnh xóa của hàm napDropdownSoDauBai
+                    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
+                    if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
+                    
                     // Cập nhật ngầm dữ liệu Server vào Map RAM
                     if (typeof khoiTaoDuLieuSoDauBai === 'function') {
                         khoiTaoDuLieuSoDauBai(duLieuSever);
                     }
+                    
+                    // [KHẮC PHỤC LỖI TRẮNG UI]: Khôi phục lại ID chuẩn để hàm cập nhật chống giật tìm được lưới
+                    let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
+                    if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
                     
                     if (tuanChon && theTuan) {
                         theTuan.value = tuanChon;
@@ -739,7 +747,7 @@
                         if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo');
                     }
                     
-                    // [NÂNG CẤP ĐỘT PHÁ]: Gọi hàm cập nhật cục bộ DOM thay vì vẽ lại toàn bộ bảng gây giật
+                    // Gọi hàm cập nhật cục bộ DOM thay vì vẽ lại toàn bộ bảng gây giật
                     if (tuanChon && lopChon && typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
                         capNhatSoDauBaiNgamLenLuoi(tuanChon, lopChon);
                     }
