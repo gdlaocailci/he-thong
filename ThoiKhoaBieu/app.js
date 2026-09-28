@@ -649,15 +649,24 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
+// THAY THẾ HÀM TÍNH NGÀY ĐỘC LẬP (app.js)
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
-    let parts = ngayDauTuanStr.split('-');
+    // Nắn chỉnh nếu định dạng là dd/mm/yyyy truyền nhầm
+    let inputStr = ngayDauTuanStr;
+    if (inputStr.includes('/')) {
+        let p = inputStr.split('/');
+        inputStr = `${p[2]}-${p[1]}-${p[0]}`;
+    }
+
+    let parts = inputStr.split('-');
     if (parts.length !== 3) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
     let ngayGoc = new Date(parts[0], parts[1] - 1, parts[2]);
+    if (isNaN(ngayGoc.getTime())) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
+
     const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
     let soNgayLech = doLechThu[tenThu] || 0;
     
