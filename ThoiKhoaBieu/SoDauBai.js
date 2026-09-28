@@ -778,7 +778,7 @@ async function luuSoDauBaiSangMayChu() {
     let tuanSo = parseInt(tuanChon.replace(/\D/g, ''));
     let tuanHeThong = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.TUAN_HIEN_TAI) ? parseInt(window.thongSoHocVu.TUAN_HIEN_TAI) : 999;
     
-    // Lấy thông tin năm học từ biến toàn cục thongSoHocVu để làm tiền tố tạo mã lưu trữ duy nhất. 
+    // [NÂNG CẤP]: Lấy thông tin năm học từ biến toàn cục thongSoHocVu để làm tiền tố tạo mã lưu trữ duy nhất. 
     let namHocHienTai = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.NAM_HOC) 
                         ? window.thongSoHocVu.NAM_HOC 
                         : `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
@@ -788,8 +788,8 @@ async function luuSoDauBaiSangMayChu() {
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true') : false);
     let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
 
-    let duLieuQuetDuoc = []; 
-    let danhSachThongBao = []; 
+    let duLieuQuetDuoc = []; // Mảng chứa TOÀN BỘ dữ liệu để gửi lên server
+    let danhSachThongBao = []; // Mảng CHỈ chứa thông tin các dòng có thay đổi để hiện hộp thoại
     let soDongCoThayDoi = 0; 
 
     let cacBang = document.querySelectorAll('#vungHienThiSoDauBai .bang-so-dau-bai-container');
@@ -811,6 +811,7 @@ async function luuSoDauBaiSangMayChu() {
             let cellMon = dong.querySelector('td[data-loai="mon"]');
             let mon = cellMon ? cellMon.innerText.trim() : '';
 
+            // Quét và lấy TẤT CẢ các tiết có môn học
             if (mon && mon !== '') {
                 let isDaLuu = dong.getAttribute('data-daluu') === 'true';
                 let isThayDoi = dong.getAttribute('data-thaydoi') === 'true';
@@ -874,8 +875,11 @@ async function luuSoDauBaiSangMayChu() {
                     }
                 }
 
-                // [CẬP NHẬT]: Đã bỏ ký hiệu Buổi (S/C). Cấu trúc: NămHọc_Tuần_Thứ_Tiết_Lớp
-                let maLuuTru = `${namHocHienTai}_${tuanSo}_${thuHienTai}_${tiet}_${lopChon}`;
+                // [NÂNG CẤP ĐỒNG BỘ CẤU TRÚC]: Chuyển đổi "Sáng"/"Chiều" thành "S"/"C"
+                let buoiVietTat = buoi.toLowerCase() === 'sáng' ? 'S' : 'C';
+                
+                // [NÂNG CẤP ĐỒNG BỘ CẤU TRÚC]: Cấu trúc Mã Lưu Trữ khớp với ảnh: NămHọc_Tuần_Thứ_KýHiệuBuổi_Tiết_Lớp
+                let maLuuTru = `${namHocHienTai}_${tuanSo}_${thuHienTai}_${buoiVietTat}_${tiet}_${lopChon}`;
 
                 duLieuQuetDuoc.push({
                     maLuuTru: maLuuTru, 
