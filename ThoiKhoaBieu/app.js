@@ -922,7 +922,7 @@ async function luuDuLieu(event, loaiLuu) {
         
         if(ketQua.trangThai !== 'thanh_cong') { 
             alert("Lưu thất bại: " + ketQua.thongBao);
-        } else { 
+      } else { 
             if (loaiLuu === 'khoiphuc') {
                 await chuyenTuan(1); 
                 let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
@@ -940,10 +940,11 @@ async function luuDuLieu(event, loaiLuu) {
                 const MA_DA = (typeof CAU_HINH_FRONTEND !== 'undefined' && CAU_HINH_FRONTEND.MA_DU_AN) ? CAU_HINH_FRONTEND.MA_DU_AN : 'MAC_DINH';
                 localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(dsTietLuoi));
 
+                // Chỉ dọn dẹp bộ nhớ ẩn để SĐB tự nạp lại nếu người dùng chuyển tab
                 if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
                 
-                // [ĐÃ SỬA]: Chỉ giữ lại một dòng gọi hàm tải dữ liệu với tham số false
-                await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
+                // [NÂNG CẤP]: Đã loại bỏ lệnh tải lại máy chủ gây chớp giao diện.
+                // Hệ thống sẽ dựa hoàn toàn vào RAM và Động cơ đồng bộ ngầm 60s.
                 localStorage.setItem('KhoaDongBo_TKB', Date.now().toString());
             }
         }
