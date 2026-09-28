@@ -173,16 +173,57 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
 }
 
 // =========================================================================
-// KHỐI 2: VẼ GIAO DIỆN VÀ KHỞI TẠO DỮ LIỆU
+// THAY THẾ HÀM TÍNH NGÀY TỪ INPUT & SỬA MAP NGÀY (SoDauBai.js)
 // =========================================================================
 function tinhNgayTuInputDate(ngayYMD, tenThu) {
     if (!ngayYMD) return '';
-    let dateObj = new Date(ngayYMD);
+    // Xử lý chống lỗi định dạng ngược từ hệ thống truyền vào
+    let dateStr = ngayYMD.includes('/') ? ngayYMD.split('/').reverse().join('-') : ngayYMD;
+    let dateObj = new Date(dateStr);
+    
     if (isNaN(dateObj.getTime())) return '';
+    
     const doLech = { "Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6 };
     dateObj.setDate(dateObj.getDate() + (doLech[tenThu] || 0));
     return `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 }
+
+// CẬP NHẬT TRONG HÀM: thucThiKetXuatSoDauBaiLenLuoi (SoDauBai.js)
+// Đồng chí tìm đến đoạn khai báo "tkbTuanNay.forEach(dong => {" và thay thế khối mã đó bằng khối dưới đây:
+
+    tkbTuanNay.forEach(dong => {
+        let thuGoc = String(dong['Thứ']).trim();
+        if (thuGoc === 'Thứ 7') coDayBuThu7 = true;
+        if (thuGoc === 'Chủ nhật') coDayBuChuNhat = true;
+        
+        // [NÂNG CẤP ĐỘT PHÁ]: Bắt buộc lấy chính xác Ngày từ đối tượng đã hợp nhất (chứa cả cột E SDB và Cột K TKB)
+        if (dong['Ngày'] && dong['Ngày'] !== '' && dong['Ngày'] !== '...') {
+            mapNgayChinhXac[thuGoc] = dong['Ngày']; 
+        }
+
+        let buoiKiemTra = String(dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'Sang' : 'Chieu';
+        
+        let mon = String(dong['Môn Học']).trim();
+        if (mon !== '') {
+            tongSoTietCoMon++;
+            let monPPCT = mon.replace(/[0-9\(\)]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+            if (dong['DaLuu'] === true) {
+                soTietDaLuu++;
+                let tietLuu = parseInt(String(dong['TietPPCT_Thuc']).replace(/\D/g, '')) || 0;
+                if (tietLuu > (boDemTietPPCT[monPPCT] || 0)) boDemTietPPCT[monPPCT] = tietLuu;
+            } else {
+                boDemTietPPCT[monPPCT] = (boDemTietPPCT[monPPCT] || 0) + 1;
+                dong['TietPPCT_Thuc'] = boDemTietPPCT[monPPCT];
+
+                let khoaChinh = `${khoiChon}_${mon.toLowerCase().replace(/\s+/g, ' ')}_${dong['TietPPCT_Thuc']}`;
+                let khoaPhu = `${khoiChon}_${monPPCT}_${dong['TietPPCT_Thuc']}`;
+                dong['TenBai_Thuc'] = tuDienPPCTToanCuc[khoaChinh] || tuDienPPCTToanCuc[khoaPhu] || '';
+            }
+        }
+        
+        dictTKB[`${thuGoc}_${buoiKiemTra}_${dong['Tiết']}`] = dong;
+    });
 
 // =========================================================================
 // [NÂNG CẤP]: ÁNH XẠ DỮ LIỆU TUYỆT ĐỐI THEO TÊN CỘT VẬT LÝ (A, B, C...)
