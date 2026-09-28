@@ -591,47 +591,22 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
     // [NÂNG CẤP - FIX LỖI]: Ép buộc cập nhật Ngày đầu tuần theo đúng dữ liệu TKB của tuần vừa chọn
-    // [NÂNG CẤP ĐỘT PHÁ - THUẬT TOÁN TỊNH TIẾN NGÀY THÔNG MINH]
     let mienNgayHienTai = '';
     
-    // 1. Ưu tiên lấy ngày Thứ 2 trực tiếp từ cục dữ liệu TKB của tuần đang hiển thị
+    // Ưu tiên lấy ngày Thứ 2 trực tiếp từ cục dữ liệu TKB của tuần đang được render
     if (mapNgayChinhXac['Thứ 2']) {
         let p = mapNgayChinhXac['Thứ 2'].split('/');
         if (p.length === 3) {
-            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; // Định dạng yyyy-mm-dd
+            mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; // Định dạng yyyy-mm-dd chuẩn cho thẻ input
         }
     }
 
-    // 2. Suy luận toán học: Nếu tuần này khuyết ngày, tìm tuần bất kỳ có ngày để tịnh tiến
-    if (!mienNgayHienTai && maxTuanChon > 0) {
-        let dongCoNgay = duLieuTKBGopDaMap.find(d => 
-            parseInt(String(d['Tuần']).replace(/\D/g, '')) > 0 && 
-            String(d['Thứ']).trim() === 'Thứ 2' && 
-            d['Ngày'] && d['Ngày'].includes('/')
-        );
-        
-        if (dongCoNgay) {
-            let tuanGoc = parseInt(String(dongCoNgay['Tuần']).replace(/\D/g, ''));
-            let p = dongCoNgay['Ngày'].split('/');
-            if (p.length === 3) {
-                let ngayGocObj = new Date(p[2], p[1] - 1, p[0]);
-                // Thuật toán nhảy ngày: Cộng số ngày bằng Độ lệch tuần x 7
-                ngayGocObj.setDate(ngayGocObj.getDate() + ((maxTuanChon - tuanGoc) * 7));
-                
-                let y = ngayGocObj.getFullYear();
-                let m = String(ngayGocObj.getMonth() + 1).padStart(2, '0');
-                let d = String(ngayGocObj.getDate()).padStart(2, '0');
-                mienNgayHienTai = `${y}-${m}-${d}`;
-            }
-        }
-    }
-
-    // 3. Gắn ngược lên giao diện (Khóa chặt việc sai lệch ngày)
     if (inputNgay) {
         if (mienNgayHienTai) {
+            // Nếu có ngày chính xác từ tuần mới, ghi đè ngay lập tức để đồng bộ UI
             inputNgay.value = mienNgayHienTai;
         } else {
-            // Nếu data trắng hoàn toàn (VD: Tuần 1 hệ thống mới tinh), lấy giá trị trên UI do người dùng chọn
+            // Dự phòng: Nếu tuần này khuyết dữ liệu ngày trên server, dùng tạm giá trị đang có trên Input để tính toán tiếp
             mienNgayHienTai = inputNgay.value;
         }
     }
@@ -803,19 +778,14 @@ async function luuSoDauBaiSangMayChu() {
     let tuanSo = parseInt(tuanChon.replace(/\D/g, ''));
     let tuanHeThong = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.TUAN_HIEN_TAI) ? parseInt(window.thongSoHocVu.TUAN_HIEN_TAI) : 999;
     
-    // [NÂNG CẤP]: Lấy thông tin năm học từ biến toàn cục thongSoHocVu để làm tiền tố tạo mã lưu trữ duy nhất. 
-    let namHocHienTai = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.NAM_HOC) 
-                        ? window.thongSoHocVu.NAM_HOC 
-                        : `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
-    
     let theChotQuyen = document.getElementById('theChotQuyenSDB');
     let madinhdanhGV = maGvDangNhapHeThong || (theChotQuyen ? theChotQuyen.getAttribute('data-madinhdanh') || '' : '');
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true') : false);
     let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
 
-    let duLieuQuetDuoc = []; // Mảng chứa TOÀN BỘ dữ liệu để gửi lên server
+    let duLieuQuetDuoc = []; // Mảng chứa TOÀN BỘ dữ liệu để gửi lên server (tránh mất dữ liệu)
     let danhSachThongBao = []; // Mảng CHỈ chứa thông tin các dòng có thay đổi để hiện hộp thoại
-    let soDongCoThayDoi = 0; 
+    let soDongCoThayDoi = 0; // Biến đếm số lượng thực sự có sửa đổi
 
     let cacBang = document.querySelectorAll('#vungHienThiSoDauBai .bang-so-dau-bai-container');
     let canThiTietThieuTenBai = false; 
@@ -836,11 +806,12 @@ async function luuSoDauBaiSangMayChu() {
             let cellMon = dong.querySelector('td[data-loai="mon"]');
             let mon = cellMon ? cellMon.innerText.trim() : '';
 
-            // Quét và lấy TẤT CẢ các tiết có môn học
+            // Quét và lấy TẤT CẢ các tiết có môn học để đề phòng Backend xóa đè toàn bộ
             if (mon && mon !== '') {
                 let isDaLuu = dong.getAttribute('data-daluu') === 'true';
                 let isThayDoi = dong.getAttribute('data-thaydoi') === 'true';
 
+                // Lọc bỏ ký tự ngắt dòng (Enter) trong Textarea để chống gãy mảng khi ghi xuống Sheet
                 let getVal = (cell) => {
                     if (!cell) return '';
                     let theNhap = cell.querySelector('input, select, textarea');
@@ -900,12 +871,9 @@ async function luuSoDauBaiSangMayChu() {
                     }
                 }
 
-                // [NÂNG CẤP ĐỒNG BỘ CẤU TRÚC]: Chuyển đổi "Sáng"/"Chiều" thành "S"/"C"
-                let buoiVietTat = buoi.toLowerCase() === 'sáng' ? 'S' : 'C';
-                
-                // [NÂNG CẤP ĐỒNG BỘ CẤU TRÚC]: Cấu trúc Mã Lưu Trữ khớp với ảnh: NămHọc_Tuần_Thứ_KýHiệuBuổi_Tiết_Lớp
-                let maLuuTru = `${namHocHienTai}_${tuanSo}_${thuHienTai}_${buoiVietTat}_${tiet}_${lopChon}`;
+                let maLuuTru = `${tuanSo}_${lopChon}_${thuHienTai}_${buoi}_${tiet}`;
 
+                // [KHẮC PHỤC LỖI ĐỒNG BỘ]: Trả lại đúng các Key mà Code.gs đang nhận diện
                 duLieuQuetDuoc.push({
                     maLuuTru: maLuuTru, 
                     tuan: tuanSo, 
@@ -923,6 +891,7 @@ async function luuSoDauBaiSangMayChu() {
                     chuyenCan: chuyenCan
                 });
 
+                // CHỈ THÔNG BÁO CHO NGƯỜI DÙNG NHỮNG DÒNG THỰC SỰ CÓ THAY ĐỔI
                 if (isThayDoi || !isDaLuu) {
                     soDongCoThayDoi++;
                     danhSachThongBao.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: ${mon}`);
@@ -940,6 +909,7 @@ async function luuSoDauBaiSangMayChu() {
         return; 
     }
 
+    // Nếu không có dòng nào thực sự thay đổi, chặn thao tác gửi server
     if (soDongCoThayDoi === 0) return alert("Sổ đầu bài chưa có thay đổi nào để lưu.");
     
     let thongBaoHienThi = `Hệ thống ghi nhận ${soDongCoThayDoi} tiết học có sự thay đổi/cập nhật dữ liệu:\n\n` + 
@@ -962,28 +932,9 @@ async function luuSoDauBaiSangMayChu() {
             alert(`✅ Đã chốt thành công các cập nhật của Sổ đầu bài Lớp ${lopChon} - Tuần ${tuanSo}!`);
             coThayDoiChuaLuu_SDB = false; 
             
-            // ĐỒNG BỘ DỮ LIỆU NGẦM KHÔNG GỌI LẠI MÁY CHỦ
-            duLieuQuetDuoc.forEach(itemLuu => {
-                let matchDong = duLieuTKBGopDaMap.find(d => 
-                    String(d['Tuần']).trim() == itemLuu.tuan && 
-                    String(d['Mã Lớp']).trim().toUpperCase() === itemLuu.maLop.toUpperCase() &&
-                    String(d['Thứ']).trim() === itemLuu.thu &&
-                    String(d['Buổi']).trim().toLowerCase() === itemLuu.buoi.toLowerCase() &&
-                    String(d['Tiết']).trim() == itemLuu.tiet
-                );
-                if (matchDong) {
-                    matchDong['DaLuu'] = true;
-                    matchDong['ChuyenCan_Thuc'] = itemLuu.chuyenCan;
-                    matchDong['TietPPCT_Thuc'] = itemLuu.tietPPCT;
-                    matchDong['TenBai_Thuc'] = itemLuu.tenBai;
-                    matchDong['NhanXet_Thuc'] = itemLuu.nhanXet;
-                    matchDong['XepLoai_Thuc'] = itemLuu.xepLoai;
-                    matchDong['ChuKy_Thuc'] = itemLuu.chuKy;
-                }
-            });
-
-            thucThiKetXuatSoDauBaiLenLuoi();
-            
+            // ÉP TẢI LẠI TRỰC TIẾP TỪ MÁY CHỦ LÊN GIAO DIỆN
+            daTaiDuLieuSoDauBai = false; // Reset cờ để kích hoạt hàm tải
+            await taiDuLieuSoDauBaiTuMayChu();
         } else throw new Error(ketQua.thongBao);
     } catch (loi) { 
         alert("Lưu thất bại: " + loi.message); 
@@ -1707,7 +1658,6 @@ document.addEventListener('scroll', function(event) {
         dongKhungTruotChuKy();
     }
 }, true);
-
 // =========================================================================
 // HÀM MỚI: CẬP NHẬT DỮ LIỆU NGẦM LÊN LƯỚI MÀ KHÔNG VẼ LẠI UI (CHỐNG GIẬT)
 // =========================================================================
@@ -1721,7 +1671,7 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
     
     let boDemTietPPCT = {}; 
     
-    // 1. CHUẨN BỊ DỮ LIỆU: Quét tiến độ PPCT các tuần trước
+    // 1. Quét tiến độ PPCT các tuần trước
     duLieuTKBGopDaMap.forEach(d => {
         let t = parseInt(String(d['Tuần']).replace(/\D/g, '')) || 0;
         let maLop = String(d['Mã Lớp']).trim().toUpperCase();
@@ -1737,7 +1687,7 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
         }
     });
 
-    // 2. CHUẨN BỊ DỮ LIỆU: Tính toán tiếp tiến độ cho các tiết chưa lưu trong tuần hiện tại
+    // 2. Tính toán tiếp tiến độ cho các tiết chưa lưu trong tuần hiện tại
     let tkbTuanNay = duLieuTKBGopDaMap.filter(d => 
         String(d['Tuần']).trim() === tuanChon && 
         String(d['Mã Lớp']).trim().toUpperCase() === lopChon.toUpperCase()
@@ -1745,7 +1695,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
 
     let dictTKBMoi = {};
     tkbTuanNay.forEach(dong => {
-        // [KHẮC PHỤC LỖI TẢI LÊN UI]: Ép chữ thường (toLowerCase) để chống sai lệch từ CSS uppercase
         let thuGoc = String(dong['Thứ']).trim().toLowerCase();
         let buoiKiemTra = String(dong['Buổi']).trim().toLowerCase() === 'sáng' ? 'Sang' : 'Chieu';
         
@@ -1773,7 +1722,7 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true' || theChotQuyen.getAttribute('data-quantri') === true) : false);
     let maGvDangNhapLC = madinhdanhGV.trim().toLowerCase().normalize('NFC');
 
-    // 3. CẬP NHẬT GIAO DIỆN: Duyệt qua DOM và trỏ dữ liệu
+    // 3. Cập nhật DOM cục bộ
     let cacBang = document.querySelectorAll('#vungHienThiSoDauBai .bang-so-dau-bai-container');
     
     cacBang.forEach(khungBang => {
@@ -1784,7 +1733,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
             let cellThu = dong.querySelector('td[rowspan]');
             if (cellThu) {
                 let textThuNgay = cellThu.innerText.split('\n');
-                // [KHẮC PHỤC LỖI TẢI LÊN UI]: Ép chữ thường khi đọc DOM để khớp chuẩn với Server
                 thuHienTai = textThuNgay[0].trim().toLowerCase();
             }
 
@@ -1795,7 +1743,6 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
             let tiet = oTiet ? oTiet.innerText.trim() : '';
 
             if (thuHienTai !== '' && tiet !== '') {
-                // Ánh xạ khóa sẽ tuyệt đối chính xác
                 let dongDuLieuMoi = dictTKBMoi[`${thuHienTai}_${buoiKiemTra}_${tiet}`];
                 
                 if (dongDuLieuMoi) {
@@ -1934,7 +1881,7 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
         });
     });
 
-    // 4. CẬP NHẬT GIAO DIỆN: Thanh trạng thái tổng quát
+    // 4. Thanh trạng thái tổng quát
     let soTietDaLuu = tkbTuanNay.filter(d => d.DaLuu === true).length;
     let tongSoTietCoMon = tkbTuanNay.filter(d => String(d['Môn Học']).trim() !== '').length;
 
