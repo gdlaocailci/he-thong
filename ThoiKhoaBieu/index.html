@@ -708,7 +708,10 @@
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
    <script>
-      async function thucThiLamMoiNgam() {
+     async function thucThiLamMoiNgam() {
+          // [NÂNG CẤP]: Bổ sung kiểm tra DOM trực tiếp để chống xung đột luồng khi hệ thống đang vẽ giao diện
+          let vungHienThi = document.getElementById('vungHienThiSoDauBai');
+          if (vungHienThi && vungHienThi.innerHTML.includes('Đang kết nối kho dữ liệu')) return;
           if (typeof dangTaiDuLieuSoDauBai !== 'undefined' && dangTaiDuLieuSoDauBai === true) return;
 
             let tabSDB = document.getElementById('khungSoDauBai');
@@ -733,7 +736,6 @@
                     let lopChon = theLop ? theLop.value : null;
                     
                     // Khắc phục lỗi xóa nhầm UI
-                    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
                     if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
                     
                     if (typeof khoiTaoDuLieuSoDauBai === 'function') {
