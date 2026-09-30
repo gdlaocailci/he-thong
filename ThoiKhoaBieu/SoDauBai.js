@@ -68,19 +68,15 @@ window.lamSachBoNhoSoDauBai = function() {
 };
 
 // =========================================================================
-// [NÂNG CẤP TUYỆT ĐỐI]: THUẬT TOÁN HYBRID FETCH (TĨNH TỪ CACHE, ĐỘNG TỪ API)
-// Đảm bảo Sổ Đầu Bài luôn lấy dữ liệu mới nhất mà vẫn không bị Timeout
+// [NÂNG CẤP TUYỆT ĐỐI]: THUẬT TOÁN HYBRID FETCH VÀ CHỐNG TREO DEADLOCK
 // =========================================================================
 async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
     if (daTaiDuLieuSoDauBai && !epTaiLai) return;
-    if (dangTaiDuLieuSoDauBai) {
-        console.warn("⏳ Hệ thống Sổ đầu bài đang khởi động/nạp dữ liệu. Từ chối lệnh gọi đè...");
-        return;
-    }
-    dangTaiDuLieuSoDauBai = true;
+    
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
+    // 1. KIỂM TRA ĐĂNG NHẬP TRƯỚC (CHƯA KHÓA TIẾN TRÌNH Ở ĐÂY)
     if (chuaDangNhap) {
         if (vungHienThi) {
             vungHienThi.innerHTML = `
@@ -96,9 +92,16 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
                     </div>
                 </div>`;
         }
-        return;
+        return; // Thoát hàm an toàn, hệ thống chưa bị khóa
     }
 
+    // 2. BÂY GIỜ MỚI KÍCH HOẠT RÀO CHẮN BẢO VỆ TIẾN TRÌNH
+    if (dangTaiDuLieuSoDauBai) {
+        console.warn("⏳ Hệ thống Sổ đầu bài đang khởi động/nạp dữ liệu. Từ chối lệnh gọi đè...");
+        return;
+    }
+    
+    // Đóng cửa tiến trình để các luồng khác không nhảy vào
     dangTaiDuLieuSoDauBai = true;
     khoaUIChaoDonTai(true); 
 
@@ -112,9 +115,6 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
 
         // [NHÁNH 1]: NẾU ĐÃ CÓ CACHE TĨNH -> GỌI API "SIÊU NHẸ" ĐỂ LẤY SỔ ĐẦU BÀI MỚI NHẤT
         if (!epTaiLai && cacheJson) {
-            console.log("⚡ [Sổ Đầu Bài]: Đang kéo bản cập nhật Sổ đầu bài (Realtime) và ghép với PPCT (Cache)...");
-            
-            // Chỉ gọi hàm lấy ngầm (Delta Sync) để tăng tốc độ phản hồi < 1 giây
             const phanHoi = await fetchVoiCoCheThuLai(
                 `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBaiNgam&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
                 {}, 3, 30000
@@ -123,10 +123,9 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
             
             if (dataMoi.trangThai === 'loi_he_thong') throw new Error(dataMoi.thongBao);
 
-            // Ráp nối: Dữ liệu tĩnh (TKB, PPCT) từ Cache + Dữ liệu động (SDB) vừa lấy từ máy chủ
             duLieuSever = {
                 trangThai: 'thanh_cong',
-                SO_DAU_BAI: dataMoi.SO_DAU_BAI, // BẢO ĐẢM 100% SDB LUÔN MỚI NHẤT
+                SO_DAU_BAI: dataMoi.SO_DAU_BAI, 
                 PPCT: cacheJson.PPCT,
                 KHUNG_CHUONG_TRINH: cacheJson.KHUNG_CHUONG_TRINH,
                 DATA_TKB: cacheJson.DATA_TKB,
@@ -140,8 +139,6 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
         } 
         // [NHÁNH 2]: NẾU CHƯA CÓ CACHE (Vào lần đầu) HOẶC ÉP TẢI LẠI -> GỌI API "FULL"
         else {
-            console.log("🔄 [Sổ Đầu Bài]: Tải toàn bộ dữ liệu từ máy chủ (Bao gồm PPCT, KhungCT)...");
-            
             const phanHoi = await fetchVoiCoCheThuLai(
                 `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
                 {}, 3, 60000
@@ -150,24 +147,22 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
             duLieuSever = await phanHoi.json();
             if (duLieuSever.trangThai === 'loi_he_thong') throw new Error(duLieuSever.thongBao);
             
-            // Xóa phần Sổ Đầu Bài ra khỏi mảng trước khi ném vào RAM (Vì SDB không được phép Cache)
             let dataDeCache = Object.assign({}, duLieuSever);
             delete dataDeCache.SO_DAU_BAI; 
             delete dataDeCache.trangThai;
             
-            // Lưu các thành phần tĩnh vào bộ nhớ tạm
             sessionStorage.setItem(khoaCache, JSON.stringify(dataDeCache));
         }
 
         setTimeout(() => {
             khoiTaoDuLieuSoDauBai(duLieuSever);
             daTaiDuLieuSoDauBai = true;
-            dangTaiDuLieuSoDauBai = false;
+            dangTaiDuLieuSoDauBai = false; // Mở khóa tiến trình
             khoaUIChaoDonTai(false);
         }, 10);
 
     } catch (loi) {
-        dangTaiDuLieuSoDauBai = false;
+        dangTaiDuLieuSoDauBai = false; // Có lỗi cũng phải mở khóa tiến trình
         console.error("Lỗi Sổ đầu bài:", loi);
         if (vungHienThi) vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Cảnh báo lỗi kết nối: <br><span class="text-base font-normal text-slate-700">${loi.message}</span></div>`;
         khoaUIChaoDonTai(false);
