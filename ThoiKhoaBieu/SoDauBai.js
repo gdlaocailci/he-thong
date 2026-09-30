@@ -67,7 +67,10 @@ window.lamSachBoNhoSoDauBai = function() {
     }
 };
 
-// [NÂNG CẤP]: Áp dụng thuật toán Caching để giảm tải API và tăng tốc độ kết xuất
+// =========================================================================
+// [NÂNG CẤP TUYỆT ĐỐI]: THUẬT TOÁN HYBRID FETCH (TĨNH TỪ CACHE, ĐỘNG TỪ API)
+// Đảm bảo Sổ Đầu Bài luôn lấy dữ liệu mới nhất mà vẫn không bị Timeout
+// =========================================================================
 async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
     if (daTaiDuLieuSoDauBai && !epTaiLai) return;
     
@@ -93,48 +96,63 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
     }
 
     dangTaiDuLieuSoDauBai = true;
-    khoaUIChaoDonTai(true); // Hàm phụ trợ khóa UI
+    khoaUIChaoDonTai(true); 
 
     try {
         let emailGoiLen = window.emailGiaoVienToanCuc;
         let khoaCache = layKhoaCachLy(`SDB_CACHE_${emailGoiLen}`);
         let duLieuSever = null;
         
-        // Kiểm tra bộ đệm cục bộ (Cache) nếu không bị ép tải lại
-        if (!epTaiLai) {
-            let cacheTonTai = sessionStorage.getItem(khoaCache);
-            if (cacheTonTai) {
-                try { 
-                    duLieuSever = JSON.parse(cacheTonTai);
-                    console.log("⚡ [Sổ Đầu Bài]: Khôi phục dữ liệu từ Cache tĩnh siêu tốc."); 
-                } catch(e) { sessionStorage.removeItem(khoaCache); }
-            }
-        }
+        let cacheTonTai = sessionStorage.getItem(khoaCache);
+        let cacheJson = cacheTonTai ? JSON.parse(cacheTonTai) : null;
 
-        // Gọi API nếu không có Cache hoặc bị ép tải (Gọi thao tác layDuLieuSoDauBai gốc để lấy Full dữ liệu lần đầu)
-        if (!duLieuSever) {
+        // [NHÁNH 1]: NẾU ĐÃ CÓ CACHE TĨNH -> GỌI API "SIÊU NHẸ" ĐỂ LẤY SỔ ĐẦU BÀI MỚI NHẤT
+        if (!epTaiLai && cacheJson) {
+            console.log("⚡ [Sổ Đầu Bài]: Đang kéo bản cập nhật Sổ đầu bài (Realtime) và ghép với PPCT (Cache)...");
+            
+            // Chỉ gọi hàm lấy ngầm (Delta Sync) để tăng tốc độ phản hồi < 1 giây
+            const phanHoi = await fetchVoiCoCheThuLai(
+                `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBaiNgam&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
+                {}, 3, 30000
+            );
+            const dataMoi = await phanHoi.json();
+            
+            if (dataMoi.trangThai === 'loi_he_thong') throw new Error(dataMoi.thongBao);
+
+            // Ráp nối: Dữ liệu tĩnh (TKB, PPCT) từ Cache + Dữ liệu động (SDB) vừa lấy từ máy chủ
+            duLieuSever = {
+                trangThai: 'thanh_cong',
+                SO_DAU_BAI: dataMoi.SO_DAU_BAI, // BẢO ĐẢM 100% SDB LUÔN MỚI NHẤT
+                PPCT: cacheJson.PPCT,
+                KHUNG_CHUONG_TRINH: cacheJson.KHUNG_CHUONG_TRINH,
+                DATA_TKB: cacheJson.DATA_TKB,
+                TKB_HIEN_TAI: cacheJson.TKB_HIEN_TAI,
+                MA_GIAO_VIEN: cacheJson.MA_GIAO_VIEN,
+                TEN_GIAO_VIEN: cacheJson.TEN_GIAO_VIEN,
+                TOAN_QUYEN: cacheJson.TOAN_QUYEN,
+                QUYEN_THEO_LOP: cacheJson.QUYEN_THEO_LOP,
+                DANH_SACH_GIAO_VIEN: cacheJson.DANH_SACH_GIAO_VIEN
+            };
+        } 
+        // [NHÁNH 2]: NẾU CHƯA CÓ CACHE (Vào lần đầu) HOẶC ÉP TẢI LẠI -> GỌI API "FULL"
+        else {
+            console.log("🔄 [Sổ Đầu Bài]: Tải toàn bộ dữ liệu từ máy chủ (Bao gồm PPCT, KhungCT)...");
+            
             const phanHoi = await fetchVoiCoCheThuLai(
                 `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
                 {}, 3, 60000
             );
             
-            const phanHoiText = await phanHoi.text();
-            duLieuSever = JSON.parse(phanHoiText);
-            
+            duLieuSever = await phanHoi.json();
             if (duLieuSever.trangThai === 'loi_he_thong') throw new Error(duLieuSever.thongBao);
             
-            // Chỉ cache những mảng tĩnh, không cache Sổ đầu bài để luôn cập nhật
-            sessionStorage.setItem(khoaCache, JSON.stringify({
-                MA_GIAO_VIEN: duLieuSever.MA_GIAO_VIEN,
-                TEN_GIAO_VIEN: duLieuSever.TEN_GIAO_VIEN,
-                TOAN_QUYEN: duLieuSever.TOAN_QUYEN,
-                QUYEN_THEO_LOP: duLieuSever.QUYEN_THEO_LOP,
-                KHUNG_CHUONG_TRINH: duLieuSever.KHUNG_CHUONG_TRINH,
-                PPCT: duLieuSever.PPCT,
-                DATA_TKB: duLieuSever.DATA_TKB,
-                TKB_HIEN_TAI: duLieuSever.TKB_HIEN_TAI,
-                SO_DAU_BAI: duLieuSever.SO_DAU_BAI // Lần đầu vẫn cache để vẽ UI ngay
-            }));
+            // Xóa phần Sổ Đầu Bài ra khỏi mảng trước khi ném vào RAM (Vì SDB không được phép Cache)
+            let dataDeCache = Object.assign({}, duLieuSever);
+            delete dataDeCache.SO_DAU_BAI; 
+            delete dataDeCache.trangThai;
+            
+            // Lưu các thành phần tĩnh vào bộ nhớ tạm
+            sessionStorage.setItem(khoaCache, JSON.stringify(dataDeCache));
         }
 
         setTimeout(() => {
