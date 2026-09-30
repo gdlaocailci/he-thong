@@ -157,6 +157,10 @@
                         if (tbody.querySelectorAll('tr').length > 1) {
                             row.remove();
                         } else {
+                            // [ĐÃ SỬA]: Phục hồi lại icon thùng rác và mở khóa nút bấm trước khi làm sạch dòng cuối
+                            btn.innerHTML = oldHtml;
+                            btn.disabled = false;
+                            
                             row.querySelectorAll('.cell-input').forEach(e => { e.value = ''; if(e.tagName === 'TEXTAREA') e.style.height = 'auto'; });
                             const container = row.cells[5].querySelector('div');
                             container.querySelector('.link-display-area').innerHTML = '';
