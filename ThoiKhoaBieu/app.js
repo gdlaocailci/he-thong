@@ -1112,15 +1112,6 @@ async function xuLyLayThongTin(maTokenTruyCap) {
 
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) xuatMaTranBang(duLieuTkbHienTai); 
         else await taiDuLieuTKB(); 
-        
-        // [TÍCH HỢP NÂNG CẤP]: ĐÁNH THỨC SỔ ĐẦU BÀI SAU KHI ĐĂNG NHẬP XONG
-        let tabSDB = document.getElementById('khungSoDauBai');
-        if (tabSDB && !tabSDB.classList.contains('hidden')) {
-            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') {
-                taiDuLieuSoDauBaiTuMayChu(true); // Ép tải để đổ dữ liệu ngay lập tức
-            }
-        }
-
     } catch (loi) { 
         console.error("Xác thực không thành công.", loi); 
         if (nutDangNhap) nutDangNhap.innerHTML = `<span class="text-sm font-bold text-red-200">Lỗi kết nối</span>`;
@@ -1809,22 +1800,14 @@ document.addEventListener('input', () => { thoiGianThaoTacCuoi = Date.now(); });
 async function dongBoDuLieuNgamToanCuc() {
     if (Date.now() - thoiGianThaoTacCuoi < 10000) return;
 
-    // [TÍCH HỢP NÂNG CẤP]: BẢO VỆ KHỞI ĐỘNG (CHỐNG GỌI API ĐÈ)
-    let vungDuLieuTKB = document.getElementById('vungHienThiDuLieu');
-    let dangTaiTKB = vungDuLieuTKB && (vungDuLieuTKB.innerHTML.includes('animate-spin') || vungDuLieuTKB.innerHTML.includes('Đang tải') || vungDuLieuTKB.innerHTML.includes('Đang kết nối'));
-    let dangTaiSDB = (typeof dangTaiDuLieuSoDauBai !== 'undefined' && dangTaiDuLieuSoDauBai === true);
-
-    if (dangTaiTKB || dangTaiSDB) {
-        console.warn("Hệ thống đang xử lý tải dữ liệu chính. Tạm hoãn tiến trình đồng bộ ngầm để tránh đụng độ.");
-        return;
-    }
-
     let khungTKB = document.getElementById('khungTKB');
     let khungSDB = document.getElementById('khungSoDauBai');
 
-    // [TÍCH HỢP NÂNG CẤP]: ĐỒNG BỘ THEO NHẬN THỨC NGỮ CẢNH (CHỈ TẢI SHEET ĐANG MỞ)
     if (khungTKB && !khungTKB.classList.contains('hidden')) {
-        if (khungTKB.querySelector('td[data-thaydoi="true"]')) return; 
+        if (khungTKB.querySelector('td[data-thaydoi="true"]')) {
+            console.warn("TKB đang có ô sửa đổi, tạm dừng tải TKB.");
+            return; 
+        }
 
         hienThiThongBaoTaiNgam(true);
         try {
@@ -1837,7 +1820,10 @@ async function dongBoDuLieuNgamToanCuc() {
         let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
         let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
 
-        if (coThayDoiSDB || coOThayDoiDOM_SDB) return;
+        if (coThayDoiSDB || coOThayDoiDOM_SDB) {
+            console.warn("Sổ đầu bài đang gõ dở, tạm dừng tải SDB.");
+            return;
+        }
 
         hienThiThongBaoTaiNgam(true);
         try {
