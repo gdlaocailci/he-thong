@@ -52,7 +52,7 @@
                 <img id="logoMenuDoc" src="" alt="Logo" class="w-20 h-20 rounded-full object-cover">
             </div>
             <h2 id="tenDonViMenu" class="text-center text-white font-bold text-base uppercase tracking-wide leading-relaxed">
-                Trường Hợp Thành<br>Cấp Tiểu học
+                Trường TH&THCS Tả Phời<br>Cấp Tiểu học
             </h2>
         </div>
         <div class="px-6 my-2 flex-none"><hr class="border-dashed border-blue-300 opacity-40"></div>
@@ -133,7 +133,7 @@
         </nav>
 
         
-       <!-- PHẦN CUỐI: NÚT ĐĂNG NHẬP VÀ BẢN QUYỀN (Thêm flex-none để ghim chặt dưới đáy màn hình) -->
+      <!-- PHẦN CUỐI: NÚT ĐĂNG NHẬP VÀ BẢN QUYỀN (Thêm flex-none để ghim chặt dưới đáy màn hình) -->
        <div class="p-4 bg-black/20 text-center flex-none mt-auto w-full relative z-20">
             <button id="nutDangNhapG" onclick="khoiDongDangNhap()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-2 px-4 rounded shadow-md flex items-center justify-center gap-2 transition duration-200 mb-4 group">
                 <!-- ĐÃ SỬA: Thay thế img bị lỗi bằng mã SVG nhúng trực tiếp -->
@@ -662,7 +662,7 @@
     
     <script>
         function chuyenHuongHeThong() {
-            var urlDich = 'https://gdlaocailci.github.io/he-thong/';
+            var urlDich = 'https://gdlaocailci.github.io/taphoi/';
             window.open(urlDich, '_top');
         }
         function moDongMenuMobile() {
@@ -707,61 +707,47 @@
     <script src="QuanLyDanhMucSGK.js"></script>
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
- <script>
+   <script>
      async function thucThiLamMoiNgam() {
-          let vungHienThi = document.getElementById('vungHienThiSoDauBai');
-          if (vungHienThi && vungHienThi.innerHTML.includes('Đang kết nối kho dữ liệu')) return;
-          if (typeof dangTaiDuLieuSoDauBai !== 'undefined' && dangTaiDuLieuSoDauBai === true) return;
+    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    // KHÓA BẢO VỆ 1: Đang tải lần đầu
+    if (vungHienThi && vungHienThi.innerHTML.includes('Đang kết nối kho dữ liệu')) return;
+    if (typeof dangTaiDuLieuSoDauBai !== 'undefined' && dangTaiDuLieuSoDauBai === true) return;
 
-            let tabSDB = document.getElementById('khungSoDauBai');
-            if (!tabSDB || tabSDB.classList.contains('hidden')) return;
-            if (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true) return;
-            if (tabSDB.querySelector('td[data-thaydoi="true"]')) return;
+    let tabSDB = document.getElementById('khungSoDauBai');
+    if (!tabSDB || tabSDB.classList.contains('hidden')) return;
 
-            let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-            if (!emailGoiLen || typeof CAU_HINH_FRONTEND === 'undefined') return;
+    // KHÓA BẢO VỆ 2: Đang gõ dở
+    if (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true) return;
+    if (tabSDB.querySelector('td[data-thaydoi="true"]')) return;
 
-            try {
-                // [TÍCH HỢP NÂNG CẤP]: GỌI API DELTA SYNC SIÊU NHẸ (CHỈ KÉO MỖI SỔ ĐẦU BÀI)
-                const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBaiNgam&emailTruyCap=${encodeURIComponent(emailGoiLen)}`);
-                const duLieuSever = await phanHoi.json();
-                
-                if (duLieuSever && duLieuSever.trangThai !== 'loi_he_thong') {
-                    let theTuan = document.getElementById('chonTuanSo');
-                    let theLop = document.getElementById('chonLopSo');
-                    let tuanChon = theTuan ? theTuan.value : null;
-                    let lopChon = theLop ? theLop.value : null;
-                    
-                    if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
-                    
-                    // [TÍCH HỢP NÂNG CẤP]: BÙ ĐẮP DỮ LIỆU TĨNH TỪ CACHE (Vì API Ngầm không trả về PPCT)
-                    let cacheTonTai = sessionStorage.getItem(layKhoaCachLy(`SDB_CACHE_${emailGoiLen}`));
-                    if (cacheTonTai) {
-                        let cacheJson = JSON.parse(cacheTonTai);
-                        duLieuSever.PPCT = cacheJson.PPCT;
-                        duLieuSever.KHUNG_CHUONG_TRINH = cacheJson.KHUNG_CHUONG_TRINH;
-                        duLieuSever.DATA_TKB = cacheJson.DATA_TKB;
-                        duLieuSever.TKB_HIEN_TAI = cacheJson.TKB_HIEN_TAI;
-                        duLieuSever.MA_GIAO_VIEN = cacheJson.MA_GIAO_VIEN;
-                        duLieuSever.TEN_GIAO_VIEN = cacheJson.TEN_GIAO_VIEN;
-                        duLieuSever.TOAN_QUYEN = cacheJson.TOAN_QUYEN;
-                        duLieuSever.QUYEN_THEO_LOP = cacheJson.QUYEN_THEO_LOP;
-                    }
-                    
-                    if (typeof khoiTaoDuLieuSoDauBai === 'function') khoiTaoDuLieuSoDauBai(duLieuSever);
-                    
-                    let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
-                    if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
-                    
-                    if (tuanChon && theTuan) { theTuan.value = tuanChon; if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonTuanSo'); }
-                    if (lopChon && theLop) { theLop.value = lopChon; if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo'); }
-                    
-                    if (tuanChon && lopChon && typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
-                        capNhatSoDauBaiNgamLenLuoi(tuanChon, lopChon);
-                    }
-                }
-            } catch (loi) { console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do lỗi mạng."); }
+    // KHÓA BẢO VỆ 3 (CỐT LÕI): Đang mở xem 1 lớp cụ thể
+    let theTuan = document.getElementById('chonTuanSo');
+    let theLop = document.getElementById('chonLopSo');
+    if (theTuan && theTuan.value && theTuan.value !== '') return;
+    if (theLop && theLop.value && theLop.value !== '') return;
+
+    let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+    if (!emailGoiLen || typeof CAU_HINH_FRONTEND === 'undefined') return;
+
+    try {
+        const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`);
+        const duLieuSever = await phanHoi.json();
+        
+        if (duLieuSever && duLieuSever.trangThai !== 'loi_he_thong') {
+            if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
+            
+            if (typeof khoiTaoDuLieuSoDauBai === 'function') {
+                khoiTaoDuLieuSoDauBai(duLieuSever);
+            }
+            
+            let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
+            if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
         }
+    } catch (loi) {
+        console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do lỗi mạng.");
+    }
+}
     </script>
 </body>
 </html>
