@@ -204,6 +204,18 @@ async function khoiTaoGiaoDien() {
                     let menuNam = document.getElementById('menuHienThiNamHoc'); 
                     if (menuNam) menuNam.innerText = thongSoHocVu.NAM_HOC; 
                 }
+                // [CHÈN THÊM VÀO ĐÂY]: Cập nhật ngay trạng thái hệ thống từ Cache RAM cục bộ
+                let theTrangThai = document.getElementById('trangThaiHeThong');
+                if (theTrangThai && thongSoHocVu.TRANG_THAI_WEB) {
+                    let trangThai = thongSoHocVu.TRANG_THAI_WEB.trim();
+                    if (trangThai.toLowerCase() === 'hoạt động') {
+                        theTrangThai.innerText = 'Hệ thống mở';
+                        theTrangThai.className = 'font-bold text-green-700 text-base leading-tight inline-block mt-0.5';
+                    } else {
+                        theTrangThai.innerText = 'Hệ thống đang nâng cấp\nBảo trì'; 
+                        theTrangThai.className = 'font-bold text-red-600 text-base leading-tight inline-block mt-0.5 reactbits-bap-benh';
+                    }
+                }
 
                 // Vẽ lưới TKB ngay để người dùng thấy kết quả (0 giây chờ)
                 xuatMaTranBang(duLieuTkbHienTai);
