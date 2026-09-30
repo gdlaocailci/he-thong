@@ -145,14 +145,21 @@ function kiemTraTrangThaiDangNhapSDB() {
 // HÀM TẢI DỮ LIỆU TỐC ĐỘ CAO (ASYNCHRONOUS BACKGROUND THREAD)
 // =========================================================================
 async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
-    // [TỐI ƯU UX AN TOÀN]: Chỉ khóa giao diện Input, tuyệt đối không phá hủy nội dung HTML của Thẻ Select gốc để bảo toàn logic đồng bộ ngầm
     let selTuan = document.getElementById('chonTuanSo');
     let selLop = document.getElementById('chonLopSo');
     let inTuan = document.getElementById('input_chonTuanSo');
     let inLop = document.getElementById('input_chonLopSo');
 
-    if (selTuan) selTuan.disabled = true;
-    if (selLop) selLop.disabled = true;
+    // [TỐI ƯU UX AN TOÀN]: Xử lý bao quát cả lúc khởi động (chưa có thẻ input) và các lần tải sau
+    if (selTuan) { 
+        selTuan.disabled = true; 
+        if (!inTuan) selTuan.innerHTML = '<option value="" disabled selected>⏳ Đang tải...</option>'; 
+    }
+    if (selLop) { 
+        selLop.disabled = true; 
+        if (!inLop) selLop.innerHTML = '<option value="" disabled selected>⏳ Đang tải...</option>'; 
+    }
+    
     if (inTuan) { inTuan.dataset.oldValue = inTuan.value; inTuan.value = '⏳ Đang tải...'; inTuan.disabled = true; inTuan.classList.add('cursor-wait'); }
     if (inLop) { inLop.dataset.oldValue = inLop.value; inLop.value = '⏳ Đang tải...'; inLop.disabled = true; inLop.classList.add('cursor-wait'); }
 
