@@ -804,25 +804,44 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     htmlBang += `</tbody></table></div>`;
     vungHienThi.innerHTML = theTrangThaiHtml + thanhCanhBaoRender + theHienThiQuyen + htmlBang;
     
-    // [NÂNG CẤP LẮNG NGHE DOM]: Khi user chỉnh sửa, gắn cờ và icon cây bút
+   // [FIX LỖI 2 - NÂNG CẤP HIỆU NĂNG DOM]: 
+    // Áp dụng RequestAnimationFrame để tránh Layout Thrashing và dùng Event Delegation.
     setTimeout(() => {
         let cacOVanBan = vungHienThi.querySelectorAll('textarea');
-        cacOVanBan.forEach(ta => {
-            ta.style.height = 'auto';
-            ta.style.height = (ta.scrollHeight) + 'px';
+        
+        requestAnimationFrame(() => {
+            cacOVanBan.forEach(ta => {
+                // Tối ưu: Thay vì đo chiều cao mọi textarea, ta chỉ set height tự động 
+                // cho những ô thực sự có nội dung dài để giảm tải tính toán đồ họa
+                if (ta.value.length > 35) {
+                    ta.style.height = 'auto';
+                    ta.style.height = (ta.scrollHeight) + 'px';
+                }
+            });
         });
 
-        let tatCaOVanBan = vungHienThi.querySelectorAll('textarea, input, select');
-        tatCaOVanBan.forEach(oNhap => {
-            oNhap.addEventListener('input', (e) => { 
-                coThayDoiChuaLuu_SDB = true; 
-                danhDauDongThayDoi(e.target.closest('tr'));
-            });
-            oNhap.addEventListener('change', (e) => { 
-                coThayDoiChuaLuu_SDB = true; 
-                danhDauDongThayDoi(e.target.closest('tr'));
-            });
-        });
+        // Tối ưu 2: Dùng ủy quyền sự kiện (Event Delegation) gắn vào vùng cha,
+        // thay vì gắn hàng trăm EventListener riêng lẻ cho từng input làm nặng RAM.
+        if (!vungHienThi.dataset.daGanSuKien) {
+            vungHienThi.dataset.daGanSuKien = "true";
+            
+            const langNgheSuKienThayDoi = (e) => {
+                let theTag = e.target.tagName;
+                if (theTag === 'INPUT' || theTag === 'SELECT' || theTag === 'TEXTAREA') {
+                    coThayDoiChuaLuu_SDB = true; 
+                    if (typeof danhDauDongThayDoi === 'function') {
+                        danhDauDongThayDoi(e.target.closest('tr'));
+                    }
+                    if (theTag === 'TEXTAREA') {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = (e.target.scrollHeight) + 'px';
+                    }
+                }
+            };
+            
+            vungHienThi.addEventListener('input', langNgheSuKienThayDoi);
+            vungHienThi.addEventListener('change', langNgheSuKienThayDoi);
+        }
     }, 50);
 }
 
