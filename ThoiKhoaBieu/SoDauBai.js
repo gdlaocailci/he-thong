@@ -1084,18 +1084,49 @@ async function luuSoDauBaiSangMayChu() {
     btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="ml-1">Đang lưu...</span>`;
     btn.disabled = true;
 
-    try {
+try {
         const payload = { thaoTac: 'luuSoDauBaiDongBo', tuan: tuanChon.replace(/\D/g, ''), lop: lopChon, duLieu: duLieuQuetDuoc };
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify(payload) });
         const ketQua = await phanHoi.json();
 
         if (ketQua.trangThai === 'thanh_cong') {
-            alert(`✅ Đã chốt thành công các cập nhật của Sổ đầu bài Lớp ${lopChon} - Tuần ${tuanSo}!`);
-            coThayDoiChuaLuu_SDB = false; 
+            // [CẬP NHẬT CHUYÊN GIA]: Cập nhật trực tiếp RAM và DOM, tuyệt đối KHÔNG gọi lại API kéo dữ liệu để chống giật UI
+            coThayDoiChuaLuu_SDB = false;
             
-            // ÉP TẢI LẠI TRỰC TIẾP TỪ MÁY CHỦ LÊN GIAO DIỆN
-            daTaiDuLieuSoDauBai = false; // Reset cờ để kích hoạt hàm tải
-            await taiDuLieuSoDauBaiTuMayChu();
+            // 1. Cập nhật mảng RAM (Biến toàn cục duLieuTKBGopDaMap)
+            duLieuQuetDuoc.forEach(dongLuu => {
+                let tietRAM = duLieuTKBGopDaMap.find(d => 
+                    String(d['Tuần']).trim() == dongLuu.tuan && 
+                    String(d['Mã Lớp']).trim().toUpperCase() === dongLuu.maLop.toUpperCase() && 
+                    String(d['Thứ']).trim() === dongLuu.thu && 
+                    String(d['Buổi']).trim().toLowerCase() === dongLuu.buoi.toLowerCase() &&
+                    String(d['Tiết']).trim() == dongLuu.tiet
+                );
+                
+                if (tietRAM) {
+                    tietRAM['TietPPCT_Thuc'] = dongLuu.tietPPCT;
+                    tietRAM['TenBai_Thuc'] = dongLuu.tenBai;
+                    tietRAM['NhanXet_Thuc'] = dongLuu.nhanXet;
+                    tietRAM['XepLoai_Thuc'] = dongLuu.xepLoai;
+                    tietRAM['ChuKy_Thuc'] = dongLuu.chuKy;
+                    tietRAM['ChuyenCan_Thuc'] = dongLuu.chuyenCan;
+                    tietRAM['DaLuu'] = true; // Bật cờ đã lưu trong RAM
+                }
+            });
+
+            // 2. Chốt thẳng giao diện (Xóa icon cây bút, đổi trạng thái cờ)
+            document.querySelectorAll('#vungHienThiSoDauBai tr[data-thaydoi="true"]').forEach(tr => {
+                tr.setAttribute('data-thaydoi', 'false');
+                tr.setAttribute('data-daluu', 'true');
+                let icon = tr.querySelector('.icon-sua-chua');
+                if (icon) icon.remove();
+            });
+
+            alert(`✅ Đã chốt thành công các cập nhật của Sổ đầu bài Lớp ${lopChon} - Tuần ${tuanSo}!`);
+            
+            // 3. Quét nhẹ UI để đổi thanh thông báo sang màu Xanh (Đã chốt sổ) mà không load lại trang
+            thucThiKetXuatSoDauBaiLenLuoi(); 
+
         } else throw new Error(ketQua.thongBao);
     } catch (loi) { 
         alert("Lưu thất bại: " + loi.message); 
