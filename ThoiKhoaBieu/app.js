@@ -1798,15 +1798,29 @@ document.addEventListener('keydown', () => { thoiGianThaoTacCuoi = Date.now(); }
 document.addEventListener('input', () => { thoiGianThaoTacCuoi = Date.now(); });
 
 async function dongBoDuLieuNgamToanCuc() {
-    // Chống spam: Dừng tải ngầm nếu người dùng vừa có thao tác chuột/phím trong 10 giây qua
+    // 1. Chống spam: Dừng tải ngầm nếu người dùng vừa có thao tác chuột/phím trong 10 giây qua
     if (Date.now() - thoiGianThaoTacCuoi < 10000) return;
 
-    // Lấy trạng thái hiển thị của các Khung giao diện (UI)
+    // =====================================================================
+    // [NÂNG CẤP]: BẢO VỆ KHỞI ĐỘNG (CHỐNG TẢI NGẦM KHI ĐANG TẢI CHÍNH)
+    // =====================================================================
+    let vungDuLieuTKB = document.getElementById('vungHienThiDuLieu');
+    // Quét DOM xem TKB có đang quay spinner hay báo Đang tải không
+    let dangTaiTKB = vungDuLieuTKB && (vungDuLieuTKB.innerHTML.includes('animate-spin') || vungDuLieuTKB.innerHTML.includes('Đang tải') || vungDuLieuTKB.innerHTML.includes('Đang kết nối'));
+    // Đọc biến cờ toàn cục của Sổ Đầu Bài
+    let dangTaiSDB = (typeof dangTaiDuLieuSoDauBai !== 'undefined' && dangTaiDuLieuSoDauBai === true);
+
+    if (dangTaiTKB || dangTaiSDB) {
+        console.warn("Hệ thống đang xử lý tải dữ liệu chính. Tạm hoãn tiến trình đồng bộ ngầm để tránh đụng độ.");
+        return;
+    }
+
+    // 2. Lấy trạng thái hiển thị của các Khung giao diện (UI)
     let khungTKB = document.getElementById('khungTKB');
     let khungSDB = document.getElementById('khungSoDauBai');
 
     // =====================================================================
-    // TRƯỜNG HỢP 1: UI THỜI KHÓA BIỂU ĐANG MỞ -> CHỈ GỌI API SHEET TKB
+    // TRƯỜNG HỢP 1: UI THỜI KHÓA BIỂU ĐANG MỞ
     // =====================================================================
     if (khungTKB && !khungTKB.classList.contains('hidden')) {
         // Rào chắn bảo vệ: Nếu lưới TKB đang có ô sửa đổi (cờ màu vàng/cây bút) -> Hủy tải ngầm
@@ -1817,14 +1831,13 @@ async function dongBoDuLieuNgamToanCuc() {
 
         hienThiThongBaoTaiNgam(true);
         try {
-            // Gọi hàm chỉ nạp nhánh TKB
             if (typeof taiDuLieuTKB === 'function') await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
         } finally {
             setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
         }
     } 
     // =====================================================================
-    // TRƯỜNG HỢP 2: UI SỔ ĐẦU BÀI ĐANG MỞ -> CHỈ GỌI API SHEET SỔ ĐẦU BÀI
+    // TRƯỜNG HỢP 2: UI SỔ ĐẦU BÀI ĐANG MỞ
     // =====================================================================
     else if (khungSDB && !khungSDB.classList.contains('hidden')) {
         let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
@@ -1838,14 +1851,15 @@ async function dongBoDuLieuNgamToanCuc() {
 
         hienThiThongBaoTaiNgam(true);
         try {
-            // Gọi hàm thucThiLamMoiNgam 
             if (typeof thucThiLamMoiNgam === 'function') await thucThiLamMoiNgam();
         } finally {
             setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
         }
     }
-        else {
-        // Tắt hoàn toàn tiến trình kết nối máy chủ để tiết kiệm tài nguyên
+    // =====================================================================
+    // TRƯỜNG HỢP 3: ĐANG MỞ CÁC UI KHÁC
+    // =====================================================================
+    else {
         console.log("Hệ thống tải ngầm đang ngủ đông vì UI hiện tại không yêu cầu đồng bộ Realtime.");
     }
 }
