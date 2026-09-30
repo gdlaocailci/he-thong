@@ -649,24 +649,15 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// THAY THẾ HÀM TÍNH NGÀY ĐỘC LẬP (app.js)
+// KHỐI 3: VẼ LƯỚI MA TRẬN VÀ LỌC CÁ NHÂN
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
-    // Nắn chỉnh nếu định dạng là dd/mm/yyyy truyền nhầm
-    let inputStr = ngayDauTuanStr;
-    if (inputStr.includes('/')) {
-        let p = inputStr.split('/');
-        inputStr = `${p[2]}-${p[1]}-${p[0]}`;
-    }
-
-    let parts = inputStr.split('-');
+    let parts = ngayDauTuanStr.split('-');
     if (parts.length !== 3) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
     let ngayGoc = new Date(parts[0], parts[1] - 1, parts[2]);
-    if (isNaN(ngayGoc.getTime())) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
-
     const doLechThu = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
     let soNgayLech = doLechThu[tenThu] || 0;
     
@@ -720,16 +711,21 @@ function xuatMaTranBang(danhSachTiet) {
         return;
     }
 
-    let dateInput = document.getElementById('chonNgayDauTuan');
-    if (duLieuTiet && duLieuTiet.length > 0) {
+   let dateInput = document.getElementById('chonNgayDauTuan');
+       
+    if (!ngayDauTuanUI && duLieuTiet && duLieuTiet.length > 0) {
         let thu2Data = duLieuTiet.find(t => t.thu === "Thứ 2" && t.ngay);
         if (thu2Data && thu2Data.ngay) {
             let p = thu2Data.ngay.split('/'); 
             if (p.length === 3) {
                 ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`; 
-                if (dateInput) dateInput.value = ngayDauTuanUI;
             }
         }
+    }
+    
+    // Luôn ép Input UI hiển thị theo biến toàn cục (Nguồn chân lý)
+    if (dateInput && ngayDauTuanUI) {
+        dateInput.value = ngayDauTuanUI;
     }
 
     let theadHTML = `<tr style="height: 45px;">
@@ -949,11 +945,10 @@ async function luuDuLieu(event, loaiLuu) {
                 const MA_DA = (typeof CAU_HINH_FRONTEND !== 'undefined' && CAU_HINH_FRONTEND.MA_DU_AN) ? CAU_HINH_FRONTEND.MA_DU_AN : 'MAC_DINH';
                 localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(dsTietLuoi));
 
-                // Chỉ dọn dẹp bộ nhớ ẩn để SĐB tự nạp lại nếu người dùng chuyển tab
                 if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
                 
-                // [NÂNG CẤP]: Đã loại bỏ lệnh tải lại máy chủ gây chớp giao diện.
-                // Hệ thống sẽ dựa hoàn toàn vào RAM và Động cơ đồng bộ ngầm 60s.
+                // [ĐÃ SỬA]: Chỉ giữ lại một dòng gọi hàm tải dữ liệu với tham số false
+                await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
                 localStorage.setItem('KhoaDongBo_TKB', Date.now().toString());
             }
         }
@@ -1857,7 +1852,7 @@ async function dongBoDuLieuNgamToanCuc() {
     else if (khungSDB && !khungSDB.classList.contains('hidden')) {
         let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
         // [CHỐT ĐỘC LẬP]: Chỉ quét cây bút bên trong vùng khungSDB
-        let coOThayDoiDOM_SDB = khungSDB.querySelector('tr[data-thaydoi="true"]');
+        let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
 
         if (coThayDoiSDB || coOThayDoiDOM_SDB) {
             console.warn("Sổ đầu bài đang gõ dở, tạm dừng tải SDB.");
@@ -1897,7 +1892,7 @@ function hienThiThongBaoTaiNgam(dangTai) {
             <svg class="w-4 h-4 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            <span class="text-sm font-bold tracking-wide">Đang đồng bộ dữ liệu mới nhất...</span>
+            <span class="text-sm font-bold tracking-wide">Đang đồng bộ dữ liệu mới...</span>
         `;
         document.body.appendChild(theThongBao);
     }
