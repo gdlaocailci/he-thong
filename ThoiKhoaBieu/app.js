@@ -1844,10 +1844,7 @@ async function dongBoDuLieuNgamToanCuc() {
             setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
         }
     }
-    // =====================================================================
-    // TRƯỜNG HỢP 3: ĐANG MỞ CÁC UI KHÁC (Danh mục, Cài đặt, Báo cáo...)
-    // =====================================================================
-    else {
+        else {
         // Tắt hoàn toàn tiến trình kết nối máy chủ để tiết kiệm tài nguyên
         console.log("Hệ thống tải ngầm đang ngủ đông vì UI hiện tại không yêu cầu đồng bộ Realtime.");
     }
