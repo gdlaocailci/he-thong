@@ -67,16 +67,14 @@ window.lamSachBoNhoSoDauBai = function() {
     }
 };
 
-async function taiDuLieuSoDauBaiTuMayChu() {
-    if (daTaiDuLieuSoDauBai) return;
+// [NÂNG CẤP]: Áp dụng thuật toán Caching để giảm tải API và tăng tốc độ kết xuất
+async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
+    if (daTaiDuLieuSoDauBai && !epTaiLai) return;
     
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
-    
-    // Kiểm tra trực tiếp biến toàn cục thay vì check sự kiện onclick để chống lỗi Race Condition
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
     if (chuaDangNhap) {
-        // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan trên vùng hiển thị
         if (vungHienThi) {
             vungHienThi.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-12 animate-pulse-once">
@@ -85,30 +83,93 @@ async function taiDuLieuSoDauBaiTuMayChu() {
                     </div>
                     <h3 class="text-xl font-extrabold text-slate-800 mb-2 uppercase tracking-wide">Yêu cầu định danh</h3>
                     <p class="text-sm text-slate-600 text-center max-w-md mb-6 font-semibold">Để đảm bảo bảo mật và phân quyền chính xác, hệ thống yêu cầu đồng chí đăng nhập tài khoản trước khi truy cập Sổ Đầu Bài.</p>
-                    
                    <div class="flex gap-4">
-                        <button onclick="document.getElementById('menuTKB').click()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold rounded shadow-sm transition-colors border border-gray-400">
-                            Quay lại TKB
-                        </button>
-                        <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">
-                            <!-- ĐÃ SỬA: Thay thế img bị lỗi bằng mã SVG -->
-                            <svg class="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 48 48">
-                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"></path>
-                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                                <path fill="none" d="M0 0h48v48H0z"></path>
-                            </svg>
-                            Đăng nhập ngay
-                        </button>
+                        <button onclick="document.getElementById('menuTKB').click()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold rounded shadow-sm transition-colors border border-gray-400">Quay lại TKB</button>
+                        <button onclick="khoiDongDangNhap(); kiemTraTrangThaiDangNhapSDB()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-colors flex items-center gap-2">Đăng nhập ngay</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
         return;
     }
 
-    thucThiTaiDuLieuVaVeLuoi(vungHienThi);
+    dangTaiDuLieuSoDauBai = true;
+    khoaUIChaoDonTai(true); // Hàm phụ trợ khóa UI
+
+    try {
+        let emailGoiLen = window.emailGiaoVienToanCuc;
+        let khoaCache = layKhoaCachLy(`SDB_CACHE_${emailGoiLen}`);
+        let duLieuSever = null;
+        
+        // Kiểm tra bộ đệm cục bộ (Cache) nếu không bị ép tải lại
+        if (!epTaiLai) {
+            let cacheTonTai = sessionStorage.getItem(khoaCache);
+            if (cacheTonTai) {
+                try { 
+                    duLieuSever = JSON.parse(cacheTonTai);
+                    console.log("⚡ [Sổ Đầu Bài]: Khôi phục dữ liệu từ Cache tĩnh siêu tốc."); 
+                } catch(e) { sessionStorage.removeItem(khoaCache); }
+            }
+        }
+
+        // Gọi API nếu không có Cache hoặc bị ép tải (Gọi thao tác layDuLieuSoDauBai gốc để lấy Full dữ liệu lần đầu)
+        if (!duLieuSever) {
+            const phanHoi = await fetchVoiCoCheThuLai(
+                `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
+                {}, 3, 60000
+            );
+            
+            const phanHoiText = await phanHoi.text();
+            duLieuSever = JSON.parse(phanHoiText);
+            
+            if (duLieuSever.trangThai === 'loi_he_thong') throw new Error(duLieuSever.thongBao);
+            
+            // Chỉ cache những mảng tĩnh, không cache Sổ đầu bài để luôn cập nhật
+            sessionStorage.setItem(khoaCache, JSON.stringify({
+                MA_GIAO_VIEN: duLieuSever.MA_GIAO_VIEN,
+                TEN_GIAO_VIEN: duLieuSever.TEN_GIAO_VIEN,
+                TOAN_QUYEN: duLieuSever.TOAN_QUYEN,
+                QUYEN_THEO_LOP: duLieuSever.QUYEN_THEO_LOP,
+                KHUNG_CHUONG_TRINH: duLieuSever.KHUNG_CHUONG_TRINH,
+                PPCT: duLieuSever.PPCT,
+                DATA_TKB: duLieuSever.DATA_TKB,
+                TKB_HIEN_TAI: duLieuSever.TKB_HIEN_TAI,
+                SO_DAU_BAI: duLieuSever.SO_DAU_BAI // Lần đầu vẫn cache để vẽ UI ngay
+            }));
+        }
+
+        setTimeout(() => {
+            khoiTaoDuLieuSoDauBai(duLieuSever);
+            daTaiDuLieuSoDauBai = true;
+            dangTaiDuLieuSoDauBai = false;
+            khoaUIChaoDonTai(false);
+        }, 10);
+
+    } catch (loi) {
+        dangTaiDuLieuSoDauBai = false;
+        console.error("Lỗi Sổ đầu bài:", loi);
+        if (vungHienThi) vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Cảnh báo lỗi kết nối: <br><span class="text-base font-normal text-slate-700">${loi.message}</span></div>`;
+        khoaUIChaoDonTai(false);
+    }
+}
+
+// Bổ sung Hàm phụ trợ quản lý UI riêng biệt để mã sạch hơn (nếu chưa có)
+function khoaUIChaoDonTai(dangKhoa) {
+    let selTuan = document.getElementById('chonTuanSo'), selLop = document.getElementById('chonLopSo');
+    let inTuan = document.getElementById('input_chonTuanSo'), inLop = document.getElementById('input_chonLopSo');
+    let vungHienThi = document.getElementById('vungHienThiSoDauBai');
+
+    if (dangKhoa) {
+        if (selTuan) { selTuan.disabled = true; if (!inTuan) selTuan.innerHTML = '<option value="" disabled selected>⏳ Đang tải...</option>'; }
+        if (selLop) { selLop.disabled = true; if (!inLop) selLop.innerHTML = '<option value="" disabled selected>⏳ Đang tải...</option>'; }
+        if (inTuan) { inTuan.dataset.oldValue = inTuan.value; inTuan.value = '⏳ Đang tải...'; inTuan.disabled = true; inTuan.classList.add('cursor-wait'); }
+        if (inLop) { inLop.dataset.oldValue = inLop.value; inLop.value = '⏳ Đang tải...'; inLop.disabled = true; inLop.classList.add('cursor-wait'); }
+        if (vungHienThi) vungHienThi.innerHTML = `<div class="text-center py-12 text-slate-500 font-bold"><div class="w-9 h-9 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div><p class="text-base text-blue-900 font-extrabold">Đang kết nối kho dữ liệu Sổ Đầu Bài...</p></div>`;
+    } else {
+        if (selTuan) selTuan.disabled = false;
+        if (selLop) selLop.disabled = false;
+        if (inTuan) { inTuan.disabled = false; inTuan.classList.remove('cursor-wait'); if(inTuan.value === '⏳ Đang tải...') inTuan.value = inTuan.dataset.oldValue || ''; }
+        if (inLop) { inLop.disabled = false; inLop.classList.remove('cursor-wait'); if(inLop.value === '⏳ Đang tải...') inLop.value = inLop.dataset.oldValue || ''; }
+    }
 }
 // =========================================================================
 // [NÂNG CẤP]: HÀM GẮN CỜ VÀ BIỂU TƯỢNG CÂY BÚT VÀO DÒNG CÓ THAY ĐỔI
