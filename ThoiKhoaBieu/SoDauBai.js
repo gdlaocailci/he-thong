@@ -1,5 +1,6 @@
+
 // =========================================================================
-// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI
+// KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI (BẢN HOÀN THIỆN TỔNG THỂ)
 // =========================================================================
 let daTaiDuLieuSoDauBai = false;
 let dangTaiDuLieuSoDauBai = false;
@@ -9,7 +10,7 @@ let dinhMucKhungCT = {};
 let tuDienQuyenPhanCong = {};
 let coToanQuyenSDB = false;
 let maGvDangNhapHeThong = '';
-let danhSachGiaoVienToanCuc = []; // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
+let danhSachGiaoVienToanCuc = []; 
 
 // Các biến toàn cục hỗ trợ kiểm soát trạng thái chưa lưu (Chống mất dữ liệu)
 let tuanTruocDo_SDB = '';
@@ -34,7 +35,7 @@ window.lamSachBoNhoSoDauBai = function() {
     
     // Xóa triệt để Cache tĩnh của người dùng hiện hành
     let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
-    try { sessionStorage.removeItem(`SDB_CACHE_${emailGoiLen}`); } catch(e) {}
+    try { sessionStorage.removeItem(layKhoaCachLy(`SDB_CACHE_${emailGoiLen}`)); } catch(e) {}
     
     maGvDangNhapHeThong = '';
     
@@ -44,7 +45,6 @@ window.lamSachBoNhoSoDauBai = function() {
     let elementTuan = document.getElementById('chonTuanSo');
     let elementLop = document.getElementById('chonLopSo');
 
-    // [BẢN SỬA LỖI]: Bốc thẻ select trả về nút cha gốc trước khi tiêu diệt wrapper
     let wTuan = document.getElementById('wrapper_chonTuanSo'); 
     if (wTuan) { 
         if (elementTuan) wTuan.parentNode.insertBefore(elementTuan, wTuan);
@@ -57,18 +57,49 @@ window.lamSachBoNhoSoDauBai = function() {
         wLop.remove(); 
     }
 
+    // [TÍCH HỢP SỬA LỖI UI]: Chuyển trạng thái về "Đang tải" thay vì trống trơn
     if(elementTuan) { 
         elementTuan.style.display = ''; 
-        elementTuan.innerHTML = '<option value="" disabled selected>-- Chọn Tuần --</option>'; 
+        elementTuan.innerHTML = '<option value="" disabled selected>⏳ Đang nạp dữ liệu...</option>'; 
     }
     if(elementLop) { 
         elementLop.style.display = ''; 
-        elementLop.innerHTML = '<option value="" disabled selected>-- Chọn Lớp --</option>'; 
+        elementLop.innerHTML = '<option value="" disabled selected>⏳ Đang nạp dữ liệu...</option>'; 
     }
 };
 
+// Lắng nghe trạng thái đăng nhập để tự động mở Sổ đầu bài
+function kiemTraTrangThaiDangNhapSDB() {
+    let soLanKiemTra = 0;
+    const vungHienThi = document.getElementById('vungHienThiSoDauBai');
+    
+    if (vungHienThi) {
+         let btnDangNhap = vungHienThi.querySelector('.bg-blue-600');
+         if(btnDangNhap) btnDangNhap.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xác thực...`;
+    }
+
+    let vongLap = setInterval(() => {
+        // [TÍCH HỢP BẢO VỆ TIẾN TRÌNH]: Chặn gọi API bồi thêm nếu hệ thống đang tải
+        if (dangTaiDuLieuSoDauBai) {
+            clearInterval(vongLap);
+            return;
+        }
+
+        if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
+            clearInterval(vongLap);
+            taiDuLieuSoDauBaiTuMayChu();
+        }
+        
+        soLanKiemTra++;
+        if (soLanKiemTra > 120) {
+            clearInterval(vongLap); 
+            if (vungHienThi) taiDuLieuSoDauBaiTuMayChu(); 
+        }
+    }, 500);
+}
+
 // =========================================================================
-// [NÂNG CẤP TUYỆT ĐỐI]: THUẬT TOÁN HYBRID FETCH VÀ CHỐNG TREO DEADLOCK
+// THUẬT TOÁN HYBRID FETCH VÀ CHỐNG TREO DEADLOCK HOÀN CHỈNH
 // =========================================================================
 async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
     if (daTaiDuLieuSoDauBai && !epTaiLai) return;
@@ -76,7 +107,7 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
-    // 1. KIỂM TRA ĐĂNG NHẬP TRƯỚC (CHƯA KHÓA TIẾN TRÌNH Ở ĐÂY)
+    // 1. KIỂM TRA ĐĂNG NHẬP (Chưa bật khóa tiến trình ở đây để tránh Deadlock)
     if (chuaDangNhap) {
         if (vungHienThi) {
             vungHienThi.innerHTML = `
@@ -92,16 +123,15 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
                     </div>
                 </div>`;
         }
-        return; // Thoát hàm an toàn, hệ thống chưa bị khóa
+        return; 
     }
 
-    // 2. BÂY GIỜ MỚI KÍCH HOẠT RÀO CHẮN BẢO VỆ TIẾN TRÌNH
+    // 2. CHỐT KHÓA TIẾN TRÌNH: Ngăn mọi thao tác tải đè khác
     if (dangTaiDuLieuSoDauBai) {
         console.warn("⏳ Hệ thống Sổ đầu bài đang khởi động/nạp dữ liệu. Từ chối lệnh gọi đè...");
         return;
     }
     
-    // Đóng cửa tiến trình để các luồng khác không nhảy vào
     dangTaiDuLieuSoDauBai = true;
     khoaUIChaoDonTai(true); 
 
@@ -113,7 +143,7 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
         let cacheTonTai = sessionStorage.getItem(khoaCache);
         let cacheJson = cacheTonTai ? JSON.parse(cacheTonTai) : null;
 
-        // [NHÁNH 1]: NẾU ĐÃ CÓ CACHE TĨNH -> GỌI API "SIÊU NHẸ" ĐỂ LẤY SỔ ĐẦU BÀI MỚI NHẤT
+        // [NHÁNH 1 - HYBRID FETCH]: CÓ CACHE -> KÉO SỔ ĐẦU BÀI REALTIME SIÊU NHẸ
         if (!epTaiLai && cacheJson) {
             const phanHoi = await fetchVoiCoCheThuLai(
                 `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBaiNgam&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
@@ -137,7 +167,7 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
                 DANH_SACH_GIAO_VIEN: cacheJson.DANH_SACH_GIAO_VIEN
             };
         } 
-        // [NHÁNH 2]: NẾU CHƯA CÓ CACHE (Vào lần đầu) HOẶC ÉP TẢI LẠI -> GỌI API "FULL"
+        // [NHÁNH 2]: VÀO LẦN ĐẦU / ÉP TẢI LẠI -> TẢI FULL DỮ LIỆU
         else {
             const phanHoi = await fetchVoiCoCheThuLai(
                 `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
@@ -157,19 +187,18 @@ async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
         setTimeout(() => {
             khoiTaoDuLieuSoDauBai(duLieuSever);
             daTaiDuLieuSoDauBai = true;
-            dangTaiDuLieuSoDauBai = false; // Mở khóa tiến trình
+            dangTaiDuLieuSoDauBai = false; 
             khoaUIChaoDonTai(false);
         }, 10);
 
     } catch (loi) {
-        dangTaiDuLieuSoDauBai = false; // Có lỗi cũng phải mở khóa tiến trình
+        dangTaiDuLieuSoDauBai = false; 
         console.error("Lỗi Sổ đầu bài:", loi);
         if (vungHienThi) vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Cảnh báo lỗi kết nối: <br><span class="text-base font-normal text-slate-700">${loi.message}</span></div>`;
         khoaUIChaoDonTai(false);
     }
 }
 
-// Bổ sung Hàm phụ trợ quản lý UI riêng biệt để mã sạch hơn (nếu chưa có)
 function khoaUIChaoDonTai(dangKhoa) {
     let selTuan = document.getElementById('chonTuanSo'), selLop = document.getElementById('chonLopSo');
     let inTuan = document.getElementById('input_chonTuanSo'), inLop = document.getElementById('input_chonLopSo');
@@ -205,43 +234,7 @@ function danhDauDongThayDoi(tr) {
         }
     }
 }
-// Lắng nghe trạng thái đăng nhập để tự động mở Sổ đầu bài
-function kiemTraTrangThaiDangNhapSDB() {
-    let soLanKiemTra = 0;
-    const vungHienThi = document.getElementById('vungHienThiSoDauBai');
-    
-    if (vungHienThi) {
-         let btnDangNhap = vungHienThi.querySelector('.bg-blue-600');
-         if(btnDangNhap) btnDangNhap.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Đang xác thực...`;
-    }
 
-    let vongLap = setInterval(() => {
-        // [RÀO CHẮN 1]: Nếu hệ thống đã bắt đầu tiến trình tải Sổ đầu bài rồi -> Hủy ngay vòng lặp đếm 60s để tránh gọi bồi thêm lệnh.
-        if (dangTaiDuLieuSoDauBai) {
-            clearInterval(vongLap);
-            return;
-        }
-
-        if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
-            clearInterval(vongLap);
-            // Kích hoạt hàm tải (Hàm Hybrid Fetch hoặc thucThiTaiDuLieuVaVeLuoi tùy bản thầy đang dùng)
-            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') {
-                taiDuLieuSoDauBaiTuMayChu();
-            } else {
-                thucThiTaiDuLieuVaVeLuoi(vungHienThi);
-            }
-        }
-        
-        soLanKiemTra++;
-        // Sau 60 giây (120 * 500ms) nếu vẫn chưa lấy được Email -> Thử ép tải 1 lần cuối
-        if (soLanKiemTra > 120) {
-            clearInterval(vongLap); 
-            if (vungHienThi && typeof taiDuLieuSoDauBaiTuMayChu === 'function') {
-                taiDuLieuSoDauBaiTuMayChu(); 
-            }
-        }
-    }, 500);
-}
 
 async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     dangTaiDuLieuSoDauBai = true; // Bật khiếu nại bảo vệ tiến trình
