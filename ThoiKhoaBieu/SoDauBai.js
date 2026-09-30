@@ -73,7 +73,11 @@ window.lamSachBoNhoSoDauBai = function() {
 // =========================================================================
 async function taiDuLieuSoDauBaiTuMayChu(epTaiLai = false) {
     if (daTaiDuLieuSoDauBai && !epTaiLai) return;
-    
+    if (dangTaiDuLieuSoDauBai) {
+        console.warn("⏳ Hệ thống Sổ đầu bài đang khởi động/nạp dữ liệu. Từ chối lệnh gọi đè...");
+        return;
+    }
+    dangTaiDuLieuSoDauBai = true;
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
 
@@ -217,14 +221,29 @@ function kiemTraTrangThaiDangNhapSDB() {
     }
 
     let vongLap = setInterval(() => {
+        // [RÀO CHẮN 1]: Nếu hệ thống đã bắt đầu tiến trình tải Sổ đầu bài rồi -> Hủy ngay vòng lặp đếm 60s để tránh gọi bồi thêm lệnh.
+        if (dangTaiDuLieuSoDauBai) {
+            clearInterval(vongLap);
+            return;
+        }
+
         if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
             clearInterval(vongLap);
-            thucThiTaiDuLieuVaVeLuoi(vungHienThi);
+            // Kích hoạt hàm tải (Hàm Hybrid Fetch hoặc thucThiTaiDuLieuVaVeLuoi tùy bản thầy đang dùng)
+            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') {
+                taiDuLieuSoDauBaiTuMayChu();
+            } else {
+                thucThiTaiDuLieuVaVeLuoi(vungHienThi);
+            }
         }
+        
         soLanKiemTra++;
+        // Sau 60 giây (120 * 500ms) nếu vẫn chưa lấy được Email -> Thử ép tải 1 lần cuối
         if (soLanKiemTra > 120) {
             clearInterval(vongLap); 
-            if (vungHienThi) taiDuLieuSoDauBaiTuMayChu(); 
+            if (vungHienThi && typeof taiDuLieuSoDauBaiTuMayChu === 'function') {
+                taiDuLieuSoDauBaiTuMayChu(); 
+            }
         }
     }, 500);
 }
