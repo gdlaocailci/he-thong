@@ -2,6 +2,7 @@
 // KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI
 // =========================================================================
 let daTaiDuLieuSoDauBai = false;
+let dangTaiDuLieuSoDauBai = false;
 let duLieuTKBGopDaMap = [];
 let tuDienPPCTToanCuc = {}; 
 let dinhMucKhungCT = {}; 
@@ -17,6 +18,7 @@ let coThayDoiChuaLuu_SDB = false;
 
 // Hàm dọn dẹp bộ nhớ đệm khi có sự kiện đổi tài khoản hoặc TKB
 window.lamSachBoNhoSoDauBai = function() {
+    if (dangTaiDuLieuSoDauBai) return;
     daTaiDuLieuSoDauBai = false;
     duLieuTKBGopDaMap = [];
     tuDienPPCTToanCuc = {}; 
@@ -141,16 +143,14 @@ function kiemTraTrangThaiDangNhapSDB() {
     }, 500);
 }
 
-// =========================================================================
-// HÀM TẢI DỮ LIỆU TỐC ĐỘ CAO (ASYNCHRONOUS BACKGROUND THREAD)
-// =========================================================================
 async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
+    dangTaiDuLieuSoDauBai = true; // Bật khiếu nại bảo vệ tiến trình
+
     let selTuan = document.getElementById('chonTuanSo');
     let selLop = document.getElementById('chonLopSo');
     let inTuan = document.getElementById('input_chonTuanSo');
     let inLop = document.getElementById('input_chonLopSo');
 
-    // [TỐI ƯU UX AN TOÀN]: Xử lý bao quát cả lúc khởi động (chưa có thẻ input) và các lần tải sau
     if (selTuan) { 
         selTuan.disabled = true; 
         if (!inTuan) selTuan.innerHTML = '<option value="" disabled selected>⏳ Đang tải...</option>'; 
@@ -176,27 +176,22 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
         
         const phanHoi = await fetchVoiCoCheThuLai(
             `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
-            {},
-            3,
-            60000
+            {}, 3, 60000
         );
         
         const phanHoiText = await phanHoi.text();
         
         let duLieuSever;
-        try { 
-            duLieuSever = JSON.parse(phanHoiText); 
-        } catch (loiParse) { 
-            throw new Error("Phản hồi máy chủ gặp sự cố định dạng. Vui lòng thử lại!"); 
-        }
+        try { duLieuSever = JSON.parse(phanHoiText); } 
+        catch (loiParse) { throw new Error("Phản hồi máy chủ gặp sự cố định dạng. Vui lòng thử lại!"); }
 
         if (duLieuSever.trangThai === 'loi_he_thong') throw new Error(duLieuSever.thongBao);
 
         setTimeout(() => {
             khoiTaoDuLieuSoDauBai(duLieuSever);
             daTaiDuLieuSoDauBai = true;
+            dangTaiDuLieuSoDauBai = false; // Hoàn thành tải, gỡ bỏ bảo vệ
 
-            // [MỞ KHÓA UX AN TOÀN]: Nhả các khóa giao diện sau khi hàm khởi tạo đã chạy xong
             let inTuanReset = document.getElementById('input_chonTuanSo');
             let inLopReset = document.getElementById('input_chonLopSo');
             let selTuanReset = document.getElementById('chonTuanSo');
@@ -210,11 +205,11 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
         }, 10);
 
     } catch (loi) {
+        dangTaiDuLieuSoDauBai = false; // Có lỗi cũng phải gỡ bảo vệ
         console.error("Lỗi Sổ đầu bài:", loi);
         if (vungHienThi) {
             vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Cảnh báo lỗi kết nối: <br><span class="text-base font-normal text-slate-700">${loi.message}</span></div>`;
         }
-        // Trả lại trạng thái nếu mạng lỗi
         if (selTuan) selTuan.disabled = false;
         if (selLop) selLop.disabled = false;
         if (inTuan) { inTuan.disabled = false; inTuan.classList.remove('cursor-wait'); inTuan.value = inTuan.dataset.oldValue || ''; }
@@ -1502,11 +1497,13 @@ window.dongBoHienThiTuSelect = function(selectId) {
     let inputEl = document.getElementById('input_' + selectId);
     if (!selectEl || !inputEl) return;
 
+    // [NÂNG CẤP UX]: Ngăn chặn việc tự động xóa chữ nếu ô chọn đang bị khóa chờ mạng
+    if (selectEl.disabled) return;
+
     if (selectEl.value) {
         let opt = Array.from(selectEl.options).find(o => o.value === selectEl.value);
         if(opt) {
             inputEl.value = opt.text;
-            // Áp dụng chữ xanh đậm khi đã được chọn
             inputEl.classList.remove('text-slate-800', 'text-slate-500', 'opacity-80', 'font-bold');
             inputEl.classList.add('text-blue-900', 'font-extrabold'); 
         }
