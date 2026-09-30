@@ -1798,39 +1798,58 @@ document.addEventListener('keydown', () => { thoiGianThaoTacCuoi = Date.now(); }
 document.addEventListener('input', () => { thoiGianThaoTacCuoi = Date.now(); });
 
 async function dongBoDuLieuNgamToanCuc() {
+    // Chống spam: Dừng tải ngầm nếu người dùng vừa có thao tác chuột/phím trong 10 giây qua
     if (Date.now() - thoiGianThaoTacCuoi < 10000) return;
 
+    // Lấy trạng thái hiển thị của các Khung giao diện (UI)
     let khungTKB = document.getElementById('khungTKB');
     let khungSDB = document.getElementById('khungSoDauBai');
 
+    // =====================================================================
+    // TRƯỜNG HỢP 1: UI THỜI KHÓA BIỂU ĐANG MỞ -> CHỈ GỌI API SHEET TKB
+    // =====================================================================
     if (khungTKB && !khungTKB.classList.contains('hidden')) {
+        // Rào chắn bảo vệ: Nếu lưới TKB đang có ô sửa đổi (cờ màu vàng/cây bút) -> Hủy tải ngầm
         if (khungTKB.querySelector('td[data-thaydoi="true"]')) {
-            console.warn("TKB đang có ô sửa đổi, tạm dừng tải TKB.");
+            console.warn("TKB đang có ô sửa đổi, tạm dừng tải ngầm để bảo vệ dữ liệu.");
             return; 
         }
 
         hienThiThongBaoTaiNgam(true);
         try {
+            // Gọi hàm chỉ nạp nhánh TKB
             if (typeof taiDuLieuTKB === 'function') await taiDuLieuTKB(true, 'TKB_HIEN_TAI', false);
         } finally {
             setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
         }
     } 
+    // =====================================================================
+    // TRƯỜNG HỢP 2: UI SỔ ĐẦU BÀI ĐANG MỞ -> CHỈ GỌI API SHEET SỔ ĐẦU BÀI
+    // =====================================================================
     else if (khungSDB && !khungSDB.classList.contains('hidden')) {
         let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
         let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
 
+        // Rào chắn bảo vệ: Nếu Sổ đầu bài đang gõ dở -> Hủy tải ngầm
         if (coThayDoiSDB || coOThayDoiDOM_SDB) {
-            console.warn("Sổ đầu bài đang gõ dở, tạm dừng tải SDB.");
+            console.warn("Sổ đầu bài đang gõ dở, tạm dừng tải ngầm để bảo vệ dữ liệu.");
             return;
         }
 
         hienThiThongBaoTaiNgam(true);
         try {
+            // Gọi hàm thucThiLamMoiNgam 
             if (typeof thucThiLamMoiNgam === 'function') await thucThiLamMoiNgam();
         } finally {
             setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
         }
+    }
+    // =====================================================================
+    // TRƯỜNG HỢP 3: ĐANG MỞ CÁC UI KHÁC (Danh mục, Cài đặt, Báo cáo...)
+    // =====================================================================
+    else {
+        // Tắt hoàn toàn tiến trình kết nối máy chủ để tiết kiệm tài nguyên
+        console.log("Hệ thống tải ngầm đang ngủ đông vì UI hiện tại không yêu cầu đồng bộ Realtime.");
     }
 }
 
