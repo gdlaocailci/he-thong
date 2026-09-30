@@ -707,41 +707,34 @@
     <script src="QuanLyDanhMucSGK.js"></script>
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
-   <script>
-    async function thucThiLamMoiNgam() {
-          // [NÂNG CẤP]: Bổ sung kiểm tra DOM trực tiếp để chống xung đột luồng khi hệ thống đang vẽ giao diện
+ <script>
+     async function thucThiLamMoiNgam() {
           let vungHienThi = document.getElementById('vungHienThiSoDauBai');
           if (vungHienThi && vungHienThi.innerHTML.includes('Đang kết nối kho dữ liệu')) return;
           if (typeof dangTaiDuLieuSoDauBai !== 'undefined' && dangTaiDuLieuSoDauBai === true) return;
 
             let tabSDB = document.getElementById('khungSoDauBai');
             if (!tabSDB || tabSDB.classList.contains('hidden')) return;
-
             if (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true) return;
-          
             if (tabSDB.querySelector('td[data-thaydoi="true"]')) return;
 
             let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
             if (!emailGoiLen || typeof CAU_HINH_FRONTEND === 'undefined') return;
 
             try {
-                // [NÂNG CẤP]: Đổi từ layDuLieuSoDauBai sang layDuLieuSoDauBaiNgam để tối ưu Băng thông
+                // [TÍCH HỢP NÂNG CẤP]: GỌI API DELTA SYNC SIÊU NHẸ (CHỈ KÉO MỖI SỔ ĐẦU BÀI)
                 const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBaiNgam&emailTruyCap=${encodeURIComponent(emailGoiLen)}`);
                 const duLieuSever = await phanHoi.json();
                 
                 if (duLieuSever && duLieuSever.trangThai !== 'loi_he_thong') {
-                    
                     let theTuan = document.getElementById('chonTuanSo');
                     let theLop = document.getElementById('chonLopSo');
                     let tuanChon = theTuan ? theTuan.value : null;
                     let lopChon = theLop ? theLop.value : null;
                     
-                    // Khắc phục lỗi xóa nhầm UI
                     if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
                     
-                    // [BẢO VỆ DỮ LIỆU]: Vì layDuLieuSoDauBaiNgam CHỈ trả về dữ liệu Sổ Đầu Bài (Delta Sync),
-                    // ta cần phải lấy các Dữ liệu tĩnh (TKB, PPCT, KhungCT...) từ Cache đắp vào 
-                    // để hàm khoiTaoDuLieuSoDauBai không bị lỗi Undefined.
+                    // [TÍCH HỢP NÂNG CẤP]: BÙ ĐẮP DỮ LIỆU TĨNH TỪ CACHE (Vì API Ngầm không trả về PPCT)
                     let cacheTonTai = sessionStorage.getItem(layKhoaCachLy(`SDB_CACHE_${emailGoiLen}`));
                     if (cacheTonTai) {
                         let cacheJson = JSON.parse(cacheTonTai);
@@ -755,30 +748,19 @@
                         duLieuSever.QUYEN_THEO_LOP = cacheJson.QUYEN_THEO_LOP;
                     }
                     
-                    if (typeof khoiTaoDuLieuSoDauBai === 'function') {
-                        khoiTaoDuLieuSoDauBai(duLieuSever);
-                    }
+                    if (typeof khoiTaoDuLieuSoDauBai === 'function') khoiTaoDuLieuSoDauBai(duLieuSever);
                     
                     let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
                     if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
                     
-                    if (tuanChon && theTuan) {
-                        theTuan.value = tuanChon;
-                        if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonTuanSo');
-                    }
-                    if (lopChon && theLop) {
-                        theLop.value = lopChon;
-                        if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo');
-                    }
+                    if (tuanChon && theTuan) { theTuan.value = tuanChon; if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonTuanSo'); }
+                    if (lopChon && theLop) { theLop.value = lopChon; if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo'); }
                     
-                    // Gọi hàm cập nhật cục bộ chống giật màn hình
                     if (tuanChon && lopChon && typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
                         capNhatSoDauBaiNgamLenLuoi(tuanChon, lopChon);
                     }
                 }
-            } catch (loi) {
-                console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do lỗi mạng.");
-            }
+            } catch (loi) { console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do lỗi mạng."); }
         }
     </script>
 </body>
