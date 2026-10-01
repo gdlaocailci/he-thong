@@ -889,11 +889,15 @@ async function luuDuLieu(event, loaiLuu) {
                 let valGv = oGv ? oGv.value.trim() : "";
                 
                 let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
-                let namHocDung = namHocChuan || thongTinNgay.nam; // [Sửa lỗi undefined]
+                let namHocDung = namHocChuan || thongTinNgay.nam;
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
+                // Dò tìm trực tiếp bằng tọa độ để tái sử dụng mã gốc của Server
+                let tietGoc = duLieuTkbHienTai.find(t => t.thu === thu && t.buoi === buoi && t.tiet == tiet && t.maLop === lop);
+                let maTietThucTe = tietGoc ? tietGoc.maTiet : `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
+                
                 dsTietLuoi.push({
-                    maTiet: `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`, 
+                    maTiet: maTietThucTe, 
                     namHoc: namHocDung, 
                     thang: thongTinNgay.thang, 
                     ngay: thongTinNgay.ngayDayDu, 
@@ -1195,6 +1199,7 @@ async function xuatExcel() {
         danhSachThu.forEach(thu => {
             const danhSachBuoi = Object.keys(luoiDuLieu[thu]).sort((a, b) => (boLocBuoi[a] || 99) - (boLocBuoi[b] || 99));
             let startRowThu = currentRow;
+            
             let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
 
             danhSachBuoi.forEach(buoi => {
@@ -1450,10 +1455,11 @@ async function luuSuaCucBoTKB(event) {
             let namHocDung = namHocChuan || thongTinNgay.nam;
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
-            // Mã Tiết chuẩn hóa khớp 100% với Server
-            let maTietHienTai = `${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
+            // [THUẬT TOÁN ĐỊNH VỊ CHÍNH XÁC 100%]: 
+            // Dò tìm trực tiếp bằng tọa độ để lấy đúng Mã Tiết gốc do Server sinh ra
+            let tietGoc = duLieuTkbHienTai.find(t => t.thu === thu && t.buoi === buoi && t.tiet == tiet && t.maLop === lop);
+            let maTietThucTe = tietGoc ? tietGoc.maTiet : `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
             
-            let tietGoc = duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietHienTai);
             let monGoc = tietGoc ? (tietGoc.monHoc || "").trim() : "";
             let gvGoc = tietGoc ? (tietGoc.maGv || "").trim() : "";
             
@@ -1470,7 +1476,7 @@ async function luuSuaCucBoTKB(event) {
             danhSachThongBao.push(msg);
 
             dsThayDoi.push({ 
-                maTiet: maTietHienTai, 
+                maTiet: maTietThucTe, 
                 namHoc: namHocDung, 
                 thang: thongTinNgay.thang, 
                 ngay: thongTinNgay.ngayDayDu, 
@@ -1490,7 +1496,7 @@ async function luuSuaCucBoTKB(event) {
     let thongBaoGiaoDien = `Hệ thống ghi nhận ${dsThayDoi.length} tiết có sự thay đổi:\n\n` + danhSachThongBao.slice(0, 15).join('\n') + (danhSachThongBao.length > 15 ? `\n... và ${danhSachThongBao.length - 15} thay đổi khác.` : "") + `\n\nĐồng chí có chắc chắn muốn chốt ghi đè dữ liệu này?`;
     if (!confirm(thongBaoGiaoDien)) return;
 
-    // Kích hoạt khóa luồng
+    // Kích hoạt khóa luồng để bảo vệ
     dangLuuMap = true;
     if (btn) {
         btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="ml-1">Đang lưu...</span>`; 
@@ -1517,14 +1523,18 @@ async function luuSuaCucBoTKB(event) {
                 if (icon) icon.remove();
             });
 
+            // Ghi đè vào bộ nhớ đệm (Tương thích cả cấu trúc mới và cũ)
             if (typeof layKhoaCachLy === 'function') {
                 localStorage.setItem(layKhoaCachLy('SmartTKB_DuLieuTuan'), JSON.stringify(duLieuTkbHienTai));
+            } else {
+                const MA_DA = (typeof CAU_HINH_FRONTEND !== 'undefined' && CAU_HINH_FRONTEND.MA_DU_AN) ? CAU_HINH_FRONTEND.MA_DU_AN : 'MAC_DINH';
+                localStorage.setItem('SmartTKB_DuLieuTuan_' + MA_DA, JSON.stringify(duLieuTkbHienTai));
             }
         }
     } catch (loi) { 
         alert("Có sự cố trong quá trình kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền."); 
     } finally { 
-        // [CHỐT BẢO VỆ 3]: Đóng cứng chữ để chặn lỗi ghi đè HTML, gỡ khóa an toàn
+        // [CHỐT BẢO VỆ 3]: Đóng cứng chữ để chặn lỗi kẹt vòng quay, gỡ khóa an toàn
         dangLuuMap = false;
         if (btn) {
             btn.innerHTML = "Lưu Sửa (Map)"; 
