@@ -1418,9 +1418,14 @@ async function nhapExcelTKB(event) {
     finally { event.target.value = ""; }
 }
 
+let dangLuuMap = false;
+
 async function luuSuaCucBoTKB(event) {
-    const btn = event.currentTarget; 
-    const textGoc = btn.innerHTML;
+    // [CHỐT BẢO VỆ 1]: Chặn spam click nhiều lần
+    if (dangLuuMap) return; 
+
+    // [CHỐT BẢO VỆ 2]: Bắt đích danh phần tử bằng ID, chống lỗi mất tham chiếu DOM của event
+    const btn = document.getElementById('btnLuuSua') || (event ? event.currentTarget : null); 
     
     let dsThayDoi = [];
     let danhSachThongBao = []; 
@@ -1445,7 +1450,8 @@ async function luuSuaCucBoTKB(event) {
             let namHocDung = namHocChuan || thongTinNgay.nam;
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
-            let maTietHienTai = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
+            // Mã Tiết chuẩn hóa khớp 100% với Server
+            let maTietHienTai = `${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
             
             let tietGoc = duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietHienTai);
             let monGoc = tietGoc ? (tietGoc.monHoc || "").trim() : "";
@@ -1484,18 +1490,24 @@ async function luuSuaCucBoTKB(event) {
     let thongBaoGiaoDien = `Hệ thống ghi nhận ${dsThayDoi.length} tiết có sự thay đổi:\n\n` + danhSachThongBao.slice(0, 15).join('\n') + (danhSachThongBao.length > 15 ? `\n... và ${danhSachThongBao.length - 15} thay đổi khác.` : "") + `\n\nĐồng chí có chắc chắn muốn chốt ghi đè dữ liệu này?`;
     if (!confirm(thongBaoGiaoDien)) return;
 
-    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`; 
-    btn.disabled = true;
+    // Kích hoạt khóa luồng
+    dangLuuMap = true;
+    if (btn) {
+        btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span class="ml-1">Đang lưu...</span>`; 
+        btn.disabled = true;
+    }
 
     try {
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, { method: 'POST', body: JSON.stringify({ thaoTac: 'luuSuaTkbHienTai', duLieu: dsThayDoi }) });
         const ketQua = await phanHoi.json();
         
-        if(ketQua.trangThai !== 'thanh_cong') alert("Lưu thất bại: " + ketQua.thongBao);
-        else { 
+        if (ketQua.trangThai !== 'thanh_cong') {
+            alert("Lưu thất bại: " + ketQua.thongBao);
+        } else { 
             alert("Đã cập nhật các thay đổi vào Thời khóa biểu Hiện tại!");
+            
             dsThayDoi.forEach(tietMoi => {
-                let idx = duLieuTkbHienTai.findIndex(t => t.maTiet === tietMoi.maTiet);
+                let idx = duLieuTkbHienTai.findIndex(t => String(t.maTiet).trim() === tietMoi.maTiet);
                 if (idx !== -1) duLieuTkbHienTai[idx] = tietMoi; else duLieuTkbHienTai.push(tietMoi);
             });
             
@@ -1505,10 +1517,20 @@ async function luuSuaCucBoTKB(event) {
                 if (icon) icon.remove();
             });
 
-            localStorage.setItem(layKhoaCachLy('SmartTKB_DuLieuTuan'), JSON.stringify(duLieuTkbHienTai));
+            if (typeof layKhoaCachLy === 'function') {
+                localStorage.setItem(layKhoaCachLy('SmartTKB_DuLieuTuan'), JSON.stringify(duLieuTkbHienTai));
+            }
         }
-    } catch (loi) { alert("Có sự cố trong quá trình kết nối đến máy chủ."); } 
-    finally { btn.innerHTML = textGoc; btn.disabled = false; }
+    } catch (loi) { 
+        alert("Có sự cố trong quá trình kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền."); 
+    } finally { 
+        // [CHỐT BẢO VỆ 3]: Đóng cứng chữ để chặn lỗi ghi đè HTML, gỡ khóa an toàn
+        dangLuuMap = false;
+        if (btn) {
+            btn.innerHTML = "Lưu Sửa (Map)"; 
+            btn.disabled = false; 
+        }
+    }
 }
 
 window.hienThiThongKeSoTietGiaoVien = function() {
