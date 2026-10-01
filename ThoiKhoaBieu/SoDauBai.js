@@ -925,7 +925,7 @@ async function luuSoDauBaiSangMayChu() {
                 let chuKyGV = getVal(dong.querySelector('td[data-loai="chuKy"]'));
                 let buoi = dong.getAttribute('data-buoi') || 'Sáng';
 
-                // Đối chiếu với bộ nhớ RAM
+               // Đối chiếu với bộ nhớ RAM
                 let indexTrongRam = duLieuTKBGopDaMap.findIndex(d => 
                     String(d['Tuần']).trim() == tuanSo && 
                     String(d['Mã Lớp']).trim().toUpperCase() === lopChon.toUpperCase() && 
@@ -934,7 +934,8 @@ async function luuSoDauBaiSangMayChu() {
                     String(d['Buổi']).trim().toLowerCase() === buoi.toLowerCase()
                 );
 
-                if (chuKyGV !== '') {
+                // [FIX LỖI]: Giới hạn kiểm tra quyền chữ ký chỉ dành cho những tiết người dùng vừa sửa đổi hoặc tiết mới.
+                if (chuKyGV !== '' && (isThayDoi || !isDaLuu)) {
                     if (!quyenQuanTri && indexTrongRam !== -1) {
                         let gvTkb = String(duLieuTKBGopDaMap[indexTrongRam]['Mã GV']).trim().toLowerCase().normalize('NFC');
                         let tapHopGvTkb = gvTkb.split(/[,;&-]/).map(g => g.trim());
