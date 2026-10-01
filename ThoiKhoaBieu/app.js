@@ -1073,6 +1073,7 @@ function khoiDongDangNhap() {
 async function xuLyLayThongTin(maTokenTruyCap) {
     let nutDangNhap = document.getElementById('nutDangNhapG');
     try {
+        // 1. Xác thực Google và lấy thông tin định danh
         const phanHoi = await fetchVoiCoCheThuLai('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${maTokenTruyCap}` } });
         const duLieuXacThuc = await phanHoi.json();
         
@@ -1081,27 +1082,34 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         const tenHienThi = duLieuXacThuc.name; 
         const anhDaiDien = duLieuXacThuc.picture;
         
-        // 1. GÁN ĐỊNH DANH TOÀN CỤC NGAY LẬP TỨC
         window.emailGiaoVienToanCuc = dinhDanhHeThong;
 
-        // 2. CẬP NHẬT TRỰC TIẾP UI NÚT ĐĂNG NHẬP (KHÔNG RELOAD)
+        // 2. Cập nhật giao diện nút Đăng nhập lập tức
         if (nutDangNhap) {
             nutDangNhap.innerHTML = `<img src="${anhDaiDien}" class="w-6 h-6 rounded-full border border-white" title="Tài khoản: ${tenHienThi}"><span class="truncate text-sm font-semibold group-hover:text-red-300 transition-colors">Đăng xuất</span>`;
             nutDangNhap.classList.replace('bg-slate-700', 'bg-slate-800'); 
             nutDangNhap.classList.replace('hover:bg-slate-600', 'hover:bg-red-700');
             nutDangNhap.classList.replace('border-slate-500', 'border-red-500'); 
             nutDangNhap.onclick = function() {
-                // CHỈ TẢI LẠI TRANG KHI ĐĂNG XUẤT (Để đảm bảo xóa sạch dữ liệu bảo mật trong phiên)
+                // CHỈ tải lại trang khi Đăng xuất để xóa sạch bộ nhớ phiên làm việc
                 if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) window.location.reload();
             }; 
         }
 
-        // 3. TÍNH TOÁN LẠI QUYỀN TKB TỪ BỘ NHỚ RAM (Không cần gọi Máy chủ)
-        const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
-        const dinhDanhGoc = 'tulieuhopthanh@gmail.com'; // Tài khoản Admin tối cao
+        // =========================================================================
+        // [LÕI BẢO MẬT ĐẢM BẢO PHÂN QUYỀN]: TẢI LẠI CẤU HÌNH TỪ MÁY CHỦ
+        // Quét lại Ma Trận Phân Quyền mới nhất để tránh dùng cache cũ của khách
+        // =========================================================================
+        const configRes = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh`);
+        const thongSoMoi = await configRes.json();
+        if (thongSoMoi.trangThai !== 'loi_he_thong') {
+            thongSoHocVu = thongSoMoi;
+            localStorage.setItem(layKhoaCachLy('SmartTKB_CauHinh'), JSON.stringify(thongSoHocVu));
+        }
 
-        if (dsQuanTri.includes(dinhDanhHeThong) || dinhDanhHeThong === dinhDanhGoc) quyenSuaChua = true; 
-        else quyenSuaChua = false; 
+        // 3. Tính toán và Áp dụng Quyền hạn vào RAM
+        const dsQuanTri = thongSoHocVu.DANH_SACH_QUAN_TRI || [];
+        quyenSuaChua = dsQuanTri.includes(dinhDanhHeThong); // Quyền Admin tổng
         
         quyenChiTiet = { menu: [], nut: [], lop: [] }; 
         if (thongSoHocVu.MA_TRAN_PHAN_QUYEN && thongSoHocVu.MA_TRAN_PHAN_QUYEN[dinhDanhHeThong]) {
@@ -1110,27 +1118,22 @@ async function xuLyLayThongTin(maTokenTruyCap) {
             quyenChiTiet.lop = thongSoHocVu.MA_TRAN_PHAN_QUYEN[dinhDanhHeThong].lop || [];
         }
         
-        // Cập nhật ngay trạng thái Ẩn/Hiện của các nút bấm và menu theo quyền mới
+        // Mở khóa/Khóa các nút chức năng theo quyền mới
         kiemSoatGiaoDien(); 
 
-        // 4. ĐIỀU HƯỚNG TẢI DỮ LIỆU THÔNG MINH DỰA THEO TAB ĐANG MỞ
+        // 4. Vẽ lại lưới Thời Khóa Biểu (Mở khóa các ô thuộc quyền mà KHÔNG F5)
         let khungSDB = document.getElementById('khungSoDauBai');
-        
         if (khungSDB && !khungSDB.classList.contains('hidden')) {
-            // KỊCH BẢN A: Đang đứng ở Sổ Đầu Bài và ấn Đăng nhập
-            // Dọn rác bộ nhớ SĐB để vòng lặp kiemTraTrangThaiDangNhapSDB tự động bắt email và gọi tải SĐB với quyền mới.
             if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
         } else {
-            // KỊCH BẢN B: Đang đứng ở TKB và ấn Đăng nhập
-            if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai(); // Khởi tạo ngầm SĐB
+            if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai(); 
             
-            // Vẽ lại lưới TKB ngay lập tức bằng dữ liệu sẵn có trên RAM để làm nổi bật các ô được cấp quyền
+            // Ép hàm xuất ma trận vẽ lại lưới với các ô được cấp quyền (biến quyenChiTiet.lop)
             if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
                 xuatMaTranBang(duLieuTkbHienTai); 
             } else {
                 await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true); 
             }
-            localStorage.setItem(layKhoaCachLy('KhoaDongBo_TKB'), Date.now().toString());
         }
 
     } catch (loi) { 
