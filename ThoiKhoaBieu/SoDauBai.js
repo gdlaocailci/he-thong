@@ -709,12 +709,11 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
     let htmlBang = `
         <div class="mb-8 bang-so-dau-bai-container overflow-x-auto">
-            <div class="flex justify-between items-center mb-2 font-bold text-slate-800 uppercase">
-                <span>LỚP: ${lopChon}</span>
-                <span>TUẦN ${tuanChon.replace(/\D/g,'')}</span>
-            </div>
-            <div class="text-center italic mb-2 text-sm text-slate-600">
-                (Từ ngày ${ngayDauTieuDe} đến ngày ${ngayCuoiTieuDe})
+            <!-- ĐÃ SỬA: Đưa toàn bộ 3 thành phần lên 1 dòng với flex justify-between -->
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-slate-800 uppercase text-base header-lop">LỚP: ${lopChon}</span>
+                <span class="text-center italic text-sm text-slate-600 flex-1 header-ngay">(Từ ngày ${ngayDauTieuDe} đến ngày ${ngayCuoiTieuDe})</span>
+                <span class="font-bold text-slate-800 uppercase text-base header-tuan">TUẦN ${tuanChon.replace(/\D/g,'')}</span>
             </div>
             <table class="w-full min-w-[950px] border-collapse border border-gray-500 text-sm">
                 <thead class="bg-slate-100 text-center font-bold">
