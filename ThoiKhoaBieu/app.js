@@ -1799,9 +1799,14 @@ document.addEventListener('keydown', () => { thoiGianThaoTacCuoi = Date.now(); }
 document.addEventListener('input', () => { thoiGianThaoTacCuoi = Date.now(); });
 
 async function dongBoDuLieuNgamToanCuc() {
+    // [NHẬN DIỆN THÔNG MINH 1]: KHÔNG KÍCH HOẠT KHI ĐANG KHỞI ĐỘNG HỆ THỐNG
+    // Nếu biến thongSoHocVu chưa được nạp hoặc DOM đang báo "Đang tải", chứng tỏ hệ thống chưa sẵn sàng.
+    if (typeof thongSoHocVu === 'undefined' || Object.keys(thongSoHocVu).length === 0) return;
+    let vungDuLieuTKB = document.getElementById('vungHienThiDuLieu');
+    if (vungDuLieuTKB && (vungDuLieuTKB.innerHTML.includes('Đang tải') || vungDuLieuTKB.innerHTML.includes('Đang kết nối'))) return;
+    
     let thoiGianNghiThaoTac = Date.now() - thoiGianThaoTacCuoi;
     
-    // [ĐÃ NÂNG CẤP]: Thay vì return để lỡ nhịp 60 giây tiếp theo, tiến hành đặt lịch hẹn chạy lại sau khi nghỉ đủ 10 giây
     if (thoiGianNghiThaoTac < 10000) {
         if (!dangChoTaiLaiNgam) {
             dangChoTaiLaiNgam = true;
@@ -1818,7 +1823,7 @@ async function dongBoDuLieuNgamToanCuc() {
 
     if (khungTKB && !khungTKB.classList.contains('hidden')) {
         if (khungTKB.querySelector('td[data-thaydoi="true"]')) {
-            console.warn("TKB đang có ô chỉnh sửa chưa lưu, tạm dừng quy trình tải TKB.");
+            console.warn("TKB đang có ô chỉnh sửa chưa lưu, tạm dừng quy trình tải ngầm.");
             return; 
         }
 
@@ -1834,7 +1839,7 @@ async function dongBoDuLieuNgamToanCuc() {
         let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
 
         if (coThayDoiSDB || coOThayDoiDOM_SDB) {
-            console.warn("Sổ đầu bài đang phát sinh dữ liệu gõ dở, tạm dừng quy trình tải SDB.");
+            console.warn("Sổ đầu bài đang phát sinh dữ liệu gõ dở, tạm dừng quy trình tải ngầm.");
             return;
         }
 
