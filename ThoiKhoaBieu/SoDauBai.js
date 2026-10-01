@@ -1235,9 +1235,13 @@ function xuatWordSoDauBai() {
             th { text-align: center; font-weight: bold; }
             .text-center { text-align: center; }
             .italic { font-style: italic; }
-            .flex { display: table; width: 100%; font-weight: bold; margin-bottom: 5px; }
-            .justify-between span { display: table-cell; width: 50%; }
-            .justify-between span:last-child { text-align: right; }
+            
+            /* ĐÃ SỬA: Bố cục CSS phân chia làm 3 cột bằng nhau để dàn đều trên Word */
+            .flex { display: table; width: 100%; margin-bottom: 10px; }
+            .justify-between span { display: table-cell; vertical-align: middle; width: 33.33%; }
+            .justify-between span:nth-child(1) { text-align: left; font-weight: bold; font-size: 13pt; }
+            .justify-between span:nth-child(2) { text-align: center; font-style: italic; font-size: 11pt; color: #475569; }
+            .justify-between span:last-child { text-align: right; font-weight: bold; font-size: 13pt; }
         </style>
         </head><body><div class='WordSection1'>
     `;
@@ -1310,13 +1314,20 @@ async function xuatExcelSoDauBai() {
 
         cacBang.forEach(khungBang => {
             let rowHeader1 = worksheet.getRow(rowIndex);
-            rowHeader1.getCell(1).value = khungBang.querySelector('.flex').innerText.replace(/\n/g, '                ');
+            
+            // [ĐÃ SỬA]: Lấy riêng text của từng thẻ span thông qua các class đánh dấu
+            let txtLop = khungBang.querySelector('.header-lop') ? khungBang.querySelector('.header-lop').innerText : '';
+            let txtTuan = khungBang.querySelector('.header-tuan') ? khungBang.querySelector('.header-tuan').innerText : '';
+            
+            rowHeader1.getCell(1).value = txtLop + '                ' + txtTuan;
             rowHeader1.font = { name: 'Times New Roman', size: 14, bold: true };
             worksheet.mergeCells(`A${rowIndex}:I${rowIndex}`);
             rowIndex++;
 
             let rowHeader2 = worksheet.getRow(rowIndex);
-            rowHeader2.getCell(1).value = khungBang.querySelector('.italic').innerText;
+            let txtNgay = khungBang.querySelector('.header-ngay') ? khungBang.querySelector('.header-ngay').innerText : '';
+            
+            rowHeader2.getCell(1).value = txtNgay;
             rowHeader2.font = { name: 'Times New Roman', size: 12, italic: true };
             rowHeader2.getCell(1).alignment = { horizontal: 'center' };
             worksheet.mergeCells(`A${rowIndex}:I${rowIndex}`);
