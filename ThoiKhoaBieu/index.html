@@ -708,7 +708,7 @@
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
    <script>
-     async function thucThiLamMoiNgam() {
+    async function thucThiLamMoiNgam() {
         let vungHienThi = document.getElementById('vungHienThiSoDauBai');
         
         // KHÓA BẢO VỆ 1: Đang tải lần đầu
@@ -718,38 +718,47 @@
         let tabSDB = document.getElementById('khungSoDauBai');
         if (!tabSDB || tabSDB.classList.contains('hidden')) return;
 
-        // KHÓA BẢO VỆ 2: Đang gõ dở
+        // KHÓA BẢO VỆ 2: Đang có thao tác gõ dở trên màn hình (Chặn tải ngầm để không mất dữ liệu)
         if (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true) return;
         if (tabSDB.querySelector('td[data-thaydoi="true"]')) return;
 
-        // [ĐÃ NÂNG CẤP]: Xóa bỏ Khóa bảo vệ 3 (Cốt lõi) chặn tải ngầm khi đang xem lưới Lớp - Tuần.
-
-        let idGiaoVienGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+        let idGiaoVienGoiLen = typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' ? window.dinhDanhGiaoVienToanCuc : (typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '');
         if (!idGiaoVienGoiLen || typeof CAU_HINH_FRONTEND === 'undefined') return;
 
         try {
-            // Giữ nguyên tham số URL backend yêu cầu
-            const phanHoi = await fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(idGiaoVienGoiLen)}`);
-            const duLieuSever = await phanHoi.json();
+            // [NÂNG CẤP ĐỘT PHÁ]: Sử dụng fetchVoiCoCheThuLai để phá vỡ bộ nhớ đệm (Cache).
+            // Trình duyệt sẽ buộc phải lấy dữ liệu tươi mới từ Máy chủ.
+            const phanHoi = await fetchVoiCoCheThuLai(
+                `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(idGiaoVienGoiLen)}`,
+                {}, 3, 60000
+            );
+            
+            const phanHoiText = await phanHoi.text();
+            let duLieuSever;
+            try { 
+                duLieuSever = JSON.parse(phanHoiText); 
+            } catch (loiParse) { 
+                throw new Error("Dữ liệu JSON máy chủ trả về bị nhiễu."); 
+            }
             
             if (duLieuSever && duLieuSever.trangThai !== 'loi_he_thong') {
                 if (vungHienThi) vungHienThi.id = 'vungHienThiSoDauBai_DangDongBoNgam';
                 
                 if (typeof khoiTaoDuLieuSoDauBai === 'function') {
                     khoiTaoDuLieuSoDauBai(duLieuSever);
-                    
-                    // [BỔ SUNG MỚI]: Kích hoạt hàm vẽ lại UI Sổ đầu bài nếu người dùng đang mở trên màn hình
-                    let theTuan = document.getElementById('chonTuanSo');
-                    let theLop = document.getElementById('chonLopSo');
-                    if (theTuan && theTuan.value && theLop && theLop.value) {
-                        if (typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
-                            capNhatSoDauBaiNgamLenLuoi(theTuan.value, theLop.value);
-                        }
-                    }
                 }
                 
                 let vungTemp = document.getElementById('vungHienThiSoDauBai_DangDongBoNgam');
                 if (vungTemp) vungTemp.id = 'vungHienThiSoDauBai';
+
+                // Nạp thẳng dữ liệu mới cấy vào lưới UI hiện tại
+                let theTuan = document.getElementById('chonTuanSo');
+                let theLop = document.getElementById('chonLopSo');
+                if (theTuan && theTuan.value && theLop && theLop.value) {
+                    if (typeof capNhatSoDauBaiNgamLenLuoi === 'function') {
+                        capNhatSoDauBaiNgamLenLuoi(theTuan.value, theLop.value);
+                    }
+                }
             }
         } catch (loi) {
             console.warn("Tiến trình đồng bộ ngầm SDB tạm dừng do sự cố mạng kết nối.");
