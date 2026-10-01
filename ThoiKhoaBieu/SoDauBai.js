@@ -1256,11 +1256,11 @@ function xuatWordSoDauBai() {
         if (cacInputClone[idx]) cacInputClone[idx].setAttribute('value', input.value);
     });
 
-    let htmlContent = preHtml + noiDungClone.innerHTML + "</div></body></html>";
-    let blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+   let htmlContent = preHtml + noiDungClone.innerHTML + "</div></body></html>";
+   let blob = new Blob(['\ufeff', htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     let link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `SoDauBai_Lop${lopChon}_Tuan${tuanChon.replace(/\D/g,'')}.doc`;
+    link.download = `SoDauBai_Lop${lopChon}_Tuan${tuanChon.replace(/\D/g,'')}.docx`;
     link.click();
 }
 
