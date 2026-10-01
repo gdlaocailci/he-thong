@@ -176,12 +176,9 @@ function capNhatNgayDauTuan() {
     }, 500); 
 }
 
-// =========================================================================
-// KHỐI 1: KHỞI TẠO TỨC THÌ (LAZY LOADING CAO CẤP)
-// =========================================================================
 async function khoiTaoGiaoDien() {
-    const KEY_CH = layKhoaCachLy('SmartTKB_CauHinh');
-    const KEY_TKB = layKhoaCachLy('SmartTKB_DuLieuTuan');
+    const KEY_CH = typeof layKhoaCachLy === 'function' ? layKhoaCachLy('SmartTKB_CauHinh') : 'SmartTKB_CauHinh';
+    const KEY_TKB = typeof layKhoaCachLy === 'function' ? layKhoaCachLy('SmartTKB_DuLieuTuan') : 'SmartTKB_DuLieuTuan';
     const hienThiTuan = document.getElementById('hienThiTuanHienTai');
     const spinnerTuan = document.getElementById('spinnerTaiTuan');
 
@@ -253,6 +250,11 @@ async function khoiTaoGiaoDien() {
             localStorage.setItem(KEY_TKB, JSON.stringify(duLieuTkbHienTai));
             xuatMaTranBang(duLieuTkbHienTai);
             if (spinnerTuan) spinnerTuan.classList.add('hidden');
+            
+            // [ĐỘT PHÁ]: Ép hệ thống gọi mạng tải ngầm 1 lần ngay sau khi khởi động 1 giây
+            // Vượt rào Cache của Server để kéo dữ liệu mới nhất đè lên lưới!
+            setTimeout(() => { taiDuLieuTKB(true, 'TKB_HIEN_TAI', true); }, 1000);
+
         } else if (!daVeLuoiRam) {
             await taiDuLieuTKB(false); 
         }
@@ -280,6 +282,95 @@ async function khoiTaoGiaoDien() {
             vungHienThi.innerHTML = `<tr><td class="px-6 py-10 text-center text-red-600 font-bold text-lg">
                 ⚠️ Lỗi khởi động: ${loi.message}
             </td></tr>`;
+        }
+    }
+}
+
+async function taiDuLieuTKB(coCache = false, nguonTruyXuat = 'TKB_HIEN_TAI', epDongBo = false) {
+    const KEY_TKB = typeof layKhoaCachLy === 'function' ? layKhoaCachLy('SmartTKB_DuLieuTuan') : 'SmartTKB_DuLieuTuan';
+    const vungHienThi = document.getElementById('vungHienThiDuLieu');
+    const hienThiTuan = document.getElementById('hienThiTuanHienTai');
+    const spinnerTuan = document.getElementById('spinnerTaiTuan');
+    
+    let nhanNguon = nguonTruyXuat === 'DATA_TKB' ? 'Dữ liệu quá khứ' : (nguonTruyXuat === 'TKB_CoDinh' ? 'Dự kiến cố định' : 'Hệ thống hiện tại');
+
+    if (!coCache) {
+        vungHienThi.innerHTML = `<tr><td class="text-center text-blue-600 font-bold py-10 reactbits-fade-in text-lg" style="font-family:'Times New Roman',Times,serif;"><div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>Đang tải TKB Tuần ${tuanDangXem} từ [${nhanNguon}]...</td></tr>`;
+    } else if (hienThiTuan) {
+        if (hienThiTuan.tagName === 'INPUT') {
+            if (spinnerTuan) spinnerTuan.classList.remove('hidden');
+        } else if (!hienThiTuan.innerHTML.includes('animate-spin')) {
+            hienThiTuan.innerHTML = `Tuần ${tuanDangXem} <svg class="inline w-4 h-4 text-blue-500 animate-spin ml-1.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"></path></svg>`;
+        }
+    }
+    
+    try {
+        const urlTKB = `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layTKB&tuan=${tuanDangXem}&nguon=${nguonTruyXuat}&_noCacheTkb=${new Date().getTime()}`;
+        const phanHoi = await fetchVoiCoCheThuLai(urlTKB);
+        const textPhanHoi = await phanHoi.text();
+        let duLieu;
+
+        try {
+            duLieu = JSON.parse(textPhanHoi);
+        } catch (loiParse) {
+            throw new Error("Máy chủ trả về dữ liệu hỏng. Hãy kiểm tra lại định dạng dữ liệu đầu ra.");
+        }
+
+        if (duLieu.trangThai === 'loi_he_thong') throw new Error(duLieu.thongBao);
+
+        if (Array.isArray(duLieu)) {
+            const taoDauVanTay = (mangTkb) => {
+                if (!Array.isArray(mangTkb)) return '';
+                return mangTkb.map(t => `${String(t.thu).trim()}_${String(t.buoi).trim()}_${String(t.tiet).trim()}_${String(t.maLop).trim()}_${String(t.monHoc || '').trim()}_${String(t.maGv || '').trim()}`).sort().join('||');
+            };
+
+            let vanTayMayChu = taoDauVanTay(duLieu);
+            // So sánh dấu vân tay trực tiếp với biến đang sống trên lưới
+            let vanTayHienTai = taoDauVanTay(duLieuTkbHienTai);
+
+            let keyKhoaDongBo = typeof layKhoaCachLy === 'function' ? layKhoaCachLy('KhoaDongBo_TKB') : 'KhoaDongBo_TKB';
+            let thoiGianKhoa = parseInt(localStorage.getItem(keyKhoaDongBo) || '0');
+            let vuaMoiLuu = (Date.now() - thoiGianKhoa) < 15000 && !epDongBo;
+
+            if (nguonTruyXuat === 'TKB_HIEN_TAI') {
+                if (!coCache || vanTayMayChu !== vanTayHienTai || epDongBo) {
+                    if (vuaMoiLuu && coCache) {
+                        console.log("🔒 [Bảo vệ UI]: Từ chối ghi đè dữ liệu cũ từ server do người dùng vừa mới lưu xong.");
+                        if (vungHienThi.innerHTML.includes('Đang tải')) xuatMaTranBang(duLieuTkbHienTai);
+                    } else {
+                        console.log("⚡ [Smart Sync]: Cập nhật lưới TKB Hiện Tại từ Máy chủ...");
+                        
+                        // [ÉP GÁN DỮ LIỆU SỐNG]: Nhét thẳng dữ liệu mới vào mảng và ép lưới vẽ lại!
+                        duLieuTkbHienTai = duLieu; 
+                        localStorage.setItem(KEY_TKB, JSON.stringify(duLieu));
+                        xuatMaTranBang(duLieuTkbHienTai); 
+                        
+                        if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
+                    }
+                } else {
+                    if (vungHienThi.innerHTML.includes('Đang tải')) xuatMaTranBang(duLieuTkbHienTai);
+                }
+            } else {
+                duLieuTkbHienTai = duLieu; 
+                xuatMaTranBang(duLieuTkbHienTai);
+            }
+        } else {
+            throw new Error("Dữ liệu nhận được không đúng cấu trúc mảng.");
+        }
+
+    } catch (loi) {
+        if (!coCache) {
+            vungHienThi.innerHTML = `<tr><td class="text-center text-red-500 font-bold py-10 text-lg" style="font-family:'Times New Roman',Times,serif;">
+                ⚠️ Lỗi nạp dữ liệu TKB:<br><span class="text-base text-slate-700 font-normal mt-2 inline-block">${loi.message}</span>
+            </td></tr>`;
+        }
+    } finally {
+        if (hienThiTuan) {
+            if (hienThiTuan.tagName === 'INPUT') {
+                hienThiTuan.value = tuanDangXem;
+                if (spinnerTuan) spinnerTuan.classList.add('hidden');
+            }
+            else hienThiTuan.innerText = `Tuần ${tuanDangXem}`;
         }
     }
 }
