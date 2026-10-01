@@ -451,6 +451,37 @@ function ketXuatSoDauBaiLenLuoi() {
 
     if (!tuanChon || !lopChon) return; 
 
+    // =========================================================================
+    // [ƯU TIÊN SỐ 1]: CHỐT CHẶN BẢO VỆ DỮ LIỆU ĐANG GÕ DỞ (ĐẶT LÊN TRÊN CÙNG)
+    // =========================================================================
+    if (coThayDoiChuaLuu_SDB && (tuanChon !== tuanTruocDo_SDB || lopChon !== lopTruocDo_SDB)) {
+        let thongBao = "⚠️ Cảnh báo: Đồng chí đang có dữ liệu chưa lưu trên màn hình!\n\n" +
+                       "- Bấm [Hủy / Cancel] để Ở LẠI và tiếp tục hoàn thiện, sau đó bấm 'Lưu Sổ đầu bài'.\n" +
+                       "- Bấm [OK] để TIẾP TỤC chuyển sang Tuần/Lớp khác (Dữ liệu chưa lưu sẽ bị xóa).";
+        
+        let xacNhan = confirm(thongBao);
+        
+        if (!xacNhan) {
+            // Người dùng chọn HỦY -> Khôi phục ô chọn UI về giá trị cũ và DỪNG LUỒNG HOÀN TOÀN
+            if (theSelectTuan && tuanTruocDo_SDB) {
+                theSelectTuan.value = tuanTruocDo_SDB;
+                if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonTuanSo');
+            }
+            if (theSelectLop && lopTruocDo_SDB) {
+                theSelectLop.value = lopTruocDo_SDB;
+                if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo');
+            }
+            // Trả về ngay lập tức -> Giao diện không bị vẽ lại -> Giữ nguyên chữ đang gõ!
+            return; 
+        } else {
+            // Người dùng chọn OK -> Chấp nhận bỏ qua dữ liệu cũ, hạ cờ bảo vệ để đi tiếp
+            coThayDoiChuaLuu_SDB = false;
+        }
+    }
+
+    // =========================================================================
+    // [ƯU TIÊN SỐ 2]: KIỂM TRA TRÌNH TỰ SỔ ĐẦU BÀI 
+    // =========================================================================
     let tuanSoChon = parseInt(tuanChon.replace(/\D/g, ''));
     let trangThaiCacTuan = {};
     let tuanChuaLuuNhoNhat = null;
@@ -494,31 +525,9 @@ function ketXuatSoDauBaiLenLuoi() {
         }
     }
 
-    // [NÂNG CẤP]: Phân nhánh hành động với nút Hủy và OK
-    if (coThayDoiChuaLuu_SDB && (tuanChon !== tuanTruocDo_SDB || lopChon !== lopTruocDo_SDB)) {
-        let thongBao = "⚠️ Cảnh báo: Đồng chí đang có dữ liệu chưa lưu trên màn hình!\n\n" +
-                       "- Bấm [Hủy / Cancel] để Ở LẠI và tiếp tục hoàn thiện, bấm 'Lưu Sổ đầu bài'.\n" +
-                       "- Bấm [OK] để TIẾP TỤC chuyển sang Tuần/Lớp khác (Dữ liệu chưa lưu sẽ bị xóa).";
-        
-        let xacNhan = confirm(thongBao);
-        
-        if (!xacNhan) {
-            // Người dùng chọn Hủy -> Khôi phục lại Tuần/Lớp cũ trên UI và dừng tiến trình
-            if (theSelectTuan && tuanTruocDo_SDB) {
-                theSelectTuan.value = tuanTruocDo_SDB;
-                if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonTuanSo');
-            }
-            if (theSelectLop && lopTruocDo_SDB) {
-                theSelectLop.value = lopTruocDo_SDB;
-                if (typeof dongBoHienThiTuSelect === 'function') dongBoHienThiTuSelect('chonLopSo');
-            }
-            return; 
-        } else {
-            // Người dùng chọn OK -> Chấp nhận mất dữ liệu chưa lưu để đi tiếp
-            coThayDoiChuaLuu_SDB = false;
-        }
-    }
-
+    // =========================================================================
+    // [ƯU TIÊN SỐ 3]: VẼ GIAO DIỆN
+    // =========================================================================
     thucThiKetXuatSoDauBaiLenLuoi();
 
     tuanTruocDo_SDB = theSelectTuan?.value || '';
