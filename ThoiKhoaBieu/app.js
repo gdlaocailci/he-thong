@@ -892,13 +892,14 @@ async function luuDuLieu(event, loaiLuu) {
                 let namHocDung = namHocChuan || thongTinNgay.nam; 
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
-                // [NÂNG CẤP TỌA ĐỘ 5 TRỤC]: Quét tìm mã nguyên bản bằng Thứ, Buổi, Tiết, Lớp và bổ sung trục NGÀY
+                // [NÂNG CẤP TỌA ĐỘ 6 TRỤC]: Quét tìm mã nguyên bản bằng Tuần, Thứ, Buổi, Tiết, Lớp, Ngày
                 let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
+                    String(t.tuan).trim() === String(tuanDangXem).trim() &&
                     String(t.thu).trim() === thu && 
                     String(t.buoi).trim() === buoi && 
                     String(t.tiet).trim() === String(tiet) && 
                     String(t.maLop).trim() === lop &&
-                    (String(t.ngay).trim() === thongTinNgay.ngayDayDu || String(t.ngay).trim() === '') // Khớp ngày tuyệt đối hoặc cho phép lưới cố định chưa có ngày
+                    (String(t.ngay).trim() === thongTinNgay.ngayDayDu || String(t.ngay).trim() === '') // Khớp ngày tuyệt đối
                 );
 
                 let maTietNguyenBan = '';
@@ -1482,8 +1483,9 @@ async function luuSuaCucBoTKB(event) {
             let namHocDung = namHocChuan || thongTinNgay.nam;
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
-            // [NÂNG CẤP TỌA ĐỘ 5 TRỤC]: Quét tìm mã nguyên bản bằng Thứ, Buổi, Tiết, Lớp và bổ sung trục NGÀY
+            // [NÂNG CẤP TỌA ĐỘ 6 TRỤC]: Quét tìm mã nguyên bản bằng Tuần, Thứ, Buổi, Tiết, Lớp, Ngày
             let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
+                String(t.tuan).trim() === String(tuanDangXem).trim() &&
                 String(t.thu).trim() === thu && 
                 String(t.buoi).trim() === buoi && 
                 String(t.tiet).trim() === String(tiet) && 
