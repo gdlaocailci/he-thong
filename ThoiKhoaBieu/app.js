@@ -892,19 +892,19 @@ async function luuDuLieu(event, loaiLuu) {
                 let namHocDung = namHocChuan || thongTinNgay.nam; 
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
-                // [NÂNG CẤP TỌA ĐỘ]: Quét tìm dữ liệu gốc trong RAM để lấy lại mã nguyên bản
+                // [NÂNG CẤP TỌA ĐỘ 5 TRỤC]: Quét tìm mã nguyên bản bằng Thứ, Buổi, Tiết, Lớp và bổ sung trục NGÀY
                 let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
                     String(t.thu).trim() === thu && 
                     String(t.buoi).trim() === buoi && 
                     String(t.tiet).trim() === String(tiet) && 
-                    String(t.maLop).trim() === lop
+                    String(t.maLop).trim() === lop &&
+                    (String(t.ngay).trim() === thongTinNgay.ngayDayDu || String(t.ngay).trim() === '') // Khớp ngày tuyệt đối hoặc cho phép lưới cố định chưa có ngày
                 );
 
                 let maTietNguyenBan = '';
                 if (indexTrongRam !== -1 && duLieuTkbHienTai[indexTrongRam].maTiet) {
                     maTietNguyenBan = duLieuTkbHienTai[indexTrongRam].maTiet;
                 } else {
-                    // Fallback: Chỉ tạo mã mới khi không có trong RAM (tiết mới tinh)
                     maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
                 }
                 
@@ -1482,12 +1482,13 @@ async function luuSuaCucBoTKB(event) {
             let namHocDung = namHocChuan || thongTinNgay.nam;
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
-            // [NÂNG CẤP TỌA ĐỘ]: Tìm kiếm mã nguyên bản thay vì tự sinh mã cứng
+            // [NÂNG CẤP TỌA ĐỘ 5 TRỤC]: Quét tìm mã nguyên bản bằng Thứ, Buổi, Tiết, Lớp và bổ sung trục NGÀY
             let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
                 String(t.thu).trim() === thu && 
                 String(t.buoi).trim() === buoi && 
                 String(t.tiet).trim() === String(tiet) && 
-                String(t.maLop).trim() === lop
+                String(t.maLop).trim() === lop &&
+                (String(t.ngay).trim() === thongTinNgay.ngayDayDu || String(t.ngay).trim() === '') // Khớp ngày tuyệt đối
             );
 
             let maTietNguyenBan = '';
