@@ -177,7 +177,16 @@ async function chuyenTuan(buocNhay) {
         if (parts.length === 3) {
             let yy = parseInt(parts[0], 10), mm = parseInt(parts[1], 10), dd = parseInt(parts[2], 10);
             let d = new Date(yy, mm - 1, dd);
+            
+            // Bước 1: Nhảy số ngày theo số tuần thay đổi
             d.setDate(d.getDate() + ((tuanMoi - tuanDangXem) * 7));
+            
+            // Bước 2: Ép mốc thời gian về chuẩn ngày Thứ 2 của tuần đó
+            let dayOfWeek = d.getDay();
+            // Nếu là Chủ nhật (0) thì lùi 6 ngày về Thứ 2. Nếu là Thứ khác thì lùi về đúng Thứ 2 (1)
+            let khoangCachDenThu2 = (dayOfWeek === 0) ? -6 : (1 - dayOfWeek);
+            d.setDate(d.getDate() + khoangCachDenThu2);
+            
             ngayDauTuanUI = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
             let dateInput = document.getElementById('chonNgayDauTuan');
             if (dateInput) dateInput.value = ngayDauTuanUI;
