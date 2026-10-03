@@ -22,9 +22,9 @@ window.layKhoaCachLy = function(keyBase) {
 };
 
 // =========================================================================
-// HÀM BỔ SUNG: SINH DANH SÁCH THỨ ĐỘNG THEO NGÀY CỦA UI
+// HÀM BỔ SUNG: SINH DANH SÁCH THỨ ĐỘNG THEO NGÀY CỦA UI (CHỈ TỚI THỨ 7)
 // =========================================================================
-window.layDanhSachThuDong = function(ngayStr, soNgay = 6) {
+window.layDanhSachThuDong = function(ngayStr) {
     let mangThu = [];
     if (!ngayStr) return ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]; 
     
@@ -34,11 +34,22 @@ window.layDanhSachThuDong = function(ngayStr, soNgay = 6) {
     let d = new Date(parts[0], parts[1] - 1, parts[2]);
     const tenCacThu = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
     
-    for (let i = 0; i < soNgay; i++) {
+    // Lặp tối đa 7 ngày từ ngày được chọn, nhưng ngắt vòng ngay khi chạm mốc Thứ 7
+    for (let i = 0; i < 7; i++) {
         let ngayTinh = new Date(d.getTime());
         ngayTinh.setDate(d.getDate() + i);
-        mangThu.push(tenCacThu[ngayTinh.getDay()]);
+        let thuIndex = ngayTinh.getDay();
+        
+        // Bỏ qua Chủ nhật theo nghiệp vụ trường phổ thông
+        if (thuIndex === 0) continue; 
+        
+        mangThu.push(tenCacThu[thuIndex]);
+        
+        // Dừng vòng lặp ngay khi duyệt đến Thứ 7 (ngăn lưới bị tràn sang tuần sau)
+        if (thuIndex === 6) break; 
     }
+    
+    if (mangThu.length === 0) return ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
     return mangThu;
 };
 
@@ -699,7 +710,7 @@ function kiemTraDinhMuc() {
 function dongModal() { document.getElementById('modalKiemTra').classList.add('hidden'); }
 
 // =========================================================================
-// HÀM ĐÃ NÂNG CẤP: LOẠI BỎ ĐỘ LỆCH TĨNH, TÍNH TOÁN NGÀY BẰNG MẢNG THỨ ĐỘNG
+// HÀM TÍNH NGÀY ĐỘC LẬP (SỬ DỤNG HỆ TỌA ĐỘ TOÁN HỌC TUYỆT ĐỐI)
 // =========================================================================
 function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
@@ -709,10 +720,15 @@ function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
     
     let ngayGoc = new Date(parts[0], parts[1] - 1, parts[2]);
     
-    // Quét mảng thứ động 7 ngày để tìm chính xác độ lệch so với ngày được chọn
-    let danhSachThu = window.layDanhSachThuDong(ngayDauTuanStr, 7); 
-    let soNgayLech = danhSachThu.indexOf(tenThu);
-    if (soNgayLech === -1) soNgayLech = 0; 
+    // Quy đổi Thứ thành Index theo chuẩn Việt Nam (Thứ 2 = 0, Thứ 3 = 1 ... Chủ nhật = 6)
+    const mapThuToDay = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
+    let dayGocToVN = ngayGoc.getDay() === 0 ? 6 : ngayGoc.getDay() - 1;
+    let dayDichToVN = mapThuToDay[tenThu];
+    
+    if (dayDichToVN === undefined) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
+    
+    // Tính khoảng cách số ngày lệch chuẩn xác bằng hiệu số tuyệt đối
+    let soNgayLech = dayDichToVN - dayGocToVN;
     
     let ngayDich = new Date(ngayGoc.getTime());
     ngayDich.setDate(ngayGoc.getDate() + soNgayLech);
