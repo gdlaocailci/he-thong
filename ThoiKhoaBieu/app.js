@@ -828,26 +828,20 @@ function xuatMaTranBang(danhSachTiet) {
        
     // [TRUNG THÀNH DỮ LIỆU]: Tìm ngày xuất phát sớm nhất thực tế có trong mảng dữ liệu để không làm mất các ngày đầu tuần
     if (duLieuTiet && duLieuTiet.length > 0) {
-        const mapThu = {"Thứ 2": 1, "Thứ 3": 2, "Thứ 4": 3, "Thứ 5": 4, "Thứ 6": 5, "Thứ 7": 6, "Chủ nhật": 7};
-        let minThuVal = 99;
-        let dongSomNhat = null;
-
+        let minDateObj = null;
         duLieuTiet.forEach(t => {
-            if ((t.monHoc && String(t.monHoc).trim() !== "") || (t.maGv && String(t.maGv).trim() !== "")) {
-                let thuVal = mapThu[t.thu ? String(t.thu).trim() : ""];
-                if (thuVal && thuVal < minThuVal) { minThuVal = thuVal; dongSomNhat = t; }
-            }
-        });
-        if (!dongSomNhat) dongSomNhat = duLieuTiet.find(t => t.ngay && String(t.ngay).trim() !== "");
-
-        if (dongSomNhat && dongSomNhat.ngay && String(dongSomNhat.ngay).trim() !== "") {
-            let p = String(dongSomNhat.ngay).trim().split('/'); 
-            if (p.length === 3) {
-                let ngayGoc = new Date(p[2], p[1] - 1, p[0]);
-                if (!isNaN(ngayGoc.getTime())) {
-                    ngayDauTuanUI = `${ngayGoc.getFullYear()}-${(ngayGoc.getMonth() + 1).toString().padStart(2, '0')}-${ngayGoc.getDate().toString().padStart(2, '0')}`; 
+            if (t.ngay && String(t.ngay).trim() !== "") {
+                let p = String(t.ngay).trim().split('/'); 
+                if (p.length === 3) {
+                    let d = new Date(p[2], p[1] - 1, p[0]);
+                    if (!isNaN(d.getTime())) {
+                        if (!minDateObj || d < minDateObj) minDateObj = d;
+                    }
                 }
             }
+        });
+        if (minDateObj) {
+            ngayDauTuanUI = `${minDateObj.getFullYear()}-${(minDateObj.getMonth() + 1).toString().padStart(2, '0')}-${minDateObj.getDate().toString().padStart(2, '0')}`; 
         }
     }
     
@@ -898,73 +892,52 @@ function xuatMaTranBang(danhSachTiet) {
         gvcnLop[lop] = gvcn;
     });
 
-    // ===============================================================
-    // [NÂNG CẤP LÕI]: THUẬT TOÁN DỰNG LƯỚI ĐỘNG CƠ HÓA CHO QUÁ KHỨ
-    // ===============================================================
+    const thongTinNgayCache = {};
+    let thuMacDinh = window.layDanhSachThuDong(ngayDauTuanUI);
+
+    // =========================================================================
+    // [NÂNG CẤP]: THUẬT TOÁN ÁNH XẠ THỜI GIAN THỰC TẾ (BẢO VỆ TÍNH TRUNG THỰC DATA_TKB)
+    // Phân tích: Lọc bỏ các "Thứ" rỗng khi xem lại lịch sử tuần quá khứ
+    // =========================================================================
     let tuanHeThong = parseInt(thongSoHocVu.TUAN_HIEN_TAI, 10) || 1;
-    let laTuanQuaKhu = tuanDangXem < tuanHeThong;
-
-    let thuMacDinh = [];
-    let cauTrucDong = {}; 
-
-    if (laTuanQuaKhu && duLieuTiet && duLieuTiet.length > 0) {
-        // [TRUNG THÀNH LỊCH SỬ]: Quét và dựng lưới ĐỘNG dựa trên dữ liệu thực tế tồn tại
-        const mapThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
-        let setThu = new Set();
+    
+    if (tuanDangXem < tuanHeThong && danhSachTiet && danhSachTiet.length > 0) {
+        let tapHopThuThucTe = new Set();
         
-        duLieuTiet.forEach(t => {
-            if ((t.monHoc && String(t.monHoc).trim() !== "") || (t.maGv && String(t.maGv).trim() !== "")) {
-                let thu = String(t.thu).trim();
-                let buoi = String(t.buoi).trim();
-                let tiet = parseInt(t.tiet, 10);
-                
-                if (thu && buoi && !isNaN(tiet)) {
-                    setThu.add(thu);
-                    if (!cauTrucDong[thu]) cauTrucDong[thu] = {};
-                    if (!cauTrucDong[thu][buoi]) cauTrucDong[thu][buoi] = 0;
-                    if (tiet > cauTrucDong[thu][buoi]) cauTrucDong[thu][buoi] = tiet;
-                }
+        // Quét mảng dữ liệu để thu thập các ngày có thật
+        danhSachTiet.forEach(tietHoc => {
+            if (tietHoc.thu && String(tietHoc.thu).trim() !== "") {
+                tapHopThuThucTe.add(String(tietHoc.thu).trim());
             }
         });
         
-        thuMacDinh = Array.from(setThu).sort((a, b) => (mapThu[a] || 99) - (mapThu[b] || 99));
-        if (thuMacDinh.length === 0) laTuanQuaKhu = false; 
-    } 
-
-    if (!laTuanQuaKhu) {
-        // [CHẾ ĐỘ CHUẨN]: Vẽ khung lưới tĩnh mặc định cho Hiện tại và Tương lai để xếp lịch
-        thuMacDinh = window.layDanhSachThuDong(ngayDauTuanUI);
-        const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
-        const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
-        thuMacDinh.forEach(thu => { cauTrucDong[thu] = { "Sáng": gioiHanSang, "Chiều": gioiHanChieu }; });
+        // Nếu phát hiện có dữ liệu, ép khung lưới hiển thị theo đúng những gì thu thập được
+        if (tapHopThuThucTe.size > 0) {
+            const dinhMucThuTu = {
+                "Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, 
+                "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8
+            };
+            
+            thuMacDinh = Array.from(tapHopThuThucTe).sort((a, b) => {
+                return (dinhMucThuTu[a] || 99) - (dinhMucThuTu[b] || 99);
+            });
+        }
     }
-
-    const thongTinNgayCache = {};
+  
     thuMacDinh.forEach(thu => { thongTinNgayCache[thu] = tinhNgayDocLap(ngayDauTuanUI, thu); });
+    
+    const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
+    const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
+    const cauTrucTkb = [{ buoi: "Sáng", soTiet: gioiHanSang }, { buoi: "Chiều", soTiet: gioiHanChieu }];
 
     let bufferHTML = []; 
 
     thuMacDinh.forEach(thu => {
         let thongTinNgay = thongTinNgayCache[thu];
-        let cTrucThu = cauTrucDong[thu];
-        if (!cTrucThu) return;
-
-        let danhSachBuoi = [];
-        let soDongCuaThu = 0;
-        
-        // Tự động triệt tiêu các buổi không có lịch học trong lịch sử
-        if (cTrucThu["Sáng"] > 0) { 
-            soDongCuaThu += cTrucThu["Sáng"]; 
-            danhSachBuoi.push({ buoi: "Sáng", soTiet: cTrucThu["Sáng"] }); 
-        }
-        if (cTrucThu["Chiều"] > 0) { 
-            soDongCuaThu += cTrucThu["Chiều"]; 
-            danhSachBuoi.push({ buoi: "Chiều", soTiet: cTrucThu["Chiều"] }); 
-        }
-
+        let soDongCuaThu = gioiHanSang + gioiHanChieu;
         let inCotThu = true;
 
-        danhSachBuoi.forEach(cTruc => {
+        cauTrucTkb.forEach(cTruc => {
             let buoi = cTruc.buoi;
             let soDongCuaBuoi = cTruc.soTiet;
             let inCotBuoi = true;
@@ -1032,6 +1005,7 @@ function xuatMaTranBang(danhSachTiet) {
     if (typeof kiemTraTrungGiaoVienToanBang === 'function') kiemTraTrungGiaoVienToanBang();
     if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
 }
+
 async function luuDuLieu(event, loaiLuu) {
     let coQuyenThaoTac = quyenSuaChua || (quyenChiTiet && (quyenChiTiet.lop.length > 0 || quyenChiTiet.nut.length > 0));
     if (!coQuyenThaoTac) return;
@@ -1378,63 +1352,17 @@ async function xuatExcel() {
             luoiDuLieu[thu][buoi][tiet][t.maLop] = t;
         });
 
-        // ===============================================================
-        // [NÂNG CẤP LÕI]: THUẬT TOÁN DỰNG LƯỚI ĐỘNG CƠ HÓA CHO QUÁ KHỨ (EXCEL)
-        // ===============================================================
-        let tuanHeThong = parseInt(thongSoHocVu.TUAN_HIEN_TAI, 10) || 1;
-        let laTuanQuaKhu = tuanDangXem < tuanHeThong;
-
-        let thuMacDinh = [];
-        let cauTrucDong = {}; 
-
-        if (laTuanQuaKhu && duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
-            const mapThu = {"Thứ 2": 2, "Thứ 3": 3, "Thứ 4": 4, "Thứ 5": 5, "Thứ 6": 6, "Thứ 7": 7, "Chủ nhật": 8};
-            let setThu = new Set();
-            
-            duLieuTkbHienTai.forEach(t => {
-                if ((t.monHoc && String(t.monHoc).trim() !== "") || (t.maGv && String(t.maGv).trim() !== "")) {
-                    let thu = String(t.thu).trim();
-                    let buoi = String(t.buoi).trim();
-                    let tiet = parseInt(t.tiet, 10);
-                    if (thu && buoi && !isNaN(tiet)) {
-                        setThu.add(thu);
-                        if (!cauTrucDong[thu]) cauTrucDong[thu] = {};
-                        if (!cauTrucDong[thu][buoi]) cauTrucDong[thu][buoi] = 0;
-                        if (tiet > cauTrucDong[thu][buoi]) cauTrucDong[thu][buoi] = tiet;
-                    }
-                }
-            });
-            thuMacDinh = Array.from(setThu).sort((a, b) => (mapThu[a] || 99) - (mapThu[b] || 99));
-            if (thuMacDinh.length === 0) laTuanQuaKhu = false; 
-        } 
-
-        if (!laTuanQuaKhu) {
-            thuMacDinh = window.layDanhSachThuDong(ngayDauTuanUI);
-            const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
-            const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
-            thuMacDinh.forEach(thu => { cauTrucDong[thu] = { "Sáng": gioiHanSang, "Chiều": gioiHanChieu }; });
-        }
-
+        const thuMacDinh = window.layDanhSachThuDong(ngayDauTuanUI);
         thuMacDinh.forEach(thu => { if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; });
         
+        const gioiHanSang = Math.max(parseInt(thongSoHocVu.SO_TIET_SANG) || 4, 5); 
+        const gioiHanChieu = Math.max(parseInt(thongSoHocVu.SO_TIET_CHIEU) || 3, 4);
+
         Object.keys(luoiDuLieu).forEach(thu => {
-            if (!cauTrucDong[thu]) {
-                delete luoiDuLieu[thu]; 
-                return;
-            }
-            if (cauTrucDong[thu]["Sáng"] !== undefined && cauTrucDong[thu]["Sáng"] > 0) {
-                if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; 
-                for (let i = 1; i <= cauTrucDong[thu]["Sáng"]; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
-            } else {
-                delete luoiDuLieu[thu]["Sáng"];
-            }
-            
-            if (cauTrucDong[thu]["Chiều"] !== undefined && cauTrucDong[thu]["Chiều"] > 0) {
-                if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
-                for (let j = 1; j <= cauTrucDong[thu]["Chiều"]; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
-            } else {
-                delete luoiDuLieu[thu]["Chiều"];
-            }
+            if (!luoiDuLieu[thu]["Sáng"]) luoiDuLieu[thu]["Sáng"] = {}; 
+            if (!luoiDuLieu[thu]["Chiều"]) luoiDuLieu[thu]["Chiều"] = {};
+            for (let i = 1; i <= gioiHanSang; i++) { if (!luoiDuLieu[thu]["Sáng"][i]) luoiDuLieu[thu]["Sáng"][i] = {}; }
+            for (let j = 1; j <= gioiHanChieu; j++) { if (!luoiDuLieu[thu]["Chiều"][j]) luoiDuLieu[thu]["Chiều"][j] = {}; }
         });
 
         const boLocBuoi = {"Sáng": 1, "Chiều": 2};
