@@ -30,7 +30,7 @@ window.lamSachBoNhoSoDauBai = function() {
     lopTruocDo_SDB = '';
     coThayDoiChuaLuu_SDB = false;
     
-    let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+    let emailGoiLen = typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' ? window.dinhDanhGiaoVienToanCuc : '';
     try { sessionStorage.removeItem(`SDB_CACHE_${emailGoiLen}`); } catch(e) {}
     
     maGvDangNhapHeThong = '';
@@ -82,8 +82,7 @@ async function taiDuLieuSoDauBaiTuMayChu() {
     const vungHienThi = document.getElementById('vungHienThiSoDauBai');
     
     // Kiểm tra trực tiếp biến toàn cục thay vì check sự kiện onclick để chống lỗi Race Condition
-    const chuaDangNhap = typeof window.emailGiaoVienToanCuc === 'undefined' || window.emailGiaoVienToanCuc === '';
-
+    const chuaDangNhap = typeof window.dinhDanhGiaoVienToanCuc === 'undefined' || window.dinhDanhGiaoVienToanCuc === '';
     if (chuaDangNhap) {
         // Giao diện Khóa bảo mật: Yêu cầu định danh trực quan trên vùng hiển thị
         if (vungHienThi) {
