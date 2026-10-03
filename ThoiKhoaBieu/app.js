@@ -150,7 +150,7 @@ function kiemSoatGiaoDien() {
 // =========================================================================
 let khoaChuyenTuan = false;
 async function chuyenTuan(buocNhay) {
-    if (khoaChuyenTuan) return; 
+    if (khoaChuyenTuan) return; // Khóa hàm chống bấm đúp gây tải lại nhiều lần
     khoaChuyenTuan = true;
     
     try {
@@ -179,9 +179,12 @@ async function chuyenTuan(buocNhay) {
                 let yy = parseInt(parts[0], 10), mm = parseInt(parts[1], 10), dd = parseInt(parts[2], 10);
                 let d = new Date(yy, mm - 1, dd);
                 
+                // Bước 1: Nhảy số ngày tương ứng với số tuần thay đổi
                 d.setDate(d.getDate() + ((tuanMoi - tuanDangXem) * 7));
                 
+                // Bước 2: Kéo mốc thời gian ép về đúng chuẩn ngày Thứ 2 của tuần đó
                 let dayOfWeek = d.getDay();
+                // Nếu là Chủ nhật (0) thì lùi 6 ngày về Thứ 2. Nếu là Thứ khác thì lùi về đúng Thứ 2 (1)
                 let khoangCachDenThu2 = (dayOfWeek === 0) ? -6 : (1 - dayOfWeek);
                 d.setDate(d.getDate() + khoangCachDenThu2);
                 
