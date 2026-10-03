@@ -1592,7 +1592,6 @@ window.renderDanhSach = function(selectEl, listEl, inputEl, searchTerm) {
         listEl.appendChild(li);
     }
 };
-
 window.dongBoHienThiTuSelect = function(selectId) {
     let selectEl = document.getElementById(selectId);
     let inputEl = document.getElementById('input_' + selectId);
