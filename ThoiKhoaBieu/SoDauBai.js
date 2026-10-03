@@ -146,7 +146,7 @@ function kiemTraTrangThaiDangNhapSDB() {
     }
 
     let vongLap = setInterval(() => {
-        if (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '') {
+        if (typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' && window.dinhDanhGiaoVienToanCuc !== '') {
             clearInterval(vongLap);
             thucThiTaiDuLieuVaVeLuoi(vungHienThi);
         }
@@ -187,7 +187,7 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     }
 
     try {
-        let emailGoiLen = typeof window.emailGiaoVienToanCuc !== 'undefined' ? window.emailGiaoVienToanCuc : '';
+        let emailGoiLen = typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' ? window.dinhDanhGiaoVienToanCuc : '';
         
         const phanHoi = await fetchVoiCoCheThuLai(
             `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(emailGoiLen)}`,
