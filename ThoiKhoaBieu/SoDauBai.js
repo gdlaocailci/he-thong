@@ -187,16 +187,17 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
     }
 
     try {
-        // ĐÃ SỬA: Đổi tên biến tránh từ khóa nhạy cảm về thông tin cá nhân
+        // Biến nội bộ sạch, tuân thủ nguyên tắc không dùng từ khóa nhạy cảm
         let dinhDanhGoiLen = typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' ? window.dinhDanhGiaoVienToanCuc : '';
         let cacheKey = `SDB_DATA_STATIC_${dinhDanhGoiLen}`;
         let duLieuSever = {};
         
-        // KIỂM TRA CACHE: Nếu đã có Khung CT và PPCT trong Session, chỉ yêu cầu tải dữ liệu động
+        // KIỂM TRA CACHE
         let duLieuTinhCache = sessionStorage.getItem(cacheKey);
         let yeuCauTaiToanBo = duLieuTinhCache ? false : true;
 
-        let thongSoURL = `thaoTac=layDuLieuSoDauBai&truyCapDinhDanh=${encodeURIComponent(dinhDanhGoiLen)}&taiToanBo=${yeuCauTaiToanBo}`;
+        // [SỬA LỖI]: Phục hồi key 'emailTruyCap' trên chuỗi URL để khớp nối chính xác với tham số Backend GAS đang chờ
+        let thongSoURL = `thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(dinhDanhGoiLen)}&taiToanBo=${yeuCauTaiToanBo}`;
         
         const phanHoi = await fetchVoiCoCheThuLai(
             `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?${thongSoURL}`,
@@ -211,10 +212,9 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
 
         if (duLieuMoi.trangThai === 'loi_he_thong') throw new Error(duLieuMoi.thongBao);
 
-        // LẮP RÁP DỮ LIỆU: Hợp nhất dữ liệu động mới tải với dữ liệu tĩnh từ Cache
+        // LẮP RÁP DỮ LIỆU TỪ CACHE
         if (yeuCauTaiToanBo) {
             duLieuSever = duLieuMoi;
-            // Lưu dữ liệu tĩnh (PPCT, Khung CT) vào bộ nhớ đệm
             let duLieuTinh = {
                 KHUNG_CHUONG_TRINH: duLieuMoi.KHUNG_CHUONG_TRINH,
                 PPCT: duLieuMoi.PPCT
@@ -223,7 +223,7 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
         } else {
             let cacheParsed = JSON.parse(duLieuTinhCache);
             duLieuSever = {
-                ...duLieuMoi, // Chứa SO_DAU_BAI, DATA_TKB, TKB_HIEN_TAI
+                ...duLieuMoi, // Gồm SO_DAU_BAI, DATA_TKB, TKB_HIEN_TAI, MA_GIAO_VIEN, TOAN_QUYEN
                 KHUNG_CHUONG_TRINH: cacheParsed.KHUNG_CHUONG_TRINH,
                 PPCT: cacheParsed.PPCT
             };
@@ -258,7 +258,6 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
         if (inLop) { inLop.disabled = false; inLop.classList.remove('cursor-wait'); inLop.value = inLop.dataset.oldValue || ''; }
     }
 }
-
 // =========================================================================
 // KHỐI 2: VẼ GIAO DIỆN VÀ KHỞI TẠO DỮ LIỆU
 // =========================================================================
