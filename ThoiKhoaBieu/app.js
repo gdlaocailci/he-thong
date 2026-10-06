@@ -603,9 +603,17 @@ window.danhDauDongThayDoiTKB = function(inputEl) {
     let td = inputEl.closest('td');
     if (!td) return;
 
-    // Đối chiếu giá trị hiện tại với giá trị gốc lúc khởi tạo
-    let giaTriHienTai = inputEl.value.trim();
-    let giaTriGoc = inputEl.getAttribute('data-valgoc') || '';
+    // [THUẬT TOÁN MỚI]: Chuẩn hóa chuỗi để so sánh chính xác tuyệt đối 
+    // (Bỏ qua khoảng trắng thừa, sai khác hoa/thường, và hiểu lệnh xóa "---")
+    const chuanHoa = (chuoi) => {
+        if (!chuoi) return '';
+        let val = String(chuoi).trim();
+        if (val === '---' || val === '--') val = '';
+        return val.normalize('NFC').toLowerCase().replace(/\s+/g, ' ');
+    };
+
+    let giaTriHienTai = chuanHoa(inputEl.value);
+    let giaTriGoc = chuanHoa(inputEl.getAttribute('data-valgoc'));
 
     if (giaTriHienTai !== giaTriGoc) {
         // Bật cờ và hiển thị icon nếu có sự thay đổi thực sự
@@ -627,7 +635,6 @@ window.danhDauDongThayDoiTKB = function(inputEl) {
         }
     }
 };
-
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = true, loaiDanhSach = '', coQuyenSua = quyenSuaChua) {
     let idThocTinh = idPhanTu ? `id="${idPhanTu}"` : '';
     let thuocTinhKhoa = coQuyenSua ? '' : 'disabled'; 
@@ -640,13 +647,14 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
     
     let onFocusClick = `this.dataset.val=this.value; if(this.value !== ''){ this.placeholder=this.value; this.value=''; }`;
     
-    // Đã bổ sung ${triggerThayDoi} vào cuối onBlurLogic để ép kiểm tra lại cờ khi ô chọn mất tiêu điểm
+   // Đã bổ sung ${triggerThayDoi} vào cuối onBlurLogic để chốt kiểm tra khi rời ô
     let onBlurLogic = `if(this.value.trim() === '') { this.value = this.dataset.val || ''; } this.placeholder='--'; xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV} ${triggerThayDoi}`;
     
-    let suKienMoi = `oninput="${kieuKiemTraGV} ${triggerThayDoi}" onchange="xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV} ${triggerThayDoi}" onfocus="${onFocusClick}" onclick="if(this.showPicker) this.showPicker();" onblur="${onBlurLogic}"`;
+    // [NÂNG CẤP]: Đã XÓA ${triggerThayDoi} khỏi oninput. Cờ chỉ được tính khi onchange (chọn xong) hoặc onblur
+    let suKienMoi = `oninput="${kieuKiemTraGV}" onchange="xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV} ${triggerThayDoi}" onfocus="${onFocusClick}" onclick="if(this.showPicker) this.showPicker();" onblur="${onBlurLogic}"`;
 
-    // Đã bổ sung thuộc tính data-valgoc="${giaTriMacDinh || ''}" vào thẻ input
-    let html = `<input type="text" size="1" list="${idDatalist}" data-valgoc="${giaTriMacDinh || ''}" ${idThocTinh} ${thuocTinhKhoa} value="${giaTriMacDinh || ''}" placeholder="--" class="w-full h-full min-w-0 bg-transparent outline-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;" autocomplete="off" ${suKienMoi}>`;
+    let html = `<input type="text" size="1" list="${idDatalist}" data-valgoc="${giaTriMacDinh || ''}" ${idThocTinh} ${thuocTinhKhoa} value="${giaTriMacDinh || ''}" placeholder="--" class="w-full h-full min-w-0 bg-transparent outline-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;" autocomplete="off" ${suKienMoi}>`; 
+    
     return html;
 }
 
@@ -1135,10 +1143,15 @@ async function luuDuLieu(event, loaiLuu) {
                 duLieuTkbHienTai = dsTietLuoi;
                 
                 document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
-                    td.removeAttribute('data-thaydoi');
-                    let icon = td.querySelector('.icon-sua-chua');
-                    if (icon) icon.remove();
-                });
+                td.removeAttribute('data-thaydoi');
+                let icon = td.querySelector('.icon-sua-chua');
+                if (icon) icon.remove();
+                
+                // BỔ SUNG: Cập nhật lại mốc giá trị gốc cho các ô input sau khi lưu thành công
+                // Để các lần sửa đổi tiếp theo không bị so sánh nhầm với dữ liệu cũ
+                let inputs = td.querySelectorAll('input');
+                inputs.forEach(inp => { inp.setAttribute('data-valgoc', inp.value); });
+            });
 
                 localStorage.setItem(layKhoaCachLy('SmartTKB_DuLieuTuan'), JSON.stringify(dsTietLuoi));
 
