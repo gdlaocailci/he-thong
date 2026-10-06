@@ -1221,6 +1221,9 @@ function chonMucPPCT(soTiet, tenBai, event) {
     dongKhungTruotPPCT(); 
 }
 
+// =========================================================================
+// SỬA LỖI: HÀM CHỌN GIÁO VIÊN KÝ TÊN (KHẮC PHỤC LỖI SHOWPICKER)
+// =========================================================================
 function chonMucChuKy(tenGv, event) {
     if (event) {
         event.preventDefault(); 
@@ -1230,11 +1233,12 @@ function chonMucChuKy(tenGv, event) {
         trangThaiKhungChuKy.inputChuKy.value = tenGv;
         coThayDoiChuaLuu_SDB = true; 
         
-        // [NÂNG CẤP]: Gắn cờ và biểu tượng khi chọn chữ ký
-        danhDauDongThayDoi(trangThaiKhungChuKy.inputChuKy.closest('tr'));
+        // Gắn cờ và biểu tượng cây bút khi chọn chữ ký
+        if (typeof danhDauDongThayDoi === 'function') {
+            danhDauDongThayDoi(trangThaiKhungChuKy.inputChuKy.closest('tr'));
+        }
         
-        let ev = new Event('input', { bubbles: true});
-        trangThaiKhungChuKy.inputChuKy.dispatchEvent(ev);
+        // [ĐÃ XÓA]: Khối lệnh dispatchEvent tạo sự kiện giả gây crash trình duyệt đã được loại bỏ hoàn toàn tại đây.
         
         // Hủy mờ sau khi chọn xong
         trangThaiKhungChuKy.inputChuKy.classList.remove('text-slate-400', 'opacity-60');
