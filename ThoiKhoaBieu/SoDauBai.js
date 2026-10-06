@@ -2136,9 +2136,12 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                                         tagMoi.style.height = (tagMoi.scrollHeight) + 'px';
                                     }
                                 }
-                            } else {
+                           } else {
                                 if (tagNhap.value !== giaTriMoi) {
                                     tagNhap.value = giaTriMoi;
+                                    // BỔ SUNG: Cập nhật lại mốc giá trị gốc nếu có dữ liệu mới tải ngầm về
+                                    tagNhap.setAttribute('data-valgoc', giaTriMoi.trim());
+                                    
                                     if (tagNhap.tagName === 'TEXTAREA') {
                                         tagNhap.style.height = 'auto';
                                         tagNhap.style.height = (tagNhap.scrollHeight) + 'px';
