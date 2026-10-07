@@ -362,26 +362,30 @@
         </button>
     </div>
 
-    <div class="panel-content" style="padding: 20px; overflow-y: auto; background: #f8fafc;">
-        <div style="display: flex; flex-wrap: wrap; gap: 20px; height: 100%; min-height: 75vh;">
+    <div class="panel-content" style="padding: 20px; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; flex: 1;">
+        <!-- Cố định chiều cao tổng thể, ép nội dung tự cuộn bên trong thay vì cuộn cả trang -->
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; flex: 1; min-height: 0;">
             
-            <!-- CỘT TRÁI: TÌM KIẾM VÀ DANH SÁCH -->
-            <div style="flex: 1 1 350px; display: flex; flex-direction: column; gap: 15px;">
-                <div style="position: relative;">
+            <!-- CỘT TRÁI: DANH SÁCH TÀI LIỆU -->
+            <!-- flex và min-height: 0 giúp giới hạn chiều cao cột -->
+            <div style="flex: 1 1 350px; display: flex; flex-direction: column; gap: 15px; min-height: 0;">
+                <div style="position: relative; flex-shrink: 0;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" id="oTimKiemTaiLieu" placeholder="Tìm kiếm văn bản..." oninput="HeThong.tuDongTimKiem()" style="padding: 10px 15px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 10.5pt; width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,0.03); transition: all 0.2s; outline: none;" onfocus="this.style.borderColor='#38bdf8'; this.style.boxShadow='0 0 0 3px rgba(56, 189, 248, 0.2)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.03)';">
                 </div>
                 
-                <div style="flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow-y: auto; min-height: 300px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 8px;">
-                    <ul id="danhSachLuuTru" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">
+                <!-- BẬT THANH TRƯỢT DỌC VÀ THÊM VÙNG ĐỆM TRÁI PHẢI -->
+                <!-- padding: 12px 16px tạo khoảng cách 2 bên; overflow-y: auto tạo thanh cuộn độc lập -->
+                <div style="flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow-y: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 12px 16px;">
+                    <ul id="danhSachLuuTru" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">
                         <li style="padding: 20px 10px; text-align: center; color: #94a3b8; font-size: 0.95rem; font-style: italic;">Đang tải dữ liệu...</li>
                     </ul>
                 </div>
             </div>
             
-            <!-- CỘT PHẢI: KHUNG XEM TRƯỚC TÀI LIỆU -->
-            <div class="ai-preview-frame" style="flex: 2 1 450px; display: flex; flex-direction: column; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; min-height: 400px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                <div style="background: #ffffff; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <!-- CỘT PHẢI: KHUNG XEM TRƯỚC -->
+            <div class="ai-preview-frame" style="flex: 2 1 450px; display: flex; flex-direction: column; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 0;">
+                <div style="background: #ffffff; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-shrink: 0;">
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; padding: 4px; background: #e0f2fe; border-radius: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                         <div id="tenHienThiVanBan" style="font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11pt;">Chưa chọn văn bản</div>
@@ -400,8 +404,7 @@
                     </div>
                 </div>
                 
-                <!-- Bọc thêm nền xám nhạt phía sau khung Word để tạo cảm giác trang giấy -->
-                <div style="flex: 1; padding: 6px; background: #f1f5f9; display: flex; flex-direction: column;">
+                <div style="flex: 1; padding: 6px; background: #f1f5f9; display: flex; flex-direction: column; min-height: 0;">
                     <iframe id="khungXemTruoc" style="width: 100%; flex: 1; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" src="about:blank"></iframe>
                 </div>
             </div>
