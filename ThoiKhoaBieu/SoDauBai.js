@@ -850,30 +850,35 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                     }
                 }
 
+               // =========================================================================
+                // NÂNG CẤP: ĐỊNH DẠNG NÉT KẺ BẢNG CHUẨN XÁC
+                // =========================================================================
                 // Xác định tiết cuối cùng của mỗi buổi để đóng nét liền ngang
                 let isCuoiBuoi = (tiet === buoiObj.dsTiet[buoiObj.dsTiet.length - 1]);
-                let cssVienNgang = isCuoiBuoi ? "border-b border-solid border-gray-500" : "border-b border-dashed border-gray-500";
                 
-                // Kết hợp viền dọc liền và viền ngang tương ứng cho từng ô (cell)
-                let cssCell = `border-x border-solid border-gray-500 ${cssVienNgang}`;
+                // Sử dụng inline style để tránh bị Tailwind đè border-style lên toàn bộ 4 cạnh
+                let inlineStyleVien = isCuoiBuoi ? "border-bottom: 1px solid #6b7280;" : "border-bottom: 1px dashed #6b7280;";
+                
+                // Cố định viền dọc (trái/phải) luôn luôn là nét liền (solid)
+                let cssCell = "border-x border-gray-500";
 
                 htmlBang += `<tr class="hover:bg-slate-50 transition-colors duration-150 group" data-buoi="${buoiObj.dataBuoi}" data-daluu="${isDaLuu}" data-thaydoi="false">`;
                 
                 if (!daInCotThu) {
-                    // Cột "THỨ" luôn được viền liền 4 cạnh vì nó gộp dòng (rowspan) toàn bộ các tiết trong ngày
-                    htmlBang += `<td class="border border-solid border-gray-500 text-center font-bold uppercase leading-tight bg-white group-hover:bg-slate-50" rowspan="${tongDongTrongNgay}">${hienThiThu}</td>`;
+                    // Cột "THỨ" gộp toàn bộ dòng trong ngày nên giữ nguyên khung viền liền bao quanh
+                    htmlBang += `<td class="border border-gray-500 text-center font-bold uppercase leading-tight bg-white group-hover:bg-slate-50" rowspan="${tongDongTrongNgay}">${hienThiThu}</td>`;
                     daInCotThu = true;
                 }
 
                 htmlBang += `
-                    <td class="${cssCell} text-center p-1 bg-white group-hover:bg-slate-50" title="Buổi ${buoiObj.dataBuoi}" data-loai="tietSDB">${tiet}</td>
-                    <td class="${cssCell} text-center p-1 bg-white group-hover:bg-slate-50 align-middle" data-loai="chuyenCan">${theChuyenCan}</td>
-                    <td class="${cssCell} p-1 font-bold text-center text-slate-900 bg-white group-hover:bg-slate-50" data-loai="mon">${monHoc}</td>
-                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle" data-loai="tiet">${theTietPPCT}</td>
-                    <td class="${cssCell} p-1 ${cssTenBai} bg-white group-hover:bg-slate-50 align-middle" style="white-space: normal; word-wrap: break-word;" data-loai="tenBai" data-islocked="${isLocked}" data-coquyensua="${quyenNhapThuCong}">${theTenBai}</td>
-                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle" style="white-space: normal; word-wrap: break-word;" data-loai="nhanXet">${theNhanXet}</td>
-                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle text-center" data-loai="xepLoai">${theXepLoai}</td>
-                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle text-center" data-loai="chuKy">${theChuKy}</td>
+                    <td class="${cssCell} text-center p-1 bg-white group-hover:bg-slate-50" style="${inlineStyleVien}" title="Buổi ${buoiObj.dataBuoi}" data-loai="tietSDB">${tiet}</td>
+                    <td class="${cssCell} text-center p-1 bg-white group-hover:bg-slate-50 align-middle" style="${inlineStyleVien}" data-loai="chuyenCan">${theChuyenCan}</td>
+                    <td class="${cssCell} p-1 font-bold text-center text-slate-900 bg-white group-hover:bg-slate-50" style="${inlineStyleVien}" data-loai="mon">${monHoc}</td>
+                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle" style="${inlineStyleVien}" data-loai="tiet">${theTietPPCT}</td>
+                    <td class="${cssCell} p-1 ${cssTenBai} bg-white group-hover:bg-slate-50 align-middle" style="white-space: normal; word-wrap: break-word; ${inlineStyleVien}" data-loai="tenBai" data-islocked="${isLocked}" data-coquyensua="${quyenNhapThuCong}">${theTenBai}</td>
+                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle" style="white-space: normal; word-wrap: break-word; ${inlineStyleVien}" data-loai="nhanXet">${theNhanXet}</td>
+                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle text-center" style="${inlineStyleVien}" data-loai="xepLoai">${theXepLoai}</td>
+                    <td class="${cssCell} p-1 bg-white group-hover:bg-slate-50 align-middle text-center" style="${inlineStyleVien}" data-loai="chuKy">${theChuKy}</td>
                 </tr>`;
             });
         });
