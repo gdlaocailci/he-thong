@@ -126,43 +126,14 @@ async function taiDuLieuSoDauBaiTuMayChu() {
 function danhDauDongThayDoi(tr) {
     if (!tr) return;
     
-    // 1. Quét tất cả các ô nhập liệu trong dòng để xem có ô nào khác giá trị gốc không
-    let cacONhap = tr.querySelectorAll('input, select, textarea');
-    let thucSuThayDoi = false;
-    
-    cacONhap.forEach(oNhap => {
-        let valGoc = oNhap.getAttribute('data-valgoc');
-        if (valGoc !== null && oNhap.value.trim() !== valGoc) {
-            thucSuThayDoi = true;
-        }
-    });
-
-    let tdMon = tr.querySelector('td[data-loai="mon"]');
-    
-    if (thucSuThayDoi) {
-        // Nếu có thay đổi -> Bật cờ và hiện icon
-        if (tr.getAttribute('data-thaydoi') !== 'true') {
-            tr.setAttribute('data-thaydoi', 'true');
-            coThayDoiChuaLuu_SDB = true; // Bật cờ toàn cục
-            
-            if (tdMon && !tdMon.querySelector('.icon-sua-chua')) {
-                tdMon.innerHTML += `<svg class="icon-sua-chua w-4 h-4 inline-block ml-1 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Dòng dữ liệu này đang được chỉnh sửa"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
-            }
-        }
-    } else {
-        // Nếu người dùng gõ lại y như cũ -> Tự động gỡ cờ và xóa icon
-        if (tr.getAttribute('data-thaydoi') === 'true') {
-            tr.setAttribute('data-thaydoi', 'false');
-            if (tdMon) {
-                let icon = tdMon.querySelector('.icon-sua-chua');
-                if (icon) icon.remove();
-            }
-            
-            // Kiểm tra xem toàn bảng còn dòng nào thay đổi không để tắt cờ toàn cục
-            let bang = tr.closest('tbody');
-            if (bang && !bang.querySelector('tr[data-thaydoi="true"]')) {
-                coThayDoiChuaLuu_SDB = false;
-            }
+    // Nếu dòng chưa được đánh dấu thay đổi thì tiến hành đánh dấu
+    if (tr.getAttribute('data-thaydoi') !== 'true') {
+        tr.setAttribute('data-thaydoi', 'true');
+        
+        let tdMon = tr.querySelector('td[data-loai="mon"]');
+        if (tdMon && !tdMon.querySelector('.icon-sua-chua')) {
+            // Chèn SVG cây bút (Màu hổ phách, có hiệu ứng nhấp nháy nhẹ) bên cạnh tên môn
+            tdMon.innerHTML += `<svg class="icon-sua-chua w-4 h-4 inline-block ml-1 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Dòng dữ liệu này đang được chỉnh sửa"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
         }
     }
 }
@@ -905,7 +876,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     htmlBang += `</tbody></table></div>`;
     vungHienThi.innerHTML = theTrangThaiHtml + thanhCanhBaoRender + theHienThiQuyen + htmlBang;
     
-  // [NÂNG CẤP LẮNG NGHE DOM]: Khi user chỉnh sửa, gắn cờ và icon cây bút
+    // [NÂNG CẤP LẮNG NGHE DOM]: Khi user chỉnh sửa, gắn cờ và icon cây bút
     setTimeout(() => {
         let cacOVanBan = vungHienThi.querySelectorAll('textarea');
         cacOVanBan.forEach(ta => {
@@ -915,17 +886,17 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
 
         let tatCaOVanBan = vungHienThi.querySelectorAll('textarea, input, select');
         tatCaOVanBan.forEach(oNhap => {
-            // BỔ SUNG: Ghi nhớ giá trị nguyên bản ngay khi vẽ lưới để làm mốc đối chiếu
-            oNhap.setAttribute('data-valgoc', oNhap.value.trim());
-
             oNhap.addEventListener('input', (e) => { 
+                coThayDoiChuaLuu_SDB = true; 
                 danhDauDongThayDoi(e.target.closest('tr'));
             });
             oNhap.addEventListener('change', (e) => { 
+                coThayDoiChuaLuu_SDB = true; 
                 danhDauDongThayDoi(e.target.closest('tr'));
             });
         });
     }, 50);
+}
 
 async function luuSoDauBaiSangMayChu() {
     let tuanChon = document.getElementById('chonTuanSo')?.value;
@@ -1250,9 +1221,6 @@ function chonMucPPCT(soTiet, tenBai, event) {
     dongKhungTruotPPCT(); 
 }
 
-// =========================================================================
-// SỬA LỖI: HÀM CHỌN GIÁO VIÊN KÝ TÊN (KHẮC PHỤC LỖI SHOWPICKER)
-// =========================================================================
 function chonMucChuKy(tenGv, event) {
     if (event) {
         event.preventDefault(); 
@@ -1262,12 +1230,11 @@ function chonMucChuKy(tenGv, event) {
         trangThaiKhungChuKy.inputChuKy.value = tenGv;
         coThayDoiChuaLuu_SDB = true; 
         
-        // Gắn cờ và biểu tượng cây bút khi chọn chữ ký
-        if (typeof danhDauDongThayDoi === 'function') {
-            danhDauDongThayDoi(trangThaiKhungChuKy.inputChuKy.closest('tr'));
-        }
+        // [NÂNG CẤP]: Gắn cờ và biểu tượng khi chọn chữ ký
+        danhDauDongThayDoi(trangThaiKhungChuKy.inputChuKy.closest('tr'));
         
-        // [ĐÃ XÓA]: Khối lệnh dispatchEvent tạo sự kiện giả gây crash trình duyệt đã được loại bỏ hoàn toàn tại đây.
+        let ev = new Event('input', { bubbles: true});
+        trangThaiKhungChuKy.inputChuKy.dispatchEvent(ev);
         
         // Hủy mờ sau khi chọn xong
         trangThaiKhungChuKy.inputChuKy.classList.remove('text-slate-400', 'opacity-60');
@@ -2136,12 +2103,9 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                                         tagMoi.style.height = (tagMoi.scrollHeight) + 'px';
                                     }
                                 }
-                           } else {
+                            } else {
                                 if (tagNhap.value !== giaTriMoi) {
                                     tagNhap.value = giaTriMoi;
-                                    // BỔ SUNG: Cập nhật lại mốc giá trị gốc nếu có dữ liệu mới tải ngầm về
-                                    tagNhap.setAttribute('data-valgoc', giaTriMoi.trim());
-                                    
                                     if (tagNhap.tagName === 'TEXTAREA') {
                                         tagNhap.style.height = 'auto';
                                         tagNhap.style.height = (tagNhap.scrollHeight) + 'px';
