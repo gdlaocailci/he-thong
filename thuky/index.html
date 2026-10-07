@@ -817,8 +817,21 @@
                 } 
             }, (kq) => {
                 HeThong.hienTai(false); // Giữ lại lệnh này để đảm bảo an toàn, phòng trường hợp có tiến trình cũ chưa tắt
+                
                 if(kq.trangThai === "ThanhCong") { 
                     HeThong.thongBao(HeThong.trangThai.idFileDangSua ? "Cập nhật thành công!" : "Khởi tạo thành công!"); 
+                    
+                    // BẮT ĐẦU NÂNG CẤP: Lưu lại ID tệp vừa khởi tạo và chuyển đổi trạng thái UI nút bấm
+                    if (!HeThong.trangThai.idFileDangSua && kq.idFile) {
+                        HeThong.trangThai.idFileDangSua = kq.idFile; 
+                    }
+                    
+                    let btnHoSo = document.getElementById('btnHoSo');
+                    if(btnHoSo) {
+                        btnHoSo.innerText = "Cập Nhật Văn Bản";
+                        btnHoSo.className = "btn btn-orange";
+                    }
+                    // KẾT THÚC NÂNG CẤP
                     
                     // NÂNG CẤP: Đóng băng lệnh làm mới form để lưu ngầm, giữ nguyên dữ liệu trên UI
                     // lamMoiForm(true); 
