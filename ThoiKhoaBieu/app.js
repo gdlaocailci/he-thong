@@ -956,12 +956,12 @@ function xuatMaTranBang(danhSachTiet) {
 
            for (let tiet = 1; tiet <= soDongCuaBuoi; tiet++) {
                 // =========================================================================
-                // NÂNG CẤP: ĐỒNG BỘ ĐỘ ĐẬM NÉT KẺ BẢNG CHO UI TKB (Nét đứt tiết, Nét liền buổi)
+                // NÂNG CẤP: ĐỒNG BỘ ĐỘ ĐẬM NÉT KẺ BẢNG CHO UI TKB (Màu đen tuyền sắc nét)
                 // =========================================================================
                 let isCuoiBuoi = (tiet === soDongCuaBuoi);
                 let kieuVienNgang = isCuoiBuoi ? "solid" : "dashed";
                 let doDayVienNgang = isCuoiBuoi ? "2px" : "1px";
-                let maMauVien = "#cbd5e1"; // Mã màu tương đương slate-300 để tiệp màu với lưới cũ
+                let maMauVien = "#000000"; // Đổi sang mã màu đen tuyền để các nét kẻ cực kỳ rõ ràng và sắc nét
                 
                 // CSS Nòng cốt: Tắt border-top để tránh đè nét, viền dưới tự động chuyển nét đứt/liền và đậm 2px khi hết buổi
                 let styleVienChung = `border-right: 1px solid ${maMauVien} !important; border-bottom: ${doDayVienNgang} ${kieuVienNgang} ${maMauVien} !important; border-top: none !important;`;
