@@ -1550,7 +1550,8 @@ function napDropdownSoDauBai() {
         if (dong['Mã Lớp']) tapHopLop.add(String(dong['Mã Lớp']).trim());
     });
 
-    let mangTuan = Array.from(tapHopTuan).sort((a, b) => parseInt(a.replace(/\D/g,'')) - parseInt(b.replace(/\D/g,'')));
+    // [NÂNG CẤP]: Thuật toán sắp xếp tuần giảm dần (từ tuần lớn nhất đến tuần nhỏ nhất)
+    let mangTuan = Array.from(tapHopTuan).sort((a, b) => parseInt(b.replace(/\D/g,'')) - parseInt(a.replace(/\D/g,'')));
     let mangLop = Array.from(tapHopLop).sort();
 
     let chonTuanHtml = `<option value="" disabled selected>-- Chọn Tuần --</option>` + mangTuan.map(t => `<option value="${t}">Tuần ${t.replace(/\D/g,'')}</option>`).join('');
@@ -1585,8 +1586,8 @@ function napDropdownSoDauBai() {
     if (inTuan) { inTuan.disabled = false; inTuan.classList.remove('cursor-wait'); }
     if (inLop) { inLop.disabled = false; inLop.classList.remove('cursor-wait'); }
 
-    nangCapSelectThanhInput('chonTuanSo', 'Tìm/Nhập Tuần...');
-    nangCapSelectThanhInput('chonLopSo', 'Tìm/Nhập Lớp...');
+    nangCapSelectThanhInput('chonTuanSo', 'Chọn Tuần..');
+    nangCapSelectThanhInput('chonLopSo', 'Chọn Lớp..');
 
     // ĐỒNG BỘ GIAO DIỆN: Ép thẻ Input hiển thị lại đúng chữ dựa trên value vừa phục hồi
     if (typeof dongBoHienThiTuSelect === 'function') {
