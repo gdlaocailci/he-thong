@@ -1463,8 +1463,38 @@ async function xuatExcelSoDauBai() {
                     row.alignment = { vertical: 'middle', horizontal: 'center' };
                 }
 
+               // NÂNG CẤP: ĐỊNH DẠNG NÉT KẺ BẢNG EXCEL (Nét đứt ngang giữa các tiết, nét liền dọc)
+                let thuocBuoi = tr.getAttribute('data-buoi') || '';
+                let tietHienTai = parseInt(rData[1]); // rData[1] luôn là số tiết học
+
                 row.eachCell({ includeEmpty: true }, function(cell, colNumber) {
-                    cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+                    if (idx === 0) {
+                        // Dòng tiêu đề bảng (THỨ, TIẾT, MÔN...) luôn kẻ nét liền 4 cạnh
+                        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+                    } else {
+                        // Xét viền ngang cho các dòng nội dung tiết học
+                        let kieuVienTren = (tietHienTai === 1) ? 'thin' : 'dashed'; // Bắt đầu buổi -> nét liền
+                        let kieuVienDuoi = 'dashed'; // Mặc định giữa các tiết -> nét đứt
+                        
+                        // Xác định tiết cuối cùng của mỗi buổi để đóng nét liền
+                        if ((thuocBuoi === 'Sáng' && tietHienTai === 5) || (thuocBuoi === 'Chiều' && tietHienTai === 4)) {
+                            kieuVienDuoi = 'thin'; 
+                        }
+                        
+                        if (colNumber === 1) {
+                            // Cột THỨ sẽ gộp ô (Merge Cells) nên thiết lập nét liền
+                            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+                        } else {
+                            // Các cột còn lại: Nét dọc luôn liền ('thin'), nét ngang đứt ('dashed') hoặc liền tùy vị trí
+                            cell.border = { 
+                                top: {style: kieuVienTren}, 
+                                left: {style:'thin'}, 
+                                bottom: {style: kieuVienDuoi}, 
+                                right: {style:'thin'} 
+                            };
+                        }
+                    }
+
                     if([1, 2, 3, 4, 5, 8, 9].includes(colNumber)) cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
                     else cell.alignment = { vertical: 'middle', wrapText: true };
                     if (colNumber === 2) cell.numFmt = '@'; 
