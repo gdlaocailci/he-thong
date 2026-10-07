@@ -19,6 +19,9 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(-45deg, #f8fafc, #f1f5f9, #e2e8f0, #f8fafc);
             background-size: 400% 400%; animation: aurora-bg 15s ease infinite;
+            background-attachment: fixed; /* KHÓA NỀN TĨNH: Chống cắt nền khi cuộn chuột */
+            min-height: 100vh; /* Ép chiều cao tối thiểu bằng màn hình */
+            display: flex; flex-direction: column; /* Bật chế độ dàn trang linh hoạt */
             color: var(--text); margin: 0; padding: 0; font-size: 10.5pt; line-height: 1.4;
             overflow-x: hidden;
         }
@@ -33,7 +36,10 @@
         .top-header-content { width: 100%; max-width: 1100px; position: relative; }
         .header-title { text-align: center; font-size: 1.3rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
 
-        .container { max-width: 1100px; margin: 2px auto; padding: 0 15px; }
+        .container { 
+            max-width: 1100px; margin: 2px auto; padding: 0 15px; 
+            width: 100%; flex: 1; display: flex; flex-direction: column; 
+        }
 
         .form-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px 16px; margin-bottom: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .section-title { font-size: 1.05rem; font-weight: 700; color: var(--secondary); margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
@@ -144,7 +150,12 @@
         .ai-table-container { height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
         .ai-preview-frame { flex: 1; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; display: flex; flex-direction: column; }
 
-        .signature-footer { text-align: center; margin-top: 20px; padding-bottom: 20px; color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+        .signature-footer { 
+            text-align: center; margin-top: auto; padding-top: 20px; padding-bottom: 20px; 
+            color: #64748b; font-size: 0.85rem; font-weight: 600; 
+            text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; 
+        }
+        
         .btn-logout { background: #ef4444; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px; border: none; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-logout:hover { opacity: 0.8; }
 
