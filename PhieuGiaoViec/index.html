@@ -502,10 +502,16 @@ function xulyPhienDn(phanho) {
       $('#chuAccount').text(window.PGV_ID_TC || "Chưa xác định");
       if (!$('#bo-cuc-he-thong').is(':visible')) $('#bo-cuc-he-thong').css('display', 'flex');
 
+      // [NÂNG CẤP]: Xử lý khi email ngoài danh sách đăng nhập
       if (kq.koxd) {
-        $('#chuTenGv').text("Không có quyền truy cập"); $('#ungDungChinh .tab-content').addClass('ndKhoa');
-        $('#ungDungChinh').find('input, select, textarea, button').not('button[onclick="thoatTaik()"]').prop('disabled', true);
-        hienThongb('loi', "⛔ BẠN KHÔNG CÓ QUYỀN TRUY CẬP\n\nHãy liên hệ quản lý."); return;
+        // Hiển thị UI thông báo lỗi
+        hienThongb('loi', "⛔ TÀI KHOẢN CHƯA ĐƯỢC PHÂN QUYỀN\n\nEmail đăng nhập của bạn không có trong danh sách hệ thống. Vui lòng liên hệ Quản trị viên để được cấp quyền.");
+        
+        // Bắt sự kiện khi modal thông báo đóng lại để đưa về UI đăng nhập
+        $('#hopThoaiTb').one('hidden.bs.modal', function () {
+            thoatTaik();
+        });
+        return;
       }
 
       if(kq.canb && kq.canb.ttrg) cacheCanb[kq.canb.ttrg] = kq;
@@ -565,10 +571,35 @@ function xulyPhienDn(phanho) {
       
       try {
         $('#chuTenGv').text(kq.tde?.tenn || ''); 
+        
+        // --- [NÂNG CẤP]: BẮT ĐẦU XỬ LÝ HIỂN THỊ CHỨC VỤ ---
+        let maChucVu = "";
+        if (kq.canb && kq.canb.chucvu) {
+            maChucVu = String(kq.canb.chucvu).trim().toLowerCase();
+        } else if (kq.tde && kq.tde.chucvu) {
+            maChucVu = String(kq.tde.chucvu).trim().toLowerCase();
+        }
+
+        let chucVuHienThi = "Chưa xác định";
+        if (maChucVu === "gv") {
+            chucVuHienThi = "Giáo viên";
+        } else if (maChucVu === "nv") {
+            chucVuHienThi = "Nhân viên";
+        } else if (maChucVu === "ql") {
+            chucVuHienThi = "Quản lý";
+        }
+        
+        $('#chuChucVu').text(chucVuHienThi);
+        // --- [NÂNG CẤP]: KẾT THÚC XỬ LÝ HIỂN THỊ CHỨC VỤ ---
+
         $('#chuNamHoc').text(kq.tde?.nhoc || ''); 
         $('#chuThoiGian').text(kq.tde?.tgian || ''); 
         $('#nhapSngayNghi').val(kq.tde?.snnghi || 0); 
-        $('#nhapDiemThuong').val(parseInt(kq.tde?.dthuong) || 0);
+        
+        let dThuongRaw = String(kq.tde?.dthuong || 0).replace(',', '.');
+        let diemThuong = parseFloat(dThuongRaw);
+        $('#nhapDiemThuong').val(isNaN(diemThuong) ? 0 : diemThuong);
+        
         if(typeof capnhTdong === 'function') capnhTdong();
         $('#nhapLdoNghi').val(kq.tde?.ldo || ""); 
         $('#nhapYkien').val(kq.tde?.kienn || "");
@@ -604,8 +635,10 @@ function xulyPhienDn(phanho) {
             $('#nhapSngayNghi, #nhapLdoNghi, #nhapYkien, #nhapBcao').prop('readonly', false);
         }
         
-        $('#chuTrangThai').text(kq.tde?.tthai || 'CHƯA NỘP BÁO CÁO'); 
-        $('#chuKqHthi').text(kq.tde?.kq || '');
+       $('#chuTrangThai').text(kq.tde?.tthai || 'CHƯA NỘP BÁO CÁO'); 
+        let ketQuaC2 = kq.tde?.kq || '';
+        $('#chuKqHthi, .ketQuaMenuDoc, #oKetQuaMenuDoc').html(ketQuaC2.replace(/\n/g, '<br>'));
+        
         if(typeof khoiTaoBoDemDiem === 'function') khoiTaoBoDemDiem(kq.tde?.kq, kq.tde?.dthuong);
         
         window.PGV_SHOW_DELETE_COLUMN = canShowDeleteButton;
