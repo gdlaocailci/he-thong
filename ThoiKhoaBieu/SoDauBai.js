@@ -1,5 +1,4 @@
 let duLieuKhoaSoToanCuc = {}; // Lưu map { 1: { daKhoa: true, nguoiThucHien: '...', thoiGian: '...' } }
-
 window.kiemTraTuanDaKhoa = function(tuan) {
     if (!tuan) return false;
     let t = parseInt(String(tuan).replace(/\D/g, ''), 10);
