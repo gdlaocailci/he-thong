@@ -1,33 +1,61 @@
 // =========================================================================
-// KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN (TẠO ĐỘNG GIAO DIỆN & LOGIC)
-
+// KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN HỆ THỐNG (BẢN HOÀN CHỈNH ĐỒNG BỘ)
+// Tích hợp: Nút Khóa Sổ Đầu Bài Tuần + Cơ chế chống mất Menu 7 đa tầng
 // =========================================================================
+
 let duLieuBangPhanQuyen = [];
+
 const DANH_SACH_MENU_HE_THONG = [
-    {id: 'menuCaiDat', ten: '1. Cài đặt'}, {id: 'menuDanhMucGV', ten: '2. DM Giáo viên'},
-    {id: 'menuDanhMucLop', ten: '3. DM Lớp'}, {id: 'menuKhungChuongTrinh', ten: '4. Khung CT'},
-    {id: 'menuPhanCong', ten: '5. Phân công'}, {id: 'menuDanhMucSGK', ten: '6. DM SGK'},
-    {id: 'menuPhanQuyen', ten: '7. Phân quyền'}
+    { id: 'menuCaiDat', ten: '1. Cài đặt' },
+    { id: 'menuDanhMucGV', ten: '2. DM Giáo viên' },
+    { id: 'menuDanhMucLop', ten: '3. DM Lớp' },
+    { id: 'menuKhungChuongTrinh', ten: '4. Khung CT' },
+    { id: 'menuPhanCong', ten: '5. Phân công' },
+    { id: 'menuDanhMucSGK', ten: '6. DM SGK' },
+    { id: 'menuPhanQuyen', ten: '7. Phân quyền' }
 ];
 
 const DANH_SACH_NUT_CHUC_NANG = [
-    {id: 'btnNhapExcelTKB', ten: 'Nhập Excel'},
-    {id: 'btnKhoiPhuc', ten: 'Tuần mới'},
-    {id: 'btnLuuTuan', ten: 'Lưu TKB Tuần'},
-    {id: 'btnLuuCoDinh', ten: 'TKB Cố Định'},
-    {id: 'btnXepTuDong', ten: 'Xếp Tự Động'},
-    {id: 'btnKiemTra', ten: 'Định Mức tiết'},
-    {id: 'btnChuyenTuan', ten: 'Mũi tên Chuyển tuần'},
-    { id: 'btnLuuSua', ten: 'Lưu Sửa' }
-    {id: 'btnKhoaSoDauBai', ten: 'Khóa Sổ đầu bài Tuần'} // <-- ĐĂNG KÝ MỚI
+    { id: 'btnNhapExcelTKB', ten: 'Nhập Excel' },
+    { id: 'btnKhoiPhuc', ten: 'Tuần mới' },
+    { id: 'btnLuuTuan', ten: 'Lưu TKB Tuần' },
+    { id: 'btnLuuCoDinh', ten: 'TKB Cố Định' },
+    { id: 'btnXepTuDong', ten: 'Xếp Tự Động' },
+    { id: 'btnKiemTra', ten: 'Định Mức tiết' },
+    { id: 'btnChuyenTuan', ten: 'Mũi tên Chuyển tuần' },
+    { id: 'btnLuuSua', ten: 'Lưu Sửa' },
+    { id: 'btnKhoaSoDauBai', ten: 'Khóa Sổ đầu bài Tuần' }
 ];
 
-// Khởi tạo và Bơm Giao diện vào index.html lúc tải trang
-document.addEventListener('DOMContentLoaded', () => {
+// =========================================================================
+// HÀM KIỂM SOÁT HIỂN THỊ MENU 7 VÀ NÚT CHỨC NĂNG
+// =========================================================================
+function capNhatHienThiPhanQuyen() {
+    // 1. Kiểm soát hiển thị Menu 7 (Phân quyền Hệ thống)
+    let menuPQ = document.getElementById('menuPhanQuyen');
+    if (menuPQ) {
+        let duocXemMenu = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
+                          (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanQuyen'));
+        menuPQ.style.display = duocXemMenu ? 'flex' : 'none';
+    }
+
+    // 2. Kiểm soát hiển thị Nút Khóa Sổ Đầu Bài Tuần
+    let btnKhoa = document.getElementById('btnKhoaSoDauBai');
+    if (btnKhoa) {
+        let duocBamKhoa = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
+                          (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
+        btnKhoa.style.display = duocBamKhoa ? 'inline-flex' : 'none';
+    }
+}
+
+// =========================================================================
+// CƠ CHẾ BẢO ĐẢM KHỞI TẠO DOM (CHỐNG MẤT MENU 7 DÙ HTML CÓ HAY CHƯA)
+// =========================================================================
+function khoiTaoDOMPhanQuyen() {
     const nav = document.querySelector('nav');
     const vungChinh = document.getElementById('vungHienThiChinh');
-    
-    // 1. Chèn Menu
+
+    // 1. Chèn Menu 7 vào thanh Sidebar nếu trong index.html chưa có
     if (nav && !document.getElementById('menuPhanQuyen')) {
         const menuHtml = `
             <a id="menuPhanQuyen" onclick="moTabPhanQuyenChuyenDung()" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
@@ -37,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nav.insertAdjacentHTML('beforeend', menuHtml);
     }
 
-    // 2. Chèn Khung hiển thị
+    // 2. Chèn Khung ma trận nếu trong index.html chưa có
     if (vungChinh && !document.getElementById('khungPhanQuyen')) {
         const khungHtml = `
             <div id="khungPhanQuyen" class="hidden p-4 w-full h-full flex-col font-sans">
@@ -74,32 +102,46 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
         vungChinh.insertAdjacentHTML('beforeend', khungHtml);
     }
-    
-// 3. Gắn nối vào hệ thống phân quyền của app.js
-if (typeof kiemSoatGiaoDien === 'function') {
-    const kiemSoatGoc = kiemSoatGiaoDien;
-    window.kiemSoatGiaoDien = function() {
-        kiemSoatGoc();
-        
-        let menuPQ = document.getElementById('menuPhanQuyen');
-        if (menuPQ) {
-            let duocXem = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
-                          (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanQuyen'));
-            menuPQ.style.display = duocXem ? 'flex' : 'none';
-        }
 
-        // [MỚI]: Chỉ hiển thị Nút Khóa Sổ Tuần cho tài khoản được cấp quyền
-        let btnKhoa = document.getElementById('btnKhoaSoDauBai');
-        if (btnKhoa) {
-            let coQuyenKhoa = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
-                              (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
-            btnKhoa.style.display = coQuyenKhoa ? 'inline-flex' : 'none';
-        }
-    };
+    // 3. Kích hoạt cập nhật hiển thị ngay
+    capNhatHienThiPhanQuyen();
 }
-});
 
-// Hàm gọi độc lập không can thiệp vào kichHoatTab gốc
+// =========================================================================
+// MÓC NỐI TỰ ĐỘNG VÀO HỆ THỐNG PHÂN QUYỀN (HOOK & MULTI-STAGE TRIGGER)
+// =========================================================================
+function ganKetHeThongKiemSoat() {
+    if (typeof window.kiemSoatGiaoDien === 'function') {
+        if (!window.kiemSoatGiaoDien._daHookPhanQuyen) {
+            const kiemSoatGoc = window.kiemSoatGiaoDien;
+            window.kiemSoatGiaoDien = function() {
+                kiemSoatGoc();
+                capNhatHienThiPhanQuyen();
+            };
+            window.kiemSoatGiaoDien._daHookPhanQuyen = true;
+        }
+    }
+}
+
+// Khởi tạo đa tầng để chống trễ nhịp sự kiện DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        khoiTaoDOMPhanQuyen();
+        ganKetHeThongKiemSoat();
+        setTimeout(capNhatHienThiPhanQuyen, 300);
+        setTimeout(capNhatHienThiPhanQuyen, 1000);
+    });
+} else {
+    khoiTaoDOMPhanQuyen();
+    ganKetHeThongKiemSoat();
+    setTimeout(capNhatHienThiPhanQuyen, 300);
+    setTimeout(capNhatHienThiPhanQuyen, 1000);
+}
+
+// =========================================================================
+// CÁC HÀM XỬ LÝ NGHIỆP VỤ BẢNG MA TRẬN PHÂN QUYỀN
+// =========================================================================
+
 function moTabPhanQuyenChuyenDung() {
     if (typeof kichHoatTab === 'function') {
         kichHoatTab('menuPhanQuyen', 'khungPhanQuyen', false);
@@ -120,11 +162,9 @@ async function taiDuLieuPhanQuyenTuMayChu() {
             throw new Error(ketQua.thongBao);
         }
         
-        // [CHỐT CHẶN AN TOÀN]: Đảm bảo dữ liệu nhận được phải là một mảng
         if (Array.isArray(ketQua)) {
             duLieuBangPhanQuyen = ketQua;
         } else if (ketQua && ketQua.trangThai === 'thanh_cong') {
-            // Cảnh báo khi người dùng quên Deploy mã Google Apps Script
             throw new Error("Mã máy chủ chưa được đồng bộ. Đồng chí vui lòng chọn Manage Deployments -> New version trên Google Apps Script.");
         } else {
             duLieuBangPhanQuyen = [];
@@ -188,15 +228,15 @@ function themDongPhanQuyenMoi() {
     hienThiBangPhanQuyen();
     setTimeout(() => {
         let khung = document.querySelector('#khungPhanQuyen .overflow-auto');
-        if(khung) khung.scrollTop = khung.scrollHeight;
+        if (khung) khung.scrollTop = khung.scrollHeight;
     }, 50);
 }
 
 function xoaDongPhanQuyen(btn) {
-    if(!confirm("Đồng chí chắc chắn muốn thu hồi phân quyền của định danh này?")) return;
+    if (!confirm("Đồng chí chắc chắn muốn thu hồi phân quyền của định danh này?")) return;
     let tr = btn.closest('tr');
-    let index = parseInt(tr.getAttribute('data-index'));
-    if(!isNaN(index)) {
+    let index = parseInt(tr.getAttribute('data-index'), 10);
+    if (!isNaN(index)) {
         duLieuBangPhanQuyen.splice(index, 1);
         hienThiBangPhanQuyen();
     }
@@ -218,8 +258,8 @@ async function luuDuLieuPhanQuyenSangMayChu() {
     });
 
     let btnLuu = document.querySelector('button[onclick="luuDuLieuPhanQuyenSangMayChu()"]');
-    let textGoc = btnLuu.innerHTML;
-    btnLuu.innerHTML = "Đang xử lý..."; btnLuu.disabled = true;
+    let textGoc = btnLuu ? btnLuu.innerHTML : '';
+    if (btnLuu) { btnLuu.innerHTML = "Đang xử lý..."; btnLuu.disabled = true; }
 
     try {
         const phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
@@ -235,8 +275,8 @@ async function luuDuLieuPhanQuyenSangMayChu() {
             alert("Lưu thất bại: " + kq.thongBao);
         }
     } catch (loi) {
-        alert("Có sự cố kết nối máy chủ.");
+        alert("Có sự cố kết nối máy chủ: " + loi.message);
     } finally {
-        btnLuu.innerHTML = textGoc; btnLuu.disabled = false;
+        if (btnLuu) { btnLuu.innerHTML = textGoc; btnLuu.disabled = false; }
     }
 }
