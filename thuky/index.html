@@ -211,7 +211,7 @@
         .ai-table-container { height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
         .ai-preview-frame { flex: 1; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; display: flex; flex-direction: column; min-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; }
 
-        .btn-logout { background: #ef4444; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: none; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.btn-logout { background: #ef4444; padding: 0 12px; font-size: 0.8rem; border-radius: 6px; border: none; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap; flex-shrink: 0; height: 32px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-logout:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
         /* =======================================================
@@ -700,7 +700,7 @@
                 if (KET_NOI.LOGO_TRUONG) { document.getElementById('loginLogo').src = KET_NOI.LOGO_TRUONG; document.getElementById('loginLogo').style.display = 'inline-block'; }
                 const phien = HeThong.phienLamViec();
                 if (phien && KET_NOI.DANH_SACH_TAI_KHOAN && KET_NOI.DANH_SACH_TAI_KHOAN.includes(phien)) {
-                    document.getElementById('userBadgeArea').innerHTML = `<div style="font-size:0.8rem; color:#047857; font-weight:bold; background:#d1fae5; padding:6px 10px; border-radius:6px; border:1px solid #34d399;" title="${phien}">👤 ${phien}</div><button class="btn-logout" onclick="executeLogout()">Đăng xuất</button>`;
+                    document.getElementById('userBadgeArea').innerHTML = `<div style="display:flex; align-items:center; gap:6px; height:32px; font-size:0.8rem; color:#047857; font-weight:bold; background:#d1fae5; padding:0 12px; border-radius:6px; border:1px solid #34d399; white-space:nowrap; max-width:250px; overflow:hidden; text-overflow:ellipsis;" title="${phien}">👤 ${phien}</div><button class="btn-logout" onclick="executeLogout()">Đăng xuất</button>`;
                     document.getElementById('loginUI').style.display = 'none';
                 } else { sessionStorage.removeItem('SessionAccountActive'); document.getElementById('loginUI').style.display = 'flex'; }
                 
