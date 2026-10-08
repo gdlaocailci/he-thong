@@ -19,6 +19,7 @@ const DANH_SACH_NUT_CHUC_NANG = [
     {id: 'btnKiemTra', ten: 'Định Mức tiết'},
     {id: 'btnChuyenTuan', ten: 'Mũi tên Chuyển tuần'},
     { id: 'btnLuuSua', ten: 'Lưu Sửa' }
+    {id: 'btnKhoaSoDauBai', ten: 'Khóa Sổ đầu bài Tuần'} // <-- ĐĂNG KÝ MỚI
 ];
 
 // Khởi tạo và Bơm Giao diện vào index.html lúc tải trang
@@ -75,19 +76,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
 // 3. Gắn nối vào hệ thống phân quyền của app.js
-    if (typeof kiemSoatGiaoDien === 'function') {
-        const kiemSoatGoc = kiemSoatGiaoDien;
-        window.kiemSoatGiaoDien = function() {
-            kiemSoatGoc();
-            let menuPQ = document.getElementById('menuPhanQuyen');
-            if (menuPQ) {
-                // [ĐÃ SỬA]: Đồng bộ gọi đúng tên biến quyenChiTiet.menu và thêm lớp bảo vệ an toàn
-                let duocXem = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
-                              (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanQuyen'));
-                menuPQ.style.display = duocXem ? 'flex' : 'none';
-            }
-        };
-    }
+if (typeof kiemSoatGiaoDien === 'function') {
+    const kiemSoatGoc = kiemSoatGiaoDien;
+    window.kiemSoatGiaoDien = function() {
+        kiemSoatGoc();
+        
+        let menuPQ = document.getElementById('menuPhanQuyen');
+        if (menuPQ) {
+            let duocXem = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
+                          (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanQuyen'));
+            menuPQ.style.display = duocXem ? 'flex' : 'none';
+        }
+
+        // [MỚI]: Chỉ hiển thị Nút Khóa Sổ Tuần cho tài khoản được cấp quyền
+        let btnKhoa = document.getElementById('btnKhoaSoDauBai');
+        if (btnKhoa) {
+            let coQuyenKhoa = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
+                              (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
+            btnKhoa.style.display = coQuyenKhoa ? 'inline-flex' : 'none';
+        }
+    };
+}
 });
 
 // Hàm gọi độc lập không can thiệp vào kichHoatTab gốc
