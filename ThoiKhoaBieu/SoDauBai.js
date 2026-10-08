@@ -2236,7 +2236,11 @@ async function thaoTacKhoaMoSoDauBai() {
     }
 
     try {
-        let emailNguoiDung = typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' ? window.dinhDanhGiaoVienToanCuc : '';
+        let emailNguoiDung = (typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' && window.dinhDanhGiaoVienToanCuc !== '') 
+    ? window.dinhDanhGiaoVienToanCuc 
+    : (typeof window.emailGiaoVienToanCuc !== 'undefined' && window.emailGiaoVienToanCuc !== '' 
+        ? window.emailGiaoVienToanCuc 
+        : (typeof maGvDangNhapHeThong !== 'undefined' ? maGvDangNhapHeThong : ''));
         let payload = {
             thaoTac: 'khoaMoSoDauBai',
             tuan: tuanSo,
