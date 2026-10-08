@@ -4,6 +4,23 @@ window.kiemTraTuanDaKhoa = function(tuan) {
     let t = parseInt(String(tuan).replace(/\D/g, ''), 10);
     return !!(duLieuKhoaSoToanCuc[t] && duLieuKhoaSoToanCuc[t].daKhoa);
 };
+
+// =========================================================================
+// [QUAN TRỌNG]: HÀM CHUẨN HÓA ĐỒNG NHẤT DẤU TIẾNG VIỆT (PHỤC HỒI LẠI)
+// =========================================================================
+window.chuanHoaDinhDanhGiaoVien = function(tenGV) {
+    if (!tenGV) return '';
+    let tenChuan = String(tenGV).trim().toLowerCase().normalize('NFC');
+    const tuDienDau = {
+        'òa': 'oà', 'óa': 'oá', 'ỏa': 'oả', 'õa': 'oã', 'ọa': 'oạ',
+        'òe': 'oè', 'óe': 'oé', 'ỏe': 'oẻ', 'õe': 'oẽ', 'ọe': 'oẹ',
+        'ùy': 'uỳ', 'úy': 'uý', 'ủy': 'uỷ', 'ũy': 'uỹ', 'ụy': 'uỵ'
+    };
+    for (let [kieuCu, kieuMoi] of Object.entries(tuDienDau)) {
+        tenChuan = tenChuan.replace(new RegExp(kieuCu, 'g'), kieuMoi);
+    }
+    return tenChuan;
+};
 // =========================================================================
 // KHỐI 1: KIỂM SOÁT ĐĂNG NHẬP VÀ BỘ MÁY TỊNH TIẾN SỔ ĐẦU BÀI
 // =========================================================================
@@ -896,6 +913,9 @@ async function luuSoDauBaiSangMayChu() {
     let tuanChon = document.getElementById('chonTuanSo')?.value;
     let lopChon = document.getElementById('chonLopSo')?.value;
     if (!tuanChon || !lopChon) return alert("Vui lòng chọn Tuần và Lớp trước khi lưu!");
+    if (window.kiemTraTuanDaKhoa(tuanChon)) {
+        return alert(`⛔ TỪ CHỐI THAO TÁC:\n\nSổ đầu bài TUẦN ${tuanChon.replace(/\D/g, '')} của toàn trường ĐÃ BỊ KHÓA bởi Quản lý chuyên môn.\n\nĐồng chí không thể sửa đổi hoặc lưu đè dữ liệu!`);
+    }
 
     let tuanSo = parseInt(tuanChon.replace(/\D/g, ''));
     let tuanHeThong = (typeof window.thongSoHocVu !== 'undefined' && window.thongSoHocVu.TUAN_HIEN_TAI) ? parseInt(window.thongSoHocVu.TUAN_HIEN_TAI) : 999;
@@ -1097,6 +1117,11 @@ async function luuSoDauBaiSangMayChu() {
 }
 
 function dongBoTenBaiHoc() {
+
+    let tuanChon = document.getElementById('chonTuanSo')?.value;
+    if (window.kiemTraTuanDaKhoa(tuanChon)) {
+        return alert(`⛔ Sổ đầu bài Tuần này đã bị khóa toàn trường. Không thể đồng bộ tên bài!`);
+    }
     const btn = document.getElementById('btnDongBoTenBai');
     let textGoc = btn ? btn.innerHTML : '';
     if (btn) {
@@ -2039,7 +2064,7 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
                     let tietPPCTMoi = String(dongDuLieuMoi['TietPPCT_Thuc'] || '');
                     // [TÙY CHỈNH]: Tạm thời tắt tính năng khóa cứng khi đã ký.
                     // let isLockedMoi = isDaLuuMoi && chuKyMoi.trim() !== '';
-                    let isLockedMoi = false;
+                    let isLockedMoi = window.kiemTraTuanDaKhoa(tuanChon);
 
                     let gvTkb = String(dongDuLieuMoi['Mã GV']).trim().toLowerCase().normalize('NFC');
                     let quyenNhapThuCong = false;
