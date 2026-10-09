@@ -1,6 +1,7 @@
 // =========================================================================
-// KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN HỆ THỐNG (BẢN HOÀN CHỈNH ĐỒNG BỘ)
-// Tích hợp: Nút Khóa Sổ Đầu Bài Tuần + Cơ chế chống mất Menu 7 đa tầng
+// KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN HỆ THỐNG (BẢN CHUẨN ĐỒNG BỘ)
+// Chỉ tập trung: Quản lý Menu Hệ thống, Nút TKB và Khóa Sổ Đầu Bài Tuần
+// Đã loại bỏ hoàn toàn tính năng Khóa TKB theo yêu cầu
 // =========================================================================
 
 let duLieuBangPhanQuyen = [];
@@ -12,7 +13,8 @@ const DANH_SACH_MENU_HE_THONG = [
     { id: 'menuKhungChuongTrinh', ten: '4. Khung CT' },
     { id: 'menuPhanCong', ten: '5. Phân công' },
     { id: 'menuDanhMucSGK', ten: '6. DM SGK' },
-    { id: 'menuPhanQuyen', ten: '7. Phân quyền' }
+    { id: 'menuPhanPhoiChuongTrinh', ten: '7. PP Chương trình' },
+    { id: 'menuPhanQuyen', ten: '8. Phân quyền' }
 ];
 
 const DANH_SACH_NUT_CHUC_NANG = [
@@ -28,23 +30,40 @@ const DANH_SACH_NUT_CHUC_NANG = [
 ];
 
 // =========================================================================
-// HÀM KIỂM SOÁT HIỂN THỊ MENU 7 VÀ NÚT CHỨC NĂNG
+// HÀM KIỂM SOÁT HIỂN THỊ MENU 7 VÀ NÚT KHÓA SỔ ĐẦU BÀI
 // =========================================================================
 function capNhatHienThiPhanQuyen() {
-    // 1. Kiểm soát hiển thị Menu 7 (Phân quyền Hệ thống)
+    let coQuyenQuanTri = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua);
+
+    // 1. Kiểm soát hiển thị Menu 8: Phân quyền Hệ thống
     let menuPQ = document.getElementById('menuPhanQuyen');
+    let duocXemMenu = false;
     if (menuPQ) {
-        let duocXemMenu = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
+        duocXemMenu = coQuyenQuanTri || 
                           (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanQuyen'));
         menuPQ.style.display = duocXemMenu ? 'flex' : 'none';
     }
 
-    // 2. Kiểm soát hiển thị Nút Khóa Sổ Đầu Bài Tuần
-    let btnKhoa = document.getElementById('btnKhoaSoDauBai');
-    if (btnKhoa) {
-        let duocBamKhoa = (typeof quyenSuaChua !== 'undefined' && quyenSuaChua) || 
-                          (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
-        btnKhoa.style.display = duocBamKhoa ? 'inline-flex' : 'none';
+    // 2. Kiểm soát hiển thị Menu 7: Phân phối Chương trình
+    let menuPPCT = document.getElementById('menuPhanPhoiChuongTrinh');
+    let duocXemPPCT = false;
+    if (menuPPCT) {
+        duocXemPPCT = coQuyenQuanTri || 
+                          (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.menu && quyenChiTiet.menu.includes('menuPhanPhoiChuongTrinh'));
+        menuPPCT.style.display = duocXemPPCT ? 'flex' : 'none';
+    }
+
+    let nhanHT = document.getElementById('nhanHeThong');
+    if (nhanHT && (duocXemMenu || duocXemPPCT)) {
+        nhanHT.style.display = 'flex';
+    }
+
+    // 3. Kiểm soát hiển thị Nút Khóa Sổ Đầu Bài Tuần
+    let btnKhoaSo = document.getElementById('btnKhoaSoDauBai');
+    if (btnKhoaSo) {
+        let duocBamKhoaSo = coQuyenQuanTri || 
+                            (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
+        btnKhoaSo.style.display = duocBamKhoaSo ? 'inline-flex' : 'none';
     }
 }
 
@@ -55,12 +74,12 @@ function khoiTaoDOMPhanQuyen() {
     const nav = document.querySelector('nav');
     const vungChinh = document.getElementById('vungHienThiChinh');
 
-    // 1. Chèn Menu 7 vào thanh Sidebar nếu trong index.html chưa có
+    // 1. Chèn Menu 8 vào thanh Sidebar nếu trong index.html chưa có
     if (nav && !document.getElementById('menuPhanQuyen')) {
         const menuHtml = `
             <a id="menuPhanQuyen" onclick="moTabPhanQuyenChuyenDung()" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
                 <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M8 11l3 3 5-5"></path></svg>
-                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">7. Phân quyền Hệ thống</span>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">8. Phân quyền Hệ thống</span>
             </a>`;
         nav.insertAdjacentHTML('beforeend', menuHtml);
     }
@@ -107,19 +126,15 @@ function khoiTaoDOMPhanQuyen() {
     capNhatHienThiPhanQuyen();
 }
 
-// =========================================================================
-// MÓC NỐI TỰ ĐỘNG VÀO HỆ THỐNG PHÂN QUYỀN (HOOK & MULTI-STAGE TRIGGER)
-// =========================================================================
+// Hook vào hàm kiemSoatGiaoDien của app.js
 function ganKetHeThongKiemSoat() {
-    if (typeof window.kiemSoatGiaoDien === 'function') {
-        if (!window.kiemSoatGiaoDien._daHookPhanQuyen) {
-            const kiemSoatGoc = window.kiemSoatGiaoDien;
-            window.kiemSoatGiaoDien = function() {
-                kiemSoatGoc();
-                capNhatHienThiPhanQuyen();
-            };
-            window.kiemSoatGiaoDien._daHookPhanQuyen = true;
-        }
+    if (typeof window.kiemSoatGiaoDien === 'function' && !window.kiemSoatGiaoDien._daHookPhanQuyen) {
+        const kiemSoatGoc = window.kiemSoatGiaoDien;
+        window.kiemSoatGiaoDien = function() {
+            kiemSoatGoc();
+            capNhatHienThiPhanQuyen();
+        };
+        window.kiemSoatGiaoDien._daHookPhanQuyen = true;
     }
 }
 
