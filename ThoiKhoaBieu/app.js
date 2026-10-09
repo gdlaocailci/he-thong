@@ -989,9 +989,9 @@ function xuatMaTranBang(danhSachTiet) {
                     if (mapDuLieu.has(checkKey)) { duLieuDong = mapDuLieu.get(checkKey); break; }
                 }
 
-                let valTuan = duLieuDong ? (String(duLieuDong.tuan).includes('_') ? duLieuDong.tuan : `${duLieuDong.tuan}_${valNam}`) : `${tuanDangXem}_${valNam}`;
-                let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
+                let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
+                let valTuan = duLieuDong ? (String(duLieuDong.tuan).includes('_') ? duLieuDong.tuan : `${duLieuDong.tuan}_${valNam}`) : `${tuanDangXem}_${valNam}`;
 
                 bufferHTML.push(`<td id="uiTuan_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle">${valTuan}</td>`);
                 bufferHTML.push(`<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="hidden text-center font-bold text-red-600 align-middle">${valThang}</td>`);
