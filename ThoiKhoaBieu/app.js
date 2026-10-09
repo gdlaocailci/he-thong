@@ -954,7 +954,7 @@ function xuatMaTranBang(danhSachTiet) {
             let soDongCuaBuoi = cTruc.soTiet;
             let inCotBuoi = true;
 
-           for (let tiet = 1; tiet <= soDongCuaBuoi; tiet++) {
+            for (let tiet = 1; tiet <= soDongCuaBuoi; tiet++) {
                 // =========================================================================
                 // NÂNG CẤP: ĐỒNG BỘ ĐỘ ĐẬM NÉT KẺ BẢNG CHO UI TKB (Màu đen tuyền sắc nét)
                 // =========================================================================
@@ -989,7 +989,7 @@ function xuatMaTranBang(danhSachTiet) {
                     if (mapDuLieu.has(checkKey)) { duLieuDong = mapDuLieu.get(checkKey); break; }
                 }
 
-                let valTuan = duLieuDong ? duLieuDong.tuan : tuanDangXem;
+                let valTuan = duLieuDong ? (String(duLieuDong.tuan).includes('_') ? duLieuDong.tuan : `${duLieuDong.tuan}_${valNam}`) : `${tuanDangXem}_${valNam}`;
                 let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
                 let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
@@ -1070,7 +1070,7 @@ async function luuDuLieu(event, loaiLuu) {
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
                 let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
-                    String(t.tuan).trim() === String(tuanDangXem).trim() &&
+                    (String(t.tuan).trim() === String(tuanDangXem).trim() || String(t.tuan).split('_')[0].trim() === String(tuanDangXem).trim()) &&
                     String(t.thu).trim() === thu && 
                     String(t.buoi).trim() === buoi && 
                     String(t.tiet).trim() === String(tiet) && 
@@ -1085,12 +1085,15 @@ async function luuDuLieu(event, loaiLuu) {
                     maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
                 }
                 
+                // [NÂNG CẤP]: Mã tuần luôn kèm hậu tố năm học (vd: 1_2025-2026) chống trùng năm sau
+                let maTuanCoHauTo = `${tuanDangXem}_${namHocDung}`;
+
                 dsTietLuoi.push({
                     maTiet: maTietNguyenBan, 
                     namHoc: namHocDung, 
                     thang: thongTinNgay.thang, 
                     ngay: thongTinNgay.ngayDayDu, 
-                    tuan: tuanDangXem, 
+                    tuan: maTuanCoHauTo, 
                     thu: thu, 
                     buoi: buoi, 
                     tiet: tiet, 
@@ -1445,7 +1448,7 @@ async function xuatExcel() {
             if (currentRow - 1 > startRowThu) worksheet.mergeCells(startRowThu, 1, currentRow - 1, 1); 
         });
 
-        // =========================================================================
+      // =========================================================================
         // NÂNG CẤP: ĐỊNH DẠNG NÉT KẺ BẢNG EXCEL TKB (Màu đen, Nét đứt tiết, Nét liền buổi)
         // =========================================================================
         worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
@@ -1689,7 +1692,7 @@ async function luuSuaCucBoTKB(event) {
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
             let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
-                String(t.tuan).trim() === String(tuanDangXem).trim() &&
+                (String(t.tuan).trim() === String(tuanDangXem).trim() || String(t.tuan).split('_')[0].trim() === String(tuanDangXem).trim()) &&
                 String(t.thu).trim() === thu && 
                 String(t.buoi).trim() === buoi && 
                 String(t.tiet).trim() === String(tiet) && 
