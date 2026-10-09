@@ -52,7 +52,7 @@
                 <img id="logoMenuDoc" src="" alt="Logo" class="w-20 h-20 rounded-full object-cover">
             </div>
             <h2 id="tenDonViMenu" class="text-center text-white font-bold text-base uppercase tracking-wide leading-relaxed">
-                Trường Hợp Thành<br>Cấp Tiểu học
+                Trường TH&THCS<br>Cấp Tiểu học
             </h2>
         </div>
         <div class="px-6 my-2 flex-none"><hr class="border-dashed border-blue-300 opacity-40"></div>
@@ -78,16 +78,6 @@
             <a id="menuThongKe" onclick="kichHoatTab('menuThongKe', 'khungThongKe', false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
                 <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px]">Báo cáo Thống kê</span>
-            </a>
-
-            <a id="menuPhanPhoiChuongTrinh" onclick="moTabPhanPhoiChuongTrinh()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
-                <svg class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-none text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    <line x1="10" y1="6" x2="16" y2="6"></line>
-                    <line x1="10" y1="10" x2="16" y2="10"></line>
-                </svg>
-                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px]">Phân phối Chương trình</span>
             </a>
 
             <a id="menuSoDauBai" onclick="kichHoatTab('menuSoDauBai', 'khungSoDauBai', false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
@@ -130,9 +120,20 @@
                 <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                 <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">6. Danh mục SGK</span>
             </a>
+
+            <a id="menuPhanPhoiChuongTrinh" onclick="moTabPhanPhoiChuongTrinh()" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
+                <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    <line x1="10" y1="6" x2="16" y2="6"></line>
+                    <line x1="10" y1="10" x2="16" y2="10"></line>
+                </svg>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">7. Phân phối Chương trình</span>
+            </a>
+
             <a id="menuPhanQuyen" onclick="moTabPhanQuyenChuyenDung()" style="display: none;" class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent hover:bg-white/10 transition-all duration-150 cursor-pointer group">
                 <svg class="w-5 h-5 flex-none opacity-70 group-hover:opacity-100 transition-opacity text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M8 11l3 3 5-5"></path></svg>
-                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">7. Phân quyền Hệ thống</span>
+                <span class="font-bold text-white/80 group-hover:text-white transition-colors text-[14px] whitespace-nowrap">8. Phân quyền Hệ thống</span>
             </a>
         </nav>
 
@@ -246,6 +247,16 @@
 
                 <!-- CÁC NÚT THAO TÁC QUẢN TRỊ (Bổ sung nút Lưu Sửa) -->
                     <div class="flex flex-wrap justify-center sm:justify-end gap-2 w-full xl:w-auto font-sans flex-none">
+
+                        <button id="btnKhoaTKB" onclick="thaoTacKhoaMoTKB()" style="display: none;" 
+                            class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg whitespace-nowrap" 
+                             title="Khóa/Mở khóa chỉnh sửa Thời khóa biểu tuần này">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <span id="textNutKhoaTKB">Khóa TKB Tuần</span>
+                        </button>
+                        
                         <button id="btnKhoiPhuc" onclick="luuDuLieu(event, 'khoiphuc')" style="display: none;" class="bg-red-700 hover:bg-red-800 text-white font-extrabold px-3 py-1.5 text-sm shadow transition duration-200 items-center gap-1.5 rounded-lg whitespace-nowrap" title="Chuyển sang tuần tiếp theo">
                             Tuần tiếp theo...
                         </button>
@@ -444,35 +455,33 @@
                             </div>
                         </div>
                         
-                        <!-- Nhóm 2: Cụm nút thao tác Sổ đầu bài -->
-                            <div class="flex items-center gap-2">
-                                <!-- NÚT KHÓA SỔ ĐẦU BÀI THEO TUẦN (Mặc định ẩn, bật theo Ma trận phân quyền) -->
-                                <button id="btnKhoaSoDauBai" onclick="thaoTacKhoaMoSoDauBai()" style="display: none;" 
-                                        class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5" 
-                                        title="Khóa/Mở khóa toàn bộ sổ đầu bài của Tuần này trên toàn trường">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                    </svg>
-                                    <span id="textNutKhoaSo">Khóa sổ Tuần</span>
-                                </button>
-                            
-                                <button id="btnDongBoTenBai" onclick="dongBoTenBaiHoc()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5" title="Kéo Tên bài học từ PPCT dựa trên Tiết trên màn hình">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                    Đồng bộ Tên Bài
-                                </button>
-                                <button id="btnLuuSoDauBai" onclick="luuSoDauBaiSangMayChu()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5" title="Chốt dữ liệu Sổ đầu bài này lưu vĩnh viễn vào CSDL">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                                    Lưu sổ đầu bài
-                                </button>
-                                <button onclick="xuatExcelSoDauBai()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    Xuất Excel
-                                </button>
-                                <button onclick="xuatWordSoDauBai()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    Xuất Word
-                                </button>
-                            </div>
+                        <!-- Nhóm 2: Cụm nút thao tác -->
+                        <div class="flex items-center gap-2">
+                            <button id="btnKhoaSoDauBai" onclick="thaoTacKhoaMoSoDauBai()" 
+                                    class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5" 
+                                    title="Khóa/Mở khóa toàn bộ sổ đầu bài của Tuần này trên toàn trường">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                                <span id="textNutKhoaSo">Khóa sổ Tuần</span>
+                            </button>
+                            <button id="btnDongBoTenBai" onclick="dongBoTenBaiHoc()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5" title="Kéo Tên bài học từ PPCT dựa trên Tiết trên màn hình">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Đồng bộ Tên Bài
+                            </button>
+                            <button id="btnLuuSoDauBai" onclick="luuSoDauBaiSangMayChu()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5" title="Chốt dữ liệu Sổ đầu bài này lưu vĩnh viễn vào CSDL">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                               Lưu sổ đầu bài
+                            </button>
+                            <button onclick="xuatExcelSoDauBai()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Xuất Excel
+                            </button>
+                            <button onclick="xuatWordSoDauBai()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Xuất Word
+                            </button>
+                        </div>
 
                     </div>
 
@@ -596,41 +605,7 @@
                     </div>
                 </div>
 
-                <!-- [CHÈN MỚI TẠI ĐÂY]: KHUNG MA TRẬN PHÂN QUYỀN HỆ THỐNG -->
-                <div id="khungPhanQuyen" class="hidden p-4 w-full h-full flex-col font-sans">
-                    <div class="flex justify-between items-center mb-4 flex-none">
-                        <h2 class="text-xl font-extrabold text-blue-900 uppercase">MA TRẬN PHÂN QUYỀN HỆ THỐNG</h2>
-                        <div class="flex items-center gap-2">
-                            <button onclick="taiDuLieuPhanQuyenTuMayChu()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-1.5">
-                                Tải lại
-                            </button>
-                            <button onclick="themDongPhanQuyenMoi()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-1.5">
-                                + Cấp quyền mới
-                            </button>
-                            <button onclick="luuDuLieuPhanQuyenSangMayChu()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-5 py-2 text-sm shadow transition duration-200 rounded flex items-center gap-1.5">
-                                Lưu Hệ Thống
-                            </button>
-                        </div>
-                    </div>
-                    <div class="overflow-auto border border-gray-400 shadow-sm bg-white relative flex-1">
-                        <table class="bang-excel w-full min-w-[1000px]">
-                            <thead class="sticky top-0 z-20 bg-slate-200 text-slate-900 shadow-sm text-center">
-                                <tr>
-                                    <th class="py-2 w-56">Tài khoản (Định danh)</th>
-                                    <th class="py-2">Quyền xếp thời khoá biểu Lớp học</th>
-                                    <th class="py-2">Phân quyền Menu</th>
-                                    <th class="py-2">Phân quyền Nút chức năng</th>
-                                    <th class="py-2 w-16 text-red-600">Xóa</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vungDuLieuPhanQuyen">
-                                <tr><td colspan="5" class="text-center py-10 text-slate-500 font-bold">Vui lòng chờ, đang tải dữ liệu...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-           </div> <!-- KẾT THÚC #vungHienThiChinh -->
+            </div> <!-- KẾT THÚC #vungHienThiChinh -->
         </main>
 
         <footer class="flex-none bg-white border-t border-gray-300 py-1 px-4 flex justify-between items-center text-xs text-slate-500 reactbits-fade-in delay-300">
@@ -755,7 +730,6 @@
     <script src="QuanLyDanhMucSGK.js"></script>
     <script src="SoDauBai.js"></script>
     <script src="PhanQuyenAdmin.js"></script>
-    <script src="AiDebugger.js"></script>
    <script>
  async function thucThiLamMoiNgam() {
         let vungHienThi = document.getElementById('vungHienThiSoDauBai');
