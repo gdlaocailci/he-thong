@@ -852,7 +852,7 @@ function xuatMaTranBang(danhSachTiet) {
     
     // [TRUNG THÀNH DỮ LIỆU]: Hợp nhất danh sách lớp hiện tại với danh sách lớp quá khứ để không bị ẩn dữ liệu
     let cacLopTrongData = duLieuTiet.map(t => t.maLop).filter(Boolean);
-    const mangLopGoc = [...new Set([...(thongSoHocVu.DANH_SACH_LOP || []), ...cacLopTrongData])].sort();
+    const mangLopGoc = [...new Set([...(thongSoHocVu.DANH_SACH_LOP || []), ...cacLopTrongData])];
     
     const dsLopDuocQuyen = (quyenChiTiet && quyenChiTiet.lop) ? quyenChiTiet.lop : [];
     const tapLopDuocQuyen = new Set(dsLopDuocQuyen);
@@ -1799,6 +1799,8 @@ async function luuSuaCucBoTKB(event) {
             });
 
             localStorage.setItem(layKhoaCachLy('SmartTKB_DuLieuTuan'), JSON.stringify(duLieuTkbHienTai));
+
+            if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
         }
     } catch (loi) { alert("Có sự cố trong quá trình kết nối đến máy chủ."); } 
     finally { btn.innerHTML = textGoc; btn.disabled = false; }
