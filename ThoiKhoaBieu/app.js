@@ -93,57 +93,93 @@ async function fetchVoiCoCheThuLai(url, tuyChon = {}, soLanThu = 3, thoiGianCho 
 }
 
 // =========================================================================
-// KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM
+// HÀM BỔ TRỢ: LẤY QUYỀN CÔNG KHAI TỪ THÔNG SỐ HỌC VỤ HOẶC MA TRẬN PHÂN QUYỀN
 // =========================================================================
-function kiemSoatGiaoDien() {
-    const menuDuocCap = (quyenChiTiet && quyenChiTiet.menu) ? quyenChiTiet.menu : [];
-    const nutDuocCap = (quyenChiTiet && quyenChiTiet.nut) ? quyenChiTiet.nut : [];
-    const lopDuocCap = (quyenChiTiet && quyenChiTiet.lop) ? quyenChiTiet.lop : [];
-
-    const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra', 'btnNhapExcelTKB', 'btnDongBoChuan', 'btnLuuSua'];
-    
-    dsNut.forEach(idNut => {
-        let nut = document.getElementById(idNut);
-        if (nut) {
-            let duocPhep = quyenSuaChua || nutDuocCap.includes(idNut);
-            if (idNut === 'btnLuuSua' || idNut === 'btnLuuTuan') {
-                if (quyenSuaChua || nutDuocCap.includes(idNut) || lopDuocCap.length > 0) duocPhep = true;
+window.layQuyenCongKhaiHienTai = function() {
+    if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.QUYEN_CONG_KHAI) {
+        return thongSoHocVu.QUYEN_CONG_KHAI;
+    }
+    if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.MA_TRAN_PHAN_QUYEN) {
+        for (let k in thongSoHocVu.MA_TRAN_PHAN_QUYEN) {
+            let kLC = k.toLowerCase();
+            if (kLC === '*' || kLC.includes('công khai') || kLC.includes('congkhai')) {
+                return thongSoHocVu.MA_TRAN_PHAN_QUYEN[k];
             }
-            if (duocPhep) { nut.style.display = 'flex'; nut.disabled = false; } 
-            else { nut.style.display = 'none'; nut.disabled = true; }
         }
-    });
+    }
+    return { menu: [], nut: [], lop: [] };
+};
 
-    const dsMenuQuanTri = ['menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuPhanCong', 'menuKhungChuongTrinh', 'menuDanhMucSGK'];
-    let coMenuQuanTriDuocMo = false;
+// =========================================================================
+// KHỐI QUẢN LÝ GIAO DIỆN & PHÂN QUYỀN TRUNG TÂM (CHỐNG ĐỆ QUY TUYỆT ĐỐI)
+// =========================================================================
+let _dangKiemSoatGiaoDien = false;
 
-    dsMenuQuanTri.forEach(idMenu => {
-        let menu = document.getElementById(idMenu);
-        if (menu) {
-            let duocXem = quyenSuaChua || menuDuocCap.includes(idMenu);
-            menu.style.display = duocXem ? 'flex' : 'none'; 
-            if (duocXem) coMenuQuanTriDuocMo = true;
+function kiemSoatGiaoDien() {
+    if (_dangKiemSoatGiaoDien) return;
+    _dangKiemSoatGiaoDien = true;
+    try {
+        const quyenCongKhai = window.layQuyenCongKhaiHienTai();
+        const menuCongKhai = quyenCongKhai.menu || [];
+        const nutCongKhai = quyenCongKhai.nut || [];
+        const lopCongKhai = quyenCongKhai.lop || [];
+
+        const menuDuocCap = (quyenChiTiet && quyenChiTiet.menu) ? quyenChiTiet.menu : [];
+        const nutDuocCap = (quyenChiTiet && quyenChiTiet.nut) ? quyenChiTiet.nut : [];
+        const lopDuocCap = (quyenChiTiet && quyenChiTiet.lop) ? quyenChiTiet.lop : [];
+
+        const dsNut = ['btnLuuTuan', 'btnLuuCoDinh', 'btnKhoiPhuc', 'btnXepTuDong', 'btnKiemTra', 'btnNhapExcelTKB', 'btnDongBoChuan', 'btnLuuSua', 'btnKhoaTKB', 'btnKhoaSoDauBai'];
+        
+        dsNut.forEach(idNut => {
+            let nut = document.getElementById(idNut);
+            if (nut) {
+                let duocPhep = quyenSuaChua || nutDuocCap.includes(idNut) || nutCongKhai.includes(idNut);
+                if (idNut === 'btnLuuSua' || idNut === 'btnLuuTuan') {
+                    if (quyenSuaChua || nutDuocCap.includes(idNut) || lopDuocCap.length > 0 || nutCongKhai.includes(idNut)) duocPhep = true;
+                }
+                if (duocPhep) { nut.style.display = 'flex'; nut.disabled = false; } 
+                else { nut.style.display = 'none'; nut.disabled = true; }
+            }
+        });
+
+        const dsMenuQuanTri = ['menuCaiDat', 'menuDanhMucGV', 'menuDanhMucLop', 'menuKhungChuongTrinh', 'menuPhanCong', 'menuDanhMucSGK', 'menuPhanPhoiChuongTrinh', 'menuPhanQuyen'];
+        let coMenuQuanTriDuocMo = false;
+
+        dsMenuQuanTri.forEach(idMenu => {
+            let menu = document.getElementById(idMenu);
+            if (menu) {
+                let duocXem = quyenSuaChua || menuDuocCap.includes(idMenu) || menuCongKhai.includes(idMenu);
+                menu.style.display = duocXem ? 'flex' : 'none'; 
+                if (duocXem) coMenuQuanTriDuocMo = true;
+            }
+        });
+
+        let nhanHT = document.getElementById('nhanHeThong');
+        if (nhanHT) nhanHT.style.display = coMenuQuanTriDuocMo ? 'flex' : 'none';
+
+        let btnTuanTruoc = document.getElementById('btnTuanTruoc');
+        let btnTuanTiep = document.getElementById('btnTuanTiep');
+        let inputNgay = document.getElementById('chonNgayDauTuan');
+        let coQuyenChuyenTuan = quyenSuaChua || nutDuocCap.includes('btnChuyenTuan') || nutCongKhai.includes('btnChuyenTuan');
+
+        if (coQuyenChuyenTuan) {
+            if (btnTuanTruoc) btnTuanTruoc.style.display = 'block'; 
+            if (btnTuanTiep) btnTuanTiep.style.display = 'block'; 
+            if (inputNgay) { inputNgay.disabled = false; inputNgay.classList.remove('cursor-not-allowed', 'opacity-80'); }
+        } else {
+            if (btnTuanTruoc) btnTuanTruoc.style.display = 'none'; 
+            if (btnTuanTiep) btnTuanTiep.style.display = 'none'; 
+            if (inputNgay) { inputNgay.disabled = true; inputNgay.classList.add('cursor-not-allowed', 'opacity-80'); }
         }
-    });
 
-    let nhanHT = document.getElementById('nhanHeThong');
-    if (nhanHT) nhanHT.style.display = coMenuQuanTriDuocMo ? 'flex' : 'none';
-
-    let btnTuanTruoc = document.getElementById('btnTuanTruoc');
-    let btnTuanTiep = document.getElementById('btnTuanTiep');
-    let inputNgay = document.getElementById('chonNgayDauTuan');
-    let coQuyenChuyenTuan = quyenSuaChua || nutDuocCap.includes('btnChuyenTuan');
-
-    if (coQuyenChuyenTuan) {
-        if (btnTuanTruoc) btnTuanTruoc.style.display = 'block'; 
-        if (btnTuanTiep) btnTuanTiep.style.display = 'block'; 
-        if (inputNgay) { inputNgay.disabled = false; inputNgay.classList.remove('cursor-not-allowed', 'opacity-80'); }
-    } else {
-        if (btnTuanTruoc) btnTuanTruoc.style.display = 'none'; 
-        if (btnTuanTiep) btnTuanTiep.style.display = 'none'; 
-        if (inputNgay) { inputNgay.disabled = true; inputNgay.classList.add('cursor-not-allowed', 'opacity-80'); }
+        if (typeof capNhatHienThiPhanQuyen === 'function') {
+            capNhatHienThiPhanQuyen();
+        }
+    } finally {
+        _dangKiemSoatGiaoDien = false;
     }
 }
+window.kiemSoatGiaoDien = kiemSoatGiaoDien;
 
 // =========================================================================
 // KHỐI XỬ LÝ CHUYỂN TUẦN VÀ NGÀY THÁNG (ĐỊNH TUYẾN 3 LUỒNG)
@@ -989,9 +1025,9 @@ function xuatMaTranBang(danhSachTiet) {
                     if (mapDuLieu.has(checkKey)) { duLieuDong = mapDuLieu.get(checkKey); break; }
                 }
 
-                let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
+                let valTuan = duLieuDong ? duLieuDong.tuan : tuanDangXem;
                 let valThang = (duLieuDong && duLieuDong.thang) ? duLieuDong.thang : thongTinNgay.thang;
-                let valTuan = duLieuDong ? (String(duLieuDong.tuan).includes('_') ? duLieuDong.tuan : `${duLieuDong.tuan}_${valNam}`) : `${tuanDangXem}_${valNam}`;
+                let valNam = (duLieuDong && duLieuDong.namHoc) ? duLieuDong.namHoc : (thongSoHocVu.NAM_HOC || thongTinNgay.nam);
 
                 bufferHTML.push(`<td id="uiTuan_${thu}_${buoi}_${tiet}" class="hidden text-center font-bold text-red-600 align-middle">${valTuan}</td>`);
                 bufferHTML.push(`<td id="uiThang_${thu}_${buoi}_${tiet}" data-ngay="${thongTinNgay.ngayDayDu}" class="hidden text-center font-bold text-red-600 align-middle">${valThang}</td>`);
@@ -1008,7 +1044,7 @@ function xuatMaTranBang(danhSachTiet) {
                     const duLieuO = mapDuLieu.get(cellKey); 
                     const duocSuaLopNay = mapQuyenSuaLop.get(lop); 
                     
-                    let monGoc = duLieuO ? duLieuO.monHoc : ""; let gvGoc = duLieuO ? duLieuO.maGv : "";
+                    let monGoc = (duLieuO && duLieuO.monHoc) ? String(duLieuO.monHoc) : ((duLieuO && duLieuO.mon) ? String(duLieuO.mon) : ""); let gvGoc = (duLieuO && duLieuO.maGv) ? String(duLieuO.maGv) : "";
 
                     let bgLop = 'bg-white'; let textClass = 'text-slate-900';
                     if (monGoc.includes('CẤN LỊCH')) { bgLop = 'bg-yellow-400'; textClass = 'text-red-700 font-extrabold'; } 
@@ -1070,7 +1106,7 @@ async function luuDuLieu(event, loaiLuu) {
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
                 let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
-                    (String(t.tuan).trim() === String(tuanDangXem).trim() || String(t.tuan).split('_')[0].trim() === String(tuanDangXem).trim()) &&
+                    String(t.tuan).trim() === String(tuanDangXem).trim() &&
                     String(t.thu).trim() === thu && 
                     String(t.buoi).trim() === buoi && 
                     String(t.tiet).trim() === String(tiet) && 
@@ -1085,15 +1121,12 @@ async function luuDuLieu(event, loaiLuu) {
                     maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
                 }
                 
-                // [NÂNG CẤP]: Mã tuần luôn kèm hậu tố năm học (vd: 1_2025-2026) chống trùng năm sau
-                let maTuanCoHauTo = `${tuanDangXem}_${namHocDung}`;
-
                 dsTietLuoi.push({
                     maTiet: maTietNguyenBan, 
                     namHoc: namHocDung, 
                     thang: thongTinNgay.thang, 
                     ngay: thongTinNgay.ngayDayDu, 
-                    tuan: maTuanCoHauTo, 
+                    tuan: tuanDangXem, 
                     thu: thu, 
                     buoi: buoi, 
                     tiet: tiet, 
@@ -1692,7 +1725,7 @@ async function luuSuaCucBoTKB(event) {
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
             let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
-                (String(t.tuan).trim() === String(tuanDangXem).trim() || String(t.tuan).split('_')[0].trim() === String(tuanDangXem).trim()) &&
+                String(t.tuan).trim() === String(tuanDangXem).trim() &&
                 String(t.thu).trim() === thu && 
                 String(t.buoi).trim() === buoi && 
                 String(t.tiet).trim() === String(tiet) && 
