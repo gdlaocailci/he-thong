@@ -617,6 +617,61 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
 
 let khoaDoubleKetXuat = false;
 
+// =========================================================================
+// [THUẬT TOÁN BẢO VỆ TIẾN ĐỘ PPCT]: KIỂM TRA TÍNH TUẦN TỰ LƯU SỔ ĐẦU BÀI
+// Ngăn chặn nhảy cóc sang Tuần N khi các tuần trước (đặc biệt Tuần 1) chưa lưu
+// =========================================================================
+window.kiemTraTuanHopLeTruocKhiMo = function(tuanCanMo, lopChon) {
+    if (!tuanCanMo || !lopChon) return { hopLe: true };
+    let tMo = parseInt(String(tuanCanMo).replace(/\D/g, ''), 10) || 1;
+    if (tMo <= 1) return { hopLe: true }; // Tuần 1 luôn luôn hợp lệ
+
+    let lop = String(lopChon).trim().toUpperCase();
+    if (!duLieuTKBGopDaMap || duLieuTKBGopDaMap.length === 0) return { hopLe: true };
+
+    // 1. Kiểm tra điều kiện tiên quyết: TUẦN 1 BẮT BUỘC PHẢI ĐÃ LƯU
+    let daLuuTuan1 = duLieuTKBGopDaMap.some(d => 
+        parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === 1 && 
+        String(d['Mã Lớp']).trim().toUpperCase() === lop && 
+        d.DaLuu === true
+    );
+
+    if (!daLuuTuan1) {
+        return {
+            hopLe: false,
+            tuanChuaLuu: 1,
+            thongBao: `⚠️ TỪ CHỐI CHUYỂN SANG TUẦN ${tMo}:\n\nSổ đầu bài TUẦN 1 của Lớp ${lop} CHƯA ĐƯỢC LƯU vào hệ thống!\n\nTheo quy chuẩn Phân phối chương trình (PPCT), số tiết dạy của Tuần ${tMo} phải được tính lũy kế nối tiếp từ Tuần 1. Nếu mở Tuần ${tMo} khi Tuần 1 chưa lưu, hệ thống sẽ tính lại từ Tiết 1 dẫn đến sai sót và trùng lặp bài dạy.\n\nĐồng chí vui lòng hoàn thành và bấm [Lưu Sổ đầu bài] cho TUẦN 1 trước khi mở Tuần ${tMo}!`
+        };
+    }
+
+    // 2. Kiểm tra tính tuần tự: Quét tìm tuần có lịch học nhưng chưa lưu từ 1 đến (tMo - 1)
+    for (let t = 1; t < tMo; t++) {
+        let coLichTuanNay = duLieuTKBGopDaMap.some(d => 
+            parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === t && 
+            String(d['Mã Lớp']).trim().toUpperCase() === lop &&
+            String(d['Môn Học'] || '').trim() !== ''
+        );
+
+        if (coLichTuanNay) {
+            let daLuuTuanT = duLieuTKBGopDaMap.some(d => 
+                parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === t && 
+                String(d['Mã Lớp']).trim().toUpperCase() === lop && 
+                d.DaLuu === true
+            );
+
+            if (!daLuuTuanT) {
+                return {
+                    hopLe: false,
+                    tuanChuaLuu: t,
+                    thongBao: `⚠️ TỪ CHỐI CHUYỂN SANG TUẦN ${tMo}:\n\nSổ đầu bài TUẦN ${t} của Lớp ${lop} CHƯA ĐƯỢC LƯU vào hệ thống!\n\nĐồng chí không thể nhảy cóc sang Tuần ${tMo} khi Tuần ${t} chưa chốt dữ liệu vì sẽ làm gián đoạn số tiết phân phối chương trình và sai tên bài học.\n\nVui lòng hoàn thành và bấm [Lưu Sổ đầu bài] cho TUẦN ${t} trước khi mở Tuần ${tMo}!`
+                };
+            }
+        }
+    }
+
+    return { hopLe: true };
+};
+
 function ketXuatSoDauBaiLenLuoi() {
     if (khoaDoubleKetXuat) return;
     khoaDoubleKetXuat = true;
@@ -641,8 +696,28 @@ function ketXuatSoDauBaiLenLuoi() {
         }
     }
 
-    // [QUAN TRỌNG]: CHO PHÉP MỞ XEM TỰ DO TẤT CẢ CÁC TUẦN
-    // Không giật ngược tuần, không alert chặn người dùng xem
+    // [THUẬT TOÁN BẢO VỆ TIẾN ĐỘ PPCT]: KIỂM TRA CHẶN NHẢY CÓC KHI TUẦN TRƯỚC CHƯA LƯU
+    let kiemTraTuan = window.kiemTraTuanHopLeTruocKhiMo(tuanChon, lopChon);
+    if (!kiemTraTuan.hopLe) {
+        alert(kiemTraTuan.thongBao);
+        
+        // Khôi phục ô chọn Tuần về tuần chưa lưu hợp lệ
+        if (theSelectTuan) {
+            let optHopLe = Array.from(theSelectTuan.options).find(o => 
+                parseInt(String(o.value).replace(/\D/g, ''), 10) === kiemTraTuan.tuanChuaLuu
+            );
+            if (optHopLe) {
+                theSelectTuan.value = optHopLe.value;
+            } else {
+                theSelectTuan.value = String(kiemTraTuan.tuanChuaLuu);
+            }
+            if (typeof dongBoHienThiTuSelect === 'function') {
+                dongBoHienThiTuSelect('chonTuanSo');
+            }
+        }
+        tuanChon = theSelectTuan?.value;
+    }
+
     thucThiKetXuatSoDauBaiLenLuoi();
 
     tuanTruocDo_SDB = theSelectTuan?.value || '';
@@ -2042,13 +2117,28 @@ window.renderDanhSach = function(selectEl, listEl, inputEl, searchTerm) {
             let li = document.createElement('li');
             li.className = 'px-3 py-2 cursor-pointer transition-colors text-sm font-bold flex justify-between items-center';
             li.innerText = opt.text;
+
+            // Kiểm tra trạng thái khóa tuần tự đối với ô chọn Tuần
+            let tagKhoa = '';
+            if (selectEl.id === 'chonTuanSo') {
+                let lopHienTai = document.getElementById('chonLopSo')?.value;
+                if (lopHienTai && typeof window.kiemTraTuanHopLeTruocKhiMo === 'function') {
+                    let kt = window.kiemTraTuanHopLeTruocKhiMo(opt.value, lopHienTai);
+                    if (!kt.hopLe) {
+                        tagKhoa = `<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-normal ml-1">Chưa lưu T${kt.tuanChuaLuu}</span>`;
+                    }
+                }
+            }
             
             // Dòng đang được chọn trong danh sách thả xuống
             if (opt.value === selectEl.value) {
                 li.classList.add('bg-blue-50', 'text-blue-600', 'italic'); 
-                li.innerHTML += `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                li.innerHTML = `<span>${opt.text} ${tagKhoa}</span><svg class="w-4 h-4 text-blue-600 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
             } else {
                 li.classList.add('text-slate-700', 'hover:bg-blue-100');
+                if (tagKhoa) {
+                    li.innerHTML = `<span>${opt.text} ${tagKhoa}</span>`;
+                }
             }
 
             li.addEventListener('mousedown', (e) => {
