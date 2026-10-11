@@ -1343,6 +1343,7 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         
         if (khungSDB && !khungSDB.classList.contains('hidden')) {
             if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
+            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         } else {
             if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai(); 
             
