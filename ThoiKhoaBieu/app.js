@@ -367,8 +367,7 @@ async function khoiTaoGiaoDien() {
 
 window.kichHoatTaiNgamCacPhanHeKhac = function() {
     setTimeout(() => {
-        // [CHỦ ĐỘNG ĐỒNG BỘ]: Không tự động tải ngầm Sổ Đầu Bài khi khởi động ứng dụng để giải phóng băng thông và tăng tốc
-        // Sổ Đầu Bài chỉ tải theo nhu cầu (On-Demand) khi người dùng chủ động bấm vào tab "Sổ Đầu Bài"
+        if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         if (typeof taiCayDanhMucThongKe === 'function' && (!window.cayDanhMucThongKe || Object.keys(window.cayDanhMucThongKe).length === 0)) taiCayDanhMucThongKe();
         if (typeof taiDuLieuPhanCongTuMayChu === 'function' && (!window.danhSachGV || window.danhSachGV.length === 0)) taiDuLieuPhanCongTuMayChu();
         if (typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && (!window.duLieuBangKCT || window.duLieuBangKCT.length === 0)) taiDuLieuKhungChuongTrinhTuMayChu();
@@ -917,7 +916,7 @@ function xuatMaTranBang(danhSachTiet) {
     const demTietGV = {}; 
 
     duLieuTiet.forEach(t => {
-        const thu = t.thu.trim(); const buoi = t.buoi.trim();
+        const thu = String(t.thu || '').trim(); const buoi = String(t.buoi || '').trim();
         const key = `${thu}_${buoi}_${t.tiet}_${t.maLop}`;
         mapDuLieu.set(key, t);
         
@@ -1160,9 +1159,14 @@ async function luuDuLieu(event, loaiLuu) {
             alert("Lưu thất bại: " + ketQua.thongBao);
         } else { 
             if (loaiLuu === 'khoiphuc') {
+                let tuanMoi = ketQua.tuanMoi || (tuanDangXem + 1);
+                thongSoHocVu.TUAN_HIEN_TAI = tuanMoi;
+                try {
+                    localStorage.setItem(layKhoaCachLy('SmartTKB_CauHinh'), JSON.stringify(thongSoHocVu));
+                } catch(e) {}
+                
                 await chuyenTuan(1); 
-                let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
-                await luuDuLieu({ currentTarget: btnAn }, 'tuan');
+                alert(ketQua.thongBao || `Đã lưu trữ Tuần ${tuanMoi - 1} vào kho dữ liệu và chuyển sang Tuần ${tuanMoi} thành công!`);
             } else {
                 alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
                 duLieuTkbHienTai = dsTietLuoi;
@@ -1343,7 +1347,6 @@ async function xuLyLayThongTin(maTokenTruyCap) {
         
         if (khungSDB && !khungSDB.classList.contains('hidden')) {
             if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
-            if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
         } else {
             if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai(); 
             
@@ -1410,7 +1413,7 @@ async function xuatExcel() {
         const luoiDuLieu = {}; 
         
         duLieuTkbHienTai.forEach(t => {
-            const thu = t.thu.trim(); const buoi = t.buoi.trim(); const tiet = t.tiet;
+            const thu = String(t.thu || '').trim(); const buoi = String(t.buoi || '').trim(); const tiet = t.tiet;
             if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; 
             if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {}; 
             if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
@@ -2136,8 +2139,20 @@ async function dongBoDuLieuNgamToanCuc() {
         }
     } 
     else if (khungSDB && !khungSDB.classList.contains('hidden')) {
-        // [CHỦ ĐỘNG ĐỒNG BỘ]: Tắt polling 60s đối với Sổ Đầu Bài để chống nghẽn mạng Google Sheets và bảo vệ dữ liệu người dùng
-        return;
+        let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
+        let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
+
+        if (coThayDoiSDB || coOThayDoiDOM_SDB) {
+            console.warn("Sổ đầu bài đang phát sinh dữ liệu gõ dở, tạm dừng quy trình tải ngầm.");
+            return;
+        }
+
+        hienThiThongBaoTaiNgam(true);
+        try {
+            if (typeof thucThiLamMoiNgam === 'function') await thucThiLamMoiNgam();
+        } finally {
+            setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
+        }
     }
 }
 
@@ -2206,5 +2221,24 @@ window.toggleToanManHinhModal = function(idModal, nutBam) {
         // Đổi sang icon thu nhỏ
         nutBam.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`;
         nutBam.title = "Thu nhỏ";
+    }
+};
+
+window.saoChepTkbCoDinhSangHienTai = async function() {
+    if (!confirm(`Xác nhận: Sao chép toàn bộ Thời khóa biểu Cố định sang sheet Thời khóa biểu hiện tại (Tuần ${tuanDangXem})?`)) return;
+    try {
+        let phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
+            method: 'POST',
+            body: JSON.stringify({ thaoTac: 'saoChepCoDinhSangHienTai', tuan: tuanDangXem })
+        });
+        let kq = await phanHoi.json();
+        if (kq.trangThai === 'thanh_cong') {
+            alert(kq.thongBao || "Đã sao chép thành công!");
+            await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
+        } else {
+            alert("Lỗi sao chép: " + (kq.thongBao || "Không rõ nguyên nhân"));
+        }
+    } catch(e) {
+        alert("Có sự cố kết nối máy chủ: " + e.message);
     }
 };
