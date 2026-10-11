@@ -540,20 +540,62 @@ function ketXuatSoDauBaiLenLuoi() {
 
     if (!tuanChon || !lopChon) return; 
 
-    // Chốt chặn bảo vệ nếu có thay đổi nháp
+    // 1. Chốt chặn bảo vệ nếu có thay đổi nháp chưa lưu
     if (coThayDoiChuaLuu_SDB) {
         let xacNhan = confirm("⚠️ Đồng chí có dữ liệu chưa lưu trên màn hình! Bấm [Hủy] để ở lại lưu, bấm [OK] để chuyển tuần (dữ liệu chưa lưu sẽ mất).");
         if (!xacNhan) {
             if (theSelectTuan && tuanTruocDo_SDB) theSelectTuan.value = tuanTruocDo_SDB;
             if (theSelectLop && lopTruocDo_SDB) theSelectLop.value = lopTruocDo_SDB;
+            if (typeof dongBoHienThiTuSelect === 'function') {
+                dongBoHienThiTuSelect('chonTuanSo');
+                dongBoHienThiTuSelect('chonLopSo');
+            }
             return;
         } else {
             coThayDoiChuaLuu_SDB = false;
         }
     }
 
-    // [QUAN TRỌNG]: CHO PHÉP MỞ XEM TỰ DO TẤT CẢ CÁC TUẦN
-    // Không giật ngược tuần, không alert chặn người dùng xem
+    // 2. [QUY TẮC RÀNG BUỘC CHẶN TUẦN]: NẾU CHƯA LƯU TUẦN 1 THÌ KHÔNG CHO CHỌN TUẦN 2 (VÀ CÁC TUẦN TIẾP THEO)
+    let tuanSo = parseInt(String(tuanChon).replace(/\D/g, ''), 10) || 0;
+    if (tuanSo > 1) {
+        let lopNorm = String(lopChon).trim().toUpperCase();
+        
+        for (let w = 1; w < tuanSo; w++) {
+            let dsTietTuanW = duLieuTKBGopDaMap.filter(d => 
+                parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === w && 
+                String(d['Mã Lớp']).trim().toUpperCase() === lopNorm &&
+                String(d['Môn Học'] || '').trim() !== ''
+            );
+
+            if (dsTietTuanW.length > 0) {
+                let soTietDaLuuW = dsTietTuanW.filter(d => d.DaLuu === true).length;
+                if (soTietDaLuuW === 0) {
+                    alert(`⛔ CHƯA LƯU SỔ ĐẦU BÀI TUẦN TRƯỚC:\n\nSổ đầu bài Tuần ${w} của Lớp ${lopChon} chưa được lưu dữ liệu lên hệ thống!\n\nĐồng chí vui lòng hoàn thành và bấm "Lưu Sổ đầu bài" Tuần ${w} trước khi chuyển sang Tuần ${tuanSo}.`);
+                    
+                    // Phục hồi lại tuần w chưa lưu hoặc tuần trước đó
+                    let optW = Array.from(theSelectTuan.options).find(o => parseInt(String(o.value).replace(/\D/g, ''), 10) === w);
+                    let giaTriPhucHoi = optW ? optW.value : (tuanTruocDo_SDB || '');
+                    
+                    if (giaTriPhucHoi) {
+                        theSelectTuan.value = giaTriPhucHoi;
+                    }
+                    if (typeof dongBoHienThiTuSelect === 'function') {
+                        dongBoHienThiTuSelect('chonTuanSo');
+                    }
+                    
+                    // Kết xuất tuần w để người dùng thao tác trực tiếp trên tuần cần lưu
+                    thucThiKetXuatSoDauBaiLenLuoi();
+                    tuanTruocDo_SDB = theSelectTuan?.value || '';
+                    lopTruocDo_SDB = theSelectLop?.value || '';
+                    coThayDoiChuaLuu_SDB = false;
+                    return;
+                }
+            }
+        }
+    }
+
+    // 3. Kết xuất lưới Sổ đầu bài tuần hợp lệ
     thucThiKetXuatSoDauBaiLenLuoi();
 
     tuanTruocDo_SDB = theSelectTuan?.value || '';
@@ -1638,7 +1680,13 @@ async function luuSoDauBaiSangMayChu() {
             coThayDoiChuaLuu_SDB = false; 
             
             duLieuTKBGopDaMap.forEach(d => { 
-                if (d.TrangThaiThayDoi || d.DaDongBoTKB) { 
+                let t = parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) || 0;
+                let maLop = String(d['Mã Lớp']).trim().toUpperCase();
+                if (t === tuanSo && maLop === lopChon.toUpperCase()) {
+                    d.DaLuu = true;
+                    delete d.TrangThaiThayDoi;
+                    delete d.DaDongBoTKB;
+                } else if (d.TrangThaiThayDoi || d.DaDongBoTKB) { 
                     d.DaLuu = true; 
                     delete d.TrangThaiThayDoi; 
                     delete d.DaDongBoTKB;
@@ -2234,6 +2282,9 @@ window.renderDanhSach = function(selectEl, listEl, inputEl, searchTerm) {
     let term = searchTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     let hasMatch = false;
 
+    let lopChon = selectEl.id === 'chonTuanSo' ? document.getElementById('chonLopSo')?.value : null;
+    let lopNorm = lopChon ? String(lopChon).trim().toUpperCase() : '';
+
     Array.from(selectEl.options).forEach((opt, index) => {
         if (index === 0 && opt.disabled) return; 
         
@@ -2242,14 +2293,33 @@ window.renderDanhSach = function(selectEl, listEl, inputEl, searchTerm) {
             hasMatch = true;
             let li = document.createElement('li');
             li.className = 'px-3 py-2 cursor-pointer transition-colors text-sm font-bold flex justify-between items-center';
-            li.innerText = opt.text;
+
+            let wOpt = selectEl.id === 'chonTuanSo' ? (parseInt(String(opt.value).replace(/\D/g, ''), 10) || 0) : 0;
+            let tuanChuaLuuTruoc = 0;
+            if (wOpt > 1 && lopNorm) {
+                for (let w = 1; w < wOpt; w++) {
+                    let dsTietTuanW = duLieuTKBGopDaMap.filter(d => 
+                        parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === w && 
+                        String(d['Mã Lớp']).trim().toUpperCase() === lopNorm &&
+                        String(d['Môn Học'] || '').trim() !== ''
+                    );
+                    if (dsTietTuanW.length > 0 && dsTietTuanW.filter(d => d.DaLuu === true).length === 0) {
+                        tuanChuaLuuTruoc = w;
+                        break;
+                    }
+                }
+            }
             
             // Dòng đang được chọn trong danh sách thả xuống
-            if (opt.value === selectEl.value) {
+            if (tuanChuaLuuTruoc > 0) {
+                li.classList.add('text-slate-400', 'bg-slate-50', 'hover:bg-amber-50');
+                li.innerHTML = `<span>${opt.text}</span><span class="text-[10px] text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded font-normal flex items-center gap-0.5">🔒 Chưa lưu T${tuanChuaLuuTruoc}</span>`;
+            } else if (opt.value === selectEl.value) {
                 li.classList.add('bg-blue-50', 'text-blue-600', 'italic'); 
-                li.innerHTML += `<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                li.innerHTML = `<span>${opt.text}</span><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
             } else {
                 li.classList.add('text-slate-700', 'hover:bg-blue-100');
+                li.innerText = opt.text;
             }
 
             li.addEventListener('mousedown', (e) => {
