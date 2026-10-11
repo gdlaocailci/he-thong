@@ -255,45 +255,30 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
             };
         }
 
-        if (duLieuSever.TRANG_THAI_KHOA) { duLieuKhoaSoToanCuc = duLieuSever.TRANG_THAI_KHOA; }
+        setTimeout(() => {
+            khoiTaoDuLieuSoDauBai(duLieuSever);
+            daTaiDuLieuSoDauBai = true;
+            dangTaiDuLieuSoDauBai = false; 
 
-        let inTuanReset = document.getElementById('input_chonTuanSo');
-        let inLopReset = document.getElementById('input_chonLopSo');
-        let selTuanReset = document.getElementById('chonTuanSo');
-        let selLopReset = document.getElementById('chonLopSo');
+            let inTuanReset = document.getElementById('input_chonTuanSo');
+            let inLopReset = document.getElementById('input_chonLopSo');
+            let selTuanReset = document.getElementById('chonTuanSo');
+            let selLopReset = document.getElementById('chonLopSo');
 
-        if (selTuanReset) selTuanReset.disabled = false;
-        if (selLopReset) selLopReset.disabled = false;
-        if (inTuanReset) { inTuanReset.disabled = false; inTuanReset.classList.remove('cursor-wait'); }
-        if (inLopReset) { inLopReset.disabled = false; inLopReset.classList.remove('cursor-wait'); }
+            if (duLieuSever.TRANG_THAI_KHOA) { duLieuKhoaSoToanCuc = duLieuSever.TRANG_THAI_KHOA; }
 
-        khoiTaoDuLieuSoDauBai(duLieuSever);
-        daTaiDuLieuSoDauBai = true;
-        dangTaiDuLieuSoDauBai = false;
+            if (selTuanReset) selTuanReset.disabled = false;
+            if (selLopReset) selLopReset.disabled = false;
+            if (inTuanReset) { inTuanReset.disabled = false; inTuanReset.classList.remove('cursor-wait'); }
+            if (inLopReset) { inLopReset.disabled = false; inLopReset.classList.remove('cursor-wait'); }
 
-        let theSelectTuan = document.getElementById('chonTuanSo');
-        let theSelectLop = document.getElementById('chonLopSo');
-        if (theSelectTuan && !theSelectTuan.value && theSelectTuan.options.length > 1) {
-            theSelectTuan.selectedIndex = 1;
-            if (typeof window.dongBoHienThiTuSelect === 'function') window.dongBoHienThiTuSelect('chonTuanSo');
-        }
-        if (theSelectLop && !theSelectLop.value && theSelectLop.options.length > 1) {
-            theSelectLop.selectedIndex = 1;
-            if (typeof window.dongBoHienThiTuSelect === 'function') window.dongBoHienThiTuSelect('chonLopSo');
-        }
-        if (typeof ketXuatSoDauBaiLenLuoi === 'function') {
-            ketXuatSoDauBaiLenLuoi();
-        }
+        }, 10);
 
     } catch (loi) {
         dangTaiDuLieuSoDauBai = false; 
         console.error("Lỗi Sổ đầu bài:", loi);
         if (vungHienThi) {
-            vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">
-                <svg class="w-12 h-12 text-red-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                ⚠️ Kết nối máy chủ bị gián đoạn: <br><span class="text-base font-normal text-slate-700">${loi.message}</span>
-                <div class="mt-4"><button onclick="taiDuLieuSoDauBaiTuMayChu()" class="px-4 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition">🔄 Thử kết nối lại</button></div>
-            </div>`;
+            vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Cảnh báo lỗi kết nối: <br><span class="text-base font-normal text-slate-700">${loi.message}</span></div>`;
         }
         if (selTuan) selTuan.disabled = false;
         if (selLop) selLop.disabled = false;
@@ -668,6 +653,76 @@ function ketXuatSoDauBaiLenLuoi() {
 
 
 // =========================================================================
+// [MODAL CHI TIẾT]: HIỂN THỊ CHI TIẾT ĐỒNG BỘ TKB DẠNG HỘP THOẠI NỔI (POPUP)
+// Thay vì hiển thị banner dài dặc chiếm màn hình, chỉ mở popup khi bấm [Xem chi tiết]
+// =========================================================================
+window.moModalChiTietDongBoTKB = function() {
+    let tuanChon = document.getElementById('chonTuanSo')?.value || '';
+    let lopChon = document.getElementById('chonLopSo')?.value || '';
+    let dsCapNhatLopNay = (window._danhSachTietCapNhatTuTKB || []).filter(item => 
+        String(item.tuan).trim() === String(tuanChon).replace(/\D/g, '') &&
+        String(item.lop).trim().toUpperCase() === String(lopChon).trim().toUpperCase()
+    );
+
+    let modal = document.getElementById('modalChiTietDongBoTKB');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalChiTietDongBoTKB';
+        modal.className = 'fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden';
+        modal.onclick = function(e) {
+            if (e.target === modal) window.dongModalChiTietDongBoTKB();
+        };
+        if (document.body) document.body.appendChild(modal); else if (document.documentElement) document.documentElement.appendChild(modal);
+    }
+
+    let danhSachItemHtml = dsCapNhatLopNay.map(it => `
+        <li class="p-2.5 bg-slate-50 hover:bg-blue-50/50 rounded-lg border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 transition-colors">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-blue-900 bg-blue-100 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">${it.thu} (${it.buoi}, Tiết ${it.tiet})</span>
+                <span class="text-slate-700 font-medium">${it.chiTiet || ''}</span>
+            </div>
+            <span class="text-[11px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-semibold self-start sm:self-auto whitespace-nowrap">Chưa ký</span>
+        </li>
+    `).join('');
+
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-blue-600 text-white flex-none">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span class="font-bold text-sm uppercase">Chi tiết điều chỉnh theo Thời khóa biểu mới</span>
+                    <span class="bg-blue-800 text-white text-xs px-2 py-0.5 rounded-full font-bold">${dsCapNhatLopNay.length} tiết</span>
+                </div>
+                <button type="button" onclick="window.dongModalChiTietDongBoTKB()" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-blue-700 transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto overscroll-contain flex-1 max-h-[60vh]">
+                <p class="text-xs text-slate-500 mb-3">Thời khóa biểu có sự điều chỉnh sau khi tạo sổ. Dưới đây là danh sách các tiết chưa ký tên đã được tự động cập nhật:</p>
+                <ul class="space-y-2">
+                    ${danhSachItemHtml || '<li class="text-slate-400 italic text-center py-4">Không có tiết nào thay đổi.</li>'}
+                </ul>
+            </div>
+            <div class="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs flex-none">
+                <span class="text-slate-500 italic">👉 Vui lòng kiểm tra Tên bài, Nhận xét và bấm [Lưu Sổ đầu bài] để chốt!</span>
+                <button type="button" onclick="window.dongModalChiTietDongBoTKB()" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded font-bold transition cursor-pointer">Đóng</button>
+            </div>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.dongModalChiTietDongBoTKB = function() {
+    let modal = document.getElementById('modalChiTietDongBoTKB');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+};
+
+// =========================================================================
 // [KIỂM SOÁT PHÂN QUYỀN CHÍNH XÁC]: HÀM XÁC THỰC QUYỀN GIÁO VIÊN THEO TỪNG TIẾT TKB
 // =========================================================================
 window.kiemTraQuyenGiaoVienTheoTiet = function(dongDuLieu, maLop, monHoc) {
@@ -982,17 +1037,17 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     );
 
     if (dsCapNhatLopNay.length > 0) {
-        let chiTietTietHtml = dsCapNhatLopNay.map(it => `<li>• <b>${it.thu} (${it.buoi}, Tiết ${it.tiet}):</b> ${it.chiTiet}</li>`).join('');
         thongBaoCapNhatTkbHtml = `
-            <div class="mb-3 p-3 bg-blue-50 border-l-4 border-blue-600 shadow-sm rounded text-xs animate-pulse-once">
-                <div class="flex items-center gap-2 mb-1">
+            <div class="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 shadow-sm rounded-lg flex items-center justify-between text-xs animate-pulse-once">
+                <div class="flex items-center gap-2">
                     <svg class="w-4 h-4 text-blue-600 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <span class="font-extrabold text-blue-900 uppercase">TỰ ĐỘNG ĐỒNG BỘ THEO THỜI KHÓA BIỂU MỚI:</span>
-                    <span class="bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-full">${dsCapNhatLopNay.length} tiết chưa ký</span>
+                    <span class="font-bold text-blue-900">Tự động đồng bộ theo Thời khóa biểu mới:</span>
+                    <span class="bg-blue-200 text-blue-800 font-extrabold px-2 py-0.5 rounded-full text-[11px]">${dsCapNhatLopNay.length} tiết chưa ký</span>
                 </div>
-                <p class="text-slate-600 mb-1">Thời khóa biểu có sự điều chỉnh sau khi tạo sổ. Hệ thống đã tự động cập nhật lại các tiết chưa ký tên dưới đây:</p>
-                <ul class="text-blue-800 font-medium pl-2 space-y-0.5">${chiTietTietHtml}</ul>
-                <p class="text-slate-500 italic mt-1 font-semibold">👉 Vui lòng kiểm tra lại Tên bài, Nhận xét và bấm <b>[Lưu Sổ đầu bài]</b> để chốt vào cơ sở dữ liệu!</p>
+                <button type="button" onclick="window.moModalChiTietDongBoTKB()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Xem chi tiết
+                </button>
             </div>
         `;
     }
@@ -1399,7 +1454,7 @@ async function luuSoDauBaiSangMayChu() {
     let thongBaoGiaoDien = `Hệ thống ghi nhận ${duLieuQuetDuoc.length} dòng có bút thay đổi cần lưu/ghi đè lên Server:\n\n` + 
                           danhSachThongBao.slice(0, 10).join('\n') + 
                           (danhSachThongBao.length > 10 ? `\n... và ${danhSachThongBao.length - 10} dòng khác.` : "") + 
-                          `\n\n(Chỉ ghi đè đúng các dòng thay đổi này, bảo lưu nguyên vẹn dữ liệu các tiết khác trên Server)\n\nĐồng chí có chắc chắn muốn lưu?`;
+                          `\n\n(Chỉ ghi đè đúng các dòng thay đổi này, bảo lưu nguyên vẹn các tiết khác trên Server)\n\nĐồng chí có chắc chắn muốn lưu?`;
                           
     if (!confirm(thongBaoGiaoDien)) return;
 
@@ -2158,7 +2213,7 @@ window.nangCapSelectThanhInput = function(selectId, placeholderText) {
         // Khởi tạo danh sách kết quả lọc
         listEl = document.createElement('ul');
         listEl.id = 'list_' + selectId;
-        listEl.className = 'absolute z-[999] w-full min-w-[130px] mt-1 max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 rounded shadow-xl hidden divide-y divide-slate-100 left-0 text-left';
+        listEl.className = 'absolute z-[999] w-[150px] mt-1 max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 rounded shadow-xl hidden divide-y divide-slate-100 left-0 text-left';
 
         wrapper.appendChild(inputEl);
         wrapper.appendChild(iconEl);
