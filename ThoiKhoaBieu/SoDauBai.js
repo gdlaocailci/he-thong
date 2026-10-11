@@ -252,35 +252,60 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
             };
         }
 
-        setTimeout(() => {
-            khoiTaoDuLieuSoDauBai(duLieuSever);
-            daTaiDuLieuSoDauBai = true;
-            dangTaiDuLieuSoDauBai = false; 
+        // [KHẮC PHỤC TRIỆT ĐỂ LỖI QUAY MÃI]: Bỏ setTimeout để thực thi đồng bộ trong try/catch
+        // 1. Mở khóa các ô chọn ngay khi dữ liệu đã tải về thành công
+        if (selTuan) selTuan.disabled = false;
+        if (selLop) selLop.disabled = false;
+        if (inTuan) { inTuan.disabled = false; inTuan.classList.remove('cursor-wait'); }
+        if (inLop) { inLop.disabled = false; inLop.classList.remove('cursor-wait'); }
 
-            let inTuanReset = document.getElementById('input_chonTuanSo');
-            let inLopReset = document.getElementById('input_chonLopSo');
-            let selTuanReset = document.getElementById('chonTuanSo');
-            let selLopReset = document.getElementById('chonLopSo');
+        if (duLieuSever.TRANG_THAI_KHOA) { duLieuKhoaSoToanCuc = duLieuSever.TRANG_THAI_KHOA; }
 
-            if (duLieuSever.TRANG_THAI_KHOA) { duLieuKhoaSoToanCuc = duLieuSever.TRANG_THAI_KHOA; }
+        // 2. Khởi tạo dữ liệu vào bộ nhớ và tạo danh sách chọn Tuần / Lớp
+        khoiTaoDuLieuSoDauBai(duLieuSever);
+        daTaiDuLieuSoDauBai = true;
+        dangTaiDuLieuSoDauBai = false; 
 
-            if (selTuanReset) selTuanReset.disabled = false;
-            if (selLopReset) selLopReset.disabled = false;
-            if (inTuanReset) { inTuanReset.disabled = false; inTuanReset.classList.remove('cursor-wait'); }
-            if (inLopReset) { inLopReset.disabled = false; inLopReset.classList.remove('cursor-wait'); }
+        // 3. Tự động kích hoạt vẽ Sổ Đầu Bài lên lưới (Xóa hoàn toàn màn hình chờ quay tròn)
+        let theTuan = document.getElementById('chonTuanSo');
+        let theLop = document.getElementById('chonLopSo');
+        
+        if (theTuan && theLop) {
+            // Đồng bộ lại hiển thị cho input Tuần và Lớp
+            if (typeof window.dongBoHienThiTuSelect === 'function') {
+                window.dongBoHienThiTuSelect('chonTuanSo');
+                window.dongBoHienThiTuSelect('chonLopSo');
+            }
 
-        }, 10);
+            if (theTuan.value && theLop.value) {
+                ketXuatSoDauBaiLenLuoi();
+            } else if (vungHienThi) {
+                vungHienThi.innerHTML = `<div class="p-4"><p class="text-center py-10 text-slate-500 font-bold">Vui lòng chọn Tuần và Lớp để xem Sổ đầu bài.</p></div>`;
+            }
+        }
 
     } catch (loi) {
         dangTaiDuLieuSoDauBai = false; 
-        console.error("Lỗi Sổ đầu bài:", loi);
+        daTaiDuLieuSoDauBai = false;
+        console.error("Lỗi kết nối Sổ đầu bài:", loi);
         if (vungHienThi) {
-            vungHienThi.innerHTML = `<div class="text-center py-10 text-red-600 font-bold text-lg">⚠️ Cảnh báo lỗi kết nối: <br><span class="text-base font-normal text-slate-700">${loi.message}</span></div>`;
+            vungHienThi.innerHTML = `
+                <div class="text-center py-10 text-red-600 font-bold text-base">
+                    <div class="w-12 h-12 text-red-500 mx-auto mb-2">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    ⚠️ Kết nối máy chủ bị gián đoạn: <br>
+                    <span class="text-xs font-normal text-slate-600 block mt-1">${loi.message}</span>
+                    <button onclick="taiDuLieuSoDauBaiTuMayChu()" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded shadow transition-colors">
+                        🔄 Thử kết nối lại
+                    </button>
+                </div>
+            `;
         }
         if (selTuan) selTuan.disabled = false;
         if (selLop) selLop.disabled = false;
-        if (inTuan) { inTuan.disabled = false; inTuan.classList.remove('cursor-wait'); inTuan.value = inTuan.dataset.oldValue || ''; }
-        if (inLop) { inLop.disabled = false; inLop.classList.remove('cursor-wait'); inLop.value = inLop.dataset.oldValue || ''; }
+        if (inTuan) { inTuan.disabled = false; inTuan.classList.remove('cursor-wait'); inTuan.value = inTuan.dataset.oldValue || 'Chọn Tuần...'; }
+        if (inLop) { inLop.disabled = false; inLop.classList.remove('cursor-wait'); inLop.value = inLop.dataset.oldValue || 'Chọn Lớp...'; }
     }
 }
 
@@ -2069,17 +2094,28 @@ function napDropdownSoDauBai() {
     if(elementTuan) {
         elementTuan.disabled = false;
         elementTuan.innerHTML = chonTuanHtml;
-        // Phục hồi lại giá trị cũ nếu danh sách mới vẫn chứa giá trị đó
+        // Phục hồi lại giá trị cũ nếu danh sách mới vẫn chứa giá trị đó, hoặc chọn mặc định tuần hiện tại
         if (giaTriTuanCu && mangTuan.includes(giaTriTuanCu)) {
             elementTuan.value = giaTriTuanCu;
+        } else if (mangTuan.length > 0) {
+            let tuanHT = (typeof window.tuanDangXem !== 'undefined' && window.tuanDangXem) 
+                ? String(window.tuanDangXem) 
+                : ((typeof thongSoHocVu !== 'undefined' && thongSoHocVu.TUAN_HIEN_TAI) ? String(thongSoHocVu.TUAN_HIEN_TAI) : '');
+            if (tuanHT && mangTuan.includes(tuanHT)) {
+                elementTuan.value = tuanHT;
+            } else {
+                elementTuan.value = mangTuan[0]; // Tuần lớn nhất
+            }
         }
     }
     if(elementLop) {
         elementLop.disabled = false;
         elementLop.innerHTML = chonLopHtml;
-        // Phục hồi lại giá trị cũ
+        // Phục hồi lại giá trị cũ, hoặc chọn lớp đầu tiên
         if (giaTriLopCu && mangLop.includes(giaTriLopCu)) {
             elementLop.value = giaTriLopCu;
+        } else if (mangLop.length > 0) {
+            elementLop.value = mangLop[0];
         }
     }
 
@@ -2098,8 +2134,9 @@ function napDropdownSoDauBai() {
     }
 
     let vungHienThi = document.getElementById('vungHienThiSoDauBai');
-    // Chỉ báo "Vui lòng chọn" nếu thực sự ô chọn đang trống
-    if (vungHienThi && (!elementTuan || !elementTuan.value || !elementLop || !elementLop.value)) {
+    if (elementTuan && elementTuan.value && elementLop && elementLop.value) {
+        ketXuatSoDauBaiLenLuoi();
+    } else if (vungHienThi) {
         vungHienThi.innerHTML = `<div class="p-4"><p class="text-center py-10 text-slate-500 font-bold">Vui lòng chọn Tuần và Lớp để xem Sổ đầu bài.</p></div>`;
     }
 }
