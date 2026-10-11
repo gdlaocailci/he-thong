@@ -32,7 +32,6 @@ let dinhMucKhungCT = {};
 let tuDienQuyenPhanCong = {};
 let coToanQuyenSDB = false;
 let maGvDangNhapHeThong = '';
-    tenGvDangNhapHeThong = '';
 let tenGvDangNhapHeThong = '';
 let danhSachGiaoVienToanCuc = [];
 let mapTkbToanTapToanCuc = {}; // [BẢO CHỨNG LỊCH SỬ]: Lưu bản đồ TKB toàn bộ các tuần (quá khứ từ DATA_TKB và hiện tại từ TKB_HIEN_TAI) // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
@@ -60,6 +59,7 @@ window.lamSachBoNhoSoDauBai = function() {
     // Vì PPCT không thay đổi khi sửa TKB, việc giữ cache giúp API bỏ qua tải 2 bảng nặng này (giảm 85% thời gian mạng)
     
     maGvDangNhapHeThong = '';
+    tenGvDangNhapHeThong = '';
     
     let vungHienThi = document.getElementById('vungHienThiSoDauBai');
     if (vungHienThi) vungHienThi.innerHTML = '';
