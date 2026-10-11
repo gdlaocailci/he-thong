@@ -418,9 +418,14 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         });
     }
 
+    // [LƯU TRỮ TỪ ĐIỂN TKB TOÀN TẬP]: Phục vụ đồng bộ chủ động theo yêu cầu của giáo viên
+    window._mapTkbToanTap = mapTkbToanTap;
+    mapTkbToanTapToanCuc = mapTkbToanTap;
+
     // =========================================================================
-    // [SMART RECONCILIATION ENGINE]: ĐỐI CHIẾU VÀ ĐỒNG BỘ THỜI KHÓA BIỂU MỚI
-    // Tự động cập nhật môn, giáo viên, PPCT cho các tiết CHƯA KÝ khi TKB thay đổi
+    // [SMART RECONCILIATION ENGINE - ĐỐI CHIẾU KHÁC BIỆT CHỦ ĐỘNG]:
+    // Chỉ đối chiếu phát hiện sai lệch TKB cho các tiết CHƯA KÝ để hiển thị Badge số lượng
+    // TUYỆT ĐỐI KHÔNG TỰ ĐỘNG GHI ĐÈ/XÓA SỬA DỮ LIỆU SĐB ĐÃ LƯU KHI VỪA MỞ SỔ!
     // =========================================================================
     let danhSachTietCapNhatTuTKB = [];
 
@@ -431,7 +436,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
         let ngayTkb = String(dongTkb['Ngày'] || '').trim();
 
         if (!mapDuiLieuHopNhat[khoa]) {
-            // Tiết này có trong TKB nhưng chưa từng có trong SĐB -> Thêm mới vào SĐB
+            // Tiết này có trong TKB nhưng chưa từng có trong SĐB -> Khởi tạo placeholder để có dòng hiển thị trên lưới SĐB
             if (monTkb !== '') {
                 mapDuiLieuHopNhat[khoa] = {
                     'Tuần': String(dongTkb['Tuần']).replace(/\D/g, ''),
@@ -445,7 +450,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
                     'TietPPCT_Thuc': '', 'TenBai_Thuc': '', 'NhanXet_Thuc': '', 
                     'XepLoai_Thuc': '', 'ChuKy_Thuc': '', 'ChuyenCan_Thuc': '',
                     'DaLuu': false,
-                    'CapNhatTuTKB': true
+                    'CapNhatTuTKB': false
                 };
             }
         } else {
@@ -459,7 +464,7 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
                     dongSdb['Mã GV'] = gvTkb;
                 }
             } else {
-                // TIẾT CHƯA KÝ TÊN -> TỰ ĐỘNG ĐỒNG BỘ THEO THỜI KHÓA BIỂU MỚI NHẤT
+                // TIẾT CHƯA KÝ TÊN -> ĐỐI CHIẾU KHÁC BIỆT (KHÔNG TỰ ĐỘNG GHI ĐÈ KHI KHỞI TẠO)
                 let monSdb = String(dongSdb['Môn Học'] || '').trim();
                 let gvSdb = String(dongSdb['Mã GV'] || '').trim();
 
@@ -471,32 +476,22 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
                     if (coThayDoiMon) chiTietDoi.push(`Môn: [${monSdb || '--'} ➔ ${monTkb || '--'}]`);
                     if (coThayDoiGv) chiTietDoi.push(`GV: [${gvSdb || '--'} ➔ ${gvTkb || '--'}]`);
 
-                    dongSdb['Môn Học'] = monTkb;
-                    dongSdb['Mã GV'] = gvTkb;
-                    if (ngayTkb) dongSdb['Ngày'] = ngayTkb;
-
-                    // Nếu môn học thay đổi: Xóa Tiết PPCT, Tên bài, Nhận xét cũ để tính lại môn mới
-                    if (coThayDoiMon) {
-                        dongSdb['TietPPCT_Thuc'] = '';
-                        dongSdb['TenBai_Thuc'] = '';
-                        dongSdb['NhanXet_Thuc'] = '';
-                        dongSdb['XepLoai_Thuc'] = '';
-                        dongSdb['DaLuu'] = false; // Bắt buộc set DaLuu = false để render lại PPCT môn mới
-                    }
-
-                    dongSdb['CapNhatTuTKB'] = true;
-                    dongSdb['TrangThaiThayDoi'] = true;
-
+                    // Ghi nhận vào danh sách khác biệt để kích hoạt Badge số lượng trên nút bấm
+                    // GIỮ NGUYÊN BẢN dữ liệu SĐB đã lưu, không tự ý sửa đổi trong RAM khi chưa bấm Đồng bộ
                     danhSachTietCapNhatTuTKB.push({
                         tuan: dongSdb['Tuần'],
                         lop: dongSdb['Mã Lớp'],
                         thu: dongSdb['Thứ'],
                         buoi: dongSdb['Buổi'],
                         tiet: dongSdb['Tiết'],
+                        monTkb: monTkb,
+                        gvTkb: gvTkb,
+                        ngayTkb: ngayTkb,
+                        monSdb: monSdb,
+                        gvSdb: gvSdb,
                         chiTiet: chiTietDoi.join(' | ')
                     });
                 } else {
-                    dongSdb['Mã GV'] = gvTkb;
                     if (ngayTkb && !dongSdb['Ngày']) dongSdb['Ngày'] = ngayTkb;
                 }
             }
@@ -513,21 +508,15 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
             let monTkb = dongTkb ? String(dongTkb['Môn Học'] || '').trim() : '';
             let monSdb = String(dongSdb['Môn Học'] || '').trim();
             if (monSdb !== '' && monTkb === '') {
-                dongSdb['Môn Học'] = '';
-                dongSdb['Mã GV'] = '';
-                dongSdb['TietPPCT_Thuc'] = '';
-                dongSdb['TenBai_Thuc'] = '';
-                dongSdb['NhanXet_Thuc'] = '';
-                dongSdb['XepLoai_Thuc'] = '';
-                dongSdb['DaLuu'] = false;
-                dongSdb['CapNhatTuTKB'] = true;
-                dongSdb['TrangThaiThayDoi'] = true;
                 danhSachTietCapNhatTuTKB.push({
                     tuan: dongSdb['Tuần'],
                     lop: dongSdb['Mã Lớp'],
                     thu: dongSdb['Thứ'],
                     buoi: dongSdb['Buổi'],
                     tiet: dongSdb['Tiết'],
+                    monTkb: '',
+                    gvTkb: '',
+                    monSdb: monSdb,
                     chiTiet: `Hủy tiết [${monSdb}] theo TKB mới`
                 });
             }
@@ -921,61 +910,37 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let chuoiMonDay = tapHopMonDay.size > 0 ? Array.from(tapHopMonDay).join(', ') : '<span class="text-red-500 font-normal">Không có tiết dạy tại lớp này</span>';
     let theHienThiQuyen = `<div class="mb-4 p-2.5 bg-blue-50 border border-blue-300 shadow-sm text-sm rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-pulse-once"><div><span class="font-bold text-blue-800">Giáo viên:</span> <span class="text-blue-700 font-extrabold">${madinhdanhGV || 'Chưa nhận diện'}</span></div><div class="text-left sm:text-right sm:max-w-[70%]"><span class="font-bold text-blue-800">Được phân công dạy:</span> <span class="text-blue-700 font-semibold italic">${chuoiMonDay}</span></div></div>`;
 
-    // [UI THÔNG MINH - GỌN GÀNG]: Thanh Capsule 1 dòng (Cao 36px) + Modal Popup chi tiết
+    // [UI THÔNG MINH - CHỦ ĐỘNG ĐỒNG BỘ]:
+    // Loại bỏ hoàn toàn banner chiếm diện tích màn hình. Chuyển toàn bộ chỉ báo thành Badge số lượng trên nút "Đồng bộ TKB"
     let thongBaoCapNhatTkbHtml = '';
     let dsCapNhatLopNay = (window._danhSachTietCapNhatTuTKB || []).filter(item => 
         String(item.tuan).trim() === String(tuanChon).replace(/\D/g, '') &&
         String(item.lop).trim().toUpperCase() === String(lopChon).trim().toUpperCase()
     );
+    let soTietCanDongBo = dsCapNhatLopNay.length;
 
-    if (dsCapNhatLopNay.length > 0) {
-        thongBaoCapNhatTkbHtml = `
-            <!-- Thanh thông báo thu gọn 1 dòng duy nhất -->
-            <div id="bannerDongBoTkb" class="mb-2 px-3 py-1.5 bg-blue-50 border border-blue-300 rounded shadow-xs flex items-center justify-between gap-3 text-xs animate-pulse-once">
-                <div class="flex items-center gap-2 min-w-0 flex-1 truncate">
-                    <svg class="w-4 h-4 text-blue-600 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <span class="font-bold text-blue-900 truncate">
-                        Tự động đồng bộ: <span class="text-blue-700 font-extrabold underline">${dsCapNhatLopNay.length} tiết chưa ký</span> đã được cập nhật theo Thời khóa biểu mới.
-                    </span>
-                </div>
-                <div class="flex items-center gap-2 flex-none">
-                    <button type="button" onclick="moModalChiTietDongBoTKB()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow-xs text-[11px] transition-colors flex items-center gap-1 cursor-pointer">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                        Xem chi tiết (${dsCapNhatLopNay.length})
-                    </button>
-                    <button type="button" onclick="document.getElementById('bannerDongBoTkb')?.remove()" class="text-slate-400 hover:text-slate-700 font-bold px-1.5 py-0.5 text-base leading-none transition-colors" title="Đóng">&times;</button>
-                </div>
-            </div>
-
-            <!-- Cửa sổ Modal chi tiết (Mặc định ẩn, chỉ hiện khi bấm Xem chi tiết) -->
-            <div id="modalChiTietDongBoTKB" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans reactbits-fade-in" onclick="if(event.target===this) dongModalChiTietDongBoTKB()">
-                <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden border border-slate-300">
-                    <div class="bg-blue-700 text-white px-4 py-3 flex justify-between items-center shadow-md">
-                        <h3 class="text-sm font-bold flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            Danh sách ${dsCapNhatLopNay.length} tiết cập nhật theo TKB (Tuần ${tuanChon.replace(/\D/g,'')}, Lớp ${lopChon})
-                        </h3>
-                        <button type="button" onclick="dongModalChiTietDongBoTKB()" class="text-white hover:text-red-200 text-2xl leading-none">&times;</button>
-                    </div>
-                    <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-slate-50 text-xs">
-                        <p class="text-slate-600 mb-2 font-medium">Thời khóa biểu có sự điều chỉnh. Các tiết chưa ký dưới đây đã được tự động cập nhật:</p>
-                        <div class="divide-y divide-slate-200 bg-white rounded border border-slate-200 shadow-2xs">
-                            ${dsCapNhatLopNay.map((it, idx) => `
-                                <div class="p-2.5 flex items-center justify-between gap-3 hover:bg-blue-50/50 transition-colors">
-                                    <span class="font-bold text-slate-800 whitespace-nowrap">${idx + 1}. ${it.thu} (${it.buoi}, Tiết ${it.tiet})</span>
-                                    <span class="text-blue-700 font-semibold text-right">${it.chiTiet}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <p class="text-slate-500 italic mt-3 text-center">👉 Vui lòng kiểm tra lại Tên bài, Nhận xét và bấm <b>[Lưu Sổ đầu bài]</b> để chốt vào cơ sở dữ liệu!</p>
-                    </div>
-                    <div class="bg-gray-100 px-4 py-2.5 border-t flex justify-end">
-                        <button type="button" onclick="dongModalChiTietDongBoTKB()" class="bg-slate-600 hover:bg-slate-700 text-white font-bold px-4 py-1.5 rounded text-xs transition-colors">Đóng</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+    // Cập nhật trạng thái nút bấm trên thanh công cụ
+    setTimeout(() => {
+        let btnDongBo = document.getElementById('btnDongBoTenBai');
+        if (btnDongBo) {
+            if (soTietCanDongBo > 0) {
+                btnDongBo.innerHTML = `
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Đồng bộ TKB</span>
+                    <span class="ml-1 px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-black animate-pulse shadow-xs">${soTietCanDongBo}</span>
+                `;
+                btnDongBo.className = "bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-2 text-xs shadow-md transition duration-200 rounded flex items-center gap-1.5 ring-2 ring-amber-300 ring-offset-1 cursor-pointer";
+                btnDongBo.title = `Có ${soTietCanDongBo} tiết chưa ký có thay đổi theo Thời khóa biểu mới. Bấm để chủ động đồng bộ!`;
+            } else {
+                btnDongBo.innerHTML = `
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Đồng bộ TKB</span>
+                `;
+                btnDongBo.className = "bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5 cursor-pointer";
+                btnDongBo.title = "Đồng bộ môn, giáo viên và tên bài học từ TKB & PPCT";
+            }
+        }
+    }, 50);
 
     let danhSachThu = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
     if (coDayBuThu7) danhSachThu.push("Thứ 7");
@@ -1648,16 +1613,28 @@ function dongBoTenBaiHoc() {
             }
         });
 
+        // 3. CẬP NHẬT LẠI DANH SÁCH KHÁC BIỆT & XÓA BADGE TRÊN NÚT BẤM
+        if (window._danhSachTietCapNhatTuTKB) {
+            window._danhSachTietCapNhatTuTKB = window._danhSachTietCapNhatTuTKB.filter(it => 
+                !(String(it.tuan).trim() === String(tuanSo) && String(it.lop).trim().toUpperCase() === String(lopChon).trim().toUpperCase())
+            );
+        }
+
         if (btn) { 
-            btn.innerHTML = textGoc; 
+            btn.innerHTML = `
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>Đồng bộ TKB</span>
+            `; 
+            btn.className = "bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 text-xs shadow transition duration-200 rounded flex items-center gap-1.5 cursor-pointer";
+            btn.title = "Đồng bộ môn, giáo viên và tên bài học từ TKB & PPCT";
             btn.disabled = false; 
         }
 
-        let thongBao = `✅ ĐÃ ĐỒNG BỘ HOÀN TẤT:\n`;
-        if (demTkbCapNhat > 0) thongBao += `- Đã cập nhật ${demTkbCapNhat} tiết theo Thời khóa biểu mới nhất.\n`;
-        if (demTenBaiCapNhat > 0) thongBao += `- Đã tự động điền Tên bài dạy PPCT cho ${demTenBaiCapNhat} tiết.\n`;
+        let thongBao = `✅ ĐÃ ĐỒNG BỘ CHỦ ĐỘNG HOÀN TẤT:\n`;
+        if (demTkbCapNhat > 0) thongBao += `• Đã cập nhật ${demTkbCapNhat} tiết theo Thời khóa biểu mới nhất.\n`;
+        if (demTenBaiCapNhat > 0) thongBao += `• Đã tự động đánh số và điền ${demTenBaiCapNhat} tên bài học theo PPCT.\n`;
         if (demTkbCapNhat === 0 && demTenBaiCapNhat === 0) thongBao += `Toàn bộ các tiết trên Sổ đầu bài đã hoàn toàn khớp chuẩn với Thời khóa biểu và PPCT.`;
-        else thongBao += `\nĐồng chí vui lòng kiểm tra và bấm [Lưu Sổ đầu bài] để chốt cơ sở dữ liệu!`;
+        else thongBao += `\n👉 Đồng chí vui lòng kiểm tra lại và bấm [Lưu Sổ đầu bài] để chốt cơ sở dữ liệu!`;
 
         alert(thongBao);
     }, 150); 
