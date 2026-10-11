@@ -621,6 +621,23 @@ let khoaDoubleKetXuat = false;
 // [THUẬT TOÁN BẢO VỆ TIẾN ĐỘ PPCT]: KIỂM TRA TÍNH TUẦN TỰ LƯU SỔ ĐẦU BÀI
 // Ngăn chặn nhảy cóc sang Tuần N khi các tuần trước (đặc biệt Tuần 1) chưa lưu
 // =========================================================================
+
+window.moModalChiTietDongBoTKB = function() {
+    let modal = document.getElementById('modalChiTietDongBoTKB');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+};
+
+window.dongModalChiTietDongBoTKB = function() {
+    let modal = document.getElementById('modalChiTietDongBoTKB');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+};
+
 window.kiemTraTuanHopLeTruocKhiMo = function(tuanCanMo, lopChon) {
     if (!tuanCanMo || !lopChon) return { hopLe: true };
     let tMo = parseInt(String(tuanCanMo).replace(/\D/g, ''), 10) || 1;
@@ -906,7 +923,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let chuoiMonDay = tapHopMonDay.size > 0 ? Array.from(tapHopMonDay).join(', ') : '<span class="text-red-500 font-normal">Không có tiết dạy tại lớp này</span>';
     let theHienThiQuyen = `<div class="mb-4 p-2.5 bg-blue-50 border border-blue-300 shadow-sm text-sm rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-pulse-once"><div><span class="font-bold text-blue-800">Giáo viên:</span> <span class="text-blue-700 font-extrabold">${madinhdanhGV || 'Chưa nhận diện'}</span></div><div class="text-left sm:text-right sm:max-w-[70%]"><span class="font-bold text-blue-800">Được phân công dạy:</span> <span class="text-blue-700 font-semibold italic">${chuoiMonDay}</span></div></div>`;
 
-    // [THÔNG MINH]: Khối Banner thông báo các tiết vừa được tự động đồng bộ theo TKB mới
+    // [UI THÔNG MINH - GỌN GÀNG]: Thanh Capsule 1 dòng (Cao 36px) + Modal Popup chi tiết
     let thongBaoCapNhatTkbHtml = '';
     let dsCapNhatLopNay = (window._danhSachTietCapNhatTuTKB || []).filter(item => 
         String(item.tuan).trim() === String(tuanChon).replace(/\D/g, '') &&
@@ -914,17 +931,50 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     );
 
     if (dsCapNhatLopNay.length > 0) {
-        let chiTietTietHtml = dsCapNhatLopNay.map(it => `<li>• <b>${it.thu} (${it.buoi}, Tiết ${it.tiet}):</b> ${it.chiTiet}</li>`).join('');
         thongBaoCapNhatTkbHtml = `
-            <div class="mb-3 p-3 bg-blue-50 border-l-4 border-blue-600 shadow-sm rounded text-xs animate-pulse-once">
-                <div class="flex items-center gap-2 mb-1">
+            <!-- Thanh thông báo thu gọn 1 dòng duy nhất -->
+            <div id="bannerDongBoTkb" class="mb-2 px-3 py-1.5 bg-blue-50 border border-blue-300 rounded shadow-xs flex items-center justify-between gap-3 text-xs animate-pulse-once">
+                <div class="flex items-center gap-2 min-w-0 flex-1 truncate">
                     <svg class="w-4 h-4 text-blue-600 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <span class="font-extrabold text-blue-900 uppercase">TỰ ĐỘNG ĐỒNG BỘ THEO THỜI KHÓA BIỂU MỚI:</span>
-                    <span class="bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-full">${dsCapNhatLopNay.length} tiết chưa ký</span>
+                    <span class="font-bold text-blue-900 truncate">
+                        Tự động đồng bộ: <span class="text-blue-700 font-extrabold underline">${dsCapNhatLopNay.length} tiết chưa ký</span> đã được cập nhật theo Thời khóa biểu mới.
+                    </span>
                 </div>
-                <p class="text-slate-600 mb-1">Thời khóa biểu có sự điều chỉnh sau khi tạo sổ. Hệ thống đã tự động cập nhật lại các tiết chưa ký tên dưới đây:</p>
-                <ul class="text-blue-800 font-medium pl-2 space-y-0.5">${chiTietTietHtml}</ul>
-                <p class="text-slate-500 italic mt-1 font-semibold">👉 Vui lòng kiểm tra lại Tên bài, Nhận xét và bấm <b>[Lưu Sổ đầu bài]</b> để chốt vào cơ sở dữ liệu!</p>
+                <div class="flex items-center gap-2 flex-none">
+                    <button type="button" onclick="moModalChiTietDongBoTKB()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow-xs text-[11px] transition-colors flex items-center gap-1 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Xem chi tiết (${dsCapNhatLopNay.length})
+                    </button>
+                    <button type="button" onclick="document.getElementById('bannerDongBoTkb')?.remove()" class="text-slate-400 hover:text-slate-700 font-bold px-1.5 py-0.5 text-base leading-none transition-colors" title="Đóng">&times;</button>
+                </div>
+            </div>
+
+            <!-- Cửa sổ Modal chi tiết (Mặc định ẩn, chỉ hiện khi bấm Xem chi tiết) -->
+            <div id="modalChiTietDongBoTKB" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans reactbits-fade-in" onclick="if(event.target===this) dongModalChiTietDongBoTKB()">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden border border-slate-300">
+                    <div class="bg-blue-700 text-white px-4 py-3 flex justify-between items-center shadow-md">
+                        <h3 class="text-sm font-bold flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Danh sách ${dsCapNhatLopNay.length} tiết cập nhật theo TKB (Tuần ${tuanChon.replace(/\D/g,'')}, Lớp ${lopChon})
+                        </h3>
+                        <button type="button" onclick="dongModalChiTietDongBoTKB()" class="text-white hover:text-red-200 text-2xl leading-none">&times;</button>
+                    </div>
+                    <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-slate-50 text-xs">
+                        <p class="text-slate-600 mb-2 font-medium">Thời khóa biểu có sự điều chỉnh. Các tiết chưa ký dưới đây đã được tự động cập nhật:</p>
+                        <div class="divide-y divide-slate-200 bg-white rounded border border-slate-200 shadow-2xs">
+                            ${dsCapNhatLopNay.map((it, idx) => `
+                                <div class="p-2.5 flex items-center justify-between gap-3 hover:bg-blue-50/50 transition-colors">
+                                    <span class="font-bold text-slate-800 whitespace-nowrap">${idx + 1}. ${it.thu} (${it.buoi}, Tiết ${it.tiet})</span>
+                                    <span class="text-blue-700 font-semibold text-right">${it.chiTiet}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p class="text-slate-500 italic mt-3 text-center">👉 Vui lòng kiểm tra lại Tên bài, Nhận xét và bấm <b>[Lưu Sổ đầu bài]</b> để chốt vào cơ sở dữ liệu!</p>
+                    </div>
+                    <div class="bg-gray-100 px-4 py-2.5 border-t flex justify-end">
+                        <button type="button" onclick="dongModalChiTietDongBoTKB()" class="bg-slate-600 hover:bg-slate-700 text-white font-bold px-4 py-1.5 rounded text-xs transition-colors">Đóng</button>
+                    </div>
+                </div>
             </div>
         `;
     }
