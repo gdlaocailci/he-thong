@@ -280,14 +280,18 @@ window.toggleMenuThaoTacTKB = function(event) {
         event.preventDefault();
     }
     const dropdown = document.getElementById('dropdownMenuThaoTacTKB');
-    if (dropdown) {
-        if (dropdown.classList.contains('hidden')) {
-            dropdown.classList.remove('hidden');
-            dropdown.classList.add('flex');
-        } else {
-            dropdown.classList.add('hidden');
-            dropdown.classList.remove('flex');
-        }
+    if (!dropdown) return;
+    
+    const isHidden = dropdown.classList.contains('hidden') || dropdown.style.display === 'none' || window.getComputedStyle(dropdown).display === 'none';
+    
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+        dropdown.classList.add('flex');
+        dropdown.style.display = 'flex';
+    } else {
+        dropdown.classList.add('hidden');
+        dropdown.classList.remove('flex');
+        dropdown.style.display = 'none';
     }
 };
 
@@ -296,6 +300,7 @@ window.dongMenuThaoTacTKB = function() {
     if (dropdown) {
         dropdown.classList.add('hidden');
         dropdown.classList.remove('flex');
+        dropdown.style.display = 'none';
     }
 };
 
