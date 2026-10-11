@@ -367,7 +367,8 @@ async function khoiTaoGiaoDien() {
 
 window.kichHoatTaiNgamCacPhanHeKhac = function() {
     setTimeout(() => {
-        if (typeof taiDuLieuSoDauBaiTuMayChu === 'function') taiDuLieuSoDauBaiTuMayChu();
+        // [CHỦ ĐỘNG ĐỒNG BỘ]: Không tự động tải ngầm Sổ Đầu Bài khi khởi động ứng dụng để giải phóng băng thông và tăng tốc
+        // Sổ Đầu Bài chỉ tải theo nhu cầu (On-Demand) khi người dùng chủ động bấm vào tab "Sổ Đầu Bài"
         if (typeof taiCayDanhMucThongKe === 'function' && (!window.cayDanhMucThongKe || Object.keys(window.cayDanhMucThongKe).length === 0)) taiCayDanhMucThongKe();
         if (typeof taiDuLieuPhanCongTuMayChu === 'function' && (!window.danhSachGV || window.danhSachGV.length === 0)) taiDuLieuPhanCongTuMayChu();
         if (typeof taiDuLieuKhungChuongTrinhTuMayChu === 'function' && (!window.duLieuBangKCT || window.duLieuBangKCT.length === 0)) taiDuLieuKhungChuongTrinhTuMayChu();
@@ -2134,20 +2135,8 @@ async function dongBoDuLieuNgamToanCuc() {
         }
     } 
     else if (khungSDB && !khungSDB.classList.contains('hidden')) {
-        let coThayDoiSDB = (typeof coThayDoiChuaLuu_SDB !== 'undefined' && coThayDoiChuaLuu_SDB === true);
-        let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
-
-        if (coThayDoiSDB || coOThayDoiDOM_SDB) {
-            console.warn("Sổ đầu bài đang phát sinh dữ liệu gõ dở, tạm dừng quy trình tải ngầm.");
-            return;
-        }
-
-        hienThiThongBaoTaiNgam(true);
-        try {
-            if (typeof thucThiLamMoiNgam === 'function') await thucThiLamMoiNgam();
-        } finally {
-            setTimeout(() => hienThiThongBaoTaiNgam(false), 1500);
-        }
+        // [CHỦ ĐỘNG ĐỒNG BỘ]: Tắt polling 60s đối với Sổ Đầu Bài để chống nghẽn mạng Google Sheets và bảo vệ dữ liệu người dùng
+        return;
     }
 }
 
