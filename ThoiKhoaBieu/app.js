@@ -798,38 +798,20 @@ function dongModal() { document.getElementById('modalKiemTra').classList.add('hi
 // =========================================================================
 // HÀM TÍNH NGÀY ĐỘC LẬP (SỬ DỤNG HỆ TỌA ĐỘ TOÁN HỌC TUYỆT ĐỐI)
 // =========================================================================
-function tinhNgayDocLap(ngayDauTuanStr, tenThu, tuanHienTai) {
-    let mapThuToDay = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
-    let tenThuChuan = tenThu ? String(tenThu).trim() : "Thứ 2";
-    if (tenThuChuan.match(/^[2-7]$/)) tenThuChuan = "Thứ " + tenThuChuan;
-    let dayDichToVN = mapThuToDay[tenThuChuan] !== undefined ? mapThuToDay[tenThuChuan] : 0;
+function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
+    if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
-    let ngayGoc = null;
-    if (ngayDauTuanStr && String(ngayDauTuanStr).trim() !== '') {
-        let str = String(ngayDauTuanStr).trim();
-        if (str.includes('-')) {
-            let p = str.split('-');
-            if (p.length === 3) {
-                if (p[0].length === 4) ngayGoc = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
-                else ngayGoc = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
-            }
-        } else if (str.includes('/')) {
-            let p = str.split('/');
-            if (p.length === 3) {
-                if (p[2].length === 4) ngayGoc = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
-                else ngayGoc = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
-            }
-        }
-    }
+    let parts = ngayDauTuanStr.split('-');
+    if (parts.length !== 3) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
     
-    // Nếu vẫn chưa có ngày gốc hợp lệ, tự động tính mốc Thứ 2 dựa trên tuần làm việc
-    if (!ngayGoc || isNaN(ngayGoc.getTime())) {
-        let tNum = tuanHienTai ? (parseInt(tuanHienTai, 10) || 1) : (parseInt(tuanDangXem, 10) || 1);
-        let baseM1 = new Date(2026, 8, 21); // Thứ 2 Tuần 1: 21/09/2026
-        ngayGoc = new Date(baseM1.getTime() + (tNum - 1) * 7 * 86400000);
-    }
+    let ngayGoc = new Date(parts[0], parts[1] - 1, parts[2]);
     
+    const mapThuToDay = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
     let dayGocToVN = ngayGoc.getDay() === 0 ? 6 : ngayGoc.getDay() - 1;
+    let dayDichToVN = mapThuToDay[tenThu];
+    
+    if (dayDichToVN === undefined) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
+    
     let soNgayLech = dayDichToVN - dayGocToVN;
     
     let ngayDich = new Date(ngayGoc.getTime());
@@ -908,14 +890,6 @@ function xuatMaTranBang(danhSachTiet) {
         });
         if (minDateObj) {
             ngayDauTuanUI = `${minDateObj.getFullYear()}-${(minDateObj.getMonth() + 1).toString().padStart(2, '0')}-${minDateObj.getDate().toString().padStart(2, '0')}`; 
-        } else if (tuanDangXem) {
-            let tt = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
-            if (tt && tt.ngayDayDu) {
-                let p = tt.ngayDayDu.split('/');
-                if (p.length === 3) {
-                    ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`;
-                }
-            }
         }
     }
     
@@ -942,7 +916,7 @@ function xuatMaTranBang(danhSachTiet) {
     const demTietGV = {}; 
 
     duLieuTiet.forEach(t => {
-        const thu = String(t.thu || '').trim(); const buoi = String(t.buoi || '').trim();
+        const thu = t.thu.trim(); const buoi = t.buoi.trim();
         const key = `${thu}_${buoi}_${t.tiet}_${t.maLop}`;
         mapDuLieu.set(key, t);
         
@@ -1116,28 +1090,6 @@ async function luuDuLieu(event, loaiLuu) {
         let cacOMon = document.querySelectorAll('input[id^="mon_"]');
         let setLopDangHienThi = new Set();
         
-        // [ĐẢM BẢO NGÀY ĐẦU TUẦN LUÔN CÓ GIÁ TRỊ HỢP LỆ TRƯỚC KHI LƯU]
-        let dateInput = document.getElementById('chonNgayDauTuan');
-        if (dateInput && dateInput.value) {
-            ngayDauTuanUI = dateInput.value;
-        }
-        if (!ngayDauTuanUI && tuanDangXem) {
-            let ttDau = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
-            if (ttDau && ttDau.ngayDayDu) {
-                let p = ttDau.ngayDayDu.split('/');
-                if (p.length === 3) {
-                    ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`;
-                    if (dateInput) dateInput.value = ngayDauTuanUI;
-                }
-            }
-        }
-        if (!ngayDauTuanUI || ngayDauTuanUI.trim() === '') {
-            let tt = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
-            let p = tt.ngayDayDu.split('/');
-            ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`;
-            if (dateInput) dateInput.value = ngayDauTuanUI;
-        }
-        
         cacOMon.forEach(oMon => {
             let valMon = oMon.value.trim();
             if (valMon !== "") {
@@ -1149,12 +1101,7 @@ async function luuDuLieu(event, loaiLuu) {
                 let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
                 let valGv = oGv ? oGv.value.trim() : "";
                 
-                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu, tuanDangXem);
-                let ngayChuan = thongTinNgay.ngayDayDu;
-                let thangChuan = thongTinNgay.thang;
-                if (!thangChuan || thangChuan === '--') {
-                    if (ngayChuan && ngayChuan.includes('/')) thangChuan = ngayChuan.split('/')[1];
-                }
+                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
                 let namHocDung = namHocChuan || thongTinNgay.nam; 
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
@@ -1177,8 +1124,8 @@ async function luuDuLieu(event, loaiLuu) {
                 dsTietLuoi.push({
                     maTiet: maTietNguyenBan, 
                     namHoc: namHocDung, 
-                    thang: thangChuan, 
-                    ngay: ngayChuan, 
+                    thang: thongTinNgay.thang, 
+                    ngay: thongTinNgay.ngayDayDu, 
                     tuan: tuanDangXem, 
                     thu: thu, 
                     buoi: buoi, 
@@ -1193,14 +1140,7 @@ async function luuDuLieu(event, loaiLuu) {
         let mangLopDangHienThi = Array.from(setLopDangHienThi);
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
             duLieuTkbHienTai.forEach(tietGoc => {
-                if (!mangLopDangHienThi.includes(tietGoc.maLop)) {
-                    if (!tietGoc.ngay || tietGoc.ngay === '' || !tietGoc.thang || tietGoc.thang === '--') {
-                        let tt = tinhNgayDocLap(ngayDauTuanUI, tietGoc.thu, tuanDangXem);
-                        tietGoc.ngay = tt.ngayDayDu;
-                        tietGoc.thang = tt.thang;
-                    }
-                    dsTietLuoi.push(tietGoc);
-                }
+                if (!mangLopDangHienThi.includes(tietGoc.maLop)) dsTietLuoi.push(tietGoc);
             });
         }
 
@@ -1219,14 +1159,9 @@ async function luuDuLieu(event, loaiLuu) {
             alert("Lưu thất bại: " + ketQua.thongBao);
         } else { 
             if (loaiLuu === 'khoiphuc') {
-                let tuanMoi = ketQua.tuanMoi || (tuanDangXem + 1);
-                thongSoHocVu.TUAN_HIEN_TAI = tuanMoi;
-                try {
-                    localStorage.setItem(layKhoaCachLy('SmartTKB_CauHinh'), JSON.stringify(thongSoHocVu));
-                } catch(e) {}
-                
                 await chuyenTuan(1); 
-                alert(ketQua.thongBao || `Đã lưu trữ Tuần ${tuanMoi - 1} vào kho dữ liệu và chuyển sang Tuần ${tuanMoi} thành công!`);
+                let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
+                await luuDuLieu({ currentTarget: btnAn }, 'tuan');
             } else {
                 alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
                 duLieuTkbHienTai = dsTietLuoi;
@@ -1473,7 +1408,7 @@ async function xuatExcel() {
         const luoiDuLieu = {}; 
         
         duLieuTkbHienTai.forEach(t => {
-            const thu = String(t.thu || '').trim(); const buoi = String(t.buoi || '').trim(); const tiet = t.tiet;
+            const thu = t.thu.trim(); const buoi = t.buoi.trim(); const tiet = t.tiet;
             if (!luoiDuLieu[thu]) luoiDuLieu[thu] = {}; 
             if (!luoiDuLieu[thu][buoi]) luoiDuLieu[thu][buoi] = {}; 
             if (!luoiDuLieu[thu][buoi][tiet]) luoiDuLieu[thu][buoi][tiet] = {};
@@ -2281,24 +2216,5 @@ window.toggleToanManHinhModal = function(idModal, nutBam) {
         // Đổi sang icon thu nhỏ
         nutBam.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`;
         nutBam.title = "Thu nhỏ";
-    }
-};
-
-window.saoChepTkbCoDinhSangHienTai = async function() {
-    if (!confirm(`Xác nhận: Sao chép toàn bộ Thời khóa biểu Cố định sang sheet Thời khóa biểu hiện tại (Tuần ${tuanDangXem})?`)) return;
-    try {
-        let phanHoi = await fetchVoiCoCheThuLai(CAU_HINH_FRONTEND.URL_API_MAY_CHU, {
-            method: 'POST',
-            body: JSON.stringify({ thaoTac: 'saoChepCoDinhSangHienTai', tuan: tuanDangXem })
-        });
-        let kq = await phanHoi.json();
-        if (kq.trangThai === 'thanh_cong') {
-            alert(kq.thongBao || "Đã sao chép thành công!");
-            await taiDuLieuTKB(false, 'TKB_HIEN_TAI', true);
-        } else {
-            alert("Lỗi sao chép: " + (kq.thongBao || "Không rõ nguyên nhân"));
-        }
-    } catch(e) {
-        alert("Có sự cố kết nối máy chủ: " + e.message);
     }
 };
