@@ -32,6 +32,8 @@ let dinhMucKhungCT = {};
 let tuDienQuyenPhanCong = {};
 let coToanQuyenSDB = false;
 let maGvDangNhapHeThong = '';
+    tenGvDangNhapHeThong = '';
+let tenGvDangNhapHeThong = '';
 let danhSachGiaoVienToanCuc = [];
 let mapTkbToanTapToanCuc = {}; // [BẢO CHỨNG LỊCH SỬ]: Lưu bản đồ TKB toàn bộ các tuần (quá khứ từ DATA_TKB và hiện tại từ TKB_HIEN_TAI) // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
 
@@ -328,7 +330,7 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
     // [ĐỒNG BỘ]: Ưu tiên nhận TEN_GIAO_VIEN do Backend cung cấp, nếu không có mới lùi về MA_GIAO_VIEN
-    let tenGvDangNhapHeThong = duLieuSever.TEN_GIAO_VIEN || duLieuSever.MA_GIAO_VIEN || '';
+    tenGvDangNhapHeThong = duLieuSever.TEN_GIAO_VIEN || duLieuSever.MA_GIAO_VIEN || '';
     coToanQuyenSDB = duLieuSever.TOAN_QUYEN || false;
     tuDienQuyenPhanCong = duLieuSever.QUYEN_THEO_LOP || {};
     if (duLieuSever.DANH_SACH_GIAO_VIEN && Array.isArray(duLieuSever.DANH_SACH_GIAO_VIEN)) {
@@ -611,8 +613,16 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     // =========================================================================
     // [NÂNG CẤP ĐỒNG BỘ - BẢN FIX CUỐI]: Gán danh sách giáo viên từ Backend gửi sang
     // =========================================================================
-    // Nhờ việc Backend trả trực tiếp TEN_GIAO_VIEN, ta có thể gán trực tiếp làm chữ ký
-    if (tenGvDangNhapHeThong && tenGvDangNhapHeThong.trim() !== '') {
+    // Nhờ việc Backend trả trực tiếp TEN_GIAO_VIEN, ta gán chữ ký:
+    // - Quản trị viên (BGH): Giữ danh sách toàn trường để có thể ký/điều chỉnh thay
+    // - Giáo viên bộ môn: Chỉ được ký đúng tên của chính mình
+    if (coToanQuyenSDB) {
+        if (duLieuSever.DANH_SACH_GIAO_VIEN && Array.isArray(duLieuSever.DANH_SACH_GIAO_VIEN)) {
+            danhSachGiaoVienToanCuc = duLieuSever.DANH_SACH_GIAO_VIEN;
+        } else if (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.DANH_SACH_GIAO_VIEN) {
+            danhSachGiaoVienToanCuc = thongSoHocVu.DANH_SACH_GIAO_VIEN;
+        }
+    } else if (tenGvDangNhapHeThong && tenGvDangNhapHeThong.trim() !== '') {
         danhSachGiaoVienToanCuc = [tenGvDangNhapHeThong.trim()];
     } else {
         danhSachGiaoVienToanCuc = [];
@@ -631,15 +641,19 @@ let khoaDoubleKetXuat = false;
 // =========================================================================
 
 // =========================================================================
-// [KIỂM SOÁT PHÂN QUYỀN CHÍNH XÁC]: HÀM XÁC THỰC QUYỀN GIÁO VIÊN THEO TIẾT HỌC
+// [KIỂM SOÁT PHÂN QUYỀN CHÍNH XÁC]: HÀM XÁC THỰC QUYỀN GIÁO VIÊN THEO TỪNG TIẾT TKB
+// Đảm bảo: Thời khóa biểu phân dạy Tiết 1 Tiếng Việt thì CHỈ được quyền ký tiết đó;
+// các tiết khác của môn Tiếng Việt (hoặc môn khác) không được phân công sẽ BỊ KHÓA HOÀN TOÀN!
 // =========================================================================
 window.kiemTraQuyenGiaoVienTheoTiet = function(dongDuLieu, maLop, monHoc) {
+    // 1. Quản trị viên / Ban Giám Hiệu: Toàn quyền quản trị chuyên môn
     if (coToanQuyenSDB) return true;
     let theChot = document.getElementById('theChotQuyenSDB');
     if (theChot && (theChot.getAttribute('data-quantri') === 'true' || theChot.getAttribute('data-quantri') === true)) return true;
 
+    // 2. Định danh giáo viên đang đăng nhập
     let madinhdanh = maGvDangNhapHeThong || (theChot ? theChot.getAttribute('data-madinhdanh') || '' : '');
-    let tendinhdanh = (theChot ? theChot.getAttribute('data-tendinhdanh') || '' : '') || madinhdanh;
+    let tendinhdanh = tenGvDangNhapHeThong || (theChot ? theChot.getAttribute('data-tendinhdanh') || '' : '') || madinhdanh;
     let emailDinhDanh = (typeof window.dinhDanhGiaoVienToanCuc !== 'undefined' && window.dinhDanhGiaoVienToanCuc !== '') ? window.dinhDanhGiaoVienToanCuc.trim().toLowerCase() : '';
 
     let maChuan = window.chuanHoaDinhDanhGiaoVien(madinhdanh);
@@ -647,41 +661,82 @@ window.kiemTraQuyenGiaoVienTheoTiet = function(dongDuLieu, maLop, monHoc) {
 
     if (!maChuan && !tenChuan && !emailDinhDanh) return false;
 
-    // 1. Kiểm tra theo Mã GV / Tên GV trong TKB của tiết này
-    let gvTkb = dongDuLieu ? window.chuanHoaDinhDanhGiaoVien(dongDuLieu['Mã GV']) : '';
-    if (gvTkb) {
-        let tapHopGvTkb = gvTkb.split(/[,;&-]/).map(g => g.trim());
-        for (let g of tapHopGvTkb) {
-            if (!g) continue;
-            if (maChuan && (g === maChuan || g.includes(maChuan) || maChuan.includes(g))) return true;
-            if (tenChuan && (g === tenChuan || g.includes(tenChuan) || tenChuan.includes(g))) return true;
-            if (emailDinhDanh && g.includes(emailDinhDanh)) return true;
-        }
-    }
+    // Hàm kiểm tra khớp danh tính giáo viên đăng nhập
+    const laGiaoVienHienTai = function(chuoiGV) {
+        if (!chuoiGV) return false;
+        let gvNorm = window.chuanHoaDinhDanhGiaoVien(chuoiGV);
+        if (!gvNorm) return false;
 
-    // 2. Kiểm tra theo Ma Trận Phân Công Chuyên Môn (từ sheet PHAN_CONG)
-    let monChuan = String(monHoc || '').replace(/[0-9\(\)]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
-    let lopKey = String(maLop || '').trim().toUpperCase();
-    let maTran = tuDienQuyenPhanCong;
-    if (!maTran || Object.keys(maTran).length === 0) {
-        if (theChot && theChot.getAttribute('data-matranquyen')) {
-            try { maTran = JSON.parse(theChot.getAttribute('data-matranquyen')); } catch(e) {}
-        }
-    }
+        let tokens = gvNorm.split(/[,;&-]/).map(t => t.trim()).filter(Boolean);
+        for (let t of tokens) {
+            // Khớp chính xác mã GV, tên GV, hoặc email
+            if (maChuan && t === maChuan) return true;
+            if (tenChuan && t === tenChuan) return true;
+            if (emailDinhDanh && t === emailDinhDanh) return true;
 
-    if (maTran && maTran[lopKey] && Array.isArray(maTran[lopKey])) {
-        let dsMon = maTran[lopKey].map(m => String(m).replace(/[0-9\(\)]/g, '').trim().toLowerCase().replace(/\s+/g, ' '));
-        if (dsMon.includes(monChuan) || dsMon.some(m => monChuan.includes(m) || m.includes(monChuan))) {
-            return true;
-        }
-    }
+            let tKhongDau = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            let maKhongDau = maChuan ? maChuan.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
+            let tenKhongDau = tenChuan ? tenChuan.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '';
 
-    // 3. Kiểm tra nếu tiết này đã có chữ ký đúng tên giáo viên này
+            if (maKhongDau && tKhongDau === maKhongDau) return true;
+            if (tenKhongDau && tKhongDau === tenKhongDau) return true;
+
+            // Khớp theo tên chính (từ cuối cùng của họ tên, ví dụ: 'Hương' trong 'Nguyễn Thị Hương')
+            if (tenChuan) {
+                let parts = tenChuan.split(/\s+/);
+                let tenChinh = parts[parts.length - 1];
+                let tenChinhKhongDau = tenChinh.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                
+                if (t === tenChinh || tKhongDau === tenChinhKhongDau) return true;
+                if (t.endsWith(' ' + tenChinh) || tKhongDau.endsWith(' ' + tenChinhKhongDau)) return true;
+            }
+
+            // Khớp họ tên đầy đủ từ 2 từ trở lên
+            if (t.includes(' ') && tenChuan.includes(' ')) {
+                if (t === tenChuan || t.includes(tenChuan) || tenChuan.includes(t)) return true;
+            }
+            if (maChuan && maChuan.length >= 4 && (t.includes(maChuan) || maChuan.includes(t))) return true;
+        }
+        return false;
+    };
+
+    // 3. Nếu tiết này đã có chữ ký trong SĐB:
     let chuKyHienTai = dongDuLieu ? window.chuanHoaDinhDanhGiaoVien(dongDuLieu['ChuKy_Thuc']) : '';
-    if (chuKyHienTai && tenChuan && (chuKyHienTai === tenChuan || chuKyHienTai.includes(tenChuan) || tenChuan.includes(chuKyHienTai))) {
-        return true;
+    if (chuKyHienTai && chuKyHienTai !== '--') {
+        // Nếu chính giáo viên này đã ký -> Cho phép tiếp tục xem/sửa tiết của chính mình
+        if (laGiaoVienHienTai(chuKyHienTai)) return true;
+        // Nếu tiết đã được giáo viên khác ký -> Khóa cứng, tuyệt đối không được sửa hay ký đè
+        return false;
     }
 
+    // 4. [CHUẨN HÓA PHÂN QUYỀN CHẶT CHẼ THEO THỜI KHÓA BIỂU]:
+    // Chỉ giáo viên ĐƯỢC PHÂN CÔNG DẠY ĐÚNG TIẾT NÀY trong Thời Khóa Biểu mới có quyền ký và nhập bài!
+    // Các tiết khác (dù cùng môn) sẽ KHÔNG được quyền.
+    let gvTkb = dongDuLieu ? String(dongDuLieu['Mã GV'] || '').trim() : '';
+
+    // Fallback tra cứu trực tiếp từ mapTkbToanTap theo tọa độ tiết nếu dongDuLieu chưa gắn sẵn Mã GV
+    if (!gvTkb && dongDuLieu) {
+        let tuanDong = parseInt(String(dongDuLieu['Tuần']).replace(/\D/g, ''), 10) || 0;
+        let lopDong = String(dongDuLieu['Mã Lớp'] || maLop || '').trim().toUpperCase();
+        let thuDong = String(dongDuLieu['Thứ'] || '').trim();
+        if (thuDong) {
+            let thuLow = thuDong.toLowerCase();
+            thuDong = thuLow.charAt(0).toUpperCase() + thuLow.slice(1);
+        }
+        let buoiDong = String(dongDuLieu['Buổi'] || '').trim().toLowerCase() === 'sáng' ? 'sáng' : 'chiều';
+        let tietDong = String(dongDuLieu['Tiết'] || '').trim();
+        let khoaTkb = `${tuanDong}_${lopDong}_${thuDong}_${buoiDong}_${tietDong}`;
+        if (window._mapTkbToanTap && window._mapTkbToanTap[khoaTkb]) {
+            gvTkb = String(window._mapTkbToanTap[khoaTkb]['Mã GV'] || '').trim();
+        }
+    }
+
+    // Nếu Thời khóa biểu có ghi nhận giáo viên dạy tiết này:
+    if (gvTkb) {
+        return laGiaoVienHienTai(gvTkb);
+    }
+
+    // Nếu tiết học này không có phân công giáo viên trong TKB -> Không cấp quyền ký tự do
     return false;
 };
 
@@ -1333,8 +1388,25 @@ async function luuSoDauBaiSangMayChu() {
                 if (!quyenQuanTri && isThayDoi) {
                     let coQuyen = window.kiemTraQuyenGiaoVienTheoTiet(dongTrongRam, lopChon, mon);
                     if (!coQuyen) {
-                        danhSachLoiPhanQuyen.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: Môn ${mon}`);
+                        danhSachLoiPhanQuyen.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: Môn ${mon} (Không thuộc phân công dạy của đồng chí)`);
                         dong.classList.add('bg-red-100'); 
+                    } else if (chuKyGV && chuKyGV !== '--') {
+                        // Chữ ký nhập vào phải khớp với tài khoản giáo viên đang đăng nhập
+                        let theChot = document.getElementById('theChotQuyenSDB');
+                        let madinhdanh = maGvDangNhapHeThong || (theChot ? theChot.getAttribute('data-madinhdanh') || '' : '');
+                        let tendinhdanh = tenGvDangNhapHeThong || (theChot ? theChot.getAttribute('data-tendinhdanh') || '' : '') || madinhdanh;
+                        let maChuan = window.chuanHoaDinhDanhGiaoVien(madinhdanh);
+                        let tenChuan = window.chuanHoaDinhDanhGiaoVien(tendinhdanh);
+                        let chuKyChuan = window.chuanHoaDinhDanhGiaoVien(chuKyGV);
+
+                        let laChuKyHopLe = false;
+                        if (tenChuan && (chuKyChuan === tenChuan || chuKyChuan.includes(tenChuan) || tenChuan.includes(chuKyChuan))) laChuKyHopLe = true;
+                        if (maChuan && (chuKyChuan === maChuan || chuKyChuan.includes(maChuan))) laChuKyHopLe = true;
+
+                        if (!laChuKyHopLe) {
+                            danhSachLoiPhanQuyen.push(`- ${thuHienTai} (${buoi}), Tiết ${tiet}: Chữ ký "${chuKyGV}" không khớp với tài khoản của đồng chí`);
+                            dong.classList.add('bg-red-100');
+                        }
                     }
                 }
 
