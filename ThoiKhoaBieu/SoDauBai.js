@@ -704,48 +704,40 @@ window.dongModalChiTietDongBoTKB = function() {
 window.kiemTraTuanHopLeTruocKhiMo = function(tuanCanMo, lopChon) {
     if (!tuanCanMo || !lopChon) return { hopLe: true };
     let tMo = parseInt(String(tuanCanMo).replace(/\D/g, ''), 10) || 1;
-    if (tMo <= 1) return { hopLe: true }; // Tuần 1 luôn luôn hợp lệ
 
     let lop = String(lopChon).trim().toUpperCase();
     if (!duLieuTKBGopDaMap || duLieuTKBGopDaMap.length === 0) return { hopLe: true };
 
-    // 1. Kiểm tra điều kiện tiên quyết: TUẦN 1 BẮT BUỘC PHẢI ĐÃ LƯU
-    let daLuuTuan1 = duLieuTKBGopDaMap.some(d => 
-        parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === 1 && 
-        String(d['Mã Lớp']).trim().toUpperCase() === lop && 
-        d.DaLuu === true
-    );
+    // [THÔNG MINH]: Chỉ xét các tuần THỰC SỰ CÓ LỊCH DẠY của lớp này trong CSDL
+    let dsTuanCuaLop = [...new Set(
+        duLieuTKBGopDaMap
+            .filter(d => String(d['Mã Lớp']).trim().toUpperCase() === lop && String(d['Môn Học'] || '').trim() !== '')
+            .map(d => parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) || 0)
+            .filter(t => t > 0)
+    )].sort((a, b) => a - b);
 
-    if (!daLuuTuan1) {
-        return {
-            hopLe: false,
-            tuanChuaLuu: 1,
-            thongBao: `⚠️ TỪ CHỐI CHUYỂN SANG TUẦN ${tMo}:\n\nSổ đầu bài TUẦN 1 của Lớp ${lop} CHƯA ĐƯỢC LƯU vào hệ thống!\n\nTheo quy chuẩn Phân phối chương trình (PPCT), số tiết dạy của Tuần ${tMo} phải được tính lũy kế nối tiếp từ Tuần 1. Nếu mở Tuần ${tMo} khi Tuần 1 chưa lưu, hệ thống sẽ tính lại từ Tiết 1 dẫn đến sai sót và trùng lặp bài dạy.\n\nĐồng chí vui lòng hoàn thành và bấm [Lưu Sổ đầu bài] cho TUẦN 1 trước khi mở Tuần ${tMo}!`
-        };
-    }
+    if (dsTuanCuaLop.length === 0) return { hopLe: true };
 
-    // 2. Kiểm tra tính tuần tự: Quét tìm tuần có lịch học nhưng chưa lưu từ 1 đến (tMo - 1)
-    for (let t = 1; t < tMo; t++) {
-        let coLichTuanNay = duLieuTKBGopDaMap.some(d => 
+    // Tuần nhỏ nhất có lịch dạy của lớp này luôn luôn hợp lệ để mở (không ép buộc phải có Tuần 1 nếu dữ liệu bắt đầu từ Tuần 3)
+    let tuanNhoNhat = dsTuanCuaLop[0];
+    if (tMo <= tuanNhoNhat) return { hopLe: true };
+
+    // Quét tìm tuần có lịch dạy trước tMo mà CHƯA LƯU
+    for (let t of dsTuanCuaLop) {
+        if (t >= tMo) break;
+
+        let daLuuTuanT = duLieuTKBGopDaMap.some(d => 
             parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === t && 
-            String(d['Mã Lớp']).trim().toUpperCase() === lop &&
-            String(d['Môn Học'] || '').trim() !== ''
+            String(d['Mã Lớp']).trim().toUpperCase() === lop && 
+            d.DaLuu === true
         );
 
-        if (coLichTuanNay) {
-            let daLuuTuanT = duLieuTKBGopDaMap.some(d => 
-                parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === t && 
-                String(d['Mã Lớp']).trim().toUpperCase() === lop && 
-                d.DaLuu === true
-            );
-
-            if (!daLuuTuanT) {
-                return {
-                    hopLe: false,
-                    tuanChuaLuu: t,
-                    thongBao: `⚠️ TỪ CHỐI CHUYỂN SANG TUẦN ${tMo}:\n\nSổ đầu bài TUẦN ${t} của Lớp ${lop} CHƯA ĐƯỢC LƯU vào hệ thống!\n\nĐồng chí không thể nhảy cóc sang Tuần ${tMo} khi Tuần ${t} chưa chốt dữ liệu vì sẽ làm gián đoạn số tiết phân phối chương trình và sai tên bài học.\n\nVui lòng hoàn thành và bấm [Lưu Sổ đầu bài] cho TUẦN ${t} trước khi mở Tuần ${tMo}!`
-                };
-            }
+        if (!daLuuTuanT) {
+            return {
+                hopLe: false,
+                tuanChuaLuu: t,
+                thongBao: `Lưu ý: Sổ đầu bài TUẦN ${t} của Lớp ${lop} chưa được lưu vào hệ thống.\n\nViệc mở Tuần ${tMo} có thể khiến số tiết phân phối chương trình chưa được tính lũy kế nối tiếp từ Tuần ${t}.\n\nĐồng chí có chắc chắn vẫn muốn mở Tuần ${tMo} không?`
+            };
         }
     }
 
@@ -776,26 +768,28 @@ function ketXuatSoDauBaiLenLuoi() {
         }
     }
 
-    // [THUẬT TOÁN BẢO VỆ TIẾN ĐỘ PPCT]: KIỂM TRA CHẶN NHẢY CÓC KHI TUẦN TRƯỚC CHƯA LƯU
+    // [THUẬT TOÁN BẢO VỆ TIẾN ĐỘ PPCT]: CẢNH BÁO NẾU TUẦN TRƯỚC CHƯA LƯU (KHÔNG CHẶN CỨNG LÀM HỎNG Ô CHỌN)
     let kiemTraTuan = window.kiemTraTuanHopLeTruocKhiMo(tuanChon, lopChon);
     if (!kiemTraTuan.hopLe) {
-        alert(kiemTraTuan.thongBao);
-        
-        // Khôi phục ô chọn Tuần về tuần chưa lưu hợp lệ
-        if (theSelectTuan) {
-            let optHopLe = Array.from(theSelectTuan.options).find(o => 
-                parseInt(String(o.value).replace(/\D/g, ''), 10) === kiemTraTuan.tuanChuaLuu
-            );
-            if (optHopLe) {
-                theSelectTuan.value = optHopLe.value;
-            } else {
-                theSelectTuan.value = String(kiemTraTuan.tuanChuaLuu);
+        let xacNhanMo = confirm(kiemTraTuan.thongBao);
+        if (!xacNhanMo) {
+            // Người dùng chọn Hủy -> Chuyển về tuần chưa lưu trước đó
+            if (theSelectTuan) {
+                let optHopLe = Array.from(theSelectTuan.options).find(o => 
+                    parseInt(String(o.value).replace(/\D/g, ''), 10) === kiemTraTuan.tuanChuaLuu
+                );
+                if (optHopLe) {
+                    theSelectTuan.value = optHopLe.value;
+                } else {
+                    theSelectTuan.value = String(kiemTraTuan.tuanChuaLuu);
+                }
+                if (typeof window.dongBoHienThiTuSelect === 'function') {
+                    window.dongBoHienThiTuSelect('chonTuanSo');
+                }
             }
-            if (typeof dongBoHienThiTuSelect === 'function') {
-                dongBoHienThiTuSelect('chonTuanSo');
-            }
+            tuanChon = theSelectTuan?.value;
         }
-        tuanChon = theSelectTuan?.value;
+        // Nếu người dùng chọn OK -> Vẫn cho phép mở tuần đang chọn bình thường!
     }
 
     thucThiKetXuatSoDauBaiLenLuoi();
@@ -2182,7 +2176,7 @@ window.nangCapSelectThanhInput = function(selectId, placeholderText) {
         // Khởi tạo danh sách kết quả lọc
         listEl = document.createElement('ul');
         listEl.id = 'list_' + selectId;
-        listEl.className = 'absolute z-[999] w-[150px] mt-1 max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 rounded shadow-xl hidden divide-y divide-slate-100 left-0 text-left';
+        listEl.className = 'absolute z-[999] w-full min-w-[130px] mt-1 max-h-56 overflow-y-auto overscroll-contain bg-white border border-blue-400 rounded shadow-xl hidden divide-y divide-slate-100 left-0 text-left';
 
         wrapper.appendChild(inputEl);
         wrapper.appendChild(iconEl);
@@ -2235,27 +2229,13 @@ window.renderDanhSach = function(selectEl, listEl, inputEl, searchTerm) {
             li.className = 'px-3 py-2 cursor-pointer transition-colors text-sm font-bold flex justify-between items-center';
             li.innerText = opt.text;
 
-            // Kiểm tra trạng thái khóa tuần tự đối với ô chọn Tuần
-            let tagKhoa = '';
-            if (selectEl.id === 'chonTuanSo') {
-                let lopHienTai = document.getElementById('chonLopSo')?.value;
-                if (lopHienTai && typeof window.kiemTraTuanHopLeTruocKhiMo === 'function') {
-                    let kt = window.kiemTraTuanHopLeTruocKhiMo(opt.value, lopHienTai);
-                    if (!kt.hopLe) {
-                        tagKhoa = `<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-normal ml-1">Chưa lưu T${kt.tuanChuaLuu}</span>`;
-                    }
-                }
-            }
-            
-            // Dòng đang được chọn trong danh sách thả xuống
+            // Dòng đang được chọn trong danh sách thả xuống (gọn gàng, sạch sẽ, không chèn badge gây vỡ giao diện)
             if (opt.value === selectEl.value) {
                 li.classList.add('bg-blue-50', 'text-blue-600', 'italic'); 
-                li.innerHTML = `<span>${opt.text} ${tagKhoa}</span><svg class="w-4 h-4 text-blue-600 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                li.innerHTML = `<span>${opt.text}</span><svg class="w-4 h-4 text-blue-600 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
             } else {
                 li.classList.add('text-slate-700', 'hover:bg-blue-100');
-                if (tagKhoa) {
-                    li.innerHTML = `<span>${opt.text} ${tagKhoa}</span>`;
-                }
+                li.innerHTML = `<span>${opt.text}</span>`;
             }
 
             li.addEventListener('mousedown', (e) => {
