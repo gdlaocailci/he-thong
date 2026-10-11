@@ -798,20 +798,38 @@ function dongModal() { document.getElementById('modalKiemTra').classList.add('hi
 // =========================================================================
 // HÀM TÍNH NGÀY ĐỘC LẬP (SỬ DỤNG HỆ TỌA ĐỘ TOÁN HỌC TUYỆT ĐỐI)
 // =========================================================================
-function tinhNgayDocLap(ngayDauTuanStr, tenThu) {
-    if (!ngayDauTuanStr) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
+function tinhNgayDocLap(ngayDauTuanStr, tenThu, tuanHienTai) {
+    let mapThuToDay = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
+    let tenThuChuan = tenThu ? String(tenThu).trim() : "Thứ 2";
+    if (tenThuChuan.match(/^[2-7]$/)) tenThuChuan = "Thứ " + tenThuChuan;
+    let dayDichToVN = mapThuToDay[tenThuChuan] !== undefined ? mapThuToDay[tenThuChuan] : 0;
     
-    let parts = ngayDauTuanStr.split('-');
-    if (parts.length !== 3) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
+    let ngayGoc = null;
+    if (ngayDauTuanStr && String(ngayDauTuanStr).trim() !== '') {
+        let str = String(ngayDauTuanStr).trim();
+        if (str.includes('-')) {
+            let p = str.split('-');
+            if (p.length === 3) {
+                if (p[0].length === 4) ngayGoc = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+                else ngayGoc = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+            }
+        } else if (str.includes('/')) {
+            let p = str.split('/');
+            if (p.length === 3) {
+                if (p[2].length === 4) ngayGoc = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+                else ngayGoc = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+            }
+        }
+    }
     
-    let ngayGoc = new Date(parts[0], parts[1] - 1, parts[2]);
+    // Nếu vẫn chưa có ngày gốc hợp lệ, tự động tính mốc Thứ 2 dựa trên tuần làm việc
+    if (!ngayGoc || isNaN(ngayGoc.getTime())) {
+        let tNum = tuanHienTai ? (parseInt(tuanHienTai, 10) || 1) : (parseInt(tuanDangXem, 10) || 1);
+        let baseM1 = new Date(2026, 8, 21); // Thứ 2 Tuần 1: 21/09/2026
+        ngayGoc = new Date(baseM1.getTime() + (tNum - 1) * 7 * 86400000);
+    }
     
-    const mapThuToDay = {"Thứ 2": 0, "Thứ 3": 1, "Thứ 4": 2, "Thứ 5": 3, "Thứ 6": 4, "Thứ 7": 5, "Chủ nhật": 6};
     let dayGocToVN = ngayGoc.getDay() === 0 ? 6 : ngayGoc.getDay() - 1;
-    let dayDichToVN = mapThuToDay[tenThu];
-    
-    if (dayDichToVN === undefined) return { hienThi: "--/--/----", thang: "--", nam: "--", ngayDayDu: "" };
-    
     let soNgayLech = dayDichToVN - dayGocToVN;
     
     let ngayDich = new Date(ngayGoc.getTime());
@@ -1090,6 +1108,18 @@ async function luuDuLieu(event, loaiLuu) {
         let cacOMon = document.querySelectorAll('input[id^="mon_"]');
         let setLopDangHienThi = new Set();
         
+        // [ĐẢM BẢO NGÀY ĐẦU TUẦN LUÔN CÓ GIÁ TRỊ HỢP LỆ TRƯỚC KHI LƯU]
+        let dateInput = document.getElementById('chonNgayDauTuan');
+        if (dateInput && dateInput.value) {
+            ngayDauTuanUI = dateInput.value;
+        }
+        if (!ngayDauTuanUI || ngayDauTuanUI.trim() === '') {
+            let tt = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
+            let p = tt.ngayDayDu.split('/');
+            ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`;
+            if (dateInput) dateInput.value = ngayDauTuanUI;
+        }
+        
         cacOMon.forEach(oMon => {
             let valMon = oMon.value.trim();
             if (valMon !== "") {
@@ -1101,7 +1131,12 @@ async function luuDuLieu(event, loaiLuu) {
                 let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
                 let valGv = oGv ? oGv.value.trim() : "";
                 
-                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu);
+                let thongTinNgay = tinhNgayDocLap(ngayDauTuanUI, thu, tuanDangXem);
+                let ngayChuan = thongTinNgay.ngayDayDu;
+                let thangChuan = thongTinNgay.thang;
+                if (!thangChuan || thangChuan === '--') {
+                    if (ngayChuan && ngayChuan.includes('/')) thangChuan = ngayChuan.split('/')[1];
+                }
                 let namHocDung = namHocChuan || thongTinNgay.nam; 
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
@@ -1124,8 +1159,8 @@ async function luuDuLieu(event, loaiLuu) {
                 dsTietLuoi.push({
                     maTiet: maTietNguyenBan, 
                     namHoc: namHocDung, 
-                    thang: thongTinNgay.thang, 
-                    ngay: thongTinNgay.ngayDayDu, 
+                    thang: thangChuan, 
+                    ngay: ngayChuan, 
                     tuan: tuanDangXem, 
                     thu: thu, 
                     buoi: buoi, 
@@ -1140,7 +1175,14 @@ async function luuDuLieu(event, loaiLuu) {
         let mangLopDangHienThi = Array.from(setLopDangHienThi);
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
             duLieuTkbHienTai.forEach(tietGoc => {
-                if (!mangLopDangHienThi.includes(tietGoc.maLop)) dsTietLuoi.push(tietGoc);
+                if (!mangLopDangHienThi.includes(tietGoc.maLop)) {
+                    if (!tietGoc.ngay || tietGoc.ngay === '' || !tietGoc.thang || tietGoc.thang === '--') {
+                        let tt = tinhNgayDocLap(ngayDauTuanUI, tietGoc.thu, tuanDangXem);
+                        tietGoc.ngay = tt.ngayDayDu;
+                        tietGoc.thang = tt.thang;
+                    }
+                    dsTietLuoi.push(tietGoc);
+                }
             });
         }
 
