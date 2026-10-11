@@ -908,6 +908,14 @@ function xuatMaTranBang(danhSachTiet) {
         });
         if (minDateObj) {
             ngayDauTuanUI = `${minDateObj.getFullYear()}-${(minDateObj.getMonth() + 1).toString().padStart(2, '0')}-${minDateObj.getDate().toString().padStart(2, '0')}`; 
+        } else if (tuanDangXem) {
+            let tt = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
+            if (tt && tt.ngayDayDu) {
+                let p = tt.ngayDayDu.split('/');
+                if (p.length === 3) {
+                    ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`;
+                }
+            }
         }
     }
     
@@ -1112,6 +1120,16 @@ async function luuDuLieu(event, loaiLuu) {
         let dateInput = document.getElementById('chonNgayDauTuan');
         if (dateInput && dateInput.value) {
             ngayDauTuanUI = dateInput.value;
+        }
+        if (!ngayDauTuanUI && tuanDangXem) {
+            let ttDau = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
+            if (ttDau && ttDau.ngayDayDu) {
+                let p = ttDau.ngayDayDu.split('/');
+                if (p.length === 3) {
+                    ngayDauTuanUI = `${p[2]}-${p[1]}-${p[0]}`;
+                    if (dateInput) dateInput.value = ngayDauTuanUI;
+                }
+            }
         }
         if (!ngayDauTuanUI || ngayDauTuanUI.trim() === '') {
             let tt = tinhNgayDocLap('', 'Thứ 2', tuanDangXem);
