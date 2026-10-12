@@ -25,7 +25,7 @@ function khoiTaoModalTienDoDOM() {
     modalDiv.id = 'modalKiemTraTienDo';
     modalDiv.className = 'hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] font-sans p-2 md:p-4';
     modalDiv.innerHTML = `
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-300 animate-fadeIn">
+        <div id="hopNoiDungModalTienDo" class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-300 animate-fadeIn transition-all duration-200">
             
             <!-- HEADER MODAL -->
             <div class="bg-gradient-to-r from-cyan-700 via-blue-800 to-indigo-900 text-white px-5 py-3.5 flex justify-between items-center border-b shadow-md flex-none">
@@ -46,6 +46,13 @@ function khoiTaoModalTienDoDOM() {
                     <button onclick="xuatExcelTienDoDayHoc()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow flex items-center gap-1.5 transition-all cursor-pointer" title="Xuất báo cáo Excel">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         <span>Xuất Excel</span>
+                    </button>
+                    <!-- NÚT TOÀN MÀN HÌNH / CO LẠI -->
+                    <button id="btnToggleFullscreenTienDo" onclick="toggleFullscreenTienDo()" class="bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow border border-white/20 flex items-center gap-1.5 transition-all cursor-pointer" title="Toàn màn hình">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Toàn màn hình</span>
                     </button>
                     <button onclick="dongModalKiemTraTienDo()" class="text-white/80 hover:text-white hover:bg-white/10 w-8 h-8 rounded-lg flex items-center justify-center text-2xl font-bold transition-colors cursor-pointer" title="Đóng">&times;</button>
                 </div>
@@ -180,11 +187,60 @@ window.moModalKiemTraTienDo = async function() {
     await napVaTinhToanTienDoDayHoc(tuanHienTai, namHoc);
 };
 
+let isTienDoFullscreen = false;
+
+window.toggleFullscreenTienDo = function() {
+    isTienDoFullscreen = !isTienDoFullscreen;
+    const modalDiv = document.getElementById('modalKiemTraTienDo');
+    const hopNoiDung = document.getElementById('hopNoiDungModalTienDo');
+    const btn = document.getElementById('btnToggleFullscreenTienDo');
+    if (!modalDiv || !hopNoiDung) return;
+
+    if (isTienDoFullscreen) {
+        // Phóng to toàn màn hình
+        modalDiv.classList.remove('p-2', 'md:p-4');
+        modalDiv.classList.add('p-0');
+
+        hopNoiDung.classList.remove('max-w-6xl', 'max-h-[92vh]', 'rounded-2xl', 'border');
+        hopNoiDung.classList.add('w-screen', 'h-screen', 'max-w-none', 'max-h-none', 'rounded-none', 'border-0');
+
+        if (btn) {
+            btn.title = "Co lại (Thu nhỏ màn hình)";
+            btn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L4 4m0 0h4m-4 0v4m11 0l5-5m0 0h-4m4 0v4M9 15l-5 5m0 0h4m-4 0v-4m11 0l5 5m0 0h-4m4 0v-4"></path>
+                </svg>
+                <span class="hidden sm:inline">Co lại</span>
+            `;
+        }
+    } else {
+        // Thu nhỏ lại cửa sổ chuẩn
+        modalDiv.classList.remove('p-0');
+        modalDiv.classList.add('p-2', 'md:p-4');
+
+        hopNoiDung.classList.remove('w-screen', 'h-screen', 'max-w-none', 'max-h-none', 'rounded-none', 'border-0');
+        hopNoiDung.classList.add('max-w-6xl', 'max-h-[92vh]', 'rounded-2xl', 'border');
+
+        if (btn) {
+            btn.title = "Toàn màn hình";
+            btn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+                <span class="hidden sm:inline">Toàn màn hình</span>
+            `;
+        }
+    }
+};
+
 window.dongModalKiemTraTienDo = function() {
     const modal = document.getElementById('modalKiemTraTienDo');
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+    }
+    if (isTienDoFullscreen) {
+        toggleFullscreenTienDo();
     }
 };
 
