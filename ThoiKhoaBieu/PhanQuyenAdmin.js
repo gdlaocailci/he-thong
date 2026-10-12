@@ -1,7 +1,7 @@
 // =========================================================================
 // KHỐI QUẢN LÝ MA TRẬN PHÂN QUYỀN HỆ THỐNG (BẢN CHUẨN ĐỒNG BỘ)
 // Chỉ tập trung: Quản lý Menu Hệ thống, Nút TKB và Khóa Sổ Đầu Bài Tuần
-// Đã loại bỏ hoàn toàn tính năng Khóa TKB theo yêu cầu
+// Quản lý Menu Hệ thống, Nút TKB (gồm Khóa TKB Tuần) và Khóa Sổ Đầu Bài Tuần
 // =========================================================================
 
 let duLieuBangPhanQuyen = [];
@@ -27,6 +27,7 @@ const DANH_SACH_NUT_CHUC_NANG = [
     { id: 'btnKiemTra', ten: 'Định Mức tiết' },
     { id: 'btnChuyenTuan', ten: 'Mũi tên Chuyển tuần' },
     { id: 'btnLuuSua', ten: 'Lưu Sửa' },
+    { id: 'btnKhoaTKB', ten: 'Khóa TKB Tuần' },
     { id: 'btnKhoaSoDauBai', ten: 'Khóa Sổ đầu bài Tuần' }
 ];
 
@@ -76,6 +77,15 @@ function capNhatHienThiPhanQuyen() {
                                 (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai')) ||
                                 nutCongKhai.includes('btnKhoaSoDauBai');
             btnKhoaSo.style.display = duocBamKhoaSo ? 'inline-flex' : 'none';
+        }
+
+        // 3b. Kiểm soát hiển thị Nút Khóa TKB Tuần (vùng quyền Admin / Ma trận)
+        let btnKhoaTKB = document.getElementById('btnKhoaTKB');
+        if (btnKhoaTKB) {
+            let duocBamKhoaTKB = coQuyenQuanTri || 
+                                 (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaTKB')) ||
+                                 nutCongKhai.includes('btnKhoaTKB');
+            btnKhoaTKB.style.display = duocBamKhoaTKB ? 'flex' : 'none';
         }
 
         // 4. Đồng bộ giao diện thanh công cụ 1-click nếu đang mở Ma trận phân quyền
