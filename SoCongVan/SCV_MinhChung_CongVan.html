@@ -181,7 +181,7 @@
             } else {
                 document.getElementById('createFolderStatus').innerText = "❌ Lỗi: " + res.message;
             }
-        }).SCV_createNewFolder(p, n);
+        }).SCV_createNewFolder(p, n, window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : ""));
     }
 
     function closeUploadModalCV() {
@@ -344,7 +344,7 @@
                                else reject(res ? res.message : "Lỗi tải file");
                            })
                            .withFailureHandler(err => reject(err.message || err))
-                           .SCV_uploadSingleFileToDrive(fileData, "", fId);
+                           .SCV_uploadSingleFileToDrive(fileData, "", fId, window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : ""));
                    });
                });
 
@@ -381,7 +381,7 @@
                  google.script.run
                  .withSuccessHandler(res => { handleUpResultCV(res, st, btn); })
                  .withFailureHandler(err => { st.style.color="red"; st.innerText="❌ "+err.message; btn.style.opacity=1; btn.style.pointerEvents="auto"; })
-                 .SCV_uploadFolderEvidence(fId, folderName, filesData, "", wMode); 
+                 .SCV_uploadFolderEvidence(fId, folderName, filesData, "", wMode, window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : "")); 
                }
              };
              r.readAsDataURL(file);
