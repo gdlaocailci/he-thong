@@ -318,8 +318,17 @@
 
   applySystemConfig(null);
 
+  let MODULES_PROMISE = null;
+  function ensureModulesLoaded() {
+      if (!MODULES_PROMISE) {
+          MODULES_PROMISE = loadSystemModules();
+      }
+      return MODULES_PROMISE;
+  }
+
   window.onload = function() {
     applySystemConfig(null); 
+    ensureModulesLoaded(); // TỐI ƯU SONG SONG: Bắt đầu tải các module HTML ngay khi trang khởi tạo!
     const storedId = sessionStorage.getItem("SCV_ACTIVE_ID");
     if(storedId) {
       window.SYS_ACTIVE_ID = storedId; 
@@ -358,12 +367,23 @@
   
   function handleGuestLogin(isAutoLogin = false) {
     if (!isAutoLogin) { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('loading-overlay').style.display = 'flex'; }
+    ensureModulesLoaded();
     google.script.run.withSuccessHandler(async res => {
       applySystemConfig(res.config); 
       if (res && res.canView) {
         sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SYS_ACTIVE_ID = "Khách";
         SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false; GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false;
         
+        // TỐI ƯU HÓA KHỞI ĐỘNG: Nạp tức thời dữ liệu mới nhất từ phản hồi gộp
+        if (res.cache && (res.cache.lich || res.cache.congvan)) {
+            window.SCV_CACHE_LICH = res.cache.lich || [];
+            window.SCV_CACHE_CONGVAN = res.cache.congvan || [];
+            window.SCV_DATA_READY = true;
+            if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
+        }
+
+        await ensureModulesLoaded();
+
         document.getElementById('loading-overlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         
@@ -372,8 +392,14 @@
         document.getElementById('btnTabPhanQuyen').style.display = 'none';
         showTab('tabSearch', document.getElementById('btnTabSearch'));
         
-        await loadSystemModules();
-        executePriorityLoading(); 
+        if (window.SCV_DATA_READY) {
+            let seenLich = SCV_GetSeenIDs('LICH');
+            let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+            if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
+            preloadDriveFolders();
+        } else {
+            executePriorityLoading();
+        }
       } else {
         toast("⚠️ Cần quyền truy cập để xem dữ liệu");
         sessionStorage.removeItem("SCV_ACTIVE_ID");
@@ -419,6 +445,16 @@
           }
       }
       
+      // TỐI ƯU HÓA KHỞI ĐỘNG: Nạp tức thời dữ liệu mới nhất được gửi kèm từ máy chủ
+      if (res.cache && (res.cache.lich || res.cache.congvan)) {
+          window.SCV_CACHE_LICH = res.cache.lich || [];
+          window.SCV_CACHE_CONGVAN = res.cache.congvan || [];
+          window.SCV_DATA_READY = true;
+          if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
+      }
+
+      await ensureModulesLoaded();
+
       document.getElementById('loading-overlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
 
@@ -428,8 +464,17 @@
       if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
       else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
 
-      await loadSystemModules();
-      executePriorityLoading();
+      if (window.SCV_DATA_READY) {
+          // Bung dữ liệu tab mặc định tức thời, người dùng thao tác được ngay!
+          let seenLich = SCV_GetSeenIDs('LICH');
+          let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+          if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
+          setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
+          setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
+          preloadDriveFolders();
+      } else {
+          executePriorityLoading();
+      }
 
     }).SCV_getInitialData(window.SYS_ACTIVE_ID);
   }
