@@ -277,6 +277,8 @@
 
   let SYS_ACTIVE_ACCOUNT = "";
   let GLOBAL_PERM = false;
+  let GLOBAL_ADMIN = false;
+  window.GLOBAL_ADMIN = false;
 
   function applySystemConfig(config) {
       const tenTruong = typeof SCV_TEN_TRUONG !== 'undefined' ? SCV_TEN_TRUONG : 'ĐANG TẢI...';
@@ -352,7 +354,7 @@
       applySystemConfig(res.config); 
       if (res && res.canView) {
         sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SYS_ACTIVE_ID = "Khách";
-        SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false;
+        SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false; GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false;
         
         document.getElementById('loading-overlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -373,13 +375,15 @@
   }
 
   function logoutGoogle() {
-    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SYS_ACTIVE_ID = null; location.reload(); 
+    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SYS_ACTIVE_ID = null; 
+    GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false; location.reload(); 
   }
 
   function checkPermissionAndLoad() {
     google.script.run.withSuccessHandler(async res => {
       applySystemConfig(res.config); 
       SYS_ACTIVE_ACCOUNT = res.sysId; GLOBAL_PERM = res.canInput; 
+      GLOBAL_ADMIN = !!res.canAdmin; window.GLOBAL_ADMIN = !!res.canAdmin; 
       
       if (!res.canView) {
           document.getElementById('loading-overlay').style.display = 'none';
@@ -716,7 +720,7 @@ function copyLinkDangXem() {
   function chuyenHuongHeThong() {
       var urlDich = (typeof SCV_LINK_TRANG_CHU !== 'undefined' && SCV_LINK_TRANG_CHU.trim() !== '') 
                     ? SCV_LINK_TRANG_CHU 
-                    : 'https://gdlaocailci.github.io/taphoi/';
+                    : 'https://gdlaocailci.github.io/he-thong/';
                     
       window.open(urlDich, '_top');
   }
