@@ -36,29 +36,50 @@
 <script>
 function loadPhanQuyen() {
     const tbody = document.getElementById('tbodyPhanQuyen');
-    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px;">⏳ Đang tải dữ liệu cấu hình...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px;"><div class="spinner" style="width:25px; height:25px; border:3px solid #ccc; border-top:3px solid #1e3a8a; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 10px;"></div>⏳ Đang đồng bộ dữ liệu cấu hình từ sheet KHAIBAO...</td></tr>';
     
+    const sysId = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : "");
+
     google.script.run.withSuccessHandler(res => {
         tbody.innerHTML = '';
         
+        if (!res) {
+            tbody.innerHTML = '<tr><td colspan="4" style="color:red; padding: 20px;">❌ Máy chủ không có phản hồi dữ liệu!</td></tr>';
+            if (typeof toast === 'function') toast("❌ Lỗi: Máy chủ không phản hồi!");
+            return;
+        }
+
+        if (res.success === false) {
+            tbody.innerHTML = `<tr><td colspan="4" style="color:red; padding: 20px; font-weight:bold;">${res.message || "⛔ Không có quyền truy cập cấu hình phân quyền!"}</td></tr>`;
+            if (typeof toast === 'function') toast(res.message || "❌ Lỗi truy cập phân quyền");
+            return;
+        }
+
         // Cập nhật giá trị ô phạm vi truy cập (C4)
-        if(res.phamVi !== undefined) {
+        if (res.phamVi !== undefined) {
             document.getElementById('valPhamVi').value = res.phamVi;
         }
 
-        if(res.success && res.data && res.data.length > 0) {
+        let rowCount = 0;
+        if (res.data && res.data.length > 0) {
             res.data.forEach(r => {
-                if(String(r[1]).trim() === "" && String(r[2]).trim() === "") return;
-                tbody.appendChild(createPQRow(r[0], r[1], r[2]));
+                let stt = r[0];
+                let email = String(r[1] || "").trim();
+                let quyen = String(r[2] || "").trim();
+                if (email === "" && quyen === "") return;
+                tbody.appendChild(createPQRow(stt, email, quyen));
+                rowCount++;
             });
-        //    addPQRow();
-        } else {
-        //    addPQRow();
+        }
+        
+        // Nếu chưa có dòng dữ liệu nào, tự động tạo sẵn 1 dòng để quản trị viên nhập
+        if (rowCount === 0) {
+            addPQRow();
         }
     }).withFailureHandler(err => {
         tbody.innerHTML = '<tr><td colspan="4" style="color:red; padding: 20px;">❌ ' + err + '</td></tr>';
-        toast("❌ Lỗi tải phân quyền: " + err);
-    }).SCV_getPhanQuyen();
+        if (typeof toast === 'function') toast("❌ Lỗi tải phân quyền: " + err);
+    }).SCV_getPhanQuyen(sysId);
 }
 
 function createPQRow(stt, email, quyen) {
@@ -171,6 +192,6 @@ function savePhanQuyen() {
         }
     }).withFailureHandler(err => {
         toast("❌ Lỗi lưu phân quyền: " + err);
-    }).SCV_updatePhanQuyen(payload); 
+    }).SCV_updatePhanQuyen(payload, window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : "")); 
 }
 </script>
