@@ -7,8 +7,8 @@
 var SCV_CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbxQNLrkoHnxF81IO_QmB7rcIdjQhavLWNG6fy3VngBeR_2xG8rHxJAlrJLcAs_szZO9/exec";
 var SCV_LINK_LOGO = "https://i.postimg.cc/xjzpvXCm/Logo-HL.png"; 
 
-var SCV_TEN_TRUONG = "TRƯỜNG TH&THCS HỢP THÀNH";
-var SCV_TEN_TRUONG_UP = "TRƯỜNG TH&THCS HỢP THÀNH";
+var SCV_TEN_TRUONG = "LỊCH CÔNG TÁC CÁ NHÂN";
+var SCV_TEN_TRUONG_UP = "LỊCH CÔNG TÁC CÁ NHÂN";
 
 var SCV_TEN_PM = "Quản lý Công văn & Lịch công tác";
 var SCV_TEN_PM_UP = "QUẢN LÝ CÔNG VĂN & LỊCH CÔNG TÁC";
