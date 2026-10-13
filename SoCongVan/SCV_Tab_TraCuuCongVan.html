@@ -79,6 +79,7 @@
 
 <script>
     let IS_AUTH_CV = false; 
+    let IS_ADMIN_CV = false;
     window.SCV_AI_CACHE = window.SCV_AI_CACHE || {};
     window.SCV_DM_CONGVAN_CACHE = window.SCV_DM_CONGVAN_CACHE || null; 
 
@@ -117,6 +118,7 @@
         }
         
         IS_AUTH_CV = (typeof GLOBAL_PERM !== 'undefined') ? GLOBAL_PERM : false;
+        IS_ADMIN_CV = (typeof GLOBAL_ADMIN !== 'undefined' && GLOBAL_ADMIN) || (typeof window.GLOBAL_ADMIN !== 'undefined' && window.GLOBAL_ADMIN);
         const sysId = (typeof SYS_ACTIVE_ACCOUNT !== 'undefined') ? SYS_ACTIVE_ACCOUNT : "";
         
         const st = document.getElementById('status_search_cv');
@@ -241,13 +243,19 @@
             let linkHtml = "";
             if(r.vanBanUrl && r.vanBanUrl.includes('http')) { 
                 const links = r.vanBanUrl.split(',').map(l => l.trim()).filter(l => l !== "");
+                const canUseAI = (typeof IS_ADMIN_CV !== 'undefined' && IS_ADMIN_CV) || 
+                                 (typeof GLOBAL_ADMIN !== 'undefined' && GLOBAL_ADMIN) || 
+                                 (typeof window.GLOBAL_ADMIN !== 'undefined' && window.GLOBAL_ADMIN);
                 linkHtml = `<div style="display:flex; flex-direction:column; gap:4px; align-items:center;">` + 
-                           links.map((url, idx) => `
+                           links.map((url, idx) => {
+                              const btnAI = canUseAI ? `<button onclick="openChatModal('${url}')" style="background:#fef08a; border:1px solid #fde047; padding:3px 6px; border-radius:3px; font-size:12px; font-weight:bold; color:#854d0e; cursor:pointer;" title="Hỏi Trợ lý AI về văn bản này">🤖 Hỏi AI</button>` : '';
+                              return `
                               <div style="display:flex; gap:4px;">
                                  <a href="javascript:void(0)" onclick="moKhungXemTep('${url}')" style="text-decoration:none; background:#e0f2fe; border:1px solid #bae6fd; padding:3px 6px; border-radius:3px; font-size:12px; font-weight:bold; color:#0369a1;" title="Xem tài liệu ${idx+1}">📎 Xem</a>
-                                 <button onclick="openChatModal('${url}')" style="background:#fef08a; border:1px solid #fde047; padding:3px 6px; border-radius:3px; font-size:12px; font-weight:bold; color:#854d0e; cursor:pointer;" title="Hỏi Trợ lý AI về văn bản này">🤖 Hỏi AI</button>
+                                 ${btnAI}
                               </div>
-                           `).join('') +
+                           `;
+                           }).join('') +
                            `</div>`;
             }
             
@@ -293,6 +301,13 @@
     function checkEnterChat(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChatToAI(); } }
 
     function openChatModal(fileUrl) {
+        const canUseAI = (typeof IS_ADMIN_CV !== 'undefined' && IS_ADMIN_CV) || 
+                         (typeof GLOBAL_ADMIN !== 'undefined' && GLOBAL_ADMIN) || 
+                         (typeof window.GLOBAL_ADMIN !== 'undefined' && window.GLOBAL_ADMIN);
+        if (!canUseAI) {
+            alert("⚠️ Tính năng AI đọc văn bản chỉ dành cho tài khoản có quyền quản trị (xx)!");
+            return;
+        }
         document.getElementById('aiChatModal').style.display = 'flex';
         document.getElementById('aiCurrentFileUrl').value = fileUrl;
         document.getElementById('aiResponseBox').innerHTML = '<em>Xin chào! Hãy đặt câu hỏi về tài liệu (Ví dụ: Tóm tắt ý chính? Ai là người ký? Hạn nộp là bao giờ?), tôi sẽ đọc và phản hồi giúp đồng chí.</em>';
@@ -330,6 +345,13 @@
     }
 
     function sendChatToAI() {
+        const canUseAI = (typeof IS_ADMIN_CV !== 'undefined' && IS_ADMIN_CV) || 
+                         (typeof GLOBAL_ADMIN !== 'undefined' && GLOBAL_ADMIN) || 
+                         (typeof window.GLOBAL_ADMIN !== 'undefined' && window.GLOBAL_ADMIN);
+        if (!canUseAI) {
+            alert("⚠️ Tính năng AI đọc văn bản chỉ dành cho tài khoản có quyền quản trị (xx)!");
+            return;
+        }
         const queryInput = document.getElementById('aiQueryInput');
         const query = queryInput.value.trim();
         const fileUrl = document.getElementById('aiCurrentFileUrl').value;
