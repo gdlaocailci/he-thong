@@ -215,10 +215,39 @@
         }
 
         const sysId = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : "");
-        if (args.length === 0 || (funcName === 'SCV_updatePhanQuyen' && args.length === 1)) {
+        const expectedArgCounts = {
+          'SCV_getInitialData': 1,
+          'SCV_getAllDataCache': 1,
+          'SCV_getDmCongVan': 1,
+          'SCV_getPhanQuyen': 1,
+          'SCV_saveDataLich': 2,
+          'SCV_getDataLich': 2,
+          'SCV_getDataCongVan': 2,
+          'SCV_getSubFolders': 2,
+          'SCV_updatePhanQuyen': 2,
+          'SCV_syncTrackingState': 2,
+          'SCV_deleteFileByUrl': 2,
+          'SCV_deleteLich': 3,
+          'SCV_deleteCongVan': 3,
+          'SCV_saveCongVan': 3,
+          'SCV_createNewFolder': 3,
+          'SCV_chatWithDocument': 3,
+          'SCV_extractLichFromDocument': 3,
+          'SCV_extractCongVanFromDocument': 3,
+          'SCV_uploadSingleFileToDrive': 4,
+          'SCV_uploadMultipleFilesToDrive': 6,
+          'SCV_uploadFolderEvidence': 6
+        };
+
+        const expectedCount = expectedArgCounts[funcName];
+        if (expectedCount !== undefined) {
+            if (args.length < expectedCount) {
+                args.push(sysId);
+            } else if (!args[expectedCount - 1]) {
+                args[expectedCount - 1] = sysId;
+            }
+        } else {
             args.push(sysId);
-        } else if (args.length === 1 && funcName === 'SCV_getPhanQuyen' && !args[0]) {
-            args[0] = sysId;
         } 
 
         fetch(GAS_URL, {
@@ -258,20 +287,20 @@
       SCV_getDataCongVan: function(a) { this._call('SCV_getDataCongVan', [a]); },
       SCV_deleteCongVan: function(a,b) { this._call('SCV_deleteCongVan', [a,b]); }, 
       SCV_getSubFolders: function(a) { this._call('SCV_getSubFolders', [a]); },
-      SCV_createNewFolder: function(a,b) { this._call('SCV_createNewFolder', [a,b]); },
-      SCV_uploadMultipleFilesToDrive: function(a,b,c,d,e) { this._call('SCV_uploadMultipleFilesToDrive', [a,b,c,d,e]); },
-      SCV_uploadFolderEvidence: function(a,b,c,d,e) { this._call('SCV_uploadFolderEvidence', [a,b,c,d,e]); },
-      SCV_deleteFileByUrl: function(a) { this._call('SCV_deleteFileByUrl', [a]); },
-      SCV_chatWithDocument: function(a,b) { this._call('SCV_chatWithDocument', [a,b]); },
-      SCV_extractLichFromDocument: function(a,b) { this._call('SCV_extractLichFromDocument', [a,b]); },
-      SCV_extractCongVanFromDocument: function(a,b) { this._call('SCV_extractCongVanFromDocument', [a,b]); },
+      SCV_createNewFolder: function(a,b,c) { this._call('SCV_createNewFolder', c !== undefined ? [a,b,c] : [a,b]); },
+      SCV_uploadMultipleFilesToDrive: function(a,b,c,d,e,f) { this._call('SCV_uploadMultipleFilesToDrive', f !== undefined ? [a,b,c,d,e,f] : [a,b,c,d,e]); },
+      SCV_uploadFolderEvidence: function(a,b,c,d,e,f) { this._call('SCV_uploadFolderEvidence', f !== undefined ? [a,b,c,d,e,f] : [a,b,c,d,e]); },
+      SCV_deleteFileByUrl: function(a,b) { this._call('SCV_deleteFileByUrl', b !== undefined ? [a,b] : [a]); },
+      SCV_chatWithDocument: function(a,b,c) { this._call('SCV_chatWithDocument', c !== undefined ? [a,b,c] : [a,b]); },
+      SCV_extractLichFromDocument: function(a,b,c) { this._call('SCV_extractLichFromDocument', c !== undefined ? [a,b,c] : [a,b]); },
+      SCV_extractCongVanFromDocument: function(a,b,c) { this._call('SCV_extractCongVanFromDocument', c !== undefined ? [a,b,c] : [a,b]); },
       SCV_getPhanQuyen: function(a) { this._call('SCV_getPhanQuyen', a !== undefined ? [a] : []); },
       SCV_updatePhanQuyen: function(a, b) { 
           let args = [a];
           if (b !== undefined) args.push(b);
           this._call('SCV_updatePhanQuyen', args); 
       },
-      SCV_uploadSingleFileToDrive: function(a,b,c) { this._call('SCV_uploadSingleFileToDrive', [a,b,c]); },
+      SCV_uploadSingleFileToDrive: function(a,b,c,d) { this._call('SCV_uploadSingleFileToDrive', d !== undefined ? [a,b,c,d] : [a,b,c]); },
       SCV_syncTrackingState: function(a) { this._call('SCV_syncTrackingState', [a]); }
     };
   }
