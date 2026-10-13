@@ -214,8 +214,12 @@
           return;
         }
 
-        const sysId = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID");
-        args.push(sysId); 
+        const sysId = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : "");
+        if (args.length === 0 || (funcName === 'SCV_updatePhanQuyen' && args.length === 1)) {
+            args.push(sysId);
+        } else if (args.length === 1 && funcName === 'SCV_getPhanQuyen' && !args[0]) {
+            args[0] = sysId;
+        } 
 
         fetch(GAS_URL, {
           method: 'POST',
@@ -261,8 +265,12 @@
       SCV_chatWithDocument: function(a,b) { this._call('SCV_chatWithDocument', [a,b]); },
       SCV_extractLichFromDocument: function(a,b) { this._call('SCV_extractLichFromDocument', [a,b]); },
       SCV_extractCongVanFromDocument: function(a,b) { this._call('SCV_extractCongVanFromDocument', [a,b]); },
-      SCV_getPhanQuyen: function() { this._call('SCV_getPhanQuyen', []); },
-      SCV_updatePhanQuyen: function(a) { this._call('SCV_updatePhanQuyen', [a]); },
+      SCV_getPhanQuyen: function(a) { this._call('SCV_getPhanQuyen', a !== undefined ? [a] : []); },
+      SCV_updatePhanQuyen: function(a, b) { 
+          let args = [a];
+          if (b !== undefined) args.push(b);
+          this._call('SCV_updatePhanQuyen', args); 
+      },
       SCV_uploadSingleFileToDrive: function(a,b,c) { this._call('SCV_uploadSingleFileToDrive', [a,b,c]); },
       SCV_syncTrackingState: function(a) { this._call('SCV_syncTrackingState', [a]); }
     };
@@ -382,7 +390,10 @@
   function checkPermissionAndLoad() {
     google.script.run.withSuccessHandler(async res => {
       applySystemConfig(res.config); 
-      SYS_ACTIVE_ACCOUNT = res.sysId; GLOBAL_PERM = res.canInput; 
+      SYS_ACTIVE_ACCOUNT = res.sysId; 
+      window.SYS_ACTIVE_ID = res.sysId;
+      sessionStorage.setItem("SCV_ACTIVE_ID", res.sysId);
+      GLOBAL_PERM = res.canInput; 
       GLOBAL_ADMIN = !!res.canAdmin; window.GLOBAL_ADMIN = !!res.canAdmin; 
       
       if (!res.canView) {
@@ -490,6 +501,8 @@ function fetchCacheData() {
                          let seenCV = SCV_GetSeenIDs('CV');
                          let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
                          loadDataSearchCV(newCV.length > 0);
+                     } else if (activeTabId === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') {
+                         loadPhanQuyen();
                      }
                  }
              }
@@ -577,6 +590,12 @@ function showTab(id, btn) {
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
     
+    // ĐỐI VỚI TAB PHÂN QUYỀN: Kích hoạt tải dữ liệu trực tiếp từ sheet KHAIBAO ngay lập tức
+    if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') {
+        loadPhanQuyen();
+        return;
+    }
+
     // NGĂN CHẶN XUNG ĐỘT (RACE CONDITION): 
     // Nếu click tab mà máy chủ chưa tải xong, chỉ lật giao diện, tuyệt đối không được bung lệnh tìm kiếm rỗng!
     if (!window.SCV_DATA_READY) return;
@@ -592,8 +611,6 @@ function showTab(id, btn) {
         let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
         loadDataSearchCV(newCV.length > 0);
     }
-    
-    if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') loadPhanQuyen();
   }
 
   function preloadDriveFolders() {
