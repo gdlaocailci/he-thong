@@ -450,6 +450,111 @@
 
 <script>
     let dsCanbgv = []; let tdtaiXoaCho = null; let ptuChoXoa = null;
+
+    // =========================================================================
+    // NÂNG CẤP CỐT LÕI: BỘ ĐIỀU PHỐI HÀNG ĐỢI & TỰ ĐỘNG THỬ LẠI (AUTO-RETRY)
+    // Khắc phục triệt để lỗi "Failed to fetch" / "LỖI GIAO TIẾP DỮ LIỆU" do nghẽn
+    // kết nối đồng thời tới Google Apps Script khi tải ngầm nhiều hồ sơ.
+    // =========================================================================
+    (function gvNangCapKetNoiChongNghen() {
+        if (typeof window.khachApi === 'undefined' || window.khachApi._daNangCapChongNghen) return;
+        window.khachApi._daNangCapChongNghen = true;
+
+        let dangChay = 0;
+        const TOI_DA_DONG_THOI = 2; // Giới hạn tối đa 2 luồng gọi GAS cùng lúc để không bị Google chặn CORS
+        const hangDoi = [];
+        let cacheDsCanbTam = null;
+        let thoiDiemCacheCanb = 0;
+
+        function chayTiepHangDoi() {
+            while (dangChay < TOI_DA_DONG_THOI && hangDoi.length > 0) {
+                const tacVu = hangDoi.shift();
+                dangChay++;
+                tacVu().finally(() => {
+                    dangChay--;
+                    chayTiepHangDoi();
+                });
+            }
+        }
+
+        window.khachApi.yeucauApi = function(hdong, tdtai, khiTcong, khiLoi) {
+            if (typeof ddungApi === 'undefined' || !ddungApi) {
+                if (khiLoi) khiLoi(new Error("Liên kết API hệ thống chưa sẵn sàng. Vui lòng tải lại trang."));
+                return;
+            }
+
+            // Dùng chung kết quả gvlaydscanb trong 15 giây đầu để tránh gọi trùng lặp giữa index.html và Tab Giao việc
+            if (hdong === "gvlaydscanb" && cacheDsCanbTam && (Date.now() - thoiDiemCacheCanb < 15000)) {
+                if (khiTcong) setTimeout(() => khiTcong(cacheDsCanbTam), 10);
+                return;
+            }
+
+            const laUuTienCao = (hdong === "gvxulynviec" || hdong === "gvlaydlbdau" || hdong === "gvlaydscanb" || hdong === "luutam" || hdong === "nopbcao");
+
+            const thucThiFetch = () => new Promise((resolve) => {
+                const dlieu = { hdong: hdong, token: window.PGV_TOKEN || "", ...tdtai };
+                const urlFetch = ddungApi + (ddungApi.includes('?') ? '&' : '?') + 'hdong=' + encodeURIComponent(hdong);
+
+                const goiThu = (lanThu) => {
+                    fetch(urlFetch, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(dlieu),
+                        redirect: 'follow'
+                    })
+                    .then(function(ph) {
+                        if (!ph.ok) throw new Error("Máy chủ bận (Mã: " + ph.status + ")");
+                        return ph.text();
+                    })
+                    .then(function(txt) {
+                        let kq;
+                        try {
+                            kq = JSON.parse(txt);
+                        } catch (e) {
+                            throw new Error("Phản hồi máy chủ gián đoạn (" + e.message + ")");
+                        }
+
+                        // Tự động ẩn thông báo lỗi #hopLoi trên màn hình chính ngay khi kết nối thông suốt
+                        const hopLoi = document.getElementById('hopLoi');
+                        if (hopLoi && hopLoi.style.display !== 'none') {
+                            hopLoi.style.display = 'none';
+                        }
+
+                        if (kq.ttai === 'loi') {
+                            if (khiLoi) khiLoi(new Error(kq.tbao));
+                        } else {
+                            const dcuoi = (kq.dliu !== undefined) ? kq.dliu : kq;
+                            if (hdong === "gvlaydscanb" && Array.isArray(dcuoi)) {
+                                cacheDsCanbTam = dcuoi;
+                                thoiDiemCacheCanb = Date.now();
+                            }
+                            if (khiTcong) khiTcong(dcuoi);
+                        }
+                        resolve();
+                    })
+                    .catch(function(loie) {
+                        // Tự động thử lại tối đa 3 lần nếu gặp lỗi "Failed to fetch" hoặc nghẽn mạng tạm thời
+                        if (lanThu < 3) {
+                            setTimeout(() => goiThu(lanThu + 1), 650 * lanThu);
+                        } else {
+                            if (khiLoi) khiLoi(loie);
+                            resolve();
+                        }
+                    });
+                };
+
+                goiThu(1);
+            });
+
+            if (laUuTienCao) {
+                hangDoi.unshift(thucThiFetch);
+            } else {
+                hangDoi.push(thucThiFetch);
+            }
+            chayTiepHangDoi();
+        };
+    })();
+
     setTimeout(function() { gvTaiCanb(); }, 500);
 
     function gvDatTai(dt, tbt = null) { 
@@ -540,7 +645,7 @@ function gvTaiCanb() {
             return;
         }
         khachApi.gvLaydsCanb(function(dl) { 
-            dsCanbgv = dl || []; 
+            dsCanbgv = Array.isArray(dl) ? dl : (dl && Array.isArray(dl.dliu) ? dl.dliu : []); 
             gvTaoDatalistChung(); // NÂNG CẤP: Gọi tạo danh sách dùng chung
             gvLaydlGoc(); 
         }, function(l) { 
@@ -583,31 +688,52 @@ function gvTaiCanb() {
         dlTienDo.innerHTML = '<option value="Cho vượt tiến độ">Cho vượt tiến độ</option>';
     }
 
-    // Hàm tiện ích: Lấy thông tin người dùng đang đăng nhập hiện tại (Họ tên, ID, Email, Quyền)
+    // Hàm tiện ích: Lấy thông tin người dùng đang đăng nhập hiện tại chính xác 100%
+    // (Ưu tiên lấy từ window.PGV_ID_TC để không bị nhảy tên khi Quản trị viên chọn xem giáo viên khác ở Tab Nhiệm vụ)
     function gvLayThongTinNguoiDangNhap() {
         let id = "";
         let ten = "";
         let taik = "";
         let quyen = "";
 
-        if (typeof canbHientai !== 'undefined' && canbHientai) {
-            id = String(canbHientai.ttrg || "").trim();
-            ten = String(canbHientai.tenn || "").trim();
-            taik = String(canbHientai.taik || "").trim().toLowerCase();
-            quyen = String(canbHientai.quyen || "").trim().toLowerCase();
+        if (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) {
+            taik = String(window.PGV_ID_TC).trim().toLowerCase();
+        }
+        if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN) {
+            quyen = String(window.PGV_QUYEN).trim().toLowerCase();
         }
 
-        if (dsCanbgv && Array.isArray(dsCanbgv)) {
+        // 1. Tra cứu trực tiếp theo email đăng nhập thực (window.PGV_ID_TC) trong dsCanbgv
+        if (taik && dsCanbgv && Array.isArray(dsCanbgv)) {
+            let foundByEmail = dsCanbgv.find(s => s && s.taik && String(s.taik).trim().toLowerCase() === taik);
+            if (foundByEmail) {
+                id = String(foundByEmail.ttrg || "").trim();
+                ten = String(foundByEmail.tenn || "").trim();
+                if (!quyen && foundByEmail.quyen) quyen = String(foundByEmail.quyen).trim().toLowerCase();
+            }
+        }
+
+        // 2. Dự phòng lấy từ canbHientai.canb hoặc canbHientai nếu là chính chủ đang đăng nhập
+        if (typeof canbHientai !== 'undefined' && canbHientai) {
+            if (!quyen && canbHientai.quyen) quyen = String(canbHientai.quyen).trim().toLowerCase();
+            const cbObj = canbHientai.canb || canbHientai;
+            const cbEmail = String(cbObj.taik || "").trim().toLowerCase();
+            if (!taik || cbEmail === taik) {
+                if (!id && cbObj.ttrg) id = String(cbObj.ttrg).trim();
+                if (!ten && cbObj.tenn) ten = String(cbObj.tenn).trim();
+                if (!taik && cbEmail) taik = cbEmail;
+            }
+        }
+
+        // 3. Đối chiếu bổ sung với dsCanbgv nếu mới có tên hoặc mới có ID
+        if ((!id || !ten) && dsCanbgv && Array.isArray(dsCanbgv)) {
             let found = dsCanbgv.find(s =>
                 (id && s.ttrg && String(s.ttrg).trim().toLowerCase() === id.toLowerCase()) ||
-                (taik && s.taik && String(s.taik).trim().toLowerCase() === taik) ||
                 (ten && s.tenn && String(s.tenn).trim().toLowerCase() === ten.toLowerCase())
             );
             if (found) {
                 if (!id) id = String(found.ttrg || "").trim();
                 if (!ten) ten = String(found.tenn || "").trim();
-                if (!taik && found.taik) taik = String(found.taik || "").trim().toLowerCase();
-                if (!quyen && found.quyen) quyen = String(found.quyen || "").trim().toLowerCase();
             }
         }
 
@@ -675,11 +801,11 @@ function gvTaiCanb() {
 
         if (laToanTruong) {
             const tongSo = gvLayDsGiaoVienHopLe().length;
-            return `Người giao: ${dinhDanhNgGiao}: (Toàn trường - ${tongSo} người thực hiện)`;
+            return `Người giao: ${dinhDanhNgGiao}: (Toàn trường - ${tongSo} người)`;
         }
         const soLuong = Array.isArray(dsNguoiChon) ? dsNguoiChon.length : 0;
         if (soLuong <= 0) return "";
-        return `Người giao: ${dinhDanhNgGiao}: (${soLuong} người thực hiện)`;
+        return `Người giao: ${dinhDanhNgGiao}: (${soLuong} người)`;
     }
 
     // Hàm tiện ích: Lấy danh sách giáo viên hợp lệ được phép nhận giao việc
@@ -872,7 +998,9 @@ function gvTaiCanb() {
 
         // [ĐÃ FIX TRIỆT ĐỂ] Bóc tách định tuyến tường minh cho 3 cấp độ: xxx, xx và phần còn lại
         let quyen = ''; 
-        if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen) { 
+        if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN) {
+            quyen = window.PGV_QUYEN;
+        } else if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen) { 
             quyen = canbHientai.quyen; 
         }
         
