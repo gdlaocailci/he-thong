@@ -623,10 +623,10 @@ function gvTaiCanb() {
     // Hàm tiện ích: Bóc tách thông tin Người giao từ chuỗi Ghi chú ("Người giao: Họ tên (ID): (...)")
     function gvTrichXuatNguoiGiaoTuGhiChu(chuoiGhiChu) {
         let raw = String(chuoiGhiChu || "").trim();
-        let m = raw.match(/^Người\s*giao\s*:\s*(.+?)\s*:\s*\(([\s\S]*)\)\s*$/i);
+        let m = raw.match(/^Người\s*giao\s*:\s*(.+?)\s*(?::\s*\(([\s\S]*)\)|-\s*SL\s*:\s*(.*))$/i);
         if (!m) return { coNguoiGiao: false, id: "", ten: "", hienThi: "", phanNguoiNhan: raw };
         let cumNgGiao = m[1].trim();
-        let phanNgNhan = m[2].trim();
+        let phanNgNhan = String(m[2] !== undefined ? m[2] : (m[3] || "")).trim();
         let mId = cumNgGiao.match(/^(.*?)\s*\(([^()]+)\)\s*$/);
         if (mId) {
             return {
@@ -665,7 +665,7 @@ function gvTaiCanb() {
         return { biKhoa: false, chuSoHuu: ttGiao.hienThi };
     }
 
-    // Hàm tiện ích: Tạo chuỗi Ghi chú chuẩn "Người giao: Họ tên (ID): (Họ tên 1 (ID1); Họ tên 2 (ID2))"
+    // Hàm tiện ích: Tạo chuỗi Ghi chú chuẩn gọn nhẹ chỉ gồm Họ tên + ID người giao và số lượng người nhận
     function gvTaoChuoiGhiChuChuan(dsNguoiChon, laToanTruong, chuoiGhiChuCu = "") {
         const ttCu = gvTrichXuatNguoiGiaoTuGhiChu(chuoiGhiChuCu);
         const ngDangNhap = gvLayThongTinNguoiDangNhap();
@@ -674,11 +674,12 @@ function gvTaiCanb() {
             : (ngDangNhap.hienThi || "Người giao");
 
         if (laToanTruong) {
-            return `Người giao: ${dinhDanhNgGiao}: (TOÀN TRƯỜNG)`;
+            const tongSo = gvLayDsGiaoVienHopLe().length;
+            return `Người giao: ${dinhDanhNgGiao}: (Toàn trường - ${tongSo} người)`;
         }
-        if (!dsNguoiChon || dsNguoiChon.length === 0) return "";
-        const dsChuoi = dsNguoiChon.map(x => `${x.tenn} (${x.ttrg})`);
-        return `Người giao: ${dinhDanhNgGiao}: (${dsChuoi.join("; ")})`;
+        const soLuong = Array.isArray(dsNguoiChon) ? dsNguoiChon.length : 0;
+        if (soLuong <= 0) return "";
+        return `Người giao: ${dinhDanhNgGiao}: (${soLuong} người)`;
     }
 
     // Hàm tiện ích: Lấy danh sách giáo viên hợp lệ được phép nhận giao việc
@@ -691,18 +692,20 @@ function gvTaiCanb() {
         });
     }
 
-    // Hàm tiện ích: Bóc tách chuỗi tên/ID từ dữ liệu dòng thành danh sách giáo viên đã chọn (Tách riêng phần Người giao)
+    // Hàm tiện ích: Bóc tách chuỗi tên/ID từ dữ liệu dòng thành danh sách giáo viên đã chọn (Tách riêng phần Người giao và bỏ qua cụm số lượng)
     function gvPhanTichNguoiNhan(chuoiNgNhan, chuoiGhiChu = "") {
         let rawNg = String(chuoiNgNhan || "").trim();
         let rawGc = String(chuoiGhiChu || "").trim();
         const ttGiao = gvTrichXuatNguoiGiaoTuGhiChu(rawGc);
         let phanNgNhanTrongGhiChu = ttGiao.coNguoiGiao ? ttGiao.phanNguoiNhan : rawGc;
+        let upperGc = phanNgNhanTrongGhiChu.toUpperCase();
 
         if (
             rawNg.toUpperCase() === "ALL" ||
             rawNg.toUpperCase() === "-TOÀN TRƯỜNG-" ||
-            phanNgNhanTrongGhiChu.toUpperCase() === "TOÀN TRƯỜNG" ||
-            phanNgNhanTrongGhiChu.toUpperCase() === "-TOÀN TRƯỜNG-"
+            upperGc === "TOÀN TRƯỜNG" ||
+            upperGc === "-TOÀN TRƯỜNG-" ||
+            upperGc.includes("TOÀN TRƯỜNG")
         ) {
             return { isAll: true, ids: ["ALL"], names: ["ALL"] };
         }
@@ -713,8 +716,9 @@ function gvTaiCanb() {
         const mangId = [];
 
         const tachChuoi = (str) => {
-            if (!str) return;
+            if (!str || /^\d+\s*người$/i.test(str.trim())) return;
             str.split(/[;,]+/).map(x => x.trim()).filter(x => x !== "").forEach(token => {
+                if (/^\d+\s*người$/i.test(token)) return;
                 let tenToken = token;
                 let idToken = "";
                 let mToken = token.match(/^(.*?)\s*\(([^()]+)\)\s*$/);
@@ -984,7 +988,7 @@ function gvVeDong(dong = null) {
     <td><input type="text" class="form-control text-center oTdoGv" list="dl_gvTienDo" onclick="this.select(); try{this.showPicker();}catch(e){}" placeholder="--Chọn--" value="${cv_tdo}" ${dcb}></td>
     <td><input type="text" class="form-control oNnghanGv text-center ${biKhoaKhac ? 'gv-locked-other' : ''}" readonly onclick="gvMoModalChonNguoi(this)" data-selected-ids="${attrSelectedIds}" data-da-giao="${attrSelectedIds}" title="${biKhoaKhac ? ('Do ' + ktraSoHuu.chuSoHuu + ' giao - Không có quyền thay đổi') : displayNgnth}" placeholder="-- Nhấn để chọn --" value="${displayNgnth}"></td>
     <td>
-        <textarea class="form-control oGchuGv" placeholder="Tự động hiển thị người giao & người nhận" rows="1" readonly oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${gchuGoc}</textarea>
+        <textarea class="form-control oGchuGv" placeholder="Tự động hiển thị người giao & số người nhận" rows="1" readonly oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${gchuGoc}</textarea>
         <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
         <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
         <input type="hidden" class="oColJ" value="${vColJ}">
@@ -1388,7 +1392,7 @@ function gvVeDong(dong = null) {
             ptu.title = ten_hien_thi;
         }
 
-        // Tạo chuỗi Ghi chú chuẩn ngay trên giao diện và đồng bộ xuống máy chủ
+        // Tạo chuỗi Ghi chú chuẩn gọn nhẹ: "Người giao: Họ tên (ID): (X người)"
         const ghiChuMoi = gvTaoChuoiGhiChuChuan(dsNguoiChon, laToanTruong, gchuCu);
         if (oGchu) {
             oGchu.value = ghiChuMoi;
