@@ -54,15 +54,15 @@
   .diemKhong, .diemKhong:disabled { background-color: #28a745 !important; color: black !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: black !important; }
   button:disabled { cursor: not-allowed !important; opacity: 0.5 !important; filter: grayscale(100%) !important; pointer-events: none !important; box-shadow: none !important; }
   
-  #bangNviec select.form-select.chonKq,
+ #bangNviec select.form-select.chonKq,
   #bangNviec input.chonKq {
       border: 1px solid #adb5bd !important;
       background-color: #ffffff !important;
       border-radius: 6px !important;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
       padding: 5px 8px !important;
-      width: 300px !important;
-      max-width: 300px !important; 
+      width: 100% !important; 
+      max-width: 100% !important; 
       box-sizing: border-box !important;
       font-weight: 500 !important;
       transition: 0.1s ease;
@@ -146,10 +146,10 @@
              </div>
         </div>
             
+        <!-- Hàng 1: Ý kiến tham mưu (Trái) & Báo cáo tóm tắt (Phải) -->
         <div class="row g-1 mb-1">
-            <div class="col-md-6 d-flex flex-column gap-1">
+            <div class="col-md-6">
               <textarea id="nhapYkien" class="form-control border-danger" placeholder="* Ý kiến tham mưu, đề xuất..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
-             <textarea id="oNoiDungYkienLanhDao" class="form-control border-success" placeholder="* Ý kiến lãnh đạo hoặc người giám sát..." style="display: none; height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #198754; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
             </div>
             <div class="col-md-6">
               <div style="position: relative;">
@@ -158,6 +158,13 @@
                 <input type="file" id="tepBcao" multiple style="display:none;" onchange="xulyTaiBcao(this)">
               </div>
               <div id="vungDinhkBcao" class="mt-1 d-flex gap-1 flex-wrap justify-content-end"></div>
+            </div>
+        </div>
+        
+        <!-- Hàng 2: Ý kiến lãnh đạo trải dài toàn bộ chiều ngang (col-12) -->
+        <div class="row g-1 mb-1">
+            <div class="col-12">
+              <textarea id="oNoiDungYkienLanhDao" class="form-control border-success" placeholder="* Ý kiến lãnh đạo hoặc người giám sát..." style="display: none; width: 100%; height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #198754; padding: 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
             </div>
         </div>
     </div>
@@ -777,7 +784,8 @@ function veBangNviec(db) {
         let tHt   = (dong[5] !== undefined && dong[5] !== null) ? String(dong[5]) : "";
         let lTdo = dong[4] || ""; 
         let nTH = dong[6] || ""; 
-        let rawH = dong[7] || ""; 
+        
+        let rawH = dong[7] !== undefined && dong[7] !== null ? String(dong[7]) : ""; 
         let gc = dong[8] || "";
         
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
@@ -823,13 +831,27 @@ function veBangNviec(db) {
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 if(txt !== "") {
-                    let matchNum = txt.match(/[-+]?\d*\.?\d+/);
+                    // Đã xử lý: Nâng cấp regex bắt chính xác số thập phân chứa dấu chấm hoặc phẩy
+                    let matchNum = txt.match(/[-+]?\d+([.,]\d+)?/);
                     if (matchNum && kv.length === 1) { val = matchNum[0]; }
                     mangGiaTriDiem.push(val);
                 }
             });
 
-            if (valChon !== "" && !mangGiaTriDiem.includes(valChon)) {
+            // Đã xử lý: Đồng bộ hóa giá trị thực (float) để đối chiếu, tránh lệch định dạng giữa Sheets (8.5) và cấu hình (8,5)
+            let valChonFloat = isNaN(parseFloat(valChon.replace(/,/g, '.'))) ? null : parseFloat(valChon.replace(/,/g, '.'));
+            let isMatched = false;
+            for (let i = 0; i < mangGiaTriDiem.length; i++) {
+                let v = mangGiaTriDiem[i];
+                let vFloat = isNaN(parseFloat(v.replace(/,/g, '.'))) ? null : parseFloat(v.replace(/,/g, '.'));
+                if (v === valChon || (valChonFloat !== null && vFloat !== null && vFloat === valChonFloat)) {
+                    isMatched = true;
+                    valChon = v; // Đồng bộ lại biến giao diện theo định dạng cấu hình
+                    break;
+                }
+            }
+
+            if (valChon !== "" && !isMatched) {
                 valChon = ""; 
             }
 
@@ -843,9 +865,12 @@ function veBangNviec(db) {
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 
                 if(txt !== "") {
-                    let matchNum = txt.match(/[-+]?\d*\.?\d+/);
+                    let matchNum = txt.match(/[-+]?\d+([.,]\d+)?/);
                     if (matchNum && kv.length === 1) { val = matchNum[0]; }
-                    let isSel = (val === valChon);
+                    
+                    let valFloat = isNaN(parseFloat(val.replace(/,/g, '.'))) ? null : parseFloat(val.replace(/,/g, '.'));
+                    let isSel = (val === valChon || (valFloat !== null && valChonFloat !== null && valFloat === valChonFloat));
+                    
                     danhSachHtml += `<div class="muc-chon p-2 border-bottom text-dark ${isSel ? 'bg-light fw-bold text-primary' : ''}" style="cursor:pointer; text-align:justify; word-wrap:break-word; white-space:normal; line-height:1.4; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#cfe2ff'" onmouseout="this.style.backgroundColor='transparent'" onclick="chonGiaTriDiem(this, '${val}')">${txt}</div>`;
                 }
             });
@@ -981,7 +1006,8 @@ function moDanhSachDiem(suKien, ptu) {
                 if (valClick) {
                     let match = valClick.match(/'([^']*)'/); 
                     if (match && match[1]) {
-                        let num = parseFloat(match[1]);
+                        // Đã xử lý: Thay thế phẩy bằng chấm để parseFloat phân tích chính xác
+                        let num = parseFloat(match[1].replace(/,/g, '.'));
                         if (!isNaN(num) && !dsGiaTriSo.includes(num)) {
                             dsGiaTriSo.push(num);
                         }
@@ -1033,7 +1059,8 @@ function moDanhSachDiem(suKien, ptu) {
                 if (valClick) {
                     let match = valClick.match(/'([^']*)'/);
                     if (match && match[1]) {
-                        let num = parseFloat(match[1]);
+                        // Đã xử lý: Đảm bảo đồng bộ lấy giá trị float xếp hạng chuẩn
+                        let num = parseFloat(match[1].replace(/,/g, '.'));
                         let thuHang = dsGiaTriSo.indexOf(num);
                         
                         if (thuHang > mucToiDaDuocChon) {
@@ -1279,7 +1306,6 @@ function debounce(func, wait) {
 
 const tinhtTdong = debounce(function() {
     const dtc = document.getElementById('nhapDiemThuong'); 
-    // Chuyển đổi dấu phẩy thành dấu chấm cho Điểm thưởng
     let dc = dtc ? (parseFloat(dtc.value.replace(/,/g, '.')) || 0) : 0;
     if(dtc) { 
         dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); 
@@ -1288,20 +1314,19 @@ const tinhtTdong = debounce(function() {
         else dtc.classList.add('diemKhong'); 
     }
     
-    let tongDiem = 0;
-    let tongMax = 0;
-    let soNhiemVu = 0;
-    let soDaDanhGia = 0;
-    let minRank = 5;
-    let hasJMLogic = false;
+    let tongDiem = 0; let tongMax = 0; let soNhiemVu = 0; let soDaDanhGia = 0;
+    let minRank = 5; let hasJMLogic = false;
 
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
+        // [ĐIỂM MẤU CHỐT]: Bỏ qua dòng trống, không đếm nhầm
+        const ndg = dg.querySelector('.nhapNdung');
+        if (!ndg || ndg.value.trim() === "") return; 
+
         const cg = dg.querySelector('.chonKq');
         if (cg && cg.style.display !== 'none') {
             soNhiemVu++;
             const maxInp = dg.querySelector('.nhapDiemMax');
             if(maxInp && maxInp.value) {
-                // Khắc phục dấu phẩy cho Điểm tối đa
                 let mVal = parseFloat(maxInp.value.replace(/,/g, '.'));
                 if(!isNaN(mVal)) tongMax += mVal;
             }
@@ -1314,7 +1339,6 @@ const tinhtTdong = debounce(function() {
                     if (selOpt) txtHienThi = selOpt.text;
                 }
                 
-                // Khắc phục dấu phẩy (,) thành dấu chấm (.) để hệ thống không cắt mất phần thập phân
                 let diem = parseFloat(valThuc.replace(/,/g, '.'));
                 if (!isNaN(diem)) tongDiem += diem;
                 
@@ -1337,7 +1361,6 @@ const tinhtTdong = debounce(function() {
         }
     });
     
-    // Cộng điểm và triệt tiêu lỗi số lẻ dài của JavaScript (giữ lại tối đa 3 số thập phân)
     let diemCuoiCung = Math.round((tongDiem + dc) * 1000) / 1000;
     let xpl = "Chưa hoàn thành";
     
@@ -1346,17 +1369,13 @@ const tinhtTdong = debounce(function() {
     } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
-        // Xếp loại theo mốc điểm tuyệt đối
         let mucDiem = 1; 
         if (diemCuoiCung >= 90) mucDiem = 4; 
         else if (diemCuoiCung >= 70) mucDiem = 3; 
         else if (diemCuoiCung >= 50) mucDiem = 2; 
         
-        // So sánh với điểm liệt (Nếu có cột J,K,L,M)
         let mucCuoiCung = mucDiem;
-        if (hasJMLogic) {
-            mucCuoiCung = Math.min(minRank, mucDiem);
-        }
+        if (hasJMLogic) { mucCuoiCung = Math.min(minRank, mucDiem); }
 
         if (mucCuoiCung === 4) xpl = "Xuất sắc";
         else if (mucCuoiCung === 3) xpl = "Hoàn thành tốt";
@@ -1366,7 +1385,6 @@ const tinhtTdong = debounce(function() {
     
     let txtKq = xpl;
     if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
-        // Chuyển kết quả trở lại thành dấu phẩy khi hiển thị lên giao diện
         let diemHienThi = String(diemCuoiCung).replace('.', ',');
         txtKq = `${xpl}: ${diemHienThi} điểm`;
     }
@@ -1380,6 +1398,7 @@ const tinhtTdong = debounce(function() {
         else qht.classList.add("text-danger"); 
     }
     
+    // Đồng bộ kết quả ra Menu dọc
     const theMenuDoc = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
     theMenuDoc.forEach(el => {
         el.innerText = txtKq;
@@ -1749,7 +1768,10 @@ $(document).ready(function() {
         defaultDiv.innerHTML = '<i class="bi bi-x-circle me-1"></i> Bỏ chọn / Trở về chính mình';
         defaultDiv.onmouseover = () => defaultDiv.style.background = "#e2e6ea";
         defaultDiv.onmouseout = () => defaultDiv.style.background = "#f8f9fa";
-        defaultDiv.onmousedown = (e) => { e.preventDefault(); selectOption("", "-- Lựa chọn giáo viên --"); };
+        defaultDiv.onmousedown = (e) => { 
+            e.preventDefault(); 
+            selectOption("", "-- Lựa chọn giáo viên --"); 
+        };
         dropdown.appendChild(defaultDiv);
 
         Array.from(originalSelect.children).forEach(child => {
@@ -1772,11 +1794,10 @@ $(document).ready(function() {
 
     function addOptionToDropdown(val, text) {
         const optDiv = document.createElement("div");
-        optDiv.className = "muc-gv px-3 py-2 border-bottom text-dark"; // Tăng độ rộng padding (py-2) để hiển thị 2 dòng
+        optDiv.className = "muc-gv px-3 py-2 border-bottom text-dark"; 
         optDiv.style.cursor = "pointer";
         optDiv.dataset.val = val;
         
-        // NÂNG CẤP: Chèn thêm ID (Mã hồ sơ từ cột B) xuống bên dưới Tên giáo viên
         optDiv.innerHTML = `
             <div class="fw-bold" style="font-size: 13px;">${text}</div>
             <div class="text-secondary mt-1" style="font-size: 11px; font-style: italic;">
@@ -1788,7 +1809,6 @@ $(document).ready(function() {
         optDiv.onmouseout = () => optDiv.style.background = "transparent";
         optDiv.onmousedown = (e) => { 
             e.preventDefault(); 
-            // Khi nhấn chọn, vẫn chỉ đẩy giá trị 'text' (Tên) lên ô input hiển thị cho gọn
             selectOption(val, text); 
         };
         dropdown.appendChild(optDiv);
@@ -1824,12 +1844,17 @@ $(document).ready(function() {
         }
     }
 
-function selectOption(val, text) {
+    function selectOption(val, text, boQuaLoading = false) {
+       if (originalSelect.value === val) {
+            input.value = val === "" ? "" : text;
+            dropdown.style.display = "none";
+            return; 
+        }
+
         originalSelect.value = val;
         input.value = val === "" ? "" : text;
         dropdown.style.display = "none";
         
-        // 1. Kích hoạt sự kiện tương thích mạnh với jQuery để đánh thức các hàm bắt sự kiện .change() ở ngoài hệ thống
         if (typeof jQuery !== 'undefined') {
             $(originalSelect).trigger("change");
         } else {
@@ -1837,11 +1862,12 @@ function selectOption(val, text) {
             originalSelect.dispatchEvent(event);
         }
         
-        // 2. KHẮC PHỤC LỖI: Chủ động gọi hàm tải dữ liệu gốc khi người dùng chọn về chính mình (val === "")
         if (val === "") {
-            if (typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải dữ liệu cá nhân...");
+            if (!boQuaLoading && typeof hienTaiDl === 'function') {
+                hienTaiDl("⏳ Đang tải dữ liệu cá nhân...");
+            }
             if (typeof taiDlBdau === 'function') {
-                taiDlBdau(); // Hàm tải lại dữ liệu bản thân có sẵn trong hệ thống của đồng chí
+                taiDlBdau(); 
             }
         }
     }
@@ -1858,8 +1884,43 @@ function selectOption(val, text) {
     });
 
     input.addEventListener("blur", () => {
-        const selectedOpt = Array.from(originalSelect.options).find(o => o.value === originalSelect.value);
-        input.value = (selectedOpt && selectedOpt.value !== "") ? selectedOpt.textContent : "";
+        const typedVal = input.value.trim().toLowerCase();
+        
+        if (typedVal === "") {
+            selectOption("", "-- Lựa chọn giáo viên --");
+            dropdown.style.display = "none";
+            return;
+        }
+
+        const textNormTyped = typedVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+        
+        let matchedOpt = null;
+        
+        Array.from(originalSelect.options).forEach(opt => {
+            if(opt.value !== "") {
+                const optText = opt.textContent.toLowerCase();
+                const optNorm = optText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+                
+                if (optText === typedVal || optNorm === textNormTyped || opt.value.toLowerCase() === typedVal) {
+                    matchedOpt = opt;
+                }
+            }
+        });
+
+        if (matchedOpt) {
+            selectOption(matchedOpt.value, matchedOpt.textContent);
+        } else {
+            input.value = "";
+            selectOption("", "-- Lựa chọn giáo viên --", true);
+            
+            setTimeout(() => {
+                if (typeof hienThongb === 'function') {
+                    hienThongb('cbh', "⚠️ Thông tin nhân sự vừa nhập không tồn tại. Hệ thống đã hủy lựa chọn.");
+                } else {
+                    alert("⚠️ Thông tin nhân sự vừa nhập không tồn tại. Hệ thống đã hủy lựa chọn.");
+                }
+            }, 100);
+        }
         dropdown.style.display = "none";
     });
 
