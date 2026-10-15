@@ -675,11 +675,11 @@ function gvTaiCanb() {
 
         if (laToanTruong) {
             const tongSo = gvLayDsGiaoVienHopLe().length;
-            return `Người giao: ${dinhDanhNgGiao}: (Toàn trường - ${tongSo} người)`;
+            return `Người giao: ${dinhDanhNgGiao}: (Toàn trường - ${tongSo} người thực hiện)`;
         }
         const soLuong = Array.isArray(dsNguoiChon) ? dsNguoiChon.length : 0;
         if (soLuong <= 0) return "";
-        return `Người giao: ${dinhDanhNgGiao}: (${soLuong} người)`;
+        return `Người giao: ${dinhDanhNgGiao}: (${soLuong} người thực hiện)`;
     }
 
     // Hàm tiện ích: Lấy danh sách giáo viên hợp lệ được phép nhận giao việc
