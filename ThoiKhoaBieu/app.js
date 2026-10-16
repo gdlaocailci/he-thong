@@ -363,6 +363,10 @@ function capNhatNgayDauTuan() {
 }
 
 // =========================================================================
+// =========================================================================
+// KHỐI ĐIỀU KHIỂN MENU 3 GẠCH NGANG THAO TÁC THỜI KHÓA BIỂU
+// =========================================================================
+// =========================================================================
 // KHỐI QUẢN LÝ KHÓA / MỞ KHÓA VÀ HIỂN THỊ VÒNG QUAY NÚT THAO TÁC
 // =========================================================================
 window.layHoacTaoSpinnerBenCanhNutThaoTac = function() {
@@ -1022,16 +1026,52 @@ function locTheoGiaoVien() {
         let oMon = document.getElementById(oGv.id.replace('gv_', 'mon_'));
         let tdMon = oMon ? oMon.closest('td') : null;
 
-        if (isTarget) {
-            if(tdGv) tdGv.classList.remove('bg-gray-100/50');
-            if(tdMon) tdMon.classList.remove('bg-gray-100/50');
-            oGv.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
-            if(oMon) oMon.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
+        let dangLocGV = (gvLoc !== "" && gvLoc !== "Toàn trường");
+        if (dangLocGV) {
+            if (isTarget) {
+                // [SỰ KIỆN TÌM KIẾM / LỌC GV]: Tô màu nổi bật để dễ dàng xác định lịch dạy của giáo viên
+                if (tdGv) {
+                    tdGv.classList.remove('bg-gray-100/50', 'bg-slate-50/60', 'bg-white');
+                    tdGv.classList.add('bg-amber-100', 'text-amber-950', 'font-bold');
+                }
+                if (tdMon) {
+                    tdMon.classList.remove('bg-gray-100/50', 'bg-slate-50/60', 'bg-white');
+                    tdMon.classList.add('bg-amber-100', 'text-amber-950', 'font-bold');
+                }
+                oGv.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
+                if (oMon) oMon.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
+            } else {
+                // Các ô còn lại làm mờ nhẹ để hướng tiêu điểm vào các ô cần tìm
+                if (tdGv) {
+                    tdGv.classList.remove('bg-amber-100', 'text-amber-950', 'font-bold');
+                    tdGv.classList.add('bg-slate-50/60');
+                }
+                if (tdMon) {
+                    tdMon.classList.remove('bg-amber-100', 'text-amber-950', 'font-bold');
+                    tdMon.classList.add('bg-slate-50/60');
+                }
+                oGv.classList.add('opacity-0', 'pointer-events-none', 'select-none');
+                if (oMon) oMon.classList.add('opacity-0', 'pointer-events-none', 'select-none');
+            }
         } else {
-            if(tdGv) tdGv.classList.add('bg-gray-100/50');
-            if(tdMon) tdMon.classList.add('bg-gray-100/50');
-            oGv.classList.add('opacity-0', 'pointer-events-none', 'select-none');
-            if(oMon) oMon.classList.add('opacity-0', 'pointer-events-none', 'select-none');
+            // [CHẾ ĐỘ MẶC ĐỊNH / TOÀN TRƯỜNG]: Bỏ toàn bộ màu, trả về nền trắng sạch sẽ tối ưu tốc độ
+            if (tdGv) {
+                tdGv.classList.remove('bg-amber-100', 'text-amber-950', 'font-bold', 'bg-gray-100/50', 'bg-slate-50/60');
+                if (!tdGv.classList.contains('bg-yellow-400') && !tdGv.classList.contains('bg-amber-50') && !tdGv.classList.contains('bg-teal-100') && !tdGv.classList.contains('bg-red-200')) {
+                    tdGv.classList.add('bg-white');
+                }
+            }
+            if (tdMon) {
+                tdMon.classList.remove('bg-amber-100', 'text-amber-950', 'font-bold', 'bg-gray-100/50', 'bg-slate-50/60');
+                let laCanLich = oMon && oMon.value.includes('CẤN LỊCH');
+                if (laCanLich) {
+                    tdMon.classList.add('bg-yellow-400');
+                } else if (!tdMon.classList.contains('bg-amber-50') && !tdMon.classList.contains('bg-teal-100') && !tdMon.classList.contains('bg-red-200')) {
+                    tdMon.classList.add('bg-white');
+                }
+            }
+            oGv.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
+            if (oMon) oMon.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
         }
     });
 }
@@ -1041,7 +1081,7 @@ window.danhDauDongThayDoiTKB = function(inputEl) {
     let td = inputEl.closest('td');
     if (td && td.getAttribute('data-thaydoi') !== 'true') {
         td.setAttribute('data-thaydoi', 'true');
-        td.classList.add('relative'); 
+        td.classList.add('relative', 'bg-amber-50'); // SỰ KIỆN SỬA ĐỔI: Tô màu nhẹ nhận diện ô đã sửa
         
         if (!td.querySelector('.icon-sua-chua')) {
             inputEl.insertAdjacentHTML('afterend', `<svg class="icon-sua-chua w-[14px] h-[14px] absolute top-1 right-1 text-amber-600 animate-pulse pointer-events-none drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`);
@@ -1369,6 +1409,7 @@ function xuatMaTranBang(danhSachTiet) {
     const bangMauGV = ['bg-red-200', 'bg-blue-200', 'bg-green-200', 'bg-yellow-200', 'bg-purple-200', 'bg-pink-200', 'bg-teal-200', 'bg-orange-200', 'bg-cyan-200', 'bg-lime-200', 'bg-fuchsia-200', 'bg-rose-200'];
     let mauGiaoVien = {}; 
     if (thongSoHocVu.DANH_SACH_GIAO_VIEN) { thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach((gv, idx) => { mauGiaoVien[gv] = bangMauGV[idx % bangMauGV.length]; }); }
+    window.mauGiaoVien = mauGiaoVien;
     
     let gvcnLop = {};
     mangLopHienThi.forEach(lop => {
@@ -1486,9 +1527,9 @@ function xuatMaTranBang(danhSachTiet) {
                     
                     let monGoc = (duLieuO && duLieuO.monHoc) ? String(duLieuO.monHoc) : ((duLieuO && duLieuO.mon) ? String(duLieuO.mon) : ""); let gvGoc = (duLieuO && duLieuO.maGv) ? String(duLieuO.maGv) : "";
 
+                    // [TỐI ƯU HÓA BĂNG THÔNG & TỐC ĐỘ]: Khởi động với nền trắng sạch sẽ, không tải màu nền giáo viên
                     let bgLop = 'bg-white'; let textClass = 'text-slate-900';
-                    if (monGoc.includes('CẤN LỊCH')) { bgLop = 'bg-yellow-400'; textClass = 'text-red-700 font-extrabold'; } 
-                    else if (gvGoc && gvGoc !== gvcnLop[lop]) { bgLop = mauGiaoVien[gvGoc] || 'bg-gray-200'; textClass = 'text-slate-900 font-semibold'; }
+                    if (monGoc.includes('CẤN LỊCH')) { bgLop = 'bg-yellow-400'; textClass = 'text-red-700 font-extrabold'; }
 
                     let idMon = `mon_${thu}_${buoi}_${tiet}_${lop}`; let idGv = `gv_${thu}_${buoi}_${tiet}_${lop}`;
                     
@@ -1652,7 +1693,7 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
                 duLieuTkbHienTai = dsTietLuoi;
                 
                 document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
-                    td.removeAttribute('data-thaydoi');
+                    td.removeAttribute('data-thaydoi'); td.classList.remove('bg-amber-50');
                     let icon = td.querySelector('.icon-sua-chua');
                     if (icon) icon.remove();
                 });
@@ -2367,7 +2408,7 @@ async function luuSuaCucBoTKB(event) {
             });
             
             document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
-                td.removeAttribute('data-thaydoi');
+                td.removeAttribute('data-thaydoi'); td.classList.remove('bg-amber-50');
                 let icon = td.querySelector('.icon-sua-chua');
                 if (icon) icon.remove();
             });
