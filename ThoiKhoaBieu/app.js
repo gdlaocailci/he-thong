@@ -1544,13 +1544,15 @@ function xuatMaTranBang(danhSachTiet) {
     if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
 }
 
-async function luuDuLieu(event, loaiLuu) {
+async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
     let coQuyenThaoTac = quyenSuaChua || (quyenChiTiet && (quyenChiTiet.lop.length > 0 || quyenChiTiet.nut.length > 0));
     if (!coQuyenThaoTac) return;
     
-    if (loaiLuu === 'codinh') { if (!confirm("CẢNH BÁO: Thao tác này sẽ ghi đè toàn bộ TKB hiện tại làm TKB Gốc Cố Định cho toàn trường. Bấm OK để tiếp tục.")) return; }
-    if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem}, tự động chuyển sang tuần tiếp theo?`)) return; }
-    if (loaiLuu === 'tuan') { if (!confirm(`Xác nhận: Xóa trắng và ghi đè toàn bộ dữ liệu Tuần ${tuanDangXem} trên máy chủ bằng nội dung Thời khoá biểu mặc định?`)) return; }
+    if (!tuDongLuu) {
+        if (loaiLuu === 'codinh') { if (!confirm("CẢNH BÁO: Thao tác này sẽ ghi đè toàn bộ TKB hiện tại làm TKB Gốc Cố Định cho toàn trường. Bấm OK để tiếp tục.")) return; }
+        if (loaiLuu === 'khoiphuc') { if (!confirm(`Xác nhận: Lưu trữ toàn bộ TKB Tuần ${tuanDangXem}, tự động chuyển sang tuần tiếp theo?`)) return; }
+        if (loaiLuu === 'tuan') { if (!confirm(`Xác nhận: Xóa trắng và ghi đè toàn bộ dữ liệu Tuần ${tuanDangXem} trên máy chủ bằng nội dung Thời khoá biểu mặc định?`)) return; }
+    }
     if (loaiLuu === 'tuan' || loaiLuu === 'khoiphuc') {
         if (typeof window.kiemTraTuanTkbDaKhoa === 'function' && window.kiemTraTuanTkbDaKhoa(tuanDangXem)) {
             alert(`⚠️ Thời khóa biểu Tuần ${tuanDangXem} đang bị KHÓA (Niêm phong). Đồng chí vui lòng Mở khóa trước khi lưu thay đổi!`);
@@ -1645,9 +1647,12 @@ async function luuDuLieu(event, loaiLuu) {
             if (loaiLuu === 'khoiphuc') {
                 await chuyenTuan(1); 
                 let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
-                await luuDuLieu({ currentTarget: btnAn }, 'tuan');
+                // Chạy lưu ngầm cho tuần mới: Bỏ hoàn toàn thông báo xác nhận lặp lại và thông báo thành công
+                await luuDuLieu({ currentTarget: btnAn }, 'tuan', true);
             } else {
-                alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
+                if (!tuDongLuu) {
+                    alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
+                }
                 duLieuTkbHienTai = dsTietLuoi;
                 
                 document.querySelectorAll('td[data-thaydoi="true"]').forEach(td => {
@@ -2675,8 +2680,7 @@ async function thucThiChuyenTuanTiepTheo(event) {
         const ketQua = await phanHoi.json();
         
         if (ketQua.trangThai === 'thanh_cong') {
-            alert(`✅ Đã tịnh tiến hệ thống sang Tuần ${tuanMoi} và nạp TKB Cố định thành công!`);
-            
+            // Đã bỏ thông báo thành công theo yêu cầu (chỉ giữ thông báo xác nhận lần đầu)
             localStorage.removeItem(layKhoaCachLy('SmartTKB_CauHinh'));
             localStorage.removeItem(layKhoaCachLy('SmartTKB_DuLieuTuan'));
             
