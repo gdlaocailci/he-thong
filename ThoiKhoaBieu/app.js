@@ -568,10 +568,11 @@ window.dongBoDanhMucMonVaGiaoVien = async function(hienThongBao = false) {
             // Tái tạo ngay lập tức datalist Môn học và Giáo viên
             window.capNhatDatalistTKB();
             
+            // Đã bỏ thông báo thành công theo yêu cầu
             if (hienThongBao) {
                 let soMon = (thongSoHocVu.DANH_SACH_MON_HOC || []).length;
                 let soGv = (thongSoHocVu.DANH_SACH_GIAO_VIEN || []).length;
-                alert(`✅ Đồng bộ thành công!\n- Môn học: ${soMon} môn\n- Giáo viên: ${soGv} người\nĐã cập nhật vào toàn bộ ô chọn của Thời khóa biểu.`);
+                console.log(`Đồng bộ danh mục thành công: ${soMon} môn, ${soGv} giáo viên.`);
             }
             return true;
         }
@@ -1687,8 +1688,9 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
                 // Chạy lưu ngầm cho tuần mới: Bỏ hoàn toàn thông báo xác nhận lặp lại và thông báo thành công
                 await luuDuLieu({ currentTarget: btnAn }, 'tuan', true);
             } else {
+                // Đã bỏ thông báo thành công theo yêu cầu
                 if (!tuDongLuu) {
-                    alert("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
+                    console.log("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
                 }
                 duLieuTkbHienTai = dsTietLuoi;
                 
@@ -2285,7 +2287,8 @@ async function nhapExcelTKB(event) {
                 }
                 
                 if (typeof kiemTraTrungGiaoVienToanBang === 'function') kiemTraTrungGiaoVienToanBang();
-                alert("Đã kết xuất dữ liệu từ Excel lên giao diện thành công! Vui lòng kiểm tra đối chiếu và bấm [Lưu TKB Tuần] để lưu hệ thống.");
+                // Đã bỏ thông báo thành công theo yêu cầu: Dữ liệu Excel đã nạp trực tiếp lên lưới TKB
+                console.log("Đã kết xuất dữ liệu từ Excel lên giao diện thành công!");
             } catch (errParse) { console.error("Lỗi phân tích cú pháp tệp Excel: ", errParse); alert("Sự cố xảy ra khi trích xuất dữ liệu biểu mẫu."); }
         };
         reader.readAsArrayBuffer(file);
@@ -2391,7 +2394,8 @@ async function luuSuaCucBoTKB(event) {
         
         if(ketQua.trangThai !== 'thanh_cong') alert("Lưu thất bại: " + ketQua.thongBao);
         else { 
-            alert("Đã cập nhật các thay đổi vào Thời khóa biểu Hiện tại!");
+            // Đã bỏ thông báo thành công theo yêu cầu: Dữ liệu đã cập nhật vào RAM và máy chủ
+            console.log("Đã cập nhật các thay đổi vào Thời khóa biểu Hiện tại!");
             dsThayDoi.forEach(tietMoi => {
                 let idx = duLieuTkbHienTai.findIndex(t => 
                     parseInt(String(t.tuan).replace(/\D/g, ''), 10) === parseInt(String(tietMoi.tuan).replace(/\D/g, ''), 10) &&
@@ -2630,16 +2634,13 @@ window.dongBoChuanHoaDuLieuUI = async function() {
     if (typeof window.khoaNutThaoTacTKB === 'function') window.khoaNutThaoTacTKB(false);
     if (typeof window.capNhatDatalistTKB === 'function') window.capNhatDatalistTKB();
 
-    if (demSuaLoi > 0 || danhSachLoiChiTiet.length > 0) {
-        let thongBao = `Báo cáo Đồng bộ:\n- Đã nắn chỉnh: ${demSuaLoi} ô (Xanh).\n- Cảnh báo rác: ${danhSachLoiChiTiet.length} ô (Đỏ).\n`;
-        
-        if (danhSachLoiChiTiet.length > 0) {
-            thongBao += `\n📍 CHI TIẾT VỊ TRÍ LỖI:\n` + danhSachLoiChiTiet.slice(0, 15).join('\n');
-            if (danhSachLoiChiTiet.length > 15) thongBao += `\n... và ${danhSachLoiChiTiet.length - 15} lỗi khác.`;
-        }
+    if (danhSachLoiChiTiet.length > 0) {
+        let thongBao = `Cảnh báo dữ liệu rác/lỗi (${danhSachLoiChiTiet.length} ô):\n` + danhSachLoiChiTiet.slice(0, 15).join('\n');
+        if (danhSachLoiChiTiet.length > 15) thongBao += `\n... và ${danhSachLoiChiTiet.length - 15} lỗi khác.`;
         alert(thongBao);
     } else {
-        alert("Tuyệt vời! Toàn bộ dữ liệu trên lưới Thời khóa biểu đã khớp chuẩn 100% với danh mục máy chủ.");
+        // Đã bỏ thông báo thành công theo yêu cầu
+        console.log(`Đồng bộ chuẩn hóa hoàn tất: đã nắn chỉnh ${demSuaLoi} ô, 0 lỗi rác.`);
     }
 };
 
@@ -2980,7 +2981,8 @@ window.thaoTacKhoaMoTKB = async function() {
         const kq = await res.json();
 
         if (kq.trangThai === 'thanh_cong') {
-            alert("✅ " + kq.thongBao);
+            // Đã bỏ thông báo thành công theo yêu cầu (Giao diện UI đã chuyển trạng thái trực quan)
+            console.log(kq.thongBao);
 
             if (!thongSoHocVu.TRANG_THAI_KHOA_TKB) thongSoHocVu.TRANG_THAI_KHOA_TKB = {};
             thongSoHocVu.TRANG_THAI_KHOA_TKB[tuanHienTai] = {
@@ -3196,7 +3198,8 @@ window.luuDuLieuPhanQuyenSangMayChu = async function() {
         });
         const kq = await phanHoi.json();
         if (kq.trangThai === 'Thành công') {
-            alert(kq.thongBao + " Cập nhật an toàn hoàn tất.");
+            // Đã bỏ thông báo thành công theo yêu cầu
+            console.log(kq.thongBao + " Cập nhật an toàn hoàn tất.");
             window.duLieuBangPhanQuyen = mangGhi; 
             window.hienThiBangPhanQuyen();
         } else {
