@@ -2470,7 +2470,7 @@ async function luuSuaCucBoTKB(event) {
         } else if (ketQua.trangThai !== 'thanh_cong') {
             alert("Lưu thất bại: " + ketQua.thongBao);
         } else { 
-            alert("Đã cập nhật các thay đổi vào Thời khóa biểu Hiện tại!");
+           // alert("Đã cập nhật các thay đổi vào Thời khóa biểu Hiện tại!");
             if (ketQua.daGhiToanBo) {
                 duLieuTkbHienTai = dsTietLuoi;
             } else {
