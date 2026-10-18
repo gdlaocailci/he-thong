@@ -1334,14 +1334,15 @@
             badge.textContent = danhSachOnlineHienTai.length + ' online (' + soDaDangNhap + ' đã ĐN, ' + soChuaDangNhap + ' chưa ĐN)';
         }
 
-        // Luôn hiển thị tổng số và cập nhật tooltip trên nút "Ai đang online?"
+        // Luôn hiển thị tổng số người online (kể cả không đăng nhập) trực tiếp trên nút "Ai đang online?"
         var nutOnlineHeader = document.getElementById('btnAiDangOnline');
         if (nutOnlineHeader) {
+            var tongSo = danhSachOnlineHienTai.length;
             var spanText = nutOnlineHeader.querySelector('span.font-sans');
             if (spanText) {
-                spanText.textContent = 'Ai đang online? (' + danhSachOnlineHienTai.length + ')';
+                spanText.innerHTML = 'Ai đang online? <span class="ml-1.5 px-2 py-0.5 bg-emerald-800 text-white font-extrabold text-xs rounded-full border border-emerald-300">' + tongSo + '</span>';
             }
-            nutOnlineHeader.title = 'Hiện có ' + danhSachOnlineHienTai.length + ' người trực tuyến (' + soDaDangNhap + ' đã đăng nhập, ' + soChuaDangNhap + ' khách chưa đăng nhập)';
+            nutOnlineHeader.title = 'Hiện có ' + tongSo + ' người trực tuyến (' + soDaDangNhap + ' đã đăng nhập, ' + soChuaDangNhap + ' chưa đăng nhập)';
         }
 
         if (dsLoc.length === 0) {
@@ -1536,15 +1537,20 @@
         window.addEventListener('pagehide', xuLyThoatTrang);
         window.addEventListener('beforeunload', xuLyThoatTrang);
 
-        // Chờ 8 giây sau khi trang khởi động hoàn tất mới điểm danh nhẹ (nhường 100% băng thông cho TKB & SĐB)
+        // 1. Tự động điểm danh và lấy số lượng người online (kể cả người không đăng nhập) ngay sau 1.5 giây
         setTimeout(function () {
-            guiNhipTimHienDienMayChu();
-        }, 8000);
+            thuThapDanhSachOnlineThoiGianThuc();
+        }, 1500);
 
+        // 2. Định kỳ mỗi 25s gửi nhịp tim và đồng bộ số lượng người online cập nhật lên thanh tiêu đề
         if (boDemNhipTim) clearInterval(boDemNhipTim);
         boDemNhipTim = setInterval(function () {
             if (document.visibilityState === 'visible' && !daGuiTinHieuThoat) {
-                guiNhipTimHienDienMayChu();
+                if (!dangMoModal) {
+                    thuThapDanhSachOnlineThoiGianThuc();
+                } else {
+                    guiNhipTimHienDienMayChu();
+                }
             }
         }, CHU_KY_NHIP_TIM_NHE_MS);
     }
