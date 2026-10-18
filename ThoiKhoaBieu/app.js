@@ -1629,21 +1629,8 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
                 let namHocDung = namHocChuan || thongTinNgay.nam; 
                 let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
                 
-                let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
-                    String(t.tuan).trim() === String(tuanDangXem).trim() &&
-                    String(t.thu).trim() === thu && 
-                    String(t.buoi).trim() === buoi && 
-                    String(t.tiet).trim() === String(tiet) && 
-                    String(t.maLop).trim() === lop &&
-                    (String(t.ngay).trim() === thongTinNgay.ngayDayDu || String(t.ngay).trim() === '') 
-                );
-
-                let maTietNguyenBan = '';
-                if (indexTrongRam !== -1 && duLieuTkbHienTai[indexTrongRam].maTiet) {
-                    maTietNguyenBan = duLieuTkbHienTai[indexTrongRam].maTiet;
-                } else {
-                    maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
-                }
+                // [NÂNG CẤP ĐỒNG BỘ MÃ TIẾT]: Luôn ép tạo mã tiết chuẩn chứa tiền tố năm học thay vì lấy từ RAM
+                let maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
                 
                 dsTietLuoi.push({
                     maTiet: maTietNguyenBan, 
@@ -1664,7 +1651,27 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
         let mangLopDangHienThi = Array.from(setLopDangHienThi);
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
             duLieuTkbHienTai.forEach(tietGoc => {
-                if (!mangLopDangHienThi.includes(tietGoc.maLop)) dsTietLuoi.push(tietGoc);
+                // [NÂNG CẤP ĐỒNG BỘ ẨN]: Tính toán lại Ngày, Tháng và ép Mã tiết có Năm học cho các lớp đang bị ẩn khỏi UI do bộ lọc
+                if (!mangLopDangHienThi.includes(tietGoc.maLop)) {
+                    let thongTinNgayAn = tinhNgayDocLap(ngayDauTuanUI, tietGoc.thu, tuanDangXem);
+                    let namHocAn = namHocChuan || thongTinNgayAn.nam;
+                    let tienToAn = (tietGoc.buoi === "Sáng") ? "S" : "C";
+                    let maTietAn = `${namHocAn}_${tuanDangXem}_${tietGoc.thu}_${tienToAn}_${tietGoc.tiet}_${tietGoc.maLop}`;
+
+                    dsTietLuoi.push({
+                        maTiet: maTietAn,
+                        namHoc: namHocAn,
+                        thang: thongTinNgayAn.thang,
+                        ngay: thongTinNgayAn.ngayDayDu,
+                        tuan: tuanDangXem,
+                        thu: tietGoc.thu,
+                        buoi: tietGoc.buoi,
+                        tiet: tietGoc.tiet,
+                        maLop: tietGoc.maLop,
+                        monHoc: tietGoc.monHoc,
+                        maGv: tietGoc.maGv
+                    });
+                }
             });
         }
 
@@ -1685,10 +1692,8 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
             if (loaiLuu === 'khoiphuc') {
                 await chuyenTuan(1); 
                 let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
-                // Chạy lưu ngầm cho tuần mới: Bỏ hoàn toàn thông báo xác nhận lặp lại và thông báo thành công
                 await luuDuLieu({ currentTarget: btnAn }, 'tuan', true);
             } else {
-                // Đã bỏ thông báo thành công theo yêu cầu
                 if (!tuDongLuu) {
                     console.log("Đã lưu mới toàn bộ dữ liệu Thời khóa biểu tuần thành công!");
                 }
@@ -1704,7 +1709,6 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
 
                 if (typeof window.lamSachBoNhoSoDauBai === 'function') window.lamSachBoNhoSoDauBai();
                 
-                // [BẢN VÁ]: Chỉ kết xuất lại lưới TKB từ RAM, bỏ qua lệnh tải từ máy chủ để giảm độ trễ
                 xuatMaTranBang(duLieuTkbHienTai);
                 localStorage.setItem(layKhoaCachLy('KhoaDongBo_TKB'), Date.now().toString());
             }
@@ -2330,22 +2334,10 @@ async function luuSuaCucBoTKB(event) {
             let namHocDung = namHocChuan || thongTinNgay.nam;
             let tienToBuoi = (buoi === "Sáng") ? "S" : "C";
             
-            let indexTrongRam = duLieuTkbHienTai.findIndex(t => 
-                parseInt(String(t.tuan).replace(/\D/g, ''), 10) === parseInt(String(tuanDangXem).replace(/\D/g, ''), 10) &&
-                String(t.maLop).trim().toUpperCase() === lop.trim().toUpperCase() &&
-                String(t.thu).trim().toLowerCase() === thu.trim().toLowerCase() &&
-                String(t.buoi).trim().toLowerCase() === buoi.trim().toLowerCase() &&
-                String(t.tiet).trim() === String(tiet).trim()
-            );
-
-            let maTietNguyenBan = '';
-            if (indexTrongRam !== -1 && duLieuTkbHienTai[indexTrongRam].maTiet) {
-                maTietNguyenBan = duLieuTkbHienTai[indexTrongRam].maTiet;
-            } else {
-                maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
-            }
+            // [NÂNG CẤP ĐỒNG BỘ MÃ TIẾT]: Luôn ép tạo mã tiết chuẩn chứa tiền tố năm học
+            let maTietNguyenBan = `${namHocDung}_${tuanDangXem}_${thu}_${tienToBuoi}_${tiet}_${lop}`;
             
-            let tietGoc = indexTrongRam !== -1 ? duLieuTkbHienTai[indexTrongRam] : duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietNguyenBan);
+            let tietGoc = duLieuTkbHienTai.find(t => String(t.maTiet).trim() === maTietNguyenBan);
             let monGoc = tietGoc ? (tietGoc.monHoc || "").trim() : "";
             let gvGoc = tietGoc ? (tietGoc.maGv || "").trim() : "";
             
@@ -2394,16 +2386,9 @@ async function luuSuaCucBoTKB(event) {
         
         if(ketQua.trangThai !== 'thanh_cong') alert("Lưu thất bại: " + ketQua.thongBao);
         else { 
-            // Đã bỏ thông báo thành công theo yêu cầu: Dữ liệu đã cập nhật vào RAM và máy chủ
             console.log("Đã cập nhật các thay đổi vào Thời khóa biểu Hiện tại!");
             dsThayDoi.forEach(tietMoi => {
-                let idx = duLieuTkbHienTai.findIndex(t => 
-                    parseInt(String(t.tuan).replace(/\D/g, ''), 10) === parseInt(String(tietMoi.tuan).replace(/\D/g, ''), 10) &&
-                    String(t.maLop).trim().toUpperCase() === String(tietMoi.maLop).trim().toUpperCase() &&
-                    String(t.thu).trim().toLowerCase() === String(tietMoi.thu).trim().toLowerCase() &&
-                    String(t.buoi).trim().toLowerCase() === String(tietMoi.buoi).trim().toLowerCase() &&
-                    String(t.tiet).trim() === String(tietMoi.tiet).trim()
-                );
+                let idx = duLieuTkbHienTai.findIndex(t => String(t.maTiet).trim() === String(tietMoi.maTiet).trim());
                 if (idx !== -1) {
                     duLieuTkbHienTai[idx] = { ...duLieuTkbHienTai[idx], ...tietMoi };
                 } else {
