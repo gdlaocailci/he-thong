@@ -749,36 +749,40 @@
         };
     }
 
-    // Khi người dùng bấm Đăng xuất mà chưa tắt ứng dụng
+    // Khi người dùng bấm Đăng xuất mà chưa tắt ứng dụng (vẫn giữ trạng thái người dùng dạng không đăng nhập)
     function guiTinHieuChuyenTrangThaiDangXuat(dinhDanhCu) {
         try {
             thaoTacTuongTacGanNhat = { ten: 'Vừa đăng xuất', thoiGian: Date.now() };
 
+            // 1. Loại bỏ định danh đăng nhập cũ khỏi danh sách
             if (dinhDanhCu) {
                 var cuLC = chuanHoaChuoi(dinhDanhCu);
                 duLieuServerGanNhat = duLieuServerGanNhat.filter(function (u) {
                     return chuanHoaChuoi(u.emailTruyCap) !== cuLC && chuanHoaChuoi(u.maGv) !== cuLC;
                 });
-                for (var tabKey in banDoTabCungTrinhDuyet) {
-                    if (Object.prototype.hasOwnProperty.call(banDoTabCungTrinhDuyet, tabKey)) {
-                        var tb = banDoTabCungTrinhDuyet[tabKey];
-                        if (tb && (chuanHoaChuoi(tb.emailTruyCap) === cuLC || chuanHoaChuoi(tb.maGv) === cuLC)) {
-                            delete banDoTabCungTrinhDuyet[tabKey];
-                        }
-                    }
-                }
             }
 
+            // 2. Chuyển phiên của tab này sang trạng thái khách chưa đăng nhập ngay lập tức
+            var phienKhachMoi = layThongTinPhienHienTai();
+            phienKhachMoi.daXacThuc = false;
+            phienKhachMoi.maGv = '---';
+            phienKhachMoi.hoTen = 'Chưa đăng nhập';
+            phienKhachMoi.toChuyenMon = 'Khách truy cập (Chế độ xem công khai)';
+            banDoTabCungTrinhDuyet[maPhienTab] = phienKhachMoi;
+
+            // 3. Thông báo cho các tab khác cùng trình duyệt chuyển tab này thành khách (vẫn hiển thị người dạng không đăng nhập)
             if (kenhBroadcast) {
                 try {
                     kenhBroadcast.postMessage({
                         loai: 'TAB_DANG_XUAT',
                         dinhDanhCu: dinhDanhCu,
-                        maPhienTab: maPhienTab
+                        maPhienTab: maPhienTab,
+                        phienMoi: phienKhachMoi
                     });
                 } catch (eBc) {}
             }
 
+            // 4. Báo máy chủ xóa định danh đã đăng nhập cũ
             var urlApi = layUrlApiMayChu();
             if (urlApi && dinhDanhCu) {
                 var urlGetXoa = urlApi +
@@ -789,21 +793,11 @@
                 fetch(urlGetXoa, { method: 'GET', keepalive: true, mode: 'no-cors' }).catch(function () {});
             }
 
-            setTimeout(function () {
-                var phienMoi = layThongTinPhienHienTai();
-                if (kenhBroadcast) {
-                    try {
-                        kenhBroadcast.postMessage({
-                            loai: 'PONG_TOI_DANG_MO_TAB',
-                            phien: phienMoi
-                        });
-                    } catch (eBc2) {}
-                }
-                guiNhipTimHienDienMayChu();
-                if (dangMoModal) {
-                    capNhatHienThiTuTapHop();
-                }
-            }, 300);
+            // 5. Ngay lập tức gửi điểm danh lại dưới dạng người chưa đăng nhập lên máy chủ (không đóng web)
+            guiNhipTimHienDienMayChu(true);
+
+            // 6. Cập nhật ngay danh sách và số lượng hiển thị trên giao diện
+            capNhatHienThiTuTapHop();
         } catch (err) {}
     }
 
@@ -868,9 +862,9 @@
     }
 
     // Nhịp tim gửi lên máy chủ định kỳ hoặc khi có thao tác mới
-    function guiNhipTimHienDienMayChu() {
+    function guiNhipTimHienDienMayChu(boQuaKiemTraAn) {
         try {
-            if (document.visibilityState === 'hidden') return;
+            if (!boQuaKiemTraAn && document.visibilityState === 'hidden') return;
             if (heThongDangBanTacVuChinh()) return;
 
             var urlApi = layUrlApiMayChu();
@@ -929,18 +923,12 @@
                         duLieuServerGanNhat = duLieuServerGanNhat.filter(function (u) {
                             return chuanHoaChuoi(u.emailTruyCap) !== cuLC && chuanHoaChuoi(u.maGv) !== cuLC;
                         });
-                        for (var tId in banDoTabCungTrinhDuyet) {
-                            if (Object.prototype.hasOwnProperty.call(banDoTabCungTrinhDuyet, tId)) {
-                                var tItem = banDoTabCungTrinhDuyet[tId];
-                                if (tItem && (chuanHoaChuoi(tItem.emailTruyCap) === cuLC || chuanHoaChuoi(tItem.maGv) === cuLC)) {
-                                    delete banDoTabCungTrinhDuyet[tId];
-                                }
-                            }
-                        }
                     }
-                    if (dangMoModal) {
-                        capNhatHienThiTuTapHop();
+                    if (msg.maPhienTab && msg.phienMoi) {
+                        // Chuyển tab đó sang khách chưa đăng nhập chứ không xóa khỏi số lượng online
+                        banDoTabCungTrinhDuyet[msg.maPhienTab] = msg.phienMoi;
                     }
+                    capNhatHienThiTuTapHop();
                 } else if (msg.loai === 'TAB_DA_THOAT') {
                     if (msg.maPhienTab && banDoTabCungTrinhDuyet[msg.maPhienTab]) {
                         delete banDoTabCungTrinhDuyet[msg.maPhienTab];
@@ -997,9 +985,22 @@
                 maHienThi = '---';
                 tenHienThi = 'Chưa đăng nhập';
                 toCM = rawItem.toChuyenMon || 'Khách truy cập';
-                // Đảm bảo cùng một máy/trình duyệt thì bản thân và dữ liệu server gộp chung 1 key
-                var guestId = rawItem.maDinhDanhKhach || (rawItem.emailTruyCap && rawItem.emailTruyCap.indexOf('GUEST_') === 0 ? rawItem.emailTruyCap : '') || layMaDinhDanhKhach();
-                key = 'GUEST_' + String(guestId).trim().toUpperCase();
+                // Đảm bảo mỗi người dùng chưa đăng nhập có định danh riêng để luôn hiển thị đúng số lượng
+                if (laBanThan) {
+                    var myGuestId = rawItem.maDinhDanhKhach || layMaDinhDanhKhach();
+                    key = 'GUEST_ME_' + String(myGuestId).trim().toUpperCase();
+                } else if (rawItem.maPhienTab) {
+                    key = 'GUEST_TAB_' + String(rawItem.maPhienTab).trim().toUpperCase();
+                } else if (rawItem.maDinhDanhKhach) {
+                    key = 'GUEST_ID_' + String(rawItem.maDinhDanhKhach).trim().toUpperCase();
+                } else if (rawItem.emailTruyCap && rawItem.emailTruyCap !== '---') {
+                    key = 'GUEST_EM_' + String(rawItem.emailTruyCap).trim().toUpperCase();
+                } else {
+                    if (!rawItem._guestUId) {
+                        rawItem._guestUId = 'K_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                    }
+                    key = 'GUEST_ITEM_' + rawItem._guestUId;
+                }
             } else {
                 maHienThi = (
                     rawMaGv &&
@@ -1019,8 +1020,8 @@
             }
 
             var mocThoiGian = rawItem.capNhatLuc || rawItem.thoiGianCapNhat || rawItem.thoiGian || rawItem._t || rawItem.timestamp || rawItem.time || rawItem.thoiGianGui;
-            var capNhatLuc = mocThoiGian ? Number(mocThoiGian) : (laBanThan ? bayGio : 0);
-            if (!laBanThan && (bayGio - capNhatLuc) > CUA_SO_SONG_SERVER_MS) {
+            var capNhatLuc = laBanThan ? bayGio : (mocThoiGian ? Number(mocThoiGian) : bayGio);
+            if (!laBanThan && mocThoiGian && (bayGio - capNhatLuc) > CUA_SO_SONG_SERVER_MS) {
                 return;
             }
 
@@ -1319,17 +1320,28 @@
             );
         });
 
-        if (badge) {
-            var soDaDangNhap = 0;
-            var soChuaDangNhap = 0;
-            for (var k = 0; k < danhSachOnlineHienTai.length; k++) {
-                if (danhSachOnlineHienTai[k].daXacThuc) {
-                    soDaDangNhap++;
-                } else {
-                    soChuaDangNhap++;
-                }
+        var soDaDangNhap = 0;
+        var soChuaDangNhap = 0;
+        for (var k = 0; k < danhSachOnlineHienTai.length; k++) {
+            if (danhSachOnlineHienTai[k].daXacThuc) {
+                soDaDangNhap++;
+            } else {
+                soChuaDangNhap++;
             }
+        }
+
+        if (badge) {
             badge.textContent = danhSachOnlineHienTai.length + ' online (' + soDaDangNhap + ' đã ĐN, ' + soChuaDangNhap + ' chưa ĐN)';
+        }
+
+        // Luôn hiển thị tổng số và cập nhật tooltip trên nút "Ai đang online?"
+        var nutOnlineHeader = document.getElementById('btnAiDangOnline');
+        if (nutOnlineHeader) {
+            var spanText = nutOnlineHeader.querySelector('span.font-sans');
+            if (spanText) {
+                spanText.textContent = 'Ai đang online? (' + danhSachOnlineHienTai.length + ')';
+            }
+            nutOnlineHeader.title = 'Hiện có ' + danhSachOnlineHienTai.length + ' người trực tuyến (' + soDaDangNhap + ' đã đăng nhập, ' + soChuaDangNhap + ' khách chưa đăng nhập)';
         }
 
         if (dsLoc.length === 0) {
