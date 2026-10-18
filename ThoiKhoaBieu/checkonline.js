@@ -537,10 +537,7 @@
         } catch (err) {}
     }
 
-    // ---------------------------------------------------------------------
-    // 3. NHẬN DIỆN NGƯỜI DÙNG HIỆN TẠI (ĐÃ ĐN / CHƯA ĐN / THOÁT RA)
-    // ---------------------------------------------------------------------
-    function phatHienDinhDanhHienTai() {
+function phatHienDinhDanhHienTai() {
         var emailHoacMa = '';
         var tenHienThi = '';
 
@@ -553,47 +550,50 @@
                 textNutLC.indexOf('login') !== -1
             );
 
-            // Tầng 1: Biến toàn cục nhẹ của hệ thống
-            var cacBienDinhDanh = [
-                window.dinhDanhGiaoVienToanCuc,
-                window.emailGiaoVienToanCuc,
-                window.maGiaoVienHienTai,
-                window.emailNguoiDungHienTai,
-                window.userEmail
-            ];
-            for (var i = 0; i < cacBienDinhDanh.length; i++) {
-                if (cacBienDinhDanh[i] && String(cacBienDinhDanh[i]).trim() !== '') {
-                    emailHoacMa = String(cacBienDinhDanh[i]).trim();
-                    break;
+            // [SỬA LỖI]: Bỏ qua quét biến cũ nếu giao diện hiển thị trạng thái là chưa đăng nhập
+            if (!nutDangHienChuaDangNhap) {
+                // Tầng 1: Biến toàn cục nhẹ của hệ thống
+                var cacBienDinhDanh = [
+                    window.dinhDanhGiaoVienToanCuc,
+                    window.emailGiaoVienToanCuc,
+                    window.maGiaoVienHienTai,
+                    window.emailNguoiDungHienTai,
+                    window.userEmail
+                ];
+                for (var i = 0; i < cacBienDinhDanh.length; i++) {
+                    if (cacBienDinhDanh[i] && String(cacBienDinhDanh[i]).trim() !== '') {
+                        emailHoacMa = String(cacBienDinhDanh[i]).trim();
+                        break;
+                    }
                 }
-            }
 
-            if (window.tenGiaoVienToanCuc) {
-                tenHienThi = String(window.tenGiaoVienToanCuc).trim();
-            }
+                if (window.tenGiaoVienToanCuc) {
+                    tenHienThi = String(window.tenGiaoVienToanCuc).trim();
+                }
 
-            // Tầng 2: Thẻ chốt quyền Sổ đầu bài
-            var theChotSDB = document.getElementById('theChotQuyenSDB');
-            if (theChotSDB) {
-                var maSDB = theChotSDB.getAttribute('data-madinhdanh') || '';
-                var tenSDB = theChotSDB.getAttribute('data-tendinhdanh') || '';
-                if (!emailHoacMa && maSDB) emailHoacMa = maSDB.trim();
-                if (!tenHienThi && tenSDB) tenHienThi = tenSDB.trim();
-            }
+                // Tầng 2: Thẻ chốt quyền Sổ đầu bài (nếu đã nạp SĐB)
+                var theChotSDB = document.getElementById('theChotQuyenSDB');
+                if (theChotSDB) {
+                    var maSDB = theChotSDB.getAttribute('data-madinhdanh') || '';
+                    var tenSDB = theChotSDB.getAttribute('data-tendinhdanh') || '';
+                    if (!emailHoacMa && maSDB) emailHoacMa = maSDB.trim();
+                    if (!tenHienThi && tenSDB) tenHienThi = tenSDB.trim();
+                }
 
-            // Tầng 3: Nhãn hiển thị trên nút đăng nhập (loại bỏ chữ "đăng xuất", "thoát")
-            if (!nutDangHienChuaDangNhap && textNut) {
-                var cacDong = textNut.split('\n').map(function (t) { return t.trim(); }).filter(Boolean);
-                var nhanChinh = cacDong[0] || '';
-                var nhanLC = nhanChinh.toLowerCase();
-                if (nhanChinh && nhanLC.indexOf('đăng xuất') === -1 && nhanLC.indexOf('thoát') === -1 && nhanLC.indexOf('logout') === -1) {
-                    if (!emailHoacMa) emailHoacMa = nhanChinh;
-                    if (!tenHienThi) tenHienThi = nhanChinh;
+                // Tầng 3: Nhãn hiển thị trên nút #nutDangNhapG
+                if (textNut) {
+                    var cacDong = textNut.split('\n').map(function (t) { return t.trim(); }).filter(Boolean);
+                    var nhanChinh = cacDong[0] || '';
+                    var nhanLC = nhanChinh.toLowerCase();
+                    if (nhanChinh && nhanLC.indexOf('đăng xuất') === -1 && nhanLC.indexOf('thoát') === -1 && nhanLC.indexOf('logout') === -1) {
+                        if (!emailHoacMa) emailHoacMa = nhanChinh;
+                        if (!tenHienThi) tenHienThi = nhanChinh;
+                    }
                 }
             }
         } catch (err) {}
 
-        // Phát hiện chuyển đổi khi đăng xuất mà chưa tắt ứng dụng
+        // XỬ LÝ QUAN TRỌNG: Phát hiện người dùng vừa bấm Thoát/Đăng xuất mà chưa tắt ứng dụng
         if (dinhDanhTruocDo && !emailHoacMa) {
             guiTinHieuChuyenTrangThaiDangXuat(dinhDanhTruocDo);
             dinhDanhTruocDo = '';
@@ -766,11 +766,18 @@
         };
     }
 
+// Khi người dùng bấm Đăng xuất mà chưa tắt ứng dụng
     function guiTinHieuChuyenTrangThaiDangXuat(dinhDanhCu) {
         try {
-            phanHeHienTai = 'TKB';
-            thoiDiemGhiGanNhat = 0;
-            noiDungGhiGanNhat = '';
+            thaoTacTuongTacGanNhat = { ten: 'Vừa đăng xuất', thoiGian: Date.now() };
+
+            // [SỬA LỖI]: Xóa ngay thông tin người dùng cũ khỏi cache của tab hiện tại để tránh trùng lặp
+            if (dinhDanhCu) {
+                var cuLC = chuanHoaChuoi(dinhDanhCu);
+                duLieuServerGanNhat = duLieuServerGanNhat.filter(function (u) {
+                    return chuanHoaChuoi(u.emailTruyCap) !== cuLC && chuanHoaChuoi(u.maGv) !== cuLC;
+                });
+            }
 
             if (kenhBroadcast) {
                 try {
@@ -806,13 +813,24 @@
                 if (dangMoModal) {
                     capNhatHienThiTuTapHop();
                 }
-            }, 200);
+            }, 300);
         } catch (err) {}
     }
 
+// Khi người dùng vừa đăng nhập thành công
     function guiTinHieuChuyenTrangThaiDangNhap(dinhDanhMoi) {
         try {
+            thaoTacTuongTacGanNhat = { ten: 'Vừa đăng nhập', thoiGian: Date.now() };
             var maKhachCu = layMaDinhDanhKhach();
+
+            // [SỬA LỖI]: Xóa ngay thông tin Khách cũ khỏi cache tab hiện tại
+            if (maKhachCu) {
+                var khachLC = chuanHoaChuoi(maKhachCu);
+                duLieuServerGanNhat = duLieuServerGanNhat.filter(function (u) {
+                    return chuanHoaChuoi(u.emailTruyCap) !== khachLC && chuanHoaChuoi(u.maGv) !== khachLC;
+                });
+            }
+
             var urlApi = layUrlApiMayChu();
             if (urlApi && maKhachCu) {
                 var urlGetXoaKhach = urlApi +
@@ -835,7 +853,7 @@
                 if (dangMoModal) {
                     capNhatHienThiTuTapHop();
                 }
-            }, 200);
+            }, 300);
         } catch (err) {}
     }
 
