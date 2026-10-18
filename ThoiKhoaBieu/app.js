@@ -1661,7 +1661,20 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
         let mangLopDangHienThi = Array.from(setLopDangHienThi);
         if (duLieuTkbHienTai && duLieuTkbHienTai.length > 0) {
             duLieuTkbHienTai.forEach(tietGoc => {
-                if (!mangLopDangHienThi.includes(tietGoc.maLop)) dsTietLuoi.push(tietGoc);
+                if (!mangLopDangHienThi.includes(tietGoc.maLop) && tietGoc.monHoc && String(tietGoc.monHoc).trim() !== "") {
+                    let thongTinNgayAn = tinhNgayDocLap(ngayDauTuanUI, tietGoc.thu, tuanDangXem);
+                    let namHocAn = namHocChuan || tietGoc.namHoc || thongTinNgayAn.nam;
+                    let tienToBuoiAn = (tietGoc.buoi === "Sáng") ? "S" : "C";
+                    let maTietAn = `${namHocAn}_${tuanDangXem}_${tietGoc.thu}_${tienToBuoiAn}_${tietGoc.tiet}_${tietGoc.maLop}`;
+                    dsTietLuoi.push({
+                        ...tietGoc,
+                        maTiet: (tietGoc.maTiet && String(tietGoc.maTiet).startsWith(namHocAn + '_' + tuanDangXem + '_')) ? tietGoc.maTiet : maTietAn,
+                        namHoc: namHocAn,
+                        tuan: tuanDangXem,
+                        thang: thongTinNgayAn.thang,
+                        ngay: thongTinNgayAn.ngayDayDu
+                    });
+                }
             });
         }
 
@@ -1682,6 +1695,11 @@ async function luuDuLieu(event, loaiLuu, tuDongLuu = false) {
             if (loaiLuu === 'khoiphuc') {
                 await chuyenTuan(1); 
                 thongSoHocVu.TUAN_HIEN_TAI = tuanDangXem;
+                let thongTinThu2Moi = tinhNgayDocLap(ngayDauTuanUI, "Thứ 2", tuanDangXem);
+                if (thongTinThu2Moi && thongTinThu2Moi.ngayDayDu) {
+                    thongSoHocVu.NGAY_K2 = thongTinThu2Moi.ngayDayDu;
+                    thongSoHocVu.THU_K2 = "Thứ 2";
+                }
                 localStorage.setItem(layKhoaCachLy('SmartTKB_CauHinh'), JSON.stringify(thongSoHocVu));
                 let btnAn = document.createElement('button'); btnAn.innerHTML = "Auto Save";
                 // Chạy lưu ngầm cho tuần mới: Bỏ hoàn toàn thông báo xác nhận lặp lại và thông báo thành công
@@ -2408,8 +2426,8 @@ async function luuSuaCucBoTKB(event) {
                     maTiet: (tietGoc.maTiet && String(tietGoc.maTiet).startsWith(namHocAn + '_' + tuanDangXem + '_')) ? tietGoc.maTiet : maTietAn,
                     namHoc: namHocAn,
                     tuan: tuanDangXem,
-                    thang: tietGoc.thang || thongTinNgayAn.thang,
-                    ngay: tietGoc.ngay || thongTinNgayAn.ngayDayDu
+                    thang: thongTinNgayAn.thang,
+                    ngay: thongTinNgayAn.ngayDayDu
                 });
             }
         });
