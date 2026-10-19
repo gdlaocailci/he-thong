@@ -36,7 +36,7 @@
 <script>
 function loadPhanQuyen() {
     const tbody = document.getElementById('tbodyPhanQuyen');
-    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px;"><div class="spinner" style="width:25px; height:25px; border:3px solid #ccc; border-top:3px solid #1e3a8a; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 10px;"></div>⏳ Đang đồng bộ dữ liệu cấu hình từ sheet KHAIBAO...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px;"><div class="spinner" style="width:25px; height:25px; border:3px solid #ccc; border-top:3px solid #1e3a8a; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 10px;"></div>⏳ Đang đồng bộ dữ liệu...</td></tr>';
     
     const sysId = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || (typeof SYS_ACTIVE_ACCOUNT !== 'undefined' ? SYS_ACTIVE_ACCOUNT : "");
 
