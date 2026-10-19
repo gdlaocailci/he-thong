@@ -445,12 +445,8 @@
     checkPermissionAndLoad();
   }
   
-// NÂNG CẤP: Hàm Đăng nhập Khách với Thuật toán Local-First (SWR) và Chốt Định Danh
+// NÂNG CẤP: Hàm Đăng nhập Khách với Thuật toán Local-First (SWR)
   function handleGuestLogin(isAutoLogin = false, isBooted = false) {
-    // 1. Chốt an toàn: Đặt ngay định danh để máy chủ nhận diện chính xác luồng "Khách"
-    sessionStorage.setItem("SCV_ACTIVE_ID", "Khách");
-    window.SYS_ACTIVE_ID = "Khách";
-
     if (!isAutoLogin && !isBooted) { 
         document.getElementById('login-overlay').style.display = 'none'; 
         document.getElementById('loading-overlay').style.display = 'flex'; 
@@ -458,32 +454,21 @@
     ensureModulesLoaded();
     
     google.script.run.withSuccessHandler(async res => {
-      // Bảo vệ lỗi kỹ thuật nếu máy chủ Google quá tải trả về rỗng
-      if (!res) {
-          if (typeof toast === 'function') toast("⚠️ Máy chủ không phản hồi dữ liệu hợp lệ.");
-          return;
-      }
-
-      // 2. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ khởi động siêu tốc
+      // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ khởi động siêu tốc
       try {
           let cacheObj = {
-              config: res.config || null,
-              canInput: res.canInput || false, // Tôn trọng quyền "all" nếu thầy cấp từ Sheet
-              canAdmin: res.canAdmin || false,
+              config: res.config, canInput: false, canAdmin: false,
               cacheLich: (res.cache && res.cache.lich) ? res.cache.lich : window.SCV_CACHE_LICH,
               cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan : window.SCV_CACHE_CONGVAN
           };
           localStorage.setItem('SCV_APP_CACHE_Khách', JSON.stringify(cacheObj));
       } catch(e) { console.warn("Lỗi lưu trữ cục bộ tài khoản Khách:", e); }
 
-      if (res.config) applySystemConfig(res.config); 
+      applySystemConfig(res.config); 
       
-      if (res.canView) {
-        SYS_ACTIVE_ACCOUNT = "Khách"; 
-        // Linh hoạt nhận diện quyền phân công thay vì gán cứng
-        GLOBAL_PERM = res.canInput || false; 
-        GLOBAL_ADMIN = res.canAdmin || false; 
-        window.GLOBAL_ADMIN = res.canAdmin || false;
+      if (res && res.canView) {
+        sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SYS_ACTIVE_ID = "Khách";
+        SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false; GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false;
         
         // Nạp tức thời dữ liệu từ Server để chuẩn bị render
         if (res.cache && (res.cache.lich || res.cache.congvan)) {
@@ -495,16 +480,18 @@
 
         await ensureModulesLoaded();
 
-        // 3. Logic xử lý giao diện: Phân nhánh dựa theo trạng thái Boot
+        // 2. Logic xử lý giao diện: Phân nhánh dựa theo trạng thái Boot
         if (!isBooted) {
+            // NẾU CHƯA BOOT TỪ CACHE: Chạy luồng khởi tạo giao diện bình thường
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             
-            // Điều khiển Tab linh hoạt theo quyền "all"
-            document.getElementById('btnTabNhap').style.display = GLOBAL_PERM ? 'inline-block' : 'none';
-            document.getElementById('btnTabCV').style.display = GLOBAL_PERM ? 'inline-block' : 'none';
-            document.getElementById('btnTabPhanQuyen').style.display = GLOBAL_ADMIN ? 'inline-block' : 'none';
+            // Ẩn các nút nhập liệu và phân quyền với tài khoản khách
+            document.getElementById('btnTabNhap').style.display = 'none';
+            document.getElementById('btnTabCV').style.display = 'none';
+            document.getElementById('btnTabPhanQuyen').style.display = 'none';
             
+            // Mặc định hướng khách vào Tab tra cứu Lịch
             showTab('tabSearch', document.getElementById('btnTabSearch'));
             
             if (window.SCV_DATA_READY) {
@@ -516,6 +503,7 @@
                 executePriorityLoading();
             }
         } else {
+            // NẾU ĐÃ BOOT TỪ CACHE: Chỉ cập nhật ngầm lại view (Silent Update) mượt mà
             let activeTab = document.querySelector('.tab-content.active');
             if (activeTab) {
                 if (activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer(false);
@@ -526,7 +514,6 @@
       } else {
         if(typeof toast === 'function') toast("⚠️ Cần quyền truy cập để xem dữ liệu");
         sessionStorage.removeItem("SCV_ACTIVE_ID");
-        window.SYS_ACTIVE_ID = "";
         document.getElementById('loading-overlay').style.display = 'none'; 
         document.getElementById('login-overlay').style.display = 'flex';
       }
