@@ -498,6 +498,11 @@
                 let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
                 let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
                 if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
+                
+                /* CHÈN THÊM 2 DÒNG NÀY ĐỂ ĐỒNG BỘ GIAO DIỆN CHO KHÁCH */
+                setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
+                setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
+                
                 preloadDriveFolders();
             } else {
                 executePriorityLoading();
