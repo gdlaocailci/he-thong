@@ -932,6 +932,48 @@ function napDuLieuBoLocGiaoVien() {
             dtList.innerHTML += `<option value="${gv}"></option>`;
         });
     }
+
+    // Bổ sung logic giữ lại dữ liệu khi chọn liên tiếp từ datalist
+    let locGiaoVienInput = document.getElementById('locGiaoVien');
+    if (locGiaoVienInput && !locGiaoVienInput.dataset.daGanSuKienDaChon) {
+        locGiaoVienInput.dataset.daGanSuKienDaChon = "true";
+        locGiaoVienInput.dataset.giaTriTruocDo = locGiaoVienInput.value || "";
+
+        locGiaoVienInput.addEventListener('focus', function() {
+            this.dataset.giaTriTruocDo = this.value;
+        });
+
+        locGiaoVienInput.addEventListener('change', function() {
+            let valMoi = this.value.trim();
+            if (valMoi === "Toàn trường" || valMoi === "") {
+                this.value = valMoi;
+                this.dataset.giaTriTruocDo = valMoi;
+            } else {
+                let dsGV = thongSoHocVu.DANH_SACH_GIAO_VIEN || [];
+                // Nếu giá trị chọn khớp với datalist, tiến hành nối chuỗi thay vì ghi đè
+                if (dsGV.includes(valMoi)) {
+                    let valCu = this.dataset.giaTriTruocDo.trim();
+                    if (valCu !== "" && valCu !== "Toàn trường") {
+                        let mangCu = valCu.split(',').map(s => s.trim()).filter(s => s !== "");
+                        if (!mangCu.includes(valMoi)) {
+                            mangCu.push(valMoi);
+                        }
+                        this.value = mangCu.join(', ') + ', ';
+                    } else {
+                        this.value = valMoi + ', ';
+                    }
+                }
+                this.dataset.giaTriTruocDo = this.value;
+            }
+            if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
+        });
+
+        // Trigger đồng bộ khi gõ phím hoặc xóa tay
+        locGiaoVienInput.addEventListener('input', function() {
+            this.dataset.giaTriTruocDo = this.value;
+            if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
+        });
+    }
 }
 
 async function goiThuatToanXepLich() {
@@ -954,19 +996,26 @@ async function goiThuatToanXepLich() {
 }
 
 function locTheoGiaoVien() {
-    let gvLoc = document.getElementById('locGiaoVien') ? document.getElementById('locGiaoVien').value.trim() : '';
-    let gvLocLC = gvLoc.toLowerCase(); 
+    let theLoc = document.getElementById('locGiaoVien');
+    let gvLoc = theLoc ? theLoc.value.trim() : '';
+    
+    // Tách chuỗi thành mảng các giáo viên dựa vào dấu phẩy
+    let danhSachLocLC = gvLoc.toLowerCase().split(',').map(s => s.trim()).filter(s => s !== "");
 
     let tapHopLopCuaGV = new Set();
     let coTietNaoKhong = false;
+    let dangLocGiaoVien = (danhSachLocLC.length > 0 && !danhSachLocLC.includes("toàn trường"));
 
-    if (gvLoc !== "" && gvLoc !== "Toàn trường" && typeof duLieuTkbHienTai !== 'undefined') {
+    if (dangLocGiaoVien && typeof duLieuTkbHienTai !== 'undefined') {
         duLieuTkbHienTai.forEach(t => {
             if (t.maGv) {
                 let gvTkb = t.maGv.trim().toLowerCase();
                 let tapHopGvTkb = gvTkb.split(/[,;&-]/).map(g => g.trim());
                 
-                if (tapHopGvTkb.includes(gvLocLC)) {
+                // Kiểm tra xem giáo viên trong ô TKB có khớp với BẤT KỲ giáo viên nào đang lọc không
+                let coKhop = tapHopGvTkb.some(g => danhSachLocLC.includes(g));
+                
+                if (coKhop) {
                     tapHopLopCuaGV.add(t.maLop);
                     coTietNaoKhong = true;
                 }
@@ -977,6 +1026,7 @@ function locTheoGiaoVien() {
     let tbody = document.getElementById('vungHienThiDuLieu');
     let thead = document.getElementById('tieuDeBang');
     
+    // Xóa cảnh báo rỗng cũ nếu có
     if (tbody && tbody.querySelector('.canh-bao-trong-lich')) {
         let cacDong = tbody.querySelectorAll('tr:not(.canh-bao-trong-lich)');
         cacDong.forEach(dong => dong.style.display = '');
@@ -985,7 +1035,8 @@ function locTheoGiaoVien() {
         if (thead) thead.style.display = '';
     }
 
-    if (gvLoc !== "" && gvLoc !== "Toàn trường" && !coTietNaoKhong) {
+    // Hiển thị cảnh báo nếu không giáo viên nào trong danh sách lọc có tiết
+    if (dangLocGiaoVien && !coTietNaoKhong) {
         if (thead) thead.style.display = 'none';
 
         if (tbody) {
@@ -996,7 +1047,7 @@ function locTheoGiaoVien() {
             trCanhBao.className = 'canh-bao-trong-lich bg-orange-50/50';
             trCanhBao.innerHTML = `<td colspan="3" class="text-center py-12">
                 <div class="w-12 h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-3"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg></div>
-                <p class="text-orange-600 font-bold text-lg mb-1">Đồng chí ${gvLoc} không có lịch lên lớp trong tuần này.</p>
+                <p class="text-orange-600 font-bold text-lg mb-1">Không tìm thấy lịch lên lớp của: ${gvLoc} trong tuần này.</p>
                 <p class="text-sm text-slate-500 font-medium">Vui lòng xóa ô tìm kiếm hoặc chọn "Toàn trường" để hiển thị lại lưới TKB.</p>
             </td>`;
             tbody.appendChild(trCanhBao);
@@ -1004,17 +1055,18 @@ function locTheoGiaoVien() {
         return;
     }
 
+    // Ẩn/hiện các cột lớp
     let tatCaCacCot = document.querySelectorAll('[data-cotlop]');
     tatCaCacCot.forEach(cot => {
         let lopCuaCot = cot.getAttribute('data-cotlop');
-        if (gvLoc === "" || gvLoc === "Toàn trường" || tapHopLopCuaGV.has(lopCuaCot)) {
+        if (!dangLocGiaoVien || tapHopLopCuaGV.has(lopCuaCot)) {
             cot.classList.remove('hidden'); 
         } else {
             cot.classList.add('hidden'); 
         }
     });
 
-    let dangLocGiaoVien = (gvLoc !== "" && gvLoc !== "Toàn trường");
+    // Tô màu các ô khớp với mục tiêu lọc
     let cacOGiaoVien = document.querySelectorAll('input[id^="gv_"]');
     cacOGiaoVien.forEach(oGv => {
         let gvGoc = oGv.value.trim().toLowerCase();
@@ -1022,9 +1074,7 @@ function locTheoGiaoVien() {
         
         if (dangLocGiaoVien) {
             let tapHopGvGoc = gvGoc.split(/[,;&-]/).map(g => g.trim());
-            if (!tapHopGvGoc.includes(gvLocLC)) {
-                isTarget = false;
-            }
+            isTarget = tapHopGvGoc.some(g => danhSachLocLC.includes(g));
         }
         
         let tdGv = oGv.closest('td');
@@ -1033,7 +1083,6 @@ function locTheoGiaoVien() {
         let laCanLich = oMon && oMon.value.includes('CẤN LỊCH');
 
         if (!dangLocGiaoVien) {
-            // Khi không lọc (khởi động hoặc chọn Toàn trường): trả toàn bộ ô về nền trắng mặc định
             if (tdGv) {
                 tdGv.classList.remove('bg-gray-100/50', 'bg-amber-200', 'bg-amber-100');
                 if (!laCanLich) tdGv.classList.add('bg-white');
@@ -1045,7 +1094,6 @@ function locTheoGiaoVien() {
             oGv.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
             if (oMon) oMon.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
         } else if (isTarget) {
-            // Khi đang lọc và trùng khớp giáo viên cần tìm: tô màu nổi bật ô Môn và ô Giáo viên
             if (tdGv) {
                 tdGv.classList.remove('bg-gray-100/50', 'bg-white');
                 if (!laCanLich) tdGv.classList.add('bg-amber-200');
@@ -1057,7 +1105,6 @@ function locTheoGiaoVien() {
             oGv.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
             if (oMon) oMon.classList.remove('opacity-0', 'pointer-events-none', 'select-none');
         } else {
-            // Khi đang lọc nhưng ô không thuộc giáo viên đang tìm: làm mờ
             if (tdGv) {
                 tdGv.classList.remove('bg-amber-200', 'bg-amber-100', 'bg-white');
                 tdGv.classList.add('bg-gray-100/50');
