@@ -8,7 +8,8 @@
   <title>Đang tải hệ thống...</title>
 
   <script>
-    document.write('<script src="ketnoi.js?v=' + new Date().getTime() + '"><\/script>');
+    var sysVer = typeof window.SCV_PHIEN_BAN !== 'undefined' ? window.SCV_PHIEN_BAN : "1.0";
+    document.write('<script src="ketnoi.js?v=' + encodeURIComponent(sysVer) + '"><\/script>');
   </script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -510,7 +511,11 @@
 
   async function loadSystemModules() {
       try {
-        const cacheBuster = "?v=" + new Date().getTime(); 
+        // Tối ưu hóa: Sử dụng biến phiên bản hệ thống để tận dụng Cache trình duyệt.
+        // Giúp khởi động phần mềm tức thì, giảm tải request lên máy chủ.
+        const sysVersion = typeof SCV_PHIEN_BAN !== 'undefined' && SCV_PHIEN_BAN ? SCV_PHIEN_BAN : "1.0";
+        const cacheBuster = "?v=" + encodeURIComponent(sysVersion); 
+        
         const [res1, res2, res3, res4, res5, res6] = await Promise.all([
             fetch('./SCV_Tab_TraCuuLich.html' + cacheBuster),
             fetch('./SCV_Tab_TraCuuCongVan.html' + cacheBuster),
@@ -529,7 +534,9 @@
         
         executeScripts(document.getElementById('mainApp'));
         executeScripts(document.getElementById('modalMinhChung'));
-      } catch (e) { toast("❌ LỖI TẢI GIAO DIỆN: " + e.message); }
+      } catch (e) { 
+          toast("❌ LỖI TẢI GIAO DIỆN: " + e.message); 
+      }
   }
 
   function executeScripts(element) {
