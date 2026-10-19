@@ -20,7 +20,7 @@ const DANH_SACH_MENU_HE_THONG = [
 const DANH_SACH_NUT_CHUC_NANG = [
     { id: 'btnNhapExcelTKB', ten: 'Nhập Excel' },
     { id: 'btnKhoiPhuc', ten: 'Tuần mới' },
-    { id: 'btnLuuTuan', ten: 'Lưu TKB Tuần' },
+   // { id: 'btnLuuTuan', ten: 'Lưu TKB Tuần' },
     { id: 'btnLuuCoDinh', ten: 'TKB Cố Định' },
     { id: 'btnXepTuDong', ten: 'Xếp Tự Động' },
     { id: 'btnKiemTra', ten: 'Định Mức tiết' },
@@ -69,20 +69,7 @@ function capNhatHienThiPhanQuyen() {
             nhanHT.style.display = 'flex';
         }
 
-        // 3a. Kiểm soát hiển thị Nút Nhập Excel TKB (vùng quyền Admin / Ma trận phân quyền)
-        if (typeof window.khoiTaoNutNhapExcelTKB === 'function') {
-            window.khoiTaoNutNhapExcelTKB();
-        }
-        let btnNhapExcel = document.getElementById('btnNhapExcelTKB');
-        if (btnNhapExcel) {
-            let duocBamNhapExcel = coQuyenQuanTri || 
-                                   (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnNhapExcelTKB')) ||
-                                   nutCongKhai.includes('btnNhapExcelTKB');
-            btnNhapExcel.style.display = duocBamNhapExcel ? 'flex' : 'none';
-            btnNhapExcel.disabled = !duocBamNhapExcel;
-        }
-
-        // 3b. Kiểm soát hiển thị Nút Khóa TKB Tuần (vùng quyền Admin / Ma trận)
+        // 3a. Kiểm soát hiển thị Nút Khóa TKB Tuần (vùng quyền Admin / Ma trận)
         let btnKhoaTKB = document.getElementById('btnKhoaTKB');
         if (btnKhoaTKB) {
             let duocBamKhoaTKB = coQuyenQuanTri || 
@@ -91,7 +78,7 @@ function capNhatHienThiPhanQuyen() {
             btnKhoaTKB.style.display = duocBamKhoaTKB ? 'flex' : 'none';
         }
 
-        // 3c. Kiểm soát hiển thị Nút Khóa Sổ Đầu Bài Tuần
+        // 3b. Kiểm soát hiển thị Nút Khóa Sổ Đầu Bài Tuần
         let btnKhoaSo = document.getElementById('btnKhoaSoDauBai');
         if (btnKhoaSo) {
             let duocBamKhoaSo = coQuyenQuanTri || 
@@ -362,11 +349,7 @@ function taoNhomCheckbox(danhSachGoc, danhSachDaChon, kieuPhanLoai) {
         let daChon = (danhSachDaChon || []).includes(idItem) ? 'checked' : '';
         
         let borderClass = 'bg-slate-50 border-gray-300 text-slate-700';
-        if (idItem === 'btnNhapExcelTKB') {
-            borderClass = daChon 
-                ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-extrabold shadow-sm' 
-                : 'bg-emerald-50/70 border-emerald-300 text-emerald-800 font-semibold';
-        } else if (idItem === 'btnKhoaTKB') {
+        if (idItem === 'btnKhoaTKB') {
             borderClass = daChon 
                 ? 'bg-amber-100 border-amber-400 text-amber-900 font-extrabold shadow-sm' 
                 : 'bg-amber-50/70 border-amber-300 text-amber-800 font-semibold';
