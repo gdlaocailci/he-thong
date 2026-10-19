@@ -355,17 +355,67 @@
       }
       return MODULES_PROMISE;
   }
+// THUẬT TOÁN PWA SWR: Khởi động lập tức từ Cache cục bộ
+  async function bootFromLocalCache(sysId, htmlReadyPromise) {
+      try {
+          let cachedStr = localStorage.getItem('SCV_APP_CACHE_' + sysId);
+          if (cachedStr) {
+              let res = JSON.parse(cachedStr);
+              await htmlReadyPromise; // Chờ tải HTML (nhanh vì đã lưu cache)
+              
+              applySystemConfig(res.config);
+              window.SCV_CACHE_LICH = res.cacheLich || [];
+              window.SCV_CACHE_CONGVAN = res.cacheCV || [];
+              window.SCV_DATA_READY = true;
+              
+              SYS_ACTIVE_ACCOUNT = sysId;
+              GLOBAL_PERM = res.canInput || false;
+              GLOBAL_ADMIN = res.canAdmin || false;
+              window.GLOBAL_ADMIN = res.canAdmin || false;
 
-  window.onload = function() {
+              document.getElementById('loading-overlay').style.display = 'none';
+              document.getElementById('mainApp').style.display = 'block';
+
+              if (!res.canInput) {
+                  document.getElementById('btnTabNhap').style.display = 'none'; 
+                  document.getElementById('btnTabCV').style.display = 'none';
+              }
+              if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
+              else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
+
+              if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
+              
+              // Kích hoạt render dữ liệu cũ ngay lập tức
+              setTimeout(() => { 
+                  if (typeof loadDataServer === 'function') loadDataServer(); 
+                  if(typeof initCongVan === 'function') initCongVan();
+                  if(typeof initSearchCV === 'function') initSearchCV();
+              }, 100);
+
+              return true; // Báo hiệu đã boot xong
+          }
+      } catch(e) { 
+          console.warn("Lỗi đọc cache cục bộ, sẽ fallback về Server:", e); 
+          localStorage.removeItem('SCV_APP_CACHE_' + sysId);
+      }
+      return false;
+  }
+ window.onload = async function() {
     applySystemConfig(null); 
-    ensureModulesLoaded(); // TỐI ƯU SONG SONG: Bắt đầu tải các module HTML ngay khi trang khởi tạo!
+    let htmlReadyPromise = ensureModulesLoaded(); // Tải Module HTML song song
+    
     const storedId = sessionStorage.getItem("SCV_ACTIVE_ID");
     if(storedId) {
       window.SYS_ACTIVE_ID = storedId; 
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('loading-overlay').style.display = 'flex';
-      if (storedId === "Khách") { handleGuestLogin(true); } 
-      else { checkPermissionAndLoad(); }
+      
+      // Bước đột phá: Thử khởi động ngay bằng bộ nhớ cục bộ
+      let isBooted = await bootFromLocalCache(storedId, htmlReadyPromise);
+      
+      // Khởi chạy tiến trình ngầm đồng bộ với Server
+      if (storedId === "Khách") { handleGuestLogin(true, isBooted); } 
+      else { checkPermissionAndLoad(isBooted); }
     }
   };
 
@@ -443,23 +493,31 @@
     GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false; location.reload(); 
   }
 
-  function checkPermissionAndLoad() {
+  function checkPermissionAndLoad(isBooted = false) {
     google.script.run.withSuccessHandler(async res => {
+      // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ lần khởi động sau
+      try {
+          let cacheObj = {
+              config: res.config, canInput: res.canInput, canAdmin: res.canAdmin,
+              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich : window.SCV_CACHE_LICH,
+              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan : window.SCV_CACHE_CONGVAN
+          };
+          localStorage.setItem('SCV_APP_CACHE_' + window.SYS_ACTIVE_ID, JSON.stringify(cacheObj));
+      } catch(e) { console.warn("Lỗi lưu trữ cục bộ:", e); }
+
       applySystemConfig(res.config); 
       SYS_ACTIVE_ACCOUNT = res.sysId; 
-      window.SYS_ACTIVE_ID = res.sysId;
-      sessionStorage.setItem("SCV_ACTIVE_ID", res.sysId);
       GLOBAL_PERM = res.canInput; 
       GLOBAL_ADMIN = !!res.canAdmin; window.GLOBAL_ADMIN = !!res.canAdmin; 
       
       if (!res.canView) {
           document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'none';
           document.getElementById('accessDeniedBanner').style.display = 'flex';
           document.getElementById('blockedSysId').innerText = SYS_ACTIVE_ACCOUNT;
           return; 
       }
 
-      // THUẬT TOÁN ĐỒNG BỘ: Kéo vết đã đọc từ máy chủ về hợp nhất (Merge)
       if (res.trackingData) {
           let localLich = JSON.parse(localStorage.getItem('SCV_SEEN_LICH_' + window.SYS_ACTIVE_ID) || "[]");
           let localCV = JSON.parse(localStorage.getItem('SCV_SEEN_CV_' + window.SYS_ACTIVE_ID) || "[]");
@@ -475,7 +533,6 @@
           }
       }
       
-      // TỐI ƯU HÓA KHỞI ĐỘNG: Nạp tức thời dữ liệu mới nhất được gửi kèm từ máy chủ
       if (res.cache && (res.cache.lich || res.cache.congvan)) {
           window.SCV_CACHE_LICH = res.cache.lich || [];
           window.SCV_CACHE_CONGVAN = res.cache.congvan || [];
@@ -485,25 +542,35 @@
 
       await ensureModulesLoaded();
 
-      document.getElementById('loading-overlay').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
+      // 2. Logic xử lý giao diện: Phân nhánh dựa theo trạng thái Khởi động
+      if (!isBooted) {
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
 
-      if (!res.canInput) {
-          document.getElementById('btnTabNhap').style.display = 'none'; document.getElementById('btnTabCV').style.display = 'none';
-      }
-      if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
-      else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
+          if (!res.canInput) {
+              document.getElementById('btnTabNhap').style.display = 'none'; document.getElementById('btnTabCV').style.display = 'none';
+          }
+          if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
+          else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
 
-      if (window.SCV_DATA_READY) {
-          // Bung dữ liệu tab mặc định tức thời, người dùng thao tác được ngay!
-          let seenLich = SCV_GetSeenIDs('LICH');
-          let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
-          if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
-          setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
-          setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
-          preloadDriveFolders();
+          if (window.SCV_DATA_READY) {
+              let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
+              let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+              if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
+              setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
+              setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
+              preloadDriveFolders();
+          } else {
+              executePriorityLoading();
+          }
       } else {
-          executePriorityLoading();
+          // NẾU ĐÃ BOOT TỪ CACHE CỤC BỘ -> Cập nhật ngầm lại view (Silent update)
+          let activeTab = document.querySelector('.tab-content.active');
+          if (activeTab) {
+              if (activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer(false);
+              else if (activeTab.id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV(false);
+          }
+          preloadDriveFolders();
       }
 
     }).SCV_getInitialData(window.SYS_ACTIVE_ID);
