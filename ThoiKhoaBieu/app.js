@@ -922,55 +922,73 @@ async function taiDuLieuTKB(coCache = false, nguonTruyXuat = 'TKB_HIEN_TAI', epD
 
 function napDuLieuBoLocGiaoVien() {
     let dtList = document.getElementById('danhSachGvList');
-    if (!dtList) return;
-    
-    dtList.innerHTML = '';
-    dtList.innerHTML += `<option value="Toàn trường"></option>`;
-
-    if (thongSoHocVu.DANH_SACH_GIAO_VIEN && thongSoHocVu.DANH_SACH_GIAO_VIEN.length > 0) {
-        thongSoHocVu.DANH_SACH_GIAO_VIEN.forEach(gv => {
-            dtList.innerHTML += `<option value="${gv}"></option>`;
-        });
-    }
-
-    // Bổ sung logic giữ lại dữ liệu khi chọn liên tiếp từ datalist
     let locGiaoVienInput = document.getElementById('locGiaoVien');
-    if (locGiaoVienInput && !locGiaoVienInput.dataset.daGanSuKienDaChon) {
-        locGiaoVienInput.dataset.daGanSuKienDaChon = "true";
-        locGiaoVienInput.dataset.giaTriTruocDo = locGiaoVienInput.value || "";
+    if (!dtList || !locGiaoVienInput) return;
 
-        locGiaoVienInput.addEventListener('focus', function() {
-            this.dataset.giaTriTruocDo = this.value;
-        });
+    let dsGV = thongSoHocVu.DANH_SACH_GIAO_VIEN || [];
 
-        locGiaoVienInput.addEventListener('change', function() {
-            let valMoi = this.value.trim();
-            if (valMoi === "Toàn trường" || valMoi === "") {
-                this.value = valMoi;
-                this.dataset.giaTriTruocDo = valMoi;
-            } else {
-                let dsGV = thongSoHocVu.DANH_SACH_GIAO_VIEN || [];
-                // Nếu giá trị chọn khớp với datalist, tiến hành nối chuỗi thay vì ghi đè
-                if (dsGV.includes(valMoi)) {
-                    let valCu = this.dataset.giaTriTruocDo.trim();
-                    if (valCu !== "" && valCu !== "Toàn trường") {
-                        let mangCu = valCu.split(',').map(s => s.trim()).filter(s => s !== "");
-                        if (!mangCu.includes(valMoi)) {
-                            mangCu.push(valMoi);
-                        }
-                        this.value = mangCu.join(', ') + ', ';
-                    } else {
-                        this.value = valMoi + ', ';
-                    }
+    // [NÂNG CẤP]: Cập nhật Datalist động. Cộng dồn tiền tố (các giáo viên đã chọn) vào danh sách gợi ý mới
+    const capNhatDatalist = (tienTo) => {
+        dtList.innerHTML = '';
+        if (tienTo === '') {
+            dtList.innerHTML += `<option value="Toàn trường"></option>`;
+            dsGV.forEach(gv => dtList.innerHTML += `<option value="${gv}"></option>`);
+        } else {
+            let mangDaChon = tienTo.split(',').map(s => s.trim()).filter(s => s !== "");
+            dsGV.forEach(gv => {
+                // Lọc bỏ những giáo viên đã được chọn trước đó để danh sách gọn hơn
+                if (!mangDaChon.includes(gv)) {
+                    dtList.innerHTML += `<option value="${tienTo}${gv}"></option>`;
                 }
-                this.dataset.giaTriTruocDo = this.value;
+            });
+        }
+    };
+
+    // Khởi tạo datalist lúc mới load trang
+    capNhatDatalist('');
+
+    if (!locGiaoVienInput.dataset.daGanSuKienBoLoc) {
+        locGiaoVienInput.dataset.daGanSuKienBoLoc = "true";
+
+        // Bắt sự kiện khi đang gõ phím
+        locGiaoVienInput.addEventListener('input', function() {
+            let val = this.value;
+            if (val === "Toàn trường") {
+                capNhatDatalist('');
+                if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
+                return;
             }
+
+            // Dò tìm vị trí dấu phẩy cuối cùng để cắt lớp tiền tố đã chọn
+            let lastCommaIndex = val.lastIndexOf(',');
+            if (lastCommaIndex !== -1) {
+                let mangTienTo = val.substring(0, lastCommaIndex).split(',').map(s => s.trim()).filter(s => s !== "");
+                let tienToChuan = mangTienTo.join(', ') + (mangTienTo.length > 0 ? ', ' : '');
+                capNhatDatalist(tienToChuan); // Cấp lại danh sách kèm tiền tố
+            } else {
+                capNhatDatalist(''); // Nếu bị xóa hết dấu phẩy, quay lại datalist gốc
+            }
+
             if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
         });
 
-        // Trigger đồng bộ khi gõ phím hoặc xóa tay
-        locGiaoVienInput.addEventListener('input', function() {
-            this.dataset.giaTriTruocDo = this.value;
+        // Bắt sự kiện khi click chọn một mục từ danh sách xổ xuống
+        locGiaoVienInput.addEventListener('change', function() {
+            let valMoi = this.value;
+            if (valMoi === "Toàn trường" || valMoi.trim() === "") {
+                this.value = valMoi.trim();
+                capNhatDatalist('');
+            } else {
+                // Kiểm tra xem mục vừa chọn có phải là giáo viên chuẩn không
+                let mangCu = valMoi.split(',').map(s => s.trim()).filter(s => s !== "");
+                let lastGv = mangCu[mangCu.length - 1];
+                
+                if (dsGV.includes(lastGv)) {
+                    // Nối thêm dấu phẩy và khoảng trắng chuẩn bị sẵn cho việc chọn người tiếp theo
+                    this.value = mangCu.join(', ') + ', ';
+                    capNhatDatalist(this.value);
+                }
+            }
             if (typeof locTheoGiaoVien === 'function') locTheoGiaoVien();
         });
     }
