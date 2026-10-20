@@ -851,7 +851,7 @@
         }
     }
 
-   function lamMoiForm(boQua = false) {
+  function lamMoiForm(boQua = false) {
         if (boQua || confirm("Thao tác này sẽ đóng văn bản hiện hành và bắt đầu một phiên làm việc mới. Đồng chí có chắc chắn muốn thực hiện?")) {
             const loai = document.getElementById('loaiVanBan').value;
             
@@ -880,8 +880,8 @@
                 }
             }
             
-            // 2. Đưa hệ thống về trạng thái phiên làm việc mới ban đầu
-            document.getElementById('loaiVanBan').value = "0";
+            // 2. Giữ nguyên loại biểu mẫu đang làm việc (không ép về "0")
+            // Vẫn gọi chuyenDoiBieuMau() để thực hiện hiệu ứng tắt và mở lại UI giao diện mới
             chuyenDoiBieuMau();
             
             // 3. Hủy bỏ phiên liên kết với file đang chỉnh sửa
