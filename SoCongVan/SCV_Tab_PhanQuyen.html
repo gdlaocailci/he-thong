@@ -2,9 +2,21 @@
     <div class="cv-header-title" style="text-transform: uppercase;">CẤP QUYỀN TRUY CẬP</div>
     
     <div style="margin-bottom: 15px; display: flex; gap: 10px; background: #f0f9ff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd; align-items: center; flex-wrap: wrap;">
+        <style>
+            .switch-toggle { position: relative; display: inline-block; width: 46px; height: 24px; }
+            .switch-toggle input { opacity: 0; width: 0; height: 0; }
+            .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ef4444; transition: .3s; border-radius: 24px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); }
+            .slider-toggle:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+            .switch-toggle input:checked + .slider-toggle { background-color: #10b981; }
+            .switch-toggle input:checked + .slider-toggle:before { transform: translateX(22px); }
+        </style>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <label for="valPhamVi" style="font-weight: bold; color: #b91c1c; font-size: 14px;">Đối tượng truy cập:</label>
-            <input type="text" id="valPhamVi" class="cell-input" placeholder='all hoặc rỗng' style="width: 150px; border: 1px solid #94a3b8; padding: 6px; border-radius: 4px; text-align: left; background: white;">
+            <label style="font-weight: bold; color: #b91c1c; font-size: 14px;">Đối tượng truy cập:</label>
+            <label class="switch-toggle" title="Xanh = Mở, Đỏ = Chặn">
+                <input type="checkbox" id="valPhamVi" onchange="document.getElementById('txtPhamViTrangThai').innerText = this.checked ? 'Đang Mở (all)' : 'Đang Chặn (rỗng)'; document.getElementById('txtPhamViTrangThai').style.color = this.checked ? '#10b981' : '#ef4444';">
+                <span class="slider-toggle"></span>
+            </label>
+            <span id="txtPhamViTrangThai" style="font-size: 13px; font-weight: bold; color: #ef4444;">Đang Chặn (rỗng)</span>
         </div>
         
         <div style="width: 2px; height: 30px; background: #bae6fd; margin: 0 10px;"></div>
@@ -55,9 +67,18 @@ function loadPhanQuyen() {
             return;
         }
 
-        // Cập nhật giá trị ô phạm vi truy cập (C4)
-        if (res.phamVi !== undefined) {
-            document.getElementById('valPhamVi').value = res.phamVi;
+       // Cập nhật giá trị ô phạm vi truy cập (C4)
+        if(res.phamVi !== undefined) {
+            let isAll = (String(res.phamVi).trim().toLowerCase() === 'all');
+            let chk = document.getElementById('valPhamVi');
+            if(chk) {
+                chk.checked = isAll;
+                let statusTxt = document.getElementById('txtPhamViTrangThai');
+                if (statusTxt) {
+                    statusTxt.innerText = isAll ? 'Đang Mở (all)' : 'Đang Chặn (rỗng)';
+                    statusTxt.style.color = isAll ? '#10b981' : '#ef4444';
+                }
+            }
         }
 
         let rowCount = 0;
@@ -129,7 +150,7 @@ function deletePQRow(btn) {
 
 function savePhanQuyen() {
     const trs = document.querySelectorAll('#tbodyPhanQuyen tr');
-    const valPhamVi = document.getElementById('valPhamVi').value.trim();
+    const valPhamVi = document.getElementById('valPhamVi').checked ? 'all' : '';
     let dataRows = [];
     let hasValidAdmin = false;
     let hasEmptyEmail = false;
