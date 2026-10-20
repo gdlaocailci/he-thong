@@ -528,11 +528,12 @@
             }
             preloadDriveFolders();
         }
-      } else {
-        if(typeof toast === 'function') toast("⚠️ Cần quyền truy cập để xem dữ liệu");
-        sessionStorage.removeItem("SCV_ACTIVE_ID");
-        document.getElementById('loading-overlay').style.display = 'none'; 
-        document.getElementById('login-overlay').style.display = 'flex';
+     } else {
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('accessDeniedBanner').style.display = 'flex';
+        document.getElementById('blockedSysId').innerText = "Tài khoản Khách";
       }
     }).SCV_getInitialData("Khách"); 
   }
