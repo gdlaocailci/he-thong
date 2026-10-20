@@ -363,7 +363,16 @@
               let res = JSON.parse(cachedStr);
               await htmlReadyPromise; // Chờ tải HTML (nhanh vì đã lưu cache)
               
-              applySystemConfig(res.config);
+             applySystemConfig(res.config);
+
+              if (res.canView === false) {
+                  document.getElementById('loading-overlay').style.display = 'none';
+                  document.getElementById('mainApp').style.display = 'none';
+                  document.getElementById('accessDeniedBanner').style.display = 'flex';
+                  document.getElementById('blockedSysId').innerText = sysId;
+                  return true;
+              }
+
               window.SCV_CACHE_LICH = res.cacheLich || [];
               window.SCV_CACHE_CONGVAN = res.cacheCV || [];
               window.SCV_DATA_READY = true;
@@ -457,7 +466,7 @@
       // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ khởi động siêu tốc
       try {
           let cacheObj = {
-              config: res.config, canInput: false, canAdmin: false,
+              config: res.config, canInput: res.canInput, canAdmin: res.canAdmin, canView: res.canView,
               cacheLich: (res.cache && res.cache.lich) ? res.cache.lich : window.SCV_CACHE_LICH,
               cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan : window.SCV_CACHE_CONGVAN
           };
@@ -508,8 +517,11 @@
                 executePriorityLoading();
             }
         } else {
-            // NẾU ĐÃ BOOT TỪ CACHE: Chỉ cập nhật ngầm lại view (Silent Update) mượt mà
-            let activeTab = document.querySelector('.tab-content.active');
+          // NẾU ĐÃ BOOT TỪ CACHE CỤC BỘ -> Cập nhật ngầm lại view (Silent update)
+          if (document.getElementById('accessDeniedBanner').style.display === 'flex') {
+              location.reload(); return;
+          }
+          let activeTab = document.querySelector('.tab-content.active');
             if (activeTab) {
                 if (activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer(false);
                 else if (activeTab.id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV(false);
