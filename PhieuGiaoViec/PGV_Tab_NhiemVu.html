@@ -1607,33 +1607,29 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
         }
     }
 
-   const oYkien = document.getElementById('nhapYkien');
+  const oYkien = document.getElementById('nhapYkien');
     if (oYkien) {
         window.yKienCuaNguoiKhac = "";
 
         // Hàm hỗ trợ tự động tìm Họ tên thực từ danh sách cán bộ đã tải
         const layTenGiamSat = () => {
-            // Lấy ID hoặc Email của người đang đăng nhập (Giám sát)
             let idHienTai = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? window.PGV_ID_TC : "GS";
             
-            // 1. Trích xuất mảng dữ liệu chuẩn (Xử lý trường hợp dsGiaoVien bị bọc trong thuộc tính dliu)
             let mangGV = [];
             if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien) {
                 mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien.dliu || []);
             }
             
-            // 2. Tìm kiếm đối chiếu ID/Email trong danh sách cán bộ toàn trường
             if (mangGV.length > 0) {
                 let thongTinGS = mangGV.find(cb => 
                     (cb.taik && cb.taik.toLowerCase() === idHienTai.toLowerCase()) || 
                     (cb.ttrg && cb.ttrg === idHienTai)
                 );
                 if (thongTinGS && (thongTinGS.tenn || thongTinGS.ten)) {
-                    return thongTinGS.tenn || thongTinGS.ten; // Trả về Họ tên thực (VD: TƯ LIỆU HỢP THÀNH)
+                    return thongTinGS.tenn || thongTinGS.ten; 
                 }
             }
             
-            // 3. Dự phòng: Quét lấy từ thẻ HTML của Profile Card nếu mảng bị lỗi
             let tenTuGiaoDien = "";
             $("div:contains('Họ tên:')").each(function() {
                 let text = $(this).text();
@@ -1644,12 +1640,11 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
             });
             if (tenTuGiaoDien !== "") return tenTuGiaoDien;
             
-            // 4. Dự phòng cuối: Biến toàn cục
             if (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) {
                 return window.PGV_TEN_TC;
             }
             
-            return idHienTai; // Lấy ID nếu mọi dự phòng đều thất bại
+            return idHienTai; 
         };
 
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -1663,7 +1658,11 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
                     
-                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
+                    let idHienTai = layTenGiamSat(); 
+                    
+                    // Lấy email gốc và tiền tố để đối chiếu dữ liệu cũ
+                    let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? String(window.PGV_ID_TC).toLowerCase().trim() : "";
+                    let prefixEmail = emailGoc.split('@')[0];
 
                     let regex = /\{([\s\S]+?)\}$/; 
                     let match = chuGoc.match(regex);
@@ -1680,12 +1679,20 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                             coTagNaoKhong = true;
                             let tId = mTag[1].trim();
                             let tNd = mTag[2].trim();
+                            let tIdLower = tId.toLowerCase();
                             
-                            // Nếu Tag trùng với Họ tên hoặc trùng với Email gốc thì nhận diện là của mình
-                            if (tId === idHienTai || tId === window.PGV_ID_TC) {
-                                cuaToi = tNd;
+                            // Thuật toán đối chiếu thông minh: Tên OR Email OR Tiền tố Email
+                            let laCuaToi = false;
+                            if (tIdLower === idHienTai.toLowerCase() || 
+                                tIdLower === emailGoc || 
+                                (prefixEmail !== "" && tIdLower === prefixEmail)) {
+                                laCuaToi = true;
+                            }
+
+                            if (laCuaToi) {
+                                cuaToi = tNd; // Tách ra để sửa
                             } else {
-                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
+                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`; // Của người khác thì giữ nguyên cấu trúc
                             }
                         }
 
@@ -1721,7 +1728,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
                     
-                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
+                    let idHienTai = layTenGiamSat(); 
                     let chuoiGopLanhDao = window.yKienCuaNguoiKhac || "";
 
                     if (valLanhDao !== "") {
