@@ -1611,27 +1611,40 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
     if (oYkien) {
         window.yKienCuaNguoiKhac = "";
 
-        // Hàm hỗ trợ tự động tìm Họ tên đầy đủ tại cột D KHAIBAO (thuộc tính tenn)
+        // Hàm hỗ trợ tự động tìm Họ tên thực từ danh sách cán bộ đã tải
         const layTenGiamSat = () => {
-            let emailHienTai = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? window.PGV_ID_TC : "";
+            let idHienTai = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? window.PGV_ID_TC : "GS";
             
-            // Xử lý mảng (dữ liệu dsGiaoVien nằm trong thuộc tính dliu)
             let mangGV = [];
             if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien) {
                 mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien.dliu || []);
             }
             
             if (mangGV.length > 0) {
-                let thongTinGS = mangGV.find(cb => cb.taik === emailHienTai || cb.ttrg === emailHienTai);
+                let thongTinGS = mangGV.find(cb => 
+                    (cb.taik && cb.taik.toLowerCase() === idHienTai.toLowerCase()) || 
+                    (cb.ttrg && cb.ttrg === idHienTai)
+                );
                 if (thongTinGS && (thongTinGS.tenn || thongTinGS.ten)) {
-                    return thongTinGS.tenn || thongTinGS.ten; // tenn chính là Cột D KHAIBAO
+                    return thongTinGS.tenn || thongTinGS.ten; 
                 }
             }
             
-            // Dự phòng nếu không tìm thấy
-            return (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) 
-                   ? window.PGV_TEN_TC 
-                   : (emailHienTai ? emailHienTai.split('@')[0] : "Giám sát");
+            let tenTuGiaoDien = "";
+            $("div:contains('Họ tên:')").each(function() {
+                let text = $(this).text();
+                if (text.includes("Họ tên:") && text.includes("Vị trí:")) {
+                     let match = text.match(/Họ tên:\s*([^\n]+)/);
+                     if (match && match[1]) tenTuGiaoDien = match[1].trim();
+                }
+            });
+            if (tenTuGiaoDien !== "") return tenTuGiaoDien;
+            
+            if (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) {
+                return window.PGV_TEN_TC;
+            }
+            
+            return idHienTai; 
         };
 
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -1645,34 +1658,59 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
                     
-                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên đầy đủ
+                    let idHienTai = layTenGiamSat(); 
+                    let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? String(window.PGV_ID_TC).toLowerCase().trim() : "";
+                    let prefixEmail = emailGoc.split('@')[0];
 
-                    let regex = /\{([\s\S]+?)\}$/; 
-                    let match = chuGoc.match(regex);
+                    let noiDungTrongNgoac = "";
+                    let regexCu = /\{([\s\S]+?)\}$/; 
+                    let matchCu = chuGoc.match(regexCu);
+
+                    // 1. Phân tách bằng ký tự tàng hình \u200B (Phiên bản mới - Xóa bỏ hoàn toàn ngoặc {})
+                    if (chuGoc.includes("\u200B")) {
+                        let parts = chuGoc.split("\u200B");
+                        noiDungTrongNgoac = parts[1];
+                        chuGoc = parts[0].trim();
+                    } 
+                    // 2. Hỗ trợ tương thích ngược dữ liệu cũ (Tự động xóa ngoặc khi load lên)
+                    else if (matchCu) {
+                        noiDungTrongNgoac = matchCu[1];
+                        chuGoc = chuGoc.replace(regexCu, "").trim();
+                    } 
+                    // 3. Fallback dự phòng: Quét cấu trúc [Tên]: ở cuối dòng nếu mất ký tự tàng hình
+                    else {
+                        let regexFallback = /(?:\n\[[^\]]+\]:\s*[\s\S]*?)+$/;
+                        let matchFb = chuGoc.match(regexFallback);
+                        if (matchFb) {
+                            noiDungTrongNgoac = matchFb[0].trim();
+                            chuGoc = chuGoc.replace(regexFallback, "").trim();
+                        }
+                    }
                     
-                    if (match) {
-                        let noiDungTrongNgoac = match[1];
-                        // Fix Regex: Thêm dấu ? sau : để đọc được cả những dòng cũ bị thiếu dấu hai chấm
+                    if (noiDungTrongNgoac.trim() !== "") {
                         let regexTag = /\[(.*?)\*?\]:?\s*([\s\S]*?)(?=\n\[|$)/g; 
                         let mTag;
                         let cuaToi = "";
                         let cuaNguoiKhac = "";
                         let coTagNaoKhong = false;
 
-                        // Lấy tiền tố email để nhận diện và mở khóa dữ liệu cũ
-                        let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' ? String(window.PGV_ID_TC) : "");
-                        let prefixEmail = emailGoc.split('@')[0];
-
                         while ((mTag = regexTag.exec(noiDungTrongNgoac)) !== null) {
                             coTagNaoKhong = true;
                             let tId = mTag[1].trim();
                             let tNd = mTag[2].trim();
+                            let tIdLower = tId.toLowerCase();
                             
-                            // Mở khóa: Trùng Họ tên mới, HOẶC trùng Email, HOẶC trùng tiền tố email cũ thì đều là của mình
-                            if (tId === idHienTai || tId === emailGoc || (prefixEmail && tId === prefixEmail)) {
-                                cuaToi = tNd;
+                            let laCuaToi = false;
+                            if (tIdLower === idHienTai.toLowerCase() || 
+                                tIdLower === emailGoc || 
+                                (prefixEmail !== "" && tIdLower === prefixEmail)) {
+                                laCuaToi = true;
+                            }
+
+                            if (laCuaToi) {
+                                cuaToi = tNd; 
                             } else {
-                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
+                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`; 
                             }
                         }
 
@@ -1691,8 +1729,6 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                             }
                             window.yKienCuaNguoiKhac = cuaNguoiKhac.trim();
                         }
-                        
-                        chuGoc = chuGoc.replace(regex, "").trim();
                     } else {
                         if (oLanhDao) oLanhDao.value = "";
                         if (vungNguoiKhac) { vungNguoiKhac.style.display = "none"; vungNguoiKhac.innerText = ""; }
@@ -1708,7 +1744,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
                     
-                    let idHienTai = layTenGiamSat(); // Lưu nhãn mới bằng Họ tên đầy đủ
+                    let idHienTai = layTenGiamSat(); 
                     let chuoiGopLanhDao = window.yKienCuaNguoiKhac || "";
 
                     if (valLanhDao !== "") {
@@ -1717,7 +1753,9 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     }
 
                     if (chuoiGopLanhDao.trim() !== "") {
-                        return valThamMuu.trim() + " {\n" + chuoiGopLanhDao.trim() + "\n}";
+                        // Nâng cấp: Thay vì bọc " { ... }", ta ghép lại với ký tự tàng hình \u200B
+                        // Người dùng/Sheets chỉ thấy khoảng trắng xuống dòng hoàn toàn sạch sẽ
+                        return valThamMuu.trim() + "\n\n\u200B" + chuoiGopLanhDao.trim();
                     }
                     return valThamMuu.trim();
                 }
