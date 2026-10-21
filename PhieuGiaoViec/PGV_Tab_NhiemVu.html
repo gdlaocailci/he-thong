@@ -1630,15 +1630,10 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                 }
             }
             
-            let tenTuGiaoDien = "";
-            $("div:contains('Họ tên:')").each(function() {
-                let text = $(this).text();
-                if (text.includes("Họ tên:") && text.includes("Vị trí:")) {
-                     let match = text.match(/Họ tên:\s*([^\n]+)/);
-                     if (match && match[1]) tenTuGiaoDien = match[1].trim();
-                }
-            });
-            if (tenTuGiaoDien !== "") return tenTuGiaoDien;
+            // Đã xóa bỏ jQuery quét lỗi - Thay bằng đọc trực tiếp từ Object hệ thống an toàn tuyệt đối
+            if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb && canbHientai.canb.tenn) {
+                return canbHientai.canb.tenn;
+            }
             
             if (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) {
                 return window.PGV_TEN_TC;
@@ -1666,7 +1661,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let regexCu = /\{([\s\S]+?)\}$/; 
                     let matchCu = chuGoc.match(regexCu);
 
-                    // 1. Phân tách bằng ký tự tàng hình \u200B (Phiên bản mới - Xóa bỏ hoàn toàn ngoặc {})
+                    // 1. Phân tách bằng ký tự tàng hình \u200B (Xóa bỏ hoàn toàn ngoặc {})
                     if (chuGoc.includes("\u200B")) {
                         let parts = chuGoc.split("\u200B");
                         noiDungTrongNgoac = parts[1];
@@ -1753,8 +1748,6 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     }
 
                     if (chuoiGopLanhDao.trim() !== "") {
-                        // Nâng cấp: Thay vì bọc " { ... }", ta ghép lại với ký tự tàng hình \u200B
-                        // Người dùng/Sheets chỉ thấy khoảng trắng xuống dòng hoàn toàn sạch sẽ
                         return valThamMuu.trim() + "\n\n\u200B" + chuoiGopLanhDao.trim();
                     }
                     return valThamMuu.trim();
