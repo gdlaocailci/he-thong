@@ -1609,8 +1609,23 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
 
    const oYkien = document.getElementById('nhapYkien');
     if (oYkien) {
-        // Biến toàn cục lưu trữ ý kiến của các giám sát khác
         window.yKienCuaNguoiKhac = "";
+
+        // Hàm hỗ trợ tự động tìm Họ tên từ Email qua mảng dsGiaoVien đã tải
+        const layTenGiamSat = () => {
+            let emailHienTai = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "";
+            let tenGS = emailHienTai;
+            if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien && dsGiaoVien.length > 0) {
+                let thongTinGS = dsGiaoVien.find(cb => cb.taik === emailHienTai || cb.ttrg === emailHienTai);
+                if (thongTinGS && (thongTinGS.ten || thongTinGS.tenn)) {
+                    tenGS = thongTinGS.ten || thongTinGS.tenn;
+                }
+            }
+            if (!tenGS || tenGS === emailHienTai) {
+                tenGS = (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) ? window.PGV_TEN_TC : (emailHienTai ? emailHienTai.split('@')[0] : "Giám sát");
+            }
+            return tenGS;
+        };
 
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
         if (descriptorY) {
@@ -1622,14 +1637,15 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let chuGoc = String(val || "");
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
-                    let idHienTai = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "GS";
+                    
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
 
-                    let regex = /\{([\s\S]+?)\}$/; // Lấy toàn bộ nội dung trong {}
+                    let regex = /\{([\s\S]+?)\}$/; 
                     let match = chuGoc.match(regex);
                     
                     if (match) {
                         let noiDungTrongNgoac = match[1];
-                        let regexTag = /\[(.*?)\*?\]:\s*([\s\S]*?)(?=\n\[|$)/g; // Bóc tách từng cụm [ID]: Nội dung
+                        let regexTag = /\[(.*?)\*?\]:\s*([\s\S]*?)(?=\n\[|$)/g; 
                         let mTag;
                         let cuaToi = "";
                         let cuaNguoiKhac = "";
@@ -1640,14 +1656,14 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                             let tId = mTag[1].trim();
                             let tNd = mTag[2].trim();
                             
-                            if (tId === idHienTai) {
+                            // Nếu Tag trùng với Họ tên hoặc trùng với Email gốc thì nhận diện là của mình
+                            if (tId === idHienTai || tId === window.PGV_ID_TC) {
                                 cuaToi = tNd;
                             } else {
                                 cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
                             }
                         }
 
-                        // Hỗ trợ dữ liệu cũ chưa có Tag
                         if (!coTagNaoKhong && noiDungTrongNgoac.trim() !== "") {
                             cuaNguoiKhac = `[Lãnh đạo]: ${noiDungTrongNgoac.trim()}\n`;
                         }
@@ -1679,11 +1695,10 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let valThamMuu = getGocY.call(this) || "";
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
-                    let idHienTai = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "GS";
                     
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
                     let chuoiGopLanhDao = window.yKienCuaNguoiKhac || "";
 
-                    // Nếu người hiện tại có nhập ý kiến, đóng gói ID của họ vào
                     if (valLanhDao !== "") {
                         let myTag = `[${idHienTai}]: ${valLanhDao}`;
                         chuoiGopLanhDao = chuoiGopLanhDao !== "" ? (chuoiGopLanhDao + "\n" + myTag) : myTag;
