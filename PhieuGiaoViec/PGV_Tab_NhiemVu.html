@@ -1607,39 +1607,28 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
         }
     }
 
-  const oYkien = document.getElementById('nhapYkien');
+ const oYkien = document.getElementById('nhapYkien');
     if (oYkien) {
         window.yKienCuaNguoiKhac = "";
 
-        // Hàm hỗ trợ tự động tìm Họ tên thực từ danh sách cán bộ đã tải
+        // Hàm hỗ trợ tự động tìm Họ tên từ Email qua mảng dsGiaoVien đã tải
         const layTenGiamSat = () => {
-            let idHienTai = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? window.PGV_ID_TC : "GS";
+            let emailHienTai = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "";
+            let tenGS = emailHienTai;
             
-            let mangGV = [];
-            if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien) {
-                mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien.dliu || []);
-            }
+            // Xử lý an toàn nếu dsGiaoVien nằm trong thuộc tính dliu
+            let mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien && dsGiaoVien.dliu ? dsGiaoVien.dliu : []);
             
             if (mangGV.length > 0) {
-                let thongTinGS = mangGV.find(cb => 
-                    (cb.taik && cb.taik.toLowerCase() === idHienTai.toLowerCase()) || 
-                    (cb.ttrg && cb.ttrg === idHienTai)
-                );
-                if (thongTinGS && (thongTinGS.tenn || thongTinGS.ten)) {
-                    return thongTinGS.tenn || thongTinGS.ten; 
+                let thongTinGS = mangGV.find(cb => cb.taik === emailHienTai || cb.ttrg === emailHienTai);
+                if (thongTinGS && (thongTinGS.ten || thongTinGS.tenn)) {
+                    tenGS = thongTinGS.ten || thongTinGS.tenn;
                 }
             }
-            
-            // Đã xóa bỏ jQuery quét lỗi - Thay bằng đọc trực tiếp từ Object hệ thống an toàn tuyệt đối
-            if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb && canbHientai.canb.tenn) {
-                return canbHientai.canb.tenn;
+            if (!tenGS || tenGS === emailHienTai) {
+                tenGS = (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) ? window.PGV_TEN_TC : (emailHienTai ? emailHienTai.split('@')[0] : "Giám sát");
             }
-            
-            if (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) {
-                return window.PGV_TEN_TC;
-            }
-            
-            return idHienTai; 
+            return tenGS;
         };
 
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -1653,36 +1642,24 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
                     
-                    let idHienTai = layTenGiamSat(); 
-                    let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? String(window.PGV_ID_TC).toLowerCase().trim() : "";
-                    let prefixEmail = emailGoc.split('@')[0];
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
 
                     let noiDungTrongNgoac = "";
                     let regexCu = /\{([\s\S]+?)\}$/; 
                     let matchCu = chuGoc.match(regexCu);
 
-                    // 1. Phân tách bằng ký tự tàng hình \u200B (Xóa bỏ hoàn toàn ngoặc {})
+                    // Phân tách bằng ký tự tàng hình (đã bỏ ngoặc) hoặc hỗ trợ ngoặc cũ
                     if (chuGoc.includes("\u200B")) {
                         let parts = chuGoc.split("\u200B");
                         noiDungTrongNgoac = parts[1];
-                        chuGoc = parts[0].trim();
-                    } 
-                    // 2. Hỗ trợ tương thích ngược dữ liệu cũ (Tự động xóa ngoặc khi load lên)
-                    else if (matchCu) {
+                        chuGoc = parts[0];
+                    } else if (matchCu) {
                         noiDungTrongNgoac = matchCu[1];
-                        chuGoc = chuGoc.replace(regexCu, "").trim();
-                    } 
-                    // 3. Fallback dự phòng: Quét cấu trúc [Tên]: ở cuối dòng nếu mất ký tự tàng hình
-                    else {
-                        let regexFallback = /(?:\n\[[^\]]+\]:\s*[\s\S]*?)+$/;
-                        let matchFb = chuGoc.match(regexFallback);
-                        if (matchFb) {
-                            noiDungTrongNgoac = matchFb[0].trim();
-                            chuGoc = chuGoc.replace(regexFallback, "").trim();
-                        }
+                        chuGoc = chuGoc.replace(regexCu, "");
                     }
                     
-                    if (noiDungTrongNgoac.trim() !== "") {
+                    if (noiDungTrongNgoac) {
+                        // Thêm dấu ? sau : để đọc được cả những dòng cũ bị thiếu dấu
                         let regexTag = /\[(.*?)\*?\]:?\s*([\s\S]*?)(?=\n\[|$)/g; 
                         let mTag;
                         let cuaToi = "";
@@ -1693,19 +1670,15 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                             coTagNaoKhong = true;
                             let tId = mTag[1].trim();
                             let tNd = mTag[2].trim();
-                            let tIdLower = tId.toLowerCase();
                             
-                            let laCuaToi = false;
-                            if (tIdLower === idHienTai.toLowerCase() || 
-                                tIdLower === emailGoc || 
-                                (prefixEmail !== "" && tIdLower === prefixEmail)) {
-                                laCuaToi = true;
-                            }
-
-                            if (laCuaToi) {
-                                cuaToi = tNd; 
+                            // Nếu Tag trùng với Họ tên, Email gốc hoặc tiền tố email
+                            let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? String(window.PGV_ID_TC) : "";
+                            let prefixEmail = emailGoc.split('@')[0];
+                            
+                            if (tId === idHienTai || tId === emailGoc || (prefixEmail && tId === prefixEmail)) {
+                                cuaToi = tNd;
                             } else {
-                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`; 
+                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
                             }
                         }
 
@@ -1724,6 +1697,8 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                             }
                             window.yKienCuaNguoiKhac = cuaNguoiKhac.trim();
                         }
+                        
+                        chuGoc = chuGoc.trim();
                     } else {
                         if (oLanhDao) oLanhDao.value = "";
                         if (vungNguoiKhac) { vungNguoiKhac.style.display = "none"; vungNguoiKhac.innerText = ""; }
@@ -1739,7 +1714,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
                     
-                    let idHienTai = layTenGiamSat(); 
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
                     let chuoiGopLanhDao = window.yKienCuaNguoiKhac || "";
 
                     if (valLanhDao !== "") {
@@ -1748,6 +1723,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     }
 
                     if (chuoiGopLanhDao.trim() !== "") {
+                        // Chỉ bỏ ngoặc trên dưới, nối bằng ký tự tàng hình \u200B
                         return valThamMuu.trim() + "\n\n\u200B" + chuoiGopLanhDao.trim();
                     }
                     return valThamMuu.trim();
