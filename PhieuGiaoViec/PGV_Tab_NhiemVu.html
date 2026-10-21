@@ -1611,20 +1611,27 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
     if (oYkien) {
         window.yKienCuaNguoiKhac = "";
 
-        // Hàm hỗ trợ tự động tìm Họ tên từ Email qua mảng dsGiaoVien đã tải
+        // Hàm hỗ trợ tự động tìm Họ tên đầy đủ tại cột D KHAIBAO (thuộc tính tenn)
         const layTenGiamSat = () => {
-            let emailHienTai = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "";
-            let tenGS = emailHienTai;
-            if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien && dsGiaoVien.length > 0) {
-                let thongTinGS = dsGiaoVien.find(cb => cb.taik === emailHienTai || cb.ttrg === emailHienTai);
-                if (thongTinGS && (thongTinGS.ten || thongTinGS.tenn)) {
-                    tenGS = thongTinGS.ten || thongTinGS.tenn;
+            let emailHienTai = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? window.PGV_ID_TC : "";
+            
+            // Xử lý mảng (dữ liệu dsGiaoVien nằm trong thuộc tính dliu)
+            let mangGV = [];
+            if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien) {
+                mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien.dliu || []);
+            }
+            
+            if (mangGV.length > 0) {
+                let thongTinGS = mangGV.find(cb => cb.taik === emailHienTai || cb.ttrg === emailHienTai);
+                if (thongTinGS && (thongTinGS.tenn || thongTinGS.ten)) {
+                    return thongTinGS.tenn || thongTinGS.ten; // tenn chính là Cột D KHAIBAO
                 }
             }
-            if (!tenGS || tenGS === emailHienTai) {
-                tenGS = (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) ? window.PGV_TEN_TC : (emailHienTai ? emailHienTai.split('@')[0] : "Giám sát");
-            }
-            return tenGS;
+            
+            // Dự phòng nếu không tìm thấy
+            return (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) 
+                   ? window.PGV_TEN_TC 
+                   : (emailHienTai ? emailHienTai.split('@')[0] : "Giám sát");
         };
 
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -1638,26 +1645,31 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
                     
-                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên đầy đủ
 
                     let regex = /\{([\s\S]+?)\}$/; 
                     let match = chuGoc.match(regex);
                     
                     if (match) {
                         let noiDungTrongNgoac = match[1];
-                        let regexTag = /\[(.*?)\*?\]:\s*([\s\S]*?)(?=\n\[|$)/g; 
+                        // Fix Regex: Thêm dấu ? sau : để đọc được cả những dòng cũ bị thiếu dấu hai chấm
+                        let regexTag = /\[(.*?)\*?\]:?\s*([\s\S]*?)(?=\n\[|$)/g; 
                         let mTag;
                         let cuaToi = "";
                         let cuaNguoiKhac = "";
                         let coTagNaoKhong = false;
+
+                        // Lấy tiền tố email để nhận diện và mở khóa dữ liệu cũ
+                        let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' ? String(window.PGV_ID_TC) : "");
+                        let prefixEmail = emailGoc.split('@')[0];
 
                         while ((mTag = regexTag.exec(noiDungTrongNgoac)) !== null) {
                             coTagNaoKhong = true;
                             let tId = mTag[1].trim();
                             let tNd = mTag[2].trim();
                             
-                            // Nếu Tag trùng với Họ tên hoặc trùng với Email gốc thì nhận diện là của mình
-                            if (tId === idHienTai || tId === window.PGV_ID_TC) {
+                            // Mở khóa: Trùng Họ tên mới, HOẶC trùng Email, HOẶC trùng tiền tố email cũ thì đều là của mình
+                            if (tId === idHienTai || tId === emailGoc || (prefixEmail && tId === prefixEmail)) {
                                 cuaToi = tNd;
                             } else {
                                 cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
@@ -1696,7 +1708,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
                     
-                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
+                    let idHienTai = layTenGiamSat(); // Lưu nhãn mới bằng Họ tên đầy đủ
                     let chuoiGopLanhDao = window.yKienCuaNguoiKhac || "";
 
                     if (valLanhDao !== "") {
