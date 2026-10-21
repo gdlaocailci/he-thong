@@ -1611,40 +1611,20 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
     if (oYkien) {
         window.yKienCuaNguoiKhac = "";
 
-        // Hàm hỗ trợ tự động tìm Họ tên thực từ danh sách cán bộ đã tải
+        // Hàm hỗ trợ tự động tìm Họ tên từ Email qua mảng dsGiaoVien đã tải
         const layTenGiamSat = () => {
-            let idHienTai = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? window.PGV_ID_TC : "GS";
-            
-            let mangGV = [];
-            if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien) {
-                mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien.dliu || []);
-            }
-            
-            if (mangGV.length > 0) {
-                let thongTinGS = mangGV.find(cb => 
-                    (cb.taik && cb.taik.toLowerCase() === idHienTai.toLowerCase()) || 
-                    (cb.ttrg && cb.ttrg === idHienTai)
-                );
-                if (thongTinGS && (thongTinGS.tenn || thongTinGS.ten)) {
-                    return thongTinGS.tenn || thongTinGS.ten; 
+            let emailHienTai = (typeof window.PGV_ID_TC !== 'undefined') ? window.PGV_ID_TC : "";
+            let tenGS = emailHienTai;
+            if (typeof dsGiaoVien !== 'undefined' && dsGiaoVien && dsGiaoVien.length > 0) {
+                let thongTinGS = dsGiaoVien.find(cb => cb.taik === emailHienTai || cb.ttrg === emailHienTai);
+                if (thongTinGS && (thongTinGS.ten || thongTinGS.tenn)) {
+                    tenGS = thongTinGS.ten || thongTinGS.tenn;
                 }
             }
-            
-            let tenTuGiaoDien = "";
-            $("div:contains('Họ tên:')").each(function() {
-                let text = $(this).text();
-                if (text.includes("Họ tên:") && text.includes("Vị trí:")) {
-                     let match = text.match(/Họ tên:\s*([^\n]+)/);
-                     if (match && match[1]) tenTuGiaoDien = match[1].trim();
-                }
-            });
-            if (tenTuGiaoDien !== "") return tenTuGiaoDien;
-            
-            if (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) {
-                return window.PGV_TEN_TC;
+            if (!tenGS || tenGS === emailHienTai) {
+                tenGS = (typeof window.PGV_TEN_TC !== 'undefined' && window.PGV_TEN_TC) ? window.PGV_TEN_TC : (emailHienTai ? emailHienTai.split('@')[0] : "Giám sát");
             }
-            
-            return idHienTai; 
+            return tenGS;
         };
 
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -1658,11 +1638,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
                     
-                    let idHienTai = layTenGiamSat(); 
-                    
-                    // Lấy email gốc và tiền tố để đối chiếu dữ liệu cũ
-                    let emailGoc = (typeof window.PGV_ID_TC !== 'undefined' && window.PGV_ID_TC) ? String(window.PGV_ID_TC).toLowerCase().trim() : "";
-                    let prefixEmail = emailGoc.split('@')[0];
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
 
                     let regex = /\{([\s\S]+?)\}$/; 
                     let match = chuGoc.match(regex);
@@ -1679,20 +1655,12 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                             coTagNaoKhong = true;
                             let tId = mTag[1].trim();
                             let tNd = mTag[2].trim();
-                            let tIdLower = tId.toLowerCase();
                             
-                            // Thuật toán đối chiếu thông minh: Tên OR Email OR Tiền tố Email
-                            let laCuaToi = false;
-                            if (tIdLower === idHienTai.toLowerCase() || 
-                                tIdLower === emailGoc || 
-                                (prefixEmail !== "" && tIdLower === prefixEmail)) {
-                                laCuaToi = true;
-                            }
-
-                            if (laCuaToi) {
-                                cuaToi = tNd; // Tách ra để sửa
+                            // Nếu Tag trùng với Họ tên hoặc trùng với Email gốc thì nhận diện là của mình
+                            if (tId === idHienTai || tId === window.PGV_ID_TC) {
+                                cuaToi = tNd;
                             } else {
-                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`; // Của người khác thì giữ nguyên cấu trúc
+                                cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
                             }
                         }
 
@@ -1728,7 +1696,7 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let valLanhDao = oLanhDao ? oLanhDao.value.trim() : "";
                     
-                    let idHienTai = layTenGiamSat(); 
+                    let idHienTai = layTenGiamSat(); // Lấy trực tiếp Họ tên
                     let chuoiGopLanhDao = window.yKienCuaNguoiKhac || "";
 
                     if (valLanhDao !== "") {
