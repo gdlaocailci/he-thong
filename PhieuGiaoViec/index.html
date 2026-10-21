@@ -11,14 +11,17 @@
   
   <script>
     window.khachApi = {
-        yeucauApi: function(hdong, tdtai, khiTcong, khiLoi) {
+       yeucauApi: function(hdong, tdtai, khiTcong, khiLoi) {
             if (typeof ddungApi === 'undefined' || !ddungApi) {
                 if (khiLoi) khiLoi(new Error("Liên kết API hệ thống chưa sẵn sàng. Vui lòng tải lại trang."));
                 return;
             }
             var dlieu = { hdong: hdong, token: window.PGV_TOKEN || "", ...tdtai };
             
-            fetch(ddungApi, {
+            // NÂNG CẤP: Đính kèm hdong vào URL để chống lỗi mất payload khi GAS redirect 302 sang GET
+            var urlFetch = ddungApi + (ddungApi.includes('?') ? '&' : '?') + 'hdong=' + encodeURIComponent(hdong);
+            
+            fetch(urlFetch, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
                 body: JSON.stringify(dlieu),
@@ -120,7 +123,7 @@
         document.head.appendChild(metaDesc);
     }
 
-  function kiemTraPhienLamViec() {
+function kiemTraPhienLamViec() {
         const tkluuhd = sessionStorage.getItem("MA_PBAN_HT");
         const tokenluu = sessionStorage.getItem("PGV_TOKEN"); 
         const daGhiLs = sessionStorage.getItem("DA_GHI_LS"); 
@@ -151,11 +154,17 @@
                 hienThongbLoi("Cảnh báo: Tệp ketnoi.js chưa được khai báo Client ID Google.");
                 return;
             }
+            
+           // [NÂNG CẤP] Bổ sung use_fedcm_for_prompt: true để chuyển đổi sang giao thức FedCM.
+           // Việc này giúp bỏ qua cơ chế Cookie chéo (Third-party Cookies), khắc phục triệt để 
+           // tình trạng chặn đăng nhập trên các trình duyệt hiện đại (Chrome, Safari, Edge).
            google.accounts.id.initialize({
                 client_id: PGV_GOOGLE_CLIENT_ID,
                 callback: xulyPhienDn,
-                auto_prompt: false
+                auto_prompt: false,
+                use_fedcm_for_prompt: true 
             });
+            
             google.accounts.id.renderButton(
                 document.getElementById("khu_vuc_nut_dang_nhap"),
                 { theme: "outline", size: "large", type: "standard", text: "continue_with", shape: "rectangular", logo_alignment: "left" }
@@ -243,6 +252,55 @@ function xulyPhienDn(phanho) {
     .nut-huong-dan .kytu-hoi { font-size: 32px; font-weight: 900; font-family: 'Arial Black', Arial, sans-serif; line-height: 1; padding-top: 2px; }
     .nut-huong-dan span { position: absolute; top: 52px; font-size: 11px; font-weight: bold; color: #198754; white-space: nowrap; background: rgba(255,255,255,0.95); padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); pointer-events: none; }
     .nut-huong-dan:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.25); color: white; }
+
+    /* ========================================================== */
+    /* NÂNG CẤP: THUẬT TOÁN RESPONSIVE MENU OFF-CANVAS CHO MOBILE */
+    /* ========================================================== */
+    .btn-toggle-menu {
+        display: none; 
+        background: #0d6efd;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        align-self: flex-start;
+    }
+    
+    #overlay-menu-mobile {
+        display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.5); 
+        z-index: 10000; /* Đã nâng lên mức rất cao */
+        backdrop-filter: blur(2px);
+    }
+
+    /* Kích hoạt khi xem trên điện thoại hoặc máy tính bảng nhỏ */
+    @media screen and (max-width: 768px) {
+        .btn-toggle-menu { display: inline-flex; align-items: center; gap: 5px; }
+        
+        #bo-cuc-he-thong { position: relative; display: block; }
+        
+        #khuVucMenu {
+            position: fixed; top: 0; left: -320px;
+            width: 280px; height: 100vh; 
+            z-index: 10001; /* Đã nâng lên mức cao nhất, đè lên mọi giao diện */
+            background: white; 
+            transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+        
+        #khuVucMenu.mo-menu { left: 0; }
+        
+        .k-ngoai { width: 100%; padding: 10px; } 
+        
+        /* Tối ưu hiển thị bảng trên điện thoại */
+        .table-responsive { max-height: calc(100vh - 180px) !important; }
+    }
   </style>
 </head>
 
@@ -290,12 +348,18 @@ function xulyPhienDn(phanho) {
   <div id="bo-cuc-he-thong" class="bo-cuc-tong" style="display:none;">
     <div id="khuVucMenu"></div> 
     <div class="k-ngoai" id="ungDungChinh">
+      <button id="btnToggleMobile" class="btn-toggle-menu" onclick="dongMoMenuMobile()">
+            <i class="bi bi-list"></i> MENU TÍNH NĂNG
+        </button>
+        <div id="overlay-menu-mobile" onclick="dongMoMenuMobile()"></div>
+      
         <div class="tab-content border-0">
           <div class="tab-pane fade show active p-3" id="khuNhiemVu"></div>
           <div class="tab-pane fade p-3" id="khuGiaoViecChinh"></div>
           <div class="tab-pane fade px-4 py-3" id="khuTongHop"></div>
           <div class="tab-pane fade px-4 py-3" id="khuNghi"></div>
           <div class="tab-pane fade px-4 py-3" id="khuYkien"></div>
+          <div class="tab-pane fade px-4 py-3" id="khuYkienGiamSat"></div>
           <div class="tab-pane fade px-4 py-3" id="khuBaoCao"></div>
           <div class="tab-pane fade px-4 py-3" id="khuCapQuyen"></div>
           <div class="tab-pane fade px-4 py-3" id="khuTieuChi"></div>
@@ -379,7 +443,6 @@ function xulyPhienDn(phanho) {
         datTaiDl(true, "✨ ĐANG ĐỒNG BỘ DỮ LIỆU...");
 
         // TỐI ƯU 1: Chạy song song (Parallel Execution)
-        // Vừa tải giao diện HTML, vừa phát lệnh gọi API dữ liệu cùng một lúc
         const pGiaoDien = taiGiaoDienUuTien();
         const pDuLieu = new Promise((resolve, reject) => {
             window.khachApi.layDlCanb(null, window.PGV_ID_TC, resolve, reject);
@@ -399,7 +462,6 @@ function xulyPhienDn(phanho) {
 
     function taiDlBdau() { 
         // Luồng tải đã được tích hợp vào Promise.all bên trên
-        // Giữ lại tên hàm rỗng để không gây lỗi logic ở các module khác nếu có gọi nhầm
     }
 
     async function taiGiaoDienUuTien() {
@@ -484,11 +546,27 @@ function xulyPhienDn(phanho) {
         $(document).on('change', '#locNamBcao', () => { if(typeof veBangBcao === 'function') veBangBcao(); });
     }
 
-    function thuchScript(ptu) { const cack = ptu.querySelectorAll('script'); cack.forEach(kc => { const km = document.createElement('script'); Array.from(kc.attributes).forEach(tt => km.setAttribute(tt.name, tt.value)); km.appendChild(document.createTextNode(kc.innerHTML)); kc.parentNode.replaceChild(km, kc); }); }
+    function thuchScript(ptu) { 
+    const cack = ptu.querySelectorAll('script'); 
+    cack.forEach(kc => { 
+        const km = document.createElement('script'); 
+        Array.from(kc.attributes).forEach(tt => {
+            try {
+                // Thử sao chép thuộc tính gốc
+                km.setAttribute(tt.name, tt.value);
+            } catch (err) {
+                // Bỏ qua lỗi nếu tên thuộc tính chứa ký tự đặc biệt do tiện ích của máy khách chèn rác
+                console.warn("Đã bỏ qua thuộc tính rác không hợp lệ: ", tt.name);
+            }
+        }); 
+        km.appendChild(document.createTextNode(kc.innerHTML)); 
+        kc.parentNode.replaceChild(km, kc); 
+    }); 
+}
 
     function taiDlBdau() { window.khachApi.layDlCanb(null, window.PGV_ID_TC, khiTaiDlXong, khiLoiMayChu); }
 
-    function khiTaiDlXong(kq) {
+   function khiTaiDlXong(kq) {
       // 3. Tắt chặn màn hình ngay khi lấy được thông tin cơ bản
       datTaiDl(false); 
       $('#manhChao').hide(); 
@@ -550,7 +628,7 @@ function xulyPhienDn(phanho) {
       var canAddRow = true;
       
       var giaoViecReadonly = (quyen !== 'xxx');
-      var showChuyenThang = (quyen === 'xx' || quyen === 'xxx');
+      var showChuyenThang = (quyen === 'xxx');
       var showBatchUpdate = (quyen === 'xxx');
       var yearMonthReadonly = (quyen === 'x');
       
@@ -582,11 +660,11 @@ function xulyPhienDn(phanho) {
 
         let chucVuHienThi = "Chưa xác định";
         if (maChucVu === "gv") {
-            chucVuHienThi = "Giáo viên";
+            chucVuHienThi = "GIÁO VIÊN";
         } else if (maChucVu === "nv") {
             chucVuHienThi = "Nhân viên";
         } else if (maChucVu === "ql") {
-            chucVuHienThi = "Quản lý";
+            chucVuHienThi = "QUẢN LÝ";
         }
         
         $('#chuChucVu').text(chucVuHienThi);
@@ -678,71 +756,61 @@ function xulyPhienDn(phanho) {
     }
 
 function taiDsTrang() { 
-        window.khachApi.layDsTrang(function(dlt) { 
-            const hs = $('#hopChonGv'); hs.empty(); 
-            if (!dlt || dlt.length === 0) { hs.append('<option value="">Không có dữ liệu</option>'); return; } 
-            hs.append('<option value="">-- Lựa chọn Giáo viên --</option>'); 
-            
-            // Tạo mảng hứng ID để phục vụ tải ngầm
-            let dsIdTainNgam = [];
+    // Dùng API gvLaydsCanb để lấy danh sách FULL toàn trường
+    window.khachApi.gvLaydsCanb(function(dlt) { 
+        const hs = $('#hopChonGv'); hs.empty(); 
+        let danhSachBo = Array.isArray(dlt) ? dlt : (dlt && dlt.dliu ? dlt.dliu : []);
+        if (danhSachBo.length === 0) { hs.append('<option value="">Không có dữ liệu</option>'); return; } 
+        hs.append('<option value="">-- Lựa chọn Giáo viên --</option>'); 
+        
+        let dsIdTainNgam = [];
+        window.PGV_MAP_TEN_ID = {}; // TẠO BỘ TỪ ĐIỂN ID TOÀN CỤC TRÊN RAM
 
-            dlt.forEach(pt => {
-                hs.append(`<option value="${pt.gtri}">${pt.tenn}</option>`);
-                dsIdTainNgam.push(pt.gtri); // Gom ID giáo viên
-            }); 
-            
-            hs.off('change').on('change', function() { 
-                const tcd = $(this).val(); 
-                if (tcd) { 
-                    if (cacheCanb[tcd]) {
-                        // [SIÊU TỐC] Dữ liệu đã có trong RAM, bật ra ngay lập tức
-                        khiTaiDlXong(cacheCanb[tcd]);
-                        
-                        // Lặng lẽ gọi ngầm API để kiểm tra xem có ai vừa sửa dữ liệu mới không
-                        window.khachApi.layDlCanb(tcd, window.PGV_ID_TC, function(kq) {
-                            if (!kq.koxd) cacheCanb[tcd] = kq;
-                        }, function(){});
-                    } else {
-                        // Trường hợp mạng chậm, Robot chưa tải ngầm tới người này thì hiện Loading bình thường
-                        datTaiDl(true, "Đang truy xuất hồ sơ..."); 
-                        window.khachApi.layDlCanb(tcd, window.PGV_ID_TC, function(kq) {
-                            if (!kq.koxd) cacheCanb[tcd] = kq; // Nhớ lưu vào RAM
-                            khiTaiDlXong(kq);
-                        }, khiLoiMayChu); 
-                    }
-                } 
-            }); 
-
-            // =========================================================================
-            // [CẢI TIẾN 2]: TIẾN TRÌNH TẢI TRƯỚC NGẦM (BACKGROUND PREFETCHING)
-            // =========================================================================
-            let indexTai = 0;
-            function taiNgamTiepTheo() {
-                if (indexTai >= dsIdTainNgam.length) return; // Đã tải xong toàn trường
-                let idNgam = dsIdTainNgam[indexTai];
-                
-                // Nếu hồ sơ chưa có trong RAM thì gọi Server tải ngầm
-                if (!cacheCanb[idNgam]) {
-                    window.khachApi.layDlCanb(idNgam, window.PGV_ID_TC, function(kq) {
-                        if (!kq.koxd) cacheCanb[idNgam] = kq; // Nạp vào RAM
-                        indexTai++;
-                        // Dãn cách 1.5 giây tải 1 người để không bị Google báo lỗi quá tải (Too many invocations)
-                        setTimeout(taiNgamTiepTheo, 1500); 
-                    }, function() { 
-                        // Nếu lỗi ngầm (do mạng giật), bỏ qua và thử tải người tiếp theo
-                        indexTai++; setTimeout(taiNgamTiepTheo, 1500); 
-                    });
-                } else {
-                    indexTai++;
-                    taiNgamTiepTheo();
-                }
+        danhSachBo.forEach(pt => {
+            if (pt.tenn) { window.PGV_MAP_TEN_ID[pt.tenn.trim().toLowerCase()] = pt.ttrg; }
+            let qy = String(pt.quyen || "").trim().toLowerCase();
+            if (qy === "" || qy === "x" || qy === "xx") {
+                hs.append(`<option value="${pt.ttrg}">${pt.tenn}</option>`);
             }
-            
-            // Kích hoạt Robot tải ngầm sau 3 giây (khi người dùng đã yên vị trên giao diện)
-            setTimeout(taiNgamTiepTheo, 3000);
+            dsIdTainNgam.push(pt.ttrg); 
+        }); 
+        
+        // Ép bảng vẽ lại ngay khi có ID
+        if (typeof veBangThop === 'function') veBangThop();
+        if (typeof veBangNghi === 'function') veBangNghi();
+        if (typeof veBangYkien === 'function') veBangYkien();
+        if (typeof veBangBcao === 'function') veBangBcao();
 
-        }, khiLoiMayChu); 
-    }
+        hs.off('change').on('change', function() { 
+            const tcd = $(this).val(); 
+            if (tcd) { 
+                if (cacheCanb[tcd]) {
+                    khiTaiDlXong(cacheCanb[tcd]);
+                    window.khachApi.layDlCanb(tcd, window.PGV_ID_TC, function(kq) { if (!kq.koxd) cacheCanb[tcd] = kq; }, function(){});
+                } else {
+                    datTaiDl(true, "Đang truy xuất hồ sơ..."); 
+                    window.khachApi.layDlCanb(tcd, window.PGV_ID_TC, function(kq) {
+                        if (!kq.koxd) cacheCanb[tcd] = kq; 
+                        khiTaiDlXong(kq);
+                    }, khiLoiMayChu); 
+                }
+            } 
+        }); 
+
+        let indexTai = 0;
+        function taiNgamTiepTheo() {
+            if (indexTai >= dsIdTainNgam.length) return; 
+            let idNgam = dsIdTainNgam[indexTai];
+            if (!cacheCanb[idNgam]) {
+                window.khachApi.layDlCanb(idNgam, window.PGV_ID_TC, function(kq) {
+                    if (!kq.koxd) cacheCanb[idNgam] = kq; 
+                    indexTai++; setTimeout(taiNgamTiepTheo, 1500); 
+                }, function() { indexTai++; setTimeout(taiNgamTiepTheo, 1500); });
+            } else { indexTai++; taiNgamTiepTheo(); }
+        }
+        setTimeout(taiNgamTiepTheo, 3000);
+    }, khiLoiMayChu); 
+}
     
     function taiDlThop(amtham = false) { 
         if (!amtham && dataiThop) return; 
@@ -802,17 +870,6 @@ function taiDsTrang() {
             tb.append('<tr><td colspan="15" class="text-center text-muted py-4">Vui lòng chọn Năm học.</td></tr>'); 
             return; 
         } 
-        
-        // Tạo bộ từ điển ánh xạ Tên sang ID
-        let mapIdTheoTen = {};
-        const hopChon = document.getElementById('hopChonGv');
-        if (hopChon) {
-            Array.from(hopChon.options).forEach(opt => {
-                if (opt.value && opt.value !== "") {
-                    mapIdTheoTen[opt.text.trim()] = opt.value.trim();
-                }
-            });
-        }
 
         let bc = {}; 
         dlThopGoc.forEach(r => { 
@@ -821,18 +878,22 @@ function taiDsTrang() {
             let mt = parseInt(String(r[3]).match(/(\d{1,2})/)?.[0]); 
             if (mt) bc[r[0]].thangs[mt] = r[4]; 
         }); 
+        
         let stth = 1; 
         const tho = [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6]; 
         let chuoi_html = "";
+        
         for (const k in bc) { 
             const gr = bc[k]; 
-            let maId = mapIdTheoTen[gr.tenn.trim()] || "Chưa xác định";
             
-            // Tách hiển thị 2 dòng: Tên ở trên, ID ở dưới
+            // [Nâng cấp] Lấy ID từ bộ từ điển toàn cục (khắc phục độ trễ thẻ select)
+            let keyTimKiem = gr.tenn.trim().toLowerCase();
+            let maId = (window.PGV_MAP_TEN_ID && window.PGV_MAP_TEN_ID[keyTimKiem]) ? window.PGV_MAP_TEN_ID[keyTimKiem] : "Chưa xác định";
+            
             let dr = `<tr>
                 <td class="text-center align-middle">${stth++}</td>
                 <td class="ps-3 align-middle">
-                    <div class="fw-bold text-primary" style="font-size: 13px;">${gr.tenn}</div>
+                    <div class="fw-bold text-primary text-uppercase" style="font-size: 13px;">${gr.tenn}</div>
                     <div class="text-secondary mt-1" style="font-size: 11px; font-style: italic; font-weight: normal;">
                         <i class="bi bi-person-vcard me-1"></i>ID: ${maId}
                     </div>
@@ -848,17 +909,6 @@ function taiDsTrang() {
         if (!Array.isArray(dlYkienGoc)) dlYkienGoc = [];
         const nchon = $('#locNamYkien').val(), tb = $('#bangYkien tbody').empty(); 
         if (!nchon) return; 
-        
-        // Tạo bộ từ điển ánh xạ Tên sang ID
-        let mapIdTheoTen = {};
-        const hopChon = document.getElementById('hopChonGv');
-        if (hopChon) {
-            Array.from(hopChon.options).forEach(opt => {
-                if (opt.value && opt.value !== "") {
-                    mapIdTheoTen[opt.text.trim()] = opt.value.trim();
-                }
-            });
-        }
 
         let bc = {}; 
         dlYkienGoc.forEach(r => { 
@@ -871,13 +921,15 @@ function taiDsTrang() {
         const tho = [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6]; 
         for (const k in bc) { 
             const gr = bc[k]; 
-            let maId = mapIdTheoTen[gr.tenn.trim()] || "Chưa xác định";
             
-            // Tách hiển thị 2 dòng: Tên ở trên, ID ở dưới
+            // [Nâng cấp] Lấy ID từ bộ từ điển toàn cục (khắc phục độ trễ thẻ select)
+            let keyTimKiem = gr.tenn.trim().toLowerCase();
+            let maId = (window.PGV_MAP_TEN_ID && window.PGV_MAP_TEN_ID[keyTimKiem]) ? window.PGV_MAP_TEN_ID[keyTimKiem] : "Chưa xác định";
+            
             let dr = `<tr>
                 <td class="text-center align-middle">${stth++}</td>
                 <td class="ps-3 align-middle">
-                    <div class="fw-bold" style="font-size: 13px;">${gr.tenn}</div>
+                    <div class="fw-bold text-primary text-uppercase" style="font-size: 13px;">${gr.tenn}</div>
                     <div class="text-secondary mt-1" style="font-size: 11px; font-style: italic;">
                         <i class="bi bi-person-vcard me-1"></i>ID: ${maId}
                     </div>
@@ -890,6 +942,7 @@ function taiDsTrang() {
             tb.append(dr + '</tr>'); 
         } 
     }
+
     function veBangNghi() { 
         if (!Array.isArray(dlNghiGoc)) dlNghiGoc = [];
         const nchon = $('#locNamNghi').val(), tb = $('#bangNghi tbody').empty(); 
@@ -897,17 +950,6 @@ function taiDsTrang() {
             tb.append('<tr><td colspan="14" class="text-center text-muted py-4">Vui lòng chọn Năm học.</td></tr>'); 
             return; 
         } 
-        
-        // Tạo bộ từ điển ánh xạ Tên sang ID
-        let mapIdTheoTen = {};
-        const hopChon = document.getElementById('hopChonGv');
-        if (hopChon) {
-            Array.from(hopChon.options).forEach(opt => {
-                if (opt.value && opt.value !== "") {
-                    mapIdTheoTen[opt.text.trim()] = opt.value.trim();
-                }
-            });
-        }
 
         let bc = {}; 
         dlNghiGoc.forEach(r => { 
@@ -921,13 +963,15 @@ function taiDsTrang() {
         const tho = [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6]; 
         for (const k in bc) { 
             const gr = bc[k]; 
-            let maId = mapIdTheoTen[gr.tenn.trim()] || "Chưa xác định";
+            
+            // [Nâng cấp] Lấy ID từ bộ từ điển toàn cục (khắc phục độ trễ thẻ select)
+            let keyTimKiem = gr.tenn.trim().toLowerCase();
+            let maId = (window.PGV_MAP_TEN_ID && window.PGV_MAP_TEN_ID[keyTimKiem]) ? window.PGV_MAP_TEN_ID[keyTimKiem] : "Chưa xác định";
 
-            // Tách hiển thị 2 dòng: Tên ở trên, ID ở dưới
             let dr = `<tr>
                 <td class="text-center align-middle">${stth++}</td>
                 <td class="ps-3 align-middle">
-                    <div class="fw-bold" style="font-size: 13px;">${gr.tenn}</div>
+                    <div class="fw-bold text-primary text-uppercase" style="font-size: 13px;">${gr.tenn}</div>
                     <div class="text-secondary mt-1" style="font-size: 11px; font-style: italic; font-weight: normal;">
                         <i class="bi bi-person-vcard me-1"></i>ID: ${maId}
                     </div>
@@ -945,8 +989,38 @@ function taiDsTrang() {
         } 
     }
     
-    function htNgayth(nt) { if (!nt) return ""; let dt = new Date(nt); return isNaN(dt) ? nt : dt.toLocaleDateString('vi-VN'); }
-    function khoiTaoBoDemDiem(kqc, dth) { if (!kqc || !/\d+/.test(kqc)) { dlgoc.mauc = ""; return; } let dg = parseInt(kqc.match(/-?\d+/)[0]), bt = parseInt(dth) || 0; dlgoc.diemg = dg - bt; dlgoc.mauc = kqc.replace(String(dg), "{0}"); }
+    function htNgayth(nt) { 
+      if (!nt) return ""; let dt = new Date(nt); return isNaN(dt) ? nt : dt.toLocaleDateString('vi-VN'); 
+    }
+
+    function khoiTaoBoDemDiem(kqc, dth) { 
+    if (!kqc || !/\d+/.test(kqc)) { dlgoc.mauc = ""; return; } 
+    
+    // [NÂNG CẤP]: Cải thiện Regex để quét chính xác số nguyên và số thập phân đến hàng phần trăm
+    let match = kqc.match(/-?\d+(?:[\.,]\d+)?/);
+    if (!match) { dlgoc.mauc = ""; return; }
+    
+    let chuoiSo = match[0]; // VD: "73,85"
+    
+    // Chuyển đổi dấu phẩy sang chấm để JavaScript hiểu được số thực (float)
+    let dg = parseFloat(chuoiSo.replace(',', '.')); 
+    let bt = parseFloat(String(dth).replace(',', '.')) || 0; 
+    
+    // [NÂNG CẤP]: Khắc phục sai số thực của JavaScript, giữ độ chính xác đến hàng phần trăm
+    dlgoc.diemg = Math.round((dg - bt) * 100) / 100; 
+    
+    // Xây dựng khuôn mẫu và "bọc" đối tượng String để trả lại dấu phẩy chuẩn VN 
+    let maucGoc = kqc.replace(chuoiSo, "{0}");
+    dlgoc.mauc = new String(maucGoc);
+    dlgoc.mauc.replace = function(chuoiTim, chuoiThay) {
+        if (chuoiTim === "{0}" && !isNaN(chuoiThay)) {
+            // [NÂNG CẤP]: Làm tròn số thực trước khi hiển thị để tránh lỗi chuỗi dài, chuyển chấm thành phẩy
+            let gtriThapPhan = Math.round(parseFloat(chuoiThay) * 100) / 100;
+            chuoiThay = String(gtriThapPhan).replace('.', ',');
+        }
+        return String.prototype.replace.call(this, chuoiTim, chuoiThay);
+    };
+}
 
   /* ========================================================================== */
 /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (DỰ ÁN GIAO VIỆC)                   */
@@ -1023,10 +1097,40 @@ function taiTepDangXem() {
     function chuyenHuongHeThong() {
         var urlDich = (typeof PGV_LINK_TRANG_CHU !== 'undefined' && PGV_LINK_TRANG_CHU.trim() !== '') 
                       ? PGV_LINK_TRANG_CHU 
-                      : 'https://gdlaocailci.github.io/he-thong/';
+                      : 'https://gdlaocailci.github.io/taphoi/';
                       
         window.open(urlDich, '_top');
     }
+/* ========================================================== */
+  /* KHỐI XỬ LÝ ĐÓNG/MỞ MENU TRÊN THIẾT BỊ DI ĐỘNG              */
+  /* ========================================================== */
+  function dongMoMenuMobile() {
+      var menu = document.getElementById('khuVucMenu');
+      var lopPhu = document.getElementById('overlay-menu-mobile');
+      
+      if (menu.classList.contains('mo-menu')) {
+          menu.classList.remove('mo-menu');
+          lopPhu.style.display = 'none';
+      } else {
+          menu.classList.add('mo-menu');
+          lopPhu.style.display = 'block';
+      }
+  }
+
+  // Thuật toán: Tự động đóng menu khi Thầy/Cô bấm chọn một Tab bất kỳ trên điện thoại
+  // (Sử dụng Event Delegation vì menu được fetch động từ Menu_Doc.html)
+  document.addEventListener("DOMContentLoaded", function() {
+      var menuContainer = document.getElementById('khuVucMenu');
+      if(menuContainer) {
+          menuContainer.addEventListener('click', function(e) {
+              if(e.target.closest('a') || e.target.closest('button') || e.target.closest('li')) {
+                  if(window.innerWidth <= 768) {
+                      dongMoMenuMobile();
+                  }
+              }
+          });
+      }
+  });
     
     function khoaTruyCapMaNguon() {
         // 1. Khóa menu chuột phải
@@ -1059,6 +1163,120 @@ function taiTepDangXem() {
         });
     }
     khoaTruyCapMaNguon();
+  </script>
+
+<!-- =========================================================================================
+       [CẬP NHẬT] KHỐI LOGIC: Ý KIẾN GIÁM SÁT (Hiển thị Tháng D6 và Điểm C2)
+       ========================================================================================= -->
+  <script>
+  function veKhungBangYkienGiamSat() {
+      let pane = document.getElementById("khuYkienGiamSat");
+      if (pane && pane.innerHTML.trim() === "") {
+          pane.innerHTML = `
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h4 class="text-danger fw-bold text-uppercase m-0">Tổng hợp ý kiến của Lãnh đạo và ban giám sát</h4>
+                  <button class="btn btn-primary btn-sm fw-bold btn-reactbits-shiny shadow-sm" onclick="taiDlYkienGiamSat()">
+                      <i class="bi bi-arrow-repeat me-1"></i> Làm mới dữ liệu
+                  </button>
+              </div>
+              <div class="table-responsive bg-white rounded shadow-sm border p-2" style="max-height: calc(100vh - 120px); overflow-y: auto;">
+                  <table class="table table-hover table-bordered mb-0" id="bangYkienGiamSat">
+                      <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                          <tr>
+                              <th class="text-center align-middle" style="width: 5%; background-color: #0d6efd; color: white; border: none;">STT</th>
+                              <th class="text-center align-middle" style="width: 20%; background-color: #0d6efd; color: white; border: none;">Họ và tên</th>
+                              <th class="text-center align-middle" style="width: 15%; background-color: #0d6efd; color: white; border: none;">Kết quả tự đánh giá</th>
+                              <th class="text-center align-middle" style="width: 60%; background-color: #0d6efd; color: white; border: none;">Nội dung ý kiến đánh giá</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr><td colspan="4" class="text-center text-muted py-4 fst-italic">Vui lòng đợi, đang tải dữ liệu...</td></tr>
+                      </tbody>
+                  </table>
+              </div>
+          `;
+      }
+  }
+
+  function taiDlYkienGiamSat() {
+      veKhungBangYkienGiamSat(); 
+      if (typeof datTaiDl === 'function') datTaiDl(true, "Đang tổng hợp ý kiến giám sát...");
+      
+      if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.goiThuCong === 'function') {
+          window.khachApi.goiThuCong({ hdong: "laydlykiengiamsat" }, function(duLieuTrahVe) {
+              if (typeof datTaiDl === 'function') datTaiDl(false);
+              veBangYkienGiamSat(duLieuTrahVe);
+          }, function(loi) {
+              if (typeof datTaiDl === 'function') datTaiDl(false);
+              if (typeof hienThongb === 'function') hienThongb('loi', "Truy xuất thất bại: " + loi.message);
+          });
+      } else {
+          if (typeof datTaiDl === 'function') datTaiDl(false);
+          console.error("API chưa sẵn sàng.");
+      }
+  }
+
+  function veBangYkienGiamSat(duLieu) {
+      let tbody = document.querySelector("#bangYkienGiamSat tbody");
+      if (!tbody) return;
+      
+      tbody.innerHTML = "";
+      
+      if (!duLieu || !Array.isArray(duLieu) || duLieu.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4 fst-italic">Hệ thống ghi nhận không có ý kiến giám sát nào trong chu kỳ này.</td></tr>';
+          return;
+      }
+
+      let html = "";
+      let stt = 1;
+      
+      duLieu.forEach(item => {
+          let rawYkien = String(item.ykien || "").trim();
+          let arrYkien = rawYkien.split(/\r?\n/);
+          
+          let formattedYkien = '<ul style="margin: 0; padding-left: 1.2rem; list-style-type: square; color: #212529; line-height: 1.6;">';
+          
+          arrYkien.forEach(dong => {
+              let strDong = dong.trim();
+              if (strDong !== "") {
+                  strDong = strDong.replace(/^[-*•+]\s*/, '');
+                  formattedYkien += `<li style="margin-bottom: 6px; word-wrap: break-word; white-space: normal;">${strDong}</li>`;
+              }
+          });
+          formattedYkien += '</ul>';
+
+          // NÂNG CẤP: Xử lý hiển thị Tháng và Điểm
+          let thangHienThi = (item.thang && item.thang !== "") ? item.thang : "Chưa rõ tháng";
+          let diemHienThi = (item.diemTuCham && item.diemTuCham !== "") ? item.diemTuCham : "Chưa đánh giá";
+
+          html += `
+              <tr>
+                  <td class="text-center align-middle fw-bold">${stt++}</td>
+                  <td class="ps-3 align-middle">
+                      <div class="fw-bold text-primary text-uppercase" style="font-size: 14px;">${item.tenn}</div>
+                      <div class="text-secondary mt-1" style="font-size: 13.5px; font-style: italic; font-weight: normal;">
+                          <i class="bi bi-person-vcard me-1"></i>ID: ${item.maId}
+                      </div>
+                  </td>
+                  <td class="text-center align-middle">
+                      <div class="fw-bold text-secondary text-uppercase" style="font-size: 13.5px; margin-bottom: 4px;">${thangHienThi}</div>
+                      <div class="fw-bold text-danger" style="font-size: 14.5px;">${diemHienThi}</div>
+                  </td>
+                  <td class="align-middle p-3">
+                      <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 12px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                          ${formattedYkien}
+                      </div>
+                  </td>
+              </tr>
+          `;
+      });
+      
+      tbody.innerHTML = html;
+  }
+
+  $(document).on('click', '#tabYkienGiamSat', () => { 
+      taiDlYkienGiamSat(); 
+  });
   </script>
 </body>
 </html>
