@@ -467,8 +467,8 @@
       try {
           let cacheObj = {
               config: res.config, canInput: res.canInput, canAdmin: res.canAdmin, canView: res.canView,
-              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich : window.SCV_CACHE_LICH,
-              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan : window.SCV_CACHE_CONGVAN
+              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich.slice(-300) : window.SCV_CACHE_LICH.slice(-300),
+              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan.slice(-300) : window.SCV_CACHE_CONGVAN.slice(-300)
           };
           localStorage.setItem('SCV_APP_CACHE_Khách', JSON.stringify(cacheObj));
       } catch(e) { console.warn("Lỗi lưu trữ cục bộ tài khoản Khách:", e); }
@@ -545,12 +545,12 @@
 
   function checkPermissionAndLoad(isBooted = false) {
     google.script.run.withSuccessHandler(async res => {
-      // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ lần khởi động sau
+     // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ lần khởi động sau
       try {
           let cacheObj = {
               config: res.config, canInput: res.canInput, canAdmin: res.canAdmin,
-              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich : window.SCV_CACHE_LICH,
-              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan : window.SCV_CACHE_CONGVAN
+              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich.slice(-300) : window.SCV_CACHE_LICH.slice(-300),
+              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan.slice(-300) : window.SCV_CACHE_CONGVAN.slice(-300)
           };
           localStorage.setItem('SCV_APP_CACHE_' + window.SYS_ACTIVE_ID, JSON.stringify(cacheObj));
       } catch(e) { console.warn("Lỗi lưu trữ cục bộ:", e); }
