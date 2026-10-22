@@ -1168,13 +1168,22 @@ function taiTepDangXem() {
 <!-- =========================================================================================
        [CẬP NHẬT] KHỐI LOGIC: Ý KIẾN GIÁM SÁT (Hiển thị Tháng D6 và Điểm C2)
        ========================================================================================= -->
+<!-- =========================================================================================
+       [CẬP NHẬT] KHỐI LOGIC: Ý KIẾN GIÁM SÁT (Tích hợp bộ lọc Tháng độc lập)
+       ========================================================================================= -->
   <script>
   function veKhungBangYkienGiamSat() {
       let pane = document.getElementById("khuYkienGiamSat");
       if (pane && pane.innerHTML.trim() === "") {
           pane.innerHTML = `
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h4 class="text-danger fw-bold text-uppercase m-0">Tổng hợp ý kiến của Lãnh đạo và ban giám sát</h4>
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+                  <div class="d-flex align-items-center flex-wrap gap-2">
+                      <h4 class="text-danger fw-bold text-uppercase m-0">Tổng hợp ý kiến của Lãnh đạo</h4>
+                      <!-- Bổ sung bộ lọc Tháng -->
+                      <select id="locThangYkienGS" class="form-select border-primary fw-bold text-primary shadow-sm" style="width: auto; min-width: 160px;" onchange="veBangYkienGiamSat()">
+                          <option value="">-- Tất cả các tháng --</option>
+                      </select>
+                  </div>
                   <button class="btn btn-primary btn-sm fw-bold btn-reactbits-shiny shadow-sm" onclick="taiDlYkienGiamSat()">
                       <i class="bi bi-arrow-repeat me-1"></i> Làm mới dữ liệu
                   </button>
@@ -1205,7 +1214,12 @@ function taiTepDangXem() {
       if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.goiThuCong === 'function') {
           window.khachApi.goiThuCong({ hdong: "laydlykiengiamsat" }, function(duLieuTrahVe) {
               if (typeof datTaiDl === 'function') datTaiDl(false);
-              veBangYkienGiamSat(duLieuTrahVe);
+              
+              // Lưu trữ mảng dữ liệu gốc vào biến toàn cục để lọc client-side
+              window.dlYkienGiamSatGoc = duLieuTrahVe; 
+              
+              capNhatDanhSachThangYkienGS(duLieuTrahVe);
+              veBangYkienGiamSat();
           }, function(loi) {
               if (typeof datTaiDl === 'function') datTaiDl(false);
               if (typeof hienThongb === 'function') hienThongb('loi', "Truy xuất thất bại: " + loi.message);
@@ -1216,7 +1230,39 @@ function taiTepDangXem() {
       }
   }
 
-  function veBangYkienGiamSat(duLieu) {
+  function capNhatDanhSachThangYkienGS(duLieu) {
+      let selectThang = document.getElementById('locThangYkienGS');
+      if (!selectThang) return;
+
+      let giaTriCu = selectThang.value;
+      let cacThang = [];
+
+      if (Array.isArray(duLieu)) {
+          cacThang = [...new Set(duLieu.map(item => item.thang).filter(t => t && t.trim() !== ""))];
+      }
+
+      // Sắp xếp tháng theo thứ tự giảm dần (VD: Tháng 10, Tháng 9...)
+      cacThang.sort((a, b) => {
+          let numA = parseInt(a.replace(/\\D/g, '')) || 0;
+          let numB = parseInt(b.replace(/\\D/g, '')) || 0;
+          return numB - numA; 
+      });
+
+      selectThang.innerHTML = '<option value="">-- Tất cả các tháng --</option>';
+      cacThang.forEach(thang => {
+          selectThang.innerHTML += \`<option value="\${thang}">\${thang}</option>\`;
+      });
+
+      // Phục hồi lựa chọn tháng nếu dữ liệu có tháng đó, ngược lại chọn tháng mới nhất (đầu tiên)
+      if (giaTriCu && cacThang.includes(giaTriCu)) {
+          selectThang.value = giaTriCu;
+      } else if (cacThang.length > 0) {
+          selectThang.value = cacThang[0];
+      }
+  }
+
+  function veBangYkienGiamSat() {
+      let duLieu = window.dlYkienGiamSatGoc;
       let tbody = document.querySelector("#bangYkienGiamSat tbody");
       if (!tbody) return;
       
@@ -1227,48 +1273,62 @@ function taiTepDangXem() {
           return;
       }
 
+      // Đọc giá trị tháng đang được chọn
+      let selectThang = document.getElementById('locThangYkienGS');
+      let thangLoc = selectThang ? selectThang.value : "";
+
+      // Lọc dữ liệu theo tháng (nếu có chọn)
+      let duLieuDaLoc = duLieu;
+      if (thangLoc !== "") {
+          duLieuDaLoc = duLieu.filter(item => item.thang === thangLoc);
+      }
+
+      if (duLieuDaLoc.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4 fst-italic">Không có dữ liệu đánh giá cho tháng đã chọn.</td></tr>';
+          return;
+      }
+
       let html = "";
       let stt = 1;
       
-      duLieu.forEach(item => {
+      duLieuDaLoc.forEach(item => {
           let rawYkien = String(item.ykien || "").trim();
-          let arrYkien = rawYkien.split(/\r?\n/);
+          let arrYkien = rawYkien.split(/\\r?\\n/);
           
           let formattedYkien = '<ul style="margin: 0; padding-left: 1.2rem; list-style-type: square; color: #212529; line-height: 1.6;">';
           
           arrYkien.forEach(dong => {
               let strDong = dong.trim();
               if (strDong !== "") {
-                  strDong = strDong.replace(/^[-*•+]\s*/, '');
-                  formattedYkien += `<li style="margin-bottom: 6px; word-wrap: break-word; white-space: normal;">${strDong}</li>`;
+                  strDong = strDong.replace(/^[-*•+]\\s*/, '');
+                  formattedYkien += \`<li style="margin-bottom: 6px; word-wrap: break-word; white-space: normal;">\${strDong}</li>\`;
               }
           });
           formattedYkien += '</ul>';
 
-          // NÂNG CẤP: Xử lý hiển thị Tháng và Điểm
           let thangHienThi = (item.thang && item.thang !== "") ? item.thang : "Chưa rõ tháng";
           let diemHienThi = (item.diemTuCham && item.diemTuCham !== "") ? item.diemTuCham : "Chưa đánh giá";
 
-          html += `
+          html += \`
               <tr>
-                  <td class="text-center align-middle fw-bold">${stt++}</td>
+                  <td class="text-center align-middle fw-bold">\${stt++}</td>
                   <td class="ps-3 align-middle">
-                      <div class="fw-bold text-primary text-uppercase" style="font-size: 14px;">${item.tenn}</div>
+                      <div class="fw-bold text-primary text-uppercase" style="font-size: 14px;">\${item.tenn}</div>
                       <div class="text-secondary mt-1" style="font-size: 13.5px; font-style: italic; font-weight: normal;">
-                          <i class="bi bi-person-vcard me-1"></i>ID: ${item.maId}
+                          <i class="bi bi-person-vcard me-1"></i>ID: \${item.maId}
                       </div>
                   </td>
                   <td class="text-center align-middle">
-                      <div class="fw-bold text-secondary text-uppercase" style="font-size: 13.5px; margin-bottom: 4px;">${thangHienThi}</div>
-                      <div class="fw-bold text-danger" style="font-size: 14.5px;">${diemHienThi}</div>
+                      <div class="fw-bold text-secondary text-uppercase" style="font-size: 13.5px; margin-bottom: 4px;">\${thangHienThi}</div>
+                      <div class="fw-bold text-danger" style="font-size: 14.5px;">\${diemHienThi}</div>
                   </td>
                   <td class="align-middle p-3">
                       <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 12px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                          ${formattedYkien}
+                          \${formattedYkien}
                       </div>
                   </td>
               </tr>
-          `;
+          \`;
       });
       
       tbody.innerHTML = html;
