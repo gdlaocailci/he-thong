@@ -1322,7 +1322,9 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuThu7) danhSachThu.push("Thứ 7");
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
-   let mienNgayHienTai = '';
+  let mienNgayHienTai = '';
+    
+    // 1. Ưu tiên lấy ngày chính xác từ dữ liệu của chính tuần đang chọn (nếu đã lưu)
     if (mapNgayChinhXac['Thứ 2']) {
         let p = mapNgayChinhXac['Thứ 2'].split('/');
         if (p.length === 3) mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; 
@@ -1341,31 +1343,52 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
         }
     }
 
-    // [NÂNG CẤP ĐỘT PHÁ]: Khôi phục hiển thị ngày nếu dữ liệu từ máy chủ trống
-    if (!mienNgayHienTai && inputNgay && inputNgay.value) {
-        let val = inputNgay.value;
-        if (val.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            mienNgayHienTai = val;
-        } else if (val.includes('/')) {
-            let p = val.split('/');
-            if (p.length === 3) mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`;
+    // 2. [TỰ ĐỘNG TÍNH TOÁN NỘI SUY]: Nếu tuần này chưa có ngày, tự động quét tìm ngày của một tuần bất kỳ đã lưu để tịnh tiến
+    if (!mienNgayHienTai) {
+        let dBase = null; 
+        let wBase = 0;
+        
+        // Quét ngược lịch sử (các tuần đã nạp trong RAM) để tìm một ngày hợp lệ làm gốc
+        for (let i = duLieuTKBGopDaMap.length - 1; i >= 0; i--) {
+            let d = duLieuTKBGopDaMap[i];
+            if (d['Ngày'] && d['Ngày'].includes('/')) {
+                let p = d['Ngày'].split('/');
+                if (p.length === 3) {
+                    wBase = parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) || 0;
+                    if (wBase > 0) {
+                        let thuGoc = String(d['Thứ']).trim().toLowerCase();
+                        let mapThuToDay = {"thứ 2": 1, "thứ 3": 2, "thứ 4": 3, "thứ 5": 4, "thứ 6": 5, "thứ 7": 6, "chủ nhật": 0};
+                        let offsetToMonday = (mapThuToDay[thuGoc] !== undefined ? mapThuToDay[thuGoc] : 1) - 1;
+                        
+                        // Khôi phục mốc Thứ 2 của tuần tìm thấy
+                        dBase = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+                        dBase.setDate(dBase.getDate() - offsetToMonday); 
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Tính khoảng cách tuần và nội suy ngày Thứ 2 của tuần hiện tại
+        if (dBase && wBase > 0) {
+            let khoangCachTuan = maxTuanChon - wBase;
+            dBase.setDate(dBase.getDate() + khoangCachTuan * 7);
+            mienNgayHienTai = `${dBase.getFullYear()}-${(dBase.getMonth() + 1).toString().padStart(2, '0')}-${dBase.getDate().toString().padStart(2, '0')}`;
         }
     }
 
+    // 3. Xử lý hiển thị lên ô nhập (Kiểm soát để không giữ lại dữ liệu rác của tuần cũ)
     if (inputNgay) {
         let isTuanBiKhoa = window.kiemTraTuanDaKhoa(tuanChon);
         if (Object.keys(mapNgayChinhXac).length > 0 || isTuanBiKhoa) {
-            // Đã có dữ liệu chuẩn hoặc tuần bị khóa -> Khóa ô chọn
             inputNgay.readOnly = true;
             inputNgay.classList.add('bg-slate-100', 'cursor-not-allowed');
-            if (mienNgayHienTai) inputNgay.value = mienNgayHienTai;
+            inputNgay.value = mienNgayHienTai || ''; // Gán ngày mới hoặc xóa trắng nếu CSDL sạch
         } else {
-            // Chưa có dữ liệu -> Mở khóa ô chọn cho giáo viên nhập
             inputNgay.readOnly = false;
             inputNgay.classList.remove('bg-slate-100', 'cursor-not-allowed');
-            if (mienNgayHienTai) inputNgay.value = mienNgayHienTai;
+            inputNgay.value = mienNgayHienTai || ''; 
             
-            // Lắng nghe sự thay đổi để vẽ lại bảng ngay lập tức
             inputNgay.onchange = function() {
                 coThayDoiChuaLuu_SDB = true;
                 thucThiKetXuatSoDauBaiLenLuoi();
