@@ -1480,35 +1480,44 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let isBGH = quyenQuanTri || (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
     let tenNguoiDung = document.getElementById('theChotQuyenSDB')?.getAttribute('data-tendinhdanh') || maGvDangNhapHeThong;
 
+    // 4. Kết xuất HTML Chân sổ (Dùng Table ẩn viền để MS Word hiểu được 2 cột)
     let htmlChuKy = `
-    <div class="mt-4 text-[15px] text-black w-full flex flex-col gap-6" style="font-family: 'Times New Roman', Times, serif;">
-        <div class="flex justify-between items-start w-full">
-            <div class="w-1/2 pr-4">
-                <div class="font-bold text-[16px] mb-2">Ý kiến nhận xét của giáo viên chủ nhiệm lớp:</div>
-                <textarea id="txtNxGVCN" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isGVCN ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''}>${tongHopData.nxGVCN}</textarea>
-                <div class="flex items-center gap-1">
-                    <span class="font-bold text-[16px] whitespace-nowrap">Người ký:</span>
-                    <input type="text" id="txtKyGVCN" class="font-bold text-[16px] bg-transparent outline-none w-full ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="" value="${tongHopData.kyGVCN}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''}>
-                </div>
-                ${!soBiKhoa && isGVCN ? `<button onclick="kichHoatGhiNhanXet('GVCN', '${tenNguoiDung}')" class="mt-1 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer" title="Ký và nhận xét tự động"><img src="https://www.svgrepo.com/show/44053/edit.svg" class="w-5 h-5 opacity-80" alt="Ký tên"></button>` : ''}
-            </div>
+    <div id="khuVucChuKySDB" class="mt-6 text-[12pt] text-black w-full" style="font-family: 'Times New Roman', Times, serif; page-break-inside: avoid;">
+        
+        <!-- BẢNG CHỮ KÝ 2 CỘT -->
+        <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; border: none; padding-right: 20px; text-align: left;">
+                    <div style="font-weight: bold; margin-bottom: 4px; font-size: 14pt;">Ý kiến nhận xét của giáo viên chủ nhiệm lớp:</div>
+                    <div class="relative group">
+                        <textarea id="txtNxGVCN" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isGVCN ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''} style="font-size: 14pt;">${tongHopData.nxGVCN}</textarea>
+                        ${!soBiKhoa && isGVCN ? `<button onclick="kichHoatGhiNhanXet('GVCN', '${tenNguoiDung}')" class="absolute top-0 right-0 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer hide-on-print hidden group-hover:block" title="Ký tự động"><svg class="w-5 h-5 opacity-60 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>` : ''}
+                    </div>
+                    <div style="font-weight: bold; margin-top: 4px; font-size: 14pt; display: flex; align-items: center; gap: 4px;">
+                        <span>Người ký:</span> 
+                        <input type="text" id="txtKyGVCN" class="bg-transparent outline-none w-full ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" value="${tongHopData.kyGVCN}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''} style="font-weight: bold; font-size: 14pt;">
+                    </div>
+                </td>
+                <td style="width: 50%; vertical-align: top; border: none; padding-left: 20px; text-align: left;">
+                    <div style="font-weight: bold; margin-bottom: 4px; font-size: 14pt;">Ý kiến nhận xét của BGH:</div>
+                    <div class="relative group">
+                        <textarea id="txtNxBGH" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isBGH ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''} style="font-size: 14pt;">${tongHopData.nxBGH}</textarea>
+                        ${!soBiKhoa && isBGH ? `<button onclick="kichHoatGhiNhanXet('BGH', '${tenNguoiDung}')" class="absolute top-0 right-0 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer hide-on-print hidden group-hover:block" title="Ký tự động"><svg class="w-5 h-5 opacity-60 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>` : ''}
+                    </div>
+                    <div style="font-weight: bold; margin-top: 4px; font-size: 14pt; display: flex; align-items: center; gap: 4px;">
+                        <span>Người ký:</span> 
+                        <input type="text" id="txtKyBGH" class="bg-transparent outline-none w-full ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" value="${tongHopData.kyBGH}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''} style="font-weight: bold; font-size: 14pt;">
+                    </div>
+                </td>
+            </tr>
+        </table>
 
-            <div class="w-1/2 pl-4">
-                <div class="font-bold text-[16px] mb-2">Ý kiến nhận xét của BGH:</div>
-                <textarea id="txtNxBGH" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isBGH ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''}>${tongHopData.nxBGH}</textarea>
-                <div class="flex items-center gap-1">
-                    <span class="font-bold text-[16px] whitespace-nowrap">Người ký:</span>
-                    <input type="text" id="txtKyBGH" class="font-bold text-[16px] bg-transparent outline-none w-full ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="" value="${tongHopData.kyBGH}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''}>
-                </div>
-                ${!soBiKhoa && isBGH ? `<button onclick="kichHoatGhiNhanXet('BGH', '${tenNguoiDung}')" class="mt-1 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer" title="Ký và xác nhận tự động"><img src="https://www.svgrepo.com/show/44053/edit.svg" class="w-5 h-5 opacity-80" alt="Ký tên"></button>` : ''}
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-1 font-bold text-[15px]">
-            <div>- Tổng số tiết học trong tuần: <span class="font-normal italic">${tongSoTietThucHien} .</span></div>
-            <div>- Tổng số tiết không thực hiện: <span class="font-normal italic">0 . (Sáng: 0, Chiều: 0)</span></div>
-            <div>- Tổng số giờ xếp loại: <span class="font-normal italic">${tongGioXepLoai}/${tongSoTietThucHien} [${demTot} Tốt; ${demKha} Khá ; ${demTB} Đạt/TB; ${demYeu} Yếu]</span></div>
-            <div>- Điểm trung bình chung: <span class="font-normal italic">0</span></div>
+        <!-- BẢNG TỔNG HỢP DƯỚI CÙNG -->
+        <div style="font-weight: bold; line-height: 1.6; margin-top: 20px; font-size: 13pt;" id="khuVucThongKeSDB">
+            <div>- Tổng số tiết học trong tuần: <span style="font-weight: normal; font-style: italic;">${tongSoTietThucHien} .</span></div>
+            <div>- Tổng số tiết không thực hiện: <span style="font-weight: normal; font-style: italic;">0 . (Sáng: 0, Chiều: 0)</span></div>
+            <div>- Tổng số giờ xếp loại: <span style="font-weight: normal; font-style: italic;">${tongGioXepLoai}/${tongSoTietThucHien} [${demTot} Tốt; ${demKha} Khá ; ${demTB} Đạt/TB; ${demYeu} Yếu]</span></div>
+            <div>- Điểm trung bình chung: <span style="font-weight: normal; font-style: italic;">0</span></div>
         </div>
     </div>`;
 
@@ -2067,8 +2076,12 @@ function xuatWordSoDauBai() {
         cell.style.verticalAlign = "middle";
     });
 
-    // 3. Xóa các class Tailwind CSS dư thừa để bảng Word sạch sẽ và không bị loạn định dạng
-    noiDungClone.querySelectorAll('table, th, td, tr').forEach(el => {
+    // 3. Dọn dẹp DOM cho Word
+    // Xóa các nút bấm (Cái bút) để tránh lỗi hình ảnh trên Word
+    noiDungClone.querySelectorAll('button').forEach(btn => btn.remove());
+    
+    // Xóa các class Tailwind CSS dư thừa
+    noiDungClone.querySelectorAll('table:not([style*="border: none"]), th, td:not([style*="border: none"]), tr').forEach(el => {
         el.removeAttribute('class');
     });
 
@@ -2155,28 +2168,17 @@ async function xuatExcelSoDauBai() {
                     let theNhap = cell.querySelector('input, select, textarea');
                     let giaTriCell = "";
                     
-                    // Ưu tiên đọc dữ liệu người dùng gõ
                     if (theNhap) {
                         giaTriCell = theNhap.value;
                     } else {
                         giaTriCell = cell.innerText;
                     }
                     
-                    // Xử lý và làm sạch dữ liệu
                     if (giaTriCell && typeof giaTriCell === 'string') {
                         giaTriCell = giaTriCell.trim();
-                        // 1. Xóa rác hệ thống (Chữ "-Chọn-")
-                        if (giaTriCell === "-Chọn-" || giaTriCell === "--") {
-                            giaTriCell = "";
-                        }
-                        
-                        // 2. Ép Regex tách riêng chữ Thứ và Ngày xuống dòng an toàn
+                        if (giaTriCell === "-Chọn-" || giaTriCell === "--") giaTriCell = "";
                         giaTriCell = giaTriCell.replace(/(THỨ\s*[2-7]|CHỦ NHẬT)\s*(\d{2}\/\d{2}\/\d{4})/gi, "$1\n$2");
-                        
-                        // 3. Chống Crash Excel do nhận diện nhầm dấu (+, -, =) thành công thức toán học
-                        if (/^[=+\-@]/.test(giaTriCell)) {
-                            giaTriCell = "'" + giaTriCell;
-                        }
+                        if (/^[=+\-@]/.test(giaTriCell)) giaTriCell = "'" + giaTriCell;
                     }
                     
                     rData.push(giaTriCell || "");
@@ -2192,29 +2194,23 @@ async function xuatExcelSoDauBai() {
                     row.alignment = { vertical: 'middle', horizontal: 'center' };
                 }
 
-               // NÂNG CẤP: ĐỊNH DẠNG NÉT KẺ BẢNG EXCEL (Nét đứt ngang giữa các tiết, nét liền dọc)
                 let thuocBuoi = tr.getAttribute('data-buoi') || '';
-                let tietHienTai = parseInt(rData[1]); // rData[1] luôn là số tiết học
+                let tietHienTai = parseInt(rData[1]); 
 
                 row.eachCell({ includeEmpty: true }, function(cell, colNumber) {
                     if (idx === 0) {
-                        // Dòng tiêu đề bảng (THỨ, TIẾT, MÔN...) luôn kẻ nét liền 4 cạnh
                         cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                     } else {
-                        // Xét viền ngang cho các dòng nội dung tiết học
-                        let kieuVienTren = (tietHienTai === 1) ? 'thin' : 'dashed'; // Bắt đầu buổi -> nét liền
-                        let kieuVienDuoi = 'dashed'; // Mặc định giữa các tiết -> nét đứt
+                        let kieuVienTren = (tietHienTai === 1) ? 'thin' : 'dashed'; 
+                        let kieuVienDuoi = 'dashed'; 
                         
-                        // Xác định tiết cuối cùng của mỗi buổi để đóng nét liền
                         if ((thuocBuoi === 'Sáng' && tietHienTai === 5) || (thuocBuoi === 'Chiều' && tietHienTai === 4)) {
                             kieuVienDuoi = 'thin'; 
                         }
                         
                         if (colNumber === 1) {
-                            // Cột THỨ sẽ gộp ô (Merge Cells) nên thiết lập nét liền
                             cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                         } else {
-                            // Các cột còn lại: Nét dọc luôn liền ('thin'), nét ngang đứt ('dashed') hoặc liền tùy vị trí
                             cell.border = { 
                                 top: {style: kieuVienTren}, 
                                 left: {style:'thin'}, 
@@ -2231,13 +2227,72 @@ async function xuatExcelSoDauBai() {
                 rowIndex++;
             });
 
+            // =========================================================================
+            // NÂNG CẤP: BỔ SUNG CHÂN CHỮ KÝ VÀ THỐNG KÊ VÀO EXCEL
+            // =========================================================================
+            let nxGVCN = document.getElementById('txtNxGVCN') ? document.getElementById('txtNxGVCN').value : '';
+            let kyGVCN = document.getElementById('txtKyGVCN') ? document.getElementById('txtKyGVCN').value : '';
+            let nxBGH = document.getElementById('txtNxBGH') ? document.getElementById('txtNxBGH').value : '';
+            let kyBGH = document.getElementById('txtKyBGH') ? document.getElementById('txtKyBGH').value : '';
+
+            rowIndex++; 
+            
+            let rowTieuDeKy = worksheet.getRow(rowIndex);
+            rowTieuDeKy.getCell(1).value = "Ý kiến nhận xét của giáo viên chủ nhiệm lớp:";
+            rowTieuDeKy.getCell(6).value = "Ý kiến nhận xét của BGH:";
+            rowTieuDeKy.font = { name: 'Times New Roman', size: 14, bold: true };
+            worksheet.mergeCells(`A${rowIndex}:D${rowIndex}`);
+            worksheet.mergeCells(`F${rowIndex}:I${rowIndex}`);
+            rowIndex++;
+
+            let rowNhanXet = worksheet.getRow(rowIndex);
+            rowNhanXet.getCell(1).value = nxGVCN;
+            rowNhanXet.getCell(6).value = nxBGH;
+            rowNhanXet.font = { name: 'Times New Roman', size: 13 };
+            rowNhanXet.alignment = { wrapText: true, vertical: 'top' };
+            rowNhanXet.height = 40;
+            worksheet.mergeCells(`A${rowIndex}:D${rowIndex}`);
+            worksheet.mergeCells(`F${rowIndex}:I${rowIndex}`);
+            rowIndex++;
+
+            let rowNguoiKy = worksheet.getRow(rowIndex);
+            rowNguoiKy.getCell(1).value = "Người ký: " + kyGVCN;
+            rowNguoiKy.getCell(6).value = "Người ký: " + kyBGH;
+            rowNguoiKy.font = { name: 'Times New Roman', size: 14, bold: true };
+            worksheet.mergeCells(`A${rowIndex}:D${rowIndex}`);
+            worksheet.mergeCells(`F${rowIndex}:I${rowIndex}`);
+            rowIndex += 2; 
+
+            let vungThongKe = document.getElementById('khuVucThongKeSDB');
+            if (vungThongKe) {
+                let divsThongKe = vungThongKe.querySelectorAll('div');
+                divsThongKe.forEach(div => {
+                    let rawText = div.innerText.trim();
+                    let rowStat = worksheet.getRow(rowIndex);
+                    
+                    let parts = rawText.split(': ');
+                    if(parts.length > 1) {
+                        rowStat.getCell(1).value = {
+                            'richText': [
+                                {'font': {'bold': true, 'name': 'Times New Roman', 'size': 13}, 'text': parts[0] + ': '},
+                                {'font': {'italic': true, 'name': 'Times New Roman', 'size': 13}, 'text': parts.slice(1).join(': ')}
+                            ]
+                        };
+                    } else {
+                        rowStat.getCell(1).value = rawText;
+                        rowStat.font = { name: 'Times New Roman', size: 13, bold: true };
+                    }
+                    
+                    worksheet.mergeCells(`A${rowIndex}:I${rowIndex}`);
+                    rowIndex++;
+                });
+            }
             rowIndex += 2;
         });
 
         worksheet.eachRow((row, rowNumber) => {
             let val = row.getCell(1).value;
             let valUpper = (val && typeof val === 'string') ? val.toUpperCase() : '';
-            // Gộp ô (Merge Cells) cho cột THỨ
             if (valUpper && (valUpper.startsWith('THỨ ') || valUpper.startsWith('CHỦ NHẬT')) && valUpper !== 'THỨ') {
                 let rowsToMerge = 0;
                 while(worksheet.getCell(rowNumber + rowsToMerge + 1, 1).value === '') {
