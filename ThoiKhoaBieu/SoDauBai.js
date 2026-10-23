@@ -1091,11 +1091,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let vungHienThi = document.getElementById('vungHienThiSoDauBai');
 
     if (!tuanChon || !lopChon || !vungHienThi) return;
-    if (inputNgay) {
-        inputNgay.readOnly = true;
-        inputNgay.classList.add('bg-slate-100', 'cursor-not-allowed');
-    }
-
+    
     let theChotQuyen = document.getElementById('theChotQuyenSDB');
     let madinhdanhGV = maGvDangNhapHeThong || (theChotQuyen ? theChotQuyen.getAttribute('data-madinhdanh') || '' : '');
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true' || theChotQuyen.getAttribute('data-quantri') === true) : false);
@@ -1326,7 +1322,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     if (coDayBuThu7) danhSachThu.push("Thứ 7");
     if (coDayBuChuNhat) danhSachThu.push("Chủ nhật");
 
-    let mienNgayHienTai = '';
+   let mienNgayHienTai = '';
     if (mapNgayChinhXac['Thứ 2']) {
         let p = mapNgayChinhXac['Thứ 2'].split('/');
         if (p.length === 3) mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`; 
@@ -1345,8 +1341,36 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
         }
     }
 
-    if (inputNgay && mienNgayHienTai) {
-        inputNgay.value = mienNgayHienTai;
+    // [NÂNG CẤP ĐỘT PHÁ]: Khôi phục hiển thị ngày nếu dữ liệu từ máy chủ trống
+    if (!mienNgayHienTai && inputNgay && inputNgay.value) {
+        let val = inputNgay.value;
+        if (val.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            mienNgayHienTai = val;
+        } else if (val.includes('/')) {
+            let p = val.split('/');
+            if (p.length === 3) mienNgayHienTai = `${p[2]}-${p[1]}-${p[0]}`;
+        }
+    }
+
+    if (inputNgay) {
+        let isTuanBiKhoa = window.kiemTraTuanDaKhoa(tuanChon);
+        if (Object.keys(mapNgayChinhXac).length > 0 || isTuanBiKhoa) {
+            // Đã có dữ liệu chuẩn hoặc tuần bị khóa -> Khóa ô chọn
+            inputNgay.readOnly = true;
+            inputNgay.classList.add('bg-slate-100', 'cursor-not-allowed');
+            if (mienNgayHienTai) inputNgay.value = mienNgayHienTai;
+        } else {
+            // Chưa có dữ liệu -> Mở khóa ô chọn cho giáo viên nhập
+            inputNgay.readOnly = false;
+            inputNgay.classList.remove('bg-slate-100', 'cursor-not-allowed');
+            if (mienNgayHienTai) inputNgay.value = mienNgayHienTai;
+            
+            // Lắng nghe sự thay đổi để vẽ lại bảng ngay lập tức
+            inputNgay.onchange = function() {
+                coThayDoiChuaLuu_SDB = true;
+                thucThiKetXuatSoDauBaiLenLuoi();
+            };
+        }
     }
 
     let ngayDauTieuDe = mienNgayHienTai ? tinhNgayTuInputDate(mienNgayHienTai, "Thứ 2") : '...';
