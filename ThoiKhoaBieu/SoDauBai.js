@@ -35,7 +35,7 @@ let maGvDangNhapHeThong = '';
 let danhSachGiaoVienToanCuc = []; // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
 let mapTkbToanTapToanCuc = {}; // [NÂNG CẤP]: Mảng lưu TKB toàn tập để đối chiếu sự khác biệt
 let boDemTietLichSuToanCuc = {}; // [NÂNG CẤP TỐI ƯU]: Lưu số dư tiết PPCT từ máy chủ
-
+let demTietTienDoLichSuToanCuc = {};
 // Các biến toàn cục hỗ trợ kiểm soát trạng thái chưa lưu (Chống mất dữ liệu)
 let tuanTruocDo_SDB = '';
 let lopTruocDo_SDB = '';
@@ -52,8 +52,10 @@ window.lamSachBoNhoSoDauBai = function() {
     danhSachGiaoVienToanCuc = [];
     mapTkbToanTapToanCuc = {};
     window.mapTkbToanTap = {};
-    boDemTietLichSuToanCuc = {}; // [NÂNG CẤP TỐI ƯU]
-    window.boDemTietLichSuToanCuc = {}; // [NÂNG CẤP TỐI ƯU]
+    boDemTietLichSuToanCuc = {}; 
+    window.boDemTietLichSuToanCuc = {}; 
+    demTietTienDoLichSuToanCuc = {}; 
+    window.demTietTienDoLichSuToanCuc = {};
     
     tuanTruocDo_SDB = '';
     lopTruocDo_SDB = '';
@@ -337,6 +339,9 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
 
     boDemTietLichSuToanCuc = duLieuSever.BO_DEM_PPCT_LICH_SU || {};
     window.boDemTietLichSuToanCuc = boDemTietLichSuToanCuc;
+    
+    demTietTienDoLichSuToanCuc = duLieuSever.DEM_TIET_TIEN_DO_LICH_SU || {};
+    window.demTietTienDoLichSuToanCuc = demTietTienDoLichSuToanCuc;
     
     // 1. XỬ LÝ SỔ ĐẦU BÀI (Chỉ đọc cột vật lý)
     if (duLieuSever.SO_DAU_BAI) {
@@ -1098,20 +1103,19 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 let monGocChuan = mon.toLowerCase().replace(/\s+/g, ' ');
                 let monPPCT = mon.replace(/[0-9\(\)]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
 
-                if (t < maxTuanChon) {
-            // Lấy TKB làm gốc đếm tiến độ, bất chấp SĐB đã tạo hay chưa
-            demTietTienDo[monGocChuan] = (demTietTienDo[monGocChuan] || 0) + 1;
-            
-            let tietLuu = 0;
-            if (d.DaLuu === true && d['TietPPCT_Thuc']) {
-                tietLuu = parseInt(String(d['TietPPCT_Thuc']).replace(/\D/g, ''), 10) || 0;
-            } else {
-                tietLuu = (boDemTietPPCT[monPPCT] || 0) + 1; // Tự tịnh tiến theo thời khóa biểu
-            }
-            
-            let demHienTai = (boDemTietPPCT[monPPCT] || 0) + 1;
-            boDemTietPPCT[monPPCT] = Math.max(demHienTai, tietLuu);
-        }
+               if (t < maxTuanChon) {
+                    // Lấy TKB làm gốc đếm tiến độ, bất chấp SĐB đã tạo hay chưa
+                    demTietTienDo[monGocChuan] = (demTietTienDo[monGocChuan] || 0) + 1;
+                    
+                    let tietLuu = 0;
+                    if (d.DaLuu === true && d['TietPPCT_Thuc']) {
+                        tietLuu = parseInt(String(d['TietPPCT_Thuc']).replace(/\D/g, ''), 10) || 0;
+                    } else {
+                        tietLuu = (boDemTietPPCT[monPPCT] || 0) + 1; // Tự tịnh tiến theo thời khóa biểu
+                    }
+                    
+                    let demHienTai = (boDemTietPPCT[monPPCT] || 0) + 1;
+                    boDemTietPPCT[monPPCT] = Math.max(demHienTai, tietLuu);
                 } else if (t === maxTuanChon) {
                     demTietTienDo[monGocChuan] = (demTietTienDo[monGocChuan] || 0) + 1;
                 }
