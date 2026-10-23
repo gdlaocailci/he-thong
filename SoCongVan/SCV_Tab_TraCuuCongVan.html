@@ -227,7 +227,7 @@
         const colSpanNum = IS_AUTH_CV ? 8 : 7;
         
         if(!data || data.length === 0) { 
-            tb.innerHTML = `<tr><td colspan="${colSpanNum}" class="text-center" style="padding:20px; color:red; border: 1px solid #ccc !important;">❌ Không tìm thấy văn bản phù hợp!</td></tr>`;
+            tb.innerHTML = `<tr><td colspan="${colSpanNum}" class="text-center" style="padding:20px; color:red; border: 1px solid #ccc !important;">⚠️ Vui lòng nhập ít nhất 1 điều kiện để tìm!</td></tr>`;
             return; 
         }
 
