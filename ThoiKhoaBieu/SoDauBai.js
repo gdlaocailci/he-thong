@@ -1480,44 +1480,45 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let isBGH = quyenQuanTri || (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
     let tenNguoiDung = document.getElementById('theChotQuyenSDB')?.getAttribute('data-tendinhdanh') || maGvDangNhapHeThong;
 
-    // 4. Kết xuất HTML Chân sổ (Dùng Table ẩn viền để MS Word hiểu được 2 cột)
+    // 4. Kết xuất HTML Chân sổ (Dàn trang bằng Table để MS Word hiểu, CSS nowrap để UI không rớt dòng)
     let htmlChuKy = `
-    <div id="khuVucChuKySDB" class="mt-6 text-[12pt] text-black w-full" style="font-family: 'Times New Roman', Times, serif; page-break-inside: avoid;">
+    <div id="khuVucChuKySDB" class="mt-4 text-[16px] text-black w-full" style="font-family: 'Times New Roman', Times, serif; page-break-inside: avoid;">
         
         <!-- BẢNG CHỮ KÝ 2 CỘT -->
-        <table style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 20px;">
+        <table class="w-full border-none" style="width: 100%; border: none; border-collapse: collapse; margin-bottom: 15px;">
             <tr>
-                <td style="width: 50%; vertical-align: top; border: none; padding-right: 20px; text-align: left;">
-                    <div style="font-weight: bold; margin-bottom: 4px; font-size: 14pt;">Ý kiến nhận xét của giáo viên chủ nhiệm lớp:</div>
-                    <div class="relative group">
-                        <textarea id="txtNxGVCN" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isGVCN ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''} style="font-size: 14pt;">${tongHopData.nxGVCN}</textarea>
-                        ${!soBiKhoa && isGVCN ? `<button onclick="kichHoatGhiNhanXet('GVCN', '${tenNguoiDung}')" class="absolute top-0 right-0 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer hide-on-print hidden group-hover:block" title="Ký tự động"><svg class="w-5 h-5 opacity-60 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>` : ''}
+                <!-- CỘT GVCN -->
+                <td style="width: 50%; vertical-align: top; border: none; padding-right: 15px; text-align: left;">
+                    <div class="font-bold mb-1">Ý kiến nhận xét của giáo viên chủ nhiệm lớp:</div>
+                    <textarea id="txtNxGVCN" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isGVCN ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''} style="font-family: 'Times New Roman', Times, serif; font-size: 16px;">${tongHopData.nxGVCN}</textarea>
+                    
+                    <div class="font-bold whitespace-nowrap mt-1">
+                        Người ký: <input type="text" id="txtKyGVCN" class="bg-transparent outline-none inline-block ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" value="${tongHopData.kyGVCN}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''} style="font-family: 'Times New Roman', Times, serif; font-weight: bold; font-size: 16px; width: calc(100% - 90px);">
                     </div>
-                    <div style="font-weight: bold; margin-top: 4px; font-size: 14pt; display: flex; align-items: center; gap: 4px;">
-                        <span>Người ký:</span> 
-                        <input type="text" id="txtKyGVCN" class="bg-transparent outline-none w-full ${!isGVCN || soBiKhoa ? 'pointer-events-none' : ''}" value="${tongHopData.kyGVCN}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isGVCN || soBiKhoa ? 'readonly' : ''} style="font-weight: bold; font-size: 14pt;">
-                    </div>
+                    
+                    ${!soBiKhoa && isGVCN ? `<button onclick="kichHoatGhiNhanXet('GVCN', '${tenNguoiDung}')" class="mt-2 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer hide-on-print inline-block" title="Ký tự động"><img src="https://www.svgrepo.com/show/44053/edit.svg" class="w-5 h-5 opacity-80" alt="Ký"></button>` : ''}
                 </td>
-                <td style="width: 50%; vertical-align: top; border: none; padding-left: 20px; text-align: left;">
-                    <div style="font-weight: bold; margin-bottom: 4px; font-size: 14pt;">Ý kiến nhận xét của BGH:</div>
-                    <div class="relative group">
-                        <textarea id="txtNxBGH" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isBGH ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''} style="font-size: 14pt;">${tongHopData.nxBGH}</textarea>
-                        ${!soBiKhoa && isBGH ? `<button onclick="kichHoatGhiNhanXet('BGH', '${tenNguoiDung}')" class="absolute top-0 right-0 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer hide-on-print hidden group-hover:block" title="Ký tự động"><svg class="w-5 h-5 opacity-60 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>` : ''}
+                
+                <!-- CỘT BGH -->
+                <td style="width: 50%; vertical-align: top; border: none; padding-left: 15px; text-align: left;">
+                    <div class="font-bold mb-1">Ý kiến nhận xét của BGH:</div>
+                    <textarea id="txtNxBGH" class="w-full bg-transparent outline-none resize-none overflow-hidden mb-1 ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" placeholder="${!isBGH ? '' : 'Nhập nhận xét...'}" oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''} style="font-family: 'Times New Roman', Times, serif; font-size: 16px;">${tongHopData.nxBGH}</textarea>
+                    
+                    <div class="font-bold whitespace-nowrap mt-1">
+                        Người ký: <input type="text" id="txtKyBGH" class="bg-transparent outline-none inline-block ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" value="${tongHopData.kyBGH}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''} style="font-family: 'Times New Roman', Times, serif; font-weight: bold; font-size: 16px; width: calc(100% - 90px);">
                     </div>
-                    <div style="font-weight: bold; margin-top: 4px; font-size: 14pt; display: flex; align-items: center; gap: 4px;">
-                        <span>Người ký:</span> 
-                        <input type="text" id="txtKyBGH" class="bg-transparent outline-none w-full ${!isBGH || soBiKhoa ? 'pointer-events-none' : ''}" value="${tongHopData.kyBGH}" oninput="coThayDoiChuaLuu_SDB=true;" ${!isBGH || soBiKhoa ? 'readonly' : ''} style="font-weight: bold; font-size: 14pt;">
-                    </div>
+                    
+                    ${!soBiKhoa && isBGH ? `<button onclick="kichHoatGhiNhanXet('BGH', '${tenNguoiDung}')" class="mt-2 p-1 hover:bg-slate-200 rounded transition-colors cursor-pointer hide-on-print inline-block" title="Ký tự động"><img src="https://www.svgrepo.com/show/44053/edit.svg" class="w-5 h-5 opacity-80" alt="Ký"></button>` : ''}
                 </td>
             </tr>
         </table>
 
         <!-- BẢNG TỔNG HỢP DƯỚI CÙNG -->
-        <div style="font-weight: bold; line-height: 1.6; margin-top: 20px; font-size: 13pt;" id="khuVucThongKeSDB">
-            <div>- Tổng số tiết học trong tuần: <span style="font-weight: normal; font-style: italic;">${tongSoTietThucHien} .</span></div>
-            <div>- Tổng số tiết không thực hiện: <span style="font-weight: normal; font-style: italic;">0 . (Sáng: 0, Chiều: 0)</span></div>
-            <div>- Tổng số giờ xếp loại: <span style="font-weight: normal; font-style: italic;">${tongGioXepLoai}/${tongSoTietThucHien} [${demTot} Tốt; ${demKha} Khá ; ${demTB} Đạt/TB; ${demYeu} Yếu]</span></div>
-            <div>- Điểm trung bình chung: <span style="font-weight: normal; font-style: italic;">0</span></div>
+        <div class="font-bold mt-2 text-[16px]" style="line-height: 1.6;" id="khuVucThongKeSDB">
+            <div>- Tổng số tiết học trong tuần: <span class="font-normal italic">${tongSoTietThucHien} .</span></div>
+            <div>- Tổng số tiết không thực hiện: <span class="font-normal italic">0 . (Sáng: 0, Chiều: 0)</span></div>
+            <div>- Tổng số giờ xếp loại: <span class="font-normal italic">${tongGioXepLoai}/${tongSoTietThucHien} [${demTot} Tốt; ${demKha} Khá ; ${demTB} Đạt/TB; ${demYeu} Yếu]</span></div>
+            <div>- Điểm trung bình chung: <span class="font-normal italic">0</span></div>
         </div>
     </div>`;
 
