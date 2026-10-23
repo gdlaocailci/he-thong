@@ -1467,7 +1467,7 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
         ? window.duLieuTongHopSDB[`${maxTuanChon}_${lopChon.toUpperCase()}`] 
         : { nxGVCN: '', kyGVCN: '', nxBGH: '', kyBGH: '' };
 
-    let isGVCN = quyenQuanTri || (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.lop && quyenChiTiet.lop.includes(lopChon));
+    let isGVCN = quyenQuanTri || (typeof tuDienQuyenPhanCong !== 'undefined' && tuDienQuyenPhanCong[lopChon] !== undefined);
     let isBGH = quyenQuanTri || (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
     let tenNguoiDung = document.getElementById('theChotQuyenSDB')?.getAttribute('data-tendinhdanh') || maGvDangNhapHeThong;
 
