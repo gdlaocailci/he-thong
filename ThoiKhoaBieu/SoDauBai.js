@@ -1099,12 +1099,19 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
                 let monPPCT = mon.replace(/[0-9\(\)]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
 
                 if (t < maxTuanChon) {
-                    if (d.DaLuu === true) {
-                        demTietTienDo[monGocChuan] = (demTietTienDo[monGocChuan] || 0) + 1;
-                        let tietLuu = parseInt(String(d['TietPPCT_Thuc']).replace(/\D/g, ''), 10) || 0;
-                        let demHienTai = (boDemTietPPCT[monPPCT] || 0) + 1;
-                        boDemTietPPCT[monPPCT] = Math.max(demHienTai, tietLuu);
-                    }
+            // Lấy TKB làm gốc đếm tiến độ, bất chấp SĐB đã tạo hay chưa
+            demTietTienDo[monGocChuan] = (demTietTienDo[monGocChuan] || 0) + 1;
+            
+            let tietLuu = 0;
+            if (d.DaLuu === true && d['TietPPCT_Thuc']) {
+                tietLuu = parseInt(String(d['TietPPCT_Thuc']).replace(/\D/g, ''), 10) || 0;
+            } else {
+                tietLuu = (boDemTietPPCT[monPPCT] || 0) + 1; // Tự tịnh tiến theo thời khóa biểu
+            }
+            
+            let demHienTai = (boDemTietPPCT[monPPCT] || 0) + 1;
+            boDemTietPPCT[monPPCT] = Math.max(demHienTai, tietLuu);
+        }
                 } else if (t === maxTuanChon) {
                     demTietTienDo[monGocChuan] = (demTietTienDo[monGocChuan] || 0) + 1;
                 }
