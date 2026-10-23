@@ -1467,7 +1467,16 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
         ? window.duLieuTongHopSDB[`${maxTuanChon}_${lopChon.toUpperCase()}`] 
         : { nxGVCN: '', kyGVCN: '', nxBGH: '', kyBGH: '' };
 
-    let isGVCN = quyenQuanTri || (typeof tuDienQuyenPhanCong !== 'undefined' && tuDienQuyenPhanCong[lopChon] !== undefined);
+    // Lấy thông tin GVCN của lớp đang mở từ bộ nhớ cấu hình (Cột C DM_LOP)
+    let gvcnCuaLop = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.GVCN_THEO_LOP && thongSoHocVu.GVCN_THEO_LOP[lopChon]) ? thongSoHocVu.GVCN_THEO_LOP[lopChon] : '';
+    let maGvDangNhapLC_Ky = window.chuanHoaDinhDanhGiaoVien(maGvDangNhapHeThong);
+    
+    // Cấp quyền ký: Quản trị viên (Admin) HOẶC tài khoản đăng nhập khớp với GVCN khai báo tại Cột C
+    let isGVCN = quyenQuanTri;
+    if (!isGVCN && gvcnCuaLop !== '' && maGvDangNhapLC_Ky !== '') {
+        let tapHopGvcn = window.chuanHoaDinhDanhGiaoVien(gvcnCuaLop).split(/[,;&-]/).map(g => g.trim());
+        isGVCN = tapHopGvcn.includes(maGvDangNhapLC_Ky) || tapHopGvcn.some(g => maGvDangNhapLC_Ky.includes(g) && g.length > 2);
+    }
     let isBGH = quyenQuanTri || (typeof quyenChiTiet !== 'undefined' && quyenChiTiet.nut && quyenChiTiet.nut.includes('btnKhoaSoDauBai'));
     let tenNguoiDung = document.getElementById('theChotQuyenSDB')?.getAttribute('data-tendinhdanh') || maGvDangNhapHeThong;
 
