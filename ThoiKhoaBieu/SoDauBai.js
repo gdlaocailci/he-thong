@@ -191,7 +191,7 @@ function kiemTraTrangThaiDangNhapSDB() {
     }, 500);
 }
 
-async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
+async function thucThiTaiDuLieuVaVeLuoi(vungHienThi, tuanYeuCau = null) {
     dangTaiDuLieuSoDauBai = true;
 
     let selTuan = document.getElementById('chonTuanSo');
@@ -227,9 +227,13 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
         // KIỂM TRA CACHE
         let duLieuTinhCache = sessionStorage.getItem(cacheKey);
         let yeuCauTaiToanBo = duLieuTinhCache ? false : true;
-
+        
         // [SỬA LỖI]: Phục hồi key 'emailTruyCap' trên chuỗi URL để khớp nối chính xác với tham số Backend GAS đang chờ
         let thongSoURL = `thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(dinhDanhGoiLen)}&taiToanBo=${yeuCauTaiToanBo}`;
+        if (tuanYeuCau) {
+            thongSoURL = `thaoTac=layDuLieuSoDauBai&emailTruyCap=${encodeURIComponent(dinhDanhGoiLen)}&taiToanBo=true&tuanYeuCau=${tuanYeuCau}`;
+            yeuCauTaiToanBo = true; // Ép tải toàn bộ nếu gọi tuần cũ
+        }
         
         const phanHoi = await fetchVoiCoCheThuLai(
             `${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?${thongSoURL}`,
@@ -278,6 +282,10 @@ async function thucThiTaiDuLieuVaVeLuoi(vungHienThi) {
             if (inTuanReset) { inTuanReset.disabled = false; inTuanReset.classList.remove('cursor-wait'); }
             if (inLopReset) { inLopReset.disabled = false; inLopReset.classList.remove('cursor-wait'); }
 
+            if (tuanYeuCau) {
+                setTimeout(() => { ketXuatSoDauBaiLenLuoi(); }, 100);
+            }
+
         }, 10);
 
     } catch (loi) {
@@ -306,6 +314,7 @@ function tinhNgayTuInputDate(ngayYMD, tenThu) {
 }
 
 function khoiTaoDuLieuSoDauBai(duLieuSever) {
+    window.maxTuanHeThongSDB = duLieuSever.TUAN_HIEN_TAI || 1; // [NÂNG CẤP]: Bắt đỉnh tuần từ Server
     maGvDangNhapHeThong = duLieuSever.MA_GIAO_VIEN || '';
     let tenGvDangNhapHeThong = duLieuSever.TEN_GIAO_VIEN || duLieuSever.MA_GIAO_VIEN || '';
     coToanQuyenSDB = duLieuSever.TOAN_QUYEN || false;
@@ -586,8 +595,17 @@ function ketXuatSoDauBaiLenLuoi() {
         }
     }
 
-    // 2. [QUY TẮC RÀNG BUỘC CHẶN TUẦN]: NẾU CHƯA LƯU TUẦN 1 THÌ KHÔNG CHO CHỌN TUẦN 2 (VÀ CÁC TUẦN TIẾP THEO)
+  // 2. [QUY TẮC RÀNG BUỘC CHẶN TUẦN]: NẾU CHƯA LƯU TUẦN 1 THÌ KHÔNG CHO CHỌN TUẦN 2 (VÀ CÁC TUẦN TIẾP THEO)
     let tuanSo = parseInt(String(tuanChon).replace(/\D/g, ''), 10) || 0;
+    
+    // [NÂNG CẤP GỌI TUẦN CŨ]: Kiểm tra nếu RAM không chứa tuần này -> Gọi máy chủ
+    let tkbCoSanTrongRam = duLieuTKBGopDaMap.filter(d => parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) === tuanSo);
+    if (tkbCoSanTrongRam.length === 0 && tuanSo > 0) {
+        daTaiDuLieuSoDauBai = false; 
+        thucThiTaiDuLieuVaVeLuoi(document.getElementById('vungHienThiSoDauBai'), tuanSo);
+        return;
+    }
+
     if (tuanSo > 1) {
         let lopNorm = String(lopChon).trim().toUpperCase();
         
@@ -2366,8 +2384,12 @@ function napDropdownSoDauBai() {
         if (dong['Mã Lớp']) tapHopLop.add(String(dong['Mã Lớp']).trim());
     });
 
-    // [NÂNG CẤP]: Thuật toán sắp xếp tuần giảm dần (từ tuần lớn nhất đến tuần nhỏ nhất)
-    let mangTuan = Array.from(tapHopTuan).sort((a, b) => parseInt(b.replace(/\D/g,'')) - parseInt(a.replace(/\D/g,'')));
+    // [NÂNG CẤP]: Liệt kê tất cả các tuần lên danh sách thả xuống, kể cả các tuần chưa tải vào RAM
+    let maxT = window.maxTuanHeThongSDB || 1;
+    tapHopTuan.forEach(t => { if(parseInt(t) > maxT) maxT = parseInt(t); });
+    let mangTuan = [];
+    for(let i = maxT; i >= 1; i--) { mangTuan.push(String(i)); }
+    
     let mangLop = Array.from(tapHopLop).sort();
 
     let chonTuanHtml = `<option value="" disabled selected>-- Chọn Tuần --</option>` + mangTuan.map(t => `<option value="${t}">Tuần ${t.replace(/\D/g,'')}</option>`).join('');
