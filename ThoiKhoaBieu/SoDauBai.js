@@ -2228,7 +2228,7 @@ async function xuatExcelSoDauBai() {
             });
 
             // =========================================================================
-            // NÂNG CẤP: BỔ SUNG CHÂN CHỮ KÝ VÀ THỐNG KÊ VÀO EXCEL
+            // NÂNG CẤP: BỔ SUNG CHÂN CHỮ KÝ VÀ THỐNG KÊ VÀO EXCEL (Căn chỉnh BGH cột G)
             // =========================================================================
             let nxGVCN = document.getElementById('txtNxGVCN') ? document.getElementById('txtNxGVCN').value : '';
             let kyGVCN = document.getElementById('txtKyGVCN') ? document.getElementById('txtKyGVCN').value : '';
@@ -2237,32 +2237,36 @@ async function xuatExcelSoDauBai() {
 
             rowIndex++; 
             
+            // Dòng 1: Tiêu đề
             let rowTieuDeKy = worksheet.getRow(rowIndex);
-            rowTieuDeKy.getCell(1).value = "Ý kiến nhận xét của giáo viên chủ nhiệm lớp:";
-            rowTieuDeKy.getCell(6).value = "Ý kiến nhận xét của BGH:";
+            rowTieuDeKy.getCell(1).value = "Ý kiến nhận xét của giáo viên chủ nhiệm lớp:"; // Cột A
+            rowTieuDeKy.getCell(7).value = "Ý kiến nhận xét của BGH:"; // Đẩy sang Cột 7 (Cột G)
             rowTieuDeKy.font = { name: 'Times New Roman', size: 14, bold: true };
-            worksheet.mergeCells(`A${rowIndex}:D${rowIndex}`);
-            worksheet.mergeCells(`F${rowIndex}:I${rowIndex}`);
+            worksheet.mergeCells(`A${rowIndex}:E${rowIndex}`); // GVCN chiếm từ cột A đến E
+            worksheet.mergeCells(`G${rowIndex}:I${rowIndex}`); // BGH chiếm từ cột G đến I
             rowIndex++;
 
+            // Dòng 2: Nội dung nhận xét
             let rowNhanXet = worksheet.getRow(rowIndex);
             rowNhanXet.getCell(1).value = nxGVCN;
-            rowNhanXet.getCell(6).value = nxBGH;
+            rowNhanXet.getCell(7).value = nxBGH; // Cột G
             rowNhanXet.font = { name: 'Times New Roman', size: 13 };
             rowNhanXet.alignment = { wrapText: true, vertical: 'top' };
             rowNhanXet.height = 40;
-            worksheet.mergeCells(`A${rowIndex}:D${rowIndex}`);
-            worksheet.mergeCells(`F${rowIndex}:I${rowIndex}`);
+            worksheet.mergeCells(`A${rowIndex}:E${rowIndex}`);
+            worksheet.mergeCells(`G${rowIndex}:I${rowIndex}`);
             rowIndex++;
 
+            // Dòng 3: Người ký
             let rowNguoiKy = worksheet.getRow(rowIndex);
             rowNguoiKy.getCell(1).value = "Người ký: " + kyGVCN;
-            rowNguoiKy.getCell(6).value = "Người ký: " + kyBGH;
+            rowNguoiKy.getCell(7).value = "Người ký: " + kyBGH; // Cột G
             rowNguoiKy.font = { name: 'Times New Roman', size: 14, bold: true };
-            worksheet.mergeCells(`A${rowIndex}:D${rowIndex}`);
-            worksheet.mergeCells(`F${rowIndex}:I${rowIndex}`);
+            worksheet.mergeCells(`A${rowIndex}:E${rowIndex}`);
+            worksheet.mergeCells(`G${rowIndex}:I${rowIndex}`);
             rowIndex += 2; 
 
+            // Khối Thống kê dưới cùng
             let vungThongKe = document.getElementById('khuVucThongKeSDB');
             if (vungThongKe) {
                 let divsThongKe = vungThongKe.querySelectorAll('div');
