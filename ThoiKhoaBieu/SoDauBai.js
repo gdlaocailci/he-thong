@@ -34,6 +34,7 @@ let coToanQuyenSDB = false;
 let maGvDangNhapHeThong = '';
 let danhSachGiaoVienToanCuc = []; // [NÂNG CẤP]: Mảng lưu danh sách giáo viên toàn cục
 let mapTkbToanTapToanCuc = {}; // [NÂNG CẤP]: Mảng lưu TKB toàn tập để đối chiếu sự khác biệt
+let boDemTietLichSuToanCuc = {}; // [NÂNG CẤP TỐI ƯU]: Lưu số dư tiết PPCT từ máy chủ
 
 // Các biến toàn cục hỗ trợ kiểm soát trạng thái chưa lưu (Chống mất dữ liệu)
 let tuanTruocDo_SDB = '';
@@ -51,6 +52,8 @@ window.lamSachBoNhoSoDauBai = function() {
     danhSachGiaoVienToanCuc = [];
     mapTkbToanTapToanCuc = {};
     window.mapTkbToanTap = {};
+    boDemTietLichSuToanCuc = {}; // [NÂNG CẤP TỐI ƯU]
+    window.boDemTietLichSuToanCuc = {}; // [NÂNG CẤP TỐI ƯU]
     
     tuanTruocDo_SDB = '';
     lopTruocDo_SDB = '';
@@ -331,6 +334,9 @@ function khoiTaoDuLieuSoDauBai(duLieuSever) {
     };
 
     window.duLieuTongHopSDB = {}; 
+
+    boDemTietLichSuToanCuc = duLieuSever.BO_DEM_PPCT_LICH_SU || {};
+    window.boDemTietLichSuToanCuc = boDemTietLichSuToanCuc;
     
     // 1. XỬ LÝ SỔ ĐẦU BÀI (Chỉ đọc cột vật lý)
     if (duLieuSever.SO_DAU_BAI) {
@@ -782,7 +788,9 @@ function kiemTraKhacBietTkbVaSoDauBai(tuanChon, lopChon) {
     });
 
     // 4. [NÂNG CẤP ĐẶC BIỆT]: Kiểm tra phát hiện tiết bị lệch / trùng Tiết PPCT trong SĐB
-    let boDemPPCTTruoc = {};
+    let boDemPPCTTruoc = window.boDemTietLichSuToanCuc && window.boDemTietLichSuToanCuc[lopChuan] 
+        ? JSON.parse(JSON.stringify(window.boDemTietLichSuToanCuc[lopChuan])) 
+        : {};
     duLieuTKBGopDaMap.forEach(d => {
         let t = parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) || 0;
         let maLop = String(d['Mã Lớp']).trim().toUpperCase();
@@ -936,7 +944,10 @@ function thucThiDongBoTkbVaoSoDauBai() {
     });
 
     // 3. Tính toán lại số tiết tích lũy PPCT từ các tuần trước (t < maxTuanChon)
-    let boDemTietPPCT = {};
+    let lopChuanNorm = lopChon.toUpperCase();
+    let boDemTietPPCT = window.boDemTietLichSuToanCuc && window.boDemTietLichSuToanCuc[lopChuanNorm] 
+        ? JSON.parse(JSON.stringify(window.boDemTietLichSuToanCuc[lopChuanNorm])) 
+        : {};
     duLieuTKBGopDaMap.forEach(d => {
         let t = parseInt(String(d['Tuần']).replace(/\D/g, ''), 10) || 0;
         let maLop = String(d['Mã Lớp']).trim().toUpperCase();
@@ -1067,9 +1078,15 @@ function thucThiKetXuatSoDauBaiLenLuoi() {
     let quyenQuanTri = coToanQuyenSDB || (theChotQuyen ? (theChotQuyen.getAttribute('data-quantri') === 'true' || theChotQuyen.getAttribute('data-quantri') === true) : false);
 
     let maxTuanChon = parseInt(tuanChon.replace(/\D/g, '')) || 0;
+    let lopChuanNorm = lopChon.toUpperCase();
     
-    let boDemTietPPCT = {}; 
-    let demTietTienDo = {}; 
+    // [NÂNG CẤP TỐI ƯU]: Kế thừa số dư PPCT từ những tuần đã bị ẩn khỏi RAM
+    let boDemTietPPCT = window.boDemTietLichSuToanCuc && window.boDemTietLichSuToanCuc[lopChuanNorm] 
+        ? JSON.parse(JSON.stringify(window.boDemTietLichSuToanCuc[lopChuanNorm])) 
+        : {}; 
+    let demTietTienDo = window.boDemTietLichSuToanCuc && window.boDemTietLichSuToanCuc[lopChuanNorm] 
+        ? JSON.parse(JSON.stringify(window.boDemTietLichSuToanCuc[lopChuanNorm])) 
+        : {}; 
     
     duLieuTKBGopDaMap.forEach(d => {
         let t = parseInt(String(d['Tuần']).replace(/\D/g, '')) || 0;
@@ -2777,8 +2794,12 @@ window.capNhatSoDauBaiNgamLenLuoi = function(tuanChon, lopChon) {
     let maxTuanChon = parseInt(tuanChon.replace(/\D/g, '')) || 0;
     let matchKhoiChon = lopChon.match(/\d+/);
     let khoiChon = matchKhoiChon ? matchKhoiChon[0] : '';
+    let lopChuanNorm = lopChon.toUpperCase();
     
-    let boDemTietPPCT = {}; 
+    // [NÂNG CẤP TỐI ƯU]: Tải số dư PPCT từ máy chủ để tính ngầm
+    let boDemTietPPCT = window.boDemTietLichSuToanCuc && window.boDemTietLichSuToanCuc[lopChuanNorm] 
+        ? JSON.parse(JSON.stringify(window.boDemTietLichSuToanCuc[lopChuanNorm])) 
+        : {}; 
     
     // 1. Quét tiến độ PPCT các tuần trước
     duLieuTKBGopDaMap.forEach(d => {
