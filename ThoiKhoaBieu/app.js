@@ -3085,12 +3085,20 @@ async function dongBoDuLieuNgamToanCuc() {
 
     if (khungTKB && !khungTKB.classList.contains('hidden')) {
         if (khungTKB.querySelector('td[data-thaydoi="true"]')) {
-            console.warn("TKB đang có ô chỉnh sửa chưa lưu, tạm dừng quy trình tải ngầm.");
+            console.warn("TKB đang có ô chỉnh sửa chưa lưu, tạm dừng tải ngầm.");
             return; 
         }
 
         hienThiThongBaoTaiNgam(true);
         try {
+            // [CỐT LÕI]: Chủ động tải Cấu hình mới nhất để lấy đúng Tuần Hiện Tại của Server
+            const resCH = await fetchVoiCoCheThuLai(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=layCauHinh&_noCache=${Date.now()}`);
+            const tsMoi = await resCH.json();
+            if (tsMoi && !tsMoi.trangThai) {
+                thongSoHocVu = tsMoi; window.thongSoHocVu = tsMoi;
+                localStorage.setItem(window.layKhoaCachLy('SmartTKB_CauHinh'), JSON.stringify(thongSoHocVu));
+            }
+
             let tuanHeThong = parseInt(thongSoHocVu.TUAN_HIEN_TAI, 10) || 1;
             let nguonTruyXuat = 'TKB_HIEN_TAI';
             if (tuanDangXem < tuanHeThong) nguonTruyXuat = 'DATA_TKB';
@@ -3106,7 +3114,7 @@ async function dongBoDuLieuNgamToanCuc() {
         let coOThayDoiDOM_SDB = khungSDB.querySelector('td[data-thaydoi="true"]');
 
         if (coThayDoiSDB || coOThayDoiDOM_SDB) {
-            console.warn("Sổ đầu bài đang phát sinh dữ liệu gõ dở, tạm dừng quy trình tải ngầm.");
+            console.warn("Sổ đầu bài đang phát sinh dữ liệu gõ dở, tạm dừng tải ngầm.");
             return;
         }
 
