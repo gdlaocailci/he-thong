@@ -631,8 +631,10 @@ async function chuyenTuan(buocNhay) {
             }
             xuatMaTranBang(duLieuTkbHienTai);
 
-            // Nếu tuần này đã được xác thực trong phiên làm việc hiện tại thì không cần gọi lại máy chủ
+            // Nếu tuần này đã được xác thực trong phiên làm việc hiện tại thì không cần tải lại giao diện,
+            // chỉ gửi tín hiệu ngầm để máy chủ tự động sắp xếp trình tự dòng trong Sheet (TKB_HIEN_TAI, TKB_CoDinh, DATA_TKB)
             if (ketQuaSanCo.daXacThucPhien) {
+                try { fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=sapXepSheetTKB&tuan=${tuanDangXem}&nguon=${nguonTruyXuat}&_t=${Date.now()}`).catch(() => {}); } catch (eSort) {}
                 return;
             }
             // Nếu lấy từ bộ nhớ đệm lưu trữ trước đó, chỉ kiểm tra đối chiếu ngầm (coCache = true) mà không làm gián đoạn giao diện
