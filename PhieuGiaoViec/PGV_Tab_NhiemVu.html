@@ -1630,6 +1630,41 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
             return tenGS;
         };
 
+        // Hàm mới: Nhận diện chính xác ID/Tên của người được đánh giá (chủ hồ sơ)
+        const kiemTraNguoiDuocDanhGia = (tId) => {
+            let idChu = "";
+            let tenChu = "";
+            
+            var selectGv = document.getElementById("hopChonGv");
+            if (typeof cotETonTai !== 'undefined' && cotETonTai && selectGv && selectGv.style.display !== "none" && selectGv.value) {
+                idChu = selectGv.value;
+            } else if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) {
+                idChu = canbHientai.canb.ttrg || canbHientai.taik || "";
+            } else if (typeof window.PGV_ID_TC !== 'undefined') {
+                idChu = window.PGV_ID_TC;
+            }
+
+            let mangGV = Array.isArray(dsGiaoVien) ? dsGiaoVien : (dsGiaoVien && dsGiaoVien.dliu ? dsGiaoVien.dliu : []);
+            if (mangGV.length > 0 && idChu) {
+                let ttChu = mangGV.find(cb => cb.taik === idChu || cb.ttrg === idChu || cb.id === idChu || cb.ma === idChu);
+                if (ttChu) tenChu = ttChu.ten || ttChu.tenn || ttChu.hoTen || "";
+            }
+            if (!tenChu && typeof canbHientai !== 'undefined' && canbHientai && canbHientai.tde) {
+                tenChu = canbHientai.tde.tenn || "";
+            }
+
+            let tIdLower = tId.toLowerCase().trim();
+            let idChuLower = idChu.toLowerCase().trim();
+            let prefixChu = idChuLower.split('@')[0];
+            let tenChuLower = tenChu.toLowerCase().trim();
+
+            // Nếu ID lưu trùng với Email, tiền tố Email, hoặc Họ Tên của chủ hồ sơ -> Là người được đánh giá
+            if (tIdLower === idChuLower || tIdLower === prefixChu || (tenChuLower !== "" && tIdLower === tenChuLower)) {
+                return true;
+            }
+            return false;
+        };
+
         const descriptorY = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
         if (descriptorY) {
             const setGocY = descriptorY.set;
@@ -1640,8 +1675,6 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                     let chuGoc = String(val || "");
                     let oLanhDao = document.getElementById('oNoiDungYkienLanhDao');
                     let vungNguoiKhac = document.getElementById('hienThiYkienNguoiKhac');
-                    
-                    let idHienTai = layTenGiamSat(); 
 
                     let noiDungTrongNgoac = "";
                     let regexCu = /\{([\s\S]+?)\}$/; 
@@ -1669,14 +1702,21 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
                           let tId = mTag[1].trim();
                           let tNd = mTag[2].trim();
 
+                          // Vẫn lưu đầy đủ ID vào cơ sở dữ liệu để hệ thống ghi nhớ
                           cuaNguoiKhac += `[${tId}]: ${tNd}\n`;
-                          // Hiển thị trực tiếp ID/Tên để quản lý phân biệt rõ ràng phản hồi của ai
-                          hienThiNguoiKhac += `[${tId}]: ${tNd}\n`;
-                      }
+
+                          // KIỂM TRA: Nếu là người được đánh giá (chính chủ) -> Hiển thị ID
+                          // Nếu là bất kỳ ai khác (các người đánh giá) -> Ẩn ID, chỉ dùng dấu gạch ngang
+                          if (kiemTraNguoiDuocDanhGia(tId)) {
+                              hienThiNguoiKhac += `[${tId}]: ${tNd}\n`;
+                          } else {
+                              hienThiNguoiKhac += `- ${tNd}\n`;
+                          }
+                        }
 
                         if (!coTagNaoKhong && noiDungTrongNgoac.trim() !== "") {
                             cuaNguoiKhac = `[Lãnh đạo]: ${noiDungTrongNgoac.trim()}\n`;
-                            hienThiNguoiKhac = `[Lãnh đạo]: ${noiDungTrongNgoac.trim()}\n`;
+                            hienThiNguoiKhac = `- ${noiDungTrongNgoac.trim()}\n`;
                         }
 
                         if (oLanhDao) oLanhDao.value = cuaToi;
