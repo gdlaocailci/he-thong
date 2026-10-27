@@ -539,6 +539,7 @@ function apDungKhoaGiaoDien() {
     }
 
     if (daChonGvKhac) {
+        // Góc nhìn của người đánh giá: Luôn hiển thị để nhập ý kiến
         $('#vungYkienLanhDaoToanBo').show();
         if (isBGH || isGS) {
             $('#nhapYkien, #nhapBcao').prop('disabled', true);
@@ -549,10 +550,13 @@ function apDungKhoaGiaoDien() {
             $('#nhapYkien, #nhapBcao, #oNoiDungYkienLanhDao').prop('disabled', true);
         }
     } else {
-        // Cải tiến: Luôn hiển thị vùng ý kiến để chính chủ có thể phản hồi
-        $('#vungYkienLanhDaoToanBo').show();
-        // Ô #oNoiDungYkienLanhDao không bị khóa cứng (disabled = true) nữa.
-        // Quyền nhập của người được nhận xét phụ thuộc vào trạng thái "Mở/Khóa" chung ở đầu hàm.
+        // Góc nhìn của chính chủ: Chỉ hiển thị vùng phản hồi khi ĐÃ CÓ ý kiến của người đánh giá
+        let giaTriNguoiKhac = $('#hienThiYkienNguoiKhac').text().trim();
+        if (giaTriNguoiKhac !== "") {
+            $('#vungYkienLanhDaoToanBo').show();
+        } else {
+            $('#vungYkienLanhDaoToanBo').hide();
+        }
     }
     
     $('#vungDinhkBcao .bi-x').css({
