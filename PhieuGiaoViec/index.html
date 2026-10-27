@@ -1376,9 +1376,9 @@ function veKhungBangNhacBaoCao() {
                     <thead style="position: sticky; top: 0; z-index: 1;">
                         <tr style="background-color: #0d6efd; color: white;">
                             <th class="text-center align-middle" style="width: 5%; background-color: #0d6efd; color: white; border: none;">STT</th>
-                            <th class="text-center align-middle" style="width: 15%; background-color: #0d6efd; color: white; border: none;">Mã ID</th>
+                            <th class="text-start ps-3 align-middle" style="width: 15%; background-color: #0d6efd; color: white; border: none;">Mã ID</th>
                             <th class="align-middle" style="width: 35%; background-color: #0d6efd; color: white; border: none;">Họ và tên</th>
-                            <th class="text-center align-middle" style="width: 25%; background-color: #0d6efd; color: white; border: none;">Trạng thái ô C3</th>
+                            <th class="text-center align-middle" style="width: 25%; background-color: #0d6efd; color: white; border: none;">Trạng thái</th>
                             <th class="text-center align-middle" style="width: 20%; background-color: #0d6efd; color: white; border: none;">Hành động</th>
                         </tr>
                     </thead>
@@ -1401,7 +1401,7 @@ function taiDlNhacBaoCao() {
     }
 
     veKhungBangNhacBaoCao();
-    if (typeof datTaiDl === 'function') datTaiDl(true, "Đang rà soát ô C3 các sheet cá nhân...");
+    if (typeof datTaiDl === 'function') datTaiDl(true, "Đang rà soát...");
 
     if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.goiThuCong === 'function') {
         window.khachApi.goiThuCong({ hdong: "laydlnhacbcao" }, function(res) {
@@ -1464,11 +1464,11 @@ function veBangNhacBaoCao(duLieu) {
         html += `
             <tr>
                 <td class="text-center fw-bold text-secondary">${stt++}</td>
-                <td class="text-center">
-                    <span class="badge bg-light text-primary border px-2 py-1 fw-bold fs-6" style="letter-spacing: 0.5px;">
-                        <i class="bi bi-person-badge me-1"></i>${item.maId}
-                    </span>
-                </td>
+                <td class="text-start ps-3">
+                <span class="badge bg-light text-primary border px-2 py-1 fw-bold fs-6" style="letter-spacing: 0.5px;">
+                    <i class="bi bi-person-badge me-1"></i>${item.maId}
+                </span>
+            </td>
                 <td class="ps-3">
                     <div class="fw-bold text-primary text-uppercase" style="font-size: 13.5px;">${item.tenn} ${cvText}</div>
                     <div class="text-muted small" style="font-size: 11.5px;"><i class="bi bi-envelope me-1"></i>${item.email || "Chưa cập nhật"}</div>
