@@ -2248,21 +2248,15 @@ $(document).ready(function() {
 
 // 1. Hàm mở khung xem bản Quy chế (Tự động phục hồi ID kể cả khi tải lại trang)
 function xemBanQuyChe() {
-    // Ưu tiên 1: Lấy từ bộ nhớ cục bộ trình duyệt đã lưu trước đó
     let idQuyChe = localStorage.getItem("PGV_ID_QUY_CHE_CACHE") || "";
 
-    // Ưu tiên 2: Nếu trong ketnoi.js bạn dán thẳng ID tệp (không phải chữ mẫu "dien_ID_")
-    if (!idQuyChe && typeof PGV_ID_QUY_CHE !== 'undefined' && PGV_ID_QUY_CHE && !PGV_ID_QUY_CHE.includes("dien_ID_")) {
-        idQuyChe = PGV_ID_QUY_CHE.trim();
-    }
-
-    // Nếu đã có ID hợp lệ -> Mở ngay tức thì
-    if (idQuyChe && !idQuyChe.includes("dien_ID_")) {
+    // Nếu đã có trong bộ nhớ máy -> Mở xem ngay tức thì
+    if (idQuyChe && idQuyChe.trim() !== "") {
         moQuyCheTheoId(idQuyChe);
         return;
     }
 
-    // Ưu tiên 3: Nếu chưa có trong máy -> Tự động hỏi máy chủ để lấy ID mới nhất về
+    // Nếu chưa có -> Tự động truy vấn máy chủ (đọc ID do PGV_CauHinh.gs quản lý)
     if (typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang kết nối bản Quy chế từ máy chủ...");
     
     if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.goiThuCong === 'function') {
@@ -2319,7 +2313,6 @@ function kiemTraHienThiNutQuyChe() {
     }
 }
 
-// 3. Hàm tải file Quy chế lên Google Drive (Dành riêng cho quyền 'xxx')
 function thucHienTaiLenQuyChe(input) {
     const file = input.files[0];
     if (!file) return;
@@ -2330,12 +2323,11 @@ function thucHienTaiLenQuyChe(input) {
         return;
     }
 
-    if (typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải bản Quy chế lên máy chủ...");
+    if (typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải bản Quy chế lên Google Drive...");
 
     const reader = new FileReader();
     reader.onload = function(e) {
         const base64Data = e.target.result.split(',')[1];
-        let idDich = (typeof PGV_ID_QUY_CHE !== 'undefined') ? PGV_ID_QUY_CHE : "";
 
         if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.goiThuCong === 'function') {
             window.khachApi.goiThuCong({
@@ -2343,8 +2335,7 @@ function thucHienTaiLenQuyChe(input) {
                 tdtai: {
                     tentep: file.name,
                     kieu: file.type,
-                    dliu: base64Data,
-                    idChiDinh: idDich
+                    dliu: base64Data
                 }
             }, function(res) {
                 if (typeof anTaiDl === 'function') anTaiDl();
@@ -2352,7 +2343,6 @@ function thucHienTaiLenQuyChe(input) {
                 
                 if (res && res.ttai === "tcong") {
                     if (res.idFile) {
-                        window.PGV_ID_QUY_CHE = res.idFile;
                         localStorage.setItem("PGV_ID_QUY_CHE_CACHE", res.idFile);
                     }
                     if (typeof hienThongb === 'function') {
