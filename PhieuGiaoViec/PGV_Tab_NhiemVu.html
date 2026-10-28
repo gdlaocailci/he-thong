@@ -2246,31 +2246,56 @@ $(document).ready(function() {
     buildDropdown();
 });
 
-  /* ==========================================================================
-   TÍNH NĂNG: NÚT QUY CHẾ VÀ PHÂN QUYỀN TẢI LÊN (TUÂN THỦ NGUYÊN TẮC VÀNG)
-   ========================================================================== */
-
-// 1. Hàm mở khung xem bản Quy chế (Áp dụng cho mọi tài khoản)
+// 1. Hàm mở khung xem bản Quy chế (Tự động phục hồi ID kể cả khi tải lại trang)
 function xemBanQuyChe() {
-    let idQuyChe = (typeof PGV_ID_QUY_CHE !== 'undefined' && PGV_ID_QUY_CHE) 
-                   ? PGV_ID_QUY_CHE 
-                   : localStorage.getItem("PGV_ID_QUY_CHE_CACHE");
+    // Ưu tiên 1: Lấy từ bộ nhớ cục bộ trình duyệt đã lưu trước đó
+    let idQuyChe = localStorage.getItem("PGV_ID_QUY_CHE_CACHE") || "";
 
-    if (!idQuyChe || idQuyChe.trim() === "" || idQuyChe.includes("dien_ID_")) {
-        if (typeof hienThongb === 'function') {
-            hienThongb('cbh', "Hiện tại Nhà trường chưa cập nhật bản Quy chế điện tử lên hệ thống.");
-        } else {
-            alert("Chưa có bản Quy chế nào được cập nhật.");
-        }
+    // Ưu tiên 2: Nếu trong ketnoi.js bạn dán thẳng ID tệp (không phải chữ mẫu "dien_ID_")
+    if (!idQuyChe && typeof PGV_ID_QUY_CHE !== 'undefined' && PGV_ID_QUY_CHE && !PGV_ID_QUY_CHE.includes("dien_ID_")) {
+        idQuyChe = PGV_ID_QUY_CHE.trim();
+    }
+
+    // Nếu đã có ID hợp lệ -> Mở ngay tức thì
+    if (idQuyChe && !idQuyChe.includes("dien_ID_")) {
+        moQuyCheTheoId(idQuyChe);
         return;
     }
 
-    let linkXem = idQuyChe.trim();
+    // Ưu tiên 3: Nếu chưa có trong máy -> Tự động hỏi máy chủ để lấy ID mới nhất về
+    if (typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang kết nối bản Quy chế từ máy chủ...");
+    
+    if (typeof window.khachApi !== 'undefined' && typeof window.khachApi.goiThuCong === 'function') {
+        window.khachApi.goiThuCong({ hdong: "layidquyche" }, function(res) {
+            if (typeof anTaiDl === 'function') anTaiDl();
+            if (res && res.ttai === "tcong" && res.idFile && res.idFile.trim() !== "") {
+                let idMoi = res.idFile.trim();
+                localStorage.setItem("PGV_ID_QUY_CHE_CACHE", idMoi);
+                moQuyCheTheoId(idMoi);
+            } else {
+                if (typeof hienThongb === 'function') {
+                    hienThongb('cbh', "Hiện tại Nhà trường chưa cập nhật bản Quy chế điện tử lên hệ thống.");
+                } else {
+                    alert("Chưa có bản Quy chế nào được cập nhật.");
+                }
+            }
+        }, function(err) {
+            if (typeof anTaiDl === 'function') anTaiDl();
+            alert("Lỗi kết nối máy chủ: " + err.message);
+        });
+    } else {
+        if (typeof anTaiDl === 'function') anTaiDl();
+        alert("Chưa có bản Quy chế nào được cập nhật.");
+    }
+}
+
+// Hàm bổ trợ mở tệp trong khung xem
+function moQuyCheTheoId(idHoacLink) {
+    let linkXem = String(idHoacLink).trim();
     if (!linkXem.startsWith("http")) {
         linkXem = "https://drive.google.com/file/d/" + linkXem + "/preview";
     }
 
-    // Mở trực tiếp trong modal xem trước tài liệu sẵn có của hệ thống
     if (typeof moKhungXemTep === 'function') {
         moKhungXemTep(linkXem);
     } else {
