@@ -3,7 +3,6 @@ var ddungApi = "https://script.google.com/macros/s/AKfycbz6t2J2H3RNA3CY9KXGv9M0_
 
 // --- CÁC BIẾN CẤU HÌNH ĐỊNH DANH HỆ THỐNG ---
 var PGV_LINK_LOGO = "https://i.postimg.cc/xjzpvXCm/Logo-HL.png"; 
-var PGV_ID_QUY_CHE = "1-7K4re4nD1aLHiD8yCzZc4STG-Ft8feN";
 var PGV_TEN_TRUONG = "Trường TH&THCS Hợp Thành";
 var PGV_TEN_TRUONG_UP = "TRƯỜNG TH&THCS HỢP THÀNH";
 var PGV_TEN_PM = "Quản lý Nhiệm vụ";
