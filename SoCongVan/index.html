@@ -666,14 +666,21 @@
       });
   }
 
-  function executePriorityLoading() {
-      fetchCacheData().then(() => {
-          
-          setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 600);
-          setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 700);
-          preloadDriveFolders();
-      });
-  }
+ function executePriorityLoading() {
+    fetchCacheData().then(() => {
+        setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 600);
+        setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 700);
+        preloadDriveFolders();
+        
+        // Bổ sung đoạn tự động tải dữ liệu cho tab đang hiển thị
+        setTimeout(() => {
+            let activeTab = document.querySelector('.tab-content.active');
+            if (activeTab && activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') {
+                loadDataServer(false);
+            }
+        }, 800);
+    });
+}
 
 function fetchCacheData() {
      return new Promise((resolve) => {
