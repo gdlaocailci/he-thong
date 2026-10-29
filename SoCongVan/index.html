@@ -7,10 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Đang tải hệ thống...</title>
 
-  <script>
-    var sysVer = typeof window.SCV_PHIEN_BAN !== 'undefined' ? window.SCV_PHIEN_BAN : "1.0";
-    document.write('<script src="ketnoi.js?v=' + encodeURIComponent(sysVer) + '"><\/script>');
-  </script>
+  <script src="ketnoi.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
@@ -311,7 +308,7 @@
   window.SCV_CACHE_LICH = [];
   window.SCV_CACHE_CONGVAN = [];
   window.SCV_FOLDER_TREE_CACHE = {}; 
-  window.SCV_DATA_READY = false; // BỔ SUNG CỜ KIỂM SOÁT LUỒNG
+  window.SCV_DATA_READY = false;
 
   let SYS_ACTIVE_ACCOUNT = "";
   let GLOBAL_PERM = false;
@@ -355,289 +352,332 @@
       }
       return MODULES_PROMISE;
   }
-// THUẬT TOÁN PWA SWR: Khởi động lập tức từ Cache cục bộ
+
+  // THUẬT TOÁN PWA SWR: Khởi động lập tức từ Cache cục bộ (An toàn tuyệt đối)
   async function bootFromLocalCache(sysId, htmlReadyPromise) {
       try {
           let cachedStr = localStorage.getItem('SCV_APP_CACHE_' + sysId);
-          if (cachedStr) {
-              let res = JSON.parse(cachedStr);
-              await htmlReadyPromise; // Chờ tải HTML (nhanh vì đã lưu cache)
-              
-             applySystemConfig(res.config);
+          if (!cachedStr) return false;
+          
+          let res = JSON.parse(cachedStr);
+          await htmlReadyPromise;
+          
+          applySystemConfig(res.config);
 
-              if (res.canView === false) {
-                  document.getElementById('loading-overlay').style.display = 'none';
-                  document.getElementById('mainApp').style.display = 'none';
-                  document.getElementById('accessDeniedBanner').style.display = 'flex';
-                  document.getElementById('blockedSysId').innerText = sysId;
-                  return true;
-              }
-
-              window.SCV_CACHE_LICH = res.cacheLich || [];
-              window.SCV_CACHE_CONGVAN = res.cacheCV || [];
-              window.SCV_DATA_READY = true;
-              
-              SYS_ACTIVE_ACCOUNT = sysId;
-              GLOBAL_PERM = res.canInput || false;
-              GLOBAL_ADMIN = res.canAdmin || false;
-              window.GLOBAL_ADMIN = res.canAdmin || false;
-
-              document.getElementById('loading-overlay').style.display = 'none';
-              document.getElementById('mainApp').style.display = 'block';
-
-              if (!res.canInput) {
-                  document.getElementById('btnTabNhap').style.display = 'none'; 
-                  document.getElementById('btnTabCV').style.display = 'none';
-              }
-              if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
-              else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
-
-              if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
-              
-              // Kích hoạt render dữ liệu cũ ngay lập tức
-              setTimeout(() => { 
-                  if (typeof loadDataServer === 'function') loadDataServer(); 
-                  if(typeof initCongVan === 'function') initCongVan();
-                  if(typeof initSearchCV === 'function') initSearchCV();
-              }, 100);
-
-              return true; // Báo hiệu đã boot xong
+          // Nếu cache cũ đang lưu trạng thái bị chặn quyền, xóa cache để kiểm tra lại từ Server
+          if (res.canView === false) {
+              localStorage.removeItem('SCV_APP_CACHE_' + sysId);
+              return false;
           }
+
+          window.SCV_CACHE_LICH = Array.isArray(res.cacheLich) ? res.cacheLich : [];
+          window.SCV_CACHE_CONGVAN = Array.isArray(res.cacheCV) ? res.cacheCV : [];
+          window.SCV_DATA_READY = true;
+          
+          SYS_ACTIVE_ACCOUNT = sysId;
+          GLOBAL_PERM = !!res.canInput;
+          GLOBAL_ADMIN = !!res.canAdmin;
+          window.GLOBAL_ADMIN = !!res.canAdmin;
+
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('accessDeniedBanner').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+
+          document.getElementById('btnTabNhap').style.display = res.canInput ? 'inline-block' : 'none'; 
+          document.getElementById('btnTabCV').style.display = res.canInput ? 'inline-block' : 'none';
+          document.getElementById('btnTabPhanQuyen').style.display = res.canAdmin ? 'inline-block' : 'none';
+
+          if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
+          
+          setTimeout(() => { 
+              if (typeof initTabLich === 'function') initTabLich();
+              if (typeof loadDataServer === 'function') loadDataServer(false); 
+              if (typeof initCongVan === 'function') initCongVan();
+              if (typeof initSearchCV === 'function') initSearchCV();
+          }, 100);
+
+          return true;
       } catch(e) { 
-          console.warn("Lỗi đọc cache cục bộ, sẽ fallback về Server:", e); 
+          console.warn("Lỗi đọc cache cục bộ, chuyển sang tải từ Server:", e); 
           localStorage.removeItem('SCV_APP_CACHE_' + sysId);
+          return false;
       }
-      return false;
   }
- window.onload = async function() {
+
+  window.onload = async function() {
     applySystemConfig(null); 
-    let htmlReadyPromise = ensureModulesLoaded(); // Tải Module HTML song song
+    const gOnload = document.getElementById('g_id_onload');
+    if (gOnload && typeof SCV_GOOGLE_CLIENT_ID !== 'undefined') {
+        gOnload.setAttribute('data-client_id', SCV_GOOGLE_CLIENT_ID);
+    }
+
+    let htmlReadyPromise = ensureModulesLoaded();
     
     const storedId = sessionStorage.getItem("SCV_ACTIVE_ID");
-    if(storedId) {
+    if (storedId) {
       window.SYS_ACTIVE_ID = storedId; 
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('loading-overlay').style.display = 'flex';
       
-      // Bước đột phá: Thử khởi động ngay bằng bộ nhớ cục bộ
       let isBooted = await bootFromLocalCache(storedId, htmlReadyPromise);
       
-      // Khởi chạy tiến trình ngầm đồng bộ với Server
-      if (storedId === "Khách") { handleGuestLogin(true, isBooted); } 
-      else { checkPermissionAndLoad(isBooted); }
+      if (storedId === "Khách") { 
+          handleGuestLogin(true, isBooted); 
+      } else { 
+          checkPermissionAndLoad(isBooted); 
+      }
     }
   };
 
   function decodeJwtResponse(token) {
-    let base64Url = token.split('.')[1];
-    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
+    try {
+      let base64Url = token.split('.')[1];
+      let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return {};
+    }
   }
 
   function handleCredentialResponse(response) {
     const payload = decodeJwtResponse(response.credential);
-    let sysAccount = "";
-    const keys = Object.keys(payload);
-    for(let i=0; i<keys.length; i++) {
-        if(keys[i].indexOf("ma") !== -1 && keys[i].indexOf("il") !== -1) {
-            sysAccount = payload[keys[i]]; break;
+    let sysAccount = payload.email || "";
+    if (!sysAccount) {
+        const keys = Object.keys(payload);
+        for (let i = 0; i < keys.length; i++) {
+            if (keys[i].indexOf("ma") !== -1 && keys[i].indexOf("il") !== -1) {
+                sysAccount = payload[keys[i]]; break;
+            }
         }
     }
     
+    if (!sysAccount) {
+        toast("❌ Không lấy được định danh Email từ Google!");
+        return;
+    }
+
     sessionStorage.setItem("SCV_ACTIVE_ID", sysAccount);
     window.SYS_ACTIVE_ID = sysAccount; 
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('loading-overlay').style.display = 'flex';
-    checkPermissionAndLoad();
+    checkPermissionAndLoad(false);
   }
   
-// NÂNG CẤP: Hàm Đăng nhập Khách với Thuật toán Local-First (SWR)
   function handleGuestLogin(isAutoLogin = false, isBooted = false) {
     if (!isAutoLogin && !isBooted) { 
         document.getElementById('login-overlay').style.display = 'none'; 
         document.getElementById('loading-overlay').style.display = 'flex'; 
     }
+    sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); 
+    window.SYS_ACTIVE_ID = "Khách";
     ensureModulesLoaded();
     
-    google.script.run.withSuccessHandler(async res => {
-      // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ khởi động siêu tốc
-      try {
-          let cacheObj = {
-              config: res.config, canInput: res.canInput, canAdmin: res.canAdmin, canView: res.canView,
-              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich.slice(-300) : window.SCV_CACHE_LICH.slice(-300),
-              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan.slice(-300) : window.SCV_CACHE_CONGVAN.slice(-300)
-          };
-          localStorage.setItem('SCV_APP_CACHE_Khách', JSON.stringify(cacheObj));
-      } catch(e) { console.warn("Lỗi lưu trữ cục bộ tài khoản Khách:", e); }
+    google.script.run
+      .withFailureHandler(err => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('login-overlay').style.display = 'flex';
+        toast("❌ Lỗi kết nối máy chủ: " + err);
+      })
+      .withSuccessHandler(async res => {
+        if (!res) {
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('login-overlay').style.display = 'flex';
+            toast("❌ Máy chủ không phản hồi dữ liệu!");
+            return;
+        }
 
-      applySystemConfig(res.config); 
-      
-      if (res && res.canView) {
-        sessionStorage.setItem("SCV_ACTIVE_ID", "Khách"); window.SYS_ACTIVE_ID = "Khách";
-        SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false; GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false;
+        try {
+            let cacheObj = {
+                config: res.config, canInput: false, canAdmin: false, canView: res.canView,
+                cacheLich: (res.cache && Array.isArray(res.cache.lich)) ? res.cache.lich.slice(-300) : [],
+                cacheCV: (res.cache && Array.isArray(res.cache.congvan)) ? res.cache.congvan.slice(-300) : []
+            };
+            localStorage.setItem('SCV_APP_CACHE_Khách', JSON.stringify(cacheObj));
+        } catch(e) {}
+
+        applySystemConfig(res.config); 
         
-        // Nạp tức thời dữ liệu từ Server để chuẩn bị render
+        if (res.canView) {
+          SYS_ACTIVE_ACCOUNT = "Khách"; GLOBAL_PERM = false; GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false;
+          
+          if (res.cache) {
+              window.SCV_CACHE_LICH = Array.isArray(res.cache.lich) ? res.cache.lich : [];
+              window.SCV_CACHE_CONGVAN = Array.isArray(res.cache.congvan) ? res.cache.congvan : [];
+              window.SCV_DATA_READY = true;
+          }
+
+          await ensureModulesLoaded();
+          if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
+
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('accessDeniedBanner').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+          
+          document.getElementById('btnTabNhap').style.display = 'none';
+          document.getElementById('btnTabCV').style.display = 'none';
+          document.getElementById('btnTabPhanQuyen').style.display = 'none';
+          
+          if (!isBooted) {
+              showTab('tabSearch', document.getElementById('btnTabSearch'));
+              if (typeof initTabLich === 'function') initTabLich();
+              if (window.SCV_DATA_READY) {
+                  let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
+                  let newLich = window.SCV_CACHE_LICH.filter(r => r && r[7] && !seenLich.includes(r[7]));
+                  if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
+                  setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
+                  setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
+              } else {
+                  executePriorityLoading();
+              }
+          } else {
+              let activeTab = document.querySelector('.tab-content.active');
+              if (activeTab) {
+                  if (activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer(false);
+                  else if (activeTab.id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV(false);
+              }
+          }
+        } else {
+          localStorage.removeItem('SCV_APP_CACHE_Khách');
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'none';
+          document.getElementById('login-overlay').style.display = 'none';
+          document.getElementById('accessDeniedBanner').style.display = 'flex';
+          document.getElementById('blockedSysId').innerText = "Tài khoản Khách";
+        }
+      }).SCV_getInitialData("Khách"); 
+  }
+
+  function logoutGoogle() {
+    const curId = sessionStorage.getItem("SCV_ACTIVE_ID");
+    if (curId) localStorage.removeItem('SCV_APP_CACHE_' + curId);
+    sessionStorage.removeItem("SCV_ACTIVE_ID"); 
+    window.SYS_ACTIVE_ID = null; 
+    GLOBAL_ADMIN = false; 
+    window.GLOBAL_ADMIN = false; 
+    location.reload(); 
+  }
+
+  function checkPermissionAndLoad(isBooted = false) {
+    const targetAccount = window.SYS_ACTIVE_ID || sessionStorage.getItem("SCV_ACTIVE_ID") || "";
+    
+    google.script.run
+      .withFailureHandler(err => {
+          document.getElementById('loading-overlay').style.display = 'none';
+          if (!isBooted) {
+              document.getElementById('login-overlay').style.display = 'flex';
+          }
+          toast("❌ Lỗi xác thực máy chủ: " + err);
+      })
+      .withSuccessHandler(async res => {
+        if (!res) {
+            document.getElementById('loading-overlay').style.display = 'none';
+            if (!isBooted) document.getElementById('login-overlay').style.display = 'flex';
+            toast("❌ Không nhận được dữ liệu phân quyền từ máy chủ!");
+            return;
+        }
+
+        applySystemConfig(res.config); 
+        SYS_ACTIVE_ACCOUNT = res.sysId || targetAccount; 
+        GLOBAL_PERM = !!res.canInput; 
+        GLOBAL_ADMIN = !!res.canAdmin; 
+        window.GLOBAL_ADMIN = !!res.canAdmin; 
+        
+        // Nếu không có quyền xem -> Xóa cache và hiện thông báo chặn
+        if (!res.canView) {
+            localStorage.removeItem('SCV_APP_CACHE_' + targetAccount);
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('accessDeniedBanner').style.display = 'flex';
+            document.getElementById('blockedSysId').innerText = SYS_ACTIVE_ACCOUNT;
+            return; 
+        }
+
+        // Lưu Cache khi đã có quyền hợp lệ
+        try {
+            let cacheObj = {
+                config: res.config, canInput: res.canInput, canAdmin: res.canAdmin, canView: res.canView,
+                cacheLich: (res.cache && Array.isArray(res.cache.lich)) ? res.cache.lich.slice(-300) : window.SCV_CACHE_LICH.slice(-300),
+                cacheCV: (res.cache && Array.isArray(res.cache.congvan)) ? res.cache.congvan.slice(-300) : window.SCV_CACHE_CONGVAN.slice(-300)
+            };
+            localStorage.setItem('SCV_APP_CACHE_' + targetAccount, JSON.stringify(cacheObj));
+        } catch(e) { console.warn("Lỗi lưu cache:", e); }
+
+        // Đồng bộ vết đọc an toàn (chống sập mảng JSON)
+        if (res.trackingData) {
+            try {
+                let rawLocalLich = localStorage.getItem('SCV_SEEN_LICH_' + targetAccount);
+                let rawLocalCV = localStorage.getItem('SCV_SEEN_CV_' + targetAccount);
+                
+                let localLich = rawLocalLich ? JSON.parse(rawLocalLich) : [];
+                let localCV = rawLocalCV ? JSON.parse(rawLocalCV) : [];
+                if (!Array.isArray(localLich)) localLich = [];
+                if (!Array.isArray(localCV)) localCV = [];
+
+                let serverLich = Array.isArray(res.trackingData.lich) ? res.trackingData.lich : [];
+                let serverCV = Array.isArray(res.trackingData.cv) ? res.trackingData.cv : [];
+
+                let mergedLich = [...new Set([...localLich, ...serverLich])];
+                let mergedCV = [...new Set([...localCV, ...serverCV])];
+
+                localStorage.setItem('SCV_SEEN_LICH_' + targetAccount, JSON.stringify(mergedLich));
+                localStorage.setItem('SCV_SEEN_CV_' + targetAccount, JSON.stringify(mergedCV));
+
+                if (mergedLich.length > serverLich.length || mergedCV.length > serverCV.length) {
+                    google.script.run.SCV_syncTrackingState({ lich: mergedLich, cv: mergedCV });
+                }
+            } catch (errTrack) {
+                console.warn("Bỏ qua lỗi đồng bộ vết đọc:", errTrack);
+            }
+        }
+        
         if (res.cache && (res.cache.lich || res.cache.congvan)) {
-            window.SCV_CACHE_LICH = res.cache.lich || [];
-            window.SCV_CACHE_CONGVAN = res.cache.congvan || [];
+            window.SCV_CACHE_LICH = Array.isArray(res.cache.lich) ? res.cache.lich : [];
+            window.SCV_CACHE_CONGVAN = Array.isArray(res.cache.congvan) ? res.cache.congvan : [];
             window.SCV_DATA_READY = true;
-            if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
         }
 
         await ensureModulesLoaded();
+        if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
 
-        // 2. Logic xử lý giao diện: Phân nhánh dựa theo trạng thái Boot
+        // Mở giao diện chính và phân quyền nút bấm
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('accessDeniedBanner').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+
+        document.getElementById('btnTabNhap').style.display = res.canInput ? 'inline-block' : 'none';
+        document.getElementById('btnTabCV').style.display = res.canInput ? 'inline-block' : 'none';
+        document.getElementById('btnTabPhanQuyen').style.display = res.canAdmin ? 'inline-block' : 'none';
+
+        // Đồng bộ lại biến quyền bên trong các Tab con
+        if (typeof initTabLich === 'function') initTabLich();
+        if (typeof initSearchCV === 'function') initSearchCV();
+        if (res.canInput && typeof initCongVan === 'function') initCongVan();
+
         if (!isBooted) {
-            // NẾU CHƯA BOOT TỪ CACHE: Chạy luồng khởi tạo giao diện bình thường
-            document.getElementById('loading-overlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            // Ẩn các nút nhập liệu và phân quyền với tài khoản khách
-            document.getElementById('btnTabNhap').style.display = 'none';
-            document.getElementById('btnTabCV').style.display = 'none';
-            document.getElementById('btnTabPhanQuyen').style.display = 'none';
-            
-            // Mặc định hướng khách vào Tab tra cứu Lịch
-            showTab('tabSearch', document.getElementById('btnTabSearch'));
-            
             if (window.SCV_DATA_READY) {
                 let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
-                let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+                let newLich = window.SCV_CACHE_LICH.filter(r => r && r[7] && !seenLich.includes(r[7]));
                 if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
-                
-                /* CHÈN THÊM 2 DÒNG NÀY ĐỂ ĐỒNG BỘ GIAO DIỆN CHO KHÁCH */
-                setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
-                setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
-                
-                preloadDriveFolders();
+                if (res.canInput) preloadDriveFolders();
             } else {
                 executePriorityLoading();
             }
         } else {
-          // NẾU ĐÃ BOOT TỪ CACHE CỤC BỘ -> Cập nhật ngầm lại view (Silent update)
-          if (document.getElementById('accessDeniedBanner').style.display === 'flex') {
-              location.reload(); return;
-          }
-          let activeTab = document.querySelector('.tab-content.active');
+            let activeTab = document.querySelector('.tab-content.active');
             if (activeTab) {
                 if (activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer(false);
                 else if (activeTab.id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV(false);
             }
-            preloadDriveFolders();
+            if (res.canInput) preloadDriveFolders();
         }
-     } else {
-        document.getElementById('loading-overlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('accessDeniedBanner').style.display = 'flex';
-        document.getElementById('blockedSysId').innerText = "Tài khoản Khách";
-      }
-    }).SCV_getInitialData("Khách"); 
-  }
-
-  function logoutGoogle() {
-    sessionStorage.removeItem("SCV_ACTIVE_ID"); window.SYS_ACTIVE_ID = null; 
-    GLOBAL_ADMIN = false; window.GLOBAL_ADMIN = false; location.reload(); 
-  }
-
-  function checkPermissionAndLoad(isBooted = false) {
-    google.script.run.withSuccessHandler(async res => {
-     // 1. Ghi lại dữ liệu mới nhất vào Local Storage để phục vụ lần khởi động sau
-      try {
-          let cacheObj = {
-              config: res.config, canInput: res.canInput, canAdmin: res.canAdmin,
-              cacheLich: (res.cache && res.cache.lich) ? res.cache.lich.slice(-300) : window.SCV_CACHE_LICH.slice(-300),
-              cacheCV: (res.cache && res.cache.congvan) ? res.cache.congvan.slice(-300) : window.SCV_CACHE_CONGVAN.slice(-300)
-          };
-        .withSuccessHandler(async res => {
-          localStorage.setItem('SCV_APP_CACHE_' + window.SYS_ACTIVE_ID, JSON.stringify(cacheObj));
-      } catch(e) { console.warn("Lỗi lưu trữ cục bộ:", e); }
-
-      applySystemConfig(res.config); 
-      SYS_ACTIVE_ACCOUNT = res.sysId; 
-      GLOBAL_PERM = res.canInput; 
-      GLOBAL_ADMIN = !!res.canAdmin; window.GLOBAL_ADMIN = !!res.canAdmin; 
-      
-      if (!res.canView) {
-          document.getElementById('loading-overlay').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'none';
-          document.getElementById('accessDeniedBanner').style.display = 'flex';
-          document.getElementById('blockedSysId').innerText = SYS_ACTIVE_ACCOUNT;
-          return; 
-      }
-
-     if (res.trackingData) {
-    try {
-        let localLich = JSON.parse(localStorage.getItem('SCV_SEEN_LICH_' + window.SYS_ACTIVE_ID) || "[]");
-        let localCV = JSON.parse(localStorage.getItem('SCV_SEEN_CV_' + window.SYS_ACTIVE_ID) || "[]");
-
-        let serverLich = Array.isArray(res.trackingData.lich) ? res.trackingData.lich : [];
-        let serverCV = Array.isArray(res.trackingData.cv) ? res.trackingData.cv : [];
-
-        let mergedLich = [...new Set([...localLich, ...serverLich])];
-        let mergedCV = [...new Set([...localCV, ...serverCV])];
-
-        localStorage.setItem('SCV_SEEN_LICH_' + window.SYS_ACTIVE_ID, JSON.stringify(mergedLich));
-        localStorage.setItem('SCV_SEEN_CV_' + window.SYS_ACTIVE_ID, JSON.stringify(mergedCV));
-
-        if (mergedLich.length > serverLich.length || mergedCV.length > serverCV.length) {
-            google.script.run.SCV_syncTrackingState({ lich: mergedLich, cv: mergedCV });
-        }
-    } catch(errTrack) {
-        console.warn("Lỗi đồng bộ vết đọc, hệ thống đã bỏ qua an toàn:", errTrack);
-    }
-}
-      
-      if (res.cache && (res.cache.lich || res.cache.congvan)) {
-          window.SCV_CACHE_LICH = res.cache.lich || [];
-          window.SCV_CACHE_CONGVAN = res.cache.congvan || [];
-          window.SCV_DATA_READY = true;
-          if (typeof SCV_UpdateBadges === 'function') SCV_UpdateBadges();
-      }
-
-      await ensureModulesLoaded();
-
-      // 2. Logic xử lý giao diện: Phân nhánh dựa theo trạng thái Khởi động
-      if (!isBooted) {
-          document.getElementById('loading-overlay').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'block';
-
-          if (!res.canInput) {
-              document.getElementById('btnTabNhap').style.display = 'none'; document.getElementById('btnTabCV').style.display = 'none';
-          }
-          if (res.canAdmin) { document.getElementById('btnTabPhanQuyen').style.display = 'inline-block'; } 
-          else { document.getElementById('btnTabPhanQuyen').style.display = 'none'; }
-
-          if (window.SCV_DATA_READY) {
-              let seenLich = typeof SCV_GetSeenIDs === 'function' ? SCV_GetSeenIDs('LICH') : [];
-              let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
-              if (typeof loadDataServer === 'function') loadDataServer(newLich.length > 0);
-              setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 300);
-              setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 400);
-              preloadDriveFolders();
-          } else {
-              executePriorityLoading();
-          }
-      } else {
-          // NẾU ĐÃ BOOT TỪ CACHE CỤC BỘ -> Cập nhật ngầm lại view (Silent update)
-          let activeTab = document.querySelector('.tab-content.active');
-          if (activeTab) {
-              if (activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') loadDataServer(false);
-              else if (activeTab.id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') loadDataSearchCV(false);
-          }
-          preloadDriveFolders();
-      }
-
-    }).SCV_getInitialData(window.SYS_ACTIVE_ID);
+      }).SCV_getInitialData(targetAccount);
   }
 
   async function loadSystemModules() {
       try {
-        // Tối ưu hóa: Sử dụng biến phiên bản hệ thống để tận dụng Cache trình duyệt.
-        // Giúp khởi động phần mềm tức thì, giảm tải request lên máy chủ.
         const sysVersion = typeof SCV_PHIEN_BAN !== 'undefined' && SCV_PHIEN_BAN ? SCV_PHIEN_BAN : "1.0";
         const cacheBuster = "?v=" + encodeURIComponent(sysVersion); 
         
@@ -674,45 +714,42 @@
       });
   }
 
- function executePriorityLoading() {
-    fetchCacheData().then(() => {
-        setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 600);
-        setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 700);
-        preloadDriveFolders();
-        
-        // Bổ sung đoạn tự động tải dữ liệu cho tab đang hiển thị
-        setTimeout(() => {
-            let activeTab = document.querySelector('.tab-content.active');
-            if (activeTab && activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') {
-                loadDataServer(false);
-            }
-        }, 800);
-    });
-}
+  function executePriorityLoading() {
+      fetchCacheData().then(() => {
+          setTimeout(() => { if(typeof initCongVan === 'function') initCongVan(); }, 600);
+          setTimeout(() => { if(typeof initSearchCV === 'function') initSearchCV(); }, 700);
+          if (GLOBAL_PERM) preloadDriveFolders();
+          setTimeout(() => {
+              let activeTab = document.querySelector('.tab-content.active');
+              if (activeTab && activeTab.id === 'tabSearch' && typeof loadDataServer === 'function') {
+                  loadDataServer(false);
+              }
+          }, 800);
+      });
+  }
 
-function fetchCacheData() {
+  function fetchCacheData() {
      return new Promise((resolve) => {
          google.script.run.withSuccessHandler(res => {
-             if(!res.error) {
-                 window.SCV_CACHE_LICH = res.lich || [];
-                 window.SCV_CACHE_CONGVAN = res.congvan || [];
-                 window.SCV_DATA_READY = true; // KÍCH HOẠT CỜ SAU KHI CÓ DỮ LIỆU
+             if(res && !res.error) {
+                 window.SCV_CACHE_LICH = Array.isArray(res.lich) ? res.lich : [];
+                 window.SCV_CACHE_CONGVAN = Array.isArray(res.congvan) ? res.congvan : [];
+                 window.SCV_DATA_READY = true;
                  
                  if(typeof SCV_UpdateBadges === 'function') {
                      SCV_UpdateBadges();
                  }
 
-                 // SMART TRIGGER: Tự động phân tích Tab hiện tại để bung dữ liệu
                  let activeTab = document.querySelector('.tab-content.active');
                  if (activeTab) {
                      let activeTabId = activeTab.id;
                      if (activeTabId === 'tabSearch' && typeof loadDataServer === 'function') {
                          let seenLich = SCV_GetSeenIDs('LICH');
-                         let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+                         let newLich = window.SCV_CACHE_LICH.filter(r => r && r[7] && !seenLich.includes(r[7]));
                          loadDataServer(newLich.length > 0);
                      } else if (activeTabId === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') {
                          let seenCV = SCV_GetSeenIDs('CV');
-                         let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
+                         let newCV = window.SCV_CACHE_CONGVAN.filter(r => r && r.id && !seenCV.includes(r.id));
                          loadDataSearchCV(newCV.length > 0);
                      } else if (activeTabId === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') {
                          loadPhanQuyen();
@@ -725,14 +762,18 @@ function fetchCacheData() {
      });
   }
 
-  // THUẬT TOÁN ĐỒNG BỘ LOCAL STORAGE: LƯU VẾT THEO ID (ID-BASED TRACKING)
   function SCV_GetSeenIDs(type) {
-      let key = 'SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID;
-      let data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : [];
+      try {
+          let key = 'SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID;
+          let data = localStorage.getItem(key);
+          let parsed = data ? JSON.parse(data) : [];
+          return Array.isArray(parsed) ? parsed : [];
+      } catch(e) {
+          return [];
+      }
   }
 
-let syncTimeout = null;
+  let syncTimeout = null;
   function SCV_MarkAsSeen(type, id, rowElement) {
       if (!id) return;
       let seen = SCV_GetSeenIDs(type);
@@ -742,9 +783,6 @@ let syncTimeout = null;
           localStorage.setItem('SCV_SEEN_' + type + '_' + window.SYS_ACTIVE_ID, JSON.stringify(seen));
           SCV_UpdateBadges();
 
-          // THUẬT TOÁN TRỄ (DEBOUNCE): Kéo dài thời gian chờ lên 60 giây (60000ms)
-          // Mọi cú click trong vòng 60 giây sẽ liên tục đặt lại bộ đếm, 
-          // chỉ gửi 1 lệnh duy nhất lên máy chủ sau khi ngừng thao tác hoàn toàn.
           if (window.SYS_ACTIVE_ID && window.SYS_ACTIVE_ID !== "Khách") {
               clearTimeout(syncTimeout);
               syncTimeout = setTimeout(() => {
@@ -755,7 +793,6 @@ let syncTimeout = null;
           }
       }
       
-      // Xóa màu cờ báo và reset trạng thái dòng ngay lập tức ở trình duyệt
       if(rowElement) {
           rowElement.style.animation = 'none';
           rowElement.style.borderLeft = '';
@@ -764,13 +801,11 @@ let syncTimeout = null;
       }
   }
 
-function SCV_UpdateBadges() {
-      // THUẬT TOÁN ACTIVE ZONE: Lấy danh sách ID của 200 bản ghi mới nhất
-      let latestCV = window.SCV_CACHE_CONGVAN.slice(-200).map(r => r.id);
+  function SCV_UpdateBadges() {
+      let latestCV = (window.SCV_CACHE_CONGVAN || []).slice(-200).map(r => r ? r.id : null).filter(Boolean);
       let seenCV = SCV_GetSeenIDs('CV');
       
-      // ĐIỀU KIỆN MỚI: Phải nằm trong Top 200 VÀ chưa từng xem
-      let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && latestCV.includes(r.id) && !seenCV.includes(r.id));
+      let newCV = (window.SCV_CACHE_CONGVAN || []).filter(r => r && r.id && latestCV.includes(r.id) && !seenCV.includes(r.id));
       let badgeCV = document.getElementById('badge_cv_moi');
       if (badgeCV) {
           if (newCV.length > 0) {
@@ -781,11 +816,10 @@ function SCV_UpdateBadges() {
           }
       }
 
-      let latestLich = window.SCV_CACHE_LICH.slice(-200).map(r => r[7]);
+      let latestLich = (window.SCV_CACHE_LICH || []).slice(-200).map(r => r ? r[7] : null).filter(Boolean);
       let seenLich = SCV_GetSeenIDs('LICH');
       
-      // ĐIỀU KIỆN MỚI: Phải nằm trong Top 200 VÀ chưa từng xem
-      let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && latestLich.includes(r[7]) && !seenLich.includes(r[7]));
+      let newLich = (window.SCV_CACHE_LICH || []).filter(r => r && r[7] && latestLich.includes(r[7]) && !seenLich.includes(r[7]));
       let badgeLich = document.getElementById('badge_lich_moi');
       if (badgeLich) {
           if (newLich.length > 0) {
@@ -797,31 +831,28 @@ function SCV_UpdateBadges() {
       }
   }
 
-function showTab(id, btn) {
+  function showTab(id, btn) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
     
-    // ĐỐI VỚI TAB PHÂN QUYỀN: Kích hoạt tải dữ liệu trực tiếp từ sheet KHAIBAO ngay lập tức
     if(id === 'tabPhanQuyen' && typeof loadPhanQuyen === 'function') {
         loadPhanQuyen();
         return;
     }
 
-    // NGĂN CHẶN XUNG ĐỘT (RACE CONDITION): 
-    // Nếu click tab mà máy chủ chưa tải xong, chỉ lật giao diện, tuyệt đối không được bung lệnh tìm kiếm rỗng!
     if (!window.SCV_DATA_READY) return;
     
     if(id === 'tabSearch' && typeof loadDataServer === 'function') {
         let seenLich = SCV_GetSeenIDs('LICH');
-        let newLich = window.SCV_CACHE_LICH.filter(r => r[7] && !seenLich.includes(r[7]));
+        let newLich = window.SCV_CACHE_LICH.filter(r => r && r[7] && !seenLich.includes(r[7]));
         loadDataServer(newLich.length > 0); 
     }
     
     if(id === 'tabSearchCongVan' && typeof loadDataSearchCV === 'function') {
         let seenCV = SCV_GetSeenIDs('CV');
-        let newCV = window.SCV_CACHE_CONGVAN.filter(r => r.id && !seenCV.includes(r.id));
+        let newCV = window.SCV_CACHE_CONGVAN.filter(r => r && r.id && !seenCV.includes(r.id));
         loadDataSearchCV(newCV.length > 0);
     }
   }
@@ -846,7 +877,6 @@ function showTab(id, btn) {
     setTimeout(() => d.style.display = 'none', 5000);
   }
 
-  /* KHỐI XỬ LÝ NHÚNG TÀI LIỆU VÀ TẢI XUỐNG (ĐÃ TỐI ƯU HÓA LOGIC & GIAO DIỆN) */
   let urlTepXemTruocHienTai = ""; 
 
   function moKhungXemTep(duong_dan) {
@@ -910,15 +940,14 @@ function showTab(id, btn) {
     urlTepXemTruocHienTai = ""; 
   }
 
-function copyLinkDangXem() {
-  if (!urlTepXemTruocHienTai) return;
-  
-  navigator.clipboard.writeText(urlTepXemTruocHienTai).then(function() {
-      toast("✅ Đã sao chép đường dẫn tài liệu!");
-  }).catch(function(err) {
-      toast("❌ Không thể sao chép: " + err);
-  });
-}
+  function copyLinkDangXem() {
+    if (!urlTepXemTruocHienTai) return;
+    navigator.clipboard.writeText(urlTepXemTruocHienTai).then(function() {
+        toast("✅ Đã sao chép đường dẫn tài liệu!");
+    }).catch(function(err) {
+        toast("❌ Không thể sao chép: " + err);
+    });
+  }
 
   function taiTepDangXem() {
     if (!urlTepXemTruocHienTai) return;
@@ -967,7 +996,6 @@ function copyLinkDangXem() {
   }
    
   khoaTruyCapMaNguon();
-  
 </script>
 </body>
 </html>
