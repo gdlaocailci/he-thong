@@ -631,10 +631,8 @@ async function chuyenTuan(buocNhay) {
             }
             xuatMaTranBang(duLieuTkbHienTai);
 
-            // Nếu tuần này đã được xác thực trong phiên làm việc hiện tại thì không cần tải lại giao diện,
-            // chỉ gửi tín hiệu ngầm để máy chủ tự động sắp xếp trình tự dòng trong Sheet (TKB_HIEN_TAI, TKB_CoDinh, DATA_TKB)
+            // Nếu tuần này đã được xác thực trong phiên làm việc hiện tại thì không cần gọi lại máy chủ
             if (ketQuaSanCo.daXacThucPhien) {
-                try { fetch(`${CAU_HINH_FRONTEND.URL_API_MAY_CHU}?thaoTac=sapXepSheetTKB&tuan=${tuanDangXem}&nguon=${nguonTruyXuat}&_t=${Date.now()}`).catch(() => {}); } catch (eSort) {}
                 return;
             }
             // Nếu lấy từ bộ nhớ đệm lưu trữ trước đó, chỉ kiểm tra đối chiếu ngầm (coCache = true) mà không làm gián đoạn giao diện
@@ -1470,6 +1468,167 @@ window.danhDauDongThayDoiTKB = function(inputEl) {
     }
 };
 
+// =========================================================================
+// HÀM KIỂM TRA MÔN HOẠT ĐỘNG TRẢI NGHIỆM / HOẠT ĐỘNG TẬP THỂ (ĐƯỢC PHÉP TRÙNG TIẾT)
+// =========================================================================
+window.laTietHoatDongTapTheDuocPhepTrung = function(monHoc, ut) {
+    if (!monHoc) return false;
+    let monNorm = String(monHoc).trim().toLowerCase().normalize('NFC');
+    let monKhongDau = monNorm.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+    
+    // Nhận diện các biến thể của Hoạt động trải nghiệm (HĐTN)
+    if (monNorm.includes('hđtn') || 
+        monKhongDau.includes('hdtn') || 
+        monNorm.includes('hoạt động trải nghiệm') || 
+        monKhongDau.includes('hoat dong trai nghiem')) {
+        return true;
+    }
+    
+    // Tiết Chào cờ / Sinh hoạt dưới cờ / Hoạt động tập thể
+    if (monNorm.includes('chào cờ') || monKhongDau.includes('chao co') || 
+        monNorm.includes('dưới cờ') || monKhongDau.includes('duoi co')) {
+        return true;
+    }
+    
+    // Môn có độ ưu tiên 1 hoặc 6 trong Khung chương trình (thường là Chào cờ hoặc Sinh hoạt lớp tập thể)
+    if (ut === 1 || ut === 6) {
+        return true;
+    }
+    
+    return false;
+};
+
+// =========================================================================
+// HÀM KIỂM TRA TRÙNG GIÁO VIÊN KHI XẾP LỊCH TKB (NGOẠI TRỪ TIẾT HĐTN TẬP THỂ)
+// =========================================================================
+window.kiemTraVaXuLyTrungGiaoVienKhiXep = function(inputEl, tenGvMoi) {
+    if (!inputEl || !inputEl.id || !inputEl.id.startsWith('gv_') || !tenGvMoi) return true;
+    
+    let parts = inputEl.id.split('_');
+    if (parts.length < 5) return true;
+    let thu = parts[1];
+    let buoi = parts[2];
+    let tiet = parts[3];
+    let lopHienTai = parts.slice(4).join('_');
+    
+    let giaTriCu = inputEl.dataset.val || '';
+    let tenGvMoiNorm = tenGvMoi.trim().toLowerCase().normalize('NFC');
+    let giaTriCuNorm = giaTriCu.trim().toLowerCase().normalize('NFC');
+    
+    // Nếu giá trị mới không đổi so với giá trị trước khi sửa của ô này thì không kiểm tra
+    if (tenGvMoiNorm === giaTriCuNorm) return true;
+    
+    // Lấy thông tin ưu tiên môn học từ khung chương trình
+    const khung = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.KHUNG_CHUONG_TRINH) ? thongSoHocVu.KHUNG_CHUONG_TRINH : {};
+    let keyUuTien = "";
+    for (let k in khung) {
+        if (k.toLowerCase().replace(/\s+/g, '').indexOf("ưutiên") !== -1 || k.toLowerCase().replace(/\s+/g, '').indexOf("uutien") !== -1) {
+            keyUuTien = k;
+            break;
+        }
+    }
+    const uuTienMon = keyUuTien ? khung[keyUuTien] : {};
+    
+    // Môn học tại ô hiện tại:
+    let theMonHienTai = document.getElementById(`mon_${thu}_${buoi}_${tiet}_${lopHienTai}`);
+    let monHienTai = theMonHienTai ? theMonHienTai.value.trim() : '';
+    let utHienTai = parseInt(uuTienMon[monHienTai]) || 99;
+    let hienTaiLaHDTN = window.laTietHoatDongTapTheDuocPhepTrung(monHienTai, utHienTai);
+    
+    let dsLopTrung = [];
+    let setLopUI = new Set();
+    document.querySelectorAll('th[data-cotlop]').forEach(th => setLopUI.add(th.getAttribute('data-cotlop')));
+    
+    // 1. Quét các ô giáo viên cùng tiết trên giao diện DOM:
+    let cacOGvCungTiet = document.querySelectorAll(`input[id^="gv_${thu}_${buoi}_${tiet}_"]`);
+    cacOGvCungTiet.forEach(oGv => {
+        if (oGv === inputEl) return;
+        let gvVal = oGv.value.trim();
+        if (!gvVal || gvVal === '--' || gvVal === '---') return;
+        
+        let partsKhac = oGv.id.split('_');
+        let lopKhac = partsKhac.slice(4).join('_');
+        
+        let theMonKhac = document.getElementById(`mon_${thu}_${buoi}_${tiet}_${lopKhac}`);
+        let monKhac = theMonKhac ? theMonKhac.value.trim() : '';
+        let utKhac = parseInt(uuTienMon[monKhac]) || 99;
+        let lopKhacLaHDTN = window.laTietHoatDongTapTheDuocPhepTrung(monKhac, utKhac);
+        
+        // Ngoại trừ tiết HĐTN / hoạt động tập thể thì được phép trùng tiết (1 giáo viên có thể tổ chức cho cả trường)
+        if (hienTaiLaHDTN && lopKhacLaHDTN) return;
+        
+        let tapGv = gvVal.toLowerCase().normalize('NFC').split(/[,;&-]/).map(s => s.trim());
+        if (tapGv.includes(tenGvMoiNorm) || gvVal.toLowerCase().normalize('NFC') === tenGvMoiNorm) {
+            dsLopTrung.push({
+                lop: lopKhac,
+                mon: monKhac,
+                thu: thu,
+                buoi: buoi,
+                tiet: tiet
+            });
+        }
+    });
+    
+    // 2. Quét các lớp ẩn trong duLieuTkbHienTai (nếu có):
+    if (typeof duLieuTkbHienTai !== 'undefined' && Array.isArray(duLieuTkbHienTai) && duLieuTkbHienTai.length > 0) {
+        duLieuTkbHienTai.forEach(tietGoc => {
+            if (!tietGoc || !tietGoc.maGv) return;
+            if (setLopUI.has(tietGoc.maLop)) return;
+            
+            let thuGoc = String(tietGoc.thu || '').trim();
+            let buoiGoc = String(tietGoc.buoi || '').trim();
+            let tietSoGoc = String(tietGoc.tiet || '').trim();
+            
+            if (thuGoc === thu && buoiGoc === buoi && tietSoGoc === String(tiet)) {
+                let monAn = tietGoc.monHoc || '';
+                let utAn = parseInt(uuTienMon[monAn]) || 99;
+                let lopAnLaHDTN = window.laTietHoatDongTapTheDuocPhepTrung(monAn, utAn);
+                
+                // Ngoại trừ tiết HĐTN / hoạt động tập thể thì được phép trùng tiết
+                if (hienTaiLaHDTN && lopAnLaHDTN) return;
+                
+                let tapGvAn = String(tietGoc.maGv).toLowerCase().normalize('NFC').split(/[,;&-]/).map(s => s.trim());
+                if (tapGvAn.includes(tenGvMoiNorm) || String(tietGoc.maGv).toLowerCase().normalize('NFC') === tenGvMoiNorm) {
+                    dsLopTrung.push({
+                        lop: tietGoc.maLop + ' (ẩn)',
+                        mon: monAn,
+                        thu: thu,
+                        buoi: buoi,
+                        tiet: tiet
+                    });
+                }
+            }
+        });
+    }
+    
+    if (dsLopTrung.length > 0) {
+        let thongTinCacLop = dsLopTrung.map(it => `Lớp ${it.lop} (${it.thu}, ${it.buoi}, Tiết ${it.tiet}${it.mon ? ' - Môn: ' + it.mon : ''})`).join('\n- ');
+        
+        alert(`⚠️ CẢNH BÁO TRÙNG LỊCH GIÁO VIÊN:\n\nGiáo viên "${tenGvMoi}" đã được xếp lịch ở:\n- ${thongTinCacLop} rồi!\n\n(Lưu ý: Chỉ các tiết HĐTN/hoạt động tập thể mới được phép trùng giáo viên).\n\nVui lòng kiểm tra lại.`);
+        
+        // Trả về giá trị trước khi thay đổi:
+        inputEl.value = giaTriCu;
+        if (!inputEl.value) {
+            inputEl.placeholder = '--';
+        }
+        
+        // Khôi phục trạng thái cờ sửa chữa nếu ô chưa sửa trước đó:
+        let td = inputEl.closest('td');
+        if (td && inputEl.dataset.daSuaTruocDo !== '1') {
+            td.removeAttribute('data-thaydoi');
+            let icon = td.querySelector('.icon-sua-chua');
+            if (icon) icon.remove();
+        }
+        
+        if (typeof kiemTraTrungGiaoVienToanBang === 'function') {
+            kiemTraTrungGiaoVienToanBang(true);
+        }
+        return false;
+    }
+    
+    return true;
+};
+
 function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = true, loaiDanhSach = '', coQuyenSua = quyenSuaChua) {
     let idThocTinh = idPhanTu ? `id="${idPhanTu}"` : '';
     let thuocTinhKhoa = coQuyenSua ? '' : 'disabled'; 
@@ -1480,49 +1639,61 @@ function taoTuyChonDong(danhSach, giaTriMacDinh, kieuText, idPhanTu, isTarget = 
     let kieuKiemTraGV = (idPhanTu && idPhanTu.startsWith('gv_')) ? `if(typeof kiemTraTrungGiaoVienToanBang === 'function') kiemTraTrungGiaoVienToanBang();` : '';
     let triggerThayDoi = `if(typeof danhDauDongThayDoiTKB === 'function') danhDauDongThayDoiTKB(this);`;
     
-    let onFocusClick = `this.dataset.val=this.value; if(this.value !== ''){ this.placeholder=this.value; this.value=''; } if(this.showPicker) this.showPicker();`;
+    let onFocusClick = `this.dataset.val=this.value; this.dataset.valGoc=this.value; this.dataset.daSuaTruocDo=(this.closest('td')&&this.closest('td').getAttribute('data-thaydoi')==='true')?'1':'0'; if(this.value !== ''){ this.placeholder=this.value; this.value=''; } if(this.showPicker) this.showPicker();`;
     let onBlurLogic = `if(this.value.trim() === '') { this.value = this.dataset.val || ''; } this.placeholder='--'; xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV}`;
     
-    let suKienMoi = `oninput="${kieuKiemTraGV} ${triggerThayDoi}" onchange="xacThucGiaTriHopLe(this, '${loaiDanhSach}'); ${kieuKiemTraGV} ${triggerThayDoi}" onfocus="${onFocusClick}" onclick="if(this.showPicker) this.showPicker();" onblur="${onBlurLogic}"`;
+    let suKienMoi = `oninput="${kieuKiemTraGV} ${triggerThayDoi}" onchange="if(xacThucGiaTriHopLe(this, '${loaiDanhSach}') !== false){ ${kieuKiemTraGV} ${triggerThayDoi} }" onfocus="${onFocusClick}" onclick="if(this.showPicker) this.showPicker();" onblur="${onBlurLogic}"`;
 
-    let html = `<input type="text" size="1" list="${idDatalist}" ${idThocTinh} ${thuocTinhKhoa} value="${giaTriMacDinh || ''}" placeholder="--" class="w-full h-full min-w-0 bg-transparent outline-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;" autocomplete="off" ${suKienMoi}>`; 
+    let html = `<input type="text" size="1" list="${idDatalist}" ${idThocTinh} ${thuocTinhKhoa} data-val="${giaTriMacDinh || ''}" data-val-goc="${giaTriMacDinh || ''}" value="${giaTriMacDinh || ''}" placeholder="--" class="w-full h-full min-w-0 bg-transparent outline-none text-center ${cssKhoa} py-1 font-bold ${kieuText} ${cssAn}" style="font-family:'Times New Roman',Times,serif;" autocomplete="off" ${suKienMoi}>`; 
     
     return html;
 }
 
-window.xacThucGiaTriHopLe = function(inputEl, loaiDanhSach) {
-    if (!inputEl) return;
+window.xacThucGiaTriHopLe = function(inputEl, loaiDanhSach, kiemTraTrung = true) {
+    if (!inputEl) return true;
     let giaTri = inputEl.value.trim();
 
     // [NÂNG CẤP]: Xóa trắng ô hoàn toàn nếu người dùng chọn "---" hoặc "--"
     if (giaTri === '---' || giaTri === '--') { 
         inputEl.value = ''; 
         inputEl.dataset.val = ''; // Xóa bộ nhớ tạm để ngăn hàm onblur khôi phục lại chữ cũ
-        return; 
+        return true; 
     }
 
-    if (giaTri === '') { inputEl.value = ''; return; }
+    if (giaTri === '') { inputEl.value = ''; return true; }
 
     let danhSachChuan = (loaiDanhSach === 'mon') ? (thongSoHocVu.DANH_SACH_MON_HOC || []) : (thongSoHocVu.DANH_SACH_GIAO_VIEN || []);
 
-    if (danhSachChuan.includes(giaTri)) { inputEl.value = giaTri; return; }
-
-    let giaTriChuanHoa = giaTri.normalize('NFC').toLowerCase().replace(/\s+/g, ' ');
     let giaTriDung = null;
-
-    for (let i = 0; i < danhSachChuan.length; i++) {
-        let itemChuanHoa = danhSachChuan[i].normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
-        if (giaTriChuanHoa === itemChuanHoa) { giaTriDung = danhSachChuan[i]; break; }
+    if (danhSachChuan.includes(giaTri)) {
+        giaTriDung = giaTri;
+    } else {
+        let giaTriChuanHoa = giaTri.normalize('NFC').toLowerCase().replace(/\s+/g, ' ');
+        for (let i = 0; i < danhSachChuan.length; i++) {
+            let itemChuanHoa = danhSachChuan[i].normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
+            if (giaTriChuanHoa === itemChuanHoa) { giaTriDung = danhSachChuan[i]; break; }
+        }
     }
 
-    if (giaTriDung) { inputEl.value = giaTriDung; } 
-    else {
+    if (giaTriDung) {
+        // Kiểm tra xếp trùng giáo viên nếu là ô giáo viên (ngoại trừ HĐTN)
+        if (loaiDanhSach === 'gv' && kiemTraTrung && inputEl.id && inputEl.id.startsWith('gv_')) {
+            let hopLe = window.kiemTraVaXuLyTrungGiaoVienKhiXep(inputEl, giaTriDung);
+            if (!hopLe) {
+                return false; // Đã trùng và đã trả về giá trị trước khi thay đổi
+            }
+        }
+        inputEl.value = giaTriDung;
+        inputEl.dataset.val = giaTriDung;
+        return true;
+    } else {
         inputEl.value = '';
         if (inputEl.parentElement && inputEl.parentElement.tagName === 'TD') {
             let theTd = inputEl.parentElement;
             theTd.classList.add('bg-red-300', 'transition-colors', 'duration-300');
             setTimeout(() => { theTd.classList.remove('bg-red-300'); }, 800);
         }
+        return false;
     }
 };
 
@@ -2617,14 +2788,17 @@ function thucThiKiemTraTrungGiaoVienToanBang() {
                 let slotKey = `${thu}_${buoi}_${tiet}`;
                 let demGv = {}; let chiTietLop = {};
 
-                let dsAn = mapTkbAnTheoTiet[slotKey];
+               let dsAn = mapTkbAnTheoTiet[slotKey];
                 if (dsAn) {
                     dsAn.forEach(tietGoc => {
                         let tenGv = tietGoc.maGv ? tietGoc.maGv.trim() : "";
                         let monHoc = tietGoc.monHoc ? tietGoc.monHoc.trim() : "";
                         if (tenGv !== "" && tenGv !== "--") {
                             let ut = parseInt(uuTienMon[monHoc]) || 99;
-                            if (ut !== 1 && ut !== 6) {
+                            let laHDTN = (typeof window.laTietHoatDongTapTheDuocPhepTrung === 'function') 
+                                ? window.laTietHoatDongTapTheDuocPhepTrung(monHoc, ut)
+                                : (ut === 1 || ut === 6);
+                            if (!laHDTN) {
                                 demGv[tenGv] = (demGv[tenGv] || 0) + 1;
                                 if (!chiTietLop[tenGv]) chiTietLop[tenGv] = [];
                                 chiTietLop[tenGv].push(`${tietGoc.maLop}(ẩn)`);
@@ -2637,7 +2811,10 @@ function thucThiKiemTraTrungGiaoVienToanBang() {
                 if (dsHien) {
                     dsHien.forEach(item => {
                         let ut = parseInt(uuTienMon[item.monHoc]) || 99;
-                        if (ut !== 1 && ut !== 6) {
+                        let laHDTN = (typeof window.laTietHoatDongTapTheDuocPhepTrung === 'function') 
+                            ? window.laTietHoatDongTapTheDuocPhepTrung(item.monHoc, ut)
+                            : (ut === 1 || ut === 6);
+                        if (!laHDTN) {
                             demGv[item.tenGv] = (demGv[item.tenGv] || 0) + 1;
                             if (!chiTietLop[item.tenGv]) chiTietLop[item.tenGv] = [];
                             chiTietLop[item.tenGv].push(item.lop);
@@ -4101,3 +4278,714 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(window.khoiTaoNutNhapExcelTKBUI, 300);
 }
+//=================================
+// =========================================================================
+// PHÂN HỆ MỞ RỘNG: KIỂM TOÁN ĐỊNH MỨC TỪNG MÔN & QUẢN LÝ ĐẨY TIẾT / THẾ TIẾT
+// Vị trí: Đặt tại cuối file app.js - Hoạt động độc lập, an toàn tuyệt đối
+// =========================================================================
+
+window.trangThaiDacBietTKB = window.trangThaiDacBietTKB || {};
+
+// -------------------------------------------------------------------------
+// HÀM 1: Khởi tạo bộ nhớ lưu trạng thái Đẩy tiết / Thế tiết từ LocalStorage
+// -------------------------------------------------------------------------
+window.khoiTaoCoDayTheTietTKB = function() {
+    try {
+        let key = (typeof window.layKhoaCachLy === 'function')
+            ? window.layKhoaCachLy('SmartTKB_CoDayTheTiet_V2')
+            : 'SmartTKB_CoDayTheTiet_V2';
+        let raw = localStorage.getItem(key);
+        if (raw) {
+            window.trangThaiDacBietTKB = JSON.parse(raw) || {};
+        }
+    } catch (e) {
+        console.warn("Không thể đọc cache cờ Đẩy/Thế tiết:", e);
+    }
+};
+window.khoiTaoCoDayTheTietTKB();
+
+// -------------------------------------------------------------------------
+// HÀM 2: Lưu trạng thái Đẩy tiết / Thế tiết xuống LocalStorage
+// -------------------------------------------------------------------------
+window.luuCoDayTheTietTKB = function() {
+    try {
+        let key = (typeof window.layKhoaCachLy === 'function')
+            ? window.layKhoaCachLy('SmartTKB_CoDayTheTiet_V2')
+            : 'SmartTKB_CoDayTheTiet_V2';
+        localStorage.setItem(key, JSON.stringify(window.trangThaiDacBietTKB));
+    } catch (e) {}
+};
+
+// -------------------------------------------------------------------------
+// HÀM 3: Chuyển đổi chế độ [Bình thường] -> [ĐẨY TIẾT] -> [THẾ TIẾT]
+// Thao tác: Giữ phím Alt + Nhấp chuột trái vào ô Môn hoặc ô Giáo viên
+// -------------------------------------------------------------------------
+window.chuyenDoiCheDoDayTheTiet = function(thu, buoi, tiet, lop) {
+    if (typeof window.kiemTraTuanTkbDaKhoa === 'function' && window.kiemTraTuanTkbDaKhoa(tuanDangXem)) {
+        alert(`⚠️ Thời khóa biểu Tuần ${tuanDangXem} đang bị KHÓA. Không thể thay đổi trạng thái tiết học!`);
+        return;
+    }
+    let namHoc = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.NAM_HOC) ? thongSoHocVu.NAM_HOC : 'NH';
+    let maO = `${namHoc}_${tuanDangXem}_${thu}_${buoi}_${tiet}_${lop}`;
+    let trangThaiHienTai = window.trangThaiDacBietTKB[maO] || '';
+
+    if (trangThaiHienTai === '') {
+        window.trangThaiDacBietTKB[maO] = 'DAY_TIET';
+    } else if (trangThaiHienTai === 'DAY_TIET') {
+        window.trangThaiDacBietTKB[maO] = 'THE_TIET';
+    } else {
+        delete window.trangThaiDacBietTKB[maO];
+    }
+
+    window.luuCoDayTheTietTKB();
+    window.veNhanDayTheTietTrenO(thu, buoi, tiet, lop);
+    window.capNhatCanhBaoChiTietMonTrenLuoi(lop);
+};
+
+// -------------------------------------------------------------------------
+// HÀM 4: Vẽ nhãn hiển thị [ĐẨY] hoặc [THẾ] ở góc trên bên trái ô TKB
+// -------------------------------------------------------------------------
+window.veNhanDayTheTietTrenO = function(thu, buoi, tiet, lop) {
+    let oMon = document.getElementById(`mon_${thu}_${buoi}_${tiet}_${lop}`);
+    let oGv = document.getElementById(`gv_${thu}_${buoi}_${tiet}_${lop}`);
+    if (!oMon) return;
+
+    let tdMon = oMon.closest('td');
+    let tdGv = oGv ? oGv.closest('td') : null;
+    if (!tdMon) return;
+
+    let namHoc = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.NAM_HOC) ? thongSoHocVu.NAM_HOC : 'NH';
+    let maO = `${namHoc}_${tuanDangXem}_${thu}_${buoi}_${tiet}_${lop}`;
+    let co = window.trangThaiDacBietTKB[maO];
+
+    let nhanMonCu = tdMon.querySelector('.badge-day-the');
+    if (nhanMonCu) nhanMonCu.remove();
+    if (tdGv) {
+        let nhanGvCu = tdGv.querySelector('.badge-day-the');
+        if (nhanGvCu) nhanGvCu.remove();
+    }
+
+    if (co === 'DAY_TIET') {
+        tdMon.classList.add('relative');
+        tdMon.insertAdjacentHTML(
+            'beforeend',
+            `<span class="badge-day-the absolute top-0.5 left-0.5 px-1 py-0 text-[9px] font-extrabold bg-blue-600 text-white rounded shadow pointer-events-none leading-tight" title="Tiết dạy đẩy tiến độ / dạy bù">ĐẨY</span>`
+        );
+    } else if (co === 'THE_TIET' && tdGv) {
+        tdGv.classList.add('relative');
+        tdGv.insertAdjacentHTML(
+            'beforeend',
+            `<span class="badge-day-the absolute top-0.5 left-0.5 px-1 py-0 text-[9px] font-extrabold bg-purple-600 text-white rounded shadow pointer-events-none leading-tight" title="Tiết dạy thế / dạy thay giáo viên">THẾ</span>`
+        );
+    }
+};
+
+// -------------------------------------------------------------------------
+// HÀM 5: Thuật toán lõi phân tích chi tiết Thiếu môn gì / Thừa môn gì
+// -------------------------------------------------------------------------
+window.phanTichChiTietDinhMucTungMon = function(lopMucTieu = null) {
+    const khungCT = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.KHUNG_CHUONG_TRINH)
+        ? thongSoHocVu.KHUNG_CHUONG_TRINH
+        : {};
+    const namHoc = (typeof thongSoHocVu !== 'undefined' && thongSoHocVu.NAM_HOC)
+        ? thongSoHocVu.NAM_HOC
+        : 'NH';
+
+    let mangLop = [];
+    if (lopMucTieu) {
+        mangLop = [lopMucTieu];
+    } else {
+        const cacThLop = document.querySelectorAll('#tieuDeBang th[colspan="2"][data-cotlop]');
+        cacThLop.forEach(th => {
+            let tenLop = th.getAttribute('data-cotlop');
+            if (tenLop && !mangLop.includes(tenLop)) mangLop.push(tenLop);
+        });
+        if (mangLop.length === 0 && typeof thongSoHocVu !== 'undefined' && Array.isArray(thongSoHocVu.DANH_SACH_LOP)) {
+            mangLop = [...thongSoHocVu.DANH_SACH_LOP];
+        }
+    }
+
+    let demThucTe = {};
+    let demDayTiet = {};
+    let demTheTiet = {};
+    let viTriMonTheoLop = {};
+
+    mangLop.forEach(lop => {
+        demThucTe[lop] = {};
+        demDayTiet[lop] = {};
+        demTheTiet[lop] = {};
+        viTriMonTheoLop[lop] = {};
+    });
+
+    const selector = lopMucTieu
+        ? `input[id^="mon_"][id$="_${lopMucTieu}"]`
+        : `input[id^="mon_"]`;
+    const cacOMon = document.querySelectorAll(selector);
+
+    cacOMon.forEach(oMon => {
+        let parts = oMon.id.split('_');
+        if (parts.length < 5) return;
+        let thu = parts[1];
+        let buoi = parts[2];
+        let tiet = parts[3];
+        let lop = parts.slice(4).join('_');
+
+        if (!demThucTe[lop]) return;
+
+        let tenMon = oMon.value.trim();
+        if (tenMon !== '' && tenMon !== '--' && tenMon !== '---') {
+            demThucTe[lop][tenMon] = (demThucTe[lop][tenMon] || 0) + 1;
+
+            if (!viTriMonTheoLop[lop][tenMon]) viTriMonTheoLop[lop][tenMon] = [];
+            viTriMonTheoLop[lop][tenMon].push(`${thu} (${buoi} T${tiet})`);
+
+            let maO = `${namHoc}_${tuanDangXem}_${thu}_${buoi}_${tiet}_${lop}`;
+            let loaiCo = window.trangThaiDacBietTKB[maO] || '';
+            if (loaiCo === 'DAY_TIET') {
+                demDayTiet[lop][tenMon] = (demDayTiet[lop][tenMon] || 0) + 1;
+            } else if (loaiCo === 'THE_TIET') {
+                demTheTiet[lop][tenMon] = (demTheTiet[lop][tenMon] || 0) + 1;
+            }
+        }
+    });
+
+    let ketQuaToanTruong = {};
+
+    mangLop.forEach(lop => {
+        let dmChuongTrinhLop = khungCT[lop] || {};
+        let tkThucTeLop = demThucTe[lop] || {};
+
+        let tapHopMon = new Set([
+            ...Object.keys(dmChuongTrinhLop),
+            ...Object.keys(tkThucTeLop)
+        ]);
+
+        let dsMonThieu = [];
+        let dsMonThua = [];
+        let dsMonDayTiet = [];
+        let dsMonKhop = [];
+        let chiTietTungMon = {};
+        let tongTietChuan = 0;
+        let tongTietDaXep = 0;
+
+        tapHopMon.forEach(mon => {
+            if (!mon || mon === 'undefined') return;
+            let soTietChuan = parseInt(dmChuongTrinhLop[mon], 10) || 0;
+            let soTietXep = tkThucTeLop[mon] || 0;
+            let soTietDay = demDayTiet[lop][mon] || 0;
+            let soTietThe = demTheTiet[lop][mon] || 0;
+            let chenhLech = soTietXep - soTietChuan;
+
+            if (soTietChuan === 0 && soTietXep === 0) return;
+
+            tongTietChuan += soTietChuan;
+            tongTietDaXep += soTietXep;
+
+            let trangThaiMon = 'KHOP';
+            if (chenhLech < 0) {
+                trangThaiMon = 'THIEU';
+                dsMonThieu.push({
+                    mon: mon,
+                    chuan: soTietChuan,
+                    daXep: soTietXep,
+                    soThieu: Math.abs(chenhLech)
+                });
+            } else if (chenhLech > 0) {
+                if (soTietDay >= chenhLech && soTietChuan > 0) {
+                    trangThaiMon = 'DAY_TIET';
+                    dsMonDayTiet.push({
+                        mon: mon,
+                        chuan: soTietChuan,
+                        daXep: soTietXep,
+                        soThua: chenhLech,
+                        soDay: soTietDay
+                    });
+                } else {
+                    trangThaiMon = 'THUA';
+                    dsMonThua.push({
+                        mon: mon,
+                        chuan: soTietChuan,
+                        daXep: soTietXep,
+                        soThua: chenhLech,
+                        ngoaiKhung: (soTietChuan === 0)
+                    });
+                }
+            } else {
+                dsMonKhop.push({
+                    mon: mon,
+                    chuan: soTietChuan,
+                    daXep: soTietXep
+                });
+            }
+
+            chiTietTungMon[mon] = {
+                mon: mon,
+                chuan: soTietChuan,
+                daXep: soTietXep,
+                chenhLech: chenhLech,
+                soDayTiet: soTietDay,
+                soTheTiet: soTietThe,
+                trangThai: trangThaiMon,
+                cacViTri: viTriMonTheoLop[lop][mon] || []
+            };
+        });
+
+        ketQuaToanTruong[lop] = {
+            lop: lop,
+            tongChuan: tongTietChuan,
+            tongDaXep: tongTietDaXep,
+            dsMonThieu: dsMonThieu,
+            dsMonThua: dsMonThua,
+            dsMonDayTiet: dsMonDayTiet,
+            dsMonKhop: dsMonKhop,
+            chiTietTungMon: chiTietTungMon,
+            hoanHao: (dsMonThieu.length === 0 && dsMonThua.length === 0 && tongTietChuan > 0)
+        };
+    });
+
+    return ketQuaToanTruong;
+};
+
+// -------------------------------------------------------------------------
+// HÀM 6: Cập nhật Huy hiệu cảnh báo trên đầu cột Lớp & Tô viền ô môn thừa
+// -------------------------------------------------------------------------
+let _timerCapNhatCanhBaoMon = null;
+window.capNhatCanhBaoChiTietMonTrenLuoi = function(lopCuThe = null) {
+    if (_timerCapNhatCanhBaoMon) clearTimeout(_timerCapNhatCanhBaoMon);
+    _timerCapNhatCanhBaoMon = setTimeout(() => {
+        const ketQua = window.phanTichChiTietDinhMucTungMon(lopCuThe);
+
+        Object.keys(ketQua).forEach(lop => {
+            let kqLop = ketQua[lop];
+            let thLop = document.querySelector(`#tieuDeBang th[colspan="2"][data-cotlop="${lop}"]`);
+            if (!thLop) return;
+
+            let vungCu = thLop.querySelector('.vung-chi-tiet-mon-header');
+            if (vungCu) vungCu.remove();
+
+            if (kqLop.tongChuan === 0 && kqLop.tongDaXep === 0) return;
+
+            let chuoiThieu = kqLop.dsMonThieu.map(x => `${x.mon} (-${x.soThieu})`).join(', ');
+            let chuoiThua = kqLop.dsMonThua.map(x => `${x.mon} (+${x.soThua})`).join(', ');
+            let chuoiDay = kqLop.dsMonDayTiet.map(x => `${x.mon} (+${x.soThua} Đẩy)`).join(', ');
+
+            let htmlHeader = '';
+
+            if (kqLop.dsMonThieu.length === 0 && kqLop.dsMonThua.length === 0 && kqLop.dsMonDayTiet.length === 0) {
+                htmlHeader = `
+                    <div onclick="window.moPopupChiTietMonCuaLop('${lop}')" class="vung-chi-tiet-mon-header mt-0.5 px-1.5 py-0.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-400 rounded text-[10px] font-bold cursor-pointer transition-colors leading-tight mx-1" title="Bấm để xem chi tiết từng môn của lớp ${lop}">
+                        ✔ Đủ chuẩn (${kqLop.tongDaXep}/${kqLop.tongChuan} tiết)
+                    </div>`;
+            } else {
+                let dongTomTat = [];
+                if (kqLop.dsMonThieu.length > 0) {
+                    dongTomTat.push(`<span class="text-rose-700">Thiếu: ${chuoiThieu}</span>`);
+                }
+                if (kqLop.dsMonThua.length > 0) {
+                    dongTomTat.push(`<span class="text-amber-800">Thừa: ${chuoiThua}</span>`);
+                }
+                if (kqLop.dsMonDayTiet.length > 0) {
+                    dongTomTat.push(`<span class="text-blue-700">Đẩy: ${chuoiDay}</span>`);
+                }
+
+                let mauKhung = kqLop.dsMonThieu.length > 0
+                    ? 'bg-rose-50 border-rose-400 hover:bg-rose-100'
+                    : (kqLop.dsMonThua.length > 0 ? 'bg-amber-50 border-amber-400 hover:bg-amber-100' : 'bg-blue-50 border-blue-400 hover:bg-blue-100');
+
+                let tooltipChiTiet = `LỚP ${lop} (Tổng đã xếp: ${kqLop.tongDaXep}/${kqLop.tongChuan} tiết)\n` +
+                    (chuoiThieu ? `❌ THIẾU TIẾT: ${chuoiThieu}\n` : '') +
+                    (chuoiThua ? `⚠️ THỪA TIẾT: ${chuoiThua}\n` : '') +
+                    (chuoiDay ? `📘 ĐẨY TIẾT: ${chuoiDay}\n` : '') +
+                    `\n(Nhấp chuột vào đây để xem bảng đối soát từng môn của lớp ${lop})`;
+
+                htmlHeader = `
+                    <div onclick="window.moPopupChiTietMonCuaLop('${lop}')" class="vung-chi-tiet-mon-header mt-0.5 px-1.5 py-0.5 ${mauKhung} border rounded text-[10px] font-extrabold cursor-pointer transition-colors leading-tight mx-1 max-w-[230px] truncate" title="${tooltipChiTiet}">
+                        <span class="underline">${kqLop.tongDaXep}/${kqLop.tongChuan}:</span> ${dongTomTat.join(' | ')}
+                    </div>`;
+            }
+
+            thLop.insertAdjacentHTML('beforeend', htmlHeader);
+
+            const cacOMonLopNay = document.querySelectorAll(`input[id^="mon_"][id$="_${lop}"]`);
+            cacOMonLopNay.forEach(oMon => {
+                let tenMon = oMon.value.trim();
+                let td = oMon.closest('td');
+                if (!td) return;
+
+                let thongTinMon = kqLop.chiTietTungMon[tenMon];
+                if (tenMon && thongTinMon && thongTinMon.trangThai === 'THUA') {
+                    oMon.title = `⚠️ Môn [${tenMon}] của lớp ${lop} đang xếp ${thongTinMon.daXep}/${thongTinMon.chuan} tiết (Thừa ${thongTinMon.chenhLech} tiết).\n- Nếu là dạy đẩy tiết/dạy bù: Giữ phím Alt + Click chuột trái vào ô này để đánh dấu [ĐẨY].`;
+                    td.style.boxShadow = 'inset 0 0 0 2px #f59e0b';
+                } else if (tenMon && thongTinMon) {
+                    oMon.title = `✔ Môn [${tenMon}] - Lớp ${lop}: Đã xếp ${thongTinMon.daXep}/${thongTinMon.chuan} tiết.`;
+                    td.style.boxShadow = '';
+                } else {
+                    oMon.title = '';
+                    td.style.boxShadow = '';
+                }
+            });
+        });
+    }, 100);
+};
+
+// -------------------------------------------------------------------------
+// HÀM 7: Thanh trợ lý gợi ý & Điền nhanh môn còn thiếu khi bấm vào ô TKB
+// -------------------------------------------------------------------------
+window.hienThiGoiYMonConThieuKhiFocus = function(inputEl) {
+    if (!inputEl || !inputEl.id || !inputEl.id.startsWith('mon_')) return;
+    let parts = inputEl.id.split('_');
+    if (parts.length < 5) return;
+    let thu = parts[1], buoi = parts[2], tiet = parts[3], lop = parts.slice(4).join('_');
+
+    let kq = window.phanTichChiTietDinhMucTungMon(lop)[lop];
+    if (!kq) return;
+
+    let thanhGoiY = document.getElementById('thanhGoiYDinhMucLop');
+    if (!thanhGoiY) {
+        thanhGoiY = document.createElement('div');
+        thanhGoiY.id = 'thanhGoiYDinhMucLop';
+        thanhGoiY.className = 'fixed bottom-4 left-4 right-4 md:left-72 md:right-6 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-slate-600 z-[9990] flex flex-wrap items-center justify-between gap-2 text-xs transition-all duration-200';
+        document.body.appendChild(thanhGoiY);
+    }
+
+    let htmlThieu = kq.dsMonThieu.length > 0
+        ? kq.dsMonThieu.map(m => `<button type="button" onmousedown="window.dienNhanhMonConThieu('${inputEl.id}', '${m.mon}')" class="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded shadow-sm cursor-pointer transition-colors" title="Bấm để điền nhanh môn ${m.mon} vào ô đang chọn">${m.mon}: thiếu ${m.soThieu} (${m.daXep}/${m.chuan})</button>`).join(' ')
+        : `<span class="text-emerald-400 font-bold">✔ Không thiếu môn nào</span>`;
+
+    let htmlThua = kq.dsMonThua.length > 0
+        ? kq.dsMonThua.map(m => `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold rounded">${m.mon}: thừa ${m.soThua} (${m.daXep}/${m.chuan})</span>`).join(' ')
+        : '';
+
+    thanhGoiY.innerHTML = `
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-1 bg-blue-600 text-white font-extrabold rounded-lg uppercase tracking-wider">Lớp ${lop} (${thu} - ${buoi} T${tiet})</span>
+            <span class="font-bold text-slate-300">Tổng: <strong class="text-white">${kq.tongDaXep}/${kq.tongChuan}</strong> tiết</span>
+            <span class="text-slate-500">|</span>
+            <span class="font-semibold text-rose-300">Cần xếp thêm:</span>
+            <div class="flex flex-wrap items-center gap-1.5">${htmlThieu}</div>
+            ${htmlThua ? `<span class="text-slate-500">|</span><span class="font-semibold text-amber-300">Đang dư:</span><div class="flex flex-wrap items-center gap-1.5">${htmlThua}</div>` : ''}
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+            <span class="text-[11px] text-slate-400 hidden xl:inline">Mẹo: Bấm nút môn đỏ để điền nhanh | Alt+Click vào ô để gắn nhãn [ĐẨY] / [THẾ]</span>
+            <button type="button" onclick="document.getElementById('thanhGoiYDinhMucLop').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold px-1.5 py-0.5 rounded">✕</button>
+        </div>
+    `;
+    thanhGoiY.classList.remove('hidden');
+};
+
+window.dienNhanhMonConThieu = function(idInputMon, tenMon) {
+    let oMon = document.getElementById(idInputMon);
+    if (!oMon || oMon.disabled) return;
+    oMon.value = tenMon;
+    oMon.dataset.val = tenMon;
+    if (typeof window.xacThucGiaTriHopLe === 'function') window.xacThucGiaTriHopLe(oMon, 'mon');
+    if (typeof window.danhDauDongThayDoiTKB === 'function') window.danhDauDongThayDoiTKB(oMon);
+    let parts = idInputMon.split('_');
+    let lop = parts.length >= 5 ? parts.slice(4).join('_') : null;
+    window.capNhatCanhBaoChiTietMonTrenLuoi(lop);
+    setTimeout(() => window.hienThiGoiYMonConThieuKhiFocus(oMon), 50);
+};
+
+// -------------------------------------------------------------------------
+// HÀM 8: Mở bảng Pop-up đối soát riêng 1 Lớp & Nâng cấp bảng kiemTraDinhMuc
+// -------------------------------------------------------------------------
+window.moPopupChiTietMonCuaLop = function(lop) {
+    let kq = window.phanTichChiTietDinhMucTungMon(lop)[lop];
+    if (!kq) return;
+
+    let dsMon = Object.values(kq.chiTietTungMon).sort((a, b) => {
+        const thuTu = { 'THIEU': 1, 'THUA': 2, 'DAY_TIET': 3, 'KHOP': 4 };
+        return (thuTu[a.trangThai] || 9) - (thuTu[b.trangThai] || 9);
+    });
+
+    let dongBang = dsMon.map(m => {
+        let nhanTrangThai = '';
+        let mauDong = '';
+        if (m.trangThai === 'THIEU') {
+            nhanTrangThai = `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 border border-rose-300 rounded font-extrabold">⚠ Thiếu ${Math.abs(m.chenhLech)} tiết</span>`;
+            mauDong = 'bg-rose-50/70';
+        } else if (m.trangThai === 'THUA') {
+            nhanTrangThai = `<span class="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded font-extrabold">⚠ Thừa ${m.chenhLech} tiết${m.chuan === 0 ? ' (Ngoài KCT)' : ''}</span>`;
+            mauDong = 'bg-amber-50/70';
+        } else if (m.trangThai === 'DAY_TIET') {
+            nhanTrangThai = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-300 rounded font-extrabold">📘 Đẩy +${m.chenhLech} tiết</span>`;
+            mauDong = 'bg-blue-50/60';
+        } else {
+            nhanTrangThai = `<span class="text-emerald-700 font-bold">✔ Đủ tiết</span>`;
+        }
+
+        return `
+            <tr class="${mauDong} border-b border-slate-300 hover:bg-slate-100">
+                <td class="p-2 border-r border-slate-300 text-left font-bold text-slate-900 pl-3">${m.mon}</td>
+                <td class="p-2 border-r border-slate-300 font-bold text-slate-700">${m.chuan}</td>
+                <td class="p-2 border-r border-slate-300 font-extrabold text-blue-700 text-base">${m.daXep}</td>
+                <td class="p-2 border-r border-slate-300">${nhanTrangThai}</td>
+                <td class="p-2 text-left text-xs text-slate-600 pl-3">${m.cacViTri.join(', ') || '<span class="italic text-rose-500">Chưa xếp tiết nào</span>'}</td>
+            </tr>`;
+    }).join('');
+
+    let html = `
+        <div class="mb-3 p-3 bg-slate-100 rounded-lg border border-slate-300 flex flex-wrap items-center justify-between gap-2 text-sm">
+            <div>
+                <span class="font-extrabold text-blue-900 text-base uppercase">CHI TIẾT ĐỊNH MỨC MÔN HỌC - LỚP ${lop}</span>
+                <span class="ml-3 font-bold text-slate-700">Tổng tiết: <strong class="text-blue-700">${kq.tongDaXep}</strong> / ${kq.tongChuan} tiết chuẩn</span>
+            </div>
+            <button onclick="kiemTraDinhMuc()" class="px-3 py-1 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded text-xs cursor-pointer">Xem toàn trường</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-center border-collapse border border-slate-400">
+                <thead class="bg-slate-200 text-slate-900 font-bold">
+                    <tr>
+                        <th class="border border-slate-400 p-2 text-left pl-3">Môn học</th>
+                        <th class="border border-slate-400 p-2 w-24">Khung chuẩn</th>
+                        <th class="border border-slate-400 p-2 w-24">Đã xếp</th>
+                        <th class="border border-slate-400 p-2 w-40">Kết luận</th>
+                        <th class="border border-slate-400 p-2 text-left pl-3">Vị trí các tiết đã xếp trong tuần</th>
+                    </tr>
+                </thead>
+                <tbody>${dongBang}</tbody>
+            </table>
+        </div>`;
+
+    let noiDungModal = document.getElementById('noiDungKiemTra');
+    let modal = document.getElementById('modalKiemTra');
+    if (noiDungModal && modal) {
+        noiDungModal.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+};
+
+window.kiemTraDinhMuc = function(cheDoLoc = 'TAT_CA') {
+    if (typeof window.khoaNutThaoTacTKB === 'function') window.khoaNutThaoTacTKB(true, 'Đang kiểm toán từng môn');
+
+    const ketQuaToanTruong = window.phanTichChiTietDinhMucTungMon();
+    const mangLop = Object.keys(ketQuaToanTruong);
+
+    let tongLopLoi = 0;
+    let tongMonThieuToanTruong = 0;
+    let tongMonThuaToanTruong = 0;
+
+    mangLop.forEach(lop => {
+        let kq = ketQuaToanTruong[lop];
+        if (!kq.hoanHao) tongLopLoi++;
+        tongMonThieuToanTruong += kq.dsMonThieu.length;
+        tongMonThuaToanTruong += kq.dsMonThua.length;
+    });
+
+    let htmlKetQua = `
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 bg-slate-100 p-2.5 rounded-lg border border-slate-300">
+            <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span class="px-2.5 py-1 rounded bg-rose-100 text-rose-800 border border-rose-300">Lớp chưa khớp: ${tongLopLoi}/${mangLop.length}</span>
+                <span class="px-2.5 py-1 rounded bg-rose-600 text-white">Môn đang thiếu tiết: ${tongMonThieuToanTruong}</span>
+                <span class="px-2.5 py-1 rounded bg-amber-500 text-white">Môn đang thừa tiết: ${tongMonThuaToanTruong}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs font-bold">
+                <button onclick="kiemTraDinhMuc('TAT_CA')" class="px-2.5 py-1 rounded cursor-pointer ${cheDoLoc === 'TAT_CA' ? 'bg-blue-700 text-white' : 'bg-white text-slate-700 border border-slate-300'}">Tất cả các môn</button>
+                <button onclick="kiemTraDinhMuc('CHI_LOI')" class="px-2.5 py-1 rounded cursor-pointer ${cheDoLoc === 'CHI_LOI' ? 'bg-rose-700 text-white' : 'bg-white text-rose-700 border border-rose-300'}">Chỉ hiện môn Thiếu / Thừa</button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-center border-collapse border border-gray-400" style="font-family:'Times New Roman',Times,serif;">
+                <thead class="bg-purple-100 text-purple-900 font-bold">
+                    <tr>
+                        <th class="border border-gray-400 p-2 min-w-[65px]">Lớp</th>
+                        <th class="border border-gray-400 p-2 min-w-[140px]">Môn học</th>
+                        <th class="border border-gray-400 p-2 min-w-[85px]">Khung chuẩn</th>
+                        <th class="border border-gray-400 p-2 min-w-[85px]">Đang xếp</th>
+                        <th class="border border-gray-400 p-2 min-w-[160px]">Trạng thái Môn</th>
+                        <th class="border border-gray-400 p-2 min-w-[200px] bg-slate-100 text-slate-900">Tổng hợp Thiếu / Thừa theo Lớp</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    let tongTatCaTietChuan = 0;
+    let tongTatCaTietUI = 0;
+
+    mangLop.forEach(lop => {
+        let kqLop = ketQuaToanTruong[lop];
+        tongTatCaTietChuan += kqLop.tongChuan;
+        tongTatCaTietUI += kqLop.tongDaXep;
+
+        let dsMonRender = Object.values(kqLop.chiTietTungMon);
+        if (cheDoLoc === 'CHI_LOI') {
+            dsMonRender = dsMonRender.filter(m => m.trangThai !== 'KHOP');
+        }
+
+        if (dsMonRender.length === 0) return;
+
+        let tomTatThieu = kqLop.dsMonThieu.length > 0
+            ? `<div class="text-xs text-rose-700 font-bold mt-1 text-left">❌ Thiếu: ${kqLop.dsMonThieu.map(x => `${x.mon} (${x.soThieu})`).join(', ')}</div>`
+            : '';
+        let tomTatThua = kqLop.dsMonThua.length > 0
+            ? `<div class="text-xs text-amber-800 font-bold mt-1 text-left">⚠️ Thừa: ${kqLop.dsMonThua.map(x => `${x.mon} (${x.soThua})`).join(', ')}</div>`
+            : '';
+        let tomTatDay = kqLop.dsMonDayTiet.length > 0
+            ? `<div class="text-xs text-blue-700 font-bold mt-1 text-left">📘 Đẩy tiết: ${kqLop.dsMonDayTiet.map(x => `${x.mon} (+${x.soThua})`).join(', ')}</div>`
+            : '';
+        let tomTatHoanHao = kqLop.hoanHao
+            ? `<div class="text-xs text-emerald-700 font-extrabold mt-1">✔ Khớp chuẩn 100% các môn</div>`
+            : '';
+
+        dsMonRender.forEach((m, index) => {
+            let trangThaiHTML = `<span class="text-green-700 font-bold">✔ Đủ (${m.daXep}/${m.chuan})</span>`;
+            let cssRow = "";
+
+            if (m.trangThai === 'THIEU') {
+                trangThaiHTML = `<span class="text-red-600 font-extrabold">⚠ Thiếu ${Math.abs(m.chenhLech)} tiết (Môn ${m.mon})</span>`;
+                cssRow = "bg-red-50/60";
+            } else if (m.trangThai === 'THUA') {
+                trangThaiHTML = `<span class="text-orange-600 font-extrabold">⚠ Thừa ${m.chenhLech} tiết (Môn ${m.mon})</span>`;
+                cssRow = "bg-orange-50/60";
+            } else if (m.trangThai === 'DAY_TIET') {
+                trangThaiHTML = `<span class="text-blue-700 font-extrabold">📘 Đẩy +${m.chenhLech} tiết (${m.mon})</span>`;
+                cssRow = "bg-blue-50/50";
+            }
+
+            htmlKetQua += `<tr class="${cssRow} hover:bg-gray-50 border-b border-gray-300">`;
+            if (index === 0) {
+                htmlKetQua += `<td rowspan="${dsMonRender.length}" class="border-r border-gray-400 p-2 font-extrabold bg-gray-50 align-middle text-base">${lop}</td>`;
+            }
+
+            htmlKetQua += `
+                <td class="border-r border-gray-300 p-2 font-semibold text-blue-900 text-left pl-4">${m.mon}</td>
+                <td class="border-r border-gray-300 p-2 font-bold text-gray-700">${m.chuan}</td>
+                <td class="border-r border-gray-300 p-2 font-extrabold text-blue-700 text-lg">${m.daXep}</td>
+                <td class="border-r border-gray-300 p-2">${trangThaiHTML}</td>`;
+
+            if (index === 0) {
+                htmlKetQua += `
+                    <td rowspan="${dsMonRender.length}" class="p-2.5 align-middle bg-slate-50 border-l border-gray-400">
+                        <div class="text-xs text-gray-700 font-bold border-b border-gray-300 pb-1 mb-1">
+                            Chuẩn: <span class="text-blue-700 text-base">${kqLop.tongChuan}</span> |
+                            Đã xếp: <span class="${kqLop.hoanHao ? 'text-emerald-700' : 'text-rose-600'} text-base">${kqLop.tongDaXep}</span>
+                        </div>
+                        ${tomTatHoanHao}
+                        ${tomTatThieu}
+                        ${tomTatThua}
+                        ${tomTatDay}
+                    </td>`;
+            }
+            htmlKetQua += `</tr>`;
+        });
+    });
+
+    htmlKetQua += `
+        <tr class="bg-gray-200 text-gray-900 font-extrabold border-t-2 border-gray-500">
+            <td colspan="5" class="border-r border-gray-400 p-3 text-right uppercase">Tổng số tiết toàn trường trong tuần:</td>
+            <td class="p-3 leading-tight whitespace-nowrap text-left pl-4">
+                <div class="text-sm text-gray-700 mb-1">Chuẩn: <span class="text-2xl text-blue-700 ml-2">${tongTatCaTietChuan}</span></div>
+                <div class="text-sm text-gray-700">Đã xếp: <span class="text-2xl text-red-600 ml-2">${tongTatCaTietUI}</span></div>
+            </td>
+        </tr></tbody></table></div>`;
+
+    document.getElementById('noiDungKiemTra').innerHTML = htmlKetQua;
+    document.getElementById('modalKiemTra').classList.remove('hidden');
+    if (typeof window.khoaNutThaoTacTKB === 'function') window.khoaNutThaoTacTKB(false);
+};
+
+// -------------------------------------------------------------------------
+// HÀM 9: Chốt chặn kiểm tra trước khi Lưu & Tự động gắn kết (Hook) vào hệ thống
+// -------------------------------------------------------------------------
+window.kiemTraTruocKhiLuuTKB = function(loaiLuu) {
+    const ketQua = window.phanTichChiTietDinhMucTungMon();
+    let dsCanhBao = [];
+
+    Object.keys(ketQua).forEach(lop => {
+        let kq = ketQua[lop];
+        if (kq.dsMonThieu.length > 0 || kq.dsMonThua.length > 0) {
+            let phanThieu = kq.dsMonThieu.length > 0
+                ? `Thiếu [${kq.dsMonThieu.map(x => `${x.mon}: -${x.soThieu}`).join(', ')}]`
+                : '';
+            let phanThua = kq.dsMonThua.length > 0
+                ? `Thừa [${kq.dsMonThua.map(x => `${x.mon}: +${x.soThua}`).join(', ')}]`
+                : '';
+            dsCanhBao.push(`• Lớp ${lop} (${kq.tongDaXep}/${kq.tongChuan} tiết): ${[phanThieu, phanThua].filter(Boolean).join(' | ')}`);
+        }
+    });
+
+    if (dsCanhBao.length > 0) {
+        let tieuDe = loaiLuu === 'codinh'
+            ? `⚠️ CẢNH BÁO ĐỊNH MỨC TRƯỚC KHI LƯU TKB CỐ ĐỊNH:`
+            : `⚠️ PHÁT HIỆN LỆCH ĐỊNH MỨC MÔN HỌC (TUẦN ${tuanDangXem}):`;
+
+        let noiDung = `${tieuDe}\nHiện có ${dsCanhBao.length} lớp chưa khớp định mức môn học theo Khung chương trình:\n\n` +
+            dsCanhBao.slice(0, 12).join('\n') +
+            (dsCanhBao.length > 12 ? `\n... và ${dsCanhBao.length - 12} lớp khác.` : '') +
+            `\n\n(Gợi ý: Nếu có tiết dạy tăng/dạy bù, đồng chí giữ phím Alt + Click vào ô môn học để đánh dấu [ĐẨY TIẾT]).\nĐồng chí có vẫn muốn tiếp tục lưu không?`;
+
+        return confirm(noiDung);
+    }
+    return true;
+};
+
+// Khối tự động kích hoạt (IIFE) để nối các hàm mới vào hàm gốc của app.js mà không cần sửa hàm gốc
+(function kichHoatHeThongKiemToanTKB() {
+    // 1. Nối vào sau hàm xuatMaTranBang
+    const xuatMaTranGoc = window.xuatMaTranBang;
+    if (typeof xuatMaTranGoc === 'function' && !window._daHookKiemToanChiTietMon) {
+        window._daHookKiemToanChiTietMon = true;
+        window.xuatMaTranBang = function(danhSachTiet) {
+            xuatMaTranGoc.apply(this, arguments);
+            setTimeout(() => {
+                const cacOMon = document.querySelectorAll('input[id^="mon_"]');
+                cacOMon.forEach(oMon => {
+                    let parts = oMon.id.split('_');
+                    if (parts.length >= 5) {
+                        window.veNhanDayTheTietTrenO(parts[1], parts[2], parts[3], parts.slice(4).join('_'));
+                    }
+                });
+                window.capNhatCanhBaoChiTietMonTrenLuoi();
+            }, 80);
+        };
+    }
+
+    // 2. Nối vào trước hàm luuDuLieu và luuSuaCucBoTKB
+    const luuDuLieuGoc = window.luuDuLieu;
+    if (typeof luuDuLieuGoc === 'function' && !window._daHookLuuKiemToanMon) {
+        window._daHookLuuKiemToanMon = true;
+        window.luuDuLieu = async function(event, loaiLuu, tuDongLuu = false) {
+            if (!tuDongLuu && (loaiLuu === 'tuan' || loaiLuu === 'codinh')) {
+                if (!window.kiemTraTruocKhiLuuTKB(loaiLuu)) return;
+            }
+            return await luuDuLieuGoc.apply(this, arguments);
+        };
+    }
+
+    const luuSuaGoc = window.luuSuaCucBoTKB;
+    if (typeof luuSuaGoc === 'function' && !window._daHookLuuSuaKiemToanMon) {
+        window._daHookLuuSuaKiemToanMon = true;
+        window.luuSuaCucBoTKB = async function(event) {
+            if (!window.kiemTraTruocKhiLuuTKB('sua')) return;
+            return await luuSuaGoc.apply(this, arguments);
+        };
+    }
+
+    // 3. Bắt sự kiện thay đổi môn học trên lưới
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id && e.target.id.startsWith('mon_')) {
+            let parts = e.target.id.split('_');
+            let lop = parts.length >= 5 ? parts.slice(4).join('_') : null;
+            window.capNhatCanhBaoChiTietMonTrenLuoi(lop);
+            setTimeout(() => window.hienThiGoiYMonConThieuKhiFocus(e.target), 120);
+        }
+    });
+
+    // 4. Bắt sự kiện click vào ô môn học để hiện thanh gợi ý các môn còn thiếu
+    document.addEventListener('focusin', function(e) {
+        if (e.target && e.target.id && e.target.id.startsWith('mon_')) {
+            window.hienThiGoiYMonConThieuKhiFocus(e.target);
+        }
+    });
+
+    // 5. Bắt sự kiện Alt + Click chuột trái để gắn cờ [ĐẨY] hoặc [THẾ]
+    document.addEventListener('click', function(e) {
+        if (e.altKey && e.target && e.target.id && (e.target.id.startsWith('mon_') || e.target.id.startsWith('gv_'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            let parts = e.target.id.split('_');
+            if (parts.length >= 5) {
+                window.chuyenDoiCheDoDayTheTiet(parts[1], parts[2], parts[3], parts.slice(4).join('_'));
+            }
+        }
+    }, true);
+})();
