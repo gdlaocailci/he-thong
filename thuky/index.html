@@ -227,6 +227,26 @@
         .rte-editor b, .rte-editor strong { font-weight: bold; color: #000; }
         .rte-editor i, .rte-editor em { font-style: italic; }
         .rte-editor u { text-decoration: underline; }
+
+        /* Hiệu ứng cho nút Micro nhập giọng nói */
+        .rte-btn-mic {
+            font-size: 11pt;
+            transition: all 0.2s ease;
+        }
+        .rte-btn-mic:hover {
+            background: #e2e8f0;
+        }
+        .rte-btn-mic.recording {
+            background: #fee2e2 !important;
+            color: #ef4444 !important;
+            border-color: #fca5a5 !important;
+            animation: pulse-mic 1.2s infinite ease-in-out;
+        }
+        @keyframes pulse-mic {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
     </style>
 </head>
 <body>
@@ -633,43 +653,122 @@
     }
 
     function khoiTaoTrinhSoanThaoRTE() {
-        document.querySelectorAll('textarea').forEach(ta => {
-            if (ta.style.display === 'none') return;
-            
-            const container = document.createElement('div');
-            container.className = 'rte-container';
-            
-            const toolbar = document.createElement('div');
-            toolbar.className = 'rte-toolbar';
-            toolbar.innerHTML = `
-                <button type="button" class="rte-btn" tabindex="-1" onclick="document.execCommand('bold', false, null); this.classList.toggle('active')" style="font-weight:bold;" title="In đậm (Ctrl+B)">B</button>
-                <button type="button" class="rte-btn" tabindex="-1" onclick="document.execCommand('italic', false, null); this.classList.toggle('active')" style="font-style:italic;" title="In nghiêng (Ctrl+I)">I</button>
-                <button type="button" class="rte-btn" tabindex="-1" onclick="document.execCommand('underline', false, null); this.classList.toggle('active')" style="text-decoration:underline;" title="Gạch chân (Ctrl+U)">U</button>
-            `;
-            
-            const editor = document.createElement('div');
-            editor.className = 'rte-editor';
-            editor.contentEditable = true;
-            if (ta.dataset.key) editor.dataset.key = ta.dataset.key;
-            
-            editor.addEventListener('paste', function(e) {
-                e.preventDefault();
-                let text = (e.originalEvent || e).clipboardData.getData('text/plain');
-                document.execCommand('insertText', false, text);
-            });
-            
-            const dongBoDuLieu = () => { ta.value = editor.innerHTML; };
-            editor.addEventListener('input', dongBoDuLieu);
-            editor.addEventListener('blur', dongBoDuLieu);
-            
-            ta.style.display = 'none';
-            container.appendChild(toolbar);
-            container.appendChild(editor);
-            ta.parentNode.insertBefore(container, ta);
-            
-            ta.rteObject = editor; 
+    document.querySelectorAll('textarea').forEach(ta => {
+        if (ta.style.display === 'none') return;
+        
+        const container = document.createElement('div');
+        container.className = 'rte-container';
+        
+        const toolbar = document.createElement('div');
+        toolbar.className = 'rte-toolbar';
+        toolbar.innerHTML = `
+            <button type="button" class="rte-btn" tabindex="-1" onclick="document.execCommand('bold', false, null); this.classList.toggle('active')" style="font-weight:bold;" title="In đậm (Ctrl+B)">B</button>
+            <button type="button" class="rte-btn" tabindex="-1" onclick="document.execCommand('italic', false, null); this.classList.toggle('active')" style="font-style:italic;" title="In nghiêng (Ctrl+I)">I</button>
+            <button type="button" class="rte-btn" tabindex="-1" onclick="document.execCommand('underline', false, null); this.classList.toggle('active')" style="text-decoration:underline;" title="Gạch chân (Ctrl+U)">U</button>
+            <button type="button" class="rte-btn rte-btn-mic" tabindex="-1" title="Nhập bằng giọng nói (Bấm để Bật/Tắt)">🎙️</button>
+        `;
+        
+        const editor = document.createElement('div');
+        editor.className = 'rte-editor';
+        editor.contentEditable = true;
+        if (ta.dataset.key) editor.dataset.key = ta.dataset.key;
+        
+        editor.addEventListener('paste', function(e) {
+            e.preventDefault();
+            let text = (e.originalEvent || e).clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
         });
+        
+        const dongBoDuLieu = () => { ta.value = editor.innerHTML; };
+        editor.addEventListener('input', dongBoDuLieu);
+        editor.addEventListener('blur', dongBoDuLieu);
+        
+        // GẮN TÍNH NĂNG NHẬN DIỆN GIỌNG NÓI CHO NÚT MICRO
+        const btnMic = toolbar.querySelector('.rte-btn-mic');
+        btnMic.onclick = function() {
+            kichHoatGiongNoiChoRTE(editor, btnMic, ta);
+        };
+
+        ta.style.display = 'none';
+        container.appendChild(toolbar);
+        container.appendChild(editor);
+        ta.parentNode.insertBefore(container, ta);
+        
+        ta.rteObject = editor; 
+    });
+}
+
+    let boThuAmHienTai = null; // Quản lý trạng thái micro đang chạy
+
+function kichHoatGiongNoiChoRTE(editorEl, btnMicEl, textareaGoc) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        HeThong.thongBao("Trình duyệt chưa hỗ trợ giọng nói. Vui lòng dùng Chrome, Edge hoặc Safari.", "loi");
+        return;
     }
+
+    // Nếu đang thu âm ở ô này -> bấm lần 2 sẽ dừng
+    if (boThuAmHienTai && boThuAmHienTai.editor === editorEl) {
+        boThuAmHienTai.recognition.stop();
+        return;
+    }
+
+    // Nếu đang thu âm ở ô khác -> dừng ô cũ trước
+    if (boThuAmHienTai) {
+        boThuAmHienTai.recognition.stop();
+    }
+
+    try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'vi-VN';           // Tiếng Việt
+        recognition.continuous = true;        // Thu âm liên tục không tự ngắt sau 1 câu
+        recognition.interimResults = false;   // Chỉ lấy kết quả hoàn chỉnh tránh lặp chữ
+
+        recognition.onstart = function() {
+            btnMicEl.classList.add('recording');
+            btnMicEl.title = "Đang lắng nghe... Bấm để DỪNG";
+            HeThong.thongBao("🎙️ Đang nghe giọng nói tiếng Việt...", "thanh-cong");
+        };
+
+        recognition.onresult = function(event) {
+            let noiDungMoi = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    noiDungMoi += event.results[i][0].transcript;
+                }
+            }
+
+            if (noiDungMoi.trim() !== "") {
+                editorEl.focus();
+                // Tự động thêm dấu cách nếu phía trước đã có chữ
+                let vanBanHienCo = editorEl.innerText.trim();
+                let chuoiThem = (vanBanHienCo.length > 0 ? " " : "") + noiDungMoi.trim();
+                
+                document.execCommand('insertText', false, chuoiThem);
+                textareaGoc.value = editorEl.innerHTML;
+            }
+        };
+
+        recognition.onerror = function(event) {
+            if (event.error !== 'no-speech') {
+                HeThong.thongBao("Lỗi micro: " + event.error, "loi");
+            }
+        };
+
+        recognition.onend = function() {
+            btnMicEl.classList.remove('recording');
+            btnMicEl.title = "Nhập bằng giọng nói (Bấm để Bật/Tắt)";
+            boThuAmHienTai = null;
+        };
+
+        recognition.start();
+        boThuAmHienTai = { recognition: recognition, editor: editorEl, button: btnMicEl };
+
+    } catch (e) {
+        HeThong.thongBao("Không thể khởi động micro: " + e.message, "loi");
+    }
+}
 
     function lamSachDuLieuTruocKhiGui(htmlTho) {
         if (!htmlTho) return "";
