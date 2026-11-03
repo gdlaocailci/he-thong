@@ -698,7 +698,36 @@
     });
 }
 
-    let boThuAmHienTai = null; // Quản lý trạng thái micro đang chạy
+    // Quản lý phiên ghi âm duy nhất toàn hệ thống
+let phienThuAmHienTai = null;
+
+// Hàm dừng triệt để và ngắt mic ngay lập tức
+function tatMicTrietDe() {
+    if (!phienThuAmHienTai) return;
+
+    try {
+        // 1. Đặt cờ chốt chặn và vô hiệu hóa hàm nhận kết quả ngay lập tức
+        phienThuAmHienTai.daDung = true;
+        phienThuAmHienTai.recognition.onresult = null;
+        phienThuAmHienTai.recognition.onerror = null;
+        phienThuAmHienTai.recognition.onend = null;
+
+        // 2. Dùng abort() để ngắt luồng mic và hủy mọi dữ liệu âm thanh đang gửi
+        phienThuAmHienTai.recognition.abort();
+    } catch (e) {
+        console.warn("Lỗi khi ngắt mic:", e);
+    }
+
+    // 3. Khôi phục giao diện nút bấm ngay tức khắc
+    if (phienThuAmHienTai.button) {
+        phienThuAmHienTai.button.classList.remove('recording');
+        phienThuAmHienTai.button.innerHTML = '🎙️';
+        phienThuAmHienTai.button.title = 'Nhập bằng giọng nói (Bấm để Bật)';
+    }
+
+    phienThuAmHienTai = null;
+    HeThong.thongBao("🛑 Đã tắt mic hoàn toàn.", "thanh-cong");
+}
 
 function kichHoatGiongNoiChoRTE(editorEl, btnMicEl, textareaGoc) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -708,30 +737,47 @@ function kichHoatGiongNoiChoRTE(editorEl, btnMicEl, textareaGoc) {
         return;
     }
 
-    // Nếu đang thu âm ở ô này -> bấm lần 2 sẽ dừng
-    if (boThuAmHienTai && boThuAmHienTai.editor === editorEl) {
-        boThuAmHienTai.recognition.stop();
+    // NẾU ĐANG BẬT Ở CHÍNH Ô NÀY -> BẤM LÀ TẮT TRIỆT ĐỂ NGAY LẬP TỨC
+    if (phienThuAmHienTai && phienThuAmHienTai.editor === editorEl) {
+        tatMicTrietDe();
         return;
     }
 
-    // Nếu đang thu âm ở ô khác -> dừng ô cũ trước
-    if (boThuAmHienTai) {
-        boThuAmHienTai.recognition.stop();
+    // NẾU ĐANG BẬT Ở Ô KHÁC -> TẮT Ô CŨ TRƯỚC KHI MỞ Ô MỚI
+    if (phienThuAmHienTai) {
+        tatMicTrietDe();
     }
 
     try {
         const recognition = new SpeechRecognition();
-        recognition.lang = 'vi-VN';           // Tiếng Việt
-        recognition.continuous = true;        // Thu âm liên tục không tự ngắt sau 1 câu
-        recognition.interimResults = false;   // Chỉ lấy kết quả hoàn chỉnh tránh lặp chữ
+        recognition.lang = 'vi-VN';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
+        const phienMoi = {
+            recognition: recognition,
+            editor: editorEl,
+            button: btnMicEl,
+            daDung: false
+        };
 
         recognition.onstart = function() {
+            if (phienMoi.daDung) { 
+                recognition.abort(); 
+                return; 
+            }
             btnMicEl.classList.add('recording');
-            btnMicEl.title = "Đang lắng nghe... Bấm để DỪNG";
+            btnMicEl.innerHTML = '⏹️'; // Đổi icon sang nút STOP rõ ràng
+            btnMicEl.title = 'Đang nghe... Bấm để TẮT NGAY LẬP TỨC';
             HeThong.thongBao("🎙️ Đang nghe giọng nói tiếng Việt...", "thanh-cong");
         };
 
         recognition.onresult = function(event) {
+            // NẾU ĐÃ BẤM TẮT: Tuyệt đối không cho phép ghi bất kỳ chữ nào vào ô
+            if (phienMoi.daDung || !phienThuAmHienTai || phienThuAmHienTai !== phienMoi) {
+                return;
+            }
+
             let noiDungMoi = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
@@ -741,7 +787,6 @@ function kichHoatGiongNoiChoRTE(editorEl, btnMicEl, textareaGoc) {
 
             if (noiDungMoi.trim() !== "") {
                 editorEl.focus();
-                // Tự động thêm dấu cách nếu phía trước đã có chữ
                 let vanBanHienCo = editorEl.innerText.trim();
                 let chuoiThem = (vanBanHienCo.length > 0 ? " " : "") + noiDungMoi.trim();
                 
@@ -751,21 +796,24 @@ function kichHoatGiongNoiChoRTE(editorEl, btnMicEl, textareaGoc) {
         };
 
         recognition.onerror = function(event) {
-            if (event.error !== 'no-speech') {
+            if (event.error !== 'no-speech' && !phienMoi.daDung) {
                 HeThong.thongBao("Lỗi micro: " + event.error, "loi");
             }
+            tatMicTrietDe();
         };
 
         recognition.onend = function() {
-            btnMicEl.classList.remove('recording');
-            btnMicEl.title = "Nhập bằng giọng nói (Bấm để Bật/Tắt)";
-            boThuAmHienTai = null;
+            // Đảm bảo dọn dẹp sạch sẽ khi micro tự kết thúc
+            if (phienThuAmHienTai === phienMoi) {
+                tatMicTrietDe();
+            }
         };
 
+        phienThuAmHienTai = phienMoi;
         recognition.start();
-        boThuAmHienTai = { recognition: recognition, editor: editorEl, button: btnMicEl };
 
     } catch (e) {
+        tatMicTrietDe();
         HeThong.thongBao("Không thể khởi động micro: " + e.message, "loi");
     }
 }
