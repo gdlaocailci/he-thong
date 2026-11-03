@@ -247,6 +247,67 @@
             50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+
+        /* ================= TỐI ƯU GIAO DIỆN DI ĐỘNG ================= */
+.storage-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 12px;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Kho lưu trữ chuyển về 1 cột trên điện thoại */
+    .storage-layout {
+        grid-template-columns: 1fr !important;
+        height: auto;
+        overflow-y: auto;
+    }
+    
+    /* Ẩn khung xem trước iframe nặng nề trên mobile để tập trung thao tác nhanh */
+    #panelKhoLuuTru .ai-preview-frame {
+        display: none !important;
+    }
+
+    /* Tối ưu Header trên mobile */
+    .top-header {
+        padding: 8px 10px;
+    }
+    .header-title {
+        font-size: 1.05rem;
+        margin-bottom: 4px;
+    }
+
+    /* Thanh công cụ chân trang: chia 3 cột gọn gàng, nút bấm vừa vặn ngón tay */
+    .action-bar {
+        padding: 8px 10px;
+        gap: 6px;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .action-bar .btn {
+        padding: 8px 4px;
+        font-size: 7.5pt;
+        letter-spacing: 0;
+        margin: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Thẻ tài liệu dạng card dễ bấm trên điện thoại */
+    .doc-item-card {
+        padding: 10px 8px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    .doc-item-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+}
     </style>
 </head>
 <body>
