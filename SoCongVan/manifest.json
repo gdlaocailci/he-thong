@@ -2,8 +2,8 @@
   "name": "Quản lý Công văn & Lịch công tác",
   "short_name": "QLCV",
   "start_url": "./index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1e3a8a",
-  "scope": "./"
+  "theme_color": "#1e3a8a"
 }
