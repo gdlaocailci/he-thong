@@ -106,9 +106,58 @@
     .dev-text-box { display: flex; flex-direction: column; line-height: 1.1; }
     .dev-label-top { font-family: 'Segoe UI', sans-serif; font-size: 8px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
     .dev-name-main { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 850; color: #ffd700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
-  </style>
+  
+    /* ========================================================== */
+    /* CỤM NÚT ĐIỀU KHIỂN CỬA SỔ DESKTOP (TỰ ĐỘNG ẨN THANH URL)    */
+    /* ========================================================== */
+    #cumDieuKhienCuaSo {
+      position: fixed;
+      top: 10px;
+      right: 15px;
+      z-index: 10005;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(4px);
+    }
+    #cumDieuKhienCuaSo button {
+      width: 28px;
+      height: 26px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 13px;
+      transition: all 0.15s ease-in-out;
+      color: #334155;
+      padding: 0;
+    }
+    #cumDieuKhienCuaSo button:hover { background: #e2e8f0; }
+    #cumDieuKhienCuaSo #btnDongCuaSo:hover { background: #ef4444; color: white; border-color: #ef4444; }
+    #cumDieuKhienCuaSo #btnPhongToFullCuaSo:hover { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+
+    @media screen and (max-width: 768px) {
+      #cumDieuKhienCuaSo { display: none !important; }
+    }
+</style>
 </head>
 <body>
+  <!-- CỤM NÚT ĐIỀU KHIỂN CỬA SỔ (THU NHỎ, PHÓNG TO FULL, CLOSE) -->
+  <div id="cumDieuKhienCuaSo">
+      <button id="btnThuNhoCuaSo" type="button" onclick="thaoTacThuNhoCuaSo(event)" title="Thu nhỏ (Thoát toàn màn hình)">—</button>
+      <button id="btnPhongToFullCuaSo" type="button" onclick="thaoTacPhongToFull(event)" title="Phóng to Full màn hình">⛶</button>
+      <button id="btnDongCuaSo" type="button" onclick="thaoTacDongHeThong(event)" title="Đóng hệ thống" style="color: #b91c1c;">✕</button>
+  </div>
+
 
 <div id="login-overlay">
   <div class="login-box">
@@ -1011,6 +1060,82 @@
   }
    
   khoaTruyCapMaNguon();
+</script>
+
+<script>
+/* ========================================================================= */
+/* THUẬT TOÁN ĐỘNG CƠ FULLSCREEN TỰ ĐỘNG (XÓA SẠCH THANH URL KHI CHẠY APP)   */
+/* ========================================================================= */
+(function() {
+    function laThietBiDiDong() {
+        return (window.innerWidth < 768) || /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function kichHoatToanManHinhHeThong() {
+        if (laThietBiDiDong()) return;
+        var daFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (!daFull) {
+            var el = document.documentElement;
+            var yeuCau = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+            if (yeuCau) {
+                try {
+                    var res = yeuCau.call(el);
+                    if (res && typeof res.catch === 'function') res.catch(function() {});
+                } catch (e) {}
+            }
+        }
+    }
+
+    var tamDungAutoFullscreen = false;
+
+    function thaoTacThuNhoCuaSo(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        tamDungAutoFullscreen = true;
+        setTimeout(function() { tamDungAutoFullscreen = false; }, 2000);
+
+        var daFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (daFull) {
+            if (document.exitFullscreen) document.exitFullscreen().catch(function() {});
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+    }
+
+    function thaoTacPhongToFull(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        var daFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (daFull) {
+            thaoTacThuNhoCuaSo(e);
+        } else {
+            tamDungAutoFullscreen = false;
+            kichHoatToanManHinhHeThong();
+        }
+    }
+
+    function thaoTacDongHeThong(e) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        if (confirm("Đồng chí có chắc chắn muốn đóng và trở về trang Hệ thống không?")) {
+            var urlDich = (typeof SCV_LINK_TRANG_CHU !== 'undefined' && SCV_LINK_TRANG_CHU.trim() !== '') 
+                          ? SCV_LINK_TRANG_CHU 
+                          : 'https://gdlaocailci.github.io/taphoi/';
+            window.location.href = urlDich;
+        }
+    }
+
+    // TỰ ĐỘNG BẬT TOÀN MÀN HÌNH Ở LẦN CLICK ĐẦU TIÊN ĐỂ XÓA SẠCH THANH URL
+    function tuDongChayKhiTuongTacDauTien() {
+        if (laThietBiDiDong()) return;
+        if (tamDungAutoFullscreen) return;
+        kichHoatToanManHinhHeThong();
+    }
+
+    window.addEventListener('click', tuDongChayKhiTuongTacDauTien, { passive: true });
+    window.addEventListener('keydown', tuDongChayKhiTuongTacDauTien, { passive: true });
+
+    window.thaoTacThuNhoCuaSo = thaoTacThuNhoCuaSo;
+    window.thaoTacPhongToFull = thaoTacPhongToFull;
+    window.thaoTacDongHeThong = thaoTacDongHeThong;
+    window.kichHoatToanManHinhHeThong = kichHoatToanManHinhHeThong;
+})();
 </script>
 </body>
 </html>
