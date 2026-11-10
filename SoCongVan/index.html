@@ -2,10 +2,15 @@
 <html lang="vi">
 <head>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-  <base target="_top">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
   <title>Đang tải hệ thống...</title>
 
   <script src="ketnoi.js"></script>
@@ -24,7 +29,16 @@
     .btn-guest:hover { background: #c2410c; transform: translateY(-2px); box-shadow: 0 6px 10px rgba(234, 88, 12, 0.4); }
 
     :root { --primary: #1e3a8a; --red: #b91c1c; --bg: #f3f4f6; }
-    body { font-family: "Times New Roman", serif; background: var(--bg); margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
+    html, body { 
+      width: 100vw; 
+      min-height: 100vh; 
+      margin: 0; 
+      padding: 0; 
+      background: var(--bg); 
+      font-family: "Times New Roman", serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
     
     .header { background: white; border-bottom: 3px solid var(--red); display: flex; align-items: center; justify-content: center; padding: 5px; gap: 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .header img { width: 60px; height: 60px; object-fit: contain; }
@@ -982,7 +996,7 @@
                     ? SCV_LINK_TRANG_CHU 
                     : 'https://gdlaocailci.github.io/taphoi/';
                     
-      window.open(urlDich, '_top');
+      window.location.href = urlDich;
   }
   
   function khoaTruyCapMaNguon() {
